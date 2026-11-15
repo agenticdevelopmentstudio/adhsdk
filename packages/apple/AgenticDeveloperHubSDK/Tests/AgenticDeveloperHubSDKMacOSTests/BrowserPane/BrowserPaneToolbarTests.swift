@@ -180,6 +180,20 @@ final class BrowserPaneToolbarTests: XCTestCase {
         XCTAssertEqual(item?.accessibilityLabel(), "Privacy Words: Unavailable")
     }
 
+    /// Tracking only while the page has focus is on part of the time: red,
+    /// and saying which part, rather than a plain Off.
+    func test_trackingWhenFocusedSaysFocusedOnly() {
+        let settings = UserSettings(
+            with: InMemorySettingsStorageProvider(),
+            secureSettingsProvider: InMemorySecureSettingsStorageProvider()
+        )
+        settings.set(BrowserPointerTracking.whenFocused, for: UserSettings.browserPrivacyPointerTracking)
+        let item = BrowserPrivacyStatus.items(settings: settings, isPaused: false, agentPrivacy: .off)
+            .first { $0.title == "Tracking" }
+        XCTAssertEqual(item?.isOn, false)
+        XCTAssertEqual(item?.text, "Tracking: Focused Only")
+    }
+
     func test_safariKeepsKitchenNavigation() {
         let pane = makePane(ownToolbar: false)
         XCTAssertFalse(navigation(pane).contains(where: \.isHidden))

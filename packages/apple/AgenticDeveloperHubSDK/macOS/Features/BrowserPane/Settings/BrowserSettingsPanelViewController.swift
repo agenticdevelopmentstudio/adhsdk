@@ -467,9 +467,11 @@ final class BrowserSettingsBinding {
 
     /// Adds `view`, the row for `key`, to `group`: disabled when locked, and
     /// in pane scope with an override marker and its "Use Global Setting" menu.
-    func add<Value: Codable & Sendable>(
+    /// The model may show the setting as another type (a "Disable …"
+    /// checkbox over an enum); only the key's name and override are used.
+    func add<ModelValue: Codable & Sendable, Value: Codable & Sendable>(
         _ view: NSView,
-        model: ComposableSettings.ViewModel<Value>,
+        model: ComposableSettings.ViewModel<ModelValue>,
         key: UserSetting<Value>,
         to group: ComposableSettings.GroupView
     ) {

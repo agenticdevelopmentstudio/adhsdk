@@ -113,6 +113,13 @@ public enum BrowserInputPolicy: String, Codable, Sendable, CaseIterable {
 }
 
 /// When the pane reports the pointer to the page.
+///
+/// The Privacy topic offers two of the three, as its "Disable pointer
+/// tracking" checkbox: unchecked is `always`, checked writes `never`.
+/// `whenFocused` is no longer offered there (the three-way pop-up became that
+/// checkbox), but a value stored by an earlier build or written by the test
+/// harness (`APP_TEST_BROWSER_SETTINGS`) is still honoured by the gate, shown
+/// checked, and shown on the privacy toolbar as Tracking: Focused Only.
 public enum BrowserPointerTracking: String, Codable, Sendable, CaseIterable {
     case always
     case whenFocused

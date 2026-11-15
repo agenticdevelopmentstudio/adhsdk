@@ -67,7 +67,9 @@ final class BrowserPrivacySettingsPanel: BrowserTopicPanel {
                 + "stops the page being told where the pointer is — hover, "
                 + "movement, entering and leaving — and Disable drag and drop stops a drag "
                 + "from outside entering the page. All four are unchecked until you check them "
-                + "and are enforced natively. "
+                + "and are enforced natively. Pointer tracking only while the page has focus is "
+                + "no longer offered here; a pane that still holds it shows Disable pointer "
+                + "tracking checked, and unchecking it lets the page track the pointer. "
                 + "The agent's own clicks and keys pass, unless the pane is paused "
                 + "and Agent while paused says the agent pauses too."
         ),
@@ -206,9 +208,11 @@ final class BrowserPrivacySettingsPanel: BrowserTopicPanel {
 
     /// A "Disable …" checkbox over a setting whose default lets the page
     /// have the input: checked writes `disabled`, the most private value,
-    /// unchecked writes `allowed`, the default. It reads checked only while
-    /// the setting is `disabled`, so an unchecked box is the default
-    /// meaning "allowed". Checked is always the more private choice.
+    /// unchecked writes `allowed`, the default. It reads unchecked only while
+    /// the setting is `allowed`, so any restriction shows as checked —
+    /// pointer tracking's `whenFocused`, which no row offers but a stored
+    /// value or the test harness can hold, included. Checked is always the
+    /// more private choice, and unchecking always means "allowed".
     private func addDisable<Value: Codable & Sendable & Equatable>(
         _ title: String,
         _ key: UserSetting<Value>,
@@ -220,19 +224,17 @@ final class BrowserPrivacySettingsPanel: BrowserTopicPanel {
         let access = binding.accessors(key)
         let model = ComposableSettings.ViewModel<Bool>(
             title: title,
-            get: { access.get() == disabled },
-            set: { access.set($0 ? disabled : allowed) }
+            get: { access.get() != allowed },
+            set: { isDisabled in
+                // Checking a box that already reads checked (a `whenFocused`
+                // row) keeps the value it has rather than widening it.
+                guard isDisabled != (access.get() != allowed) else { return }
+                access.set(isDisabled ? disabled : allowed)
+            }
         )
         let view = ComposableSettings.CheckboxView(with: model)
         _ = view.toggle.accessibilityID(Self.identifier(id))
-        binding.add(view, name: key.name, model: model, to: group, refresh: {
-            if model.refreshHandler != nil { model.refresh() } else { model.onChange?(model.value) }
-        }, hasOverride: { [weak binding] in
-            binding?.layered?.hasOverride(key) ?? false
-        }, revert: { [weak binding] in
-            binding?.layered?.removeOverride(key)
-            if model.refreshHandler != nil { model.revert() } else { model.onChange?(model.value) }
-        })
+        binding.add(view, model: model, key: key, to: group)
     }
 
     private func makeInputGroup() -> ComposableSettings.GroupView {

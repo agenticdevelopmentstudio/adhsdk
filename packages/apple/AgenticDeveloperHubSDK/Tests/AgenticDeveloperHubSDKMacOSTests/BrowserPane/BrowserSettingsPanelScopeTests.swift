@@ -427,4 +427,23 @@ final class BrowserSettingsPanelScopeTests: XCTestCase {
             "Scripts / Capture page console"
         ])
     }
+
+    /// A stored `whenFocused`, which no row offers, still restricts the page,
+    /// so Disable pointer tracking reads checked; checking it again keeps it,
+    /// and only unchecking it lets the page track the pointer (`always`).
+    func testDisablePointerTrackingReadsAnyRestrictionAsChecked() throws {
+        let global = makeSettings()
+        global.set(BrowserPointerTracking.whenFocused, for: UserSettings.browserPrivacyPointerTracking)
+        let panel = makePanel(settings: global)
+        let row = try XCTUnwrap(panel.binding.rows(named: UserSettings.browserPrivacyPointerTracking.name).first)
+        let model = try XCTUnwrap(row.model as? ComposableSettings.ViewModel<Bool>)
+        XCTAssertTrue(model.value)
+
+        model.settingObserver.value = true
+        XCTAssertEqual(global.get(UserSettings.browserPrivacyPointerTracking), .whenFocused)
+        model.settingObserver.value = false
+        XCTAssertEqual(global.get(UserSettings.browserPrivacyPointerTracking), .always)
+        model.settingObserver.value = true
+        XCTAssertEqual(global.get(UserSettings.browserPrivacyPointerTracking), .never)
+    }
 }

@@ -88,6 +88,7 @@ enum BrowserPrivacyStatus {
         let agentPaused = isPaused && settings.get(UserSettings.browserPrivacyAgentWhilePaused) == .paused
         let access = settings.get(UserSettings.browserPrivacyAgentAccess)
         let thirdParty = settings.get(UserSettings.browserPrivacyThirdPartyContent)
+        let tracking = settings.get(UserSettings.browserPrivacyPointerTracking)
         return [
             Item(symbol: isPaused ? "pause.circle.fill" : "play.circle", title: "Events", isOn: live,
                  state: isPaused ? "Paused" : "On"),
@@ -95,8 +96,10 @@ enum BrowserPrivacyStatus {
                  isOn: live && settings.get(UserSettings.browserPrivacyKeyboard) != .block),
             Item(symbol: "computermouse", title: "Mouse",
                  isOn: live && settings.get(UserSettings.browserPrivacyMouse) != .block),
-            Item(symbol: "cursorarrow.motionlines", title: "Tracking",
-                 isOn: live && settings.get(UserSettings.browserPrivacyPointerTracking) == .always),
+            // `whenFocused` is on only part of the time, so it is off (red),
+            // as No Scripts is, and says which part.
+            Item(symbol: "cursorarrow.motionlines", title: "Tracking", isOn: live && tracking == .always,
+                 state: live && tracking == .whenFocused ? "Focused Only" : nil),
             Item(symbol: "hand.draw", title: "Drag and Drop",
                  isOn: live && settings.get(UserSettings.browserPrivacyDragAndDrop)),
             Item(symbol: "macwindow", title: "Activation",
