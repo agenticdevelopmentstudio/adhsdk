@@ -251,11 +251,8 @@ public enum ClaudeAuthPrompts {
     /// not `DispatchQueue.main.async`: a modal loop never returns from the block
     /// that starts it, so a main-*queue* block that never returns stops the
     /// queue draining and strands every `await` inside the modal.
-    public static func deferPresentation(_ presentation: @escaping () -> Void) {
-        CFRunLoopPerformBlock(CFRunLoopGetMain(), CFRunLoopMode.commonModes.rawValue) {
-            MainActor.assumeIsolated { presentation() }
-        }
-        CFRunLoopWakeUp(CFRunLoopGetMain())
+    public static func deferPresentation(_ presentation: @escaping @MainActor () -> Void) {
+        performOnNextRunLoopPass(presentation)
     }
 
     /// Target for a control that wants a closure instead of a selector, kept

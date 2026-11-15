@@ -142,21 +142,17 @@ final class AgentPrivacySettingsGroup {
     /// on `*`.
     ///
     /// A pane's settings window is app-modal, and the authentication prompt
-    /// cannot come in front of an app-modal window, so the modal session is
-    /// ended while the prompt is up and started again after it
-    /// (`BrowserPaneSettingsWindowController.suspendModal(of:)`).
+    /// cannot come in front of an app-modal window; the vault announces its
+    /// prompt and the modal session steps aside while it is up
+    /// (`SystemAuthenticationPrompt`, `AppModalWindowSession`).
     private func editWords() {
         guard !isAuthenticating, let vault = binding.privacyVault else { return }
         let newWordSite = binding.pane.map { PrivacySitePattern.defaultPattern(for: $0.privacyWordsURL) }
             ?? PrivacySitePattern.everywhere
         isAuthenticating = true
-        let resumeModal = BrowserPaneSettingsWindowController.suspendModal(of: window())
         Task { [weak self] in
             guard let self else { return }
-            defer {
-                self.isAuthenticating = false
-                resumeModal?()
-            }
+            defer { self.isAuthenticating = false }
             do {
                 try await vault.authenticate(reason: "edit the privacy words")
                 guard let window = self.window() else { return }

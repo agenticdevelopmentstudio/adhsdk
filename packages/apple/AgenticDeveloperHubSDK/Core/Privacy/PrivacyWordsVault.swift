@@ -1,5 +1,6 @@
 import Combine
 import Foundation
+import LocalAuthentication
 
 /// The privacy words while the app is running: read from the keychain when a
 /// private terminal first needs them, held in memory and nowhere else.
@@ -90,8 +91,12 @@ public final class PrivacyWordsVault: ObservableObject {
     /// remembered — and makes sure the words are in memory. Words still under
     /// the old guard are read with that authentication and saved again
     /// without it, so they never need it to be read again.
+    ///
+    /// The prompt is announced (``SystemAuthenticationPrompt``) for as long
+    /// as it is up, so an app-modal window steps aside for it instead of
+    /// leaving it behind, unanswerable — whichever caller asked.
     public func authenticate(reason: String) async throws {
-        let context = try await PrivacyWordStore.authenticate(reason: reason)
+        let context = try await promptForOwner(reason: reason)
         do {
             // Read again even when already in memory: whoever authenticates
             // is about to see or replace the words, and another app may have
@@ -102,6 +107,12 @@ public final class PrivacyWordsVault: ObservableObject {
             try persist(words)
             apply(words)
         }
+    }
+
+    private func promptForOwner(reason: String) async throws -> LAContext {
+        SystemAuthenticationPrompt.begin()
+        defer { SystemAuthenticationPrompt.end() }
+        return try await PrivacyWordStore.authenticate(reason: reason)
     }
 
     /// Makes sure the words are in memory, for running a terminal. Silent,

@@ -1,5 +1,6 @@
 import AppKit
 import AgenticDeveloperHubSDKCore
+import AgenticDeveloperHubSDKCoreMacOS
 
 extension ComposableSettings {
 
@@ -54,8 +55,8 @@ extension ComposableSettings {
         private var problemLeadingToFooter: NSLayoutConstraint?
         private var problemLeadingToHelp: NSLayoutConstraint?
         private let dialogTitle: String
-        /// Set while `NSApp.runModal(for:)` is running this dialog.
-        private var isRunningModal = false
+        /// The app-modal session, from `present` until `finish`.
+        private var modalSession: AppModalWindowSession?
         /// The dialog itself, from `present` until `finish`. Nothing else holds
         /// a window controller — a window does not keep its own — so an owner
         /// that presents and lets go would otherwise lose the dialog before
@@ -119,24 +120,18 @@ extension ComposableSettings {
         /// Shows the dialog app-modally. Returns at once; `onFinish` reports the answer.
         ///
         /// The modal session starts on the next pass of the run loop, not inside
-        /// this call: a caller running as a main-queue block (a button action
-        /// reached from SwiftUI, a `Task` on the main actor) would otherwise hold
-        /// the main queue for as long as the dialog is up, and every `await` the
-        /// dialog's own work makes on the main actor would wait for it to close.
+        /// this call (`AppModalWindowSession`): a caller running as a main-queue
+        /// block (a button action reached from SwiftUI, a `Task` on the main
+        /// actor) would otherwise hold the main queue for as long as the dialog
+        /// is up, and every `await` the dialog's own work makes on the main
+        /// actor would wait for it to close. A dialog is answered before
+        /// anything else, so it comes forward.
         public func present() {
-            guard !isFinished, let window = prepare() else { return }
+            guard !isFinished, modalSession == nil, let window = prepare() else { return }
             presentedSelf = self
-            CFRunLoopPerformBlock(CFRunLoopGetMain(), CFRunLoopMode.commonModes.rawValue) { [weak self] in
-                MainActor.assumeIsolated {
-                    guard let self, !self.isFinished else { return }
-                    self.isRunningModal = true
-                    // A dialog is answered before anything else, so it comes forward.
-                    NSApp.activate(ignoringOtherApps: true)
-                    NSApp.runModal(for: window)
-                    self.isRunningModal = false
-                }
-            }
-            CFRunLoopWakeUp(CFRunLoopGetMain())
+            let session = AppModalWindowSession(window: window, activates: true)
+            modalSession = session
+            session.start()
         }
 
         /// Shows the dialog as an ordinary window, holding up nothing: the rest
@@ -201,17 +196,9 @@ extension ComposableSettings {
         public func finish(_ accepted: Bool) {
             guard !isFinished else { return }
             isFinished = true
-            if isRunningModal {
-                NSApp.stopModal()
-                // `stopModal` takes effect when the modal loop next handles an
-                // event; an OK finished from an awaited save comes from no event,
-                // so one is posted to end the loop now.
-                if let wake = NSEvent.otherEvent(with: .applicationDefined, location: .zero, modifierFlags: [],
-                                                 timestamp: 0, windowNumber: 0, context: nil,
-                                                 subtype: 0, data1: 0, data2: 0) {
-                    NSApp.postEvent(wake, atStart: true)
-                }
-            }
+            // Ends the loop now, even for an OK finished from an awaited save.
+            modalSession?.end()
+            modalSession = nil
             if let parent = sheetParent, let window {
                 parent.endSheet(window)
                 sheetParent = nil
