@@ -112,9 +112,9 @@
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:f62b57d2f8f8be3137de67933917ffc7448864d9237e09b215c78fea6836d6a3",
+            "hash": "sha256:2da450f165b9f52f5805a85ab1cd8ec79b6a427f7fc99aa07bc83c4c6663d3da",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Integrations/Mail/MailBrowserViewController.swift",
           "platform": "macos"
@@ -3647,9 +3647,9 @@
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:8afc62e13b9859f6b865df1c14f66955d2ecb9ef6abef779322680c03428f433",
+            "hash": "sha256:94e9fc14add738467db096a7646eadcfde67a20f4c16f045059ae0bb88a7627c",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Integrations/Mail/MailMessageListViewController.swift",
           "platform": "macos"
@@ -6713,9 +6713,9 @@
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:8d9e061514e5fd5ec069c8c8fe20947a51a2d3f8241bcff588d6520db8b90969",
+            "hash": "sha256:6d09de01271d5df3122a020c1b41ae781005bf08c6626c172692e3bc3206b3a7",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Integrations/GmailSettingsView.swift",
           "platform": "macos"
@@ -9722,9 +9722,9 @@
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:cf13e4f0eceafceae82b0cc3deb30d6faa0a9280a58efed6033ef3bdd1fa650a",
+            "hash": "sha256:f4f96968c217d116509c5b9a348138a9e4a7424c3511808d0f8acbea75d943ea",
             "state": "confirmed",
-            "version": "1.2.2"
+            "version": "1.3.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/GroupView.swift",
           "platform": "apple"
@@ -11078,9 +11078,9 @@
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:8bf130b1714f560df44a05b3521d5c8b752f46b5c5a6777cc732579284fe0f6a",
+            "hash": "sha256:be0765ce20cf2320a3948ec4690e31b8b999992f393d0aa3cec7630c3e7b3b8f",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Integrations/Mail/MailSidebarViewController.swift",
           "platform": "macos"
@@ -14094,9 +14094,9 @@
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:5fdbc43edd1127d7ae819a1a78b4ab8a093260872fea56c18bb5742b3f67b0e8",
+            "hash": "sha256:8db684efedb35adcb6859b95d1c1a9b366e058009266aaead5352fc0b5ac1f58",
             "state": "confirmed",
-            "version": "1.2.2"
+            "version": "1.3.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/SplitViewController/SplitViewController.swift",
           "platform": "apple"
@@ -14826,9 +14826,9 @@
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:cd38e3ade1aa1cbe9c60bca27b4950656d85800176f87f81a2b6f4ab6cee7a72",
+            "hash": "sha256:3f4c47cbbd76836358365e0fe3cb974775761d278bb38eec101146b26d44fbb6",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Integrations/Mail/MailReaderViewController.swift",
           "platform": "macos"

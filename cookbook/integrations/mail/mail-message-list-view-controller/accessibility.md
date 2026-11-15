@@ -1,6 +1,7 @@
 
 - **role**: The list is a standard table, so it carries the platform table role. The source sets no other role.
-- **table-identifier**: The table's accessibility identifier is `mail.messages`.
+- **table-identifier**: The table's accessibility identifier is `mail.messages`, and its label is "Messages". The empty-state label's identifier is `mail.messages.empty`.
+- **row-identifier**: Each row's accessibility identifier is `mail.message.<messageID>`.
 - **row-label**: Each row's accessibility label is the sender and subject joined by a comma and a space. The date, snippet and unread state are not part of it.
 - **keyboard-navigation**: The source adds no key handling; keyboard navigation of rows comes from the platform table.
 - **unread-state-announcement**: NEEDS REVIEW: Not implemented in source. A row shows unread state only through the dot and the font weight, and the accessibility label does not carry it. A screen-reader pass over the mail window would settle whether the label needs an unread marker.

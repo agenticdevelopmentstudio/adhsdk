@@ -2,11 +2,11 @@
 id: 018e4a69-cbeb-4105-8f39-dae3e6f7d8ec
 title: "MailBrowserViewController"
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: 2026-11-13
-modified: 2026-11-14
+modified: 2026-11-15
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -97,6 +97,7 @@ The sidebar pane uses the system sidebar style and the list pane the system cont
 ## Accessibility
 
 - **role**: The controller exposes the system split view and system alert; it sets no role, trait or label of its own.
+- **split-identifier**: The split view MUST carry the accessibility identifier `mail.browser`.
 - **alert-label**: The alert MUST present its text as the standard alert message and informative text, and its single button MUST be titled "OK".
 - **keyboard-path**: NEEDS REVIEW: Not implemented in source. The controller sets no key view loop and no shortcut for moving between the three panes, and relies on whatever the system split view and pane controllers provide; a keyboard run-through with VoiceOver on would settle whether a SHOULD requirement for pane switching is needed.
 - **pane-labels**: The controller sets no accessibility label on the panes. Each pane controller sets its own accessibility identifier on its main view (`mail.sidebar`, `mail.messages`, `mail.reader.body`), and the sidebar and list rows set their own labels.
@@ -195,7 +196,7 @@ Not applicable: the source writes no log line; failures reach the user as the al
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Integrations/Mail/MailBrowserViewController.swift` | confirmed (1.0.1) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Integrations/Mail/MailBrowserViewController.swift` | confirmed (1.0.2) |
 | ios | (planned) | planned |
 | web | (planned) | planned |
 | android | (planned) | planned |
@@ -256,4 +257,5 @@ The controller is a thin composition root: layout, a poll and an error alert, wi
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.2 | 2026-11-15 | Mike Fullerton | Accessibility identifiers for UI tests and automation |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Made no-coder-init testable, limited poll-action to the controller, reworded alert requirements platform-neutrally, linked the model, marked pane widths unexplained, added debt retirement for the interval, and fixed spacing, paths and localization keys. |

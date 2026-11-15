@@ -2,11 +2,11 @@
 id: ac5b0100-ea5d-4abf-a9aa-11a477878514
 title: "MailReaderViewController"
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: 2026-11-13
-modified: 2026-11-14
+modified: 2026-11-15
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -116,6 +116,7 @@ Layout from top to bottom: header, separator, body. The remote-content bar is th
 
 - **role**: The header lines are system labels and the action is a system push button; the controller sets no role or trait of its own.
 - **body-identifier**: The body view MUST expose the identifier "mail.reader.body" for assistive and automated lookup.
+- **header-identifiers**: The header lines MUST carry the identifiers `mail.reader.subject`, `mail.reader.from`, `mail.reader.recipients` and `mail.reader.date`; the placeholder carries `mail.reader.placeholder` and the remote-content button `mail.reader.load-remote`.
 - **button-label**: The remote-content action MUST be labeled by its visible title "Load Remote Images".
 - **keyboard-path**: The "Load Remote Images" button and the selectable header text use standard system controls, so they take part in the system key view loop; the controller adds no shortcut of its own.
 - **small-button-target**: NEEDS REVIEW: Not implemented in source. The button is set to small control size and the source states no minimum target size; a design decision on whether that size meets the platform minimum is needed, settled by measuring the rendered button against the Apple Human Interface Guidelines.
@@ -245,7 +246,7 @@ Not applicable: the source writes no log; the swallowed rule list failure produc
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Integrations/Mail/MailReaderViewController.swift` | confirmed (1.0.1) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Integrations/Mail/MailReaderViewController.swift` | confirmed (1.0.2) |
 | ios | (planned) | planned |
 | web | (planned) | planned |
 | android | (planned) | planned |
@@ -318,4 +319,5 @@ The reader keeps all mail state in the model and only maps its open message to l
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.2 | 2026-11-15 | Mike Fullerton | Accessibility identifiers for UI tests and automation |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Required the remote-content bar only for a non-empty HTML body (source deviation recorded as a known gap), added fixed-constants and localized-strings requirements with localization keys, gave the known-gap decisions payoff conditions, dropped source-comment attribution from rationales, split test names into their own vector column, and added vectors for meta refresh to about:blank, empty HTML and the two review items. |

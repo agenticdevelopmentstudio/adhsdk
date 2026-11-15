@@ -2,11 +2,11 @@
 id: 26473390-9629-40f0-ae98-32ccab2fc5da
 title: "Mail Message List View Controller"
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: 2026-11-13
-modified: 2026-11-14
+modified: 2026-11-15
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -95,7 +95,8 @@ The middle column of the mail window. It shows the selected mailbox's messages a
 ## Accessibility
 
 - **role**: The list is a standard table, so it carries the platform table role. The source sets no other role.
-- **table-identifier**: The table's accessibility identifier is `mail.messages`.
+- **table-identifier**: The table's accessibility identifier is `mail.messages`, and its label is "Messages". The empty-state label's identifier is `mail.messages.empty`.
+- **row-identifier**: Each row's accessibility identifier is `mail.message.<messageID>`.
 - **row-label**: Each row's accessibility label is the sender and subject joined by a comma and a space. The date, snippet and unread state are not part of it.
 - **keyboard-navigation**: The source adds no key handling; keyboard navigation of rows comes from the platform table.
 - **unread-state-announcement**: NEEDS REVIEW: Not implemented in source. A row shows unread state only through the dot and the font weight, and the accessibility label does not carry it. A screen-reader pass over the mail window would settle whether the label needs an unread marker.
@@ -219,7 +220,7 @@ Not applicable: the source writes no log lines.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Integrations/Mail/MailMessageListViewController.swift` | confirmed (1.0.1) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Integrations/Mail/MailMessageListViewController.swift` | confirmed (1.0.2) |
 | ios | (planned) | planned |
 | web | (planned) | planned |
 | android | (planned) | planned |
@@ -269,5 +270,6 @@ Known gaps: the empty-label and no-subject strings and the sender-subject separa
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.2 | 2026-11-15 | Mike Fullerton | Accessibility identifiers for UI tests and automation |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Moved the hop explanation to the stale-row decision, added a decision for the trapping coder initializer, linked the model and browser ingredients, added deselect and reload-drops-selection vectors, listed the accessibility-label separator in Localization, and removed the placeholder tables from the not-applicable sections. |
 | 1.0.0 | 2026-11-13 | Mike Fullerton | Initial creation |

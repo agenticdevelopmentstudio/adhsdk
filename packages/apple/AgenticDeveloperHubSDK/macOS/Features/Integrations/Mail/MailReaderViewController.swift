@@ -61,6 +61,12 @@ final class MailReaderViewController: NSViewController, WKNavigationDelegate {
         remoteNote.textColor = .secondaryLabelColor
         let loadButton = NSButton(title: "Load Remote Images", target: self, action: #selector(loadRemote))
         loadButton.controlSize = .small
+        loadButton.setAccessibilityIdentifier("mail.reader.load-remote")
+        subject.setAccessibilityIdentifier("mail.reader.subject")
+        from.setAccessibilityIdentifier("mail.reader.from")
+        recipients.setAccessibilityIdentifier("mail.reader.recipients")
+        date.setAccessibilityIdentifier("mail.reader.date")
+        placeholder.setAccessibilityIdentifier("mail.reader.placeholder")
         remoteBar.setViews([remoteNote, loadButton], in: .leading)
         remoteBar.spacing = 8
 

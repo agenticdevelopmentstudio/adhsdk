@@ -2,11 +2,11 @@
 id: 4f066e76-2eca-4cd7-8b73-840178e4edf3
 title: "GmailSettingsView"
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: 2026-11-13
-modified: 2026-11-14
+modified: 2026-11-15
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -152,10 +152,10 @@ Not applicable: the view has no pressed, hover or focused styling of its own; th
 - **control-labels**: Every toggle and picker MUST carry its visible title as its label, and every button MUST carry its visible title.
 - **status-by-text**: Account status MUST be conveyed by the badge's text, never by color alone.
 - **keyboard-reach**: Every control MUST be operable from the keyboard through the standard controls' own handling; the view MUST NOT add custom key handling that replaces it.
-- **row-accessibility-label**: NEEDS REVIEW: Not implemented in source. Each account row SHOULD expose one combined accessibility label (email, status and last-synced text) on every platform. The account row is a stack of three texts with no explicit accessibility label or grouping, so what a screen reader announces for a row is whatever the platform composes; a VoiceOver pass over the list would settle whether email, status and last-synced time read as one coherent item.
+- **row-accessibility-label**: Each account row MUST combine its children into one accessibility element, so the email, status and last-synced text read as one item.
 - **badge-contrast**: NEEDS REVIEW: Not implemented in source. The status badge and hint captions SHOULD meet 4.5:1 contrast in every appearance. The status badge is caption text on a quaternary-style capsule and the hint captions use the secondary style; the source cannot say whether these meet 4.5:1 contrast in every appearance, and a contrast measurement in light and dark appearances would settle it.
 - **spinner-announcement**: The sign-in spinner and its caption SHOULD be exposed to assistive technology through the standard progress indicator and text; the view adds no explicit announcement beyond what those supply.
-
+- **accessibility-identifiers**: The view MUST carry these stable identifiers for UI tests and automation: the root `mail.settings`; the client fields `mail.client.id` and `mail.client.secret`; the client buttons `mail.client.save` and `mail.client.import`; the account list `mail.accounts.list` (labelled "Accounts"); each account row `mail.account.<accountID>`; the buttons `mail.account.add`, `mail.account.remove` (labelled "Remove Account"), `mail.signin.cancel` (labelled "Cancel Sign-In"), `mail.account.reconnect`, `mail.account.sync-now` and `mail.account.show-error`; the toggles `mail.account.sync-archived`, `mail.account.sync-junk` and `mail.account.sync-deleted`; and the pickers `mail.account.window-days` and `mail.account.poll-interval`.
 ## Conformance Test Vectors
 
 The model's tests are in `GmailSettingsModelTests` (`packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/Integrations/GmailSettingsModelTests.swift`). The view has no test beside it, so vectors marked "(view)" are derived from the view source; those naming a test assert the model behavior the view relies on. View-level tests are a known gap, tracked in the Status column: a vector marked `untested` has no view test (gmail-006, gmail-019, gmail-024 and gmail-033 to gmail-037 cover `choices(_:including:)`, the busy gating and the alert wiring).
@@ -302,7 +302,7 @@ Not applicable: the view writes no log output and has no logging subsystem; erro
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Integrations/GmailSettingsView.swift` | confirmed (1.0.1) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Integrations/GmailSettingsView.swift` | confirmed (1.0.2) |
 | ios | (planned) | planned |
 | web | (planned) | planned |
 | android | (planned) | planned |
@@ -374,4 +374,5 @@ The view passes separation-of-concerns because it only reads and calls the model
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.2 | 2026-11-15 | Mike Fullerton | Accessibility identifiers for UI tests and automation |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Rewrote configuration, added a Status column and vector 040, named quote sources, and added picker-labels-plural and an alert-queueing decision. |

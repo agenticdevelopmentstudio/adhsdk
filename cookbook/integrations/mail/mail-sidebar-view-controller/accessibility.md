@@ -1,6 +1,7 @@
 
 - **role**: The sidebar is a standard outline, so it carries the platform outline role. The source sets no other role.
-- **outline-identifier**: The outline's accessibility identifier is `mail.sidebar`.
+- **outline-identifier**: The outline's accessibility identifier is `mail.sidebar`, and its label is "Mailboxes".
+- **row-identifiers**: An account group row's identifier is `mail.account.<accountID>`. A mailbox row's identifier is `mail.mailbox.<accountID>.<labelID>`, with `all` in place of the label for the all-mail mailbox.
 - **row-label**: A mailbox row's accessibility label is the mailbox title. The unread count is not part of it. The mailbox symbol is created with no accessibility description.
 - **keyboard-navigation**: The source adds no key handling; arrow-key navigation, expand and collapse come from the platform outline. Group rows are not selectable, so keyboard selection lands only on mailbox rows.
 - **unread-count-announcement**: NEEDS REVIEW: Not implemented in source. The unread count is drawn as visible text but the row's accessibility label is only the title, so a screen reader may not announce it. A screen-reader pass over the mail window would settle whether the label needs the count.

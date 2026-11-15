@@ -2446,6 +2446,7 @@
 		901C594A6B64C8E28A8275DC /* AgenticDeveloperHubSDKHubMail.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4620D8E61096BD2358BA0420 /* AgenticDeveloperHubSDKHubMail.framework */; };
 		903CA57E38F8CC69934A5261 /* SchemaMigrator.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA3C52A1722A5EE1DA981F3E /* SchemaMigrator.swift */; };
 		906194BBC4285CC4C83CE458 /* LanguageClient in Frameworks */ = {isa = PBXBuildFile; productRef = EF3B2A4828D7FF9DA917A5D4 /* LanguageClient */; };
+		906220C9CC082D960938DA83 /* SettingsPanelAutomationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0DB3C33DF07C8AD91AE250B /* SettingsPanelAutomationTests.swift */; };
 		907C98CB64AF41D194C0DDD2 /* StorageDTOs.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FD271267755523B9795B238 /* StorageDTOs.swift */; };
 		909E7242F36D54B89C80680F /* SafariExtensionLibrary.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7364A0B8288C10ACC8DCD2D6 /* SafariExtensionLibrary.swift */; };
 		90AB5B58292C78F7CE33E919 /* MainThreadWebviews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 963A8743D72E3A966F00C6C2 /* MainThreadWebviews.swift */; };
@@ -10078,6 +10079,7 @@
 		E0C7E636F6928671E352FEEC /* PrivacyWordsEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivacyWordsEditor.swift; sourceTree = "<group>"; };
 		E0CE39E96994CF9FA3F08A85 /* ChatInputFieldTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatInputFieldTests.swift; sourceTree = "<group>"; };
 		E0CE3E8D9611C1CAE4DB3052 /* ConversationsFeed.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConversationsFeed.swift; sourceTree = "<group>"; };
+		E0DB3C33DF07C8AD91AE250B /* SettingsPanelAutomationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsPanelAutomationTests.swift; sourceTree = "<group>"; };
 		E0DF5A7B82CF68CF37C98E2A /* MobileChatViewControllerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileChatViewControllerTests.swift; sourceTree = "<group>"; };
 		E0E36A73358BAF4350AFD42E /* AgenticDeveloperHubSDKLanguage.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = AgenticDeveloperHubSDKLanguage.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		E0FB160019669DD0D82BD31C /* ContributionRegistrationsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContributionRegistrationsTests.swift; sourceTree = "<group>"; };
@@ -13446,6 +13448,7 @@
 				A8BBFEECB8C28AFFBBF75F6E /* SettingsAlertsTests.swift */,
 				22E1C993D084B876663C5626 /* SettingsCardViewsTests.swift */,
 				AF9E0FF2B62C83C410D9FFF3 /* SettingsNavigationHistoryTests.swift */,
+				E0DB3C33DF07C8AD91AE250B /* SettingsPanelAutomationTests.swift */,
 				4D221527A239DBAAAE7F3124 /* SettingsSearchIndexTests.swift */,
 				34CA9EEE58774EDD0F814342 /* TopicDialogWindowTests.swift */,
 				EB88C5AD2ACDC4CA07CE6BF8 /* ValueRowViewTests.swift */,
@@ -22231,6 +22234,7 @@
 				12F23CD30BBB31EF815A0DC7 /* SettingsAlertsTests.swift in Sources */,
 				22A55F517D9BFFD39BE7A621 /* SettingsCardViewsTests.swift in Sources */,
 				FF02D83A0C71FB4BE73D0BDE /* SettingsNavigationHistoryTests.swift in Sources */,
+				906220C9CC082D960938DA83 /* SettingsPanelAutomationTests.swift in Sources */,
 				D2464BE82219464DC6CB6887 /* SettingsSearchIndexTests.swift in Sources */,
 				9AB05670EF408E7ACEEDBC25 /* ShortcutManagerConformanceTests.swift in Sources */,
 				26C275862E43DDD46659A29E /* SingleConfigurationChatConfigProviderTests.swift in Sources */,

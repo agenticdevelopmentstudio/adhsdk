@@ -125,6 +125,18 @@
 - **clears-all-panels**: Clearing the panel list MUST empty the stored
   panels, reset navigation history, empty the sidebar, empty the detail
   pane, and invoke navigation change notification.
+- **panel-accessibility-identifier**: When the component hosts a panel
+  whose view has no accessibility identifier, it MUST give the view the
+  identifier `settings.panel.<slug of the panel title>` (lowercase, every
+  run of characters other than letters and digits one `-`), and, when the
+  view is not already an accessibility element, MUST make it one with the
+  group role and the panel title as its label, so the identifier reaches
+  the accessibility tree. A view that already has an identifier MUST keep
+  it unchanged.
+- **selects-panel-by-name**: Selecting a panel by name MUST select the
+  first panel whose title equals the name ignoring case, or whose title
+  slug equals the name lowercased, and report true; when none matches it
+  MUST change nothing and report false.
 - **records-explicit-selection**: Selecting a panel, by reference or by
   index, MUST record the target index in navigation history before
   showing it.

@@ -4,11 +4,11 @@
     "id": "83a5a5e0-3337-4aff-aef8-40a7393dabfe",
     "title": "Mail Sidebar View Controller",
     "type": "ingredient",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "status": "review",
     "language": "en",
     "created": "2026-11-13",
-    "modified": "2026-11-14",
+    "modified": "2026-11-15",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -35,7 +35,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "621f6d9c6999d04e",
+  "synced": "428c418717ef0957",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

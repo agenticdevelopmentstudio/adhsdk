@@ -2,11 +2,11 @@
 id: a11f34ff-116c-47d6-bffa-edd0799cbcb2
 title: "Settings Split View"
 type: ingredient
-version: 1.2.2
+version: 1.3.0
 status: review
 language: en
 created: 2026-09-23
-modified: 2026-10-04
+modified: 2026-11-15
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -204,6 +204,18 @@ This recipe documents only what this component itself declares.
 - **clears-all-panels**: Clearing the panel list MUST empty the stored
   panels, reset navigation history, empty the sidebar, empty the detail
   pane, and invoke navigation change notification.
+- **panel-accessibility-identifier**: When the component hosts a panel
+  whose view has no accessibility identifier, it MUST give the view the
+  identifier `settings.panel.<slug of the panel title>` (lowercase, every
+  run of characters other than letters and digits one `-`), and, when the
+  view is not already an accessibility element, MUST make it one with the
+  group role and the panel title as its label, so the identifier reaches
+  the accessibility tree. A view that already has an identifier MUST keep
+  it unchanged.
+- **selects-panel-by-name**: Selecting a panel by name MUST select the
+  first panel whose title equals the name ignoring case, or whose title
+  slug equals the name lowercased, and report true; when none matches it
+  MUST change nothing and report false.
 - **records-explicit-selection**: Selecting a panel, by reference or by
   index, MUST record the target index in navigation history before
   showing it.
@@ -326,6 +338,11 @@ This recipe documents only what this component itself declares.
   container; no touch-target constant is set anywhere in this component.
   Hit sizing for the search field and split divider is standard platform
   sizing, not a value this component chooses.
+- **Identifiers**: Each hosted panel without an identifier of its own is
+  exposed as `settings.panel.<slug of its title>`
+  (**panel-accessibility-identifier**), so UI tests and scripts find the
+  panel on screen; scripts select one by title or slug
+  (**selects-panel-by-name**).
 
 ## Conformance Test Vectors
 
@@ -390,6 +407,9 @@ This recipe documents only what this component itself declares.
 | split-view-controller-053 | (edge case: removing a non-member panel) | Panels `[a, b]`, remove `z` where `z` is not in the panel list | The stored panels are unchanged (`[a, b]`); navigation history is still reset, the sidebar's panel list is still re-set, and the navigation-change notification still fires |
 | split-view-controller-054 | (edge case: stale nested-detail floor) | Two nested settings-split-view siblings raise the nested-detail floor to `420`; removing a panel drops the nested count to one | The nested-detail floor remains `420` (not reset toward `0`), because the unification step's early exit returns before recomputing it |
 | split-view-controller-055 | confines-to-ui-thread | Use the component from a thread other than the UI thread | The use is rejected, at build time or by a runtime check; the component's state is unchanged |
+| split-view-controller-056 | panel-accessibility-identifier | Show a panel titled `Mail Source` whose view is a plain view with no identifier | The view's identifier is `settings.panel.mail-source`; it is an accessibility element with the group role and the label `Mail Source` |
+| split-view-controller-057 | panel-accessibility-identifier | Show a panel whose view already has the identifier `custom.panel` | The identifier stays `custom.panel` |
+| split-view-controller-058 | selects-panel-by-name | Panels titled `General` and `Mail Source`; select by name `mail-source`, then `GENERAL`, then `nope` | First selects `Mail Source` and reports true; then `General`, true; then the selection is unchanged and it reports false |
 
 ## Edge Cases
 
@@ -607,7 +627,7 @@ Not applicable: no logging call appears anywhere in this component.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/SplitViewController/SplitViewController.swift` | confirmed (1.2.2) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/SplitViewController/SplitViewController.swift` | confirmed (1.3.0) |
 
 ## Design Decisions
 
@@ -704,6 +724,7 @@ regardless of the app's language.
 
 | Version | Date | Author | Summary |
 |---|---|---|---|
+| 1.3.0 | 2026-11-15 | Mike Fullerton | Hosted panels get a settings.panel.<slug> accessibility identifier and group role; panels can be selected by title or slug. |
 | 1.2.2 | 2026-10-04 | Mike Fullerton | UI-thread confinement restated as the shared confines-to-ui-thread requirement, with a test vector; the @MainActor mechanism is in Platform Notes. |
 | 1.2.1 | 2026-10-04 | Mike Fullerton | Added unit-test-coverage compliance row (partial: orientation test only). |
 | 1.2.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to ui/settings/. |

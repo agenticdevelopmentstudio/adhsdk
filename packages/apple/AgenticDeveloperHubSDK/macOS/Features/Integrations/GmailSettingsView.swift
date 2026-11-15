@@ -20,6 +20,8 @@ struct GmailSettingsView: View {
         }
         .padding(20)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("mail.settings")
         // Errors are shown as alerts, not inline text.
         .onChange(of: model.errorMessage, initial: true) { _, message in
             guard let message else { return }
@@ -69,7 +71,9 @@ struct GmailSettingsView: View {
             }
             Form {
                 TextField("Client ID", text: $model.clientIdDraft, prompt: Text("….apps.googleusercontent.com"))
+                    .accessibilityIdentifier("mail.client.id")
                 SecureField("Client secret", text: $model.clientSecretDraft)
+                    .accessibilityIdentifier("mail.client.secret")
             }
             .frame(maxWidth: 460)
             HStack {
@@ -77,11 +81,13 @@ struct GmailSettingsView: View {
                     Task { await model.saveClientDraft() }
                 }
                 .disabled(model.busy || !model.canSaveClientDraft)
+                .accessibilityIdentifier("mail.client.save")
                 Text("or").foregroundStyle(.secondary)
                 Button(model.isClientImported ? "Replace from JSON…" : "Import Client JSON…") {
                     importClientJSON()
                 }
                 .disabled(model.busy)
+                .accessibilityIdentifier("mail.client.import")
             }
             if model.isClientImported && !model.accounts.isEmpty {
                 Text("Accounts signed in with a replaced client need Reconnect.")
@@ -110,19 +116,28 @@ struct GmailSettingsView: View {
             }
             List(model.accounts, id: \.id, selection: $model.selectedAccountId) { account in
                 accountRow(account)
+                    .accessibilityElement(children: .combine)
+                    .accessibilityIdentifier("mail.account.\(account.id)")
             }
             .frame(minHeight: 120)
+            .accessibilityIdentifier("mail.accounts.list")
+            .accessibilityLabel("Accounts")
             HStack {
                 Button("Add Account…") { Task { await model.addAccount() } }
                     .disabled(model.busy || !model.isClientImported)
+                    .accessibilityIdentifier("mail.account.add")
                 Button("Remove") {
                     if let account = model.selectedAccount { confirmRemove(account) }
                 }
                 .disabled(model.selectedAccount == nil || model.busy)
+                .accessibilityIdentifier("mail.account.remove")
+                .accessibilityLabel("Remove Account")
                 if model.signingIn {
                     ProgressView().controlSize(.small)
                     Text("Waiting for Google sign-in in your browser…").font(.caption)
                     Button("Cancel") { Task { await model.cancelSignIn() } }
+                        .accessibilityIdentifier("mail.signin.cancel")
+                        .accessibilityLabel("Cancel Sign-In")
                 }
             }
             if let account = model.selectedAccount {
@@ -164,22 +179,29 @@ struct GmailSettingsView: View {
                 if account.status == .revoked || account.status == .error {
                     Button("Reconnect") { Task { await model.addAccount() } }
                         .disabled(model.busy)
+                        .accessibilityIdentifier("mail.account.reconnect")
                 }
                 Button("Sync Now") { Task { await model.syncNow(accountId: account.id) } }
                     .disabled(model.busy)
+                    .accessibilityIdentifier("mail.account.sync-now")
                 if account.status == .error, account.lastError != nil {
                     Button("Show Error") { model.showError(accountId: account.id) }
+                        .accessibilityIdentifier("mail.account.show-error")
                 }
             }
             Toggle("Sync archived mail", isOn: binding(account, \.includeArchived))
+                .accessibilityIdentifier("mail.account.sync-archived")
             Toggle("Sync junk mail", isOn: binding(account, \.includeSpam))
+                .accessibilityIdentifier("mail.account.sync-junk")
             Toggle("Sync deleted mail", isOn: binding(account, \.includeTrash))
+                .accessibilityIdentifier("mail.account.sync-deleted")
             Picker("Fetch mail from the last", selection: binding(account, \.windowDays)) {
                 ForEach(Self.choices(Self.windowChoices, including: account.settings.windowDays), id: \.self) { days in
                     Text("\(days) days").tag(days)
                 }
             }
             .frame(maxWidth: 300)
+            .accessibilityIdentifier("mail.account.window-days")
             Picker("Check for mail every", selection: binding(account, \.pollIntervalMinutes)) {
                 ForEach(Self.choices(Self.pollChoices, including: account.settings.pollIntervalMinutes),
                         id: \.self) { minutes in
@@ -187,6 +209,7 @@ struct GmailSettingsView: View {
                 }
             }
             .frame(maxWidth: 300)
+            .accessibilityIdentifier("mail.account.poll-interval")
         }
     }
 
