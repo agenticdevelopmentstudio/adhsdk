@@ -267,10 +267,15 @@ public final class BrowserToolSet: ChatToolSource, @unchecked Sendable {
     /// carefully as a reply. A cancellation passes through as it is: it says
     /// nothing about the page, and the caller must see it as one.
     ///
-    /// What comes back is concealed with the pane's Agent Privacy as it
-    /// stands when the call returns, not only as it stood when it started: a
-    /// call can run for a minute (`browser_wait_for`), and the user may turn
-    /// the setting on or change the words meanwhile. If it was turned off
+    /// What comes back is concealed with the words of every site the call
+    /// touched: the pane's Agent Privacy as it stood when the call started
+    /// and as it stands when it returns, together
+    /// (`BrowserAgentPrivacy.combined(with:)`). A call can run for a minute
+    /// (`browser_wait_for`), and meanwhile the user may turn the setting on or
+    /// change the words, or the page may move to a site the start words do
+    /// not cover; a real word revealed with the start words then comes back
+    /// in the reply (an address navigated to, a waited-for fragment repeated
+    /// in a timeout) and is still concealed. If the setting was turned off
     /// meanwhile, the words the call started with still apply.
     @MainActor
     private func concealed(
@@ -284,7 +289,7 @@ public final class BrowserToolSet: ChatToolSource, @unchecked Sendable {
             outcome = .failure(error)
         }
         let now = directory.browserPanes().first { $0.id == paneID }?.agentPrivacy ?? privacy
-        let shield = now.isOn ? now : privacy
+        let shield = privacy.combined(with: now)
         guard shield.isOn else { return try outcome.get() }
         switch outcome {
         case .success(let reply):

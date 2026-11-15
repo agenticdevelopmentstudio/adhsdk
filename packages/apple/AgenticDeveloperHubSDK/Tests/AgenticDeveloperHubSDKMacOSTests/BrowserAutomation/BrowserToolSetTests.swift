@@ -539,6 +539,31 @@ final class BrowserToolSetTests: XCTestCase {
         XCTAssertEqual(reply.content, "timed out waiting for text \"never Zwei\"")
     }
 
+    /// A word scoped to the site a call started on still conceals its reply
+    /// after the page moved to a site the word does not cover: the waited-for
+    /// fragment was revealed with it, and the timeout repeats that fragment.
+    func testACallThatLeavesItsWordsSiteIsConcealedWithThemStill() async {
+        directory.panes = [handle("A"), privateHandle("B", .enabled(privateWords))]
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(50))
+            self.directory.panes = [self.handle("A"), self.privateHandle("B", .enabled(.identity))]
+        }
+        let reply = await call("browser_wait_for", ["pane_id": "B", "url": "zwei.test/thanks", "timeout": 0.3])
+        XCTAssertTrue(reply.isError)
+        XCTAssertEqual(reply.content, "timed out waiting for url containing \"Zwei.test/thanks\"")
+    }
+
+    func testCombinedPrivacyHoldsTheWordsOfBothSites() {
+        let first = BrowserAgentPrivacy.enabled(TextSubstitutionFilter(parsing: "Initech = Acme"))
+        let second = BrowserAgentPrivacy.enabled(TextSubstitutionFilter(parsing: "Zwei = Two"))
+        XCTAssertEqual(first.combined(with: second).concealing("Acme Two"), "Initech Zwei")
+        XCTAssertEqual(first.combined(with: .off), first)
+        XCTAssertEqual(BrowserAgentPrivacy.off.combined(with: second), second)
+        XCTAssertEqual(first.combined(with: .unavailable), .unavailable)
+        XCTAssertEqual(first.combined(with: .enabled(TextSubstitutionFilter(parsing: "Acmeco = Ed"))), .conflicting,
+                       "two sets of words that conflict together close the pane")
+    }
+
     func testAgentPrivacyRefusesWhatCannotBeConcealed() async {
         store.set(true, for: UserSettings.browserAutomationEvaluate)
         directory.panes = [handle("A"), privateHandle("B", .enabled(privateWords))]

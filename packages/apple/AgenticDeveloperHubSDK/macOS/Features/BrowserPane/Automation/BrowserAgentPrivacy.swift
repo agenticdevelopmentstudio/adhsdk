@@ -38,6 +38,25 @@ public enum BrowserAgentPrivacy: Sendable, Equatable {
 
     public var isOn: Bool { self != .off }
 
+    /// What conceals a call that saw both `self` and `other` — the words of
+    /// the site it started on and of the one it returned on, which a word's
+    /// `sites` make different when the page moved between them. Off on one
+    /// side gives the other; a closed side (`unavailable`, `conflicting`)
+    /// wins; two sets of words give every pair of both, checked again, since
+    /// together they may conflict where neither did alone.
+    public func combined(with other: BrowserAgentPrivacy) -> BrowserAgentPrivacy {
+        switch (self, other) {
+        case (.off, _): return other
+        case (_, .off): return self
+        case (.unavailable, _), (_, .unavailable): return .unavailable
+        case (.conflicting, _), (_, .conflicting): return .conflicting
+        case (.enabled(let first), .enabled(let second)):
+            var seen = Set<TextSubstitutionFilter.Pair>()
+            let pairs = (first.pairs + second.pairs).filter { seen.insert($0).inserted }
+            return .checking(TextSubstitutionFilter(pairs: pairs))
+        }
+    }
+
     /// The tools that cannot be concealed: a screenshot is pixels, a click by
     /// coordinate is driven off one, and `browser_evaluate` can read the
     /// page's own data and return it in any shape. A private pane refuses
