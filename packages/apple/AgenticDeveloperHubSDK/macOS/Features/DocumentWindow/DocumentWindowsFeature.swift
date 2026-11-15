@@ -164,13 +164,6 @@ public final class DocumentWindowsFeature: AppFeature {
     /// first and wait in `pendingFiles`.
     public func attach(_ pane: DocumentTabsViewController, to project: ProjectWorkspace) {
         guard project.repo.kind.isDocument else { return }
-        // A window of its own is one document: no strip of one tab above it,
-        // until a second is opened beside it.
-        if project.repo.kind == .document { pane.hidesTabBarForSingleTab = true }
-        // The window is this pane and nothing else: no outline to tell its
-        // editors from other panes, no accent on the focused one.
-        pane.showsPaneOutlines = false
-        pane.showsCenterOutline = false
         // A file chosen in a breadcrumb stays in this window: the current tab
         // (and its editor's trail), or a new tab with Option held.
         pane.onOpenRequest = { [weak pane] url in
