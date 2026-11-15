@@ -223,7 +223,10 @@ public final class PipelineDrainer: @unchecked Sendable {
     public func drainUntilEmpty() -> DrainOutcome {
         var total = DrainOutcome()
         while true {
-            let one = drainOnce()
+            // Each pass decodes a batch through JSONSerialization; without a pool per
+            // pass the bridged objects pile up until the loop ends, which on a long
+            // backlog grew the daemon by gigabytes and filled swap.
+            let one = autoreleasepool { drainOnce() }
             total.read += one.read
             total.archived += one.archived
             total.stored += one.stored

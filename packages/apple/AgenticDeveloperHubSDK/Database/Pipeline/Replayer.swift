@@ -198,54 +198,60 @@ public enum Replayer {
                                progress: (@Sendable (ReplayReport) -> Void)?) throws {
         var cursor = source.after
         if let through = source.through, cursor >= through { return }
-        while true {
-            if let shouldContinue, !shouldContinue() {
-                report.stopped = true
-                break
-            }
-            // A bulk replay's reads get the bulk budget too: the archive's 30 s
-            // read deadline stopped a dev replay of a 78 GB archive after 474,124
-            // records.
-            var ids = try source.archive.ids(after: cursor, limit: size, maxBytes: maxBytes, deadline: deadline)
-            var reachedEnd = false
-            if let through = source.through, let over = ids.firstIndex(where: { $0 > through }) {
-                ids = Array(ids[..<over])
-                reachedEnd = true
-            }
-            guard let last = ids.last else { break }
-            var chunkFailures: [Int64: String] = [:]
-            let page = try readChunk(archive: source.archive, ids: ids, deadline: deadline, report: &report,
-                                     chunkFailures: &chunkFailures)
-            var combined = NormalizedBatch()
-            for archived in page {
-                report.records += 1
-                // A conflict copy is kept bytes only; the live drain derives
-                // nothing from it either.
-                if archived.record.isConflictCopy {
-                    report.normalized += 1
-                    skip(&report, archived)
-                    continue
+        // One autorelease pool per page: normalizing decodes JSON through
+        // Foundation, and without a pool per page every bridged object of the
+        // whole replay stays alive until it ends (gigabytes on a long archive).
+        var more = true
+        while more {
+            more = try autoreleasepool { () throws -> Bool in
+                if let shouldContinue, !shouldContinue() {
+                    report.stopped = true
+                    return false
                 }
-                do {
-                    let batch = try source.normalizer.normalize(archived)
-                    report.normalized += 1
-                    if batch.isEmpty {
+                // A bulk replay's reads get the bulk budget too: the archive's 30 s
+                // read deadline stopped a dev replay of a 78 GB archive after 474,124
+                // records.
+                var ids = try source.archive.ids(after: cursor, limit: size, maxBytes: maxBytes, deadline: deadline)
+                var reachedEnd = false
+                if let through = source.through, let over = ids.firstIndex(where: { $0 > through }) {
+                    ids = Array(ids[..<over])
+                    reachedEnd = true
+                }
+                guard let last = ids.last else { return false }
+                var chunkFailures: [Int64: String] = [:]
+                let page = try readChunk(archive: source.archive, ids: ids, deadline: deadline, report: &report,
+                                         chunkFailures: &chunkFailures)
+                var combined = NormalizedBatch()
+                for archived in page {
+                    report.records += 1
+                    // A conflict copy is kept bytes only; the live drain derives
+                    // nothing from it either.
+                    if archived.record.isConflictCopy {
+                        report.normalized += 1
                         skip(&report, archived)
-                    } else {
-                        combined.append(batch)
+                        continue
                     }
-                } catch {
-                    fail(&report, &chunkFailures, id: archived.id, error)
+                    do {
+                        let batch = try source.normalizer.normalize(archived)
+                        report.normalized += 1
+                        if batch.isEmpty {
+                            skip(&report, archived)
+                        } else {
+                            combined.append(batch)
+                        }
+                    } catch {
+                        fail(&report, &chunkFailures, id: archived.id, error)
+                    }
                 }
+                let checkpoint = source.checkpointKey.map {
+                    ReplayCheckpoint(metaKey: $0, lastID: last, failures: chunkFailures)
+                }
+                try store.write(combined, provider: source.archive.provider, deadline: deadline, checkpoint: checkpoint)
+                cursor = last
+                report.lastID = last
+                progress?(report)
+                return !(reachedEnd || source.through == last)
             }
-            let checkpoint = source.checkpointKey.map {
-                ReplayCheckpoint(metaKey: $0, lastID: last, failures: chunkFailures)
-            }
-            try store.write(combined, provider: source.archive.provider, deadline: deadline, checkpoint: checkpoint)
-            cursor = last
-            report.lastID = last
-            progress?(report)
-            if reachedEnd || source.through == last { break }
         }
     }
 
