@@ -97,7 +97,11 @@ final class BrowserPaneSettingsWindowController: SingleWindowController {
         container.view.addSubview(settingsView)
         super.init(windowID: "browser-pane-settings-\(UUID().uuidString)", contentViewController: container)
         windowTitle = settings.title ?? "Browser Settings"
-        windowStyleMask = [.titled, .closable, .resizable, .miniaturizable]
+        // Not minimisable: the window is app-modal, so in the Dock it would
+        // leave every other window refusing input with nothing on screen to
+        // answer — the yellow button, Window > Minimize and a title-bar
+        // double-click all go through this mask.
+        windowStyleMask = [.titled, .closable, .resizable]
         windowSpec = WindowSpec(
             defaultSize: NSSize(width: 820, height: 560),
             minSize: NSSize(width: 560, height: 360),
