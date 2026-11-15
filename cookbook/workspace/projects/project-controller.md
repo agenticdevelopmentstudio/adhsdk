@@ -2,11 +2,11 @@
 id: 5bfadad5-c93b-432a-807e-04be57ff16b4
 title: "Project Management"
 type: ingredient
-version: 1.1.1
+version: 1.2.0
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-10-04
+modified: 2026-11-15
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -138,9 +138,11 @@ registry in step with which checkouts currently exist.
   or the plan is not unchanged, reconciling MUST signal that tabs are
   about to change, then persist the new tabs, then signal that tabs
   changed, in that order.
-- **default-enabled-edge**: Reconciling MUST use the previously stored
-  enabled edges, or the single top edge when nothing was stored, as the
-  enabled-edges list for any newly built tab record.
+- **default-enabled-edge**: Reconciling MUST build any new tab record on
+  the project's stored Tab Bars choice, or on the app-wide tab positions
+  when the project has no stored choice, and MUST persist the stored
+  choice unchanged — absent stays absent, so a reconcile never writes
+  edges of its own.
 - **new-checkout-tabs-copy-arrangement-or-blueprint**: For every checkout
   being added, reconciling MUST build its tab records from a blueprint that
   reuses the existing tab arrangement (with fresh identifiers) when one can
@@ -262,9 +264,10 @@ itself.
   repository with no linked worktrees) or many; the loops over checkouts
   being added and over held branch controllers run zero, one, or many
   times with no special case for either end (MUST). The enabled edges
-  default to the single top edge (**default-enabled-edge**) when nothing
-  was stored, so a project's very first reconcile always creates exactly
-  one tab per checkout rather than one per available edge.
+  default to the app-wide tab positions (**default-enabled-edge**) when
+  no choice was stored, so a project's very first reconcile creates one
+  tab per checkout per app-wide edge — exactly one per checkout under the
+  default top-only setting — rather than one per available edge.
 - **Concurrent access**: Opening and refreshing checkouts MUST be safe to
   call concurrently because the serialized reconcile operation chains each
   call onto whatever reconcile is already running, so two overlapping
@@ -568,3 +571,4 @@ actor while the subprocess runs.
 | 1.0.2 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to workspace/projects/. |
 | 1.1.1 | 2026-10-04 | Mike Fullerton | UI-thread confinement restated as the shared confines-to-ui-thread requirement, with a test vector; the @MainActor mechanism is in Platform Notes. |
+| 1.2.0 | 2026-11-15 | Mike Fullerton | Tab edges are an explicit per-project Tab Bars choice: no stored edges means follow the app-wide tab positions live, an empty enabled_edges value means no choice, and the shared tab configuration carries only the pane arrangement. |

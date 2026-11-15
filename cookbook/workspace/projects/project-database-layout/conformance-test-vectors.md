@@ -1,7 +1,9 @@
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
-| git-client-projects-project-database-layout-001 | load-tabs-empty-default | Loading tabs on a repository id with no rows | no tabs, no active tab, the top edge alone |
+| git-client-projects-project-database-layout-001 | load-tabs-empty-default | Loading tabs on a repository id with no rows | no tabs, no active tab, no stored edge choice |
+| git-client-projects-project-database-layout-006 | save-tabs-default-enabled-edges, load-tabs-enabled-edges-fallback | Writing one tab without enabled edges, then loading tabs | the tab and active tab come back; no stored edge choice |
+| git-client-projects-project-database-layout-007 | save-tabs-default-enabled-edges | Writing tabs with the left edge alone, then writing them again without enabled edges | loading tabs returns the left edge alone |
 | git-client-projects-project-database-layout-002 | save-tabs-whole-replace, load-tabs-order, load-tabs-tree-reconstruction | Writing two tabs, then loading tabs on the same repository id | tabs returned in the same order, each root tree structurally equal to what was saved |
 | git-client-projects-project-database-layout-003 | save-tabs-active-tab-validated | Writing tabs with the active-tab id set to an identifier not present in the tab list | loading tabs returns no active tab |
 | git-client-projects-project-database-layout-004 | load-tabs-group-id-fallback | Two tabs sharing one group id, saved and reloaded | both come back tagged with the same group id |

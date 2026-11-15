@@ -5637,6 +5637,20 @@
       "path": "agentic-developer-hub-sdk/sdk/sources-ui/macos/chrome/window-footer-bar",
       "rdid": "adhsdk.ingredient.agentic-developer-hub-sdk.sdk.sources-ui.macos.chrome.window-footer-bar"
     },
+    "3edb67d7-f58f-43ed-8bf7-e909662b6aaa": {
+      "implementations": [
+        {
+          "conformance": {
+            "state": "unverified"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/ComposableTabs/ProjectTabConfiguration.swift",
+          "platform": "macos"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "ui/layout/composable-tabs/project-tab-configuration",
+      "rdid": "adhsdk.ingredient.ui.layout.composable-tabs.project-tab-configuration"
+    },
     "3f2ae6c1-bc07-40ab-b15c-bb4b8c77986b": {
       "implementations": [
         {

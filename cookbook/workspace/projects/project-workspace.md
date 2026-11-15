@@ -2,11 +2,11 @@
 id: 33086772-2d36-49f5-8e1d-725163d7ce8f
 title: "Project Workspace"
 type: ingredient
-version: 1.2.1
+version: 1.3.0
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-10-04
+modified: 2026-11-15
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -100,10 +100,23 @@ every property and method is confined there by that declaration alone.
   when it returns a tabs list that is empty, collapsing "nothing was
   ever persisted" and "the load failed" into the same result.
 - **initial-tabs-default-when-nothing-stored**: When reading stored tabs
-  returns nothing, computing the initial tabs MUST return exactly one
-  tab record titled `"Tab 1"` with its root set to the layout's own
-  blueprint, that tab's own id as the active tab id, and a single top
-  edge as the enabled edges.
+  returns nothing, computing the initial tabs MUST return one tab record
+  titled `"Tab 1"` per edge of the app-wide tab positions (in the fixed
+  edge order), all in one group, each rooted on the first-open blueprint
+  (the layout's own blueprint when there is no arrangement source to
+  copy), the first one's id as the active tab id, and no stored edge
+  choice as the enabled edges.
+- **edge-choice-is-explicit-only**: The enabled edges a workspace reports
+  and persists are the user's explicit Tab Bars choice for this project,
+  or absent when they never made one; an absent choice MUST mean "follow
+  the app-wide tab positions". Computing the initial tabs MUST return the
+  stored choice unchanged (absent included), and the first-open seed taken
+  from an arrangement source MUST carry only the pane arrangement, never
+  that source's edges.
+- **global-enabled-edges**: The workspace MUST expose the app-wide tab
+  positions as an edge list in the fixed edge order (top, right, bottom,
+  left), read from the setting each time it is asked, for callers that
+  have no stored choice to use.
 - **stored-tab-trees-repaired-against-current-spec**: When tabs are
   stored, computing the initial tabs MUST rewrite every tab's root by
   reconciling it against the layout's current spec before doing anything
@@ -123,7 +136,8 @@ every property and method is confined there by that declaration alone.
   returned tabs, and MUST otherwise fall back to the first returned
   tab's own id.
 - **persist-tabs-swallows-failure**: Persisting tabs MUST save the given
-  tabs, active-tab id, and enabled edges to the database, and on failure
+  tabs, active-tab id, and edge choice (absent writes no edges) to the
+  database, and on failure
   MUST log the error and MUST NOT throw, retry, or otherwise signal the
   failure to its caller.
 - **pane-state-scoped-by-node-and-key**: Reading and writing pane state
@@ -237,7 +251,7 @@ renders itself.
 | git-client-projects-project-workspace-005 | file-browser-directories-weakly-held | Take the file-browser-directories value and the git-status-provider value for the same worktree directory, inside a scope holding only weak references, confirm each is reference-identical to a second call made inside that scope, then let the scope end and call both lookups again. | both weak references become nothing once the scope ends; a fresh call afterward mints a working value whose primary path still equals the worktree directory with symlinks resolved, and a repeat of that fresh call again returns the identical instance — ProjectWorkspaceTabsTests.swift › testADirectoryNothingHoldsAnyMoreIsForgotten |
 | git-client-projects-project-workspace-006 | directory-addition-fans-out-to-every-live-sibling | Take the file-browser-directories values for an unrelated root directory and for a worktree directory; add a directory to the unrelated root's value; then add a different directory to the worktree's value. | after the first addition, the worktree value's additional directories equal the one added directory, resolved; after the second addition, the project's own extra-directories list contains both added directories, and the two values' additional-directory lists are equal to each other — ProjectWorkspaceTabsTests.swift › testARootAddedInOneBrowserReachesTheOtherAndSurvivesItsNextSave |
 | git-client-projects-project-workspace-007 | primary-is-re-added-if-stored-but-dropped | Take the same two file-browser-directories values as above; add the unrelated root directory itself to the worktree's value (adding the main checkout as a root of the worktree browser); then add a new directory to the unrelated-root value. | immediately after the first addition, the unrelated-root value's additional directories are empty (a browser never lists its own primary); after the second addition, the project's own extra-directories list still contains both the unrelated root directory and the newly added one — ProjectWorkspaceTabsTests.swift › testARootThatIsAnotherBrowsersPrimaryIsNotDroppedByThatBrowsersSave |
-| git-client-projects-project-workspace-008 | initial-tabs-default-when-nothing-stored | Not present in the given test suite; synthesized from the source. Build a fresh workspace with nothing persisted; compute its initial tabs. | the returned tabs list has exactly one tab record titled `"Tab 1"` whose root equals the workspace's own layout blueprint; the active-tab id equals that tab's own id; the enabled edges equal a single top edge — synthesized, no dedicated test in the given suite |
+| git-client-projects-project-workspace-008 | initial-tabs-default-when-nothing-stored | Not present in the given test suite; synthesized from the source. Build a fresh workspace with nothing persisted and the app-wide tab positions set to the top edge alone; compute its initial tabs. | the returned tabs list has exactly one tab record titled `"Tab 1"` whose root equals the workspace's own layout blueprint; the active-tab id equals that tab's own id; the enabled edges are absent (no stored choice) — synthesized, no dedicated test in the given suite |
 | git-client-projects-project-workspace-009 | stored-tab-trees-repaired-against-current-spec, one-arrangement-per-project, stale-focused-node-cleared, active-tab-fallback | Not present in the given test suite; synthesized from the source. Persist two tab records built under a spec that later disallows one pane in the second tab's tree, with the second tab's focused node pointing at that now-disallowed pane; compute the initial tabs. | every returned tab's root is a spec-reconciled tree that also matches the one shared arrangement computed over the repaired tabs; the second tab's focused node is none; the active-tab id falls back to the first returned tab's own id when the stored active-tab id names no tab in the result — synthesized, no dedicated test in the given suite |
 | git-client-projects-project-workspace-010 | update-preserves-identity | Build a workspace from a repository; update it with a repository that shares that id but has a new path and name; then update it again with a repository that has a different id but the original path and name. | after the first update, the workspace's own repository path and display name reflect the new values; after the second update, the workspace's repository is unchanged from the first update's result — the id mismatch made the second update a no-op |
 | git-client-projects-project-workspace-011 | pane-number-allocation-is-monotonic | Call the pane-number allocation three times in a row on the same workspace. | the three calls return `1`, `2`, `3`, in that order, and no later call on the same instance ever returns a number already returned |
@@ -603,6 +617,7 @@ state is never detected or reported as such, only masked as "unset."
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.3.0 | 2026-11-15 | Mike Fullerton | Tab edges are an explicit per-project Tab Bars choice: no stored edges means follow the app-wide tab positions live, an empty enabled_edges value means no choice, and the shared tab configuration carries only the pane arrangement. |
 | 1.2.1 | 2026-10-04 | Mike Fullerton | Spec-local UI-thread confinement ids folded into the shared confines-to-ui-thread requirement, with a test vector; scope detail is in Platform Notes. |
 | 1.2.0 | 2026-10-04 | Mike Fullerton | Resolved the stored-tabs NEEDS REVIEW marker against source: try? discards load errors with no log; restated as current behavior with a pending decision. |
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to workspace/projects/. |

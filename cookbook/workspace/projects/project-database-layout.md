@@ -2,11 +2,11 @@
 id: ded9b397-958d-437d-8235-48ef85ae7386
 title: "Project Layout Persistence"
 type: ingredient
-version: 1.2.1
+version: 1.3.0
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-10-04
+modified: 2026-11-15
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -65,8 +65,9 @@ shared SQLite connection.
 ### Reading tabs
 
 - **load-tabs-empty-default**: Loading tabs MUST return `(tabs: [],
-  activeTabID: nil, enabledEdges: [top])` for a repository id with no
-  `project_tabs` or `project_state` rows.
+  activeTabID: nil, enabledEdges: nil)` for a repository id with no
+  `project_tabs` or `project_state` rows — no stored Tab Bars choice,
+  never the top edge alone.
 - **load-tabs-order**: MUST return tabs ordered ascending by the
   `project_tabs.position` column, via `ORDER BY position` in the query.
 - **load-tabs-malformed-row-dropped**: MUST silently exclude a
@@ -95,8 +96,8 @@ shared SQLite connection.
   exactly two ordered children by position.
 - **load-tabs-active-tab-default**: MUST read `active_tab_id` and
   `enabled_edges` from the single `project_state` row for the repository
-  id, or fall back to (no active tab, the top edge alone) when no such row
-  exists.
+  id, or fall back to (no active tab, no stored edge choice) when no such
+  row exists.
 - **load-tabs-active-tab-consistency**: Loading tabs reads
   `project_tabs`/`layout_nodes` and `project_state` as two separate,
   non-transactional statements, and never re-validates the returned
@@ -106,10 +107,12 @@ shared SQLite connection.
   instance can run between the two reads; a commit through a different
   connection to the same file between them can make the returned
   active-tab id name no tab in the result.
-- **load-tabs-enabled-edges-fallback**: MUST discard a stored
+- **load-tabs-enabled-edges-fallback**: MUST read a stored
   `enabled_edges` value that is empty, or that parses to zero valid edge
-  entries, and keep the default (the top edge alone) rather than return an
-  empty list.
+  entries, as no stored edge choice (absent) rather than as an empty list.
+  The column is `NOT NULL`, so the empty string is how "no choice" is
+  stored; an absent choice tells the caller to follow the app-wide tab
+  positions.
 
 ### Writing tabs
 
@@ -121,8 +124,13 @@ shared SQLite connection.
   IMMEDIATE TRANSACTION` / `COMMIT`, and MUST roll back and rethrow the
   original error unchanged if any step fails, leaving the previously
   persisted arrangement intact.
-- **save-tabs-default-enabled-edges**: The enabled edges MUST default to
-  the top edge alone when the caller omits them.
+- **save-tabs-default-enabled-edges**: The enabled edges are the
+  user's explicit Tab Bars choice and MUST default to absent when the
+  caller omits them. An absent value MUST write no edges of its own: the
+  write MUST read the stored `enabled_edges` value before deleting the
+  `project_state` row and write it back unchanged, or write the empty
+  string (no choice) when no row existed, so seeding or saving a layout
+  never turns the app-wide default into a per-project choice.
 - **save-tabs-tab-position**: MUST persist each tab's
   `project_tabs.position` as its index in the given tab list, in that
   order.
@@ -135,9 +143,9 @@ shared SQLite connection.
   than persist a reference to a tab that was not saved.
 - **save-tabs-state-row-always-written**: MUST always insert exactly one
   `project_state` row for the repository id, even when the validated
-  active tab is absent, so the enabled edges still persist.
-- **save-tabs-enabled-edges-canonical-order**: MUST persist the enabled
-  edges as a comma-joined string in a fixed canonical order (top, right,
+  active tab is absent, so a stored edge choice still persists.
+- **save-tabs-enabled-edges-canonical-order**: When the caller supplies
+  enabled edges, MUST persist them as a comma-joined string in a fixed canonical order (top, right,
   bottom, left), filtered to only the edges present in the caller's
   argument — not in the argument's own order.
 - **save-tabs-pane-state-orphan-sweep**: MUST delete every `pane_state`
@@ -251,7 +259,9 @@ Not applicable: this component has no UI surface to make accessible.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
-| git-client-projects-project-database-layout-001 | load-tabs-empty-default | Loading tabs on a repository id with no rows | no tabs, no active tab, the top edge alone |
+| git-client-projects-project-database-layout-001 | load-tabs-empty-default | Loading tabs on a repository id with no rows | no tabs, no active tab, no stored edge choice |
+| git-client-projects-project-database-layout-006 | save-tabs-default-enabled-edges, load-tabs-enabled-edges-fallback | Writing one tab without enabled edges, then loading tabs | the tab and active tab come back; no stored edge choice |
+| git-client-projects-project-database-layout-007 | save-tabs-default-enabled-edges | Writing tabs with the left edge alone, then writing them again without enabled edges | loading tabs returns the left edge alone |
 | git-client-projects-project-database-layout-002 | save-tabs-whole-replace, load-tabs-order, load-tabs-tree-reconstruction | Writing two tabs, then loading tabs on the same repository id | tabs returned in the same order, each root tree structurally equal to what was saved |
 | git-client-projects-project-database-layout-003 | save-tabs-active-tab-validated | Writing tabs with the active-tab id set to an identifier not present in the tab list | loading tabs returns no active tab |
 | git-client-projects-project-database-layout-004 | load-tabs-group-id-fallback | Two tabs sharing one group id, saved and reloaded | both come back tagged with the same group id |
@@ -326,7 +336,7 @@ Not applicable: this component has no UI surface to make accessible.
 | `repoID` | caller, every public method | none (required) | Scopes every read/write to one repository id; no method here accepts an unscoped or wildcard query. |
 | `tabs` | caller, writing tabs | none (required) | The whole tab-and-tree arrangement to persist; replaces whatever was previously stored for the repository id. |
 | `activeTabID` | caller, writing tabs | none (required, may be absent) | Persisted only if it names one of the given tabs; otherwise dropped to `NULL` (**save-tabs-active-tab-validated**). |
-| `enabledEdges` | caller, writing tabs | the top edge alone | Which tab-bar edges are shown; persisted in canonical order regardless of the argument's own order. |
+| `enabledEdges` | caller, writing tabs | absent (no choice) | The user's explicit Tab Bars choice; persisted in canonical order regardless of the argument's own order. Absent keeps whatever choice is already stored (none, stored as the empty string, for a project that never made one). |
 | `nodeID`, `key` | caller, pane-state operations | none (required) | Identifies one pane-scoped state slot. |
 | `value` | caller, setting pane state | none (required, may be absent) | An absent value deletes the row; any other value upserts it verbatim, with no format validation. |
 | `liveIDs` | caller, pruning nested pane state | none (required) | The set of node ids the caller currently considers alive; anything embedded in a stored key but absent from this set is pruned. |
@@ -491,3 +501,4 @@ Notes: both `partial` findings above trace to the same underlying property of th
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to workspace/projects/. |
 | 1.2.0 | 2026-10-04 | Mike Fullerton | Resolved the corrupt-row NEEDS REVIEW marker against source (silent drop, no logging) as a pending decision; converted test vectors to a table and Design Decisions to Decision/Rationale/Approved triples. |
 | 1.2.1 | 2026-10-04 | Mike Fullerton | Requirements use the named-bullet form, `- **id**: ...`, instead of an em dash after the id. |
+| 1.3.0 | 2026-11-15 | Mike Fullerton | Tab edges are an explicit per-project Tab Bars choice: no stored edges means follow the app-wide tab positions live, an empty enabled_edges value means no choice, and the shared tab configuration carries only the pane arrangement. |

@@ -194,6 +194,15 @@
   firing, look up the project controller for that repository id and, when
   found, start that controller's checkout refresh as an independent,
   concurrently running unit of work.
+- **shared-tab-configuration-arrangement-only**: When a project's window
+  is shown or becomes key, the manager MUST put on it the tab
+  configuration of the last-active project window (that window's live
+  configuration when it is open, otherwise the arrangement derived from
+  its stored tabs), unless the two are the same project, and the
+  configuration MUST carry only the pane arrangement (shape and sizes).
+  The manager MUST NOT copy one project's enabled edges into another: a
+  project's edges are its own explicit Tab Bars choice, or the app-wide
+  tab positions when it has made none.
 - **close-flag-respects-app-termination**: In the window-close handling,
   when that close observer records open state, writing the window-open
   flag as closed MUST happen only when the app is not in the middle of

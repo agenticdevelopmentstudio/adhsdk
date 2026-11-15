@@ -2,11 +2,11 @@
 id: 7f1b8bef-e78e-4cac-be55-c948fe9062e5
 title: "Project Window Manager"
 type: ingredient
-version: 1.3.0
+version: 1.4.0
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-11-16
+modified: 2026-11-17
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -255,6 +255,15 @@ property and method is confined there by that declaration alone.
   firing, look up the project controller for that repository id and, when
   found, start that controller's checkout refresh as an independent,
   concurrently running unit of work.
+- **shared-tab-configuration-arrangement-only**: When a project's window
+  is shown or becomes key, the manager MUST put on it the tab
+  configuration of the last-active project window (that window's live
+  configuration when it is open, otherwise the arrangement derived from
+  its stored tabs), unless the two are the same project, and the
+  configuration MUST carry only the pane arrangement (shape and sizes).
+  The manager MUST NOT copy one project's enabled edges into another: a
+  project's edges are its own explicit Tab Bars choice, or the app-wide
+  tab positions when it has made none.
 - **close-flag-respects-app-termination**: In the window-close handling,
   when that close observer records open state, writing the window-open
   flag as closed MUST happen only when the app is not in the middle of
@@ -342,6 +351,7 @@ of which this file renders itself.
 | git-client-projects-project-window-manager-010 | close-drops-controller-and-reregisters-survivors | Open a project, then close it by id and check whether its controller reports itself closed with no intervening suspension. | the controller reports open immediately before the close and closed immediately after it, in the same synchronous call — proving the close is marked synchronously from the close handling, not from separately scheduled work — ProjectWindowManagerControllerTests.swift › testClosingMarksTheControllerClosedInTheSameTurn |
 | git-client-projects-project-window-manager-011 | restore-plan-is-pure, restore-forgets-missing-folders, restore-reopens-existing-folders | Not present in the given test suite; synthesized from the source. Compute the restore plan for three repositories a, b, c, where a and b were open at last quit and only a and c still exist on disk. | the reopen set is `{a}` and the forget set is `{b}`; c (never flagged open) appears in neither set — synthesized, no dedicated test in the given suite |
 | git-client-projects-project-window-manager-012 | shutdown-all-language-services-runs-concurrently, shutdown-all-language-services-drains-pending-teardowns | Not present in the given test suite; synthesized from the source together with the pending-teardowns registry's own drain guarantee. Open two projects with distinct counting stand-ins for language services, close one of them (starting its teardown through the pending-teardowns registry), then immediately shut down all language services before that teardown would otherwise finish on its own. | both counting stand-ins report exactly one shutdown call once shutting down all language services returns — the closed project's already-detached teardown is still waited for, not just the still-open project's — synthesized, no dedicated test in the given suite |
+| git-client-projects-project-window-manager-014 | shared-tab-configuration-arrangement-only | Open project A with an explicit left-edge choice and a two-pane split, make it key, then open project B, which has no stored edge choice | B's panes take A's shape and sizes; B's enabled edges are the app-wide tab positions, and B's stored edge choice stays absent. |
 | git-client-projects-project-window-manager-013 | confines-to-ui-thread | Use the component from a thread other than the UI thread | The use is rejected, at build time or by a runtime check; the component's state is unchanged |
 | git-client-projects-project-window-manager-014 | front-workspace-window-skips-document-windows, is-document-window-by-controller | Open a project window, then open a Document window and make it key. | The front-window lookup returns the Document window's controller; the front-workspace lookup returns the project window's; asking whether each is a Document window answers true and false respectively |
 | git-client-projects-project-window-manager-015 | standalone-rows-one-row-per-canonical-path | Ask the File Browser rows helper for the row at a folder, then again through a symlink to that folder. | Both calls return the same row, and one row of that kind exists for the folder |
@@ -555,14 +565,6 @@ bundle identifier; category is this component's name.
   makes no HTTP call and reads no `Windows.Storage` file directly.
 - **confines-to-ui-thread** (scope): The manager has no thread-safety guarantee of its own; every stored property and method is reached only from the UI thread.
 
-## Reference Implementations
-
-| Platform | Location | Conformance |
-|----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectWindowManager.swift` | confirmed (1.3.0) |
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectWindowManager.swift` | confirmed (1.3.0) |
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/StandaloneWindowRows.swift` | confirmed (1.3.0) |
-
 ## Design Decisions
 
 **Decision**: `openProject(_:)` calls `refreshOpenWorkspaceIDs()` — and
@@ -683,6 +685,7 @@ anywhere in this file.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.4.0 | 2026-11-17 | Mike Fullerton | Tab edges are an explicit per-project Tab Bars choice: no stored edges means follow the app-wide tab positions live, an empty enabled_edges value means no choice, and the shared tab configuration carries only the pane arrangement. |
 | 1.3.0 | 2026-11-16 | Mike Fullerton | Standalone windows take toolbar items and pass them to the window they make (vector 017) |
 | 1.2.0 | 2026-11-14 | Mike Fullerton | Document window kinds: titles, kinds and standalone windows; the front-window chain matches the visible-window and window-group lookup; the front-workspace lookup skips Document windows (is-document-window-by-controller); the standalone window rows shared by File Browser and Document windows (vectors 014-016). |
 | 1.1.1 | 2026-10-04 | Mike Fullerton | Spec-local UI-thread confinement ids folded into the shared confines-to-ui-thread requirement, with a test vector; scope detail is in Platform Notes. |

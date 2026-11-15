@@ -38,8 +38,10 @@
   sizes — never the same node ids — to every other tab in the project.
 - **structural-change-persistence**: A split, pane close, tab
   add/remove/reorder/select, or edge toggle MUST synchronously persist every
-  tab's current layout tree, the active tab id, and the enabled-edge set to
-  the project. A divider-thickness change is the one exception to that
+  tab's current layout tree, the active tab id, and — only once the user
+  has made an explicit edge choice (see **edge-choice-explicit-only**) —
+  the enabled-edge set to the project; before that, the write carries no
+  edges. A divider-thickness change is the one exception to that
   synchronous path: the tabbed content debounces it 300ms before the
   resulting layout change reaches this persist, and that pending write is
   flushed explicitly when the window closes (see **divider-flush-on-close**).
@@ -126,6 +128,22 @@
 - **pane-chrome-is-optional**: A window created without pane chrome MUST
   show no pane header (title, window controls, gear) above its panes;
   with it, the default, every pane keeps its header.
+- **edges-follow-global-until-chosen**: A project with no stored edge
+  choice MUST open on the app-wide tab positions and MUST follow that
+  setting live — applying each change with every enable before any
+  disable, topping up newly enabled edges, and persisting the tabs without
+  edges — until the user makes an explicit edge choice. A project with a
+  stored choice MUST open on it and MUST NOT follow the setting.
+- **edge-choice-explicit-only**: Only a user edge toggle (project settings'
+  Tab Bars or the scripting edge setters) that actually changes an edge
+  MUST count as an explicit edge choice; from then on the window persists
+  its enabled-edge set and stops following the app-wide setting. Opening,
+  following the global, topping up, and adopting another window's
+  configuration MUST NOT make or persist a choice.
+- **shared-configuration-arrangement-only**: The configuration the window
+  reports for another project window to adopt, and the configuration it
+  adopts, MUST carry only the pane arrangement (shape and sizes), never
+  the enabled edges.
 - **confines-to-ui-thread**: The component MUST be usable only on the UI thread.
 - **title-document-kinds**: For a repository of a Document kind, while the
   owner has supplied no focused-document URL (see

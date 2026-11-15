@@ -2,11 +2,11 @@
 id: 55a394e6-9934-404b-941d-25bebbf71378
 title: "Composable Tabs Window"
 type: ingredient
-version: 1.4.0
+version: 1.5.0
 status: review
 language: en
 created: 2026-09-23
-modified: 2026-11-16
+modified: 2026-11-17
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -85,8 +85,10 @@ address directly.
   sizes — never the same node ids — to every other tab in the project.
 - **structural-change-persistence**: A split, pane close, tab
   add/remove/reorder/select, or edge toggle MUST synchronously persist every
-  tab's current layout tree, the active tab id, and the enabled-edge set to
-  the project. A divider-thickness change is the one exception to that
+  tab's current layout tree, the active tab id, and — only once the user
+  has made an explicit edge choice (see **edge-choice-explicit-only**) —
+  the enabled-edge set to the project; before that, the write carries no
+  edges. A divider-thickness change is the one exception to that
   synchronous path: the tabbed content debounces it 300ms before the
   resulting layout change reaches this persist, and that pending write is
   flushed explicitly when the window closes (see **divider-flush-on-close**).
@@ -173,6 +175,22 @@ address directly.
 - **pane-chrome-is-optional**: A window created without pane chrome MUST
   show no pane header (title, window controls, gear) above its panes;
   with it, the default, every pane keeps its header.
+- **edges-follow-global-until-chosen**: A project with no stored edge
+  choice MUST open on the app-wide tab positions and MUST follow that
+  setting live — applying each change with every enable before any
+  disable, topping up newly enabled edges, and persisting the tabs without
+  edges — until the user makes an explicit edge choice. A project with a
+  stored choice MUST open on it and MUST NOT follow the setting.
+- **edge-choice-explicit-only**: Only a user edge toggle (project settings'
+  Tab Bars or the scripting edge setters) that actually changes an edge
+  MUST count as an explicit edge choice; from then on the window persists
+  its enabled-edge set and stops following the app-wide setting. Opening,
+  following the global, topping up, and adopting another window's
+  configuration MUST NOT make or persist a choice.
+- **shared-configuration-arrangement-only**: The configuration the window
+  reports for another project window to adopt, and the configuration it
+  adopts, MUST carry only the pane arrangement (shape and sizes), never
+  the enabled edges.
 - **confines-to-ui-thread**: The component MUST be usable only on the UI thread.
 - **title-document-kinds**: For a repository of a Document kind, while the
   owner has supplied no focused-document URL (see
@@ -302,6 +320,9 @@ address directly.
 | composable-tabs-window-controller-033 | scripting-tab-selection | Set the active tab to an existing group's id, enabled only on the bottom edge | That group's bottom-edge member becomes active. |
 | composable-tabs-window-controller-034 | redundant-tab-selection-guard | Tab T is already active; select tab T again | No additional persist, focus-restore, or chrome refresh occurs. |
 | composable-tabs-window-controller-035 | edge-set-assignment-order | Only the top edge enabled; assign the enabled-edge set to `["bottom"]` | The bottom edge becomes enabled before the top edge is disabled; final state is the bottom edge only. |
+| composable-tabs-window-controller-040 | edges-follow-global-until-chosen | A project with no stored edge choice is open; change the app-wide tab positions from top to left | The window's enabled edges become the left edge alone, the left edge is topped up, and the stored edge choice stays absent. |
+| composable-tabs-window-controller-041 | edge-choice-explicit-only | A project with no stored edge choice; enable the right edge through the window's edge setter, then change the app-wide tab positions | The right edge stays enabled, the window ignores the setting change, and the stored edge choice includes the right edge. |
+| composable-tabs-window-controller-042 | shared-configuration-arrangement-only | Two project windows on different edges; the second adopts the first's configuration | The second window's panes take the first's shape and sizes; its enabled edges are unchanged. |
 | composable-tabs-window-controller-036 | minimum-size | Inspect the window's configured geometry before the window is ever shown | The configured minimum size is 400×300pt, matching what the window itself enforces. |
 | composable-tabs-window-controller-037 | status-footer-content | Project `"Zork"`, active tab's title is `""` (empty), pane title `"main.swift"`, no selection description | Footer reads `"Zork › main.swift"` — the empty tab title contributes no leading `" › "`. |
 | composable-tabs-window-controller-038 | search-target | The active pane changes from pane A to pane B, triggering a recomputation of search availability | The search target becomes pane B, matching the field's newly computed enabled state/placeholder. |
@@ -498,13 +519,6 @@ Not applicable: no logging calls appear anywhere in this component.
   combination.
 - **UI-thread confinement**: `confines-to-ui-thread` — the window controller is declared `@MainActor`, so use from off the main actor fails to compile.
 
-## Reference Implementations
-
-| Platform | Location | Conformance |
-|----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/ComposableTabs/ComposableTabsWindowController.swift` | confirmed (1.3.0) |
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/ComposableTabs/ComposableTabsWindowController.swift` | confirmed (1.3.0) |
-
 ## Design Decisions
 
 **Decision**: Persist the edge top-up after `installInitialTabs()` restores
@@ -622,3 +636,4 @@ hardcoded-literal inventory in Localization.
 | 1.2.1 | 2026-10-04 | Mike Fullerton | Added separation-of-concerns and unit-test-coverage compliance rows. Added the confines-to-ui-thread requirement and vector. |
 | 1.3.0 | 2026-11-14 | Mike Fullerton | Document windows: title-document-kinds and title-breadcrumb-document-file, then title-sits-in-the-toolbar, title-follows-the-focused-document and pane-chrome-is-optional, then footer-is-optional; the Document-kind title and title-breadcrumb rules apply only while no focused document is supplied. |
 | 1.4.0 | 2026-11-16 | Mike Fullerton | Extra toolbar items: the window's own items after the shelf's and before the flexible space, a targeted button sending to the object its WindowToolbarTarget names |
+| 1.5.0 | 2026-11-17 | Mike Fullerton | Tab edges are an explicit per-project Tab Bars choice: no stored edges means follow the app-wide tab positions live, an empty enabled_edges value means no choice, and the shared tab configuration carries only the pane arrangement. |

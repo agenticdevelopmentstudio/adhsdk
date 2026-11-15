@@ -4,11 +4,11 @@
     "id": "5bfadad5-c93b-432a-807e-04be57ff16b4",
     "title": "Project Management",
     "type": "ingredient",
-    "version": "1.1.1",
+    "version": "1.2.0",
     "status": "review",
     "language": "en",
     "created": "2026-09-24",
-    "modified": "2026-10-04",
+    "modified": "2026-11-15",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -50,7 +50,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "ed55185f55ca1661",
+  "synced": "8dca97e4c0469655",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
