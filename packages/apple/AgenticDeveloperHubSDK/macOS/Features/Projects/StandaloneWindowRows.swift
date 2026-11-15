@@ -31,9 +31,7 @@ public struct StandaloneWindowRows {
 
     /// One spelling per path, so `/tmp/x` and `/private/tmp/x` — or a
     /// symlink and the file it names — are one row and one window.
-    public static func canonical(_ url: URL) -> URL {
-        url.standardizedFileURL.resolvingSymlinksInPath()
-    }
+    public static func canonical(_ url: URL) -> URL { url.canonicalFileURL }
 
     // MARK: - Rows
 

@@ -302,11 +302,14 @@ public final class DocumentTabsViewController: MultiTabbedViewController {
     /// showing it is selected; failing that it fills the selected tab's
     /// focused editor when that editor is empty; failing that it opens in a
     /// new tab. What a Document window does with a file it is handed.
+    ///
+    /// Files compare by `canonicalFileURL`, so a symlink and the file it
+    /// names are one tab and one buffer.
     public func show(_ url: URL) {
-        let target = url.standardizedFileURL
+        let target = url.canonicalFileURL
         for tab in tabs(on: .top) {
             guard let root = splitsByTabID[tab.id],
-                  let editor = editors(in: root).first(where: { $0.fileURL?.standardizedFileURL == target })
+                  let editor = editors(in: root).first(where: { $0.fileURL?.canonicalFileURL == target })
             else { continue }
             selectTab(id: tab.id, on: .top)
             rememberFocus(of: editor)

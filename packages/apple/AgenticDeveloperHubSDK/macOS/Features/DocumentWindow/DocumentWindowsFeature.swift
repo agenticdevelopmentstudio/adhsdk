@@ -226,7 +226,7 @@ public final class DocumentWindowsFeature: AppFeature {
         case .document:
             let showing = pane.focusedEditor?.fileURL
             if file.onlyIfEmpty, showing != nil { return }
-            if showing?.standardizedFileURL != file.url.standardizedFileURL {
+            if showing?.canonicalFileURL != file.url.canonicalFileURL {
                 pane.openInSelectedPane(file.url)
             }
         default:
