@@ -23,6 +23,8 @@ private let logger = Logger(subsystem: "AgenticDeveloperHubSDK", category: "WebB
 /// shared settings say otherwise, and it keeps nothing once its window
 /// closes: its state store is in memory, and each window is a new one
 /// (`windowID` is unique), so no frame or visibility is saved for it either.
+/// What is kept is one frame for them all, the last one a browser window was
+/// put at, where the next one opens (`lastFrameID`).
 @MainActor
 public final class WebBrowserWindowController: SingleWindowController {
 
@@ -70,9 +72,30 @@ public final class WebBrowserWindowController: SingleWindowController {
     private let split = NSSplitViewController()
     private var logItem: NSSplitViewItem?
 
-    /// Where the last browser window was moved or resized to, so a new one
-    /// opens there (cascaded off any window already on that spot).
-    static let lastFrameKey = "web-browser.window.last-frame"
+    /// The id the last browser window's frame is saved under, so a new one
+    /// opens where the person last put one (cascaded off any window already
+    /// on that spot). Each window's own `windowID` is unique and saves
+    /// nothing; this one id is shared by them all, and goes through
+    /// `WindowFrameManager` like any other window's frame: kept per screen
+    /// set, namespaced per app copy (`WindowStateNamespace`), validated onto
+    /// the screens attached now, and never written by a move the machine
+    /// made rather than the person.
+    static let lastFrameID = "web-browser.last-window"
+
+    /// The spec every browser window opens with. The window's own copy does
+    /// not persist its frame (its id is never asked for again); the copy
+    /// registered under `lastFrameID` does.
+    private static func spec(persistsFrame: Bool) -> WindowSpec {
+        WindowSpec(
+            defaultSize: NSSize(width: 1100, height: 760),
+            minSize: NSSize(width: 480, height: 360),
+            defaultPosition: .center,
+            persistsFrame: persistsFrame,
+            behavior: []
+        )
+    }
+
+    private static let lastFrameSpec = spec(persistsFrame: true)
 
     static let windowIDPrefix = "web-browser"
     static let accessibilityWindowID = "web-browser.window"
@@ -155,13 +178,8 @@ public final class WebBrowserWindowController: SingleWindowController {
         }
         windowTitle = pane.paneTitle
         windowStyleMask = [.titled, .closable, .resizable, .miniaturizable, .fullSizeContentView]
-        windowSpec = WindowSpec(
-            defaultSize: NSSize(width: 1100, height: 760),
-            minSize: NSSize(width: 480, height: 360),
-            defaultPosition: .center,
-            persistsFrame: false,
-            behavior: []
-        )
+        windowSpec = Self.spec(persistsFrame: false)
+        WindowManager.shared.frames.register(id: Self.lastFrameID, spec: Self.lastFrameSpec)
         accessibilityIdentifier = Self.accessibilityWindowID
         pane.onPaneTitleChange = { [weak self] in
             self?.refreshTitle()
@@ -228,28 +246,30 @@ public final class WebBrowserWindowController: SingleWindowController {
             right: max(spacing.right, Self.resizeMargin))
     }
 
-    /// A new window opens down and to the right of the browser window in
-    /// front, so it never lands exactly on top of one.
+    /// A new window opens where the last browser window was put, else on the
+    /// browser window in front, and then steps down and to the right past
+    /// every open browser window already on that spot, so it never lands
+    /// exactly on top of one: the third window opened without moving
+    /// anything lands past the second, not on it.
     public override func placeWindowWithoutSavedFrame(_ window: NSWindow) {
-        if let saved = UserDefaults.standard.string(forKey: Self.lastFrameKey) {
-            let frame = NSRectFromString(saved)
-            if frame.width >= 200, frame.height >= 200,
-               NSScreen.screens.contains(where: { $0.visibleFrame.intersects(frame) }) {
-                window.setFrame(frame, display: false)
-                let taken = Self.openWindows.contains {
-                    $0 !== self && $0.isVisible && $0.window?.frame.origin == frame.origin
-                }
-                if taken {
-                    let topLeft = window.cascadeTopLeft(from: NSPoint(x: frame.minX, y: frame.maxY))
-                    window.cascadeTopLeft(from: topLeft)
-                }
-                return
-            }
+        let others = Self.openWindows.compactMap { $0 !== self && $0.isVisible ? $0.window : nil }
+        if let saved = WindowManager.shared.frames.savedFrame(for: Self.lastFrameID, spec: Self.lastFrameSpec) {
+            window.setFrame(saved, display: false)
+        } else if let front = others.last {
+            window.setFrame(front.frame, display: false)
+        } else {
+            return
         }
-        guard let front = Self.openWindows.last(where: { $0 !== self && $0.isVisible })?.window else { return }
-        window.setFrame(NSRect(origin: window.frame.origin, size: front.frame.size), display: false)
-        let topLeft = window.cascadeTopLeft(from: NSPoint(x: front.frame.minX, y: front.frame.maxY))
-        window.cascadeTopLeft(from: topLeft)
+        func topLeft(_ frame: NSRect) -> NSPoint { NSPoint(x: frame.minX, y: frame.maxY) }
+        // One step per window at most: a step the screen's edge refuses
+        // leaves the window where it is, and the loop must still end.
+        for _ in others.indices {
+            guard others.contains(where: { topLeft($0.frame) == topLeft(window.frame) }) else { break }
+            // The first call puts this window's top left where it already
+            // is and answers the next cascade step; the second moves it there.
+            let next = window.cascadeTopLeft(from: topLeft(window.frame))
+            window.cascadeTopLeft(from: next)
+        }
     }
 
     public override func windowDidMove(_ notification: Notification) {
@@ -262,10 +282,12 @@ public final class WebBrowserWindowController: SingleWindowController {
         rememberFrame()
     }
 
+    /// Saves the frame as the one the next browser window opens at. A
+    /// minimised or full-screen window's frame is not one to open another at.
     private func rememberFrame() {
         guard let window, window.isVisible, !window.isMiniaturized,
               !window.styleMask.contains(.fullScreen) else { return }
-        UserDefaults.standard.set(NSStringFromRect(window.frame), forKey: Self.lastFrameKey)
+        WindowManager.shared.frames.saveFrame(for: window, id: Self.lastFrameID)
     }
 
     public override func windowWillClose(_ notification: Notification) {
