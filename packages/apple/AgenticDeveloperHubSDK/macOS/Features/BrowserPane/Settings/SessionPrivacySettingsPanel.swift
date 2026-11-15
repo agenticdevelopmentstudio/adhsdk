@@ -7,13 +7,20 @@ import AppKit
 
 import AgenticDeveloperHubSDKCore
 
-/// The Browser panel's Privacy topic: what a page can learn of the person
-/// using it — keyboard, mouse, pointer, drags, focus and visibility (spec
-/// section 10's Session Privacy) — what the agent may do with the pane and
-/// whether models see it through the privacy words (Agent Privacy, built by
-/// `AgentPrivacySettingsGroup`), which cookie jar it keeps, and which
-/// third-party scripts it runs. Session Privacy and Agent Privacy were two
-/// topics; they are one, and the rows keep their accessibility identifiers.
+/// The Browser panel's Privacy and Security topic: what a page can learn of
+/// the person using it — keyboard, mouse, pointer, drags, focus and
+/// visibility (spec section 10's Session Privacy) — what the agent may do
+/// with the pane and whether models see it through the privacy words (Agent
+/// Privacy, built by `AgentPrivacySettingsGroup`), which cookie jar it keeps,
+/// and which third-party scripts it runs. After those, the groups that were
+/// topics of their own: Cookies, Camera and Microphone, Safari's Protection,
+/// Site Data (a button that opens `BrowserSiteDataWindowController`) and
+/// History's recording options. Every moved row keeps its key and its
+/// accessibility identifier (`keys-never-change`).
+///
+/// Protection and Site Data are WebKit's alone, so a Chrome pane's sheet
+/// leaves them out, as General leaves out AirPlay and Web Inspector
+/// (`principle-of-least-astonishment`).
 ///
 /// Every row binds through the panel's `BrowserSettingsBinding`, so the same
 /// topic is the Settings window's global one and a pane's own in its sheet
@@ -32,16 +39,44 @@ final class BrowserPrivacySettingsPanel: BrowserTopicPanel {
     }
 
     private let editorWindow: (() -> NSWindow?)?
+    /// The store Manage Site Data… lists; `nil` leaves the Site Data group
+    /// out (a Chrome pane's sheet).
+    private let siteData: BrowserSiteData?
+    /// Whether the host records visits anywhere, in global scope. A pane
+    /// answers for itself.
+    private let hasHistoryStore: Bool
+    /// Kept while the Site Data window is up.
+    private var siteDataWindow: BrowserSiteDataWindowController?
 
-    /// - Parameter editorWindow: the window Edit Privacy Words… opens its
-    ///   editor over; `nil` uses the panel's own window.
-    init(binding: BrowserSettingsBinding, editorWindow: (() -> NSWindow?)? = nil) {
+    /// - Parameters:
+    ///   - siteData: the store the Site Data window lists — the global jar's
+    ///     in the Settings window, the pane's own in its sheet; `nil` for no
+    ///     Site Data group.
+    ///   - hasHistoryStore: whether the host records visits at all, for the
+    ///     Settings window; a pane's sheet asks the pane.
+    ///   - editorWindow: the window Edit Privacy Words… and Manage Site Data…
+    ///     open over; `nil` uses the panel's own window.
+    init(
+        binding: BrowserSettingsBinding,
+        siteData: BrowserSiteData? = nil,
+        hasHistoryStore: Bool = true,
+        editorWindow: (() -> NSWindow?)? = nil
+    ) {
         self.editorWindow = editorWindow
-        super.init(title: "Privacy", symbol: "hand.raised", binding: binding)
+        self.siteData = siteData
+        self.hasHistoryStore = hasHistoryStore
+        super.init(title: "Privacy and Security", symbol: "hand.raised", binding: binding)
+    }
+
+    /// False only in a Chrome pane's sheet: Protection is WebKit's alone.
+    private var showsSafariOnlyGroups: Bool {
+        binding.pane?.engineKind != .chrome
     }
 
     override var helpContent: ComposableSettings.PanelHelp? {
-        ComposableSettings.PanelHelp(topics: Self.sessionHelpTopics + AgentPrivacySettingsGroup.helpTopics)
+        ComposableSettings.PanelHelp(
+            topics: Self.sessionHelpTopics + AgentPrivacySettingsGroup.helpTopics + addedHelpTopics
+        )
     }
 
     private static let sessionHelpTopics: [ComposableSettings.PanelHelp.Topic] = [
@@ -108,7 +143,7 @@ final class BrowserPrivacySettingsPanel: BrowserTopicPanel {
                 + "pane is removed, a worktree's when the last pane on it is. "
                 + "Closing a window deletes nothing. Changing the jar reloads the "
                 + "page in the new jar, signed out of whatever the old one held. "
-                + "Accept cookies and Private browsing are in Cookies and Site Data."
+                + "Accept cookies and Private browsing are in Cookies, below."
         ),
         .init(
             title: "Scripts",
@@ -116,8 +151,8 @@ final class BrowserPrivacySettingsPanel: BrowserTopicPanel {
                 + "a site other than its own — the usual carrier of trackers — and "
                 + "applies at once. Capture page console lets the agent read what the "
                 + "page logs. It works by adding a small hook to the page's own "
-                + "console, which page scripts can see. JavaScript and Lockdown Mode "
-                + "are in General and in Privacy and Security."
+                + "console, which page scripts can see. JavaScript is in Behavior, "
+                + "and Lockdown Mode in Protection, below."
         ),
         .init(
             title: "Screenshots",
@@ -132,10 +167,97 @@ final class BrowserPrivacySettingsPanel: BrowserTopicPanel {
         )
     ]
 
+    /// The help for the groups that were topics of their own, worded for
+    /// the scope the panel is in.
+    private var addedHelpTopics: [ComposableSettings.PanelHelp.Topic] {
+        var topics: [ComposableSettings.PanelHelp.Topic] = [
+            .init(
+                title: "Cookies",
+                body: "Accept cookies decides whether sites may set cookies at all, in "
+                    + "Safari and Chrome panes alike; there is no first-party-only middle. "
+                    + "Off, most sites cannot keep you signed in. It belongs to the jar, "
+                    + "not the pane, so in a pane's settings it can be changed only while "
+                    + "the pane has a jar of its own. Private browsing gives each new "
+                    + "browser pane a store of its own that is thrown away when the pane "
+                    + "closes, so nothing it visits is kept, history included. It is set "
+                    + "for all browser panes in the Settings window, and applies to panes "
+                    + "opened after the change; a pane already open keeps the store it was "
+                    + "made with."
+            ),
+            .init(
+                title: "Camera and Microphone",
+                body: "What happens when a page asks for the camera or microphone. Ask "
+                    + "each time shows a sheet on the pane's window naming the site and "
+                    + "the device, and the answer holds for that page. Always allow grants "
+                    + "every request without asking; never allow refuses them all. macOS "
+                    + "still asks once, the first time the app itself uses either device. "
+                    + "Autoplay is in Behavior."
+            )
+        ]
+        if showsSafariOnlyGroups {
+            topics.append(.init(
+                title: "Protection",
+                body: "Safari panes only, because only WebKit offers these. Warn about "
+                    + "fraudulent websites asks WebKit to check each page against Apple's "
+                    + "list of known phishing and malware sites and show a warning page in "
+                    + "place of a match. Upgrade known sites to HTTPS loads a site WebKit "
+                    + "knows supports HTTPS over HTTPS even when the address said http; "
+                    + "WebKit fixes it when a pane's web view is made. Lockdown Mode is the "
+                    + "same restricted mode Safari offers: certain web technologies, fonts "
+                    + "and media formats are refused, which breaks some sites in exchange "
+                    + "for a smaller attack surface. It applies to the next page each pane "
+                    + "loads."
+            ))
+        }
+        if siteData != nil {
+            topics.append(.init(
+                title: "Site Data",
+                body: "Manage Site Data… opens a window listing everything WebKit is keeping "
+                    + (binding.isPaneScope
+                        ? "for sites in this pane's jar, the one Storage names. "
+                        : "in the global jar, the one shared by every Safari pane that "
+                            + "follows it; the jars of a worktree or a single pane are "
+                            + "listed in that pane's settings. ")
+                    + "One row per site: cookies, local storage, caches, service workers "
+                    + "and the rest, named in the second column. Select a site and press "
+                    + "− to remove what it kept, which signs you out of it. Remove All "
+                    + "clears every site at once, after asking. Refresh re-reads the list, "
+                    + "since pages write while it is open. Done, or Escape, closes it."
+            ))
+        }
+        topics.append(.init(
+            title: "History",
+            body: "With Record history on, every page a browser pane finishes loading is "
+                + "written down: its address, its title and when. Off, nothing new is "
+                + "written and what is already recorded stays until you clear it. A "
+                + "pane in private browsing records nothing, whatever this says. "
+                + (binding.isPaneScope
+                    ? "Every browser pane records into the same history, so how long visits "
+                        + "are kept is set in the Settings window. "
+                    : "Keep visits for decides how long a visit is kept: anything older is "
+                        + "forgotten the next time a browser pane opens. ")
+                + "The visits themselves are listed, searched and cleared in the History "
+                + "window, from the Browser menu."
+        ))
+        return topics
+    }
+
+    /// Every control's title, then the other words someone might search by.
     static let keywords: [String] = [
         "privacy", "session privacy", "keyboard", "mouse", "scrolling", "pointer", "hover", "drag and drop",
         "focus", "visibility", "agent", "agent access", "jar", "storage", "third-party", "trackers",
-        "console", "screenshots", "chrome"
+        "console", "screenshots", "chrome",
+        // Cookies
+        "Accept cookies", "Private browsing", "cookies", "incognito", "sign out",
+        // Camera and Microphone
+        "When a page asks", "camera", "microphone", "permissions", "webcam",
+        // Protection
+        "Warn about fraudulent websites", "Upgrade known sites to HTTPS", "Lockdown Mode",
+        "security", "fraud", "phishing", "https", "webkit", "safari", "tracking",
+        // Site Data
+        "Manage Site Data…", "site data", "local storage", "cache",
+        // History
+        "Record history", "Keep visits for", "history", "visits"
     ] + AgentPrivacySettingsGroup.keywords.filter { $0 != "agent" }
 
     override var searchKeywords: [String] { Self.keywords }
@@ -149,6 +271,12 @@ final class BrowserPrivacySettingsPanel: BrowserTopicPanel {
         settingsView.addGroup(agentPrivacy.makeGroup())
         settingsView.addGroup(makeStorageGroup())
         settingsView.addGroup(makeScriptsGroup())
+        // The groups that were topics of their own, after the existing ones.
+        settingsView.addGroup(makeCookiesGroup())
+        settingsView.addGroup(makeCaptureGroup())
+        if showsSafariOnlyGroups { settingsView.addGroup(makeProtectionGroup()) }
+        if siteData != nil { settingsView.addGroup(makeSiteDataGroup()) }
+        settingsView.addGroup(makeHistoryGroup())
     }
 
     /// Pause all events (a pane's own state, so only in a pane's settings)
@@ -299,6 +427,139 @@ final class BrowserPrivacySettingsPanel: BrowserTopicPanel {
             explanation: binding.constructionNote(for: console.name),
             to: group
         )
+        return group
+    }
+
+    // MARK: Cookies, camera, protection, site data, history
+
+    /// A checkbox row under an identifier of its own, for the moved rows,
+    /// which keep the identifiers their old topics gave them.
+    private func addCheckbox(
+        _ title: String,
+        _ key: UserSetting<Bool>,
+        identifier: String,
+        explanation: String? = nil,
+        to group: ComposableSettings.GroupView
+    ) {
+        let model = binding.model(title, key, explanation: explanation)
+        let view = ComposableSettings.CheckboxView(with: model)
+        _ = view.toggle.accessibilityID(identifier)
+        binding.add(view, model: model, key: key, to: group)
+    }
+
+    private func makeCookiesGroup() -> ComposableSettings.GroupView {
+        let group = ComposableSettings.GroupView(withTitle: "Cookies")
+        addCheckbox(
+            "Accept cookies", UserSettings.browserAcceptsCookies,
+            identifier: "settings.browser.cookies.accept-cookies",
+            explanation: cookiesExplanation, to: group
+        )
+        addCheckbox(
+            "Private browsing", UserSettings.browserPrivateBrowsing,
+            identifier: "settings.browser.cookies.private-browsing",
+            explanation: "New browser panes keep nothing once closed. Applies to panes opened after the change.",
+            to: group
+        )
+        return group
+    }
+
+    /// Accept cookies belongs to a jar, so in a pane's sheet the row names
+    /// the one the pane is on — what the Cookies topic's title used to say.
+    private var cookiesExplanation: String {
+        let base = "Off, sites cannot keep you signed in."
+        guard let pane = binding.pane else { return base }
+        return base + " Applies to the jar: \(BrowserSettingsPanelViewController.jarLabel(for: pane))."
+    }
+
+    private func makeCaptureGroup() -> ComposableSettings.GroupView {
+        let group = ComposableSettings.GroupView(withTitle: "Camera and Microphone")
+        let capture = binding.choice(
+            "When a page asks", UserSettings.browserMediaCapture,
+            choices: BrowserMediaCapturePolicy.allCases.map { .init(label: $0.label, value: $0) }
+        )
+        let captureView = ComposableSettings.PopupMenuChoiceView(viewModel: capture)
+        _ = captureView.popUpButton.accessibilityID("settings.browser.media.capture")
+        binding.add(captureView, model: capture, key: UserSettings.browserMediaCapture, to: group)
+        return group
+    }
+
+    private func makeProtectionGroup() -> ComposableSettings.GroupView {
+        let group = ComposableSettings.GroupView(withTitle: "Protection")
+        addCheckbox(
+            "Warn about fraudulent websites", UserSettings.browserFraudWarning,
+            identifier: "settings.browser.safari.fraud-warning", to: group
+        )
+        addCheckbox(
+            "Upgrade known sites to HTTPS", UserSettings.browserUpgradesToHTTPS,
+            identifier: "settings.browser.safari.upgrade-https",
+            explanation: binding.safariConstructionNote(for: UserSettings.browserUpgradesToHTTPS.name),
+            to: group
+        )
+        addCheckbox(
+            "Lockdown Mode", UserSettings.browserLockdownMode,
+            identifier: "settings.browser.safari.lockdown",
+            explanation: "Refuses some web technologies for a smaller attack surface. "
+                + "Applies to the next page each pane loads.",
+            to: group
+        )
+        return group
+    }
+
+    static let manageSiteDataIdentifier = "settings.browser.site-data.manage"
+
+    /// One button; the table is in the window it opens
+    /// (`manage-site-data-button`).
+    private func makeSiteDataGroup() -> ComposableSettings.GroupView {
+        let group = ComposableSettings.GroupView(withTitle: "Site Data")
+        let manage = ComposableSettings.ButtonViewModel(title: "Manage Site Data…") { [weak self] in
+            self?.manageSiteData()
+        }
+        let manageView = ComposableSettings.ButtonView(viewModel: manage, placement: .leading)
+        manageView.button.toolTip = "List and remove what sites have stored"
+        _ = manageView.button.accessibilityID(Self.manageSiteDataIdentifier)
+        binding.register(manage, as: Self.manageSiteDataIdentifier)
+        group.addSettingSubview(manageView)
+        return group
+    }
+
+    private func manageSiteData() {
+        guard siteDataWindow == nil, let siteData,
+              let parent = editorWindow?() ?? view.window else { return }
+        let detail = binding.isPaneScope
+            ? "Cookies, caches and storage for every site in this jar are removed, and the panes on "
+                + "it are signed out of them. History and Chrome's data are not affected."
+            : "Cookies, caches and storage for every site in the global jar are removed, and Safari "
+                + "panes on it are signed out everywhere. History and Chrome's data are not affected."
+        let controller = BrowserSiteDataWindowController(siteData: siteData, removeAllDetail: detail)
+        siteDataWindow = controller
+        controller.runModal(for: parent)
+        siteDataWindow = nil
+    }
+
+    /// Record history, and — in the Settings window only, since the visit
+    /// store is one for the whole app — Keep visits for
+    /// (`history-group-contents`). Rows are appended in order, so a row
+    /// added after these goes at the end.
+    private func makeHistoryGroup() -> ComposableSettings.GroupView {
+        let group = ComposableSettings.GroupView(withTitle: "History")
+        let recordsAnywhere = binding.pane?.hasHistoryStore ?? hasHistoryStore
+        addCheckbox(
+            "Record history", UserSettings.browserRecordsHistory,
+            identifier: "settings.browser.history.record",
+            explanation: recordsAnywhere
+                ? nil
+                : "This app has no history store, so nothing is recorded whatever this says.",
+            to: group
+        )
+        guard !binding.isPaneScope else { return group }
+        let retention = binding.choice(
+            "Keep visits for", UserSettings.browserHistoryRetention,
+            choices: BrowserHistoryRetention.allCases.map { .init(label: $0.label, value: $0) },
+            explanation: "Older visits are forgotten when a browser pane opens."
+        )
+        let retentionView = ComposableSettings.PopupMenuChoiceView(viewModel: retention)
+        _ = retentionView.popUpButton.accessibilityID("settings.browser.history.retention")
+        binding.add(retentionView, model: retention, key: UserSettings.browserHistoryRetention, to: group)
         return group
     }
 }

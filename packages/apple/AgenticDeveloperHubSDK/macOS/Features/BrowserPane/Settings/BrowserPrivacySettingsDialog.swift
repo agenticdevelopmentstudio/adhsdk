@@ -38,7 +38,10 @@ final class BrowserPrivacySettingsDialog: NSObject, NSPopoverDelegate {
         guard let layered = pane.paneSettings, let session = pane.makePaneSettingsController() else { return }
         let binding = BrowserSettingsBinding(settings: layered.fallback, scope: .pane(layered, pane))
         let dialog = BrowserPrivacySettingsDialog(session: session, key: key)
-        let panel = BrowserPrivacySettingsPanel(binding: binding) { [weak pane, weak dialog] in
+        let panel = BrowserPrivacySettingsPanel(
+            binding: binding,
+            siteData: BrowserSettingsPanelViewController.siteData(for: pane)
+        ) { [weak pane, weak dialog] in
             dialog?.popover.performClose(nil)
             return pane?.view.window
         }

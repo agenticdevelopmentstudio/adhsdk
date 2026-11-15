@@ -2,14 +2,13 @@
 //  BrowserEngineTopicPanels.swift
 //  AgenticDeveloperHubSDK
 //
-//  The two topics of the Web Browser panel that belong to one engine each:
-//  Safari (WebKit) and Chrome (Chromium). Everything else in the panel
-//  applies to both. Both bind through the panel's `BrowserSettingsBinding`,
-//  so a pane's sheet shows its own engine's topic as overridable rows.
+//  The Web Browser panel's Chrome topics, which belong to Chromium alone;
+//  WebKit's own rows sit in the shared topics. They bind through the panel's
+//  `BrowserSettingsBinding`, so a Chrome pane's sheet shows them as
+//  overridable rows.
 //
 
 import AppKit
-import WebKit
 
 import AgenticDeveloperHubSDKUI
 import AgenticDeveloperHubSDKCore
@@ -41,191 +40,6 @@ public protocol BrowserEngineMaintenance: AnyObject {
     func checkForExtensionUpdates(in profile: BrowserExtensionProfile) async throws
     /// Closes the hidden management browsers. The topic calls it when it closes.
     func endExtensionManagement()
-}
-
-// MARK: - Safari
-
-/// What only WebKit offers and has not found another topic: Protection and
-/// the site data table. AirPlay and Web Inspector moved to General with their
-/// keys; the rest goes to Privacy and Security, and then this topic goes.
-@MainActor
-final class SafariBrowserTopicPanel: BrowserTopicPanel {
-
-    private let siteData: BrowserSiteData
-    private var table: ComposableSettings.EditableTableCard?
-    private var records: [WKWebsiteDataRecord] = []
-    /// The read in flight. One at a time: a Refresh pressed twice, or a
-    /// removal landing while a read is out, must not let the older answer
-    /// arrive last and show rows that are already gone.
-    private var reloadTask: Task<Void, Never>?
-
-    /// - Parameter siteData: the global jar's store in the Settings window;
-    ///   in a Safari pane's sheet, the store the pane's web view is on.
-    init(siteData: BrowserSiteData, binding: BrowserSettingsBinding) {
-        self.siteData = siteData
-        super.init(title: "Safari", symbol: "safari", binding: binding)
-    }
-
-    override var helpContent: ComposableSettings.PanelHelp? {
-        ComposableSettings.PanelHelp(topics: [
-            .init(
-                title: "Safari",
-                body: "Settings only Safari Web Browser panes have, because only WebKit "
-                    + "offers them. Chrome panes ignore everything here. AirPlay and Web "
-                    + "Inspector, Safari's too, are in General."
-            ),
-            .init(
-                title: "Protection",
-                body: "Warn about fraudulent websites asks WebKit to check each page "
-                    + "against Apple's list of known phishing and malware sites and show "
-                    + "a warning page in place of a match. Upgrade to HTTPS loads a site "
-                    + "WebKit knows supports HTTPS over HTTPS even when the address said "
-                    + "http; WebKit fixes it when a pane's web view is made. "
-                    + "Lockdown Mode is the same restricted mode Safari offers: certain "
-                    + "web technologies, fonts and media formats are refused, which "
-                    + "breaks some sites in exchange for a smaller attack surface. It "
-                    + "applies to the next page each pane loads."
-            ),
-            .init(
-                title: "Site Data",
-                body: (binding.isPaneScope
-                    ? "Everything WebKit is keeping for sites in this pane's jar, named in "
-                        + "the Cookies topic's title: all browser panes, this worktree's "
-                        + "panes, or this pane alone. "
-                    : "Everything WebKit is keeping in the global jar, the one shared by "
-                        + "every Safari pane that follows it; the jars of a worktree or a "
-                        + "single pane are listed in the Coding Project window's settings. ")
-                    + "One row per site: cookies, local storage, caches, service workers "
-                    + "and the rest, named in the second column. Select a site and press "
-                    + "− to remove what it kept, which signs you out of it. Remove All "
-                    + "clears every site at once. Refresh re-reads the list, since pages "
-                    + "write while it is open. Browsing history is separate and has its "
-                    + "own topic."
-            ),
-            .init(
-                title: "What Is Not Here",
-                body: "There is no Do Not Track switch, because WebKit sends no such "
-                    + "header and the sites that honoured it have largely stopped. "
-                    + "Passwords are not saved by the browser pane; the system keychain "
-                    + "is not involved. What a page can see of you (keyboard, mouse, "
-                    + "focus, the agent, cookie jars and third-party scripts) is in "
-                    + "Privacy."
-            )
-        ])
-    }
-
-    static let keywords: [String] = [
-        "safari", "webkit", "privacy", "security", "fraud", "phishing", "https", "lockdown mode", "tracking",
-        "site data", "local storage", "cache"
-    ]
-
-    override var searchKeywords: [String] { Self.keywords }
-
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        settingsView.addGroup(makeProtectionGroup())
-        let table = makeTable()
-        self.table = table
-        settingsView.addGroup(table)
-    }
-
-    override func viewWillAppear() {
-        super.viewWillAppear()
-        reload()
-    }
-
-    private func makeProtectionGroup() -> ComposableSettings.GroupView {
-        let group = ComposableSettings.GroupView(withTitle: "Protection")
-
-        let fraud = binding.model("Warn about fraudulent websites", UserSettings.browserFraudWarning)
-        let fraudView = ComposableSettings.CheckboxView(with: fraud)
-        _ = fraudView.toggle.accessibilityID("settings.browser.safari.fraud-warning")
-        binding.add(fraudView, model: fraud, key: UserSettings.browserFraudWarning, to: group)
-
-        let https = binding.model(
-            "Upgrade known sites to HTTPS", UserSettings.browserUpgradesToHTTPS,
-            explanation: binding.safariConstructionNote(for: UserSettings.browserUpgradesToHTTPS.name)
-        )
-        let httpsView = ComposableSettings.CheckboxView(with: https)
-        _ = httpsView.toggle.accessibilityID("settings.browser.safari.upgrade-https")
-        binding.add(httpsView, model: https, key: UserSettings.browserUpgradesToHTTPS, to: group)
-
-        let lockdown = binding.model(
-            "Lockdown Mode", UserSettings.browserLockdownMode,
-            explanation: "Refuses some web technologies for a smaller attack surface. "
-                + "Applies to the next page each pane loads."
-        )
-        let lockdownView = ComposableSettings.CheckboxView(with: lockdown)
-        _ = lockdownView.toggle.accessibilityID("settings.browser.safari.lockdown")
-        binding.add(lockdownView, model: lockdown, key: UserSettings.browserLockdownMode, to: group)
-
-        return group
-    }
-
-    private func makeTable() -> ComposableSettings.EditableTableCard {
-        let table = ComposableSettings.EditableTableCard(
-            title: "Site Data",
-            columns: [
-                .init(id: "site", title: "Site", width: 220),
-                .init(id: "kinds", title: "Data", width: 340)
-            ],
-            emptyMessage: "No site data stored.",
-            visibleRows: 10,
-            accessibilityPrefix: "settings.browser.safari.sites"
-        )
-        table.addButton.isHidden = true
-        table.onRemove = { [weak self] rowID in
-            guard let self, let record = self.records.first(where: { $0.displayName == rowID }) else { return }
-            Task {
-                await self.siteData.remove([record])
-                self.reload()
-            }
-        }
-        table.addFooterButton(
-            title: "Remove All…", identifier: "settings.browser.safari.remove-all"
-        ) { [weak self] in
-            self?.removeAll()
-        }
-        table.addFooterButton(title: "Refresh", identifier: "settings.browser.safari.refresh") { [weak self] in
-            self?.reload()
-        }
-        return table
-    }
-
-    private func removeAll() {
-        ComposableSettings.Alerts.confirmDestructive(
-            "Remove all Safari site data?",
-            detail: (binding.isPaneScope
-                ? "Cookies, caches and storage for every site in this jar are removed, and the panes on "
-                    + "it are signed out of them. "
-                : "Cookies, caches and storage for every site in the global jar are removed, and Safari "
-                    + "panes on it are signed out everywhere. ")
-                + "History and Chrome's data are not affected.",
-            actionTitle: "Remove All",
-            on: view.window
-        ) { [weak self] confirmed in
-            guard let self, confirmed else { return }
-            Task {
-                await self.siteData.removeAll()
-                self.reload()
-            }
-        }
-    }
-
-    private func reload() {
-        reloadTask?.cancel()
-        reloadTask = Task {
-            let records = await siteData.records()
-            guard !Task.isCancelled else { return }
-            self.records = records
-            table?.setRows(records.map { record in
-                ComposableSettings.EditableTableRow(id: record.displayName, cells: [
-                    "site": .text(record.displayName),
-                    "kinds": .text(BrowserSiteData.labels(for: record))
-                ])
-            })
-        }
-    }
 }
 
 // MARK: - Chrome
@@ -440,7 +254,7 @@ final class ChromeExtensionsTopicPanel: BrowserTopicPanel {
     private(set) var extensions: [BrowserExtension] = []
     private(set) var optionsButton: NSButton?
     private(set) var getButton: NSButton?
-    /// The read in flight; one at a time, as the Safari topic's.
+    /// The read in flight; one at a time, as the Site Data window's.
     private(set) var reloadTask: Task<Void, Never>?
     /// The change in flight (toggle, removal, update check), which reloads
     /// when it is done.

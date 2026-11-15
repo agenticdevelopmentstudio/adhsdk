@@ -105,8 +105,8 @@ final class BrowserSettingsPanelScopeTests: XCTestCase {
         XCTAssertTrue(javaScript.row.isEnabled)
         XCTAssertNil(javaScript.row.marker, "global rows carry no override marker")
         XCTAssertTrue(
-            panel.panels.contains { $0.descriptor.title == "Privacy" },
-            "the Privacy topic is listed"
+            panel.panels.contains { $0.descriptor.title == "Privacy and Security" },
+            "the Privacy and Security topic is listed"
         )
         XCTAssertFalse(
             panel.panels.contains { $0.descriptor.title == "Agent Privacy" },
@@ -202,7 +202,7 @@ final class BrowserSettingsPanelScopeTests: XCTestCase {
         let ownRow = try row(UserSettings.browserAcceptsCookies, in: ownPanel)
         XCTAssertTrue(ownRow.row.isEnabled)
         XCTAssertNotNil(ownRow.row.marker)
-        XCTAssertEqual(ownPanel.cookiesTitle, "Cookies — This Pane")
+        XCTAssertEqual(BrowserSettingsPanelViewController.jarLabel(for: ownPane), "This Pane")
 
         // On the shared jar, it may not: the policy belongs to every pane on it.
         global.set(BrowserStorageJar.global, for: UserSettings.browserPrivacyStorageJar)
@@ -215,16 +215,16 @@ final class BrowserSettingsPanelScopeTests: XCTestCase {
         XCTAssertFalse(sharedRow.row.isEnabled)
         XCTAssertEqual(sharedRow.row.marker?.isShowingOverride, false)
         XCTAssertFalse(sharedRow.model.value, "shows the global value")
-        XCTAssertEqual(sharedPanel.cookiesTitle, "Cookies — All Browser Panes")
+        XCTAssertEqual(BrowserSettingsPanelViewController.jarLabel(for: sharedPane), "All Browser Panes")
 
-        // Within a worktree's jar, likewise, and the title names the worktree.
+        // Within a worktree's jar, likewise, and the row names the worktree.
         global.set(BrowserStorageJar.worktree, for: UserSettings.browserPrivacyStorageJar)
         let worktreeLayer = makeLayered(over: global)
         let worktreePane = try makePane(settings: worktreeLayer)
         XCTAssertEqual(worktreePane.resolvedJar.jar, .worktree)
         let worktreePanel = makePanel(settings: global, scope: .pane(worktreeLayer, worktreePane))
         XCTAssertFalse(try row(UserSettings.browserAcceptsCookies, in: worktreePanel).row.isEnabled)
-        XCTAssertEqual(worktreePanel.cookiesTitle, "Cookies — wt")
+        XCTAssertEqual(BrowserSettingsPanelViewController.jarLabel(for: worktreePane), "wt")
     }
 
     func testResetInPaneScopeClearsOverrides() throws {
@@ -298,13 +298,20 @@ final class BrowserSettingsPanelScopeTests: XCTestCase {
         view.subviews + view.subviews.flatMap { allSubviews(of: $0) }
     }
 
-    func testGlobalCookiesTopicTitle() throws {
-        let panel = makePanel(settings: makeSettings())
-        let titles = panel.panels.map(\.descriptor.title)
-        XCTAssertTrue(titles.contains("Global Cookies"))
-        XCTAssertFalse(titles.contains("Cookies"))
-        let cookies = try XCTUnwrap(titles.firstIndex(of: "Global Cookies"))
-        XCTAssertEqual(titles[cookies + 1], "Privacy", "Privacy follows Cookies")
+    /// Accept cookies belongs to a jar, so a pane's row names the one the
+    /// pane is on; the Settings window's row names none.
+    func testAcceptCookiesNamesThePaneJar() throws {
+        let global = makeSettings()
+        let globalRow = try row(UserSettings.browserAcceptsCookies, in: makePanel(settings: global))
+        XCTAssertEqual(globalRow.model.explanation, "Off, sites cannot keep you signed in.")
+
+        let layered = makeLayered(over: global)
+        let pane = try makePane(settings: layered)
+        let panePanel = makePanel(settings: global, scope: .pane(layered, pane))
+        let paneRow = try row(UserSettings.browserAcceptsCookies, in: panePanel)
+        XCTAssertEqual(
+            paneRow.model.explanation, "Off, sites cannot keep you signed in. Applies to the jar: This Pane."
+        )
     }
 
     // MARK: - The settings' open and close

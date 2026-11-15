@@ -9,8 +9,9 @@
   differently; each reads its own layered value. Refresh pressed twice in the
   Site Data window keeps one read in flight, so an older answer never lands
   after a newer one.
-- **Error states**: A site data removal that fails is reported in a sheet on
-  the Site Data window, and the table re-reads the store.
+- **Error states**: WebKit's site data removal reports no failure, so the
+  Site Data window re-reads the store after every removal; a site still listed
+  afterwards is what a failed removal looks like, and no sheet is shown.
 - **Offline or disconnected state**: Not applicable — every setting here is
   local.
 - **Missing file or unreachable server**: Not applicable — settings are read
@@ -21,4 +22,7 @@
   to panes opened after the change; the recording gate reads the pane's own
   private state, so a pane opened private never records, and a pane opened
   before the change keeps the state it was made with.
-
+- **A Chrome pane's settings sheet**: Protection and Site Data are WebKit's
+  alone, so a Chrome pane's sheet leaves both groups out of Privacy and
+  Security, as General leaves out AirPlay and Web Inspector; the keys keep
+  their rows in the Settings window (`every-browser-key-has-a-home`).

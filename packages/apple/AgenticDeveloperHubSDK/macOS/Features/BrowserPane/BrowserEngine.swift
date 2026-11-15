@@ -256,6 +256,12 @@ public struct BrowserResolvedJar {
     /// or a jar that failed closed.
     public var isEphemeral: Bool { jar == nil || isFallback }
 
+    /// Whether this is private browsing: no jar at all, rather than one that
+    /// failed closed. Fixed when the pane resolves its jar, so a pane opened
+    /// private stays private after the setting is turned off, and one opened
+    /// before it was turned on does not become private.
+    public var isPrivateBrowsing: Bool { jar == nil && !isFallback }
+
     /// The shared store, for a pane with no jar registry and for tests.
     @MainActor public static var global: BrowserResolvedJar {
         BrowserResolvedJar(webKitDataStore: .default(), jar: .global, jarID: nil)

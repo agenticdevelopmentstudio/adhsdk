@@ -12,7 +12,9 @@
   gains the five groups. Removed: `BrowserHistoryPanel`,
   `BrowserCookiesPanel`, `BrowserMediaPanel` and `SafariBrowserTopicPanel`.
   `BrowserSiteDataWindowController: NSWindowController` with
-  `init(siteData: BrowserSiteData)` and `runModal(for: NSWindow)` holds the
+  `init(siteData: BrowserSiteData, removeAllDetail: String? = nil)` (the
+  confirmation's detail, worded for the jar) and `runModal(for: NSWindow)`
+  holds the
   `ComposableSettings.EditableTableCard` the Safari topic built; its window
   has `.titled`, `.closable`, `.resizable` style and is run with
   `NSApp.runModal(for:)`, not as a sheet. The recording gate is a static

@@ -2,7 +2,7 @@
 id: 5a246e6c-2125-4427-a8ab-2f43f2fecba5
 title: "Web Browser Settings Topics"
 type: ingredient
-version: 0.1.1
+version: 0.1.2
 status: draft
 language: en
 created: 2026-11-15
@@ -240,8 +240,9 @@ because each topic's search keywords move with its controls.
   differently; each reads its own layered value. Refresh pressed twice in the
   Site Data window keeps one read in flight, so an older answer never lands
   after a newer one.
-- **Error states**: A site data removal that fails is reported in a sheet on
-  the Site Data window, and the table re-reads the store.
+- **Error states**: WebKit's site data removal reports no failure, so the
+  Site Data window re-reads the store after every removal; a site still listed
+  afterwards is what a failed removal looks like, and no sheet is shown.
 - **Offline or disconnected state**: Not applicable — every setting here is
   local.
 - **Missing file or unreachable server**: Not applicable — settings are read
@@ -252,7 +253,10 @@ because each topic's search keywords move with its controls.
   to panes opened after the change; the recording gate reads the pane's own
   private state, so a pane opened private never records, and a pane opened
   before the change keeps the state it was made with.
-
+- **A Chrome pane's settings sheet**: Protection and Site Data are WebKit's
+  alone, so a Chrome pane's sheet leaves both groups out of Privacy and
+  Security, as General leaves out AirPlay and Web Inspector; the keys keep
+  their rows in the Settings window (`every-browser-key-has-a-home`).
 ## Configuration
 
 The control table. Keys never change when a control moves
@@ -362,7 +366,9 @@ Not applicable: the design asks for no log line of the topics' own.
   gains the five groups. Removed: `BrowserHistoryPanel`,
   `BrowserCookiesPanel`, `BrowserMediaPanel` and `SafariBrowserTopicPanel`.
   `BrowserSiteDataWindowController: NSWindowController` with
-  `init(siteData: BrowserSiteData)` and `runModal(for: NSWindow)` holds the
+  `init(siteData: BrowserSiteData, removeAllDetail: String? = nil)` (the
+  confirmation's detail, worded for the jar) and `runModal(for: NSWindow)`
+  holds the
   `ComposableSettings.EditableTableCard` the Safari topic built; its window
   has `.titled`, `.closable`, `.resizable` style and is run with
   `NSApp.runModal(for:)`, not as a sheet. The recording gate is a static
@@ -392,6 +398,7 @@ Not applicable: the design asks for no log line of the topics' own.
 | macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Settings/BrowserAppearancePanel.swift` | planned |
 | macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Settings/BrowserSiteDataWindowController.swift` | planned |
 | macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Settings/BrowserSettingsPanelViewController.swift` | planned |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Settings/SessionPrivacySettingsPanel.swift` | unverified |
 
 ## Design Decisions
 
@@ -445,5 +452,6 @@ Notes: no compliance checks have been run; the code does not exist yet.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 0.1.2 | 2026-11-15 | Mike Fullerton | Site data removal reports no failure; a Chrome pane's sheet leaves out Protection and Site Data; the Site Data window takes the Remove All detail |
 | 0.1.1 | 2026-11-15 | Mike Fullerton | A Chrome pane's sheet leaves General's Media and Web Inspector groups out. |
 | 0.1.0 | 2026-11-15 | Mike Fullerton | Initial creation (design-first, from the more privacy features design) |

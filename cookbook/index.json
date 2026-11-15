@@ -7704,6 +7704,13 @@
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Settings/BrowserSettingsPanelViewController.swift",
           "platform": "macos"
+        },
+        {
+          "conformance": {
+            "state": "unverified"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Settings/SessionPrivacySettingsPanel.swift",
+          "platform": "macos"
         }
       ],
       "kind": "ingredient",

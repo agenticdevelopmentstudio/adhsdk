@@ -1338,6 +1338,18 @@ open class WebBrowserPaneViewController: NSViewController {
         store.setPaneStateValue(address, forKey: Self.addressKey)
     }
 
+    /// The one gate every visit passes: Record history on, and the pane not
+    /// in private browsing. `paneIsPrivate` is the pane's own state — the jar
+    /// it was made on — never the live setting, which a pane opened before
+    /// the change does not follow (`history-recording-gate`).
+    static func recordsHistory(globalRecords: Bool, paneIsPrivate: Bool) -> Bool {
+        globalRecords && !paneIsPrivate
+    }
+
+    /// Whether the host gave this pane anywhere to record visits; Record
+    /// history's row says so when it has none.
+    var hasHistoryStore: Bool { history != nil }
+
     /// Files the page that just finished loading in `tab`. Only pages, only
     /// when the setting says so, and never the blank page.
     private func recordVisit(in tab: BrowserTab) {
@@ -1346,8 +1358,11 @@ open class WebBrowserPaneViewController: NSViewController {
         let engine = tab.engine
         // Private browsing keeps nothing once the window closes, history
         // included, whatever the history setting says.
-        guard let history, settings.get(UserSettings.browserRecordsHistory),
-              !settings.get(UserSettings.browserPrivateBrowsing),
+        guard let history,
+              Self.recordsHistory(
+                  globalRecords: settings.get(UserSettings.browserRecordsHistory),
+                  paneIsPrivate: resolvedJar.isPrivateBrowsing
+              ),
               let url = engine.url, url != Self.blankPage else { return }
         let generation = tab.visitGeneration
         let title = storedTitle(of: engine) ?? ""

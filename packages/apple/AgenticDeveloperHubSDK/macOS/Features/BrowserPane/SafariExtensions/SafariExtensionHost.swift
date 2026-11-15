@@ -66,7 +66,7 @@ public final class SafariExtensionHost: NSObject {
     /// Whether `jar` is private browsing: no jar at all, rather than one that
     /// failed closed.
     static func isPrivateBrowsing(_ jar: BrowserResolvedJar) -> Bool {
-        jar.jar == nil && !jar.isFallback
+        jar.isPrivateBrowsing
     }
 
     /// The host whose extensions run in a pane on `jar`: the jar's own, and
