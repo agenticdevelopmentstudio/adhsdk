@@ -550,7 +550,6 @@ component.
 | Platform | Location | Conformance |
 |----------|----------|-------------|
 | apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/TopicListViewController.swift` | confirmed (1.3.0) |
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/TopicListViewController.swift` | confirmed (1.3.0) |
 
 ## Design Decisions
 

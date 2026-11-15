@@ -150,8 +150,8 @@ public final class GitWorkingCopyViewController: NSViewController {
     @objc private func unstageAll(_ sender: Any?) { request(.unstageAll) }
 
     @objc private func performMenuIntent(_ sender: NSMenuItem) {
-        guard let box = sender.representedObject as? IntentBox else { return }
-        request(box.intent)
+        guard let intent = sender.payload(GitWorkingCopyIntent.self) else { return }
+        request(intent)
     }
 
     private func stagedMenu(for item: GitFileListItem) -> NSMenu {
@@ -172,7 +172,7 @@ public final class GitWorkingCopyViewController: NSViewController {
     private func menuItem(_ title: String, _ name: String, _ intent: GitWorkingCopyIntent) -> NSMenuItem {
         let item = NSMenuItem(title: title, action: #selector(performMenuIntent(_:)), keyEquivalent: "")
         item.target = self
-        item.representedObject = IntentBox(intent)
+        item.representedObject = MenuPayload(intent)
         item.accessibilityID("git.workingCopy.menu.\(name)")
         return item
     }
@@ -219,10 +219,4 @@ extension GitWorkingCopyViewController: GitFileListDelegate {
         other.clearSelection()
         delegate?.workingCopy(self, didSelect: target(for: item, in: list))
     }
-}
-
-/// Carries a menu item's intent as its `representedObject`, which must be an object.
-private final class IntentBox: NSObject {
-    let intent: GitWorkingCopyIntent
-    init(_ intent: GitWorkingCopyIntent) { self.intent = intent }
 }

@@ -315,41 +315,27 @@ extension GitHistoryViewController: NSMenuDelegate {
     /// outside the rows leaves it empty, which AppKit does not show.
     public func menuNeedsUpdate(_ menu: NSMenu) {
         guard menu === rowMenu else { return }
-        menu.removeAllItems()
-        guard let provided = contextMenu(forRow: tableView.clickedRow) else { return }
-        let items = provided.items
-        provided.removeAllItems()
-        for item in items { menu.addItem(item) }
+        menu.replaceItems(withItemsOf: contextMenu(forRow: tableView.clickedRow))
     }
 
     private func intentItem(_ title: String, _ name: String, _ intent: GitCommitIntent,
                             _ commit: GitCommit) -> NSMenuItem {
         let item = NSMenuItem(title: title, action: #selector(performMenuIntent(_:)), keyEquivalent: "")
         item.target = self
-        item.representedObject = CommitIntentBox(intent, commit)
+        item.representedObject = MenuPayload((intent: intent, commit: commit))
         item.accessibilityID("git.history.menu.\(name)")
         return item
     }
 
     @objc private func performMenuIntent(_ sender: NSMenuItem) {
-        guard let box = sender.representedObject as? CommitIntentBox else { return }
-        delegate?.history(self, didRequest: box.intent, for: box.commit)
+        guard let request = sender.payload((intent: GitCommitIntent, commit: GitCommit).self) else { return }
+        delegate?.history(self, didRequest: request.intent, for: request.commit)
     }
 
     @objc private func copySha(_ sender: NSMenuItem) {
         guard let sha = sender.representedObject as? String else { return }
         pasteboard.clearContents()
         pasteboard.setString(sha, forType: .string)
-    }
-}
-
-/// Carries a menu item's intent and commit as its `representedObject`, which must be an object.
-private final class CommitIntentBox: NSObject {
-    let intent: GitCommitIntent
-    let commit: GitCommit
-    init(_ intent: GitCommitIntent, _ commit: GitCommit) {
-        self.intent = intent
-        self.commit = commit
     }
 }
 

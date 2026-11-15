@@ -1,6 +1,6 @@
 import XCTest
 import AppKit
-import AgenticDeveloperHubSDKMacOS
+@testable import AgenticDeveloperHubSDKMacOS
 
 /// `preferredWidth` drives the content-sized settings sidebar: it must reflect
 /// the widest row so every topic title is fully disclosed and the width is

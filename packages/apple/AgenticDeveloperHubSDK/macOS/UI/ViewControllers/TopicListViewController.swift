@@ -511,7 +511,7 @@ open class TopicListViewController: NSViewController {
 
     /// The menu for `row`: `itemMenuProvider`'s for an item row, `headerMenuProvider`'s
     /// for a section header row, nil for a row outside the list.
-    public func contextMenu(forRow row: Int) -> NSMenu? {
+    func contextMenu(forRow row: Int) -> NSMenu? {
         guard rootNodes.indices.contains(row) else { return nil }
         switch rootNodes[row].kind {
         case .header(let title): return headerMenuProvider?(title)
@@ -521,7 +521,7 @@ open class TopicListViewController: NSViewController {
 
     /// Calls `onDoubleClick` with `row`'s item; nothing for a header row or a row
     /// outside the list.
-    public func doubleClick(row: Int) {
+    func doubleClick(row: Int) {
         guard rootNodes.indices.contains(row), case .item(let item) = rootNodes[row].kind else { return }
         onDoubleClick?(item)
     }
@@ -658,11 +658,7 @@ extension TopicListViewController: NSMenuDelegate {
     /// menu for the click it opens empty, which AppKit does not show.
     public func menuNeedsUpdate(_ menu: NSMenu) {
         guard menu === rowMenu else { return }
-        menu.removeAllItems()
-        guard let provided = contextMenu(forRow: outlineView.clickedRow) else { return }
-        let items = provided.items
-        provided.removeAllItems()
-        for item in items { menu.addItem(item) }
+        menu.replaceItems(withItemsOf: contextMenu(forRow: outlineView.clickedRow))
     }
 }
 

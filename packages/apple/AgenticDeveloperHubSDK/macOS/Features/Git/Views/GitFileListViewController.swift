@@ -150,11 +150,7 @@ extension GitFileListViewController: NSMenuDelegate {
     /// Moves the clicked row's menu items into the table's menu as it opens; with no menu
     /// for the click it opens empty, which AppKit does not show.
     public func menuNeedsUpdate(_ menu: NSMenu) {
-        menu.removeAllItems()
-        guard let provided = contextMenu(forRow: tableView.clickedRow) else { return }
-        let items = provided.items
-        provided.removeAllItems()
-        for item in items { menu.addItem(item) }
+        menu.replaceItems(withItemsOf: contextMenu(forRow: tableView.clickedRow))
     }
 }
 

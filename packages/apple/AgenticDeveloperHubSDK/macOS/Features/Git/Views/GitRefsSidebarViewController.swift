@@ -294,7 +294,7 @@ public final class GitRefsSidebarViewController: NSViewController {
             }
             let item = NSMenuItem(title: entry.title, action: #selector(performMenuIntent(_:)), keyEquivalent: "")
             item.target = self
-            item.representedObject = RefIntentBox(entry.intent)
+            item.representedObject = MenuPayload(entry.intent)
             item.accessibilityID("git.sidebar.menu.\(entry.name)")
             menu.addItem(item)
         }
@@ -302,8 +302,8 @@ public final class GitRefsSidebarViewController: NSViewController {
     }
 
     @objc private func performMenuIntent(_ sender: NSMenuItem) {
-        guard let box = sender.representedObject as? RefIntentBox else { return }
-        request(box.intent)
+        guard let intent = sender.payload(GitRefIntent.self) else { return }
+        request(intent)
     }
 
     private func request(_ intent: GitRefIntent) {
@@ -313,10 +313,4 @@ public final class GitRefsSidebarViewController: NSViewController {
     private static func symbol(_ name: String) -> NSImage? {
         NSImage(systemSymbolName: name, accessibilityDescription: nil)
     }
-}
-
-/// Carries a menu item's intent as its `representedObject`, which must be an object.
-private final class RefIntentBox: NSObject {
-    let intent: GitRefIntent
-    init(_ intent: GitRefIntent) { self.intent = intent }
 }
