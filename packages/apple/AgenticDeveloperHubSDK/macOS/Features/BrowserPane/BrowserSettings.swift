@@ -458,20 +458,28 @@ protocol BrowserSettingKey {
     func remove(from store: SettingsStore)
     /// The value `store` resolves for this key, as text.
     func describe(in store: SettingsStore) -> String
+    #if DEBUG
     /// Throws unless `json` (a JSON scalar: a Bool, number or string, the
-    /// raw value of an enum) decodes as this key's value.
+    /// raw value of an enum) decodes as this key's value. Debug only: its one
+    /// caller is `BrowserTestLaunch`, which a shipping binary leaves out.
     func check(json: Any) throws
     /// Writes `json` as this key's value; throws when it does not decode.
+    /// Debug only, for the same reason as `check(json:)`.
     func set(json: Any, in store: SettingsStore) throws
+    #endif
 }
 
 extension UserSetting: BrowserSettingKey {
     func remove(from store: SettingsStore) { store.remove(self) }
     func describe(in store: SettingsStore) -> String { String(describing: store.get(self)) }
+    #if DEBUG
     func check(json: Any) throws { _ = try decode(json) }
     func set(json: Any, in store: SettingsStore) throws { store.set(try decode(json), for: self) }
+    /// Decodes a lone JSON scalar by wrapping it in an array, since
+    /// `JSONDecoder` takes only a top-level array or object.
     private func decode(_ json: Any) throws -> Value {
         let data = try JSONSerialization.data(withJSONObject: [json])
         return try JSONDecoder().decode([Value].self, from: data)[0]
     }
+    #endif
 }

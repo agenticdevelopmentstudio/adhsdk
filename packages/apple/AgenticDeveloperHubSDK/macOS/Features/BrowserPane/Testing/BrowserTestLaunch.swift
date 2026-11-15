@@ -2,36 +2,60 @@
 //  BrowserTestLaunch.swift
 //  AgenticDeveloperHubSDK
 //
-//  The web privacy test harness's way into the app
-//  (docs/designs/web-privacy-test-harness.md in the Kitchen): the XCUITest
-//  runner is sandboxed and cannot script the app, so it launches it with
-//  `APP_TEST_BROWSER_URL` and `APP_TEST_BROWSER_SETTINGS`, and the app opens a
-//  browser window on that page with those settings as per-window overrides.
+//  A launch-time hook for UI tests of a host app's browser. An XCUITest runner
+//  is sandboxed and cannot script the app it drives, so it launches the app
+//  with `APP_TEST_BROWSER_URL` and `APP_TEST_BROWSER_SETTINGS` in its
+//  environment, and the host hands that environment to `request(from:)` and
+//  the result to `open(_:)`: a browser window on that page with those
+//  settings as the window's own overrides.
 //
-//  Debug only: the whole file compiles out of a shipping binary, and the host
-//  calls it only under a scratch test home, so it cannot reach a customer.
+//  Debug only: the whole file compiles out of a shipping binary. A host should
+//  also call it only under a scratch test home, so a test's settings never
+//  reach a real profile.
 //
 
 #if DEBUG
 import AgenticDeveloperHubSDKCore
 import Foundation
 
+/// Opens a browser window described by a test runner's launch environment.
+/// See the file header for how a host wires it in.
 @MainActor
 public enum BrowserTestLaunch {
 
+    /// The environment variable holding the page to open, an absolute URL.
     public nonisolated static let urlVariable = "APP_TEST_BROWSER_URL"
+    /// The environment variable holding the window's setting overrides: a
+    /// JSON object of browser setting name to JSON scalar (a Bool, number or
+    /// string, an enum's raw value). Optional.
     public nonisolated static let settingsVariable = "APP_TEST_BROWSER_SETTINGS"
 
+    /// A validated launch request: a page, and the settings to open it with.
     public struct Request {
+        /// The page the window opens on.
         public let url: URL
         /// Setting name → JSON scalar, every name a real browser key.
         public let overrides: [String: Any]
+
+        /// A request built directly rather than from an environment. The
+        /// names are not checked here; `open(_:)` checks every one, and every
+        /// value, before it opens anything.
+        public init(url: URL, overrides: [String: Any] = [:]) {
+            self.url = url
+            self.overrides = overrides
+        }
     }
 
+    /// Why a launch request was refused. Its `description` names the
+    /// variable at fault, so a host can print it and exit.
     public enum LaunchError: Error, CustomStringConvertible {
+        /// `urlVariable` is set but is not an absolute URL.
         case badURL(String)
+        /// `settingsVariable` is set but is not a JSON object.
         case badSettingsJSON(String)
+        /// An override names no browser setting.
         case unknownSetting(String)
+        /// An override's value does not decode as its setting's type.
         case badValue(String, Error)
 
         public var description: String {
@@ -67,8 +91,18 @@ public enum BrowserTestLaunch {
         return Request(url: url, overrides: overrides)
     }
 
+    /// Throws unless every override names a browser setting and decodes as
+    /// that setting's type.
+    static func check(_ overrides: [String: Any]) throws {
+        for (name, value) in overrides {
+            do { try key(named: name).check(json: value) } catch let error as LaunchError {
+                throw error
+            } catch { throw LaunchError.badValue(name, error) }
+        }
+    }
+
     /// Writes `overrides` into `store`, a window's own settings layer.
-    public static func apply(_ overrides: [String: Any], to store: SettingsStore) throws {
+    static func apply(_ overrides: [String: Any], to store: SettingsStore) throws {
         for (name, value) in overrides {
             do { try key(named: name).set(json: value, in: store) } catch let error as LaunchError {
                 throw error
@@ -81,11 +115,7 @@ public enum BrowserTestLaunch {
     /// nothing rather than a window without the setting the test asked for.
     @discardableResult
     public static func open(_ request: Request) throws -> WebBrowserWindowController? {
-        for (name, value) in request.overrides {
-            do { try key(named: name).check(json: value) } catch let error as LaunchError {
-                throw error
-            } catch { throw LaunchError.badValue(name, error) }
-        }
+        try check(request.overrides)
         return WebBrowserWindowController.openNew(url: request.url) { settings in
             try? apply(request.overrides, to: settings)
         }
