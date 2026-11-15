@@ -137,6 +137,7 @@ public final class MarkdownPaneViewController: NSViewController {
         }
         for frame in [singleFrame, markdownFrame, previewFrame] {
             frame.delegate = self
+            frame.keepsTabsOnPrimaryEdge = true
             frame.showsCloseButtons = false
             addChild(frame)
         }
@@ -208,7 +209,7 @@ public final class MarkdownPaneViewController: NSViewController {
         UserSettings.markdownPaneContent.value = content
         if layout == .singlePane {
             isRearranging = true
-            singleFrame.selectTab(id: tabID(for: content), on: .top)
+            singleFrame.selectTab(id: tabID(for: content), on: singleFrame.primaryEdge)
             isRearranging = false
         }
         syncHeader()
@@ -221,7 +222,7 @@ public final class MarkdownPaneViewController: NSViewController {
     private func applyArrangement() {
         isRearranging = true
         for frame in [singleFrame, markdownFrame, previewFrame] {
-            for tab in frame.tabs(on: .top) { frame.removeTab(id: tab.id) }
+            for tab in frame.tabs(on: frame.primaryEdge) { frame.removeTab(id: tab.id) }
         }
         let markdownTab = MultiTabbedViewController.Tab(
             id: markdownTabID, title: MarkdownPaneContent.markdown.title, viewController: source)
@@ -229,12 +230,12 @@ public final class MarkdownPaneViewController: NSViewController {
             id: previewTabID, title: MarkdownPaneContent.preview.title, viewController: preview)
         switch layout {
         case .singlePane:
-            singleFrame.addTab(markdownTab, on: .top)
-            singleFrame.addTab(previewTab, on: .top)
-            singleFrame.selectTab(id: tabID(for: shownContent), on: .top)
+            singleFrame.addTab(markdownTab, on: singleFrame.primaryEdge)
+            singleFrame.addTab(previewTab, on: singleFrame.primaryEdge)
+            singleFrame.selectTab(id: tabID(for: shownContent), on: singleFrame.primaryEdge)
         case .sideBySide:
-            markdownFrame.addTab(markdownTab, on: .top)
-            previewFrame.addTab(previewTab, on: .top)
+            markdownFrame.addTab(markdownTab, on: markdownFrame.primaryEdge)
+            previewFrame.addTab(previewTab, on: previewFrame.primaryEdge)
         }
         singleFrame.view.isHidden = layout != .singlePane
         splitView.isHidden = layout != .sideBySide

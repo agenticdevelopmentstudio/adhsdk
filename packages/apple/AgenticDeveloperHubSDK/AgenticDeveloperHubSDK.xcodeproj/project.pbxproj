@@ -1012,6 +1012,7 @@
 		306CF1EA26AF9A63E544E3CC /* ContextTrigger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98D251986B9EBA63FD1B4AAD /* ContextTrigger.swift */; };
 		3073D99BC43D64CA61AE49AB /* AIProviderDefaults.swift in Sources */ = {isa = PBXBuildFile; fileRef = E54FDF8C375E739EE4D541B9 /* AIProviderDefaults.swift */; };
 		307F97818CE69AD1937517B6 /* AISettingsViewPanelController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24CF1AAC96D8BAD8D0D62CFC /* AISettingsViewPanelController.swift */; };
+		3081DEFDF731970AABD57EA7 /* TabPositionSetting.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A4D847E9A3D16367ED4FDC3 /* TabPositionSetting.swift */; };
 		308700A789E59E08A45BB5A9 /* GitSettingsPanelViewControllerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E605FFBF0C6E62F529C4CE20 /* GitSettingsPanelViewControllerTests.swift */; };
 		309358297B6C568A179A2587 /* PaneMinimizeGeometry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D5A83D5DB424DC3C5A0A402 /* PaneMinimizeGeometry.swift */; };
 		30B3FEEA53A29145EDA7F171 /* SystemWindowMatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B5A0ABB17EDA43EFA41A375 /* SystemWindowMatcher.swift */; };
@@ -1235,6 +1236,7 @@
 		3F4D2A68264F7FA501704DFF /* ExtensionResourcePath.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37DB0E27D84F33DD93607336 /* ExtensionResourcePath.swift */; };
 		3F4D679C0FB4B2DC56D66D38 /* ClosureMenuItemTarget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7279CA33353A602FA0A52E0E /* ClosureMenuItemTarget.swift */; };
 		3F4ED954F290179DE71C4D50 /* Loggable.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4ECA4EDF4418B75A588FD16 /* Loggable.swift */; };
+		3F6C2D87CD814C48F35B0D18 /* TabPositionSettingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F811A4C2E02C53EF5C74761E /* TabPositionSettingTests.swift */; };
 		3F6ED670D387E759D5F33461 /* ParsedEventConformanceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 46548137FAD34E7DC1790B8F /* ParsedEventConformanceTests.swift */; };
 		3F702A720D6C3FDC6A0ABDED /* HubUserTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ACE583472523741EB98B3BF8 /* HubUserTests.swift */; };
 		3F757E808F36C37FE266E621 /* PowerAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39C42D39339B5910469E9A45 /* PowerAdapter.swift */; };
@@ -8053,6 +8055,7 @@
 		19F78C32BC10DF50DD9D5B89 /* PointingHandButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PointingHandButton.swift; sourceTree = "<group>"; };
 		19FCC0B1545C581AC9A093FA /* ThemeBinding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeBinding.swift; sourceTree = "<group>"; };
 		1A09B7CC62C8E7A1B305FEB4 /* CaptionedSliderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaptionedSliderView.swift; sourceTree = "<group>"; };
+		1A4D847E9A3D16367ED4FDC3 /* TabPositionSetting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabPositionSetting.swift; sourceTree = "<group>"; };
 		1A5292062859BFAB930D008B /* assistant-repeat.jsonl */ = {isa = PBXFileReference; path = "assistant-repeat.jsonl"; sourceTree = "<group>"; };
 		1A68E486F14BE20F338E5951 /* ThemeBindingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeBindingTests.swift; sourceTree = "<group>"; };
 		1A76CC8A261C77B974621B70 /* ComposableTabsArrangementTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComposableTabsArrangementTests.swift; sourceTree = "<group>"; };
@@ -10752,6 +10755,7 @@
 		F7E72CF27F26A840BA56ED93 /* ComposableTabsActivePaneConformanceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComposableTabsActivePaneConformanceTests.swift; sourceTree = "<group>"; };
 		F809AC4103ACDFE8885DA137 /* AvatarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AvatarView.swift; sourceTree = "<group>"; };
 		F80D72CD07465C48989A0BE6 /* TimelineFormatTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimelineFormatTests.swift; sourceTree = "<group>"; };
+		F811A4C2E02C53EF5C74761E /* TabPositionSettingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabPositionSettingTests.swift; sourceTree = "<group>"; };
 		F811F723212DE83A1DDDD68D /* WorkActivityRecorderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkActivityRecorderTests.swift; sourceTree = "<group>"; };
 		F8149D45C66268834860A506 /* Command.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Command.swift; sourceTree = "<group>"; };
 		F8328403127A70E6C6424D65 /* ScriptWindowCommand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScriptWindowCommand.swift; sourceTree = "<group>"; };
@@ -12531,6 +12535,7 @@
 				64DAC34BAF9DCC0BA99CC695 /* DisclosureCardTests.swift */,
 				0E1BB90B03BD7F591D508367 /* LineViewerTests.swift */,
 				C611BD89785906A14D1B6924 /* SpacingTests.swift */,
+				F811A4C2E02C53EF5C74761E /* TabPositionSettingTests.swift */,
 				D96C7C33E19D707498E2DC07 /* TopicListSelectionTests.swift */,
 				9E29C7053A1CDFD829E95B09 /* TopicListViewControllerTests.swift */,
 			);
@@ -12824,6 +12829,7 @@
 				7CED6D06A055DCF800AA3FA5 /* MultiTabbedViewControllerDelegate.swift */,
 				FDE89EBBCD4DED360395F000 /* TabBarView.swift */,
 				BF5C513EB0CF897D9C7AED64 /* TabItem.swift */,
+				1A4D847E9A3D16367ED4FDC3 /* TabPositionSetting.swift */,
 			);
 			path = MultiTabbedViewController;
 			sourceTree = "<group>";
@@ -23035,6 +23041,7 @@
 				473373BFF122A7B591147C66 /* TabBarStartInsetTests.swift in Sources */,
 				8C80B64418BAF105FE04CA77 /* TabCardStackTests.swift in Sources */,
 				7025007537294D762F9D260A /* TabPaneViewControllerTests.swift in Sources */,
+				3F6C2D87CD814C48F35B0D18 /* TabPositionSettingTests.swift in Sources */,
 				DC42FF4E66233874C8D5FC1C /* TerminalChatSessionTests.swift in Sources */,
 				DD34E09A2E2270800C0CE166 /* TerminalPaneFamilyTests.swift in Sources */,
 				2D5FDB2847B951ABA0F5219D /* TerminalSessionGitBranchTests.swift in Sources */,
@@ -25391,6 +25398,7 @@
 				71666A48E10244BD6D9E8BF3 /* TabPaneStatusSymbol.swift in Sources */,
 				5CF60816323B893392923392 /* TabPaneView.swift in Sources */,
 				1ACB28D10F8BD15D9A6362F3 /* TabPaneViewController.swift in Sources */,
+				3081DEFDF731970AABD57EA7 /* TabPositionSetting.swift in Sources */,
 				38A41A1FA50C36A8EF4C976B /* TableFillingView.swift in Sources */,
 				D6EBCF9E717BC106534EE4E5 /* TerminalAppearance.swift in Sources */,
 				70CE3E5DA30642D449A2D7D8 /* TerminalChatControlServer.swift in Sources */,

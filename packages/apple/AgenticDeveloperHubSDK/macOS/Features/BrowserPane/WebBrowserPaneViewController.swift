@@ -305,6 +305,9 @@ open class WebBrowserPaneViewController: NSViewController {
     /// gives its space back (`refreshBarInsets`).
     private var badgeObservations: [NSKeyValueObservation] = []
     let newTabButton = NSButton()
+    /// The horizontal bar the + follows the last tab on, or `nil` while it
+    /// sits in the address row because the tabs are down a side.
+    private var newTabButtonEdge: Edge?
     let drivenBadge = BrowserDrivenBadge()
     /// Why the last navigation was refused, until the next one starts. A
     /// refused navigation leaves the page as it was, so without it the
@@ -431,7 +434,8 @@ open class WebBrowserPaneViewController: NSViewController {
         engine = activeTab.engine
         if activeTab.pendingURL == nil { activeTab.pendingURL = restorationURL }
         tabStrip.delegate = self
-        tabStrip.setEdgeEnabled(.top, true)
+        // One edge of tabs, on whichever the tab positions put first.
+        tabStrip.keepsTabsOnPrimaryEdge = true
         applyCookiePolicy()
         observeSettings()
     }
@@ -1107,9 +1111,10 @@ open class WebBrowserPaneViewController: NSViewController {
         // navigation controls show is decided once, here.
         applyToolbarOwnership()
         addChild(tabStrip)
-        // The + follows the last tab, where a browser's new-tab control sits.
-        tabStrip.setTrailingAccessory(newTabButton, for: .top)
-        tabStrip.setAccessoryBelowBar(bar, for: .top)
+        // The address and privacy rows stay over the page wherever the tabs
+        // are: the centre's top row, not a row tied to the top bar.
+        tabStrip.setTopAccessory(bar)
+        placeNewTabButton()
         let strip = tabStrip.view
         strip.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(strip)
@@ -1124,9 +1129,10 @@ open class WebBrowserPaneViewController: NSViewController {
         let front = activeTab
         isInstallingTabs = true
         for tab in tabs {
-            tabStrip.addTab(.init(id: tab.id, title: tabTitle(for: tab), viewController: tab.content), on: .top)
+            tabStrip.addTab(.init(id: tab.id, title: tabTitle(for: tab), viewController: tab.content),
+                            on: tabStrip.primaryEdge)
         }
-        tabStrip.selectTab(id: front.id, on: .top)
+        tabStrip.selectTab(id: front.id, on: tabStrip.primaryEdge)
         isInstallingTabs = false
         activate(front)
     }
@@ -1257,6 +1263,29 @@ open class WebBrowserPaneViewController: NSViewController {
         var detail = engine.url?.host ?? ""
         if let error { detail += (detail.isEmpty ? "" : " ") + "error \((error as NSError).code)" }
         eventLog.record(channel: "navigation", event: event, decision: .info, detail: detail)
+    }
+
+    /// The + follows the last tab on a top or bottom bar, where a browser's
+    /// new-tab control sits. A side bar has no room after its last tab, so
+    /// with the tabs down a side it joins the address row, after Reload.
+    private func placeNewTabButton() {
+        guard let bar = addressBar else { return }
+        let edge = tabStrip.primaryEdge
+        let target: Edge? = edge.isVertical ? nil : edge
+        let inBar = newTabButton.superview === bar
+        guard target != newTabButtonEdge || (target == nil && !inBar) else { return }
+        // Off the old bar first: a bar taking its accessory away removes it
+        // from whatever superview it has, which must not be the new one.
+        if let old = newTabButtonEdge { tabStrip.setTrailingAccessory(nil, for: old) }
+        if inBar { bar.removeView(newTabButton) }
+        newTabButtonEdge = target
+        if let target {
+            tabStrip.setTrailingAccessory(newTabButton, for: target)
+        } else {
+            let index = bar.arrangedSubviews.firstIndex(of: reloadButton).map { $0 + 1 } ?? 0
+            bar.insertArrangedSubview(newTabButton, at: index)
+        }
+        refreshBarInsets()
     }
 
     private func configureButton(_ button: NSButton, symbol: String, label: String, action: Selector) {
@@ -1459,7 +1488,8 @@ open class WebBrowserPaneViewController: NSViewController {
         tabObserver?.pane(self, didAddTab: tabEngine)
         // The strip's tab order is the pane's: insert at the same place.
         tabStrip.insertTab(
-            .init(id: tab.id, title: tabTitle(for: tab), viewController: tab.content), at: index, on: .top)
+            .init(id: tab.id, title: tabTitle(for: tab), viewController: tab.content),
+            at: index, on: tabStrip.primaryEdge)
         if inBackground {
             persistTabs()
             return tab
@@ -1468,7 +1498,7 @@ open class WebBrowserPaneViewController: NSViewController {
         // covers both routes in.
         isActivatingPopup = openedByPage
         defer { isActivatingPopup = false }
-        tabStrip.selectTab(id: tab.id, on: .top)
+        tabStrip.selectTab(id: tab.id, on: tabStrip.primaryEdge)
         if activeTab !== tab { activate(tab) }
         return tab
     }
@@ -1531,7 +1561,7 @@ open class WebBrowserPaneViewController: NSViewController {
     /// click on it would.
     public func activateTab(engine tabEngine: BrowserEngine) {
         guard let tab = tab(for: tabEngine) else { return }
-        tabStrip.selectTab(id: tab.id, on: .top)
+        tabStrip.selectTab(id: tab.id, on: tabStrip.primaryEdge)
         if activeTab !== tab { activate(tab) }
     }
 
@@ -1572,7 +1602,7 @@ open class WebBrowserPaneViewController: NSViewController {
         // neighbour forward on the way — activating it would load its pending
         // page and move the pane's address to it for nothing.
         if tab === activeTab, let opener = tab.opener, opener !== tab, tabs.contains(where: { $0 === opener }) {
-            tabStrip.selectTab(id: opener.id, on: .top)
+            tabStrip.selectTab(id: opener.id, on: tabStrip.primaryEdge)
         }
         tabObserver?.pane(self, willCloseTab: tab.engine)
         if !settings.get(UserSettings.browserPrivateBrowsing),
@@ -2155,6 +2185,14 @@ extension WebBrowserPaneViewController: MultiTabbedViewControllerDelegate {
     ) {
         guard let tab = tabs.first(where: { $0.id == id }) else { return }
         closeTab(tab)
+    }
+
+    /// The tabs moved to another edge (the tab positions changed); the + goes
+    /// with them.
+    public func multiTabbedViewController(
+        _ controller: MultiTabbedViewController, primaryEdgeDidChange edge: Edge, from oldEdge: Edge
+    ) {
+        placeNewTabButton()
     }
 
     /// The bar has already moved the tab; the pane's list follows it.

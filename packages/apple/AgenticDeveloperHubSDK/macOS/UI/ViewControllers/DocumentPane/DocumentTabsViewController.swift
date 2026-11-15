@@ -107,7 +107,8 @@ public final class DocumentTabsViewController: MultiTabbedViewController {
         self.paneNodeID = paneNodeID
         super.init()
         delegate = self
-        setEdgeEnabled(.top, true)
+        // One edge of tabs, on whichever the app-wide tab positions put first.
+        keepsTabsOnPrimaryEdge = true
     }
 
     @available(*, unavailable)
@@ -146,7 +147,7 @@ public final class DocumentTabsViewController: MultiTabbedViewController {
     /// for another pane of the window entirely — is deliberately not recorded:
     /// the answer has to outlive the click that asks for it.
     private func firstResponderDidMove() {
-        guard let tabID = selectedTabID(on: .top), let root = splitsByTabID[tabID] else { return }
+        guard let tabID = selectedTabID(on: primaryEdge), let root = splitsByTabID[tabID] else { return }
         guard let pane = panes(in: root).first(where: { $0.containsFirstResponder }) else { return }
         rememberFocus(pane, inTab: tabID)
         reportFocusedDocument()
@@ -165,7 +166,7 @@ public final class DocumentTabsViewController: MultiTabbedViewController {
     /// No-op for an editor that is not in the tab on screen: only a visible pane
     /// can have been the one the user acted in.
     private func rememberFocus(of editor: DocumentEditorViewController) {
-        guard let tabID = selectedTabID(on: .top), let root = splitsByTabID[tabID],
+        guard let tabID = selectedTabID(on: primaryEdge), let root = splitsByTabID[tabID],
               let pane = panes(in: root).first(where: { $0.contentViewController === editor })
         else { return }
         rememberFocus(pane, inTab: tabID)
@@ -230,7 +231,7 @@ public final class DocumentTabsViewController: MultiTabbedViewController {
     private func addTab(root: ComposableTabsViewController, title: String) -> UUID {
         let tab = Tab(title: title, viewController: root)
         splitsByTabID[tab.id] = root
-        addTab(tab, on: .top)
+        addTab(tab, on: primaryEdge)
         wireTitles(in: root, tabID: tab.id)
         return tab.id
     }
@@ -293,7 +294,7 @@ public final class DocumentTabsViewController: MultiTabbedViewController {
     public func openInNewTab(_ url: URL) {
         let root = makeTabRoot()
         let newTabID = addTab(root: root, title: url.lastPathComponent)
-        selectTab(id: newTabID, on: .top)
+        selectTab(id: newTabID, on: primaryEdge)
         focusedEditor(in: root)?.fileURL = url
         persistTabs()
     }
@@ -343,7 +344,7 @@ public final class DocumentTabsViewController: MultiTabbedViewController {
     }
 
     public func openToTheSide(_ url: URL) {
-        guard let tabID = selectedTabID(on: .top),
+        guard let tabID = selectedTabID(on: primaryEdge),
               let root = splitsByTabID[tabID],
               let focused = focusedPane(in: root) else { return }
 
@@ -375,12 +376,12 @@ public final class DocumentTabsViewController: MultiTabbedViewController {
     // MARK: - Inspection
 
     public var focusedEditor: DocumentEditorViewController? {
-        guard let tabID = selectedTabID(on: .top), let root = splitsByTabID[tabID] else { return nil }
+        guard let tabID = selectedTabID(on: primaryEdge), let root = splitsByTabID[tabID] else { return nil }
         return focusedEditor(in: root)
     }
 
     public func editors(inTabAt index: Int) -> [DocumentEditorViewController] {
-        let all = tabs(on: .top)
+        let all = tabs(on: primaryEdge)
         guard index >= 0, index < all.count, let root = splitsByTabID[all[index].id] else { return [] }
         return editors(in: root)
     }
@@ -391,13 +392,13 @@ public final class DocumentTabsViewController: MultiTabbedViewController {
     /// things with close boxes on them, which is what a test of the close box
     /// has to hold.
     public func panes(inTabAt index: Int) -> [ComposableTabsPaneViewController] {
-        let all = tabs(on: .top)
+        let all = tabs(on: primaryEdge)
         guard index >= 0, index < all.count, let root = splitsByTabID[all[index].id] else { return [] }
         return panes(in: root)
     }
 
     public func paneFractions(inTabAt index: Int) -> [CGFloat] {
-        let all = tabs(on: .top)
+        let all = tabs(on: primaryEdge)
         guard index >= 0, index < all.count, let root = splitsByTabID[all[index].id] else { return [] }
         return absoluteFractions(of: root.snapshotNode())
     }
@@ -469,11 +470,11 @@ public final class DocumentTabsViewController: MultiTabbedViewController {
     /// stores nothing itself, and the project's own tab tables belong to the
     /// window, not to a pane inside it.
     public func persistTabs() {
-        let snapshots = tabs(on: .top).compactMap { splitsByTabID[$0.id]?.snapshotNode() }
+        let snapshots = tabs(on: primaryEdge).compactMap { splitsByTabID[$0.id]?.snapshotNode() }
         let records = snapshots.map { StoredTab(root: LayoutNodeCodable($0)) }
         let stored = StoredTabs(
             tabs: records,
-            selectedIndex: tabs(on: .top).firstIndex { $0.id == selectedTabID(on: .top) } ?? 0
+            selectedIndex: tabs(on: primaryEdge).firstIndex { $0.id == selectedTabID(on: primaryEdge) } ?? 0
         )
         guard let data = try? JSONEncoder().encode(stored),
               let json = String(data: data, encoding: .utf8) else { return }
@@ -522,9 +523,9 @@ public final class DocumentTabsViewController: MultiTabbedViewController {
             let tabID = addTab(root: makeTabRoot(from: record.root.node), title: "Untitled")
             retitle(tabID)
         }
-        let all = tabs(on: .top)
+        let all = tabs(on: primaryEdge)
         if stored.selectedIndex >= 0, stored.selectedIndex < all.count {
-            selectTab(id: all[stored.selectedIndex].id, on: .top)
+            selectTab(id: all[stored.selectedIndex].id, on: primaryEdge)
         }
     }
 }
@@ -547,7 +548,7 @@ extension DocumentTabsViewController: MultiTabbedViewControllerDelegate {
     /// The floor itself, reached from the tab's close box and from the last
     /// editor pane's — see `onLastPaneCloseRequest` in `makeTabRoot`.
     func closeTab(_ tabID: UUID) {
-        guard tabs(on: .top).count > 1 else {
+        guard tabs(on: primaryEdge).count > 1 else {
             // Every editor in the tab, not only the focused one: what the user
             // clicked closes the *tab*, and `retitle` renames it "Untitled" the
             // moment the focused editor empties — a tab named after nothing while

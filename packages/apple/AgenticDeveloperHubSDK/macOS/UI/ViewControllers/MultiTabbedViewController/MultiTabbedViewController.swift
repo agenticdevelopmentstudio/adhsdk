@@ -9,7 +9,7 @@ import AgenticDeveloperHubSDKCoreMacOS
 /// Layout (when all four edges enabled):
 /// ```
 ///           [ top tab bar ]
-///           [ accessory   ]   (optional; `setAccessoryBelowBar(_:for: .top)`)
+///           [ accessory   ]   (optional; `setTopAccessory(_:)`)
 /// [left bar][   content   ][right bar]
 ///           [ bottom bar  ]
 /// ```
@@ -20,6 +20,11 @@ import AgenticDeveloperHubSDKCoreMacOS
 /// while no tab is active.
 ///
 /// Hidden edges keep their tab lists so re-enabling restores them.
+///
+/// Which edges are enabled follows the app-wide `UserSettings.tabsPositions`
+/// until a host sets an edge explicitly or supplies an override
+/// (`followsGlobalTabPositions`). A host whose tabs all live on one edge sets
+/// `keepsTabsOnPrimaryEdge` and adds its tabs on `primaryEdge`.
 @MainActor
 open class MultiTabbedViewController: NSViewController {
 
@@ -154,6 +159,25 @@ open class MultiTabbedViewController: NSViewController {
         tabBars[edge]?.trailingAccessory = view
     }
 
+    /// Puts `view` in a full-width row at the top of the centre, above
+    /// whatever the centre shows, with that content moved down to start under
+    /// it; `nil` takes it away. Unlike the tab bars it does not move with the
+    /// enabled edges: with the tabs on the left it is still the centre's top
+    /// row, right of the bar, which is where a browser's address bar belongs
+    /// wherever its tabs are. The same slot `setAccessoryBelowBar(_:for: .top)`
+    /// fills — that name only reads true while the top edge is on.
+    public func setTopAccessory(_ view: NSView?) {
+        guard accessoryBelowTopBar !== view else { return }
+        accessoryBelowTopBar?.removeFromSuperview()
+        accessoryBelowTopBar = view
+        guard isViewLoaded else { return }
+        installAccessoryBelowTopBar()
+        repinCenterContentTop()
+    }
+
+    /// The view `setTopAccessory(_:)` was last given.
+    public var topAccessory: NSView? { accessoryBelowTopBar }
+
     /// Puts `view` between the bar on `edge` and the content — a full-width
     /// row at the top of the centre, above whatever the centre shows (the
     /// active tab, the overlay, or the main content), with that content moved
@@ -172,12 +196,7 @@ open class MultiTabbedViewController: NSViewController {
     /// gives the content the whole centre back.
     public func setAccessoryBelowBar(_ view: NSView?, for edge: Edge) {
         precondition(edge == .top, "only the top edge has a slot below its bar")
-        guard accessoryBelowTopBar !== view else { return }
-        accessoryBelowTopBar?.removeFromSuperview()
-        accessoryBelowTopBar = view
-        guard isViewLoaded else { return }
-        installAccessoryBelowTopBar()
-        repinCenterContentTop()
+        setTopAccessory(view)
     }
 
     /// The view `setAccessoryBelowBar(_:for:)` was last given for `edge`.
@@ -321,6 +340,13 @@ open class MultiTabbedViewController: NSViewController {
             tabBars[edge] = bar
             wireCallbacks(for: bar)
         }
+        // From the start, not only at load: hosts add their tabs before the
+        // view exists, on `primaryEdge`, which has to be the right one then.
+        applyEffectiveTabPositions()
+        tabPositionsObserver = UserSettingObserver(UserSettings.tabsPositions) { [weak self] _ in
+            guard let self, self.followsGlobalTabPositions else { return }
+            self.applyEffectiveTabPositions()
+        }
     }
 
     @available(*, unavailable)
@@ -353,6 +379,7 @@ open class MultiTabbedViewController: NSViewController {
 
     open override func viewDidLoad() {
         super.viewDidLoad()
+        applyEffectiveTabPositions()
         for edge in Edge.allCases {
             syncTabBar(for: edge)
         }
@@ -374,9 +401,117 @@ open class MultiTabbedViewController: NSViewController {
         for bar in tabBars.values { bar.updateThickness() }
     }
 
+    // MARK: - Tab positions
+
+    private var tabPositionsObserver: UserSettingObserver<TabPositions>?
+
+    /// Whether the enabled edges follow `UserSettings.tabsPositions`, applied
+    /// now and again whenever it changes. `true` until a host calls
+    /// `setEdgeEnabled(_:_:)` or `overrideTabPositions(_:)` with a value;
+    /// setting it back to `true` (or `overrideTabPositions(nil)`) drops any
+    /// override and applies the app-wide value at once.
+    public var followsGlobalTabPositions: Bool {
+        get { tabPositionsOverride == nil && !hasExplicitEdges }
+        set {
+            guard newValue != followsGlobalTabPositions else { return }
+            if newValue {
+                tabPositionsOverride = nil
+                hasExplicitEdges = false
+                applyEffectiveTabPositions()
+            } else {
+                hasExplicitEdges = true
+            }
+        }
+    }
+
+    /// The edges this view shows instead of the app-wide ones, if a host or
+    /// the user gave it some.
+    public private(set) var tabPositionsOverride: TabPositions?
+
+    /// Edges set one at a time through `setEdgeEnabled(_:_:)`, which also
+    /// stop the view following the app-wide setting.
+    private var hasExplicitEdges = false
+
+    /// Shows `positions` instead of the app-wide tab positions, and keeps
+    /// them through changes to the setting; `nil` returns to the app-wide
+    /// value and applies it now.
+    public func overrideTabPositions(_ positions: TabPositions?) {
+        tabPositionsOverride = positions
+        hasExplicitEdges = false
+        applyEffectiveTabPositions()
+    }
+
+    /// For a host whose tabs all live on one edge (a browser's strip, a
+    /// document's tabs): only the primary edge of the positions it follows
+    /// is enabled, and when that edge changes every tab moves to the new
+    /// one, in order, the selection kept, before the delegate is told
+    /// (`primaryEdgeDidChange`).
+    public var keepsTabsOnPrimaryEdge = false {
+        didSet {
+            guard keepsTabsOnPrimaryEdge != oldValue else { return }
+            applyEffectiveTabPositions()
+        }
+    }
+
+    /// The first enabled edge in the order top, left, right, bottom: where a
+    /// single-edge host adds, inserts and selects its tabs.
+    public var primaryEdge: Edge {
+        TabPositions.primaryOrder.first(where: isEdgeEnabled) ?? .top
+    }
+
+    /// Whichever positions this view is meant to show now: the override,
+    /// the app-wide value while following it, or nothing (edges set
+    /// explicitly stay as they were set).
+    private var effectiveTabPositions: TabPositions? {
+        if let tabPositionsOverride { return tabPositionsOverride }
+        return hasExplicitEdges ? nil : UserSettings.tabsPositions.value
+    }
+
+    private func applyEffectiveTabPositions() {
+        guard let positions = effectiveTabPositions else { return }
+        let oldPrimary = primaryEdge
+        let target = positions.primaryEdge
+        let wanted: Set<Edge> = keepsTabsOnPrimaryEdge ? [target] : positions.edges
+        // Tabs first, so the edge being turned off holds nothing — the active
+        // tab included — and no fallback activation runs on the way.
+        if keepsTabsOnPrimaryEdge { gatherTabs(onto: target) }
+        // Every enable before any disable: there is never a moment with no
+        // edge on, and so never one with the active tab unplaceable.
+        for edge in Edge.allCases where wanted.contains(edge) { applyEdgeEnabled(edge, true) }
+        for edge in Edge.allCases where !wanted.contains(edge) { applyEdgeEnabled(edge, false) }
+        let newPrimary = primaryEdge
+        if newPrimary != oldPrimary {
+            delegate?.multiTabbedViewController(self, primaryEdgeDidChange: newPrimary, from: oldPrimary)
+        }
+    }
+
+    /// Moves every tab on another edge to the end of `edge`, edges taken in
+    /// primary order and each edge's tabs in their own order. The active tab
+    /// keeps its id, so it stays selected.
+    private func gatherTabs(onto edge: Edge) {
+        guard let target = edgeStates[edge] else { return }
+        var moved = false
+        for other in TabPositions.primaryOrder where other != edge {
+            guard let state = edgeStates[other], !state.tabs.isEmpty else { continue }
+            target.tabs += state.tabs
+            state.tabs = []
+            syncTabBar(for: other)
+            moved = true
+        }
+        if moved { syncTabBar(for: edge) }
+    }
+
     // MARK: - Edge enable/disable
 
+    /// Turns one edge on or off, and stops the view following the app-wide
+    /// tab positions (`explicit-edges-stop-following-global`).
     public func setEdgeEnabled(_ edge: Edge, _ enabled: Bool) {
+        tabPositionsOverride = nil
+        hasExplicitEdges = true
+        applyEdgeEnabled(edge, enabled)
+    }
+
+    private func applyEdgeEnabled(_ edge: Edge, _ enabled: Bool) {
         guard let state = edgeStates[edge], state.enabled != enabled else { return }
         state.enabled = enabled
         if !enabled, let activeTabID, state.tabs.contains(where: { $0.id == activeTabID }) {

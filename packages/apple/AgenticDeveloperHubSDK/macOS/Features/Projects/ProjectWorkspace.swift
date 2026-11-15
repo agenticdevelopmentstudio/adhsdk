@@ -57,12 +57,14 @@ public final class ProjectWorkspace {
     private lazy var firstOpenSeed: (arrangement: LayoutNode?, enabledEdges: [Edge]) = {
         guard let sourceID = arrangementSourceID, sourceID != repo.id,
               let loaded = try? database.loadTabs(repoID: sourceID), !loaded.tabs.isEmpty else {
-            return (nil, [.top])
+            // No window to copy: the app-wide tab positions, in the order
+            // the window walks its edges.
+            return (nil, Self.globalEnabledEdges)
         }
         let arrangement = ProjectTabReconciler.arrangement(of: loaded.tabs, activeTabID: loaded.activeTabID)
         // The source's tree is repaired against this project's spec exactly as
         // a stored tree of its own would be (see `initialTabs()`).
-        let edges: [Edge] = loaded.enabledEdges.isEmpty ? [.top] : loaded.enabledEdges
+        let edges: [Edge] = loaded.enabledEdges.isEmpty ? Self.globalEnabledEdges : loaded.enabledEdges
         return (arrangement.map { layout.spec.reconcile($0) }, edges)
     }()
 
@@ -184,8 +186,16 @@ public final class ProjectWorkspace {
     }
 
     /// The edges a project with no stored tabs turns on: the arrangement
-    /// source's, or the top edge alone.
+    /// source's, or the app-wide tab positions (`UserSettings.tabsPositions`,
+    /// the top edge alone until the user picks others).
     public var firstOpenEnabledEdges: [Edge] { firstOpenSeed.enabledEdges }
+
+    /// The app-wide tab positions in `Edge.allCases` order, the order the
+    /// project window enables and persists its edges in.
+    static var globalEnabledEdges: [Edge] {
+        let edges = UserSettings.tabsPositions.value.edges
+        return Edge.allCases.filter(edges.contains)
+    }
 
     /// A fresh tree for a project with no tab of its own to copy: the
     /// arrangement source's, in ids nobody is using, or the layout's

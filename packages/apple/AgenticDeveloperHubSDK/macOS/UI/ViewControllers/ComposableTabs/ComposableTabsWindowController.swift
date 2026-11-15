@@ -839,7 +839,7 @@ public final class ComposableTabsWindowController: WindowController<NSViewContro
     }
 
     /// Creates a project-level tab: one member per enabled edge, all
-    /// sharing a title, and activates the first member.
+    /// sharing a title, and activates the member on the primary edge.
     private func addTabGroup(title: String? = nil, workingDirectory: URL? = nil) {
         let title = title ?? "Tab \(tabGroups.count + 1)"
         var group = TabGroup(
@@ -867,11 +867,11 @@ public final class ComposableTabsWindowController: WindowController<NSViewContro
             group.members[edge] = id
         }
         tabGroups.append(group)
-        for edge in Edge.allCases {
-            if let id = group.members[edge] {
-                tabbed.selectTab(id: id, on: edge)
-                break
-            }
+        // The member on the primary edge — the first enabled one in top,
+        // left, right, bottom order — is the one that comes up in front.
+        let primary = tabbed.primaryEdge
+        if let id = group.members[primary] {
+            tabbed.selectTab(id: id, on: primary)
         }
         persistAllTabs()
         // `selectTab(id:on:)` above already fired `activeTabDidChange`, and

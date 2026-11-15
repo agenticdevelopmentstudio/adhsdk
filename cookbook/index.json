@@ -18534,6 +18534,13 @@
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/MultiTabbedViewController/MultiTabbedViewController.swift",
           "platform": "apple"
+        },
+        {
+          "conformance": {
+            "state": "unverified"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/MultiTabbedViewController/TabPositionSetting.swift",
+          "platform": "macos"
         }
       ],
       "kind": "ingredient",

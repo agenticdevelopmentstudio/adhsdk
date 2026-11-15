@@ -59,6 +59,18 @@ public protocol MultiTabbedViewControllerDelegate: AnyObject {
         to index: Int,
         on edge: Edge
     )
+
+    /// The edge a single-edge host keeps its tabs on moved — the enabled
+    /// edges changed, from the app-wide setting or an override — and, with
+    /// `keepsTabsOnPrimaryEdge` on, every tab has already been moved there in
+    /// order with the selection kept. A host whose tab items are drawn for
+    /// one edge (a card for a side bar) replaces them here, and one with
+    /// accessories on the old edge moves them.
+    func multiTabbedViewController(
+        _ controller: MultiTabbedViewController,
+        primaryEdgeDidChange edge: Edge,
+        from oldEdge: Edge
+    )
 }
 
 extension MultiTabbedViewControllerDelegate {
@@ -85,5 +97,10 @@ extension MultiTabbedViewControllerDelegate {
         didReorderTab id: UUID,
         to index: Int,
         on edge: Edge
+    ) {}
+    public func multiTabbedViewController(
+        _ controller: MultiTabbedViewController,
+        primaryEdgeDidChange edge: Edge,
+        from oldEdge: Edge
     ) {}
 }
