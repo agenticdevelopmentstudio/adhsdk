@@ -483,8 +483,17 @@ open class WebBrowserPaneViewController: NSViewController {
         return nil
     }
 
-    /// The front tab's words, which the pane's chrome is shown through.
+    /// The front tab's words, which the pane's address and title are shown
+    /// through.
     private var pageWordFilter: TextSubstitutionFilter? { pageWordFilter(for: engine) }
+
+    /// The words `tab`'s name is shown through: those of its own page, or of
+    /// the page it was told to load or waits to load before its engine has
+    /// one — never the front tab's, whose site-scoped words are not this
+    /// tab's.
+    private func pageWordFilter(for tab: BrowserTab) -> TextSubstitutionFilter? {
+        pageWordFilter(at: tab.engine.url ?? tab.requestedURL ?? tab.pendingURL)
+    }
 
     private func refreshPageWordFilter() {
         for tab in tabs {
@@ -511,7 +520,11 @@ open class WebBrowserPaneViewController: NSViewController {
     /// Only what is shown; what is stored (history, the reopen address)
     /// keeps the real text.
     private func shown(_ text: String) -> String {
-        pageWordFilter?.concealing(text, matchingCase: true) ?? text
+        shown(text, through: pageWordFilter)
+    }
+
+    private func shown(_ text: String, through filter: TextSubstitutionFilter?) -> String {
+        filter?.concealing(text, matchingCase: true) ?? text
     }
 
     /// The page's title in the real words, for what is stored — history, the
@@ -1340,11 +1353,20 @@ open class WebBrowserPaneViewController: NSViewController {
 
     /// What a tab is called in the bar: its page's title, else its host,
     /// else what it was called when the pane was last stored, else New Tab.
+    /// Shown through the tab's own site's words, so a tab behind the front
+    /// one is concealed as its own page is.
     private func tabTitle(for tab: BrowserTab) -> String {
+        let filter = pageWordFilter(for: tab)
         // Chromium titles a blank page with its address; that is no name.
-        if let title = tab.engine.title, !title.isEmpty, title != Self.blankPage.absoluteString { return shown(title) }
-        if let url = tab.engine.url, url != Self.blankPage, let host = url.host, !host.isEmpty { return shown(host) }
-        if tab.engine.url == nil, let stored = tab.storedTitle, !stored.isEmpty { return shown(stored) }
+        if let title = tab.engine.title, !title.isEmpty, title != Self.blankPage.absoluteString {
+            return shown(title, through: filter)
+        }
+        if let url = tab.engine.url, url != Self.blankPage, let host = url.host, !host.isEmpty {
+            return shown(host, through: filter)
+        }
+        if tab.engine.url == nil, let stored = tab.storedTitle, !stored.isEmpty {
+            return shown(stored, through: filter)
+        }
         return Self.newTabTitle
     }
 

@@ -79,8 +79,9 @@ final class AgentPrivacySettingsGroup {
         ),
         .init(
             title: "What It Does Not Hide",
-            body: "The page on your screen is not changed: you still see the real "
-                + "words. A word that a page has encoded — inside a web address's "
+            body: "The pane draws its page, address and tab names with the stand-ins "
+                + "too, each tab with the words for its own site, so the screen shows "
+                + "them rather than the real words. A word that a page has encoded — inside a web address's "
                 + "percent-escapes, say, or split across two elements — is not "
                 + "recognised, so it can reach a model as the page wrote it. Agent "
                 + "access, which hides the pane or makes it read only, works alongside "
