@@ -35,7 +35,11 @@ public final class DocumentEditorViewController: NSViewController {
     /// Every file this editor has shown, for the `‹ ›` before the breadcrumb.
     /// Per editor, because an editor is its tab's document: each open pushes,
     /// and stepping back or forward moves along the trail without pushing.
-    private var history = NavigationHistory<URL>()
+    /// Capped: the trail's menu is rebuilt, one row per entry, on every click.
+    private var history = NavigationHistory<URL>(limit: DocumentEditorViewController.historyLimit)
+
+    /// The most files an editor's trail, and so its menu, holds.
+    static let historyLimit = 50
 
     /// The `‹ ›` that walks `history`, first in the row above the editor.
     /// Internal so a test can read its segments.
@@ -182,6 +186,7 @@ public final class DocumentEditorViewController: NSViewController {
     /// The trail as a menu, most recent first, the file showing checked.
     func makeHistoryMenu() -> NSMenu {
         let menu = NSMenu()
+        let palette = view.resolvedThemeScope.palette
         for (index, url) in history.entries.enumerated().reversed() {
             let item = NSMenuItem(
                 title: url.lastPathComponent,
@@ -191,9 +196,9 @@ public final class DocumentEditorViewController: NSViewController {
             item.tag = index
             item.state = index == history.currentIndex ? .on : .off
             item.toolTip = url.path
-            let icon = NSWorkspace.shared.icon(forFile: url.path)
-            icon.size = NSSize(width: 16, height: 16)
-            item.image = icon
+            // The breadcrumb's tinted symbol for the same file, and no disk
+            // read: `hasDirectoryPath` is the URL's own spelling.
+            item.image = BreadcrumbMenu.icon(for: url, isDirectory: url.hasDirectoryPath, palette: palette)
             menu.addItem(item)
         }
         return menu

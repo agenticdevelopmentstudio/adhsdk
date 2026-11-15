@@ -133,6 +133,19 @@ struct NavigationHistoryTests {
         #expect(history.current == "b")
     }
 
+    @Test("a limited trail drops its oldest entries and keeps walking")
+    func limitDropsTheOldest() {
+        var history = NavigationHistory<String>(limit: 3)
+        for place in ["a", "b", "c", "d", "e"] { history.record(place) }
+
+        #expect(history.entries == ["c", "d", "e"])
+        #expect(history.current == "e")
+        #expect(history.currentIndex == 2)
+        #expect(history.goBack() == "d")
+        #expect(history.goBack() == "c")
+        #expect(!history.canGoBack)
+    }
+
     @Test("a place recorded after leaving goes on the end of the kept trail")
     func recordAfterLeavingAppends() {
         var history = NavigationHistory<String>()

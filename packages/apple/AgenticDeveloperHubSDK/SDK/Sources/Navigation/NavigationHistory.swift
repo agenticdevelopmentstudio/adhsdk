@@ -17,7 +17,14 @@ public struct NavigationHistory<Element: Equatable>: Equatable {
     /// visited, and after `leave()`.
     private var cursor: Int = -1
 
-    public init() {}
+    /// The most entries the trail keeps; recording past it drops the oldest.
+    /// Nil keeps every one.
+    public let limit: Int?
+
+    public init(limit: Int? = nil) {
+        precondition(limit.map { $0 > 0 } ?? true, "a NavigationHistory limit must be positive")
+        self.limit = limit
+    }
 
     /// The place the user is on, or nil before anything is visited.
     public var current: Element? {
@@ -45,6 +52,9 @@ public struct NavigationHistory<Element: Equatable>: Equatable {
             entries.removeSubrange((cursor + 1)...)
         }
         entries.append(element)
+        if let limit, entries.count > limit {
+            entries.removeFirst(entries.count - limit)
+        }
         cursor = entries.count - 1
     }
 
