@@ -102,6 +102,16 @@ public final class ChromiumBrowserEngine: NSObject, BrowserEngine {
     private var pageWordTask: Task<Void, Never>?
     /// Each attached cross-site frame's filter script identifier.
     private var pageWordFrameScripts: [String: String] = [:]
+    /// Hide Images as asked for and as the page last took it, its script's
+    /// token, its new-document script's identifier in the page's session
+    /// and in each attached cross-site frame's, and the queue its changes
+    /// land in, in order.
+    private var hidesImages = false
+    private var appliedHidesImages = false
+    private let hiddenImagesToken = UUID().uuidString
+    private var hiddenImagesScriptIdentifier: String?
+    private var hiddenImagesFrameScripts: [String: String] = [:]
+    private var hiddenImagesTask: Task<Void, Never>?
     private var eventMonitor: Any?
     /// Whether the mouse button now down went down on the page, so its drags
     /// and its release follow it wherever the pointer goes.
@@ -257,6 +267,7 @@ public final class ChromiumBrowserEngine: NSObject, BrowserEngine {
         eventMonitor = nil
         shieldTask?.cancel()
         pageWordTask?.cancel()
+        hiddenImagesTask?.cancel()
         onInputDecision = nil
         delegate = nil
         browserView.delegate = nil
@@ -517,6 +528,7 @@ extension ChromiumBrowserEngine: ChromiumBrowserViewDelegate {
         setMainFrameLoading(false)
         reconcileShield()
         reconcilePageWordFilter()
+        reconcileHiddenImages()
         delegate?.browserEngineDidFinishNavigation(self)
     }
 
@@ -805,6 +817,80 @@ extension ChromiumBrowserEngine {
         }
     }
 
+    // MARK: Hide Images
+
+    /// The script (`BrowserHiddenImages`) with the setting written in, as a
+    /// new-document script in its isolated world, in the page's session and
+    /// every attached cross-site frame's, run at once on the documents
+    /// showing, so turning it on or off reaches every frame without a reload.
+    public func setHidesImages(_ hides: Bool) {
+        guard hides != hidesImages else { return }
+        hidesImages = hides
+        reconcileHiddenImages()
+    }
+
+    private var hiddenImagesSource: String {
+        BrowserHiddenImages.script(hides: hidesImages, token: hiddenImagesToken)
+    }
+
+    /// Brings the page to the setting asked for, after any change still
+    /// landing. A change that failed is tried again at the next load.
+    private func reconcileHiddenImages() {
+        let previous = hiddenImagesTask
+        hiddenImagesTask = Task { @MainActor [weak self] in
+            await previous?.value
+            guard let self, !Task.isCancelled else { return }
+            let wanted = self.hidesImages
+            guard wanted != self.appliedHidesImages else { return }
+            if await self.applyHiddenImages(self.hiddenImagesSource) { self.appliedHidesImages = wanted }
+        }
+    }
+
+    /// Whether the page's session took `source`, which replaces the last one.
+    private func applyHiddenImages(_ source: String) async -> Bool {
+        attachFrames()
+        for session in frameSessions { hideImagesInFrame(session, source: source, runNow: true) }
+        do {
+            if let identifier = hiddenImagesScriptIdentifier {
+                _ = try await send("Page.removeScriptToEvaluateOnNewDocument", ["identifier": identifier], timeout: nil)
+                hiddenImagesScriptIdentifier = nil
+            }
+            try await enablePageDomain()
+            let added = try await send("Page.addScriptToEvaluateOnNewDocument", [
+                "source": source, "worldName": BrowserHiddenImages.worldName, "runImmediately": url != nil
+            ], timeout: nil)
+            hiddenImagesScriptIdentifier = added["identifier"] as? String
+            return true
+        } catch {
+            // The page goes on drawing its images as they were.
+            logger.error("hide images did not change: \(error.localizedDescription, privacy: .public)")
+            return false
+        }
+    }
+
+    /// Replaces one cross-site frame's Hide Images script with `source`.
+    /// `runNow` also runs it on the document showing, which a frame still
+    /// paused before its first document does not have.
+    private func hideImagesInFrame(_ session: String, source: String, runNow: Bool) {
+        if let identifier = hiddenImagesFrameScripts.removeValue(forKey: session) {
+            sendIgnoringResult("Page.removeScriptToEvaluateOnNewDocument",
+                               ["identifier": identifier], sessionId: session)
+        }
+        sendIgnoringResult("Page.addScriptToEvaluateOnNewDocument", [
+            "source": source, "worldName": BrowserHiddenImages.worldName, "runImmediately": runNow
+        ], sessionId: session) { [weak self] added in
+            guard let self, let identifier = added["identifier"] as? String,
+                  self.frameSessions.contains(session) else { return }
+            if self.hiddenImagesSource == source {
+                self.hiddenImagesFrameScripts[session] = identifier
+            } else {
+                // The setting changed while this one was on its way.
+                self.sendIgnoringResult("Page.removeScriptToEvaluateOnNewDocument",
+                                        ["identifier": identifier], sessionId: session)
+            }
+        }
+    }
+
     // MARK: Cross-site frames
 
     /// Auto-attach to out-of-process frames, each paused until it is told to
@@ -835,6 +921,7 @@ extension ChromiumBrowserEngine {
             sendIgnoringResult("Target.setAutoAttach", Self.frameAttach, sessionId: session)
             if isActivationShieldActive { shieldFrame(session, active: true, runNow: !waiting) }
             if let source = wantedPageWordSource { filterFrame(session, source: source, runNow: !waiting) }
+            if hidesImages { hideImagesInFrame(session, source: hiddenImagesSource, runNow: !waiting) }
         }
         // Messages in one session run in order, so whatever was sent above is
         // in place before the frame goes on.
@@ -846,6 +933,7 @@ extension ChromiumBrowserEngine {
         shieldedFrames.remove(session)
         frameScriptIdentifiers.removeValue(forKey: session)
         pageWordFrameScripts.removeValue(forKey: session)
+        hiddenImagesFrameScripts.removeValue(forKey: session)
     }
 
     /// Raises or lowers the shield in one frame's session. `runNow` also runs

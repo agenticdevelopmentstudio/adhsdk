@@ -33,6 +33,8 @@ private final class ScriptedBrowserEngine: BrowserEngine {
     func stopLoading() {}
     func teardown() { isTornDown = true }
     func setActivationShieldActive(_ active: Bool) { isActivationShieldActive = active }
+    private(set) var hidesImages = false
+    func setHidesImages(_ hides: Bool) { hidesImages = hides }
     private(set) var pageWordFilter: TextSubstitutionFilter?
     func setPageWordFilter(_ filter: TextSubstitutionFilter?) { pageWordFilter = filter }
     func applyCookiePolicy(acceptsCookies: Bool) {}

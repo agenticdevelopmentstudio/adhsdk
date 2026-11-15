@@ -35,13 +35,13 @@ import Foundation
 /// every generated box, clearfixes included), and a document a page
 /// rewrites with `document.open()`, until its next navigation. An agent's
 /// screenshot is the pixels on screen, so it shows whatever this misses.
-enum BrowserHiddenImages {
+public enum BrowserHiddenImages {
 
-    static let styleID = "__adk_hidden_images"
+    public static let styleID = "__adk_hidden_images"
 
     /// The isolated world the script runs in, so its listener and its
     /// function are out of the page's reach.
-    static let worldName = "adk-hidden-images"
+    public static let worldName = "adk-hidden-images"
 
     /// An eye with a line through it, grey on a faint grey tile.
     private static let placeholder: String = {
@@ -76,7 +76,7 @@ enum BrowserHiddenImages {
     /// The script with `hides` written in. At document start it applies it
     /// to the new document; run on a page already showing, it applies it to
     /// every frame of it.
-    static func script(hides: Bool, token: String) -> String {
+    public static func script(hides: Bool, token: String) -> String {
         """
         (() => {
           const KEY = '__adkHiddenImages';

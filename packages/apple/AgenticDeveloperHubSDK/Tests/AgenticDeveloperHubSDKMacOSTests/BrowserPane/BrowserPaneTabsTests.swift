@@ -41,6 +41,8 @@ final class FakeBrowserEngine: BrowserEngine {
         delegate = nil
     }
     func setActivationShieldActive(_ active: Bool) { isActivationShieldActive = active }
+    private(set) var hidesImages = false
+    func setHidesImages(_ hides: Bool) { hidesImages = hides }
     private(set) var pageWordFilter: TextSubstitutionFilter?
     func setPageWordFilter(_ filter: TextSubstitutionFilter?) { pageWordFilter = filter }
     func applyCookiePolicy(acceptsCookies: Bool) {}

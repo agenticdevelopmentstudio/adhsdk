@@ -172,7 +172,9 @@ public protocol BrowserEngine: BrowserPageDriver {
     func setActivationShieldActive(_ active: Bool)
     /// Draws every image as a crossed-out eye (`BrowserHiddenImages`), on the
     /// page showing now and every page after it, in every frame of each, and
-    /// turned off puts every frame's images back.
+    /// turned off puts every frame's images back. Every engine implements
+    /// it: there is no default, so an engine cannot ignore the setting while
+    /// the pane's privacy strip says images are hidden.
     func setHidesImages(_ hides: Bool)
     /// Puts the cookie policy the pane decided on the engine's store. The pane
     /// decides because only it knows whether the store is shared.
@@ -200,8 +202,6 @@ public protocol BrowserEngine: BrowserPageDriver {
 }
 
 extension BrowserEngine {
-    /// An engine that cannot hide images draws them as they are.
-    public func setHidesImages(_ hides: Bool) {}
     public var pageWindow: NSWindow? { nil }
     public var providesOwnToolbar: Bool { false }
     public func focusOwnAddressBar() {}
