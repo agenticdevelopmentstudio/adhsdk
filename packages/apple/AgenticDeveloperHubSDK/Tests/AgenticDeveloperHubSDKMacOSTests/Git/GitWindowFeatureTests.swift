@@ -1,3 +1,4 @@
+import AppKit
 import Foundation
 import Testing
 @testable import AgenticDeveloperHubSDKCore
@@ -70,6 +71,33 @@ struct GitWindowFeatureTests {
 
         controller.window?.close()
         #expect(feature.sessions.isEmpty, "closing the window drops its session")
+    }
+
+    @Test("the window's toolbar carries the six verbs, aimed at a toolbar kept beside the session")
+    func toolbarIsWired() async throws {
+        let repository = try await GitTestRepository.make(prefix: "git-window-feature-toolbar")
+        defer { repository.tearDown() }
+        let setting = makeSetting()
+        defer { setting.remove() }
+        defer { removeDatabase() }
+        let feature = try makeFeature(setting)
+        defer { feature.unregister() }
+
+        let controller = try #require(await feature.open(path: repository.root, activates: false))
+        defer { controller.window?.close() }
+        let identifiers = ProjectWindowTestSupport.buildToolbarItems(controller).map(\.rawValue)
+        let verbs = ["fetch", "pull", "push", "branch", "stash", "pop"].map { "git.toolbar.\($0)" }
+
+        #expect(Array(identifiers.prefix(6)) == verbs)
+        let toolbar = try #require(feature.toolbars[controller.project.id])
+        #expect(toolbar.session === feature.sessions[controller.project.id])
+        let fetch = try #require(
+            controller.toolbarDelegate.button(for: NSToolbarItem.Identifier("git.toolbar.fetch")))
+        #expect(fetch.target === toolbar)
+        #expect(feature.sessions[controller.project.id]?.presenter != nil)
+
+        controller.window?.close()
+        #expect(feature.toolbars.isEmpty, "closing the window drops its toolbar")
     }
 
     @Test("a directory outside any repository opens nothing and remembers nothing")

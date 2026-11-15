@@ -12,6 +12,11 @@
 - **window-title**: The window title MUST be the project's display name.
 - **unified-toolbar**: The window MUST install a unified toolbar containing,
   in order, a flexible space, a search field, and a help button.
+- **extra-toolbar-items**: The items the window is made with
+  (`extraToolbarItems`, none by default) MUST come after the shelf's items
+  and before the flexible space, in the order given; each `.targetedButton`
+  among them MUST send its action to the object its `WindowToolbarTarget`
+  names (held weakly), not to the window.
 - **tab-group-creation**: Creating a project tab MUST create one member tab
   on every currently enabled edge, all sharing one title and one working
   directory, and MUST select the first member created.

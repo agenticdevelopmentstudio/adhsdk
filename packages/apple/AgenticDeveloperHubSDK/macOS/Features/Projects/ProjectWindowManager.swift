@@ -535,12 +535,15 @@ public final class ProjectWindowManager: ProjectOpening, ObservableObject {
     /// - Parameter startsLanguageServices: false for a window with no
     ///   workspace a language server could be rooted at (a Document window)
     ///   or no documents to serve (the Git window).
+    /// - Parameter toolbarItems: the window's own toolbar items, before the
+    ///   flexible space; ignored when the window is already open.
     @discardableResult
     public func openStandaloneWindow(
         _ repo: GitRepo,
         layout: ComposableTabsLayout,
         startsLanguageServices: Bool = true,
         activates: Bool = true,
+        toolbarItems: [WindowToolbarItem] = [],
         onClose: @escaping @MainActor (GitRepo) -> Void
     ) -> ComposableTabsWindowController? {
         precondition(repo.kind != .project, "a project opens through openProject(_:)")
@@ -568,7 +571,8 @@ public final class ProjectWindowManager: ProjectOpening, ObservableObject {
         // No top-level tabs: a standalone window is one fixed arrangement.
         let controller = ComposableTabsWindowController(
             project: workspace, showsTabBars: false,
-            showsPaneChrome: !repo.kind.isDocument, showsFooter: !repo.kind.isDocument)
+            showsPaneChrome: !repo.kind.isDocument, showsFooter: !repo.kind.isDocument,
+            extraToolbarItems: toolbarItems)
         controllers[repo.id] = controller
         openOrder.append(repo.id)
         standaloneWindowKinds[repo.id] = repo.kind

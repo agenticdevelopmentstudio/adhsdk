@@ -2,7 +2,7 @@
 id: 6a830cf8-0b95-4ffd-b175-f5cf481490c4
 title: "Git Window"
 type: ingredient
-version: 1.3.0
+version: 1.4.0
 status: review
 language: en
 created: 2026-11-14
@@ -39,7 +39,7 @@ approved-date: ""
 
 A git window shows one repository. `GitWindowFeature` owns every git window: it turns any directory inside a repository into the repository's canonical top level, keeps one window per top level through a [keyed window set](cookbook:274f0727-b9b3-4fd3-9dea-b7e1bfbe92fc) that remembers which were open and reopens them at launch, builds one [syntax highlighter](cookbook:6708bfd4-5b29-4bf9-b180-05904873906e) for all of them from the [TextMate resources](cookbook:add92e9b-94e5-412c-970f-5ea8e2eb9eed), and registers the two commands that open a window (with a chooser, or on a given path) and the File > New menu item.
 
-`GitWindowController` is one window: a [repository model](cookbook:a2394ca0-3988-410b-9fc8-e0c9e253fc94) on its top level, kept current by a watcher, and the [git views](cookbook:bdd3a72d-8810-439b-bad7-ec16233cb2a3) in an autosaved three-column split (`GitWindowSplitViewController`): the refs sidebar; the history, or the working copy while the sidebar's Working Copy row is selected; and the commit detail over the diff, whose bottom pane swaps to a blame or a file history on request. The controller routes every view's delegate call to the view it concerns, so no view knows another. The toolbar (`GitWindowToolbar`) holds the history search field and Refresh.
+`GitWindowController` is one window: a [repository model](cookbook:a2394ca0-3988-410b-9fc8-e0c9e253fc94) on its top level, kept current by a watcher, and the [git views](cookbook:bdd3a72d-8810-439b-bad7-ec16233cb2a3) in an autosaved three-column split (`GitWindowSplitViewController`): the refs sidebar; the history, or the working copy while the sidebar's Working Copy row is selected; and the commit detail over the diff, whose bottom pane swaps to a blame or a file history on request. The controller routes every view's delegate call to the view it concerns, so no view knows another. The toolbar carries the history search field and, ahead of it, the six verbs of `GitWindowToolbar` (Fetch, Pull, Push, Branch, Stash, Pop), which forward to the session's actions.
 
 The branch card's [branch management](cookbook:92f11498-2cb2-4b04-92b9-560d9f2de6ee) offers "Open in Git Window" when the open-for-path command is registered.
 ## Behavioral Requirements
@@ -74,6 +74,12 @@ The branch card's [branch management](cookbook:92f11498-2cb2-4b04-92b9-560d9f2de
 - **latest-call-wins**: Each asynchronous load the window starts (the subtitle, a stash's commit) MUST carry a generation the window owns, and a result for an older generation MUST be dropped.
 - **close-stops-model**: Closing the window MUST stop the model's watcher and tell the feature, unless the app is terminating.
 - **confines-to-ui-thread**: The feature and the window MUST be usable only on the UI thread.
+
+### Toolbar
+
+- **toolbar-verbs**: The window's toolbar MUST carry, ahead of the search field and help, six icon buttons in order: `git.toolbar.fetch` "Fetch" `arrow.down.circle`, `git.toolbar.pull` "Pull" `arrow.down.to.line`, `git.toolbar.push` "Push" `arrow.up.to.line`, `git.toolbar.branch` "Branch" `arrow.triangle.branch`, `git.toolbar.stash` "Stash" `tray.and.arrow.down`, `git.toolbar.pop` "Pop" `tray.and.arrow.up`, each the identifier as its accessibility identifier and the label as its tooltip.
+- **toolbar-forwards**: Each button MUST be aimed at the window's `GitWindowToolbar`, which forwards it to its session's verb (`fetch`, `pull`, `push`, `newBranch`, `stash`, `popStash`), so it goes through the one funnel; with no session a button does nothing. Push is the HEAD push of **push-remote**.
+- **toolbar-lifetime**: The feature MUST make the toolbar before the window, keep it beside the window's session by the row's id (the buttons hold it weakly, it holds the session weakly), point it at the session once the layout has made it, and drop it when the window closes; the session's presenter is a `GitAlertPresenter` over the window, set at the same moment.
 
 ### Asking the user
 
@@ -114,7 +120,7 @@ A titled, closable, miniaturizable, resizable window, 1200 x 760 points by defau
 - **Asking**: a confirmation, text or failure sheet is attached to the window; the window's other controls wait behind it.
 ## Accessibility
 
-The window carries `git-window`. Its split carries `git.window.split`, the right column `git.window.right`, the centre container `git.window.centre`, the bottom container `git.window.bottom`, the error label `git.window.error`; the toolbar's search field `git.window.search` and Refresh `git.window.refresh`. The panes keep the git views' own identifiers. Its sheets carry `git.prompt.confirm`, `git.prompt.text` or `git.prompt.failure`; their buttons `git.prompt.action`, `git.prompt.cancel` and `git.prompt.ok`; a text request's fields `git.prompt.field.<index>` (each with its label as accessibility label) inside `git.prompt.fields`.
+The window carries `git-window`. Its split carries `git.window.split`, the right column `git.window.right`, the centre container `git.window.centre`, the bottom container `git.window.bottom`, the error label `git.window.error`; the toolbar's verbs `git.toolbar.fetch`, `git.toolbar.pull`, `git.toolbar.push`, `git.toolbar.branch`, `git.toolbar.stash` and `git.toolbar.pop`, and its search field `git.window.search`; Refresh `git.window.refresh`. The panes keep the git views' own identifiers. Its sheets carry `git.prompt.confirm`, `git.prompt.text` or `git.prompt.failure`; their buttons `git.prompt.action`, `git.prompt.cancel` and `git.prompt.ok`; a text request's fields `git.prompt.field.<index>` (each with its label as accessibility label) inside `git.prompt.fields`.
 ## Conformance Test Vectors
 
 | ID | Requirements | Input | Expected |
@@ -157,6 +163,9 @@ The window carries `git-window`. Its split carries `git.window.split`, the right
 | git-window-036 | push-remote | `push.default=simple`; New Branch `topic` from `origin/main` (so it tracks it), a commit; push from HEAD, then from the sidebar with `main` checked out | Each push shows one `Push failed`, the second `topic has no push destination.`; the remote's `main` never moves and it has no `topic`; `topic` still tracks `origin/main`. |
 | git-window-037 | push-remote | `push.default=current`; `pr` tracks `origin/pr` with `branch.pr.pushRemote=fork`, a commit on it; pushed from the sidebar with `main` checked out | `fork`'s `pr` is at `pr`; `origin`'s `pr` is unchanged; `pr` still tracks `origin/pr`; no failure. |
 | git-window-038 | push-remote | `push.default=simple`; `loc` tracks the local `main` (`.`), a commit on it; push from HEAD, then from the sidebar | Two `Push failed` failures, the second `loc has no push destination.`; local `main` unchanged, no `loc` on the remote, `loc` still tracks `main`. |
+| git-window-039 | toolbar-verbs | Build the window's toolbar items | The first six identifiers are `git.toolbar.fetch`, `.pull`, `.push`, `.branch`, `.stash`, `.pop`, with their labels and symbols. |
+| git-window-040 | toolbar-forwards | A session on a repository with one commit and no remote; press each button in turn, every question cancelled | Each press starts an action that finishes; Branch asks `New Branch`, Stash asks `Stash Changes`, Push shows `Push failed`. |
+| git-window-041 | toolbar-lifetime | Open a window, then close it | While open, the toolbar's session is the window's session and Fetch's button targets the toolbar; after closing, the feature holds no toolbar. |
 ## Edge Cases
 
 - **Symlinked spelling**: `/tmp/r` and `/private/tmp/r` resolve to one key and one window.
@@ -214,7 +223,7 @@ Under the `Loggable` categories of `GitWindowFeature`, `GitWindowController` and
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Window/` | confirmed (1.3.0) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Window/` | confirmed (1.4.0) |
 
 ## Design Decisions
 
@@ -261,6 +270,7 @@ Under the `Loggable` categories of `GitWindowFeature`, `GitWindowController` and
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.4.0 | 2026-11-14 | Mike Fullerton | Toolbar: Fetch, Pull, Push, Branch, Stash and Pop, aimed at the window's GitWindowToolbar and forwarded to the session's verbs; the toolbar kept beside the session and dropped on close |
 | 1.3.0 | 2026-11-14 | Mike Fullerton | Push goes where git resolves it: the checked-out branch with an upstream by a plain push, any other by its `@{push}` without `--set-upstream`, failing when git names none, never falling back to setting an upstream; the spinner shows only while git runs; local branch and tag deletes confirm destructively |
 | 1.2.0 | 2026-11-14 | Mike Fullerton | Actions: every intent and toolbar verb through one funnel, one at a time, with confirmations, failures and the busy spinner; only remotes with a URL count; a sheet ends when its window closes |
 | 1.1.0 | 2026-11-14 | Mike Fullerton | Asking the user: the GitActionPresenting seam and GitAlertPresenter's confirm, text and failure sheets |

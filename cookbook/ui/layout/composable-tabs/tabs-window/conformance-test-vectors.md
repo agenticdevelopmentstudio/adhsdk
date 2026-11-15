@@ -40,4 +40,5 @@
 | composable-tabs-window-controller-037 | status-footer-content | Project `"Zork"`, active tab's title is `""` (empty), pane title `"main.swift"`, no selection description | Footer reads `"Zork › main.swift"` — the empty tab title contributes no leading `" › "`. |
 | composable-tabs-window-controller-038 | search-target | The active pane changes from pane A to pane B, triggering a recomputation of search availability | The search target becomes pane B, matching the field's newly computed enabled state/placeholder. |
 | composable-tabs-window-controller-039 | confines-to-ui-thread | Use the component from a thread other than the UI thread | The use is rejected, at build time or by a runtime check; the component's state is unchanged |
+| composable-tabs-window-controller-040 | extra-toolbar-items | A window with no shelf made with two targeted buttons `first`, `second` aimed at a receiver | Item order is `first`, `second`, flexible space, search, help; `first`'s button targets the receiver. |
 

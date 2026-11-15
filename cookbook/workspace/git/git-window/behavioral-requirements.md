@@ -30,6 +30,12 @@
 - **close-stops-model**: Closing the window MUST stop the model's watcher and tell the feature, unless the app is terminating.
 - **confines-to-ui-thread**: The feature and the window MUST be usable only on the UI thread.
 
+### Toolbar
+
+- **toolbar-verbs**: The window's toolbar MUST carry, ahead of the search field and help, six icon buttons in order: `git.toolbar.fetch` "Fetch" `arrow.down.circle`, `git.toolbar.pull` "Pull" `arrow.down.to.line`, `git.toolbar.push` "Push" `arrow.up.to.line`, `git.toolbar.branch` "Branch" `arrow.triangle.branch`, `git.toolbar.stash` "Stash" `tray.and.arrow.down`, `git.toolbar.pop` "Pop" `tray.and.arrow.up`, each the identifier as its accessibility identifier and the label as its tooltip.
+- **toolbar-forwards**: Each button MUST be aimed at the window's `GitWindowToolbar`, which forwards it to its session's verb (`fetch`, `pull`, `push`, `newBranch`, `stash`, `popStash`), so it goes through the one funnel; with no session a button does nothing. Push is the HEAD push of **push-remote**.
+- **toolbar-lifetime**: The feature MUST make the toolbar before the window, keep it beside the window's session by the row's id (the buttons hold it weakly, it holds the session weakly), point it at the session once the layout has made it, and drop it when the window closes; the session's presenter is a `GitAlertPresenter` over the window, set at the same moment.
+
 ### Asking the user
 
 - **presenter-seam**: The window MUST ask the user only through `GitActionPresenting` (`confirm`, `askForText`, `showFailure`), never through `NSAlert` directly, so a test answers with a fake.

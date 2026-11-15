@@ -149,6 +149,19 @@ public struct ToolbarSegment: Sendable {
     }
 }
 
+/// The object a `.targetedButton` sends its action to, held weakly: the
+/// object usually owns the window whose toolbar holds the button, so a strong
+/// reference would keep the two alive together. A class rather than a bare
+/// `AnyObject` so the enum case can carry the weak reference.
+@MainActor
+public final class WindowToolbarTarget {
+    public weak var object: AnyObject?
+
+    public init(_ object: AnyObject?) {
+        self.object = object
+    }
+}
+
 /// One slot in a toolbar built from a list.
 ///
 /// Deliberately small. A window whose toolbar needs more than this — a menu
@@ -158,6 +171,16 @@ public struct ToolbarSegment: Sendable {
 /// complicated as the delegate it was meant to replace.
 public enum WindowToolbarItem {
     case button(identifier: NSToolbarItem.Identifier, symbol: String, label: String, action: Selector)
+    /// A `.button` whose target is the object it names rather than the
+    /// delegate's: the one exception to "one target per delegate", for a
+    /// window whose controller hosts items another object answers (the Git
+    /// window's toolbar verbs, answered by its session's toolbar object).
+    case targetedButton(
+        identifier: NSToolbarItem.Identifier,
+        symbol: String,
+        label: String,
+        target: WindowToolbarTarget,
+        action: Selector)
     case segmented(
         identifier: NSToolbarItem.Identifier,
         label: String,
@@ -183,6 +206,7 @@ public enum WindowToolbarItem {
     var identifier: NSToolbarItem.Identifier {
         switch self {
         case .button(let identifier, _, _, _): identifier
+        case .targetedButton(let identifier, _, _, _, _): identifier
         case .segmented(let identifier, _, _, _): identifier
         case .search(let identifier, _): identifier
         case .flexibleSpace: .flexibleSpace
@@ -371,6 +395,17 @@ extension WindowToolbarBuilder {
                     symbol: symbol,
                     label: label,
                     target: self.target,
+                    action: action)
+                self.buttons[identifier] = button
+                item.isNavigational = self.navigationalItems.contains(identifier)
+                return item
+
+            case .targetedButton(let identifier, let symbol, let label, let target, let action):
+                let (item, button) = WindowToolbarBuilder.iconButtonItem(
+                    identifier: identifier,
+                    symbol: symbol,
+                    label: label,
+                    target: target.object,
                     action: action)
                 self.buttons[identifier] = button
                 item.isNavigational = self.navigationalItems.contains(identifier)

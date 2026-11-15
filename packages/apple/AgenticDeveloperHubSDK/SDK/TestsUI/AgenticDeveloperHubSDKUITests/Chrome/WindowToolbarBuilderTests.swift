@@ -240,6 +240,40 @@ struct WindowToolbarBuilderTests {
         #expect(calls == 0)
     }
 
+    /// A targeted button answers to its own object, not the delegate's target:
+    /// the one exception to "one target per delegate".
+    @Test("a targeted button's target is the object it names, and its action the selector")
+    func targetedButton() {
+        let windowTarget = Target()
+        let other = Target()
+        let identifier = NSToolbarItem.Identifier("git.toolbar.fetch")
+        let delegate = WindowToolbarBuilder.Delegate(
+            items: [.targetedButton(
+                identifier: identifier, symbol: "arrow.down.circle", label: "Fetch",
+                target: WindowToolbarTarget(other), action: #selector(Target.tapped))],
+            target: windowTarget)
+        let toolbar = NSToolbar(identifier: "git.toolbar")
+
+        #expect(delegate.toolbarDefaultItemIdentifiers(toolbar) == [identifier])
+        let item = delegate.toolbar(toolbar, itemForItemIdentifier: identifier, willBeInsertedIntoToolbar: true)
+        let button = delegate.button(for: identifier)
+        #expect(item?.view === button)
+        #expect(button?.target === other)
+        #expect(button?.action == #selector(Target.tapped))
+        #expect(button?.accessibilityIdentifier() == "git.toolbar.fetch")
+        #expect(item?.label == "Fetch")
+    }
+
+    /// The box holds its object weakly: a toolbar never keeps its owner alive.
+    @Test("a toolbar target holds its object weakly")
+    func targetIsWeak() {
+        var object: Target? = Target()
+        let box = WindowToolbarTarget(object)
+        #expect(box.object === object)
+        object = nil
+        #expect(box.object == nil)
+    }
+
     /// `NSToolbar.delegate` is weak. A builder that returned a delegate nobody
     /// stored would render an empty toolbar and report nothing.
     @Test("makeToolbar wires the delegate the caller is holding")

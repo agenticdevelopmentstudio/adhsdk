@@ -149,7 +149,7 @@ public final class ComposableTabsWindowController: WindowController<NSViewContro
     /// the delegate has been asked for it, and a test with no window on screen
     /// has to do the asking itself.
     lazy var toolbarDelegate = WindowToolbarBuilder.Delegate(
-        items: shelfToolbarItems + [
+        items: shelfToolbarItems + extraToolbarItems + [
             .flexibleSpace,
             .search(identifier: .projectSearch, placeholder: "Search"),
             .button(
@@ -164,6 +164,10 @@ public final class ComposableTabsWindowController: WindowController<NSViewContro
             self?.applySearchAvailability(to: field)
         }
     )
+
+    /// The window's own toolbar items, after the shelf's and before the
+    /// flexible space; each a `.targetedButton` aimed at whatever answers it.
+    private let extraToolbarItems: [WindowToolbarItem]
 
     /// The titlebar search field, once the toolbar has built it.
     public var searchField: NSSearchField? { toolbarDelegate.searchField }
@@ -330,17 +334,21 @@ public final class ComposableTabsWindowController: WindowController<NSViewContro
     ///   or active-pane border, and no frame spacing around the pane.
     /// - Parameter showsFooter: false for a window with no footer bar (a
     ///   Document window, for now).
+    /// - Parameter extraToolbarItems: the window's own items, placed after the
+    ///   shelf's and before the flexible space (the Git window's verbs).
     public init(
         project: ProjectWorkspace,
         tabItemDataSource: ComposableTabsTabItemDataSource? = nil,
         shelf: ProjectShelfViewController? = nil,
         showsTabBars: Bool = true,
         showsPaneChrome: Bool = true,
-        showsFooter: Bool = true
+        showsFooter: Bool = true,
+        extraToolbarItems: [WindowToolbarItem] = []
     ) {
         self.project = project
         self.shelf = shelf
         self.showsPaneChrome = showsPaneChrome
+        self.extraToolbarItems = extraToolbarItems
         // Locals first: a stored property cannot be read back before
         // `super.init`, and the host needs the tab controller to wrap.
         let tabbed = MultiTabbedViewController()

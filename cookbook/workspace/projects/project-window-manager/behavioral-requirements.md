@@ -238,3 +238,7 @@
   forward instead of building a second, and MUST honour quiet presentation
   when activating.
 - **document-windows-have-no-footer**: A window for a repository of a Document kind MUST be created without the footer bar, as it is created without pane chrome; every other kind keeps both.
+- **standalone-toolbar-items**: Opening a standalone window MUST pass the
+  toolbar items it is given (none by default) to the window it makes, which
+  places them before its flexible space; a window already open keeps the
+  items it was made with.

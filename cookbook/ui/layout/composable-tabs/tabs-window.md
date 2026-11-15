@@ -59,6 +59,11 @@ address directly.
 - **window-title**: The window title MUST be the project's display name.
 - **unified-toolbar**: The window MUST install a unified toolbar containing,
   in order, a flexible space, a search field, and a help button.
+- **extra-toolbar-items**: The items the window is made with
+  (`extraToolbarItems`, none by default) MUST come after the shelf's items
+  and before the flexible space, in the order given; each `.targetedButton`
+  among them MUST send its action to the object its `WindowToolbarTarget`
+  names (held weakly), not to the window.
 - **tab-group-creation**: Creating a project tab MUST create one member tab
   on every currently enabled edge, all sharing one title and one working
   directory, and MUST select the first member created.
@@ -301,6 +306,7 @@ address directly.
 | composable-tabs-window-controller-037 | status-footer-content | Project `"Zork"`, active tab's title is `""` (empty), pane title `"main.swift"`, no selection description | Footer reads `"Zork › main.swift"` — the empty tab title contributes no leading `" › "`. |
 | composable-tabs-window-controller-038 | search-target | The active pane changes from pane A to pane B, triggering a recomputation of search availability | The search target becomes pane B, matching the field's newly computed enabled state/placeholder. |
 | composable-tabs-window-controller-039 | confines-to-ui-thread | Use the component from a thread other than the UI thread | The use is rejected, at build time or by a runtime check; the component's state is unchanged |
+| composable-tabs-window-controller-040 | extra-toolbar-items | A window with no shelf made with two targeted buttons `first`, `second` aimed at a receiver | Item order is `first`, `second`, flexible space, search, help; `first`'s button targets the receiver. |
 
 ## Edge Cases
 
@@ -615,3 +621,4 @@ hardcoded-literal inventory in Localization.
 | 1.2.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to ui/layout/composable-tabs/. |
 | 1.2.1 | 2026-10-04 | Mike Fullerton | Added separation-of-concerns and unit-test-coverage compliance rows. Added the confines-to-ui-thread requirement and vector. |
 | 1.3.0 | 2026-11-14 | Mike Fullerton | Document windows: title-document-kinds and title-breadcrumb-document-file, then title-sits-in-the-toolbar, title-follows-the-focused-document and pane-chrome-is-optional, then footer-is-optional; the Document-kind title and title-breadcrumb rules apply only while no focused document is supplied. |
+| 1.3.0 | 2026-11-14 | Mike Fullerton | Extra toolbar items: the window's own items after the shelf's and before the flexible space, a targeted button sending to the object its WindowToolbarTarget names |

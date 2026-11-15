@@ -39,6 +39,9 @@ public final class GitWindowFeature: AppFeature {
     private let terminals: TerminalPaneFamily?
     /// Each open window's session, by its row's id.
     private(set) var sessions: [UUID: GitWindowSession] = [:]
+    /// Each open window's toolbar verbs, by its row's id, kept beside its session:
+    /// the buttons hold it weakly.
+    private(set) var toolbars: [UUID: GitWindowToolbar] = [:]
     private lazy var layout: ComposableTabsLayout? = {
         do {
             return try GitWindowPanes.layout(terminals: terminals) { [unowned self] context in
@@ -205,13 +208,20 @@ public final class GitWindowFeature: AppFeature {
             Self.logger.error("Could not record the Git window row for \(key, privacy: .public): \(error)")
             return nil
         }
+        let toolbar = GitWindowToolbar()
         guard let controller = windows.openStandaloneWindow(
             repo, layout: layout, startsLanguageServices: false, activates: activates,
+            toolbarItems: toolbar.items,
             onClose: { [weak self] repo in
                 self?.sessions.removeValue(forKey: repo.id)?.stop()
+                self?.toolbars.removeValue(forKey: repo.id)
                 onClose()
             }) else { return nil }
+        // A window already open keeps the toolbar its buttons were built against.
+        let liveToolbar = toolbars[repo.id] ?? toolbar
+        toolbars[repo.id] = liveToolbar
         if let session = sessions[repo.id] {
+            liveToolbar.session = session
             session.onRefsChange = { [weak controller] in controller?.refreshTitleBranch() }
             session.presenter = GitAlertPresenter(window: { [weak controller] in controller?.window })
             session.onOpenDirectory = { [weak self] directory in
