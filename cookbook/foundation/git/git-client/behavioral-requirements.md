@@ -146,7 +146,8 @@
   and never assembles flags. The actions are: stage paths, stage all,
   unstage paths, unstage all, discard (tracked files' working-tree changes),
   remove untracked, commit (message, amend), fetch (one remote or all),
-  pull, push, push setting upstream (remote, branch), create branch (name,
+  pull, push, push setting upstream (remote, branch), push to upstream
+  (remote, branch, upstream branch), create branch (name,
   optional start point, optional checkout), checkout branch, checkout
   tracking (a remote branch), checkout detached (commit), rename branch,
   delete branch (optional force), delete remote branch, create tag (name,
@@ -161,7 +162,9 @@
   `clean -f -d -- <paths>`; commit → `commit --cleanup=strip -m <message>`,
   plus `--amend` when amending; fetch all → `fetch --all --prune`, fetch one
   → `fetch --prune <remote>`; pull → `pull --no-edit`; push → `push`; push
-  setting upstream → `push --set-upstream <remote> <branch>`; create branch
+  setting upstream → `push --set-upstream <remote> <branch>`; push to
+  upstream → `push <remote> refs/heads/<branch>:refs/heads/<upstream
+  branch>`, which leaves the branch's tracking as it is; create branch
   → `branch <name> [<start>]`, or with checkout `switch -c <name> [<start>]`;
   checkout → `switch <branch>`; checkout tracking → `switch --track
   <remote>/<branch>`; checkout detached → `switch --detach <commit>`; rename
@@ -181,7 +184,7 @@
   perform verb MUST therefore refuse, before resolving its configuration or
   spawning anything, any action whose positional operands — branch name,
   start point, checkout target, remote branch, commit, tag name, remote,
-  and a rename's old and new names — include one that is empty or begins
+  a push's upstream branch, and a rename's old and new names — include one that is empty or begins
   with `-`, with a distinct invalid-argument outcome carrying the verb and
   the offending value (its log description carries only the verb). Paths,
   which follow `--`, and messages, which follow `-m`, are exempt.
@@ -190,7 +193,8 @@
   same error outcomes — with its own wall-clock budget: the larger of the
   configured timeout and 60 seconds for a local write, or 600 seconds for a
   long-running one. The long-running actions are the ones that talk to a
-  remote (fetch, pull, push, push setting upstream, delete remote branch,
+  remote (fetch, pull, push, push setting upstream, push to upstream,
+  delete remote branch,
   push tag) and commit, which runs the repository's hooks. Both budgets
   MUST be exposed as constants. A read's budget is unchanged.
 - **write-editor-override**: The perform verb MUST run with `-c
@@ -217,6 +221,13 @@
   credential prompt cannot hang the child behind an unwatched terminal) and
   MUST merge a caller-supplied extra-environment configuration over that
   default, with the caller-supplied values winning on key collision.
+- **environment-messages-in-english**: The execution step MUST set
+  `LC_MESSAGES=C` in the spawned child's environment, so git's messages
+  are English in any locale and a caller that reads one (a branch that is
+  `not fully merged`) works everywhere. It MUST NOT set `LC_ALL`, `LC_CTYPE`
+  or `LANG`, so the character set, and with it path encoding, stays the
+  user's; a parent `LC_ALL` therefore still outranks it. Caller-supplied
+  extra environment wins over it like over the prompt default.
 - **total-failure-mapping**: The execution step MUST map every error the
   underlying process-launch mechanism throws onto exactly one of a
   timed-out outcome (for exceeding the configured wall-clock budget) or a

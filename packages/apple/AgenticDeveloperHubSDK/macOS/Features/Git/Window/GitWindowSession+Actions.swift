@@ -34,15 +34,16 @@ extension GitWindowSession {
 
     // MARK: - The funnel
 
-    /// Runs `request` unless an action is already running, when it is ignored. The
-    /// overview's spinner and `onBusyChange` follow it from start to end.
+    /// Runs `request` unless an action is already running, when it is ignored; `isActing`
+    /// spans the whole request, sheets included. The overview's spinner and `onBusyChange`
+    /// follow only the stretches where git runs, never a sheet waiting for an answer.
     func perform(_ request: Request) {
         guard !isActing else { return }
-        setActing(true)
+        isActing = true
         actionTask = Task { [weak self] in
             guard let self else { return }
             await self.run(request)
-            self.setActing(false)
+            self.isActing = false
         }
     }
 
@@ -99,7 +100,8 @@ extension GitWindowSession {
         let box = workingCopy.commitBox
         guard Self.isBlank(box.message) else { return }
         do {
-            guard let message = try await model.lastCommitMessage(), box.isAmend, Self.isBlank(box.message) else {
+            let last = try await whileGitRuns { try await model.lastCommitMessage() }
+            guard let message = last, box.isAmend, Self.isBlank(box.message) else {
                 return
             }
             box.message = message
@@ -213,7 +215,7 @@ extension GitWindowSession {
         switch ref.kind {
         case .localBranch:
             let confirmation = GitConfirmation(
-                title: "Delete branch \(ref.name)?", message: "", actionTitle: "Delete", isDestructive: false)
+                title: "Delete branch \(ref.name)?", message: "", actionTitle: "Delete", isDestructive: true)
             guard await presenter.confirm(confirmation) else { return }
             let action = GitAction.deleteBranch(name: ref.name, force: false)
             guard let error = await attempt(action) else { return }
@@ -243,7 +245,7 @@ extension GitWindowSession {
     private func deleteTag(_ ref: GitRef) async {
         guard let presenter else { return }
         let confirmation = GitConfirmation(
-            title: "Delete tag \(ref.name)?", message: "", actionTitle: "Delete", isDestructive: false)
+            title: "Delete tag \(ref.name)?", message: "", actionTitle: "Delete", isDestructive: true)
         guard await presenter.confirm(confirmation) else { return }
         await execute(.deleteTag(name: ref.name))
     }
@@ -263,32 +265,45 @@ extension GitWindowSession {
         await push(head)
     }
 
-    /// The checked-out branch with an upstream pushes plainly; any other branch is
-    /// pushed to its upstream's remote, or the push remote, setting its upstream.
+    /// A branch with an upstream pushes to that upstream, by name, leaving its tracking as
+    /// it is, so `feat` tracking `origin/feature` updates `origin/feature`. A branch with
+    /// none is pushed to the push remote under its own name, setting that as its upstream.
     private func push(_ branch: GitRef) async {
-        if branch.isHead, branch.upstream != nil {
-            await execute(.push)
+        guard let remotes = await listRemotes(failureTitle: "Push failed") else { return }
+        if let upstream = branch.upstream, let target = Self.split(upstream, among: remotes) {
+            await execute(.pushToUpstream(remote: target.remote, branch: branch.name, upstreamBranch: target.branch))
             return
         }
-        guard let remote = await pushRemote(for: branch, failureTitle: "Push failed") else { return }
+        guard let remote = pushRemote(among: remotes, failureTitle: "Push failed") else { return }
         await execute(.pushSettingUpstream(remote: remote, branch: branch.name))
     }
 
-    /// The remote to push to: `branch`'s upstream's remote, else `origin`, else the only
-    /// remote. With none to pick, the failure is shown and the answer is nil.
     private func pushRemote(for branch: GitRef?, failureTitle: String) async -> String? {
-        let remotes: [String]
+        guard let remotes = await listRemotes(failureTitle: failureTitle) else { return nil }
+        return pushRemote(among: remotes, failureTitle: failureTitle)
+    }
+
+    /// The repository's remotes, or nil with the failure shown.
+    private func listRemotes(failureTitle: String) async -> [String]? {
         do {
-            remotes = try await model.remotes()
+            return try await whileGitRuns { try await model.remotes() }
         } catch {
             showFailure(title: failureTitle, error: error)
             return nil
         }
-        if let upstream = branch?.upstream,
-           let remote = upstream.split(separator: "/", maxSplits: 1).first.map(String.init),
-           remotes.contains(remote) {
-            return remote
-        }
+    }
+
+    /// `origin/feature` as (`origin`, `feature`), matching the longest remote name so a
+    /// remote with a slash in its name splits right; nil when no remote is its prefix.
+    static func split(_ upstream: String, among remotes: [String]) -> (remote: String, branch: String)? {
+        let matches = remotes.filter { upstream.hasPrefix($0 + "/") && upstream.count > $0.count + 1 }
+        guard let remote = matches.max(by: { $0.count < $1.count }) else { return nil }
+        return (remote, String(upstream.dropFirst(remote.count + 1)))
+    }
+
+    /// The remote to push to: `origin`, else the only remote. With none to pick, the
+    /// failure is shown and the answer is nil.
+    private func pushRemote(among remotes: [String], failureTitle: String) -> String? {
         if remotes.contains("origin") { return "origin" }
         if remotes.count == 1 { return remotes[0] }
         showFailure(title: failureTitle, message: remotes.isEmpty
@@ -330,7 +345,7 @@ extension GitWindowSession {
     /// Runs `action` through the model, which refreshes either way; its error, or nil.
     private func attempt(_ action: GitAction) async -> Error? {
         do {
-            try await model.perform(action)
+            try await whileGitRuns { try await model.perform(action) }
             return nil
         } catch {
             return error
@@ -363,10 +378,15 @@ extension GitWindowSession {
         presenter?.showFailure(title: title, message: message)
     }
 
-    private func setActing(_ acting: Bool) {
-        isActing = acting
-        overviewPane.setBusy(acting)
-        onBusyChange?(acting)
+    /// Runs `body` with the overview's spinner on and `onBusyChange` told, then off again.
+    private func whileGitRuns<T>(_ body: () async throws -> T) async rethrows -> T {
+        overviewPane.setBusy(true)
+        onBusyChange?(true)
+        defer {
+            overviewPane.setBusy(false)
+            onBusyChange?(false)
+        }
+        return try await body()
     }
 
     /// Whether git refused to delete a branch because its commits are on no other branch.
@@ -390,7 +410,7 @@ extension GitAction {
         case .commit: "Commit failed"
         case .fetch: "Fetch failed"
         case .pull: "Pull failed"
-        case .push, .pushSettingUpstream: "Push failed"
+        case .push, .pushSettingUpstream, .pushToUpstream: "Push failed"
         case .createBranch: "Create branch failed"
         case .checkout, .checkoutTracking, .checkoutDetached: "Checkout failed"
         case .renameBranch: "Rename branch failed"

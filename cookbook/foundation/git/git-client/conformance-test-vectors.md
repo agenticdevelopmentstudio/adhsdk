@@ -56,3 +56,5 @@
 | git-client-053 | log-query-name-status | A follow request for `a b.txt` with name-status | Ends `--name-status --follow -- a b.txt`. |
 | git-client-054 | file-contents | A repository with `dir é/naïve file.swift` committed as `let a = 1`, then `let a = 2`, and `let a = 3` staged | Contents at `second^1`, `second` and `:0` are the three versions; `dir é` at `second` and `dir é/missing` at `:0` are nothing. |
 | git-client-055 | user-message | Command-failed with standard error `  fatal: nope` plus a newline; command-failed with only a newline; timed-out | `fatal: nope`; each error's user-facing description. |
+| git-client-056 | environment-messages-in-english | A script standing in for git that prints `$LC_MESSAGES|$LC_CTYPE` | `C|` followed by the parent's `LC_CTYPE`; the defaults set neither `LC_ALL` nor `LC_CTYPE`. |
+| git-client-057 | invalid-argument | `.pushToUpstream` with a remote `-q`, a branch `-f`, or an empty upstream branch | Refused before spawning, naming that operand. |

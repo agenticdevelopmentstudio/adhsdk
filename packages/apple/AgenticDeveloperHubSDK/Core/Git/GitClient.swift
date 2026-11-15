@@ -520,6 +520,13 @@ public actor GitClient {
 
     // MARK: - Write verbs
 
+    /// Merged over the parent's environment for every git child. `GIT_TERMINAL_PROMPT=0`
+    /// stops a credential prompt from hanging a child nobody can answer. `LC_MESSAGES=C`
+    /// keeps git's messages in English, so a caller that reads one (a branch "not fully
+    /// merged") works in any locale. Only messages: `LC_CTYPE` and `LC_ALL` are left
+    /// alone, so path encoding is the user's. A parent `LC_ALL` still outranks it.
+    static let baseEnvironment = ["GIT_TERMINAL_PROMPT": "0", "LC_MESSAGES": "C"]
+
     /// The least time a local write is given: a minute, whatever the (read) timeout says.
     public static let writeBudget: TimeInterval = 60
 
@@ -711,14 +718,13 @@ public actor GitClient {
             executableURL: configuration.executableURL,
             arguments: overrides + [verb] + verbArguments,
             // A non-empty environment is what makes `.mergeOverParent` merge
-            // rather than inherit wholesale; git needs PATH and HOME, and this
-            // one override stops a credential prompt from hanging the child
-            // forever behind a terminal nobody is watching. `extraEnvironment`
+            // rather than inherit wholesale; git needs PATH and HOME, and
+            // `baseEnvironment` says what it adds and why. `extraEnvironment`
             // merges on top so a caller (a test redirecting
             // `GIT_CONFIG_GLOBAL`, say) can add overrides of its own without
             // touching process-wide state — see
             // `GitClientConfiguration.extraEnvironment`.
-            environment: ["GIT_TERMINAL_PROMPT": "0"]
+            environment: Self.baseEnvironment
                 .merging(configuration.extraEnvironment) { _, override in override },
             environmentPolicy: .mergeOverParent,
             currentDirectoryURL: directory

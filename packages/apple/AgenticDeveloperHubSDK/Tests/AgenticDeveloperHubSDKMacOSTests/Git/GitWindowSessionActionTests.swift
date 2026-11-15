@@ -18,13 +18,17 @@ private final class StubPresenter: GitActionPresenting {
     var failures: [String] = []
     var confirmAnswers: [Bool] = []
     var textAnswers: [[String]?] = []
+    /// Called as each confirmation or text request arrives, before it is answered.
+    var onAsk: (() -> Void)?
 
     func confirm(_ request: GitConfirmation) async -> Bool {
+        onAsk?()
         confirmations.append(request)
         return confirmAnswers.isEmpty ? false : confirmAnswers.removeFirst()
     }
 
     func askForText(_ request: GitTextRequest) async -> [String]? {
+        onAsk?()
         textRequests.append(request)
         return textAnswers.isEmpty ? nil : textAnswers.removeFirst()
     }
@@ -132,6 +136,33 @@ struct GitWindowSessionActionTests {
         #expect(spinnerShown == [true, false])
         #expect(session.overviewPane.isBusy == false)
         #expect(session.overviewPane.busyIndicator.accessibilityIdentifier() == "git.window.busy")
+    }
+
+    @Test("the spinner is off while a sheet waits and on only while git runs; the action spans both")
+    func spinnerOnlyWhileGitRuns() async throws {
+        let repository = try await GitTestRepository.make(prefix: "git-actions")
+        defer { repository.tearDown() }
+        try await commitFile(repository, "a.txt", "a\n", at: 100)
+        try await repository.run(["tag", "v1"])
+        let presenter = StubPresenter()
+        presenter.confirmAnswers = [true]
+        let (model, session) = await makeSession(repository, presenter: presenter)
+        var busyWhileAsked: [Bool] = []
+        var actingWhileAsked: [Bool] = []
+        presenter.onAsk = { [unowned session] in
+            busyWhileAsked.append(session.overviewPane.isBusy)
+            actingWhileAsked.append(session.isActing)
+        }
+        var busy: [Bool] = []
+        session.onBusyChange = { busy.append($0) }
+
+        await act(session, .ref(.deleteTag(try ref(model, "refs/tags/v1"))))
+
+        #expect(busyWhileAsked == [false])
+        #expect(actingWhileAsked == [true])
+        #expect(busy == [true, false])
+        #expect(!session.isActing)
+        #expect(!session.overviewPane.isBusy)
     }
 
     @Test("the spinner sits before Refresh in the overview's accessories")
@@ -343,6 +374,45 @@ struct GitWindowSessionActionTests {
         #expect(model.headBranch?.upstream == "origin/topic")
     }
 
+    @Test("a branch named unlike its upstream pushes to that upstream and keeps tracking it, from HEAD or not")
+    func pushToADifferentlyNamedUpstream() async throws {
+        let (remote, clone) = try await makeRemoteAndClone()
+        defer { remote.tearDown(); clone.tearDown() }
+        try await clone.run(["push", "--quiet", "origin", "main:feature"])
+        try await clone.run(["fetch", "--quiet", "origin"])
+        try await clone.run(["checkout", "--quiet", "-b", "feat", "--track", "origin/feature"])
+        try await commitFile(clone, "two.txt", "two\n", at: 200)
+        let presenter = StubPresenter()
+        let (model, session) = await makeSession(clone, presenter: presenter)
+
+        session.push()
+        await session.actionTask?.value
+
+        #expect(presenter.failures.isEmpty)
+        #expect(try await remote.sha("feature") == clone.sha("feat"))
+        #expect(await !branchExists(remote, "feat"))
+        #expect(model.headBranch?.upstream == "origin/feature")
+
+        try await commitFile(clone, "three.txt", "three\n", at: 300)
+        try await clone.run(["checkout", "--quiet", "main"])
+        await model.refresh([.refs, .workingCopy])
+        await act(session, .ref(.push(try ref(model, "refs/heads/feat"))))
+
+        #expect(presenter.failures.isEmpty)
+        #expect(try await remote.sha("feature") == clone.sha("feat"))
+        #expect(await !branchExists(remote, "feat"))
+        #expect(try ref(model, "refs/heads/feat").upstream == "origin/feature")
+    }
+
+    @Test("the upstream splits at the longest remote name that prefixes it")
+    func upstreamSplitsAtItsRemote() {
+        let split = GitWindowSession.split("team/origin/feature", among: ["origin", "team", "team/origin"])
+        #expect(split?.remote == "team/origin")
+        #expect(split?.branch == "feature")
+        #expect(GitWindowSession.split("other/feature", among: ["origin"]) == nil)
+        #expect(GitWindowSession.split("origin/", among: ["origin"]) == nil)
+    }
+
     @Test("push with no upstream and one remote that is not origin pushes to it")
     func pushToTheOnlyRemote() async throws {
         let remote = try await GitTestRepository.makeBare()
@@ -497,7 +567,7 @@ struct GitWindowSessionActionTests {
         #expect(!(await branchExists(repository, "old")))
     }
 
-    @Test("deleting a merged branch confirms once")
+    @Test("deleting a merged branch confirms once, destructively")
     func deleteMergedBranch() async throws {
         let repository = try await GitTestRepository.make(prefix: "git-actions")
         defer { repository.tearDown() }
@@ -510,7 +580,7 @@ struct GitWindowSessionActionTests {
         await act(session, .ref(.delete(try ref(model, "refs/heads/merged"))))
 
         #expect(presenter.confirmations.count == 1)
-        #expect(presenter.confirmations.first?.isDestructive == false)
+        #expect(presenter.confirmations.first?.isDestructive == true)
         #expect(!(await branchExists(repository, "merged")))
     }
 
@@ -529,6 +599,7 @@ struct GitWindowSessionActionTests {
         await act(session, .ref(.delete(try ref(model, "refs/heads/side"))))
 
         #expect(presenter.confirmations.count == 2)
+        #expect(presenter.confirmations.first?.isDestructive == true)
         #expect(presenter.confirmations.last?.title == "Delete unmerged branch?")
         #expect(presenter.confirmations.last?.isDestructive == true)
         #expect(presenter.failures.isEmpty)
@@ -595,6 +666,7 @@ struct GitWindowSessionActionTests {
 
         await act(session, .ref(.deleteTag(try ref(model, "refs/tags/v2"))))
         #expect(presenter.confirmations.count == 1)
+        #expect(presenter.confirmations.first?.isDestructive == true)
         #expect((try? await clone.run(["rev-parse", "--verify", "--quiet", "refs/tags/v2"])) == nil)
         #expect(presenter.failures.isEmpty)
     }

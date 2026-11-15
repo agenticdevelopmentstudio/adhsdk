@@ -419,3 +419,28 @@ struct GitClientCancellationTests {
         #expect(!alive, "the git process must not outlive its cancelled caller")
     }
 }
+
+/// git runs with its messages in English whatever the user's locale, so a caller that
+/// reads one ("not fully merged") works everywhere; the character set is left alone.
+/// The "git" here is a script that prints the two variables it was given.
+@Suite("GitClient locale")
+struct GitClientLocaleTests {
+    @Test("the child gets LC_MESSAGES=C and the parent's LC_CTYPE")
+    func messagesAreInEnglish() async throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("git-client-locale-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let script = directory.appendingPathComponent("env-git")
+        try "#!/bin/sh\necho \"$LC_MESSAGES|$LC_CTYPE\"\n".write(to: script, atomically: true, encoding: .utf8)
+        try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: script.path)
+        let client = GitClient(configuration: GitClientConfiguration(executableURL: script, timeout: 10))
+
+        let output = try await client.run("status", [], in: directory)
+
+        let parentCType = ProcessInfo.processInfo.environment["LC_CTYPE"] ?? ""
+        #expect(output.trimmingCharacters(in: .newlines) == "C|\(parentCType)")
+        #expect(GitClient.baseEnvironment["LC_ALL"] == nil)
+        #expect(GitClient.baseEnvironment["LC_CTYPE"] == nil)
+    }
+}

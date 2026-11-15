@@ -25,6 +25,10 @@ public enum GitAction: Sendable, Hashable {
     case pull
     case push
     case pushSettingUpstream(remote: String, branch: String)
+    /// Pushes local `branch` to `upstreamBranch` on `remote`, leaving its tracking as it is
+    /// (`push remote refs/heads/branch:refs/heads/upstreamBranch`), so a branch whose name
+    /// differs from its upstream's updates that upstream rather than a new namesake.
+    case pushToUpstream(remote: String, branch: String, upstreamBranch: String)
     case createBranch(name: String, startPoint: String?, checkout: Bool)
     case checkout(branch: String)
     /// `origin/x` becomes a local `x` that tracks it.
@@ -57,7 +61,7 @@ public enum GitAction: Sendable, Hashable {
         case .commit: "commit"
         case .fetch: "fetch"
         case .pull: "pull"
-        case .push, .pushSettingUpstream, .deleteRemoteBranch, .pushTag: "push"
+        case .push, .pushSettingUpstream, .pushToUpstream, .deleteRemoteBranch, .pushTag: "push"
         case .createBranch(_, _, let checkout): checkout ? "switch" : "branch"
         case .checkout, .checkoutTracking, .checkoutDetached: "switch"
         case .renameBranch, .deleteBranch: "branch"
@@ -82,6 +86,8 @@ public enum GitAction: Sendable, Hashable {
         case .pull: ["--no-edit"]
         case .push: []
         case let .pushSettingUpstream(remote, branch): ["--set-upstream", remote, branch]
+        case let .pushToUpstream(remote, branch, upstreamBranch):
+            [remote, "refs/heads/\(branch):refs/heads/\(upstreamBranch)"]
         case let .createBranch(name, startPoint, checkout):
             (checkout ? ["-c", name] : [name]) + (startPoint.map { [$0] } ?? [])
         case .checkout(let branch): [branch]
@@ -109,7 +115,9 @@ public enum GitAction: Sendable, Hashable {
     /// remote, and a commit, which runs the repository's hooks.
     public var isLongRunning: Bool {
         switch self {
-        case .commit, .fetch, .pull, .push, .pushSettingUpstream, .deleteRemoteBranch, .pushTag: true
+        case .commit, .fetch, .pull, .push, .pushSettingUpstream, .pushToUpstream, .deleteRemoteBranch,
+             .pushTag:
+            true
         default: false
         }
     }
@@ -124,6 +132,7 @@ public enum GitAction: Sendable, Hashable {
             []
         case .fetch(let remote): remote.map { [$0] } ?? []
         case let .pushSettingUpstream(remote, branch): [remote, branch]
+        case let .pushToUpstream(remote, branch, upstreamBranch): [remote, branch, upstreamBranch]
         case let .createBranch(name, startPoint, _): [name] + (startPoint.map { [$0] } ?? [])
         case .checkout(let branch): [branch]
         case .checkoutTracking(let remoteBranch): [remoteBranch]

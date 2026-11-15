@@ -33,3 +33,6 @@
 | git-window-030 | commit-actions | Two commits; a hard reset to the first declined, then a soft reset, then a hard one confirmed | One confirmation `Reset main to <shortID>?` and HEAD unchanged; then HEAD at the first commit with the second's file staged; then nothing staged and the file gone. |
 | git-window-031 | sheets-only | A sheet begun on a window that closes before it ends | The sheet is ended once and the question answered as cancelled. |
 | git-window-032 | names-validated | New Branch answered `-f` | `Create branch failed`: `A name cannot begin with “-”.`; HEAD unchanged. |
+| git-window-033 | push-remote | A clone whose `feat` tracks `origin/feature`, a commit on it; push from HEAD, then another commit and push from the sidebar with `main` checked out | Both times `origin/feature` is at `feat`, the remote has no `feat`, and `feat` still tracks `origin/feature`. |
+| git-window-034 | one-at-a-time | A tag; delete it, confirmed | While the confirmation waits the spinner is hidden and the action is running; one busy cycle (`true`, `false`) follows. |
+| git-window-035 | rename-delete, tags | Delete a merged local branch; delete a tag | Each first confirmation is destructive. |

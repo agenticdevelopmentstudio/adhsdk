@@ -231,7 +231,8 @@ picker) is a consumer of this contract, not part of it.
   and never assembles flags. The actions are: stage paths, stage all,
   unstage paths, unstage all, discard (tracked files' working-tree changes),
   remove untracked, commit (message, amend), fetch (one remote or all),
-  pull, push, push setting upstream (remote, branch), create branch (name,
+  pull, push, push setting upstream (remote, branch), push to upstream
+  (remote, branch, upstream branch), create branch (name,
   optional start point, optional checkout), checkout branch, checkout
   tracking (a remote branch), checkout detached (commit), rename branch,
   delete branch (optional force), delete remote branch, create tag (name,
@@ -246,7 +247,9 @@ picker) is a consumer of this contract, not part of it.
   `clean -f -d -- <paths>`; commit → `commit --cleanup=strip -m <message>`,
   plus `--amend` when amending; fetch all → `fetch --all --prune`, fetch one
   → `fetch --prune <remote>`; pull → `pull --no-edit`; push → `push`; push
-  setting upstream → `push --set-upstream <remote> <branch>`; create branch
+  setting upstream → `push --set-upstream <remote> <branch>`; push to
+  upstream → `push <remote> refs/heads/<branch>:refs/heads/<upstream
+  branch>`, which leaves the branch's tracking as it is; create branch
   → `branch <name> [<start>]`, or with checkout `switch -c <name> [<start>]`;
   checkout → `switch <branch>`; checkout tracking → `switch --track
   <remote>/<branch>`; checkout detached → `switch --detach <commit>`; rename
@@ -266,7 +269,7 @@ picker) is a consumer of this contract, not part of it.
   perform verb MUST therefore refuse, before resolving its configuration or
   spawning anything, any action whose positional operands — branch name,
   start point, checkout target, remote branch, commit, tag name, remote,
-  and a rename's old and new names — include one that is empty or begins
+  a push's upstream branch, and a rename's old and new names — include one that is empty or begins
   with `-`, with a distinct invalid-argument outcome carrying the verb and
   the offending value (its log description carries only the verb). Paths,
   which follow `--`, and messages, which follow `-m`, are exempt.
@@ -275,7 +278,8 @@ picker) is a consumer of this contract, not part of it.
   same error outcomes — with its own wall-clock budget: the larger of the
   configured timeout and 60 seconds for a local write, or 600 seconds for a
   long-running one. The long-running actions are the ones that talk to a
-  remote (fetch, pull, push, push setting upstream, delete remote branch,
+  remote (fetch, pull, push, push setting upstream, push to upstream,
+  delete remote branch,
   push tag) and commit, which runs the repository's hooks. Both budgets
   MUST be exposed as constants. A read's budget is unchanged.
 - **write-editor-override**: The perform verb MUST run with `-c
@@ -302,6 +306,13 @@ picker) is a consumer of this contract, not part of it.
   credential prompt cannot hang the child behind an unwatched terminal) and
   MUST merge a caller-supplied extra-environment configuration over that
   default, with the caller-supplied values winning on key collision.
+- **environment-messages-in-english**: The execution step MUST set
+  `LC_MESSAGES=C` in the spawned child's environment, so git's messages
+  are English in any locale and a caller that reads one (a branch that is
+  `not fully merged`) works everywhere. It MUST NOT set `LC_ALL`, `LC_CTYPE`
+  or `LANG`, so the character set, and with it path encoding, stays the
+  user's; a parent `LC_ALL` therefore still outranks it. Caller-supplied
+  extra environment wins over it like over the prompt default.
 - **total-failure-mapping**: The execution step MUST map every error the
   underlying process-launch mechanism throws onto exactly one of a
   timed-out outcome (for exceeding the configured wall-clock budget) or a
@@ -672,6 +683,8 @@ component.
 | git-client-053 | log-query-name-status | A follow request for `a b.txt` with name-status | Ends `--name-status --follow -- a b.txt`. |
 | git-client-054 | file-contents | A repository with `dir é/naïve file.swift` committed as `let a = 1`, then `let a = 2`, and `let a = 3` staged | Contents at `second^1`, `second` and `:0` are the three versions; `dir é` at `second` and `dir é/missing` at `:0` are nothing. |
 | git-client-055 | user-message | Command-failed with standard error `  fatal: nope` plus a newline; command-failed with only a newline; timed-out | `fatal: nope`; each error's user-facing description. |
+| git-client-056 | environment-messages-in-english | A script standing in for git that prints `$LC_MESSAGES|$LC_CTYPE` | `C|` followed by the parent's `LC_CTYPE`; the defaults set neither `LC_ALL` nor `LC_CTYPE`. |
+| git-client-057 | invalid-argument | `.pushToUpstream` with a remote `-q`, a branch `-f`, or an empty upstream branch | Refused before spawning, naming that operand. |
 ## Edge Cases
 
 - **Null/empty input**: Parsing an empty status output MUST return an
@@ -727,7 +740,7 @@ component.
 | executable path | string (file path) | `/usr/bin/git` | Path to the git binary the client spawns. |
 | timeout | number (seconds) | `5` | Wall-clock budget for one invocation. |
 | submodule handling | enumeration (ignore / include) | ignore | When set to ignore, the status verb appends `--ignore-submodules`. |
-| extra environment | key-value map of strings | empty | Merged over the `GIT_TERMINAL_PROMPT=0` default in the spawned child's environment; lets a caller (a test, in particular) redirect something like `GIT_CONFIG_GLOBAL` without mutating process-wide state. |
+| extra environment | key-value map of strings | empty | Merged over the `GIT_TERMINAL_PROMPT=0` and `LC_MESSAGES=C` defaults in the spawned child's environment; lets a caller (a test, in particular) redirect something like `GIT_CONFIG_GLOBAL` without mutating process-wide state. |
 | caller attribution | captured at the call site | captured automatically | Identifies the calling file and function that invoked a verb, with no effort required from the caller. |
 | git executable path setting | string | `"/usr/bin/git"` | Read when deriving configuration from settings, into the executable path. |
 | git status timeout setting | integer (seconds) | `5` | Read when deriving configuration from settings, into the timeout, clamped to a minimum of `1`. |
@@ -959,6 +972,14 @@ indefinite hang instead of a command-failed/timed-out outcome the caller
 can act on.
 **Approved**: pending
 
+**Decision**: The execution step sets `LC_MESSAGES=C`, and only that
+locale variable.
+**Rationale**: Callers recognise some refusals by git's text (`not fully
+merged`), which a translated git would change. `LC_MESSAGES` moves only the
+messages; `LC_ALL` or `LC_CTYPE` would also change how git reads and prints
+non-ASCII paths, which must stay the user's.
+**Approved**: pending
+
 **Decision**: The `max(1, ...)` timeout clamp lives only in the
 settings-derived configuration path, not in the plain constructor.
 **Rationale**: (Swift implementation) The settings-derived path
@@ -1036,4 +1057,4 @@ one.
 | 1.0.2 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to foundation/git/. |
 | 1.2.0 | 2026-11-14 | Mike Fullerton | History model: commit, ref, stash and submodule value types with their format strings and parsers, and the log request; output decoding falls back to Latin-1 per segment; diff, word-diff and blame models with their parsers and C-quoted path unquoting; read verbs (top level, log, refs, stashes, submodules, diff targets and options, blame, file contents) and accepted exit codes in the execution step. Final review: changed files without the patch, literal author and message search, precomposed paths, capped file contents, a named file-history limit. |
-| 2.0.0 | 2026-11-14 | Mike Fullerton | Write verbs: the action list and its exact command lines, one perform verb through the execution step with its own budgets (60 s, 600 s for remote verbs and commit) and core.editor=true, the remotes verb and the last commit message. An empty or dash-led ref, remote or commit is refused before anything runs, with a fifth error outcome, invalid-argument (the closed error taxonomy grows, hence major). |
+| 2.0.0 | 2026-11-14 | Mike Fullerton | Write verbs: the action list and its exact command lines, one perform verb through the execution step with its own budgets (60 s, 600 s for remote verbs and commit) and core.editor=true, the remotes verb and the last commit message. An empty or dash-led ref, remote or commit is refused before anything runs, with a fifth error outcome, invalid-argument (the closed error taxonomy grows, hence major). Push to upstream (remote, branch, upstream branch) without `--set-upstream`; every child runs with `LC_MESSAGES=C`. |

@@ -38,6 +38,8 @@ struct GitActionTests {
         expect(.pull, "pull", ["--no-edit"])
         expect(.push, "push", [])
         expect(.pushSettingUpstream(remote: "origin", branch: "main"), "push", ["--set-upstream", "origin", "main"])
+        expect(.pushToUpstream(remote: "origin", branch: "feat", upstreamBranch: "feature"), "push",
+               ["origin", "refs/heads/feat:refs/heads/feature"])
     }
 
     @Test("creating branches, with and without checkout and a start point")
@@ -103,6 +105,7 @@ struct GitActionTests {
         let long: [GitAction] = [
             .commit(message: "m", amend: false), .fetch(remote: nil), .pull, .push,
             .pushSettingUpstream(remote: "origin", branch: "main"),
+            .pushToUpstream(remote: "origin", branch: "feat", upstreamBranch: "feature"),
             .deleteRemoteBranch(remote: "origin", name: "topic"), .pushTag(name: "v1", remote: "origin")
         ]
         let short: [GitAction] = [
@@ -137,6 +140,9 @@ struct GitActionTests {
             (.fetch(remote: "--upload-pack=x"), "--upload-pack=x"),
             (.pushSettingUpstream(remote: "-q", branch: "main"), "-q"),
             (.pushSettingUpstream(remote: "origin", branch: "--force"), "--force"),
+            (.pushToUpstream(remote: "-q", branch: "feat", upstreamBranch: "feature"), "-q"),
+            (.pushToUpstream(remote: "origin", branch: "-f", upstreamBranch: "feature"), "-f"),
+            (.pushToUpstream(remote: "origin", branch: "feat", upstreamBranch: ""), ""),
             (.deleteRemoteBranch(remote: "origin", name: "--mirror"), "--mirror"),
             (.pushTag(name: "v1", remote: "--force"), "--force"),
             (.renameBranch(from: "-M", to: "topic"), "-M"),

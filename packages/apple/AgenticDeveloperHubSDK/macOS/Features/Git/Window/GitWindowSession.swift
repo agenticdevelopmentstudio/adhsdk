@@ -53,7 +53,8 @@ final class GitWindowSession {
     /// action that needs the user (a confirmation, a name) does nothing, and a failure
     /// is only logged.
     var presenter: GitActionPresenting?
-    /// Called with true before an action runs and false once it has finished.
+    /// Called with true when an action starts running git and false when git returns;
+    /// never while a sheet waits for the user. The overview's spinner follows it.
     var onBusyChange: ((Bool) -> Void)?
     /// The action running or last finished; tests await it. Set only by `perform(_:)`
     /// (GitWindowSession+Actions.swift), which is why the setter is not private.
