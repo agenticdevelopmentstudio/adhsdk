@@ -116,6 +116,12 @@ public final class DocumentWindowsFeature: AppFeature {
     /// without taking the foreground. A file that has gone is dropped from
     /// the list.
     public func restoreOpenWindows() {
+        for path in rows.rememberedPaths where !FileManager.default.fileExists(atPath: path) {
+            rows.forget(path)
+        }
+        // A window per file means a row per file: keep only the ones that
+        // are about to reopen.
+        rows.discardForgottenRows()
         for path in rows.rememberedPaths {
             let url = URL(fileURLWithPath: path)
             let reopened = FileManager.default.fileExists(atPath: path)
@@ -157,8 +163,15 @@ public final class DocumentWindowsFeature: AppFeature {
         pendingFiles.removeValue(forKey: repo.id)
         panes.removeObject(forKey: repo.id as NSUUID)
         switch repo.kind {
-        case .document: rows.forget(repo.path)
-        default: UserSettings.documentTabsWindowOpen.value = false
+        case .document:
+            rows.forget(repo.path)
+            // A closed file's window is gone for good: its row and frame go
+            // too, a turn later, once its panes have written what they write
+            // on the way out.
+            let rows = rows
+            DispatchQueue.main.async { rows.discard(repo) }
+        default:
+            UserSettings.documentTabsWindowOpen.value = false
         }
     }
 

@@ -12,7 +12,7 @@ import Foundation
 /// reopen at launch.
 ///
 /// One copy, so a fix to any of it — how a path is spelled, how a row is
-/// found — reaches every kind at once.
+/// found, when one is thrown away — reaches every kind at once.
 @MainActor
 public struct StandaloneWindowRows {
 
@@ -54,6 +54,39 @@ public struct StandaloneWindowRows {
         return repo
     }
 
+    /// Deletes `repo`'s row — its tabs, layout, state and pane state go with
+    /// it by cascade — and its saved window frame, which lives in
+    /// `UserDefaults` under an id nothing would ask for again.
+    ///
+    /// Call it a turn after the window closes, so whatever its panes write on
+    /// the way out lands before the row is gone rather than after.
+    public func discard(_ repo: GitRepo) {
+        do {
+            try database.delete(id: repo.id)
+        } catch {
+            StandaloneWindowRowsLog.logger.error(
+                "Could not delete the row for \(repo.path, privacy: .public): \(error)")
+        }
+        let windowID = ComposableTabsWindowController.windowID(for: repo.id)
+        WindowManager.shared.frames.clearSavedState(for: windowID)
+        WindowManager.shared.frames.clearVisibility(for: windowID)
+    }
+
+    /// Deletes every row of this kind whose path is not in the restore list:
+    /// rows whose windows were closed before closing discarded them, and
+    /// rows for files that have gone. Run at launch, before any window of
+    /// this kind is open.
+    public func discardForgottenRows() {
+        let kept = Set(rememberedPaths)
+        do {
+            for repo in try database.repos(kind: kind) where !kept.contains(repo.path) {
+                discard(repo)
+            }
+        } catch {
+            StandaloneWindowRowsLog.logger.error("Could not list \(kind.rawValue, privacy: .public) rows: \(error)")
+        }
+    }
+
     // MARK: - Restore list
 
     /// The paths whose windows reopen at launch.
@@ -73,4 +106,8 @@ public struct StandaloneWindowRows {
         guard paths.contains(path) else { return }
         openPaths.value = paths.filter { $0 != path }
     }
+}
+
+enum StandaloneWindowRowsLog: Loggable {
+    static nonisolated let logger = makeLogger()
 }

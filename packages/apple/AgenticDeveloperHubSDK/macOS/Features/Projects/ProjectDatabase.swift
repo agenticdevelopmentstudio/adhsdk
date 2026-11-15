@@ -472,6 +472,13 @@ public final class ProjectDatabase {
             "SELECT \(Self.repoColumns) FROM git_repo WHERE kind = 'project' ORDER BY name COLLATE NOCASE")
     }
 
+    /// Every row of `kind`, in no particular order.
+    public func repos(kind: GitRepo.Kind) throws -> [GitRepo] {
+        try queryRepos("SELECT \(Self.repoColumns) FROM git_repo WHERE kind = ?") { stmt in
+            self.bindText(stmt, 1, kind.rawValue)
+        }
+    }
+
     public func repo(id: UUID) throws -> GitRepo? {
         try queryRepos("SELECT \(Self.repoColumns) FROM git_repo WHERE id = ?") { stmt in
             self.bindText(stmt, 1, id.uuidString)
