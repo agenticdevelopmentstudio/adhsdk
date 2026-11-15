@@ -36,7 +36,10 @@ import os
 @MainActor
 public final class DocumentWindowsFeature: AppFeature {
 
-    private let database: ProjectDatabase
+    /// The per-file `.document` rows and the files whose windows reopen.
+    private let rows: StandaloneWindowRows
+    /// The one `.documentTabs` row, whose window reopens by its own flag.
+    private let tabsRows: StandaloneWindowRows
     private let layout: ComposableTabsLayout
     private let windows: ProjectWindowManager
 
@@ -65,7 +68,10 @@ public final class DocumentWindowsFeature: AppFeature {
         layout: ComposableTabsLayout,
         windows: ProjectWindowManager = .shared
     ) {
-        self.database = database
+        self.rows = StandaloneWindowRows(
+            kind: .document, database: database,
+            openPaths: UserSettings.openDocumentWindowFiles)
+        self.tabsRows = StandaloneWindowRows(kind: .documentTabs, database: database, openPaths: nil)
         self.layout = layout
         self.windows = windows
         super.init()
@@ -82,7 +88,7 @@ public final class DocumentWindowsFeature: AppFeature {
     ///   its row could not be read or written (logged).
     @discardableResult
     public func open(file: URL, activates: Bool = true) -> ComposableTabsWindowController? {
-        let url = Self.canonical(file)
+        let url = StandaloneWindowRows.canonical(file)
         var isDirectory: ObjCBool = false
         guard FileManager.default.fileExists(atPath: url.path, isDirectory: &isDirectory),
               !isDirectory.boolValue else {
@@ -90,7 +96,7 @@ public final class DocumentWindowsFeature: AppFeature {
             return nil
         }
         do {
-            if let own = try database.repo(path: url.path, kind: .document),
+            if let own = try rows.existingRow(for: url),
                windows.isDocumentWindow(own.id) {
                 return openWindow(own, showing: url, activates: activates)
             }
@@ -98,7 +104,7 @@ public final class DocumentWindowsFeature: AppFeature {
             case .tabs:
                 return openWindow(try tabsRow(), showing: url, activates: activates)
             case .windows:
-                return openWindow(try row(for: url), showing: url, activates: activates)
+                return openWindow(try rows.row(for: url), showing: url, activates: activates)
             }
         } catch {
             Self.logger.error("Could not record Document window row for \(url.path, privacy: .public): \(error)")
@@ -110,13 +116,13 @@ public final class DocumentWindowsFeature: AppFeature {
     /// without taking the foreground. A file that has gone is dropped from
     /// the list.
     public func restoreOpenWindows() {
-        for path in UserSettings.openDocumentWindowFiles.currentValue {
+        for path in rows.rememberedPaths {
             let url = URL(fileURLWithPath: path)
             let reopened = FileManager.default.fileExists(atPath: path)
-                && (try? row(for: url)).flatMap {
+                && (try? rows.row(for: url)).flatMap {
                     openWindow($0, showing: url, activates: false, onlyIfEmpty: true)
                 } != nil
-            if !reopened { forget(path) }
+            if !reopened { rows.forget(path) }
         }
         if UserSettings.documentTabsWindowOpen.currentValue, let row = try? tabsRow() {
             _ = openWindow(row, showing: nil, activates: false)
@@ -140,7 +146,7 @@ public final class DocumentWindowsFeature: AppFeature {
         )
         guard controller != nil else { return nil }
         switch repo.kind {
-        case .document: remember(repo.path)
+        case .document: rows.remember(repo.path)
         default: UserSettings.documentTabsWindowOpen.value = true
         }
         if let file { show(PendingFile(url: file, onlyIfEmpty: onlyIfEmpty), in: repo) }
@@ -151,7 +157,7 @@ public final class DocumentWindowsFeature: AppFeature {
         pendingFiles.removeValue(forKey: repo.id)
         panes.removeObject(forKey: repo.id as NSUUID)
         switch repo.kind {
-        case .document: forget(repo.path)
+        case .document: rows.forget(repo.path)
         default: UserSettings.documentTabsWindowOpen.value = false
         }
     }
@@ -217,51 +223,15 @@ public final class DocumentWindowsFeature: AppFeature {
 
     // MARK: - Rows
 
-    /// The `.document` row for `url`, inserted the first time.
-    private func row(for url: URL) throws -> GitRepo {
-        if let existing = try database.repo(path: url.path, kind: .document) {
-            return existing
-        }
-        let repo = GitRepo(path: url.path, name: url.lastPathComponent, kind: .document)
-        try database.insert(repo)
-        return repo
-    }
-
     /// The one `.documentTabs` row, inserted the first time. Its path is the
     /// home directory: a real directory for the workspace to be rooted at,
     /// and one fixed value for the row to be found by.
     private func tabsRow() throws -> GitRepo {
-        let home = Self.canonical(FileManager.default.homeDirectoryForCurrentUser)
-        if let existing = try database.repo(path: home.path, kind: .documentTabs) {
-            return existing
-        }
-        let repo = GitRepo(path: home.path, name: Self.tabsWindowName, kind: .documentTabs)
-        try database.insert(repo)
-        return repo
+        let home = StandaloneWindowRows.canonical(FileManager.default.homeDirectoryForCurrentUser)
+        return try tabsRows.row(for: home, name: Self.tabsWindowName)
     }
 
     static let tabsWindowName = "Documents"
-
-    /// One spelling per file, so `/tmp/x` and `/private/tmp/x` are one row
-    /// and one window.
-    static func canonical(_ url: URL) -> URL {
-        url.standardizedFileURL.resolvingSymlinksInPath()
-    }
-
-    // MARK: - Restore list
-
-    private func remember(_ path: String) {
-        var paths = UserSettings.openDocumentWindowFiles.currentValue
-        guard !paths.contains(path) else { return }
-        paths.append(path)
-        UserSettings.openDocumentWindowFiles.value = paths
-    }
-
-    private func forget(_ path: String) {
-        let paths = UserSettings.openDocumentWindowFiles.currentValue
-        guard paths.contains(path) else { return }
-        UserSettings.openDocumentWindowFiles.value = paths.filter { $0 != path }
-    }
 }
 
 extension DocumentWindowsFeature: Loggable {

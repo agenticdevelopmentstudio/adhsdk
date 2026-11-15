@@ -1203,6 +1203,7 @@
 		450471595A915D85CF2B31B0 /* SyncSmokeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C6365BB511F484494EFADAF /* SyncSmokeTests.swift */; };
 		4514F2D730A374C70759ECD8 /* FenceScannerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 050E7857EA194498A1DFCDA9 /* FenceScannerTests.swift */; };
 		451A4563C85CB6A35D0C5C89 /* QueuedPrompt.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1583212C5760FF46DF0AEE6C /* QueuedPrompt.swift */; };
+		4532BA0796F2110B4D6BFD79 /* StandaloneWindowRows.swift in Sources */ = {isa = PBXBuildFile; fileRef = B27C30926FD89BA215E605A6 /* StandaloneWindowRows.swift */; };
 		4535AD920A6662DC491F7DB6 /* ActivityRunsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51BDCD2B63439154EEADE13B /* ActivityRunsTests.swift */; };
 		454724256BB3DB0964A2E861 /* UserSettings+Notes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8864F0FE657FB9F63EEFE085 /* UserSettings+Notes.swift */; };
 		456CFD94B52572C1E12BE00E /* Tool.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86E5F67903F71CECF7ABACBA /* Tool.swift */; };
@@ -9179,6 +9180,7 @@
 		B1EE156AD247905E3805CF82 /* ScriptedBackendTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScriptedBackendTests.swift; sourceTree = "<group>"; };
 		B1F88756D7E830D2103FE31B /* StenographerSummarizing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StenographerSummarizing.swift; sourceTree = "<group>"; };
 		B24D1617B46B5A19A118EB1C /* MailClassification.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MailClassification.swift; sourceTree = "<group>"; };
+		B27C30926FD89BA215E605A6 /* StandaloneWindowRows.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StandaloneWindowRows.swift; sourceTree = "<group>"; };
 		B27F5C198D3777E13DC2C2A6 /* GitSettingsPanelViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GitSettingsPanelViewController.swift; sourceTree = "<group>"; };
 		B2891085AAD4FF4A5E68A61E /* ComposableSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComposableSettings.swift; sourceTree = "<group>"; };
 		B2924831DD8AA1035941BB0B /* landmarks.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = landmarks.html; sourceTree = "<group>"; };
@@ -17403,6 +17405,7 @@
 				78FC2B27A850C37BE2FD49B3 /* ProjectWindowKeyCommands.swift */,
 				3089372D3E5F287086456D86 /* ProjectWindowManager.swift */,
 				472711BDA83A46ACA0186493 /* ProjectWorkspace.swift */,
+				B27C30926FD89BA215E605A6 /* StandaloneWindowRows.swift */,
 				D8348865FC2D6E7B7C129868 /* UserSettings+Projects.swift */,
 			);
 			path = Projects;
@@ -23523,6 +23526,7 @@
 				C0E0C8CA7FA3A7A3B6C8D85A /* SpacingSettingsBinding.swift in Sources */,
 				A83D0356F0C0910D1457356C /* SpacingSettingsPanelViewController.swift in Sources */,
 				B6B9110C949242BA1A08D535 /* SplitViewController.swift in Sources */,
+				4532BA0796F2110B4D6BFD79 /* StandaloneWindowRows.swift in Sources */,
 				C88703586955BB294F22AAA0 /* StenographerAIConfigPush.swift in Sources */,
 				21A4093ABA031175AB5AE0F2 /* StenographerFeaturePermissions.swift in Sources */,
 				0BA26F64670F39B270108F75 /* StenographerOversightPrefsPush.swift in Sources */,

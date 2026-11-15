@@ -27,7 +27,7 @@ public final class FileBrowserWindowsFeature: AppFeature {
         public static let newWindow = "fileBrowser.action.newWindow"
     }
 
-    private let database: ProjectDatabase
+    private let rows: StandaloneWindowRows
     private let layout: ComposableTabsLayout
     private let windows: ProjectWindowManager
 
@@ -39,7 +39,9 @@ public final class FileBrowserWindowsFeature: AppFeature {
         layout: ComposableTabsLayout,
         windows: ProjectWindowManager = .shared
     ) {
-        self.database = database
+        self.rows = StandaloneWindowRows(
+            kind: .fileBrowser, database: database,
+            openPaths: UserSettings.openFileBrowserDirectories)
         self.layout = layout
         self.windows = windows
         super.init()
@@ -82,7 +84,7 @@ public final class FileBrowserWindowsFeature: AppFeature {
     ///   its row could not be read or written (logged).
     @discardableResult
     public func open(directory: URL, activates: Bool = true) -> ComposableTabsWindowController? {
-        let url = Self.canonical(directory)
+        let url = StandaloneWindowRows.canonical(directory)
         var isDirectory: ObjCBool = false
         guard FileManager.default.fileExists(atPath: url.path, isDirectory: &isDirectory),
               isDirectory.boolValue else {
@@ -91,7 +93,7 @@ public final class FileBrowserWindowsFeature: AppFeature {
         }
         let repo: GitRepo
         do {
-            repo = try row(for: url)
+            repo = try rows.row(for: url)
         } catch {
             Self.logger.error("Could not record File Browser row for \(url.path, privacy: .public): \(error)")
             return nil
@@ -100,9 +102,9 @@ public final class FileBrowserWindowsFeature: AppFeature {
             repo,
             layout: layout,
             activates: activates,
-            onClose: { [weak self] closed in self?.forget(closed.path) }
+            onClose: { [weak self] closed in self?.rows.forget(closed.path) }
         )
-        if controller != nil { remember(url.path) }
+        if controller != nil { rows.remember(url.path) }
         return controller
     }
 
@@ -121,45 +123,11 @@ public final class FileBrowserWindowsFeature: AppFeature {
     /// quit, without taking the foreground. A directory that has gone is
     /// dropped from the list.
     public func restoreOpenWindows() {
-        let paths = UserSettings.openFileBrowserDirectories.currentValue
-        for path in paths where open(directory: URL(fileURLWithPath: path), activates: false) == nil {
-            forget(path)
+        for path in rows.rememberedPaths where open(directory: URL(fileURLWithPath: path), activates: false) == nil {
+            rows.forget(path)
         }
     }
 
-    // MARK: - Rows
-
-    /// The `.fileBrowser` row for `url`, inserted the first time.
-    private func row(for url: URL) throws -> GitRepo {
-        if let existing = try database.repo(path: url.path, kind: .fileBrowser) {
-            return existing
-        }
-        let name = url.lastPathComponent.isEmpty ? url.path : url.lastPathComponent
-        let repo = GitRepo(path: url.path, name: name, kind: .fileBrowser)
-        try database.insert(repo)
-        return repo
-    }
-
-    /// One spelling per directory, so `/tmp/x` and `/private/tmp/x` are one
-    /// row and one window.
-    static func canonical(_ url: URL) -> URL {
-        url.standardizedFileURL.resolvingSymlinksInPath()
-    }
-
-    // MARK: - Restore list
-
-    private func remember(_ path: String) {
-        var paths = UserSettings.openFileBrowserDirectories.currentValue
-        guard !paths.contains(path) else { return }
-        paths.append(path)
-        UserSettings.openFileBrowserDirectories.value = paths
-    }
-
-    private func forget(_ path: String) {
-        let paths = UserSettings.openFileBrowserDirectories.currentValue
-        guard paths.contains(path) else { return }
-        UserSettings.openFileBrowserDirectories.value = paths.filter { $0 != path }
-    }
 }
 
 extension FileBrowserWindowsFeature: Loggable {
