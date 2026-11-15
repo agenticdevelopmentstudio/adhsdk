@@ -165,6 +165,61 @@ struct GitClientConflictTests {
         #expect(!(try await helperExists(repository)))
     }
 
+    /// `main` has `base`; `feature` adds `x.txt` ("add x") then changes it ("change x"). The
+    /// rebase onto `main` drops "add x" and rewords "change x", so that pick stops on a
+    /// modify/delete conflict with the reword's `exec` still to run.
+    private func stoppedRewordRepository(_ prefix: String) async throws -> GitTestRepository {
+        let repository = try await GitTestRepository.make(prefix: prefix)
+        do {
+            try await commitFile(repository, "base.txt", "base\n", message: "base")
+            try await repository.run(["switch", "-q", "-c", "feature"])
+            try await commitFile(repository, "x.txt", "1\n", message: "add x")
+            try await commitFile(repository, "x.txt", "2\n", message: "change x")
+            _ = await failure {
+                try await rebase(repository) { entries in
+                    entries[0].action = .drop
+                    entries[1].action = .reword
+                    entries[1].message = "reworded x"
+                }
+            }
+            return repository
+        } catch {
+            repository.tearDown()
+            throw error
+        }
+    }
+
+    @Test("skipping a reworded pick that stopped leaves every earlier commit, onto included, alone")
+    func skipStoppedReword() async throws {
+        let repository = try await stoppedRewordRepository("rebase-reword-skip")
+        defer { repository.tearDown() }
+        let onto = try await repository.sha("main")
+        #expect(try await client.operationState(in: repository.root) != .none)
+
+        try await client.perform(.operation(.rebase, .skip), in: repository.root)
+        #expect(try await client.operationState(in: repository.root) == .none)
+        #expect(try await repository.sha("HEAD") == onto)
+        #expect(try await repository.sha("main") == onto)
+        let subject = try await repository.run(["log", "-1", "--format=%s", "HEAD"])
+        #expect(subject.trimmingCharacters(in: .whitespacesAndNewlines) == "base")
+        #expect(!(try await helperExists(repository)))
+    }
+
+    @Test("resolving a reworded pick that stopped, then continuing, gives it the new message")
+    func continueStoppedReword() async throws {
+        let repository = try await stoppedRewordRepository("rebase-reword-continue")
+        defer { repository.tearDown() }
+        let onto = try await repository.sha("main")
+        try repository.write("2\n", to: "x.txt")
+        try await repository.run(["add", "x.txt"])
+
+        try await client.perform(.operation(.rebase, .continue), in: repository.root)
+        #expect(try await client.operationState(in: repository.root) == .none)
+        #expect(try await history(repository).map(\.subject) == ["reworded x"])
+        #expect(try await repository.sha("HEAD~1") == onto)
+        #expect(!(try await helperExists(repository)))
+    }
+
     @Test("an edit stops as an interactive rebase, and continue finishes it")
     func editThenContinue() async throws {
         let repository = try await featureRepository("rebase-edit")
@@ -199,14 +254,41 @@ struct GitClientConflictTests {
         #expect(!(try await helperExists(repository)))
     }
 
-    @Test("a stale helper folder is replaced, and removed by a rebase step that finds no rebase")
-    func staleHelper() async throws {
-        let repository = try await featureRepository("rebase-stale")
-        defer { repository.tearDown() }
+    /// Leaves a helper folder holding only `message-7`, as a rebase ended outside the app would.
+    private func plantStaleHelper(_ repository: GitTestRepository) async throws -> URL {
         let helper = try await client.gitPath(GitClient.rebaseHelperName, in: repository.root)
         try FileManager.default.createDirectory(at: helper, withIntermediateDirectories: true)
         try Data("stale".utf8).write(to: helper.appendingPathComponent("message-7"))
-        _ = await failure { try await client.perform(.operation(.rebase, .abort), in: repository.root) }
+        return helper
+    }
+
+    @Test("a stale helper folder is replaced by a new plan's, and removed by an unrelated perform")
+    func staleHelper() async throws {
+        let repository = try await featureRepository("rebase-stale")
+        defer { repository.tearDown() }
+        var helper = try await plantStaleHelper(repository)
+        try await rebase(repository) { $0[1].action = .edit }
+        #expect(try await client.operationState(in: repository.root) != .none)
+        #expect(!FileManager.default.fileExists(atPath: helper.appendingPathComponent("message-7").path))
+        #expect(FileManager.default.fileExists(atPath: helper.appendingPathComponent("todo").path))
+        try await client.perform(.operation(.rebase, .continue), in: repository.root)
+        #expect(!(try await helperExists(repository)))
+
+        helper = try await plantStaleHelper(repository)
+        try repository.write("staged\n", to: "staged.txt")
+        try await client.perform(.stage(paths: ["staged.txt"]), in: repository.root)
+        #expect(!FileManager.default.fileExists(atPath: helper.path))
+    }
+
+    @Test("a perform during a stopped rebase keeps the helper folder its exec lines need")
+    func helperKeptWhileStopped() async throws {
+        let repository = try await featureRepository("rebase-stale-kept")
+        defer { repository.tearDown() }
+        try await rebase(repository) { $0[1].action = .edit }
+        try repository.write("staged\n", to: "staged.txt")
+        try await client.perform(.stage(paths: ["staged.txt"]), in: repository.root)
+        #expect(try await helperExists(repository))
+        try await client.perform(.operation(.rebase, .abort), in: repository.root)
         #expect(!(try await helperExists(repository)))
     }
 

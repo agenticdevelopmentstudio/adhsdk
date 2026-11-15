@@ -381,11 +381,19 @@
   before writing or spawning anything.
 - **interactive-rebase-todo**: The todo MUST hold one line per entry,
   `<action> <sha> <subject>`, the subject's line breaks turned into spaces,
-  and end with a newline. A reword MUST be written as `pick <sha> <subject>`
-  followed by `exec git commit --amend --no-edit --allow-empty -F
-  '<helper>/message-<n>'`, `n` counting rewords from 0 in todo order and the
-  path single-quoted for `sh` (each `'` written `'\''`), so the rebase never
-  needs an editor.
+  and end with a newline. A reword MUST be written as three lines, so the
+  rebase never needs an editor: `exec git rev-parse HEAD > '<helper>/head-<n>'`,
+  then `pick <sha> <subject>`, then `exec test "$(git rev-parse HEAD)" =
+  "$(cat '<helper>/head-<n>')" || git commit --amend --no-edit --allow-empty
+  -F '<helper>/message-<n>'`, `n` counting rewords from 0 in todo order and
+  each path single-quoted for `sh` (each `'` written `'\''`).
+- **reword-amends-only-its-pick**: A reword's amend MUST run only when its
+  pick moved HEAD. A pick that stops (a conflict, a commit that became empty)
+  and is then skipped leaves HEAD where it was, and git still runs the next
+  todo line; an unconditional amend would rewrite the previous commit, or
+  `onto` itself when the reword is the first kept entry. A pick that applied,
+  fast-forwarded, or was resolved and continued always moves HEAD, so its
+  amend runs.
 - **interactive-rebase-run**: The perform verb MUST write the todo and each
   reword's message into the helper folder, `rev-parse --git-path
   adk-rebase` (inside the working tree's own git directory, beside
@@ -393,11 +401,13 @@
   `GIT_SEQUENCE_EDITOR` to `cp '<helper>/todo'`, which git calls with its own
   todo's path; and MUST run `rebase -i <onto>` under `GIT_EDITOR=true`
   (`write-editor-override`), so a squash keeps git's combined message.
-- **interactive-rebase-cleanup**: After an interactive rebase and after any
-  rebase step (continue, abort, skip), whether git succeeded or failed, the
-  perform verb MUST remove the helper folder when it exists and the
-  operation state is none. A rebase that stopped (an edit, a conflict) keeps
-  it, since its `exec` lines still read the messages.
+- **interactive-rebase-cleanup**: After every action it runs, whether git
+  succeeded or failed, the perform verb MUST remove the helper folder when it
+  exists and the operation state is none, so a rebase finished or aborted
+  outside the app does not leave it behind; an interactive rebase also
+  replaces any folder already there before writing its own. A rebase that
+  stopped (an edit, a conflict) keeps it, since its `exec` lines still read
+  the messages. An action refused before spawning does not clean up.
 
 ### Worktrees and submodules
 

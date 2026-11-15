@@ -6,7 +6,7 @@ version: 1.2.0
 status: review
 language: en
 created: 2026-11-13
-modified: 2026-11-14
+modified: 2026-11-15
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -43,7 +43,7 @@ The one place a git window's views read a repository from. `GitRepositoryModel` 
 - **set-query**: `setQuery(_:)` MUST replace the query, clear commits, graph rows and paging, and load the first page of the new query.
 - **refs-at**: `refs(at:)` MUST return every ref whose `target` is the commit id, in ref order, and none for an unknown id.
 - **working-copy-split**: `staged` and `unstaged` MUST come from `GitClient.status`'s per-column maps, sorted by path; untracked files MUST be unstaged with `isUntracked` true; a file changed in both columns MUST appear in both lists.
-- **refresh-scope**: `refresh(_:)` MUST reload `.refs` → refs, stashes, submodules and worktrees; `.history` → the history from the top, covering at least as many commits as were loaded, with the graph rebuilt; `.workingCopy` and `.operation` → the working-copy status.
+- **refresh-scope**: `refresh(_:)` MUST reload `.refs` → refs, stashes, submodules and worktrees; `.history` → the history from the top, covering at least as many commits as were loaded, with the graph rebuilt; `.workingCopy` and `.operation` → the working-copy status and the operation state.
 - **watcher-drives-refresh**: Every change set the watcher reports MUST be passed to `refresh(_:)` on the main actor.
 - **observe**: After a refresh, every live observer MUST be called on the main actor with the kinds whose data reloaded, and with history after `setQuery(_:)` and after each page `loadMore()` appends; dropping the token returned by `observe(_:)` MUST stop its calls. No call is made when nothing reloaded.
 - **failures-keep-state**: A git call that fails MUST leave that part's last loaded value in place and be logged; `start()` and `refresh(_:)` MUST NOT throw. A repository deleted under the model keeps showing what it last loaded. A load that was cancelled (a search the window replaced, whose `git log` was terminated) is not a failure and MUST be logged at debug level only.
@@ -51,7 +51,7 @@ The one place a git window's views read a repository from. `GitRepositoryModel` 
 - **stale-results-dropped**: A history result that a later `setQuery(_:)` or refresh superseded MUST be discarded, and so MUST a page from `loadMore()` that finishes after one.
 - **unborn**: A repository with no commits MUST load an empty history and no refs without failing, and its working copy MUST list its files.
 - **content-pass-through**: `diff`, `changedFiles`, `contents`, `blame` and `fileHistory` MUST call the git client in the model's root; `contents` MUST pass its `maximumBytes` through, so an oversized file is never read; `fileHistory` MUST log, at info level, a history that reaches the client's file-history limit, since the list then ends there; `fileHistory` MUST follow renames and return the client's `fileHistory(path:in:)` entries, each commit with the file's path at that commit; `commit(_:)` MUST return a loaded commit by id, or nil.
-- **watcher-classify**: `classify(relativePath:)` MUST map a path inside the git directory (written `.git/<path>`) as follows: `HEAD`, `packed-refs`, `refs` and anything under `refs/` → refs and history; `index` → working copy; `MERGE_HEAD`, `CHERRY_PICK_HEAD`, `rebase-merge`, `rebase-apply` and anything under the last two → operation; `worktrees/<name>` (the directory itself) and `worktrees/<name>/HEAD` (another worktree switching branch) → refs; anything under `objects/`, any name ending `.lock`, and everything else inside the git directory → nothing. Any path outside the git directory MUST map to working copy.
+- **watcher-classify**: `classify(relativePath:)` MUST map a path inside the git directory (written `.git/<path>`) as follows: `HEAD`, `packed-refs`, `refs` and anything under `refs/` → refs and history; `index` → working copy; `MERGE_HEAD`, `CHERRY_PICK_HEAD`, `REVERT_HEAD`, `rebase-merge`, `rebase-apply`, `sequencer` and anything under the last three → operation; `worktrees/<name>` (the directory itself) and `worktrees/<name>/HEAD` (another worktree switching branch) → refs; anything under `objects/`, any name ending `.lock`, and everything else inside the git directory → nothing. Any path outside the git directory MUST map to working copy.
 - **watcher-paths**: The watcher MUST watch the working tree, the git directory and the common directory through the toolkit's file-system watcher, MUST exclude the common directory's `objects`, and MUST write a path under the git directory or the common directory as `.git/<path relative to it>` (the git directory wins when both contain it) before classifying it.
 - **watcher-debounce**: The watcher MUST call `onChange` once, 300 ms after the last event, with the union of the kinds since its last call, and MUST NOT call it for events that classify to nothing. `stop()` MUST stop the stream and drop a pending call.
 - **main-actor**: The model MUST be used on the main actor; every git call MUST be `async` and never block it.
@@ -66,6 +66,12 @@ The one place a git window's views read a repository from. `GitRepositoryModel` 
 - **has-commits**: `hasCommits` MUST be true when history is loaded or any local branch exists, and false on an unborn HEAD, which has neither.
 - **reads-pass-through**: `remotes()` and `lastCommitMessage()` MUST return `GitClient.remotes(in:)` and `GitClient.lastCommitMessage(in:)` for the model's root; the latter is nil on an unborn HEAD.
 - **caller-attributed**: `perform(_:)`, `remotes()` and `lastCommitMessage()` MUST pass their `GitCaller` (defaulted at the call site) through to the client, so the command log names the code that asked.
+
+### Operation state
+
+- **operation-state**: `operationState` MUST be `GitClient.operationState(in:)` for the model's root: none before it first loads, reloaded by `start()`, by a refresh that names `.operation` or `.workingCopy`, and so after every `perform(_:)`, which refreshes every kind.
+- **operation-state-failure**: A failed operation-state read MUST keep the last value and be logged, like any other part (`failures-keep-state`).
+- **operation-state-observed**: Observers MUST be told `.operation` when the operation state reloaded to a different value, even when the refresh did not name it (a `.workingCopy` refresh after a conflicting merge started outside the app); a refresh that names `.operation` reports it whenever the status or the operation state loaded.
 ## Appearance
 
 Not applicable: the model draws nothing; the git window's views do.
@@ -96,6 +102,9 @@ Not applicable: the model presents no view.
 | git-repository-model-012 | is-performing | A client whose executable sleeps 0.3 s before running git; `perform(.stage(...))` started in a task, read after 100 ms | `isPerforming` true while it runs, false once it returns. |
 | git-repository-model-013 | head-branch, has-commits | `git init`, `start()`; then a commit and a refresh of every kind | nil and false; then `main` and true. |
 | git-repository-model-014 | reads-pass-through | A clone of a bare remote; `lastCommitMessage()`, a commit, then `remotes()` and `lastCommitMessage()` | nil; then `["origin"]` and the commit's message. |
+| git-repository-model-015 | watcher-classify | `.git/REVERT_HEAD`, `.git/sequencer`, `.git/sequencer/todo` | Operation, each. |
+| git-repository-model-016 | operation-state, operation-state-observed | `main` and `topic` both changing `a.txt`; `perform(.merge(ref: "topic", fastForward: .allowed))`; then `perform(.operation(.merge, .abort))` | Throws, `operationState` is merging with `topic`'s commit and an observer was told `.operation`; then none. |
+| git-repository-model-017 | operation-state | A conflicting merge started by the fixture outside the model; the watcher reports `.operation` | `operationState` is merging. |
 ## Edge Cases
 
 - **Null / empty input**: An unborn repository loads empty history and refs; a repository with no stashes, submodules or linked worktrees loads empty lists (worktrees still lists the main one).
@@ -199,7 +208,7 @@ A failed load logs one line at error level naming the part (refs, history, statu
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
-| 1.2.0 | 2026-11-14 | Mike Fullerton | Actions: perform refreshes every kind after any action and rethrows; isPerforming, headBranch, hasCommits; remotes and last commit message |
+| 1.2.0 | 2026-11-14 | Mike Fullerton | Actions: perform refreshes every kind after any action and rethrows; isPerforming, headBranch, hasCommits; remotes and last commit message; operation state: loaded with the working copy, kept on failure, reported as `.operation` when it changes; the watcher classifies `REVERT_HEAD` and `sequencer` as operation |
 | 1.1.0 | 2026-11-14 | Mike Fullerton | Final review: refs, stashes, submodules and worktrees load independently; cancelled loads log at debug; contents pass a size cap; a capped file history is logged; the deferred watcher makes one watcher per latest start |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | fileHistory returns the client's entries, each commit with the file's path at that commit |
 | 1.0.0 | 2026-11-13 | Mike Fullerton | Initial creation |

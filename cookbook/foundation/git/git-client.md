@@ -475,11 +475,19 @@ picker) is a consumer of this contract, not part of it.
   before writing or spawning anything.
 - **interactive-rebase-todo**: The todo MUST hold one line per entry,
   `<action> <sha> <subject>`, the subject's line breaks turned into spaces,
-  and end with a newline. A reword MUST be written as `pick <sha> <subject>`
-  followed by `exec git commit --amend --no-edit --allow-empty -F
-  '<helper>/message-<n>'`, `n` counting rewords from 0 in todo order and the
-  path single-quoted for `sh` (each `'` written `'\''`), so the rebase never
-  needs an editor.
+  and end with a newline. A reword MUST be written as three lines, so the
+  rebase never needs an editor: `exec git rev-parse HEAD > '<helper>/head-<n>'`,
+  then `pick <sha> <subject>`, then `exec test "$(git rev-parse HEAD)" =
+  "$(cat '<helper>/head-<n>')" || git commit --amend --no-edit --allow-empty
+  -F '<helper>/message-<n>'`, `n` counting rewords from 0 in todo order and
+  each path single-quoted for `sh` (each `'` written `'\''`).
+- **reword-amends-only-its-pick**: A reword's amend MUST run only when its
+  pick moved HEAD. A pick that stops (a conflict, a commit that became empty)
+  and is then skipped leaves HEAD where it was, and git still runs the next
+  todo line; an unconditional amend would rewrite the previous commit, or
+  `onto` itself when the reword is the first kept entry. A pick that applied,
+  fast-forwarded, or was resolved and continued always moves HEAD, so its
+  amend runs.
 - **interactive-rebase-run**: The perform verb MUST write the todo and each
   reword's message into the helper folder, `rev-parse --git-path
   adk-rebase` (inside the working tree's own git directory, beside
@@ -487,11 +495,13 @@ picker) is a consumer of this contract, not part of it.
   `GIT_SEQUENCE_EDITOR` to `cp '<helper>/todo'`, which git calls with its own
   todo's path; and MUST run `rebase -i <onto>` under `GIT_EDITOR=true`
   (`write-editor-override`), so a squash keeps git's combined message.
-- **interactive-rebase-cleanup**: After an interactive rebase and after any
-  rebase step (continue, abort, skip), whether git succeeded or failed, the
-  perform verb MUST remove the helper folder when it exists and the
-  operation state is none. A rebase that stopped (an edit, a conflict) keeps
-  it, since its `exec` lines still read the messages.
+- **interactive-rebase-cleanup**: After every action it runs, whether git
+  succeeded or failed, the perform verb MUST remove the helper folder when it
+  exists and the operation state is none, so a rebase finished or aborted
+  outside the app does not leave it behind; an interactive rebase also
+  replaces any folder already there before writing its own. A rebase that
+  stopped (an edit, a conflict) keeps it, since its `exec` lines still read
+  the messages. An action refused before spawning does not clean up.
 
 ### Worktrees and submodules
 
@@ -935,16 +945,17 @@ component.
 | git-client-086 | rebase-plan-command | `feature` with `add one`, `add two`, `add three` after `main`; plan onto `main` | Onto is `main`'s full sha; entries `add one`, `add two`, `add three`, all pick, the first `HEAD~2`. |
 | git-client-087 | rebase-plan-command | Plan onto `HEAD`; onto `nowhere`; onto `main` after merging a side branch into `feature` with `--no-ff` | Each refused as invalid-argument naming `rebase`: an empty range, `“nowhere” names no commit.`, a reason naming the merge commit. |
 | git-client-088 | rebase-plan-validation | Plans: all dropped; empty; squash first; drop then fixup; reword with no message or only whitespace; commit `abcg123` | The three reasons in order, none for drop-then-pick; the non-hex commit reported invalid. |
-| git-client-089 | interactive-rebase-todo | Pick (subject on two lines), reword, squash, fixup, edit, drop, reword; message files under a path holding `'` | `pick <sha> two lines`; each reword a pick and `exec git commit --amend --no-edit --allow-empty -F '/tmp/it'\''s/message-<n>'`, n 0 then 1; the rest as `<action> <sha> <subject>`; a final newline. |
+| git-client-089 | interactive-rebase-todo | Pick (subject on two lines), reword, squash, fixup, edit, drop, reword; message files under a path holding `'` | `pick <sha> two lines`; each reword `exec git rev-parse HEAD > '/tmp/it'\''s/head-<n>'`, its pick, and `exec test "$(git rev-parse HEAD)" = "$(cat '/tmp/it'\''s/head-<n>')" || git commit --amend --no-edit --allow-empty -F '/tmp/it'\''s/message-<n>'`, n 0 then 1; the rest as `<action> <sha> <subject>`; a final newline. |
 | git-client-090 | interactive-rebase-run, interactive-rebase-cleanup | 086's branch: swap the first two; squash the second; fixup the second; drop the second | `add three`, `add one`, `add two`; squash leaves two commits, the first's body naming `add two`, with the client's `GIT_EDITOR=false`; fixup the same without it; drop removes `two.txt`. No operation and no helper folder after each. |
 | git-client-091 | interactive-rebase-todo, interactive-rebase-cleanup | 086's branch with the second entry reworded to `renamed two` with a body holding `'` | Subjects `add three`, `renamed two`, `add one`; the first commit's sha unchanged; no helper folder. |
 | git-client-092 | interactive-rebase-cleanup, operation-state | 086's branch with the second entry edit; then the rebase continue step | Stops rebasing, interactive, the helper folder present; continue ends with no operation, three commits and no helper folder. |
-| git-client-093 | rebase-plan-validation, interactive-rebase-cleanup | 086's plan with its first entry squash; separately a stale helper folder and a rebase abort with no rebase | Refused before anything runs, HEAD unmoved, no helper folder; the abort fails and the stale folder is removed. |
+| git-client-093 | rebase-plan-validation, interactive-rebase-cleanup | 086's plan with its first entry squash; separately a stale helper folder holding `message-7`, then 086's plan with the second entry edit, the continue step, a second stale folder and a stage of a new file; separately an edit that stops, a stage, then the abort step | Refused before anything runs, HEAD unmoved, no helper folder; the edit stops with `todo` in the folder and no `message-7`, continue removes it, the stage removes the second stale folder; the stage during the stopped rebase keeps the folder and the abort removes it. |
 | git-client-094 | write-action-mapping, write-operand-guard, worktree-absolute-paths | Add worktree `/tmp/wt` creating `topic`, with and without start `main`; checking out `topic`; remove with and without force; branch `-x`; start `-s`; path `wt` | `worktree add -b topic /tmp/wt [main]`, `worktree add /tmp/wt topic`, `worktree remove [--force] /tmp/wt`; `-x` and `-s` (when creating) invalid operands; `wt` relative. |
 | git-client-095 | worktree-absolute-paths, worktree-remove-dirty | Add a worktree creating `fresh`; add one on the existing `existing`; add `relative/wt`; remove `fresh`; dirty `existing`, remove, then force | Worktrees `main`, `fresh`, `existing`; the relative path refused as invalid-argument; `fresh` gone; the dirty removal command-failed and `existing` kept; forced, only `main` left. |
 | git-client-096 | worktree-locked | Porcelain records `locked`, `locked on a removable disk`, and none | Locked, locked, not locked. |
 | git-client-097 | write-action-mapping, submodule-update | Update submodules with no paths, with `--init`, and for `lib/a` | `submodule update --recursive`, `submodule update --init --recursive`, `… -- :(top,literal)lib/a`; no paths is not an empty path list. |
 | git-client-098 | submodule-update | A superproject with submodule `lib`, cloned without `--recurse-submodules`; update submodules initializing | `lib` uninitialized, then current, `lib/lib.txt` present. |
+| git-client-099 | reword-amends-only-its-pick, interactive-rebase-cleanup | `main` with `base`; `feature` adds `x.txt` (`add x`) then changes it (`change x`); plan onto `main` dropping `add x` and rewording `change x` to `reworded x`, which stops on a conflict; then the skip step; separately, `x.txt` resolved, staged and the continue step | Skip: no operation, HEAD and `main` both `main`'s sha, HEAD's subject still `base`, no helper folder. Continue: no operation, one commit `reworded x` whose parent is `main`, no helper folder. |
 ## Edge Cases
 
 - **Null/empty input**: Parsing an empty status output MUST return an
@@ -1321,4 +1332,4 @@ one.
 | 1.0.2 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to foundation/git/. |
 | 1.2.0 | 2026-11-14 | Mike Fullerton | History model: commit, ref, stash and submodule value types with their format strings and parsers, and the log request; output decoding falls back to Latin-1 per segment; diff, word-diff and blame models with their parsers and C-quoted path unquoting; read verbs (top level, log, refs, stashes, submodules, diff targets and options, blame, file contents) and accepted exit codes in the execution step. Final review: changed files without the patch, literal author and message search, precomposed paths, capped file contents, a named file-history limit. |
-| 2.0.0 | 2026-11-14 | Mike Fullerton | Write verbs: the action list and its exact command lines, one perform verb through the execution step with its own budgets (60 s, 600 s for remote verbs and commit) and core.editor=true, the remotes verb and the last commit message. An empty or dash-led ref, remote or commit is refused before anything runs, with a fifth error outcome, invalid-argument (the closed error taxonomy grows, hence major). Push to upstream (remote, branch, upstream branch) without `--set-upstream`; every child runs with `LC_MESSAGES=C`; the push-destination verb (`<branch>@{push}`). Patches from diff lines: a selection of one file's lines, forward and reversed line rules, recomputed hunk headers, the no-newline marker and a one-path file header; apply to the index or the work tree with the patch on standard input, never logged, an empty patch refused. Operations: the operation state (merge, rebase, cherry-pick, revert) read from the files at `rev-parse --git-path`, interactive only when `interactive` exists without `drop_redundant_commits`; merge with its fast-forward rule, rebase, and the continue, abort and skip steps, merge-skip refused before anything runs, every write under `GIT_EDITOR=true`. Conflicts: the seven conflict kinds kept per path, resolve by side and remove paths. Interactive rebase: the plan verb (first-parent, oldest first, merges and empty ranges refused), its validation, the todo with reword as pick plus an amending exec, run from an `adk-rebase` helper folder through `GIT_SEQUENCE_EDITOR` and removed once no operation is left. Worktrees and submodules: add and remove worktree (absolute paths only), locked worktrees, update submodules. |
+| 2.0.0 | 2026-11-14 | Mike Fullerton | Write verbs: the action list and its exact command lines, one perform verb through the execution step with its own budgets (60 s, 600 s for remote verbs and commit) and core.editor=true, the remotes verb and the last commit message. An empty or dash-led ref, remote or commit is refused before anything runs, with a fifth error outcome, invalid-argument (the closed error taxonomy grows, hence major). Push to upstream (remote, branch, upstream branch) without `--set-upstream`; every child runs with `LC_MESSAGES=C`; the push-destination verb (`<branch>@{push}`). Patches from diff lines: a selection of one file's lines, forward and reversed line rules, recomputed hunk headers, the no-newline marker and a one-path file header; apply to the index or the work tree with the patch on standard input, never logged, an empty patch refused. Operations: the operation state (merge, rebase, cherry-pick, revert) read from the files at `rev-parse --git-path`, interactive only when `interactive` exists without `drop_redundant_commits`; merge with its fast-forward rule, rebase, and the continue, abort and skip steps, merge-skip refused before anything runs, every write under `GIT_EDITOR=true`. Conflicts: the seven conflict kinds kept per path, resolve by side and remove paths. Interactive rebase: the plan verb (first-parent, oldest first, merges and empty ranges refused), its validation, the todo with reword as pick plus an amending exec, run from an `adk-rebase` helper folder through `GIT_SEQUENCE_EDITOR` and removed once no operation is left. Worktrees and submodules: add and remove worktree (absolute paths only), locked worktrees, update submodules. Fix round 1: a reword amends only when its pick moved HEAD (reword-amends-only-its-pick, vector 099); every perform that runs removes an idle helper folder. |

@@ -629,6 +629,11 @@ public actor GitClient {
     ///
     /// Every write runs with `writeEnvironment` (`GIT_EDITOR=true`).
     ///
+    /// Every perform that runs, whether git succeeds or fails, then removes the interactive
+    /// rebase's helper folder (`rebaseHelperName`) if it exists and no operation is in progress,
+    /// so a rebase finished or aborted outside the app does not leave it behind. A refused
+    /// action spawns nothing, so it does not clean up.
+    ///
     /// An action's `standardInput` (an apply's patch) is written to git's standard input;
     /// only the arguments are logged, so a patch never reaches `GitCommandLog`.
     @discardableResult
@@ -646,15 +651,11 @@ public actor GitClient {
         if let path = action.relativeWorktreePath {
             throw GitClientError.invalidArgument(verb: action.verb, argument: "“\(path)” is not an absolute path.")
         }
-        switch action {
-        case .interactiveRebase(let plan):
+        if case .interactiveRebase(let plan) = action {
             return try await performInteractiveRebase(plan, action: action, in: directory, caller: caller)
-        case .operation(.rebase, _):
-            return try await runThenRemoveRebaseHelper(in: directory, caller: caller) {
-                try await self.runWrite(action, in: directory, caller: caller)
-            }
-        default:
-            return try await runWrite(action, in: directory, caller: caller)
+        }
+        return try await runThenRemoveRebaseHelper(in: directory, caller: caller) {
+            try await self.runWrite(action, in: directory, caller: caller)
         }
     }
 
@@ -729,11 +730,11 @@ public actor GitClient {
         let files = FileManager.default
         if files.fileExists(atPath: helper.path) { try files.removeItem(at: helper) }
         try files.createDirectory(at: helper, withIntermediateDirectories: true)
-        let messageFile = { (index: Int) in helper.appendingPathComponent("message-\(index)").path }
+        let helperFile = { (name: String) in helper.appendingPathComponent(name).path }
         for (index, message) in plan.rewordMessages.enumerated() {
-            try Data(message.utf8).write(to: URL(fileURLWithPath: messageFile(index)))
+            try Data(message.utf8).write(to: URL(fileURLWithPath: helperFile(GitRebasePlan.messageFileName(index))))
         }
-        try Data(plan.todo(messageFile: messageFile).utf8).write(to: todo)
+        try Data(plan.todo(helperFile: helperFile).utf8).write(to: todo)
     }
 
     /// Runs `body`, then, whether it returned or threw, removes the helper folder if the

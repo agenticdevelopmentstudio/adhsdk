@@ -66,18 +66,27 @@ public struct GitRebasePlan: Sendable, Hashable {
     private static let hexDigits = Set("0123456789abcdefABCDEF")
 
     /// The todo `GIT_SEQUENCE_EDITOR` copies over git's: `<action> <sha> <subject>` per entry,
-    /// the subject on one line. A reword is a pick followed by an `exec` that amends the commit
-    /// with the message in `messageFile(n)` (`n` counting rewords from 0), so the rebase never
-    /// needs an editor; `--allow-empty` keeps an emptied commit amendable.
-    func todo(messageFile: (Int) -> String) -> String {
+    /// the subject on one line. `helperFile(name)` is the path of `name` in the helper folder.
+    ///
+    /// A reword is three lines, so the rebase never needs an editor: an `exec` that records
+    /// HEAD in `head-<n>`, the pick, and an `exec` that amends HEAD with the message in
+    /// `message-<n>` (`n` counting rewords from 0) only when HEAD has moved since. A pick that
+    /// stops (a conflict, an emptied commit) and is then skipped leaves HEAD where it was, and
+    /// git still runs the next line, so an unconditional amend would rewrite the previous
+    /// commit, `onto` included. A pick that ran, fast-forwarded or was continued always moves
+    /// HEAD. `--allow-empty` keeps an emptied commit amendable.
+    func todo(helperFile: (String) -> String) -> String {
         var lines: [String] = []
         var rewords = 0
         for entry in entries {
             let subject = entry.subject.components(separatedBy: .newlines).joined(separator: " ")
             if entry.action == .reword {
+                let head = Self.shellQuoted(helperFile("head-\(rewords)"))
+                let message = Self.shellQuoted(helperFile(Self.messageFileName(rewords)))
+                lines.append("exec git rev-parse HEAD > \(head)")
                 lines.append("pick \(entry.commit) \(subject)")
-                lines.append("exec git commit --amend --no-edit --allow-empty -F "
-                             + Self.shellQuoted(messageFile(rewords)))
+                lines.append("exec test \"$(git rev-parse HEAD)\" = \"$(cat \(head))\""
+                             + " || git commit --amend --no-edit --allow-empty -F \(message)")
                 rewords += 1
             } else {
                 lines.append("\(entry.action.rawValue) \(entry.commit) \(subject)")
@@ -86,7 +95,10 @@ public struct GitRebasePlan: Sendable, Hashable {
         return lines.joined(separator: "\n") + "\n"
     }
 
-    /// Each reword's message, in todo order: what `messageFile(n)` holds.
+    /// The helper file holding the `index`th reword's message.
+    static func messageFileName(_ index: Int) -> String { "message-\(index)" }
+
+    /// Each reword's message, in todo order: what `messageFileName(n)` holds.
     var rewordMessages: [String] {
         entries.filter { $0.action == .reword }.map { $0.message ?? "" }
     }

@@ -153,8 +153,11 @@ are never logged.
 - **Swift**: A `Sendable`, `Hashable` value type in the Foundation-only Core
   framework, with a static `parse(_:)` returning an optional document and
   `resolved(_:)` taking a dictionary from conflict index to choice. Lines
-  are split on `"\n"` by Unicode scalar, because `"\r\n"` is a single
-  `Character` in Swift and a character-level suffix check would miss it.
+  are split with `components(separatedBy: "\n")`, which works on UTF-16
+  code units, so a `"\r\n"` line keeps its carriage return. Only the
+  trailing-newline check looks at Unicode scalars, because `"\r\n"` is a
+  single `Character` in Swift and a character-level suffix check would miss
+  it.
 - **Other platforms**: Split on the line-feed byte or code point, never on a
   platform line-ending abstraction that would swallow the carriage return.
 ## Reference Implementations
@@ -190,4 +193,4 @@ Not yet assessed.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
-| 1.0.0 | 2026-11-15 | Mike Fullerton | Initial creation: seven-character markers, an optional diff3 base, lookalikes as text, CRLF lines, the trailing-newline rule, no document for an unterminated conflict or none, and resolution by a choice per conflict. |
+| 1.0.0 | 2026-11-15 | Mike Fullerton | Initial creation: seven-character markers, an optional diff3 base, lookalikes as text, CRLF lines, the trailing-newline rule, no document for an unterminated conflict or none, and resolution by a choice per conflict. Platform note: lines split on "\n" by UTF-16 code unit; only the trailing-newline check is by scalar. |

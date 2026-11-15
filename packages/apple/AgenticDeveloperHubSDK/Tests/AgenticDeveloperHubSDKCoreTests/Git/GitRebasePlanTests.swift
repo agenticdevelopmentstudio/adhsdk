@@ -47,22 +47,26 @@ struct GitRebasePlanTests {
         }
     }
 
-    @Test("the todo: one line per entry, a reword as a pick and an amending exec, subjects on one line")
+    @Test("the todo: one line per entry, a reword as a pick between a HEAD record and a guarded amend")
     func todo() {
         var entries = plan([.pick, .reword, .squash, .fixup, .edit, .drop, .reword], message: "m").entries
         entries[0].subject = "two\nlines"
         let candidate = GitRebasePlan(onto: "aaaa000", entries: entries)
-        let todo = candidate.todo { "/tmp/it's/message-\($0)" }
+        let todo = candidate.todo { "/tmp/it's/\($0)" }
+        let dir = "'/tmp/it'\\''s/"
+        let amend = " || git commit --amend --no-edit --allow-empty -F "
         #expect(todo == """
             pick bbbb000 two lines
+            exec git rev-parse HEAD > \(dir)head-0'
             pick bbbb001 subject 1
-            exec git commit --amend --no-edit --allow-empty -F '/tmp/it'\\''s/message-0'
+            exec test "$(git rev-parse HEAD)" = "$(cat \(dir)head-0')"\(amend)\(dir)message-0'
             squash bbbb002 subject 2
             fixup bbbb003 subject 3
             edit bbbb004 subject 4
             drop bbbb005 subject 5
+            exec git rev-parse HEAD > \(dir)head-1'
             pick bbbb006 subject 6
-            exec git commit --amend --no-edit --allow-empty -F '/tmp/it'\\''s/message-1'
+            exec test "$(git rev-parse HEAD)" = "$(cat \(dir)head-1')"\(amend)\(dir)message-1'
 
             """)
         #expect(candidate.rewordMessages == ["m", "m"])
