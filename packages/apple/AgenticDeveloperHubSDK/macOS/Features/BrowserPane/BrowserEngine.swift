@@ -171,7 +171,8 @@ public protocol BrowserEngine: BrowserPageDriver {
     /// every page after it.
     func setActivationShieldActive(_ active: Bool)
     /// Draws every image as a crossed-out eye (`BrowserHiddenImages`), on the
-    /// page showing now and every page after it.
+    /// page showing now and every page after it, in every frame of each, and
+    /// turned off puts every frame's images back.
     func setHidesImages(_ hides: Bool)
     /// Puts the cookie policy the pane decided on the engine's store. The pane
     /// decides because only it knows whether the store is shared.

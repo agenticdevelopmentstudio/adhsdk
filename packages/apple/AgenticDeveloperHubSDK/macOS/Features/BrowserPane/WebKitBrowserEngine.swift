@@ -352,14 +352,24 @@ public final class WebKitBrowserEngine: WebKitPageDriver, BrowserEngine {
 
     /// Whether the page's images are drawn as a crossed-out eye.
     private var hidesImages = false
+    /// The Hide Images script's token: one per engine, so a message only
+    /// this engine's script sent changes a frame's images.
+    private let hiddenImagesToken = UUID().uuidString
 
+    private var hiddenImagesSource: String {
+        BrowserHiddenImages.script(hides: hidesImages, token: hiddenImagesToken)
+    }
+
+    /// The script goes back in with the new setting written in, for every
+    /// document from now on, and runs in the main frame of the page showing,
+    /// which passes it to every frame already loaded (`BrowserHiddenImages`).
     public func setHidesImages(_ hides: Bool) {
         guard hides != hidesImages else { return }
         hidesImages = hides
         installUserScripts()
         guard webView.url != nil else { return }
-        let source = hides ? BrowserHiddenImages.hideSource : BrowserHiddenImages.showSource
-        webView.evaluateJavaScript(source, in: nil, in: .page) { _ in }
+        webView.evaluateJavaScript(
+            hiddenImagesSource, in: nil, in: .world(name: BrowserHiddenImages.worldName)) { _ in }
     }
 
     /// The words the committed document was drawn through.
@@ -446,8 +456,9 @@ public final class WebKitBrowserEngine: WebKitPageDriver, BrowserEngine {
 
     /// Puts every user script the engine wants on the web view's controller:
     /// the console hook when this web view captures the console, the
-    /// activation shield's script while the shield is up, and the page word
-    /// filter while Agent Privacy draws the page through the privacy words.
+    /// activation shield's script while the shield is up, the page word
+    /// filter while Agent Privacy draws the page through the privacy words,
+    /// and Hide Images' script, always, with its setting written in.
     ///
     /// The only place user scripts are added or removed.
     /// `WKUserContentController` cannot remove one script, only all of them,
@@ -462,11 +473,11 @@ public final class WebKitBrowserEngine: WebKitPageDriver, BrowserEngine {
         if let shieldScript = activationShield.userScript {
             controller.addUserScript(shieldScript)
         }
-        if hidesImages {
-            controller.addUserScript(WKUserScript(
-                source: BrowserHiddenImages.hideSource, injectionTime: .atDocumentStart,
-                forMainFrameOnly: false))
-        }
+        // Installed with Hide Images off too: each frame's copy is what a
+        // later change reaches it through.
+        controller.addUserScript(WKUserScript(
+            source: hiddenImagesSource, injectionTime: .atDocumentStart, forMainFrameOnly: false,
+            in: .world(name: BrowserHiddenImages.worldName)))
         if let source = pageWordScript {
             controller.addUserScript(WKUserScript(
                 source: source, injectionTime: .atDocumentStart, forMainFrameOnly: false,
