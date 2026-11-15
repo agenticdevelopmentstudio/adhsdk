@@ -319,19 +319,27 @@ public final class DocumentTabsViewController: MultiTabbedViewController {
     /// - Returns: false, changing nothing, when no tab shows it.
     @discardableResult
     public func selectTab(showing url: URL) -> Bool {
+        guard let (tabID, editor) = tab(showing: url) else { return false }
+        selectTab(id: tabID, on: .top)
+        rememberFocus(of: editor)
+        retitle(tabID)
+        reportFocusedDocument()
+        persistTabs()
+        return true
+    }
+
+    /// Whether a tab's editor shows `url`.
+    public func holds(_ url: URL) -> Bool { tab(showing: url) != nil }
+
+    private func tab(showing url: URL) -> (UUID, DocumentEditorViewController)? {
         let target = url.canonicalFileURL
         for tab in tabs(on: .top) {
             guard let root = splitsByTabID[tab.id],
                   let editor = editors(in: root).first(where: { $0.fileURL?.canonicalFileURL == target })
             else { continue }
-            selectTab(id: tab.id, on: .top)
-            rememberFocus(of: editor)
-            retitle(tab.id)
-            reportFocusedDocument()
-            persistTabs()
-            return true
+            return (tab.id, editor)
         }
-        return false
+        return nil
     }
 
     public func openToTheSide(_ url: URL) {

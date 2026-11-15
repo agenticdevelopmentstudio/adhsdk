@@ -25,9 +25,9 @@ import os
 /// held it opens in a new tab of the same window. The window's title is the
 /// name of the file its focused editor shows.
 ///
-/// A file already open in a window of its own comes forward there whatever
-/// the setting says: the setting decides where a file *opens*, not where an
-/// open one is.
+/// A file already open — in a window of its own, or in a tab of the shared
+/// window — comes forward there whatever the setting says: the setting
+/// decides where a file *opens*, not where an open one is.
 ///
 /// What reopens at launch is this feature's own record
 /// (`UserSettings.openDocumentWindowFiles`, `UserSettings.documentTabsWindowOpen`),
@@ -99,6 +99,9 @@ public final class DocumentWindowsFeature: AppFeature {
             if let own = try rows.existingRow(for: url),
                windows.isDocumentWindow(own.id) {
                 return openWindow(own, showing: url, activates: activates)
+            }
+            if let shared = try openTabsRow(holding: url) {
+                return openWindow(shared, showing: url, activates: activates)
             }
             switch UserSettings.singleDocumentsOpenIn.currentValue {
             case .tabs:
@@ -245,6 +248,17 @@ public final class DocumentWindowsFeature: AppFeature {
     private func tabsRow() throws -> GitRepo {
         let home = StandaloneWindowRows.canonical(FileManager.default.homeDirectoryForCurrentUser)
         return try tabsRows.row(for: home, name: Self.tabsWindowName)
+    }
+
+    /// The shared window's row, when that window is open and one of its
+    /// tabs already shows `url`: changing the setting never makes a second
+    /// view of a file that is open.
+    private func openTabsRow(holding url: URL) throws -> GitRepo? {
+        let home = StandaloneWindowRows.canonical(FileManager.default.homeDirectoryForCurrentUser)
+        guard let shared = try tabsRows.existingRow(for: home),
+              windows.isDocumentWindow(shared.id),
+              panes.object(forKey: shared.id as NSUUID)?.holds(url) == true else { return nil }
+        return shared
     }
 
     static let tabsWindowName = "Documents"
