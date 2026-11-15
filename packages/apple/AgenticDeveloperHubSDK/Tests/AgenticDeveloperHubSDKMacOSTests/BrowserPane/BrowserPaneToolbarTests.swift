@@ -122,6 +122,29 @@ final class BrowserPaneToolbarTests: XCTestCase {
         XCTAssertTrue(pane.refusalNotice.isHidden)
     }
 
+    /// One colour rule for every strip item: green while the thing its title
+    /// names is on, red while it is off. At the defaults the page gets
+    /// everything, so the only items off are the two protections nobody
+    /// turned on, and each reads as exactly that ("Hide Images: Off").
+    func test_privacyStatusItemIsOnWhileTheNamedThingIsOn() {
+        let settings = UserSettings(
+            with: InMemorySettingsStorageProvider(),
+            secureSettingsProvider: InMemorySecureSettingsStorageProvider()
+        )
+        func item(_ title: String) -> BrowserPrivacyStatus.Item? {
+            BrowserPrivacyStatus.items(settings: settings, isPaused: false, isAgentPrivacyOn: false)
+                .first { $0.title == title }
+        }
+        let defaults = BrowserPrivacyStatus.items(settings: settings, isPaused: false, isAgentPrivacyOn: false)
+        XCTAssertEqual(defaults.filter { !$0.isOn }.map(\.title), ["Privacy Words", "Hide Images"])
+        XCTAssertEqual(item("Hide Images")?.text, "Hide Images: Off")
+
+        settings.set(true, for: UserSettings.browserPrivacyHideImages)
+        settings.set(BrowserInputPolicy.block, for: UserSettings.browserPrivacyKeyboard)
+        XCTAssertEqual(item("Hide Images")?.isOn, true, "images hidden: Hide Images is on")
+        XCTAssertEqual(item("Keyboard")?.isOn, false, "keyboard withheld: Keyboard is off")
+    }
+
     func test_safariKeepsKitchenNavigation() {
         let pane = makePane(ownToolbar: false)
         XCTAssertFalse(navigation(pane).contains(where: \.isHidden))

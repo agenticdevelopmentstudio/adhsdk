@@ -979,8 +979,9 @@ open class WebBrowserPaneViewController: NSViewController {
         placePrivacyButton()
     }
 
-    /// One strip item: its symbol and title, green while on and red while off,
-    /// with its state in the tooltip and to accessibility.
+    /// One strip item: its symbol and title, green while the thing it names
+    /// is on and red while it is off (`BrowserPrivacyStatus.Item.isOn`), with
+    /// its state in the tooltip and to accessibility.
     private static func stripItemView(_ item: BrowserPrivacyStatus.Item) -> NSView {
         let color: NSColor = item.isOn ? .systemGreen : .systemRed
         let icon = NSImageView(image: NSImage(systemSymbolName: item.symbol, accessibilityDescription: nil)

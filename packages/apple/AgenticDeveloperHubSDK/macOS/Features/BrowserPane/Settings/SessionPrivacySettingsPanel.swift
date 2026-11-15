@@ -49,8 +49,11 @@ final class BrowserPrivacySettingsPanel: BrowserTopicPanel {
             title: "General",
             body: "Pause all events, in a tab's privacy settings, keeps every event from "
                 + "that page until you uncheck it; the privacy button turns red while it is on. "
-                + "Show privacy toolbar puts a bar under the address bar that shows what is "
-                + "being kept from the page, with the privacy button at its left end. Set in "
+                + "Show privacy toolbar puts a bar under the address bar that shows every "
+                + "privacy setting, with the privacy button at its left end: each item is green "
+                + "while the thing it names is on and red while it is off, so Keyboard is green "
+                + "while the page gets the keyboard and Hide Images is green while images are "
+                + "hidden. Set in "
                 + "the Settings window it applies to every web browser; set in a tab's "
                 + "privacy settings, to that browser alone."
         ),

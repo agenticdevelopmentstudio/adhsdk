@@ -56,16 +56,21 @@ final class BrowserAddressBox: NSView {
 }
 
 /// What the privacy toolbar shows: every privacy setting a page or the
-/// agent is subject to, always, each with its symbol and whether it is on —
-/// whether the page (or the agent) gets that thing now, given the pane's
-/// effective settings and its pause state. The toolbar draws on green and
-/// off red.
+/// agent is subject to, always, each with its symbol and whether the thing
+/// its title names is on now, given the pane's effective settings and its
+/// pause state. The toolbar draws on green and off red, one rule for every
+/// item: "Keyboard" is on while the page gets the keyboard, "Hide Images" is
+/// on while the images are hidden. So red never means "kept from the page";
+/// it means the named thing is off, and the label beside it says so.
 @MainActor
 enum BrowserPrivacyStatus {
 
     struct Item: Equatable {
         let symbol: String
         let title: String
+        /// Whether the thing `title` names is on: the page's keyboard, the
+        /// agent's access, the concealing of the privacy words, the hiding of
+        /// images. Green while true, red while false.
         let isOn: Bool
         /// What the item says beside its title: "On", "Off", or a choice's name.
         var state: String?
