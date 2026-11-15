@@ -148,8 +148,39 @@ public actor GitClient {
             caller: caller,
             configuration: await configurationProvider()
         )
-        let path = output.trimmingCharacters(in: .whitespacesAndNewlines)
-        return path.hasPrefix("/") ? URL(fileURLWithPath: path) : directory.appendingPathComponent(path)
+        return Self.gitPathURL(output.trimmingCharacters(in: .whitespacesAndNewlines), in: directory)
+    }
+
+    /// The operation the working tree containing `directory` is in the middle of, read from
+    /// the files git keeps for it in that working tree's own git directory (a linked
+    /// worktree's are not the main one's). The five locations come from one
+    /// `rev-parse --git-path` call naming them all, or one call each when its output does
+    /// not split into one line per name; reading them never throws (`GitOperationState.read`).
+    public func operationState(in directory: URL, caller: GitCaller = GitCaller()) async throws
+        -> GitOperationState {
+        let names = GitOperationState.gitPathNames
+        let output = try await execute(
+            verb: "rev-parse",
+            arguments: names.flatMap { ["--git-path", $0] },
+            directory: directory,
+            caller: caller,
+            configuration: await configurationProvider()
+        )
+        var lines = output.components(separatedBy: "\n")
+        if lines.last == "" { lines.removeLast() }
+        if let files = GitOperationState.Files(lines.map { Self.gitPathURL($0, in: directory) }) {
+            return GitOperationState.read(files)
+        }
+        var urls: [URL] = []
+        for name in names {
+            urls.append(try await gitPath(name, in: directory, caller: caller))
+        }
+        return GitOperationState.Files(urls).map(GitOperationState.read) ?? .none
+    }
+
+    /// `rev-parse --git-path` answers relative to the directory it ran in unless the path is absolute.
+    private static func gitPathURL(_ path: String, in directory: URL) -> URL {
+        path.hasPrefix("/") ? URL(fileURLWithPath: path) : directory.appendingPathComponent(path)
     }
 
     // MARK: - History, refs, diff, blame and contents
@@ -536,6 +567,12 @@ public actor GitClient {
     /// `core.editor=true`, so no verb can stop to wait on an editor nobody will see.
     private static let writeConfigOverrides = ["core.editor=true"]
 
+    /// `GIT_EDITOR=true` for every write, over the parent's environment and the configuration's
+    /// extra environment: `GIT_EDITOR` outranks `core.editor`, so an app launched from a shell
+    /// that sets it would otherwise have `merge --continue` or `rebase --continue` wait on an
+    /// editor nobody sees. The message git prepared is kept as it is.
+    static let writeEnvironment = ["GIT_EDITOR": "true"]
+
     /// Runs `action` in `directory` and returns git's standard output.
     ///
     /// Goes through `execute` like every read, so each write is logged, attributed and
@@ -548,7 +585,10 @@ public actor GitClient {
     /// `git branch --delete main`. A path-taking action with no paths
     /// (`GitAction.hasEmptyPathList`) throws `.invalidArgument` too: git reads an empty
     /// pathspec list as the whole tree. So does an apply with an empty patch
-    /// (`GitAction.hasEmptyPatch`).
+    /// (`GitAction.hasEmptyPatch`), and so does a step the operation's verb does not take
+    /// (`GitAction.isUnsupportedStep`, a merge's skip), naming that step's flag.
+    ///
+    /// Every write runs with `writeEnvironment` (`GIT_EDITOR=true`).
     ///
     /// An action's `standardInput` (an apply's patch) is written to git's standard input;
     /// only the arguments are logged, so a patch never reaches `GitCommandLog`.
@@ -561,6 +601,9 @@ public actor GitClient {
         if action.hasEmptyPathList || action.hasEmptyPatch {
             throw GitClientError.invalidArgument(verb: action.verb, argument: "")
         }
+        if action.isUnsupportedStep {
+            throw GitClientError.invalidArgument(verb: action.verb, argument: action.arguments.first ?? "")
+        }
         let configuration = await configurationProvider()
         let floor = action.isLongRunning ? Self.longWriteBudget : Self.writeBudget
         return try await execute(
@@ -571,7 +614,8 @@ public actor GitClient {
             configuration: configuration,
             configOverrides: Self.writeConfigOverrides,
             budget: max(configuration.timeout, floor),
-            standardInput: action.standardInput
+            standardInput: action.standardInput,
+            environment: Self.writeEnvironment
         )
     }
 
@@ -715,12 +759,13 @@ public actor GitClient {
         configOverrides: [String] = [],
         acceptedExitCodes: Set<Int32> = [0],
         budget: TimeInterval? = nil,
-        standardInput: Data? = nil
+        standardInput: Data? = nil,
+        environment: [String: String] = [:]
     ) async throws -> String {
         let result = try await executeRaw(verb: verb, arguments: arguments, directory: directory, caller: caller,
                                           configuration: configuration, configOverrides: configOverrides,
                                           acceptedExitCodes: acceptedExitCodes, budget: budget,
-                                          standardInput: standardInput)
+                                          standardInput: standardInput, environment: environment)
         return GitOutputDecoding.string(result.standardOutput)
     }
 
@@ -733,6 +778,7 @@ public actor GitClient {
     /// throws `.commandFailed`. `budget` replaces `configuration.timeout` as the wall-clock
     /// limit when given; only the write verbs pass one. `standardInput` is written to the
     /// child's standard input and is never recorded: the log is told the arguments only.
+    /// `environment` merges last, over `configuration.extraEnvironment`.
     private func executeRaw(
         verb: String,
         arguments verbArguments: [String],
@@ -742,7 +788,8 @@ public actor GitClient {
         configOverrides: [String] = [],
         acceptedExitCodes: Set<Int32> = [0],
         budget: TimeInterval? = nil,
-        standardInput: Data? = nil
+        standardInput: Data? = nil,
+        environment: [String: String] = [:]
     ) async throws -> SubprocessChannel.RunResult {
         let overrides = configOverrides.flatMap { ["-c", $0] }
         let arguments = overrides + verbArguments
@@ -766,7 +813,8 @@ public actor GitClient {
             // touching process-wide state — see
             // `GitClientConfiguration.extraEnvironment`.
             environment: Self.baseEnvironment
-                .merging(configuration.extraEnvironment) { _, override in override },
+                .merging(configuration.extraEnvironment) { _, override in override }
+                .merging(environment) { _, override in override },
             environmentPolicy: .mergeOverParent,
             currentDirectoryURL: directory
         )

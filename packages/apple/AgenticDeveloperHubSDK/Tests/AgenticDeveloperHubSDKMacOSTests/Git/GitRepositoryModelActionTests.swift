@@ -117,6 +117,64 @@ struct GitRepositoryModelActionTests {
         #expect(!model.hasCommits)
     }
 
+    @Test("operationState follows a conflicting merge performed through the model, and its abort")
+    func operationStateFollowsPerform() async throws {
+        let repository = try await GitTestRepository.make(prefix: "git-model-action")
+        defer { repository.tearDown() }
+        try repository.write("base\n", to: "a.txt")
+        try await repository.run(["add", "a.txt"])
+        try await repository.commit("base", at: Self.epoch + 100)
+        try await repository.run(["switch", "-q", "-c", "topic"])
+        try repository.write("topic\n", to: "a.txt")
+        try await repository.run(["add", "a.txt"])
+        try await repository.commit("topic", at: Self.epoch + 200)
+        try await repository.run(["switch", "-q", "main"])
+        try repository.write("main\n", to: "a.txt")
+        try await repository.run(["add", "a.txt"])
+        try await repository.commit("main", at: Self.epoch + 300)
+        let theirs = try await repository.sha("topic")
+        let client = GitClient(configuration: GitClientConfiguration(
+            extraEnvironment: ["GIT_CONFIG_GLOBAL": "/dev/null", "GIT_CONFIG_NOSYSTEM": "1"]
+        ))
+        let model = makeModel(repository, client: client)
+        await model.start()
+        #expect(model.operationState == .none)
+
+        var notified: [Set<GitRepositoryChange>] = []
+        let token = model.observe { notified.append($0) }
+        await #expect(throws: GitClientError.self) {
+            try await model.perform(.merge(ref: "topic", fastForward: .allowed))
+        }
+        #expect(model.operationState == .merging(head: theirs))
+        #expect(notified.contains { $0.contains(.operation) })
+
+        try await model.perform(.operation(.merge, .abort))
+        #expect(model.operationState == .none)
+        withExtendedLifetime(token) {}
+    }
+
+    @Test("a working-copy refresh alone reloads the operation state and reports it when it changed")
+    func workingCopyRefreshReportsAnOperationChange() async throws {
+        let repository = try await GitTestRepository.make(prefix: "git-model-action")
+        defer { repository.tearDown() }
+        try await commitFile(repository, "base.txt", at: 100)
+        let model = makeModel(repository)
+        await model.start()
+
+        let head = try await repository.sha("HEAD")
+        try repository.write("\(head)\n", to: ".git/REVERT_HEAD")
+        var notified: [Set<GitRepositoryChange>] = []
+        let token = model.observe { notified.append($0) }
+        await model.refresh([.workingCopy])
+        #expect(model.operationState == .reverting(commit: head))
+        #expect(notified.last?.contains(.operation) == true)
+
+        try FileManager.default.removeItem(at: repository.url(".git/REVERT_HEAD"))
+        await model.refresh([.workingCopy])
+        #expect(model.operationState == .none)
+        withExtendedLifetime(token) {}
+    }
+
     @Test("remotes and lastCommitMessage read through the client")
     func remotesAndLastCommitMessage() async throws {
         let remote = try await GitTestRepository.makeBare()

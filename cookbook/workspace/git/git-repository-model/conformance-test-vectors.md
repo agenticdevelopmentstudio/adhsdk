@@ -15,3 +15,6 @@
 | git-repository-model-012 | is-performing | A client whose executable sleeps 0.3 s before running git; `perform(.stage(...))` started in a task, read after 100 ms | `isPerforming` true while it runs, false once it returns. |
 | git-repository-model-013 | head-branch, has-commits | `git init`, `start()`; then a commit and a refresh of every kind | nil and false; then `main` and true. |
 | git-repository-model-014 | reads-pass-through | A clone of a bare remote; `lastCommitMessage()`, a commit, then `remotes()` and `lastCommitMessage()` | nil; then `["origin"]` and the commit's message. |
+| git-repository-model-015 | watcher-classify | `.git/REVERT_HEAD`, `.git/sequencer`, `.git/sequencer/todo` | Operation, each. |
+| git-repository-model-016 | operation-state, operation-state-observed | `main` and `topic` both changing `a.txt`; `perform(.merge(ref: "topic", fastForward: .allowed))`; then `perform(.operation(.merge, .abort))` | Throws, `operationState` is merging with `topic`'s commit and an observer was told `.operation`; then none. |
+| git-repository-model-017 | operation-state | A conflicting merge started by the fixture outside the model; the watcher reports `.operation` | `operationState` is merging. |

@@ -154,8 +154,10 @@
   commit, optional message), delete tag, push tag, stash save (optional
   message), stash apply, stash pop and stash drop (each by index),
   cherry-pick and revert (commit, optional mainline), reset (commit,
-  soft, mixed or hard), and apply a patch to the index or to the work
-  tree (patch text, reverse).
+  soft, mixed or hard), apply a patch to the index or to the work
+  tree (patch text, reverse), merge (ref, fast-forward allowed, never or
+  only), rebase (onto a ref), and an in-progress operation's step
+  (merge, rebase, cherry-pick or revert; continue, abort or skip).
 - **write-action-mapping**: Each action MUST map to exactly this verb and
   these arguments, every path list preceded by `--` and every path in it
   written as the literal, top-relative pathspec `:(top,literal)<path>`, so a
@@ -183,7 +185,10 @@
   `cherry-pick [-m <mainline>] <commit>`; revert → `revert --no-edit [-m
   <mainline>] <commit>`; reset → `reset --soft|--mixed|--hard <commit>`; apply to the index → `apply
   --cached --whitespace=nowarn [--reverse] -`; apply to the work tree →
-  `apply --whitespace=nowarn [--reverse] -`, the patch on standard input.
+  `apply --whitespace=nowarn [--reverse] -`, the patch on standard input;
+  merge → `merge --no-edit --ff|--no-ff|--ff-only <ref>` (fast-forward
+  allowed, never, only); rebase → `rebase <ref>`; an operation's step →
+  `merge|rebase|cherry-pick|revert --continue|--abort|--skip`.
 - **write-operand-guard**: None of those mappings puts a ref, branch, tag,
   remote or commit after `--`, so git would read one that begins with `-`
   as an option (`branch --delete main` from a branch named `--delete`
@@ -198,7 +203,10 @@
   likewise refuse a stage, unstage, discard or remove-untracked action whose
   path list is empty, as invalid-argument with an empty value: git reads an
   empty pathspec list as the whole tree, so `clean -f -d --` with no paths
-  would delete every untracked file.
+  would delete every untracked file. A merge's ref and a rebase's onto ref
+  are operands like any other. A merge has no skip step (`git merge` takes
+  no `--skip`), so the merge-skip action MUST be refused the same way,
+  carrying the verb `merge` and the value `--skip`.
 - **write-budgets**: The perform verb MUST run through the same private
   execution step as every read — logged, attributed and mapped onto the
   same error outcomes — with its own wall-clock budget: the larger of the
@@ -206,13 +214,19 @@
   long-running one. The long-running actions are the ones that talk to a
   remote (fetch, pull, push, push setting upstream, push to upstream,
   delete remote branch,
-  push tag) and commit, which runs the repository's hooks. Both budgets
+  push tag) and the ones that make commits, which run the repository's
+  hooks: commit, merge, rebase, and an operation's continue and skip
+  steps (an abort makes no commit and is local). Both budgets
   MUST be exposed as constants. A read's budget is unchanged.
 - **write-editor-override**: The perform verb MUST run with `-c
   core.editor=true`, so no write can stop to wait on an editor nobody is
   watching; together with `GIT_TERMINAL_PROMPT=0` a write either finishes
   or fails, and a write that cannot reach a remote (none configured)
-  surfaces as command-failed, not as a timeout.
+  surfaces as command-failed, not as a timeout. It MUST also set
+  `GIT_EDITOR=true` in the child's environment, over anything the parent
+  or the configuration's extra environment set: `GIT_EDITOR` outranks
+  `core.editor`, and a continue step MUST never wait on an editor, so the
+  message git prepared (`MERGE_MSG`, the picked commit's) is kept as it is.
 - **remotes-command**: The remotes verb MUST invoke `git remote -v` and
   return, once each and sorted, the names of the remotes that have a
   non-empty URL. A name that exists only through a setting
@@ -276,6 +290,38 @@
   verb and arguments only, never the patch. An empty patch MUST be refused
   as invalid-argument with an empty value before anything is spawned. A patch
   that no longer applies MUST fail as command-failed carrying git's message.
+
+### Operations
+
+- **operation-kinds**: An in-progress operation MUST be one of four kinds,
+  merge, rebase, cherry-pick and revert, each run by the git verb of the
+  same name, and its steps MUST be continue, abort and skip, written
+  `--continue`, `--abort` and `--skip`.
+- **operation-state**: The operation-state verb MUST report which operation
+  the working tree is in, read from the files git keeps for it in the
+  working tree's own git directory, each located through the git-path verb
+  (`rev-parse --git-path <name>`), never by joining `.git/` by hand: a
+  linked worktree keeps them under the common directory's
+  `worktrees/<name>/`. They are tried in this order, the first present
+  winning: `rebase-merge/` → rebasing, with the branch from `head-name`
+  (`refs/heads/` stripped), the onto commit from `onto`, the step from
+  `msgnum`, the total from `end`, and interactive when `interactive`
+  exists and `drop_redundant_commits` does not (since git 2.26 every
+  merge-backend rebase writes `interactive`; under default options only a
+  plain rebase, whose `--empty` is drop, writes `drop_redundant_commits`); `rebase-apply/` → rebasing, with `head-name`, `onto`, the step
+  from `next` and the total from `last`, never interactive; `MERGE_HEAD` →
+  merging, with the first commit it names; `CHERRY_PICK_HEAD` →
+  cherry-picking that commit; `REVERT_HEAD` → reverting that commit;
+  otherwise none. Each value is the file's text trimmed of whitespace; a
+  missing, empty or unreadable file, or a count that is not a number, MUST
+  give no value for that field, never a failure. The git-path lookups MAY
+  be one `rev-parse` naming every file, falling back to one call each when
+  its output cannot be split into exactly one line per file.
+- **operation-state-properties**: The state MUST expose its kind (none for
+  no operation) and whether it allows skip: rebasing, cherry-picking and
+  reverting do; merging and none do not.
+- **operation-editor**: A continue step MUST finish without an editor
+  (`write-editor-override`), keeping the message git prepared.
 
 ### Execution, configuration and attribution
 

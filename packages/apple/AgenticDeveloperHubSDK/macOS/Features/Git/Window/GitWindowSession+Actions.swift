@@ -481,6 +481,19 @@ extension GitAction {
         case .reset: "Reset failed"
         case .applyToIndex(_, let reverse): reverse ? "Unstage failed" : "Stage failed"
         case .applyToWorktree(_, let reverse): reverse ? "Discard failed" : "Apply failed"
+        case .merge: "Merge failed"
+        case .rebase: "Rebase failed"
+        case let .operation(kind, step): "\(step.title) \(kind.verb) failed"
+        }
+    }
+}
+
+private extension GitOperationStep {
+    var title: String {
+        switch self {
+        case .continue: "Continue"
+        case .abort: "Abort"
+        case .skip: "Skip"
         }
     }
 }

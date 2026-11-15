@@ -5,6 +5,20 @@ public enum GitResetMode: String, Sendable, Hashable, CaseIterable {
     case soft, mixed, hard
 }
 
+/// Whether `git merge` may fast-forward: allowed (`--ff`), never (`--no-ff`, always a merge
+/// commit) or only (`--ff-only`, failing rather than making one).
+public enum GitMergeFastForward: String, Sendable, Hashable {
+    case allowed, never, only
+
+    public var flag: String {
+        switch self {
+        case .allowed: "--ff"
+        case .never: "--no-ff"
+        case .only: "--ff-only"
+        }
+    }
+}
+
 /// One write to a repository, as `GitClient.perform` runs it.
 ///
 /// Each case is a fixed git command line: `verb` is the subcommand and `arguments` what
@@ -59,6 +73,13 @@ public enum GitAction: Sendable, Hashable {
     /// Applies `patch` to the working tree only (`apply`), reversed when `reverse` is set:
     /// discarding lines.
     case applyToWorktree(patch: String, reverse: Bool)
+    /// Merges `ref` into the current branch, keeping git's prepared message (`--no-edit`).
+    case merge(ref: String, fastForward: GitMergeFastForward)
+    /// Replays the current branch onto `onto`.
+    case rebase(onto: String)
+    /// Continues, aborts or skips the operation in progress. A merge has no skip:
+    /// `isUnsupportedStep`, which `GitClient.perform` refuses.
+    case operation(GitOperationKind, GitOperationStep)
 
     /// The git subcommand.
     public var verb: String {
@@ -79,6 +100,9 @@ public enum GitAction: Sendable, Hashable {
         case .cherryPick: "cherry-pick"
         case .revert: "revert"
         case .applyToIndex, .applyToWorktree: "apply"
+        case .merge: "merge"
+        case .rebase: "rebase"
+        case .operation(let kind, _): kind.verb
         }
     }
 
@@ -120,16 +144,21 @@ public enum GitAction: Sendable, Hashable {
         case let .reset(commit, mode): ["--\(mode.rawValue)", commit]
         case .applyToIndex(_, let reverse): ["--cached"] + Self.applyArguments(reverse: reverse)
         case .applyToWorktree(_, let reverse): Self.applyArguments(reverse: reverse)
+        case let .merge(ref, fastForward): ["--no-edit", fastForward.flag, ref]
+        case .rebase(let onto): [onto]
+        case .operation(_, let step): [step.flag]
         }
     }
 
     /// Whether the action can take far longer than a local write: anything that talks to a
-    /// remote, and a commit, which runs the repository's hooks.
+    /// remote, and whatever makes commits, which runs the repository's hooks: a commit, a
+    /// merge, a rebase, and an operation's continue or skip. An abort makes no commit.
     public var isLongRunning: Bool {
         switch self {
         case .commit, .fetch, .pull, .push, .pushSettingUpstream, .pushToUpstream, .deleteRemoteBranch,
-             .pushTag:
+             .pushTag, .merge, .rebase:
             true
+        case .operation(_, let step): step != .abort
         default: false
         }
     }
@@ -140,7 +169,7 @@ public enum GitAction: Sendable, Hashable {
     public var operands: [String] {
         switch self {
         case .stage, .stageAll, .unstage, .unstageAll, .discard, .removeUntracked, .commit, .pull, .push,
-             .stashSave, .stashApply, .stashPop, .stashDrop, .applyToIndex, .applyToWorktree:
+             .stashSave, .stashApply, .stashPop, .stashDrop, .applyToIndex, .applyToWorktree, .operation:
             []
         case .fetch(let remote): remote.map { [$0] } ?? []
         case let .pushSettingUpstream(remote, branch): [remote, branch]
@@ -156,6 +185,8 @@ public enum GitAction: Sendable, Hashable {
         case .deleteTag(let name): [name]
         case let .pushTag(name, remote): [name, remote]
         case .cherryPick(let commit, _), .revert(let commit, _), .reset(let commit, _): [commit]
+        case .merge(let ref, _): [ref]
+        case .rebase(let onto): [onto]
         }
     }
 
@@ -174,6 +205,13 @@ public enum GitAction: Sendable, Hashable {
             paths.isEmpty
         default: false
         }
+    }
+
+    /// Whether the action asks an operation for a step its verb does not take: a merge's skip
+    /// (`git merge` has no `--skip`). `GitClient.perform` refuses it.
+    public var isUnsupportedStep: Bool {
+        if case .operation(.merge, .skip) = self { return true }
+        return false
     }
 
     /// What git reads on standard input: the patch, UTF-8, for the two apply cases; nil

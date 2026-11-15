@@ -120,7 +120,9 @@ struct GitActionTests {
             .commit(message: "m", amend: false), .fetch(remote: nil), .pull, .push,
             .pushSettingUpstream(remote: "origin", branch: "main"),
             .pushToUpstream(remote: "origin", branch: "feat", upstreamBranch: "feature"),
-            .deleteRemoteBranch(remote: "origin", name: "topic"), .pushTag(name: "v1", remote: "origin")
+            .deleteRemoteBranch(remote: "origin", name: "topic"), .pushTag(name: "v1", remote: "origin"),
+            .merge(ref: "topic", fastForward: .allowed), .rebase(onto: "main"), .operation(.rebase, .continue),
+            .operation(.merge, .continue), .operation(.cherryPick, .skip), .operation(.revert, .continue)
         ]
         let short: [GitAction] = [
             .stage(paths: ["a"]), .stageAll, .unstage(paths: ["a"]), .unstageAll, .discard(paths: ["a"]),
@@ -130,7 +132,8 @@ struct GitActionTests {
             .createTag(name: "t", commit: "c", message: nil), .deleteTag(name: "t"), .stashSave(message: nil),
             .stashApply(index: 0), .stashPop(index: 0), .stashDrop(index: 0),
             .cherryPick(commit: "c", mainline: nil), .revert(commit: "c", mainline: nil),
-            .reset(commit: "c", mode: .hard)
+            .reset(commit: "c", mode: .hard), .operation(.merge, .abort), .operation(.rebase, .abort),
+            .operation(.cherryPick, .abort), .operation(.revert, .abort)
         ]
         #expect(long.filter { !$0.isLongRunning }.isEmpty)
         #expect(short.filter(\.isLongRunning).isEmpty)
@@ -160,7 +163,11 @@ struct GitActionTests {
             (.deleteRemoteBranch(remote: "origin", name: "--mirror"), "--mirror"),
             (.pushTag(name: "v1", remote: "--force"), "--force"),
             (.renameBranch(from: "-M", to: "topic"), "-M"),
-            (.renameBranch(from: "topic", to: "-D"), "-D")
+            (.renameBranch(from: "topic", to: "-D"), "-D"),
+            (.merge(ref: "-f", fastForward: .allowed), "-f"),
+            (.merge(ref: "", fastForward: .only), ""),
+            (.rebase(onto: "--root"), "--root"),
+            (.rebase(onto: ""), "")
         ]
         for (action, operand) in invalid {
             #expect(action.invalidOperand == operand, "\(action)")
@@ -170,7 +177,8 @@ struct GitActionTests {
             .commit(message: "-m", amend: false), .stashSave(message: "--x"), .fetch(remote: nil),
             .createBranch(name: "topic", startPoint: nil, checkout: true),
             .createTag(name: "v1", commit: "HEAD", message: "-a"),
-            .renameBranch(from: "a-b", to: "c-d"), .reset(commit: "HEAD~2", mode: .hard)
+            .renameBranch(from: "a-b", to: "c-d"), .reset(commit: "HEAD~2", mode: .hard),
+            .merge(ref: "origin/main", fastForward: .never), .rebase(onto: "main"), .operation(.rebase, .skip)
         ]
         #expect(valid.compactMap(\.invalidOperand).isEmpty)
     }
@@ -193,5 +201,40 @@ struct GitActionTests {
         #expect(GitAction.applyToWorktree(patch: "", reverse: true).hasEmptyPatch)
         #expect(!GitAction.applyToWorktree(patch: patch, reverse: true).hasEmptyPatch)
         #expect(!GitAction.stage(paths: []).hasEmptyPatch)
+    }
+
+    @Test("merge with each fast-forward rule; rebase onto a ref")
+    func mergeAndRebase() {
+        expect(.merge(ref: "topic", fastForward: .allowed), "merge", ["--no-edit", "--ff", "topic"])
+        expect(.merge(ref: "topic", fastForward: .never), "merge", ["--no-edit", "--no-ff", "topic"])
+        expect(.merge(ref: "origin/main", fastForward: .only), "merge", ["--no-edit", "--ff-only", "origin/main"])
+        expect(.rebase(onto: "main"), "rebase", ["main"])
+        #expect(GitMergeFastForward.allowed.rawValue == "allowed")
+    }
+
+    @Test("every operation kind takes every step through its own verb")
+    func operationSteps() {
+        let verbs: [GitOperationKind: String] = [
+            .merge: "merge", .rebase: "rebase", .cherryPick: "cherry-pick", .revert: "revert"
+        ]
+        let flags: [GitOperationStep: String] = [.continue: "--continue", .abort: "--abort", .skip: "--skip"]
+        #expect(GitOperationKind.allCases == [.merge, .rebase, .cherryPick, .revert])
+        for kind in GitOperationKind.allCases {
+            for (step, flag) in flags {
+                expect(.operation(kind, step), verbs[kind] ?? "", [flag])
+                #expect(GitAction.operation(kind, step).operands.isEmpty)
+            }
+        }
+    }
+
+    @Test("a merge has no skip step: only merge-skip is an unsupported step")
+    func mergeSkipIsUnsupported() {
+        #expect(GitAction.operation(.merge, .skip).isUnsupportedStep)
+        let supported: [GitAction] = [
+            .operation(.merge, .continue), .operation(.merge, .abort), .operation(.rebase, .skip),
+            .operation(.cherryPick, .skip), .operation(.revert, .skip), .merge(ref: "t", fastForward: .only),
+            .rebase(onto: "main"), .stageAll
+        ]
+        #expect(supported.filter(\.isUnsupportedStep).isEmpty)
     }
 }

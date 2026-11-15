@@ -242,6 +242,47 @@ struct GitRepositoryModelTests {
         #expect(notified.isEmpty)
     }
 
+    @Test("an operation change from the watcher after an outside conflicting merge loads the operation state")
+    func externalMergeLoadsOperationState() async throws {
+        let repository = try await GitTestRepository.make(prefix: "git-repository-model")
+        defer { repository.tearDown() }
+        try repository.write("base\n", to: "a.txt")
+        try await repository.run(["add", "a.txt"])
+        try await repository.commit("base", at: Self.epoch + 100)
+        try await repository.run(["switch", "-q", "-c", "topic"])
+        try repository.write("topic\n", to: "a.txt")
+        try await repository.run(["add", "a.txt"])
+        try await repository.commit("topic", at: Self.epoch + 200)
+        try await repository.run(["switch", "-q", "main"])
+        try repository.write("main\n", to: "a.txt")
+        try await repository.run(["add", "a.txt"])
+        try await repository.commit("main", at: Self.epoch + 300)
+        let theirs = try await repository.sha("topic")
+
+        let (model, watcher) = makeModel(repository)
+        await model.start()
+        #expect(model.operationState == .none)
+
+        await #expect(throws: GitTestRepository.CommandFailed.self) {
+            try await repository.run(["merge", "--no-edit", "topic"])
+        }
+        var token: AnyObject?
+        typealias Waiter = CheckedContinuation<Set<GitRepositoryChange>, Never>
+        let changes = await withCheckedContinuation { (continuation: Waiter) in
+            var resumed = false
+            token = model.observe { changes in
+                guard !resumed else { return }
+                resumed = true
+                continuation.resume(returning: changes)
+            }
+            watcher.fire([.operation])
+        }
+        _ = token
+
+        #expect(changes.contains(.operation))
+        #expect(model.operationState == .merging(head: theirs))
+    }
+
     @Test("the watcher sorts paths into kinds of change")
     func watcherClassifiesPaths() {
         let classify = GitRepositoryWatcher.classify(relativePath:)
@@ -255,6 +296,10 @@ struct GitRepositoryModelTests {
         #expect(classify(".git/rebase-merge") == [.operation])
         #expect(classify(".git/rebase-merge/done") == [.operation])
         #expect(classify(".git/rebase-apply/next") == [.operation])
+        #expect(classify(".git/REVERT_HEAD") == [.operation])
+        #expect(classify(".git/sequencer") == [.operation])
+        #expect(classify(".git/sequencer/todo") == [.operation])
+        #expect(classify(".git/REVERT_HEAD.lock").isEmpty)
         #expect(classify(".git/worktrees/other") == [.refs])
         #expect(classify(".git/worktrees/other/HEAD") == [.refs])
         #expect(classify(".git/worktrees/other/index").isEmpty)

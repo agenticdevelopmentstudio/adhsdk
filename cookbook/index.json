@@ -9786,7 +9786,7 @@
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:33d55c8dd639c3d6102f5242c6ce734d3e4adb9e25d61ec57f88c1ad359318ae",
+            "hash": "sha256:ec7a2b49d0c4cfda1be81cb3e431ebdb77f00a766831a71a1dc254fd6de3699d",
             "state": "confirmed",
             "version": "2.0.0"
           },
@@ -9804,7 +9804,7 @@
         },
         {
           "conformance": {
-            "hash": "sha256:39d8e1bd1fd75ad35a736e888662c8a873e90d57a84298a235f2571bc6369d4a",
+            "hash": "sha256:b4de07ee30ef195671fd0c82ed1a363834e0b221c288bfdacf4c3adaea96d640",
             "state": "confirmed",
             "version": "2.0.0"
           },
@@ -9819,6 +9819,15 @@
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Git/GitPatchBuilder.swift",
           "platform": "macos"
+        },
+        {
+          "conformance": {
+            "hash": "sha256:803b525750201249530646336893d12bdf6cc60ef77e23d64e429a585f8230f0",
+            "state": "confirmed",
+            "version": "2.0.0"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/Core/Git/GitOperationState.swift",
+          "platform": "apple"
         }
       ],
       "kind": "ingredient",
@@ -14233,7 +14242,7 @@
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:17aebc0746638f2dc59180a76e33dbf5eaff5e4ff51784763cfef3734c4251da",
+            "hash": "sha256:b74e0e22854168a2efc5a7f90a385fb87949b3787f2f855de704e13761d6fb07",
             "state": "confirmed",
             "version": "1.2.0"
           },

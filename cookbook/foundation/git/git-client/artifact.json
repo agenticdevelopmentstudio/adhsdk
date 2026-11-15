@@ -8,7 +8,7 @@
     "status": "review",
     "language": "en",
     "created": "2026-09-24",
-    "modified": "2026-11-14",
+    "modified": "2026-11-15",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -68,6 +68,7 @@
       "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/Git/GitActionTests.swift (adhsdk)",
       "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/Git/GitClientWriteTests.swift (adhsdk)",
       "packages/apple/AgenticDeveloperHubSDK/Core/Git/GitPatchBuilder.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Core/Git/GitOperationState.swift (adhsdk)",
       "packages/apple/AgenticDeveloperHubSDK/Core/RPC/SubprocessChannel+Run.swift (adhsdk)",
       "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/Git/GitPatchBuilderTests.swift (adhsdk)",
       "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/Git/GitClientPatchTests.swift (adhsdk)"

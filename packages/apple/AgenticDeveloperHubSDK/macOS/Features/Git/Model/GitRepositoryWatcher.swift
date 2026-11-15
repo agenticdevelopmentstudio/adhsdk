@@ -9,7 +9,7 @@ public enum GitRepositoryChange: Sendable, Hashable, CaseIterable {
     case history
     /// The index or a file in the working tree.
     case workingCopy
-    /// A merge, rebase or cherry-pick starting or ending.
+    /// A merge, rebase, cherry-pick or revert starting, stopping or ending.
     case operation
 }
 
@@ -127,8 +127,8 @@ public final class GitRepositoryWatcher: GitRepositoryWatching, @unchecked Senda
     /// What a change at `relativePath` (as `relativePath(of:...)` writes it) means.
     /// Anything outside `.git` is the working copy. Inside it: `HEAD`, `packed-refs` and
     /// anything under `refs/` move refs and history; `index` is the working copy;
-    /// `MERGE_HEAD`, `CHERRY_PICK_HEAD` and anything under `rebase-merge/` or
-    /// `rebase-apply/` is an operation; a worktree's entry appearing or going, or another
+    /// `MERGE_HEAD`, `CHERRY_PICK_HEAD`, `REVERT_HEAD` and anything under `rebase-merge/`,
+    /// `rebase-apply/` or `sequencer/` is an operation; a worktree's entry appearing or going, or another
     /// worktree's `worktrees/<name>/HEAD` moving, is refs (the refs reload lists worktrees).
     /// Lock files, objects and everything else mean nothing.
     public static func classify(relativePath: String) -> Set<GitRepositoryChange> {
@@ -142,7 +142,8 @@ public final class GitRepositoryWatcher: GitRepositoryWatching, @unchecked Senda
             return [.refs, .history]
         case "index" where single:
             return [.workingCopy]
-        case "MERGE_HEAD" where single, "CHERRY_PICK_HEAD" where single, "rebase-merge", "rebase-apply":
+        case "MERGE_HEAD" where single, "CHERRY_PICK_HEAD" where single, "REVERT_HEAD" where single,
+             "rebase-merge", "rebase-apply", "sequencer":
             return [.operation]
         case "worktrees" where rest.count == 2,
              "worktrees" where rest.count == 3 && last == "HEAD":

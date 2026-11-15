@@ -30,6 +30,10 @@ public final class GitRepositoryModel: GitRefsDataSource, GitHistoryDataSource, 
     public private(set) var staged: [GitFileChange] = []
     public private(set) var unstaged: [GitFileChange] = []
 
+    /// The merge, rebase, cherry-pick or revert the working tree is in the middle of; none
+    /// before it first loads. Reloaded with the working copy, so after every `perform`.
+    public private(set) var operationState: GitOperationState = .none
+
     private let client: GitClient
     private let watcher: GitRepositoryWatching
 
@@ -42,6 +46,7 @@ public final class GitRepositoryModel: GitRefsDataSource, GitHistoryDataSource, 
     private var refsGeneration = 0
     private var historyGeneration = 0
     private var statusGeneration = 0
+    private var operationGeneration = 0
 
     private var observers: [WeakObserver] = []
 
@@ -69,20 +74,25 @@ public final class GitRepositoryModel: GitRefsDataSource, GitHistoryDataSource, 
     }
 
     /// Reloads the parts `changes` names, concurrently, then tells observers which of
-    /// them actually changed. `.operation` reloads the working copy, where a merge or
-    /// rebase shows its conflicts.
+    /// them actually changed. `.operation` and `.workingCopy` each reload both the working
+    /// copy, where a merge or rebase shows its conflicts, and the operation state; an
+    /// operation state that changed is reported as `.operation` even when only
+    /// `.workingCopy` was named (an operation started outside the app).
     public func refresh(_ changes: Set<GitRepositoryChange>) async {
         async let refsLoaded = changes.contains(.refs) ? reloadRefs() : false
         async let historyLoaded = changes.contains(.history) ? reloadHistory() : false
         let wantsStatus = changes.contains(.workingCopy) || changes.contains(.operation)
         async let statusLoaded = wantsStatus ? reloadStatus() : false
+        async let operation = wantsStatus ? reloadOperation() : OperationReload(loaded: false, changed: false)
 
         var applied: Set<GitRepositoryChange> = []
         if await refsLoaded { applied.insert(.refs) }
         if await historyLoaded { applied.insert(.history) }
-        if await statusLoaded {
+        let operationReload = await operation
+        if await statusLoaded || operationReload.loaded {
             applied.formUnion(changes.intersection([.workingCopy, .operation]))
         }
+        if operationReload.changed { applied.insert(.operation) }
         notify(applied)
     }
 
@@ -265,6 +275,29 @@ public final class GitRepositoryModel: GitRefsDataSource, GitHistoryDataSource, 
         } catch {
             logFailure("status", error)
             return false
+        }
+    }
+
+    // MARK: Operation state
+
+    private struct OperationReload {
+        let loaded: Bool
+        let changed: Bool
+    }
+
+    /// Reads the operation state; a failure keeps the last value and is logged.
+    private func reloadOperation() async -> OperationReload {
+        operationGeneration += 1
+        let generation = operationGeneration
+        do {
+            let state = try await client.operationState(in: root)
+            guard generation == operationGeneration else { return OperationReload(loaded: false, changed: false) }
+            let changed = state != operationState
+            operationState = state
+            return OperationReload(loaded: true, changed: changed)
+        } catch {
+            logFailure("operation state", error)
+            return OperationReload(loaded: false, changed: false)
         }
     }
 
