@@ -27,9 +27,10 @@ extension HubMailService {
     ///
     /// The database opens on the first sign-in, or on a launch whose restore
     /// ends signed out (to purge what a previous launch left), and stays
-    /// open, so signing out and back in reuses it. Pulls authenticate with the stored session;
-    /// label changes go through the hub client, whose middleware refreshes
-    /// an expired token.
+    /// open, so signing out and back in reuses it. Pulls authenticate with the
+    /// stored session; when the hub refuses one, the service renews the
+    /// session through the hub client (whose middleware refreshes an expired
+    /// token) and pulls again. Label changes go through that client too.
     public static func live(
         databaseURL: URL,
         deviceId: String,
@@ -50,7 +51,18 @@ extension HubMailService {
                 let api = await MainActor.run { environment.client.api }
                 try await HubMailBridge.labelWriter(sender: HubMailSender(client: api))(write)
             }
-            return Connection(sync: sync, writeLabels: writeLabels)
+            // Any authenticated call renews: the middleware answers a 401 by
+            // rotating the session in `sessionStore`, which the pulls read.
+            let refreshSession: @Sendable () async -> Bool = {
+                let client = await MainActor.run { environment.client }
+                do {
+                    _ = try await client.currentUser()
+                    return true
+                } catch {
+                    return false
+                }
+            }
+            return Connection(sync: sync, writeLabels: writeLabels, refreshSession: refreshSession)
         }
         // Set before HubAccount wraps the session: the account chains onto
         // this handler rather than replacing it.

@@ -28,15 +28,29 @@ public final class HubMailService {
     public struct Connection: Sendable {
         public let sync: HubMailSync
         public let writeLabels: @Sendable (HubMailLabelWrite) async throws -> Void
+        /// Renews the session after the hub refused a pull's token. True when
+        /// the pull is worth trying again; false when the session could not be
+        /// renewed (the hub unreachable, or no refresh token).
+        public let refreshSession: @Sendable () async -> Bool
 
-        public init(sync: HubMailSync, writeLabels: @escaping @Sendable (HubMailLabelWrite) async throws -> Void) {
+        public init(
+            sync: HubMailSync,
+            writeLabels: @escaping @Sendable (HubMailLabelWrite) async throws -> Void,
+            refreshSession: @escaping @Sendable () async -> Bool = { false }
+        ) {
             self.sync = sync
             self.writeLabels = writeLabels
+            self.refreshSession = refreshSession
         }
     }
 
     public nonisolated static let signedOutMessage =
         "Sign in to the Agentic Developer Hub in Settings to read hub mail."
+
+    /// The status while the hub refuses pulls and the session could not be
+    /// renewed. Reads still answer from the mirror.
+    public nonisolated static let authRetryMessage =
+        "Hub mail could not renew its sign-in, so new mail is not arriving. It will try again shortly."
 
     public private(set) var status: Status = .signedOut {
         didSet { if status != oldValue { onChange() } }
@@ -49,6 +63,7 @@ public final class HubMailService {
 
     private let connect: @MainActor () throws -> Connection
     private let syncInterval: TimeInterval?
+    private let authRetryDelay: Duration
     private let current: BridgeBox
     private var sync: HubMailSync?
     private var trigger: PeriodicTriggerSource?
@@ -56,19 +71,30 @@ public final class HubMailService {
     /// identity never opens the mirror while the old one is being cleared
     /// (the purge would delete what the new sync pulled).
     private var signingOut: Task<Void, Never>?
+    /// Reads the open sync's events, renewing the session when a pull is refused.
+    private var watcher: Task<Void, Never>?
+    /// The pull a refused token scheduled, now or after `authRetryDelay`.
+    private var authRetry: Task<Void, Never>?
 
     private static let log = Logger(subsystem: "com.agenticdevelopmentstudio.hubmail", category: "service")
 
     /// - Parameters:
     ///   - syncInterval: seconds between background pulls, or nil for none
     ///     (the bridge's `syncNow` request still pulls on demand).
+    ///   - authRetryDelay: how long to wait before pulling again when the hub
+    ///     refused the token and the session could not be renewed.
     ///   - connect: builds the sync and label writer for the identity that
     ///     just signed in. A throw lands in `.failed` with its message.
-    public init(syncInterval: TimeInterval? = 300, connect: @escaping @MainActor () throws -> Connection) {
+    public init(
+        syncInterval: TimeInterval? = 300,
+        authRetryDelay: Duration = .seconds(60),
+        connect: @escaping @MainActor () throws -> Connection
+    ) {
         let box = BridgeBox()
         self.current = box
         self.connect = connect
         self.syncInterval = syncInterval
+        self.authRetryDelay = authRetryDelay
         self.client = MailClient { data in
             let request = try JSONDecoder().decode(MailRequest.self, from: data)
             guard let bridge = box.bridge else {
@@ -100,6 +126,7 @@ public final class HubMailService {
             syncNow: { await sync.syncNow() }
         )
         status = .connected
+        watcher = watch(sync, refresh: connection.refreshSession)
         if let syncInterval {
             let trigger = PeriodicTriggerSource(interval: syncInterval)
             self.trigger = trigger
@@ -122,6 +149,10 @@ public final class HubMailService {
         current.bridge = nil
         trigger?.stop()
         trigger = nil
+        watcher?.cancel()
+        watcher = nil
+        authRetry?.cancel()
+        authRetry = nil
         status = .signedOut
         let purge = Task { await self.purge(departing) }
         signingOut = purge
@@ -149,6 +180,52 @@ public final class HubMailService {
             status = .failed("The hub mail copy could not be cleared: \(error.localizedDescription)")
         }
         await sync.engine.stop()
+    }
+
+    /// Keeps pulls going past the access token's lifetime. The engine pauses
+    /// on a refused token and drops its periodic kicks until a manual one, so
+    /// each `.authRequired` renews the session and pulls again. A refusal
+    /// right after a renewal, or a renewal that fails, shows
+    /// `authRetryMessage` and tries again after `authRetryDelay`; the next
+    /// completed cycle clears it.
+    private func watch(
+        _ sync: HubMailSync,
+        refresh: @escaping @Sendable () async -> Bool
+    ) -> Task<Void, Never> {
+        Task { [weak self] in
+            var renewedSinceLastCycle = false
+            for await event in sync.events {
+                guard let service = self, service.sync === sync else { return }
+                switch event {
+                case .authRequired:
+                    let renewed = renewedSinceLastCycle ? false : await refresh()
+                    guard service.sync === sync else { return }
+                    renewedSinceLastCycle = renewed
+                    if renewed {
+                        service.pull(sync, after: nil)
+                    } else {
+                        Self.log.error("hub mail pull refused and the session was not renewed")
+                        service.status = .failed(Self.authRetryMessage)
+                        service.pull(sync, after: service.authRetryDelay)
+                    }
+                case .idle:
+                    renewedSinceLastCycle = false
+                    if case .failed = service.status { service.status = .connected }
+                default:
+                    break
+                }
+            }
+        }
+    }
+
+    /// A manual pull, which lifts the engine's auth pause.
+    private func pull(_ sync: HubMailSync, after delay: Duration?) {
+        authRetry?.cancel()
+        authRetry = Task { [weak self] in
+            if let delay { try? await Task.sleep(for: delay) }
+            guard !Task.isCancelled, let self, self.sync === sync else { return }
+            await sync.syncNow()
+        }
     }
 
     /// Asks for a pull now, when connected.
