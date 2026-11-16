@@ -46,11 +46,13 @@
   built from the element's tag and class names only, MUST NOT use ids, and
   MUST NOT use any class name that looks generated: one containing three
   or more digits in a row, one made of six or more letters and digits
-  only, or one with a `-` or `_` followed by five or more hexadecimal
-  characters.
+  only, one with a `-` or `_` followed by five or more hexadecimal
+  characters, or one with a `-` or `_` followed by five or more letters and
+  digits that mix both (a CSS-in-JS hash such as `css-1x2y3z`).
 - **all-like-it-absent-when-same**: When the looser selector is the same as
-  the This item selector, or cannot be computed, the pick MUST carry no All
-  items like it selector.
+  the This item selector (the same text, or it matches only the picked
+  element), or cannot be computed, the pick MUST carry no All items like it
+  selector.
 - **pick-without-selector-refused**: A pick with no This item selector
   (finder failed or threw, for instance inside a shadow root, an SVG `use`
   or a frame) MUST be refused with a beep: no dialog opens and selecting
