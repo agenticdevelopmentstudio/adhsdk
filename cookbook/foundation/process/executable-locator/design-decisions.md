@@ -4,7 +4,7 @@
 **Approved**: pending
 
 **Decision**: The locator holds no tool-specific location.
-**Rationale**: It is a shared foundation component (Build From Shared Components); a tool such as Claude Code keeps its own installer and version-manager locations beside its own lookup and can pass them in.
+**Rationale**: It is a shared foundation component (Build From Shared Components); a caller that knows its own tool keeps its installer and version-manager locations beside its own lookup and can pass them in.
 **Approved**: pending
 
 **Decision**: `isExecutable` is injected.

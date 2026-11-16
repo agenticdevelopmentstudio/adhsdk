@@ -303,16 +303,6 @@ Not applicable: the code makes no log calls. Failures are written to the `stderr
 - **AppKit / UIKit**: Source is `packages/apple/AgenticDeveloperHubSDK/Integrations/CLI/MailCommandLine.swift`, in the Integrations target. It depends on `AgenticDeveloperHubSDKCore` (for `HTMLText`) and `Foundation`, and on `MailClient`, `MailMessageFilter`, `MailJSON` and `MailDateBound` from the sibling `Integrations/Service` files. It is a caseless `public enum` with static methods, so there is nothing to instantiate and nothing for AppKit or UIKit; the `@Sendable` closure parameters let the host forward to `FileHandle.standardOutput` and `FileHandle.standardError`. Private `Command`, `Options` and `Parsed` types hold the parse result.
 - **WinUI 3**: Build it as a .NET class library, a static class `MailCommandLine` with `public static string Usage(string program = "mail")` and `public static async Task<int> RunAsync(string[] args, string program, IMailClient client, Action<string> stdout, Action<string> stderr)`. Model `Command` as a C# record hierarchy and the parse result as a nullable tuple (null for a usage error). Do not use `System.CommandLine` unless it is configured to return 3 for not found and 64 for usage errors and to treat `--help` and `-h` anywhere as help. Print with the `Console.Out` and `Console.Error` supplied by the host `Program.Main`, returning the integer from `Main` as the process exit code. Encode JSON with `System.Text.Json.JsonSerializer` and `WriteIndented = true`; it has no built-in sorted-key option, so serialize through `JsonNode` after sorting properties explicitly to match the source's sorted keys. Map `MailClientError.notFound` to a `MailNotFoundException` caught before a general `Exception` handler that prints `Error: ` plus `ex.Message`. Parse date-only bounds with `DateTime.TryParseExact` using `yyyy-MM-dd` and `CultureInfo.InvariantCulture`, parse timestamps with `DateTimeOffset.TryParse`, then format with `ToUniversalTime().ToString("yyyy-MM-dd'T'HH:mm:ss.fff'Z'")`. Use `HttpClient` only inside the injected client. Where the host is a WinUI 3 app, route `stdout` to a `TextBlock` or an `ObservableCollection<string>` log rather than a console.
 
-## Reference Implementations
-
-| Platform | Location | Conformance |
-|----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Integrations/CLI/MailCommandLine.swift` | confirmed (1.0.1) |
-| web | (planned) | planned |
-| android | (planned) | planned |
-| windows | (planned) | planned |
-| macos | `packages/apple/AgenticDeveloperHubSDK/Integrations/CLI/MailCommandLine.swift` | confirmed (1.0.1) |
-
 ## Design Decisions
 
 **Decision**: The command line never contacts a service directly; it takes an injected `MailClient` and two output closures instead of reading process streams.

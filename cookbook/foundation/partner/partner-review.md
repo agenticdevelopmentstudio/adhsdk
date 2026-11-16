@@ -2,11 +2,11 @@
 id: 2a298bb0-d8af-40aa-8fec-42dd3b1d8f43
 title: "Partner Review"
 type: ingredient
-version: 1.0.2
+version: 1.0.3
 status: review
 language: en
 created: 2026-11-14
-modified: 2026-11-14
+modified: 2026-11-16
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -117,7 +117,7 @@ Not applicable: the source contains no analytics call.
 ## Privacy
 
 - **Data handled**: A commit's repository path and name, SHA, parent, branch, subject and author, the review's summary and a diff of the branch tip in `PartnerReviewStart`; these are the user's source-control data and can include other people's names. `tipDiff` and `summary` can also contain secrets that were committed to source, such as keys or tokens, so consumers MUST treat them as sensitive and avoid logging or persisting `tipDiff`.
-- **Storage**: None by these types; the macOS partner store persists reviews.
+- **Storage**: None by these types; the macOS partner store persists reviews. The Git window reads a review's state, summary, skip reason and id from that store, read-only, through `PartnerGitReviews` (recipe `workspace/git/git-views`, "Reviews"), and leaves superseded reviews out.
 - **Transmission**: None by these types; `PartnerReviewStart` is returned by the `partner_review_start` tool to the partner process.
 - **Retention**: None beyond the lifetime of the value; the store decides how long reviews are kept.
 
@@ -137,7 +137,7 @@ Not applicable: the source calls no logging API.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Partner/PartnerReview.swift` | confirmed (1.0.2) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Partner/PartnerReview.swift` | confirmed (1.0.3) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -169,5 +169,6 @@ Not applicable: the source calls no logging API.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.3 | 2026-11-16 | Mike Fullerton | Git window Phase 4: reviews read by the Git window |
 | 1.0.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (PartnerReviewConformanceTests.swift, 15 of 15 vectors); unit-test-coverage now passed. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Moved ReviewService and store behavior to the Overview, made superseded-by-meaning and start-source testable, added vectors 011-015, added depends-on Partner Job, tightened Compose and WinUI notes, and added secret-handling guidance for tipDiff and summary. |

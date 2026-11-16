@@ -1,0 +1,7 @@
+
+- **SwiftUI**: Source is `Core/Partner/PartnerReview.swift`, plain structs and one enum importing only `Foundation`; they use synthesised `Codable`. `Identifiable` lets a SwiftUI `List` or `ForEach` use a review directly.
+- **Compose**: Kotlin data classes with `kotlinx.serialization` `@Serializable`; the enum serialises by name; give optional fields `= null` defaults and use `Json { explicitNulls = false }` to omit nulls, and keep required fields free of defaults so a missing key fails; dates need a serializer for the chosen format.
+- **React/Web**: TypeScript interfaces with a string-literal union for the state and optional properties; JSON omits absent optionals naturally; dates travel as strings and need parsing at the edge.
+- **AppKit / UIKit**: Identical to the SwiftUI note; the file is UI-framework-agnostic.
+- **WinUI 3**: C# `record` types with `System.Text.Json`; use `JsonStringEnumConverter` with camelCase naming for the state, `JsonNamingPolicy.CamelCase`, nullable reference or value types for the optional fields and `DefaultIgnoreCondition = WhenWritingNull` to omit nil. Require `supersededBy` and `state` with the `required` keyword so a missing key fails as in Swift. Swift's default `Date` coding (`deferredToDate`) is a number of seconds since 2001-01-01, while `System.Text.Json` writes ISO 8601 by default; the `partner_review_start` tool also encodes ISO 8601, so the default matches it, and a port that uses the default Swift coding needs a converter. Bind a list to an `ObservableCollection<PartnerReview>`.
+

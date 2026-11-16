@@ -281,16 +281,6 @@ Not applicable: the source contains no logging call.
 - **AppKit / UIKit** (source platform): Implemented in `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/ComposableTabs/ProjectWindowSplitViewController.swift` as a `@MainActor` `NSSplitViewController` subclass. The shelf item uses `.preferResizingSiblingsWithFixedSplitView`, a holding priority one above the default-low, minimum and maximum thickness of 180 and 480, and `isCollapsed` restored from the persisted setting. Slides are driven by a `CADisplayLink` created from the view, running in the common run loop mode, which sets the shelf host's width constraint and calls `layoutSubtreeIfNeeded()` on the split view each frame; `item.animator().isCollapsed` is avoided because it lays contents out once at the final size. Drag detection uses `NSSplitView.willResizeSubviewsNotification` and `didResizeSubviewsNotification` rather than the delegate method, which the superclass does not offer for overriding, and a 250 millisecond `Task.sleep` for settle. `beginAnimatedResize` and `endAnimatedResize` on the content view are helpers from the surrounding framework. Backdrop colors come from a `ThemePaletteObserver`. `init(coder:)` is unavailable and `deinit` is `isolated`. UIKit has no equivalent controller; `UISplitViewController` is the nearest, with different collapse semantics.
 - **WinUI 3**: Use a `Grid` with two `ColumnDefinition`s: a shelf column with `MinWidth="180"`, `MaxWidth="480"` and a `Width` bound to the persisted value, and a content column with `MinWidth="300"` and `Width="*"`. Place a `GridSplitter` (Windows Community Toolkit `CommunityToolkit.WinUI.Controls.GridSplitter`) between them, with `ResizeBehavior="PreviousAndNext"`, a thin 1 epx visual and the `Focus` visual state for keyboard resizing with Left and Right arrows. Slide the column by animating its width in code with a `CompositionTarget.Rendering` handler or a `DoubleAnimation` with `EnableDependentAnimation="True"` over 0.2 seconds with a `CubicBezierEase` approximating smoothstep, because `ColumnDefinition.Width` is a layout property and a composition-only animation would not re-lay the content out. Extend each pane's backdrop under the title bar with `Window.ExtendsContentIntoTitleBar = true` and `SetTitleBar`, drawing the shelf's `Background` as `ThemeResource` brushes, and pad the content with the title bar's height. Persist visibility and width in `ApplicationData.Current.LocalSettings`. Pair the slide with the will-move and did-move notifications around the animation. Honor the system's animation setting through `UISettings.AnimationsEnabled`.
 
-## Reference Implementations
-
-| Platform | Location | Conformance |
-|----------|----------|-------------|
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/ComposableTabs/ProjectWindowSplitViewController.swift` | confirmed (1.0.0) |
-| apple | (planned) | planned |
-| web | (planned) | planned |
-| android | (planned) | planned |
-| windows | (planned) | planned |
-
 ## Design Decisions
 
 **Decision**: The shelf is a plain split item in a plain split view, not a sidebar item in a themed split view.

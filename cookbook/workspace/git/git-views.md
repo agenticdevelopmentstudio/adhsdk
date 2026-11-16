@@ -110,6 +110,36 @@ The **diff** (`GitDiffViewController`) shows one file's change for a `GitDiffTar
 - **detail-clear**: `show(commit: nil)` MUST empty the header and the list, hide a shown failure, collapse the header to no height, and cancel any diff in flight.
 - **detail-ui-thread**: The commit detail MUST be used on the UI thread; the diff is awaited, never blocked on.
 
+### Agent sessions
+
+- **sessions-model**: An agent session (`GitAgentSession`) MUST carry the daemon's id, its title (nil when unnamed), its working directory, its branch (nil when unknown) and its start and last-activity dates; its display title is the title, or the id's first eight characters when there is none. Sessions come from a `GitSessionsProviding`, which answers the sessions under a list of roots active since a date and never throws; the Git views never write to it.
+- **sessions-match-commit**: The sessions beside a commit MUST be those whose working directory is one of the roots (the repository's top level and its worktrees) or under one, compared by path component so `/a/bc` is not under `/a/b`, and that either ran on the commit's branch (an empty branch counts as unknown) or were active at its committer date within ten minutes' slack, inclusive (`startedAt - 600 ≤ date ≤ lastActivityAt + 600`); newest start first, ties by id.
+- **sessions-match-branch**: The sessions beside a branch MUST be those under the roots whose branch is that branch's short name, in the same order.
+- **sessions-daemon-adapter**: `GitDaemonSessions` MUST read a daemon read-only, with one `sessions(status: nil, project: <root>, sinceHours:, includeCounts: false)` call per root, merged by id with the first seen kept; `sinceHours` is the whole hours since the date, rounded up, between 1 and 2160 (90 days). A row with no id or an unreadable start is dropped; an unreadable or earlier last activity is the start; empty title and branch strings are nil; an unreachable daemon answers none.
+- **detail-sessions-section**: The commit detail MUST show its matched sessions (`agentSessionMatches`) as an `Agent Sessions` section (`git.commit.sessions`, caption `git.commit.sessions.caption`) after the commit message in the header, one row per session (`git.commit.sessions.row`) titled `<display title> · <branch> · <start–last activity>` (the branch only when known; the span by `DateIntervalFormatter`, medium date, short time) with the working directory as its tooltip. The section MUST be hidden when nothing matches and absent without `agentSessionMatches`; it is re-matched on every `show(commit:)` and on `reloadAgentSessions()`.
+- **detail-sessions-open**: Clicking a row MUST call `onOpenAgentSession` once with that session's id; while `onOpenAgentSession` is nil the rows are disabled. A row's colour MUST follow whether it is enabled (accent while clickable, primary text while not), including when `onOpenAgentSession` is set or cleared after the rows are shown.
+- **sidebar-sessions-submenu**: A local branch's context menu MUST end, after a separator, with an `Agent Sessions` submenu (`git.sidebar.menu.sessions`) holding the branch's sessions (`agentSessionsOnBranch`), at most 20, one item each (`git.sidebar.menu.sessions.item`, titled like a detail row, the working directory as its tooltip); choosing one MUST call `onOpenAgentSession` with its id, and while that is nil the items are disabled. With no sessions, or no `agentSessionsOnBranch`, there is no separator and no submenu.
+
+### Signing badges
+
+- **signature-badge**: A commit's signing badge (`GitHistorySignatureBadge`) MUST exist only for a checked, signed commit (none for a commit whose signature is not known yet or is `unsigned`), with the SF Symbol `checkmark.seal` in the success colour for `good`, `seal` in the secondary text colour for `unknownValidity`, `exclamationmark.triangle` in the warning colour for `bad`, `revokedKey`, `expired` and `expiredKey`, and `questionmark.diamond` in the secondary text colour for `cannotCheck`. Its text is the signature's summary, `<status title> by <signer>` (the status title alone without a signer).
+- **history-signature-badge**: The history's subject cell MUST show the commit's badge (`git.history.signature`, an accessibility image) before its ref badges, with the badge's text as both its tooltip and its accessibility label, read from the data source's `signature(for:)` on each cell; a commit without a badge shows none and takes no space.
+- **history-signature-requests**: The history MUST ask the data source for the signatures of the rows it shows (`requestSignatures(for:)` with the visible rows' shas, in row order) after every `reload()` and every time its clip view's bounds or frame change (each scroll step and resize, so the rows where a scroll stops are asked for, the leading edge included), and never waits on the answer; it never runs git.
+- **signature-loader**: `GitShaBatchLoader` MUST debounce requests by its `delay` (150 ms by default) and run one provider call per batch, off the UI thread. A request MUST drop the shas already cached, in the running batch, or left unanswered; by default it replaces the queued (not yet started) batch, so the latest visible rows win, and with `replacingQueued: false` it keeps the shas apart from that queue, so no replacement drops them, and they join the next batch (first). A running batch is never cancelled: it finishes and its values are cached for the life of the loader. A sha a successful batch did not answer is never asked for again; a failed batch is reported to `onFailure` and its shas MUST NOT be asked for again until `failureCooldown` (one minute) has passed. `onLoad` is called once per batch that cached a value.
+- **model-signatures**: The repository model MUST keep one signature loader whose provider is `GitClient.signatures(for:in:caller:)`, answer `signature(for:)` from its cache, send the history's requests in replace mode and a single commit's in add mode (`requestSignature(for:)`), post a `.history` change when a batch lands, and log a failed batch without surfacing it.
+- **detail-signature-line**: The commit detail MUST show a `Signature` line (`git.commit.signature`, caption `git.commit.signature.caption`) right after the committer row, from `signatureLookup`: the badge's symbol in its colour, then its text, with `Key <key>` as its tooltip when git named a key and `Signature: <text>` as its accessibility label. The line MUST be hidden without a lookup, for an unsigned commit and for one not checked yet, re-read on every `show(commit:)` and on `reloadSignature()`, which the window calls on every `.history` change so a signature that lands shows without reselecting. The window's lookup answers from the model's cache and, when the commit is not cached, asks for it in add mode.
+
+### Reviews
+
+- **reviews-model**: A commit's Coding Partner review (`GitCommitReview`) MUST carry its sha, its state (`queued`, `running`, `done`, `failed`, `skipped`; the title is the capitalized name), its summary and skip reason (each nil when absent) and the review's id. Its first summary line is the summary trimmed of surrounding whitespace and newlines, up to its first newline, trimmed again; nil when that is empty. Reviews come from a `GitReviewsProviding`, which answers the reviews of a list of shas in one repository path (a sha without a review is absent from the answer), never throws, and ticks `changes()` whenever any review changes; the Git views never write to it.
+- **review-badge**: A commit's review badge (`GitHistoryReviewBadge`) MUST exist for every review except a skipped one (none for a commit with no review or none read yet), with the SF Symbol `text.magnifyingglass` in the accent colour for `done`, `hourglass` in the secondary text colour for `queued` and `running`, and `xmark.octagon` in the danger colour for `failed`. Its text is the summary's first line, or the state's title when there is none.
+- **history-review-badge**: The history's subject cell MUST show the commit's review badge (`git.history.review`, an accessibility image) after its signing badge and before its ref badges, with the badge's text as both its tooltip and its accessibility label, read from the data source's `review(for:)` on each cell; a commit without a badge shows none and takes no space.
+- **history-review-requests**: The history MUST ask the data source for the reviews of the rows it shows (`requestReviews(for:)`, the visible rows' shas in row order) exactly when it asks for their signatures: after every `reload()` and on every clip-view bounds or frame change. It never waits on the answer.
+- **review-loader-invalidate**: `GitShaBatchLoader.invalidate()` MUST make every value it holds stale without dropping it, so a cached value stays readable until the next batch that asks for its sha lands, and forget every unanswered and failed sha and every queued, kept and running request, so the next request asks for them all again. A batch started before the invalidation MUST NOT be cached. When a batch lands, a stale sha it answered takes the new value and a stale sha it did not answer is removed; either counts as a change for `onLoad`. Without `invalidate()` a cached sha is never asked for again.
+- **model-reviews**: The repository model MUST take an optional `GitReviewsProviding` (`reviews:` at init, `reviewsProvider`) and, when it has one, keep one review loader whose provider asks it for the batch under the root's path. It answers `review(for:)` from that cache (nil without a provider), sends the history's requests in replace mode and a single commit's in add mode (`requestReview(for:)`), posts a `.history` change when a batch lands, and `invalidateReviews()` invalidates the loader.
+- **detail-review-section**: The commit detail MUST show a `Review` section (`git.commit.review`, caption `git.commit.review.caption`) after the `Agent Sessions` section, from `reviewLookup`: a row (`git.commit.review.stateRow`) with the review's symbol (`git.commit.review.symbol`: the badge's, or `minus.circle` in the secondary text colour for a skipped review) and its state title (`git.commit.review.state`), then the full text (`git.commit.review.summary`, selectable, not editable): the skip reason for a skipped review, otherwise the summary, trimmed, and hidden when empty. Its accessibility label is `Review: <state>`. The section MUST be hidden without a lookup and for a commit without a review, re-read on every `show(commit:)` and on `reloadReview()`, which the window calls on every `.history` change. The window's lookup answers from the model's cache and, when the commit is not cached, asks for it in add mode.
+- **detail-review-open**: The section MUST end with `Open in Coding Partner` (`git.commit.review.open`) while `onOpenReview` is set, hidden while it is nil; pressing it calls `onOpenReview` once with the review's id.
+
 ### Working copy
 
 - **wc-lists**: The working copy MUST show two changed-files lists, `Staged` (context `staged`) over the data source's `staged` files and `Unstaged` (context `unstaged`) over its `unstaged` files, in the data source's order, each item `GitFileListItem(change:)`, each under a header titled `Staged (<count>)` or `Unstaged (<count>)`.
@@ -143,6 +173,29 @@ The **diff** (`GitDiffViewController`) shows one file's change for a `GitDiffTar
 - **diff-staging-intents**: The diff MUST NOT run git. Each item is one call of the delegate's `diff(_:didRequest:)` with a `GitDiffIntent` (`.stage`, `.unstage`, `.discard`) of a `GitPatchSelection` of the shown file: Hunk is `GitPatchSelection.hunk` of the clicked row's hunk (a filler's is the hunk of the row above it); Lines is every added or removed line among the clicked viewer's selected rows, grouped by hunk, read through that viewer's own `lineRefs` alone: side by side, the two viewers keep separate selections, so the left viewer's rows give removed lines and the right viewer's added lines, and a row never brings in its partner on the other side. The viewers' selection is cleared after.
 - **diff-ui-thread**: The diff, its models and its coloring MUST be used on the UI thread; every read and highlight is awaited, never blocked on.
 
+### LFS
+
+- **lfs-diff-row**: When the shown file diff summarises as an LFS diff
+  (git-client's lfs-diff-summary), the diff view MUST show that summary as
+  its one row (`git.diff.lfs`, secondary text) instead of the pointer text,
+  build no viewer rows and colour nothing; any other diff hides the row.
+- **lfs-badge**: While the working copy's data source reports an LFS state
+  that is in use, each row of the Conflicts, Staged and Unstaged lists
+  whose path is stored in LFS (git-client's lfs-tracked-path) MUST show an
+  `externaldrive` symbol after its title (`git.workingCopy.lfsBadge`,
+  tooltip `Stored in Git LFS`); other rows, and every row of a repository
+  not using LFS, show none. The badge is an accessibility image element
+  labelled `Stored in Git LFS`. The model loads the LFS state with the refs,
+  so a refs change re-reads the badges without re-reading the lists, and a
+  change to any `.gitattributes` file counts as a refs change too.
+- **lfs-fetch-menu**: While the repository uses LFS, the toolbar's Fetch
+  button MUST open a menu under itself of `Fetch`, `Fetch LFS Objects`
+  (`git.toolbar.lfsFetch`) and `Pull LFS Objects` (`git.toolbar.lfsPull`);
+  otherwise it fetches at once, and the two LFS items are not offered. The
+  toolbar's items are the same either way. Neither LFS item confirms; a
+  failure shows under `Fetch LFS objects failed` or `Pull LFS objects
+  failed`.
+
 ### Blame
 
 - **blame-rows**: `GitBlameViewController.show(path:at:)` MUST ask the content source for `blame(path:at:)` and show one row per blame line, in order, its text the line's text, with three gutter columns filled only on the first line of each `GitBlame.Run`: the commit's first eight characters, the author's initials (`PersonInitials.of(name:fallback:)` with the email as fallback), and the author date as `yyyy-MM-dd` in the current time zone.
@@ -158,13 +211,28 @@ The **diff** (`GitDiffViewController`) shows one file's change for a `GitDiffTar
 
 ### Command log
 
-- **command-log-columns**: `GitCommandLogViewController(book:roots:)` MUST show the book's entries oldest first in a themed table of five columns, identifiers `git.commandLog.<time|command|directory|duration|status>`, titled Time, Command, Directory, Duration and Status: the entry's time, its command line, its directory's last component, its duration as `<n> ms`, and its exit status (or `–` when unfinished) beside a symbol — `checkmark.circle` success, `clock.badge.exclamationmark` warning when unfinished, `xmark.octagon` danger otherwise.
-- **command-log-filter**: It MUST show only entries whose directory is one of the roots the closure returns (the repository's top level and its worktrees), or inside one, comparing standardized and symlink-resolved paths; an entry with no directory is not shown.
+- **command-log-columns**: `GitCommandLogViewController(book:roots:)` MUST show the book's entries oldest first in a themed table of five columns, identifiers `git.commandLog.<time|command|directory|duration|status>`, titled Time, Command, Directory, Duration and Status: the entry's time as a 24-hour `HH:mm:ss` whatever the locale's clock, its command line, its directory's last component, its duration as `<n> ms`, and its exit status (or `–` when unfinished) beside a symbol — `checkmark.circle` success, `clock.badge.exclamationmark` warning when unfinished, `xmark.octagon` danger otherwise.
+- **command-log-filter**: It MUST show only entries whose directory is one of the roots the closure returns (the repository's top level and its worktrees), or inside one, comparing the entry's directory and the roots each in their standardized and symlink-resolved forms; an entry with no directory is not shown. The roots are asked for and resolved once per reload (and again only when the list they return changes), and each entry directory is resolved once, never once per entry per root.
 - **command-log-follow**: It MUST subscribe to the book's updates when its view loads, before reading what is already there, so nothing lands between the two unseen; each new matching entry is appended (dropping the oldest past the ring's capacity), and the table scrolls to it only when it was already scrolled to the bottom. `stop()` ends the subscription.
 - **command-log-copy**: Its context menu MUST hold `Copy Command` (`git.commandLog.menu.copy`), which puts the clicked row's command line on the pasteboard.
 - **command-log-tooltip**: A failed row's tooltip MUST be its kept standard error; a row without one has none.
 - **error-label**: Every view's error label MUST be the shared `ThemedLabel` and change state only through `show(error:)`, which shows the error's description, or empties and hides the label for nil.
 - **settings-keys**: A view's persisted setting MUST be a `UserSettings` key in lower snake case, prefixed with the feature (`git_diff_layout`). Keys already stored keep their spelling; renaming one orphans what users saved.
+
+### Reflog
+
+- **reflog-columns**: `GitReflogViewController` (`git.reflog`; table `git.reflog.table`, scroll `git.reflog.scroll`, rows `git.reflog.row`) MUST show the entries it is given, newest first, in a themed table of five columns, identifiers `git.reflog.<selector|action|message|commit|date>`, titled Selector, Action, Message, Commit and Date, Message alone taking up extra width: the selector (`HEAD@{n}`), the action, the message, the eight-character short sha and the date in the locale's medium date and short time. It shows no text when empty.
+- **reflog-selection**: Selecting a row MUST report its entry to the delegate (nil when the selection empties), which shows that commit in the detail. `show(_:)` MUST keep the selected entry selected when an entry with the same sha, date, action and message is still listed (never matched by selector, which shifts with every new action), and reports nothing while it applies the selection.
+- **reflog-menu**: A row's menu MUST hold `Reset HEAD to Here` (`git.reflog.menu.reset`) with a submenu `Soft`, `Mixed`, `Hard…` (`git.reflog.menu.resetSoft|resetMixed|resetHard`), then `Check Out (detached)` (`git.reflog.menu.checkout`) and `Create Branch Here…` (`git.reflog.menu.createBranch`); each item hands the delegate a `GitReflogIntent` for the clicked entry and runs nothing itself. A click outside the rows shows no menu. The session confirms the hard reset; the soft and mixed ones run at once.
+
+### Pull requests
+
+- **pull-requests-source**: `GitRefsDataSource.pullRequests` MUST be the open pull requests `gh` lists (`[GitPullRequest]?`): nil while `gh` is missing, not logged in, not a GitHub repository, or failing, which leaves the sidebar's Pull Requests section absent with no word of explanation; empty when none is open. `GitRefsDataSource.headPullRequest` MUST be the checked-out branch's own open pull request as `GitHubCLI.pullRequest(forBranch:in:)` finds it, which drops fork (cross-repository) pull requests and is not capped by the list's limit; nil on a detached HEAD, when it has none, or when the lookup fails. A branch name is never matched against the list. Sources that have no `gh` keep the defaults, nil.
+- **pull-requests-loading**: `GitPullRequestsModel` MUST load when the window opens (once the refs are read, so the window's first refs change does not load a second time), after every Fetch, the toolbar's or a remote section's (both at once, started before the fetch), on a change of the checked-out branch (at once), and on any other `.refs` change of the repository model, at most once per 30 seconds: a change inside the interval is answered once, when it ends, and a change while a forced load runs or inside the interval after one starts nothing. A load runs `GitHubCLI.availability` first, then `pullRequests` (`gh pr list --state open --limit 50 --json …`), then the checked-out branch's `pullRequest(forBranch:in:)`; any error at the first two steps gives nil. It runs `gh` only through `GitHubCLI` and git only through `GitClient`, never on the main thread, and tells the session only when the list changed.
+- **pull-requests-section**: The sidebar MUST show a `Pull Requests` section after Worktrees while the list is not nil, even with no rows; its rows (`git.sidebar.pullRequests.<number>`) read `#<number> <title>` in `gh`'s order, with the status symbol as the icon (`circle.dashed` draft, `arrow.triangle.pull` open, `arrow.triangle.merge` merged, `xmark.circle` closed) and the check state as the badge (`✗` any failing, `●` any pending, `✓` all passing, none without checks). The row that is `headPullRequest` (by number) is bold; a fork's pull request from a branch of the same name is not. The section header carries `git.sidebar.pullRequests`.
+- **pull-requests-menus**: A row's menu MUST hold `Check Out`, `Open in Browser` and `Copy URL` (`git.sidebar.pullRequests.menu.checkout|open|copyURL`); Copy URL puts the URL on the pasteboard and runs nothing. The section header's menu MUST hold `Create Pull Request for <head>…` (`git.sidebar.pullRequests.menu.create`), and is absent on a detached HEAD or while `headPullRequest` is not nil. Each item hands the delegate a `GitPullRequestIntent` and runs nothing itself.
+- **pull-request-detail**: Selecting a row MUST show `GitPullRequestViewController` (`git.pullRequest`) in the centre pane, titled `Pull Request`: the title (`git.pullRequest.title`), `#<number>`, the state (`Draft`, `Open`, `Closed`, `Merged`), the author, `head → base`, the review decision (`Approved`, `Changes requested`, `Review required`, `None`), the checks (`<n> passing, <n> failing, <n> pending`, or `None`) and the updated date in the locale's medium date and short time, with `Open in Browser` (`git.pullRequest.open`) and `Check Out` (`git.pullRequest.checkout`). The body is not fetched. The detail follows each reload of the selected pull request.
+- **pull-request-form**: The create form MUST be a sheet titled `Create Pull Request for <head>` (`git.pullRequest.form`) holding Title, Body, Base and Draft (`git.pullRequest.form.title|body|base|draft`), with `Create` (`git.prompt.action`), enabled only while the title is not blank, and `Cancel` (`git.prompt.cancel`). The title starts as the subject of the branch's first commit not on the base, the body as those commits' subjects oldest first, one `- <subject>` line each; the bases are the repository's default branch first (`gh repo view --json defaultBranchRef`, else `<remote>/HEAD` as git records it), then the push remote's other branches (origin's, else the first remote's) without the head. When neither knows the default branch the Base popup is empty and disabled and `--base` is left out, so `gh` picks it; no branch name is ever guessed to be the default. The form is the confirmation.
 
 ## Appearance
 
@@ -253,6 +321,13 @@ A vertical-divider `ThemedSplitView`: the commit list (a headerless single-colum
 - **No commits**: no rows; the diff is cleared.
 - **History failed**: no rows, the diff cleared, the error's description shown until the next `show`.
 
+### Pull requests
+
+- **gh unavailable**: no section, and no explanation.
+- **No open pull requests**: the section with no rows; its header menu can still create one.
+- **Default branch unknown**: the form's Base popup is empty and disabled; `gh` picks the base.
+- **Nothing selected in the detail**: no fields; both buttons disabled.
+
 ## Accessibility
 
 ### Refs sidebar
@@ -261,7 +336,7 @@ The sidebar's root view carries the identifier `git.sidebar`. Rows are the topic
 
 ### History list
 
-The root view carries `git.history`, its scroll view `git.history.scroll`, the table `git.history.table`, each row view `git.history.row`. Cells carry `git.history.subject`, `git.history.author`, `git.history.date` and `git.history.sha`; the graph cell keeps its own `commitGraph.cell` and the avatar `avatar`. Badges carry `git.history.badge.local`, `git.history.badge.remote` or `git.history.badge.tag`. Rows are table rows, so `dev.py ax --nth` picks one. Context menu items carry `git.history.menu.<name>`: `checkout`, `newBranch`, `newTag`, `cherryPick`, `revert`, `reset` (the submenu's item), `resetSoft`, `resetMixed`, `resetHard` and `copySha`.
+The root view carries `git.history`, its scroll view `git.history.scroll`, the table `git.history.table`, each row view `git.history.row`. Cells carry `git.history.subject`, `git.history.author`, `git.history.date` and `git.history.sha`; the graph cell keeps its own `commitGraph.cell` and the avatar `avatar`. Badges carry `git.history.badge.local`, `git.history.badge.remote` or `git.history.badge.tag`; the signing badge carries `git.history.signature` and the review badge `git.history.review`, each an image whose accessibility label is its tooltip. Rows are table rows, so `dev.py ax --nth` picks one. Context menu items carry `git.history.menu.<name>`: `checkout`, `newBranch`, `newTag`, `cherryPick`, `revert`, `reset` (the submenu's item), `resetSoft`, `resetMixed`, `resetHard` and `copySha`.
 
 ### Changed-files list
 
@@ -269,7 +344,7 @@ The root view carries `git.fileList.<context>` (`commit`, `conflicts`, `staged`,
 
 ### Commit detail
 
-The root view carries `git.detail`, the header's scroll view `git.detail.header`; then `git.detail.subject`, `git.detail.body`, `git.detail.author`, `git.detail.committer` (each row; its avatar keeps `avatar`), `git.detail.sha`, `git.detail.copySha` (accessibility label `Copy SHA`) and `git.detail.parent` for each parent link (use `dev.py ax --nth` for a merge). Its list is `git.fileList.commit`.
+The root view carries `git.detail`, the header's scroll view `git.detail.header`; then `git.detail.subject`, `git.detail.body`, `git.detail.author`, `git.detail.committer` (each row; its avatar keeps `avatar`), `git.detail.sha`, `git.detail.copySha` (accessibility label `Copy SHA`) and `git.detail.parent` for each parent link (use `dev.py ax --nth` for a merge). The review section carries `git.commit.review` (accessibility label `Review: <state>`), its caption `git.commit.review.caption`, the row `git.commit.review.stateRow` holding `git.commit.review.symbol` and `git.commit.review.state`, the text `git.commit.review.summary` and the button `git.commit.review.open`. Its list is `git.fileList.commit`.
 
 ### Working copy
 
@@ -286,6 +361,10 @@ The root view carries `git.blame`, its viewer `git.blame.lines` (with `.text` an
 ### File history
 
 The root view carries `git.fileHistory`, the split `git.fileHistory.split`, the list's scroll view `git.fileHistory.scroll`, its table `git.fileHistory.table`, each row view `git.fileHistory.row`, each cell `git.fileHistory.commit` with `git.fileHistory.subject` and `git.fileHistory.details`, the error label `git.fileHistory.error`, and the diff's own `git.diff`.
+
+### Pull requests
+
+The section header carries `git.sidebar.pullRequests` (`TopicListSection.accessibilityIdentifier`), rows `git.sidebar.pullRequests.<number>` and their menu items `git.sidebar.pullRequests.menu.<checkout|open|copyURL|create>`. The detail's root view carries `git.pullRequest`, its fields `git.pullRequest.<title|number|state|author|branches|review|checks|updated>` in the grid `git.pullRequest.fields`, and its buttons `git.pullRequest.open` and `git.pullRequest.checkout` in `git.pullRequest.buttons`. The form's window carries `git.pullRequest.form`, its controls `git.pullRequest.form.<title|body|bodyScroll|base|draft>` in `git.pullRequest.form.fields`.
 
 ## Conformance Test Vectors
 
@@ -388,6 +467,28 @@ The root view carries `git.fileHistory`, the split `git.fileHistory.split`, the 
 | git-views-095 | command-log-follow | 40 entries shown at the bottom; one more; scroll to the top; one more | the last row visible; then still the first row visible. |
 | git-views-096 | command-log-copy | `push https://***@github.com/o/r.git main`; Copy Command on row 0 | the pasteboard holds `git push https://***@github.com/o/r.git main`. |
 | git-views-097 | command-log-tooltip | a passed `status`; a failed `push` (1, `rejected`) | no tooltip; `rejected`, `xmark.octagon`, `1`, `12 ms`. |
+| git-views-098 | command-log-columns | 14:05:09 and 00:00:07 UTC | `14:05:09` and `00:00:07`. |
+| git-views-099 | command-log-filter | 20 entries in the root and one in `other`; reload; change the roots to `other`; reload | 20 shown, the roots asked for at most twice; then only `other`'s. |
+| git-views-100 | sessions-match-commit | roots `/repo`, `/worktrees/feature`; sessions in `/worktrees/feature`, `/repo/App/Sources`, `/repobc`, `/worktrees/featurex/a`, each active 0–3600 s; a commit at 60 s, no branch | the first two only. |
+| git-views-101 | sessions-match-commit | one session on `feature` that ended a day before the commit; one active 0–3600 s; commits at -600, -601, 4200 and 4201 s | the `feature` one for branch `feature`, none for `main`; the active one at -600 and 4200, not at -601 or 4201. |
+| git-views-102 | sessions-match-commit, sessions-match-branch | sessions `b` and `a` started at 0, `c` at 100; on-branch `feature` with one session in `/other` | `c`, `a`, `b`; the one in `/other` left out. |
+| git-views-103 | sessions-daemon-adapter | rows with empty title and branch; empty id; start `not a date`; empty last activity; last activity before the start; since now, 3601 s ago and 400 days ago | nil title and branch; dropped; dropped; the start; the start; 1, 2 and 2160 hours. |
+| git-views-104 | detail-sessions-section | no `agentSessionMatches`; matches answering `[]`; two sessions for `c1`, then show `c2` | hidden; hidden; `Fix it · main · …` and `abcdefgh · main · …`, disabled; hidden again. |
+| git-views-105 | detail-sessions-open | `onOpenAgentSession` set; click row 1 | called once with `second`. |
+| git-views-106 | sidebar-sessions-submenu | no provider; `[]`; 25 sessions; 2 sessions, `onOpenAgentSession` nil then set, choose item 1 | no submenu; no submenu; the last item `Agent Sessions` holding 20; items disabled, then called with `session-1`. |
+| git-views-107 | reflog-columns | three entries, `HEAD@{0}` `commit (amend)` `three again` at sha `c`×40 | columns Selector, Action, Message, Commit, Date (`git.reflog.<name>`); three rows; the first reads `HEAD@{0}`, `commit (amend)`, `three again`, `cccccccc`. |
+| git-views-108 | reflog-menu | row 1's menu; then rows -1 and 3 | `Reset HEAD to Here` (submenu `Soft`, `Mixed`, `Hard…`), `Check Out (detached)`, `Create Branch Here…` with their `git.reflog.menu.*` ids; no menu for either. |
+| git-views-109 | reflog-menu | choose `Hard…`, `Soft`, `Mixed`, `Check Out (detached)`, `Create Branch Here…` on row 1 | the delegate gets `.reset(e, .hard)`, `.reset(e, .soft)`, `.reset(e, .mixed)`, `.checkout(e)`, `.createBranch(e)`. |
+| git-views-110 | reflog-selection | select row 1, then show the same entries | one report of entry 1; it stays selected with no second report. |
+| git-views-111 | reflog-selection | select row 1, then show a new `reset` entry first with every selector shifted by one | entry 1's step stays selected, now `HEAD@{2}`; no second report. |
+| git-views-112 | review-badge, history-review-badge | Reviews for six rows: done with summary `\n  Looks fine.  \nMore.`, running, queued, failed, skipped with reason `Merge commit`, none | Row 0 shows `text.magnifyingglass` in the accent colour with tooltip and accessibility label `Looks fine.` (`git.history.review`); rows 1 and 2 `hourglass` in the secondary text colour, tooltip `Running` and `Queued`; row 3 `xmark.octagon` in the danger colour, tooltip `Failed`; rows 4 and 5 no badge, hidden. |
+| git-views-113 | history-review-requests | 200 commits, an 800 × 240 view, `reload()` | The last `requestReviews(for:)` holds exactly the visible rows' shas, fewer than 200. |
+| git-views-114 | detail-review-section, detail-review-open | `reviewLookup` answers `c1` done with summary `Looks fine.\nOne nit.` (review id `repo:c1`); `show(c1)`; then `onOpenReview` set and the button pressed | Section shown right after `Agent Sessions`: caption `Review`, state `Done`, symbol `text.magnifyingglass`, text `Looks fine.\nOne nit.`; the button hidden until `onOpenReview` is set; one call with `repo:c1`. |
+| git-views-115 | detail-review-section | No lookup; a lookup answering nil; a lookup answering skipped with reason `Merge commit`; then `show(nil)` | Hidden; hidden; shown with state `Skipped`, symbol `minus.circle`, text `Merge commit`; hidden. |
+| git-views-116 | review-loader-invalidate | `a1` cached as `queued`; the answer becomes `done`; `invalidate()`; read; request `a1` | `queued` until the batch lands, then `done`; two batches; `onLoad` twice. |
+| git-views-117 | review-loader-invalidate | `a1` cached as `done`; the answer becomes none; `invalidate()`; request `a1` | `a1` reads nil; `onLoad` still called. |
+| git-views-118 | review-loader-invalidate | `a1` unanswered and requested twice (one batch); the answer becomes `queued`; `invalidate()`; request `a1` | Two batches in all; `a1` reads `queued`. |
+| git-views-119 | review-loader-invalidate | `a1` cached as `queued`; the answer becomes `done`; request `a1` without `invalidate()` | One batch; `a1` still reads `queued`. |
 ## Edge Cases
 
 - **Null / empty input**: An unborn repository lists only the working copy (and its worktree).
@@ -481,7 +582,7 @@ Not applicable: the views contain no analytics call.
 
 ## Privacy
 
-The views show local repository data only and send nothing anywhere.
+The views show local repository data only and send nothing anywhere. Coding Partner reviews are read, never written, through `GitReviewsProviding`; the views show a review's state, summary and skip reason, and hand only its id to `onOpenReview`.
 
 ## Logging
 
@@ -590,6 +691,18 @@ The commit detail, the diff, the blame and the file history each log a failed lo
 **Decision**: The window's own worktree has `Open` but no `Remove…`, and the main worktree has no menu.
 **Rationale**: Git refuses to remove the main worktree, and removing the folder a window is showing would leave that window on nothing; the sidebar compares the row's directory with the data source's `root`, which it already holds.
 **Approved**: pending
+
+**Decision**: Reviews reach the views through `GitReviewsProviding`, declared in Core beside `GitCommitReview`, and the Partner store's adapter (`PartnerGitReviews`) lives with the Partner feature.
+**Rationale**: The Git views must not know the Partner store or its schema, and the Partner feature must not know the views; a Foundation-only protocol in the lowest tier lets either change, and lets a test supply reviews without a store.
+**Approved**: pending
+
+**Decision**: Reviews use the signing badges' `GitShaBatchLoader`, with `invalidate()` added, rather than a loader of their own.
+**Rationale**: The request shape is the same (visible rows, debounced, coalesced, single commits in add mode); what differs is that a review changes after it is read, which `invalidate()` covers without dropping what is shown, so a queued badge does not blink out while its done value loads.
+**Approved**: pending
+
+**Decision**: A skipped review has no history badge but does have a detail section.
+**Rationale**: A row of skipped merge commits would be noise in the list; the detail is where someone asks why a commit has no review, and the skip reason answers it.
+**Approved**: pending
 ## Compliance
 
 | Check | Status | Category |
@@ -626,3 +739,5 @@ The commit detail, the diff, the blame and the file history each log a failed lo
 | 1.12.2 | 2026-11-16 | Mike Fullerton | Selecting a conflict with markers opens the merge view; one without shows its .conflicted diff (vector 086) |
 | 1.12.3 | 2026-11-16 | Mike Fullerton | A conflicted diff's old side is coloured from the revision the diff used (vector 093) |
 | 1.13.0 | 2026-11-16 | Mike Fullerton | Command log view: columns, root filter, follow-bottom, Copy Command, failure tooltip. |
+| 1.14.0 | 2026-11-16 | Mike Fullerton | Signing badges: a symbol per signed history row, the visible-row requests through the debounced, coalesced `GitShaBatchLoader` (replace the queued batch, a running one finishes and is cached), and the Signature line in the commit detail. |
+| 1.14.1 | 2026-11-16 | Mike Fullerton | Signing badges fix round 1: requests on every clip-view bounds or frame change; single-sha requests kept apart from the replaceable queue; a failed batch cools down for a minute. |

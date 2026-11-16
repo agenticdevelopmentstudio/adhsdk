@@ -1,5 +1,6 @@
 import Combine
 import Foundation
+import os
 import AgenticDeveloperHubSDKCore
 
 /// The Partner store's reviews as the Git window reads them (recipe

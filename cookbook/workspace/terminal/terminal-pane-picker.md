@@ -196,16 +196,6 @@ Not applicable: the source declares no logger and writes no log entries.
 - **AppKit / UIKit**: Source platform. The file is `TerminalPanePicker.swift`: an NSPanel with an NSStackView, a local NSEvent monitor for left mouse-down and key-down, hit testing through converted view coordinates and a layer-backed outline view whose hit test returns nothing. UIKit has no local event monitor, so a transparent full-screen overlay with a tap recognizer would replace it.
 - **WinUI 3**: Show the instruction in a small floating Window (or a Popup with a Grid) holding a TextBlock and a Button with Escape as an accelerator via KeyboardAccelerator; capture the choice by hooking PointerPressed on the host content with AddHandler and handledEventsToo set, mark the event handled, and hit-test each pane with VisualTreeHelper or TransformToVisual and ActualWidth and ActualHeight; draw the outline as a Border with BorderThickness 3, CornerRadius 4, the SystemAccentColor brush and an 8 percent opacity fill, IsHitTestVisible set to false and AutomationProperties.AccessibilityView set to Raw.
 
-## Reference Implementations
-
-| Platform | Location | Conformance |
-|----------|----------|-------------|
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/TerminalSession/TerminalPanePicker.swift` | confirmed (1.0.0) |
-| apple | (planned) | planned |
-| web | (planned) | planned |
-| android | (planned) | planned |
-| windows | (planned) | planned |
-
 ## Design Decisions
 
 **Decision**: While the picker runs, every left click in the host window is caught and nothing else reacts to it.

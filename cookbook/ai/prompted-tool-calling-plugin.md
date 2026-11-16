@@ -195,15 +195,6 @@ Not applicable: the source makes no logging call.
 - **AppKit / UIKit**: Identical to the SwiftUI note; the type is UI-free, and the AppKit or UIKit chat surface only needs a pending indicator while the decoder holds the reply.
 - **WinUI 3**: Implement as a class decorating the plugin interface, with a per-reply decoder class. Use `string.IndexOf` with ordinal comparison for tags and `System.Text.Json.JsonDocument.Parse` in a `try` for block bodies, falling back to prose on `JsonException`. Bind a progress ring to the pending state until the end event arrives.
 
-## Reference Implementations
-
-| Platform | Location | Conformance |
-|----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/PromptedToolCallingPlugin.swift` | confirmed (1.0.1) |
-| web | (planned) | planned |
-| android | (planned) | planned |
-| windows | (planned) | planned |
-
 ## Design Decisions
 
 **Decision**: Tools are described in the system prompt and requested as `<tool_call>` JSON blocks in the reply text.

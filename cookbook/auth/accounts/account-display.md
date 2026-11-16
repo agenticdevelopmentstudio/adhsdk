@@ -178,12 +178,6 @@ Not applicable: the source calls no logging API.
 - **AppKit / UIKit**: This is the source platform. The shared tier is `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Accounts/AccountDisplay.swift`; the macOS detail panel (`AccountDetailPanelViewController`) constructs it and draws it with `ThemedActionButton` (a push-button subclass) for Login, Signup and Logout, hiding each from the `shows` flags, and an `NSProgressIndicator`; the iOS `MobileAccountViewController` rebuilds it with `lastUser` set to the previous `display.shownUser` and maps it to table rows (user, status with a `UIActivityIndicatorView`, Login, Signup, Logout) through `rows(for:)`, so the iOS buttons are list cells rather than `UIButton`. The account-based initializer is `@MainActor`, matching the view controllers.
 - **WinUI 3**: Implement it as an immutable C# `record` (value equality matches `Equatable`) with a constructor taking `AccountState`, `string?`, `bool` and `AccountUser?`, where `AccountState` is a discriminated union (an abstract record with `Restoring`, `SignedOut`, `Busy` and `SignedIn(AccountUser)` subtypes). Expose the flags to XAML through a view model that implements `INotifyPropertyChanged` and rebuilds the record on the account's change event; bind `Visibility` to the `shows` flags with a `BoolToVisibilityConverter` (or `x:Bind` function binding), `Button.IsEnabled` to `ControlsEnabled`, and a `ProgressRing` with `IsActive` to `ShowsSpinner`. Marshal the rebuild onto the UI thread through `DispatcherQueue.TryEnqueue`, the analogue of the source's `@MainActor` account initializer.
 
-## Reference Implementations
-
-| Platform | Location | Conformance |
-|----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Accounts/AccountDisplay.swift` | confirmed (1.0.2) |
-
 ## Design Decisions
 All four decisions are `Approved: pending`: the recipe is in review and none has been settled by the owner yet.
 

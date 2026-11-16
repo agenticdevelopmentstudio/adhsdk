@@ -3774,6 +3774,12 @@
       "path": "ui/components/actions/inline-commit-control",
       "rdid": "adhsdk.ingredient.ui.components.actions.inline-commit-control"
     },
+    "27310902-e328-4bdf-9d3c-23f027be7af4": {
+      "implementations": [],
+      "kind": "ingredient",
+      "path": "workspace/terminal/terminal-pane-picker",
+      "rdid": "adhsdk.ingredient.workspace.terminal.terminal-pane-picker"
+    },
     "28436339-4eda-46e9-b45f-f58a26949641": {
       "implementations": [
         {
@@ -4010,7 +4016,7 @@
           "conformance": {
             "hash": "sha256:5f0f8ac5928548494885a42fd5c29f3cbdbc44389856bf25230e04fdc3a868b9",
             "state": "confirmed",
-            "version": "1.0.2"
+            "version": "1.0.3"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Partner/PartnerReview.swift",
           "platform": "apple"
@@ -7676,6 +7682,22 @@
       "path": "status/service/monitor/worker",
       "rdid": "adhsdk.ingredient.status.service.monitor.worker"
     },
+    "5d0f6a3e-2b8c-4e71-9a4d-7c3e1f9b2a60": {
+      "implementations": [
+        {
+          "conformance": {
+            "hash": "sha256:876aa10fd1686714b6dfd1f4d6db1d9b4de82886cc79d44fa72a49945f38c88f",
+            "state": "confirmed",
+            "version": "1.0.0"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/Core/Process/ExecutableLocator.swift",
+          "platform": "apple"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "foundation/process/executable-locator",
+      "rdid": "adhsdk.ingredient.foundation.process.executable-locator"
+    },
     "5d44b127-7701-4d3f-8d34-fe50084e52b7": {
       "implementations": [
         {
@@ -7785,6 +7807,24 @@
       "kind": "ingredient",
       "path": "status/service/monitor/types",
       "rdid": "adhsdk.ingredient.status.service.monitor.types"
+    },
+    "5f18890e-5473-4315-9e69-dde7c64778bc": {
+      "implementations": [],
+      "kind": "ingredient",
+      "path": "ai/prompted-tool-calling-plugin",
+      "rdid": "adhsdk.ingredient.ai.prompted-tool-calling-plugin"
+    },
+    "5f54f265-0f62-49e6-a311-116863751eef": {
+      "implementations": [],
+      "kind": "ingredient",
+      "path": "workspace/files/file-browser-exclusion-state",
+      "rdid": "adhsdk.ingredient.workspace.files.file-browser-exclusion-state"
+    },
+    "5f832f45-b409-41db-b1ab-b360a0c7a1ea": {
+      "implementations": [],
+      "kind": "ingredient",
+      "path": "ui/composable-tabs/project-window-split-view-controller",
+      "rdid": "adhsdk.ingredient.ui.composable-tabs.project-window-split-view-controller"
     },
     "5f9e0c63-382d-4803-bd50-a8fb90ea9e4d": {
       "implementations": [
@@ -9813,7 +9853,7 @@
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:35e040c80b84230f4eb9338e452fb758394066c7741dd75447ba2939c6de668d",
+            "hash": "sha256:f02e674e29b9cbc20859b8a839f18a0305a3d746a583b76624a38bd9fb6fa440",
             "state": "confirmed",
             "version": "2.1.0"
           },
@@ -9831,7 +9871,7 @@
         },
         {
           "conformance": {
-            "hash": "sha256:de5b2069f39407e38c64da81e9edb31c40cfa8e3091d2af575f664c8de1d3cfb",
+            "hash": "sha256:6c02593afca6a73772885054be1a6c01435405797fe1e59635b255f920795407",
             "state": "confirmed",
             "version": "2.1.0"
           },
@@ -11530,6 +11570,18 @@
       "kind": "ingredient",
       "path": "status/service/monitor/issue-sources",
       "rdid": "adhsdk.ingredient.status.service.monitor.issue-sources"
+    },
+    "86eccc6f-cd1b-4ac7-bb98-851eb7c54324": {
+      "implementations": [],
+      "kind": "ingredient",
+      "path": "auth/accounts/account-display",
+      "rdid": "adhsdk.ingredient.auth.accounts.account-display"
+    },
+    "870c182f-1a80-4254-8fec-3eb35c8f13f7": {
+      "implementations": [],
+      "kind": "ingredient",
+      "path": "data/services/auth/v1",
+      "rdid": "adhsdk.ingredient.data.services.auth.v1"
     },
     "873f79b1-444d-4c2c-8a5f-4fc01cd9022e": {
       "implementations": [
@@ -16072,6 +16124,12 @@
       "path": "ui/blocks/hierarchical-document-view",
       "rdid": "adhsdk.ingredient.ui.blocks.hierarchical-document-view"
     },
+    "b7e2c4d1-8f3a-4c6e-a1d9-2e5f7b0c3d84": {
+      "implementations": [],
+      "kind": "ingredient",
+      "path": "foundation/git/github-cli",
+      "rdid": "adhsdk.ingredient.foundation.git.github-cli"
+    },
     "b85dc186-31e9-472b-99ea-2c097fc926c8": {
       "implementations": [
         {
@@ -16522,7 +16580,7 @@
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:4dbe7004550eb49eba070b0caf533b1aa3789c6be5c693bd46fc5d6be231eb09",
+            "hash": "sha256:f94257ef3b4b29099be29dc3110e7bde831b75a112cc587dfd182ee431e8c219",
             "state": "confirmed",
             "version": "1.13.0"
           },
@@ -16567,7 +16625,7 @@
         },
         {
           "conformance": {
-            "hash": "sha256:f5e504c84201749b2949d70032b27b055a9f9df2eb713e472a6a146355b1ad2e",
+            "hash": "sha256:14ef73f5ffed4bc13afd8dcbe68781ec9a6b875a92988bd7585a9672d43f2f41",
             "state": "confirmed",
             "version": "1.13.0"
           },
@@ -16621,7 +16679,7 @@
         },
         {
           "conformance": {
-            "hash": "sha256:bf4e41370feefc6a14327591cd12670f6dfb424a96caf4cf40e94cc4671f83b5",
+            "hash": "sha256:714f504ebe73e66f01d003a55bf18275800f7e2ae56855483e014f18d01cb890",
             "state": "confirmed",
             "version": "1.13.0"
           },
@@ -16630,7 +16688,7 @@
         },
         {
           "conformance": {
-            "hash": "sha256:04d69609d2008886b6978c4ea339a429e0813914d705e804e9b2acdb81131099",
+            "hash": "sha256:74313632d8d824a54f99dfc04ea07ff0f6eb670d6f56bdfd698ccde3a861aaab",
             "state": "confirmed",
             "version": "1.13.0"
           },
@@ -16641,6 +16699,18 @@
       "kind": "ingredient",
       "path": "workspace/git/git-views",
       "rdid": "adhsdk.ingredient.workspace.git.git-views"
+    },
+    "bdd78ecf-0a90-4a3c-8731-df6999442776": {
+      "implementations": [],
+      "kind": "ingredient",
+      "path": "ui/panes/pane-content-spacing-consuming",
+      "rdid": "adhsdk.ingredient.ui.panes.pane-content-spacing-consuming"
+    },
+    "be4db0fe-628d-41f8-9fdf-25a6d46844cf": {
+      "implementations": [],
+      "kind": "ingredient",
+      "path": "integrations/cli/mail-command-line",
+      "rdid": "adhsdk.ingredient.integrations.cli.mail-command-line"
     },
     "bea6525c-171f-4547-bbb3-7c709543552e": {
       "implementations": [
@@ -17862,9 +17932,9 @@
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:359d2bb6c966c4a59deaeb995e45159d17ea4d6911726d759159e5e84b23f53d",
+            "hash": "sha256:640f8d1512edfaf0e34a093d3c0a96f2e5294677054683b4a5cd5101ac867240",
             "state": "confirmed",
-            "version": "1.4.0"
+            "version": "1.4.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/TopicListViewController.swift",
           "platform": "apple"

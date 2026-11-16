@@ -252,16 +252,6 @@ Not applicable: the source makes no log call.
   UI-bound changes on the `DispatcherQueue` thread, which replaces the source's
   main-actor isolation.
 
-## Reference Implementations
-
-| Platform | Location | Conformance |
-|----------|----------|-------------|
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/FileBrowser/FileBrowserExclusionState.swift` | confirmed (1.0.0) |
-| apple | (planned) | planned |
-| web | (planned) | planned |
-| android | (planned) | planned |
-| windows | (planned) | planned |
-
 ## Design Decisions
 
 **Decision**: The switch is a shared class instance, not a per-browser flag.

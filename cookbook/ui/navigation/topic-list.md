@@ -2,11 +2,11 @@
 id: ce223be3-818a-4310-b136-9e1e84e9af54
 title: "Topic List"
 type: ingredient
-version: 1.4.0
+version: 1.4.1
 status: review
 language: en
 created: 2026-09-23
-modified: 2026-11-15
+modified: 2026-11-16
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -258,8 +258,11 @@ component always disables. A section's optional title renders as a
   accessibility identifier (a slugified form of the item's title,
   prefixed for this component - see **item-accessibility-id-from-title**),
   and its accessible name is its own displayed text (the item's title) -
-  no separate accessibility-label override is set. Group header, title,
-  and footer/accessory views carry no accessibility identifier in this
+  no separate accessibility-label override is set. A group header's
+  label carries the identifier its section supplies
+  (`TopicListSection.accessibilityIdentifier`), set on every use of the
+  pooled cell and cleared when the section supplies none; title and
+  footer/accessory views carry no accessibility identifier in this
   component.
 - **Announce state changes**: Not implemented. When the grouped setter
   reloads the list with a different row count, no accessibility change
@@ -570,7 +573,7 @@ drops alone and returns `.generic`. The providers are `dragPayloadProvider`,
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/TopicListViewController.swift` | confirmed (1.4.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/TopicListViewController.swift` | confirmed (1.4.1) |
 
 ## Design Decisions
 
@@ -693,3 +696,4 @@ Separation-of-concerns is passed: `TopicListViewController` renders sections and
 | 1.2.2 | 2026-10-04 | Mike Fullerton | UI-thread confinement restated as the shared confines-to-ui-thread requirement, with a test vector; the @MainActor mechanism is in Platform Notes. |
 | 1.3.0 | 2026-11-13 | Mike Fullerton | Items can carry a trailing badge and be emphasized (bold); the preferred width measures both. Item and section header context menus from client providers, and a double-click callback for item rows (vectors 032-035). |
 | 1.4.0 | 2026-11-15 | Mike Fullerton | Drag and drop: items drag a client payload of the item pasteboard type, drops onto an item row are validated and delivered to the client (vectors 036-038). |
+| 1.4.1 | 2026-11-16 | Mike Fullerton | Sections carry an optional accessibility identifier |

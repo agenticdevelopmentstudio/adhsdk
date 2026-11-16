@@ -203,16 +203,6 @@ Not applicable: the source contains no log calls.
 - **AppKit / UIKit**: The source is `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/Panes/PaneContentSpacingConsuming.swift`, a `@MainActor` protocol refining `AnyObject`. The deciding code is `PaneViewController.applyResolvedSpacing()` in the same folder (a cast to the protocol, then either the call or the edge constraint constants), the values come from `PaneSpacing.contentSpacing` in `ComposableTabs/PaneSpacing.swift`, and the adopters are `PrivateTerminalViewController` and `TerminalSessionContentViewController` under `Features/TerminalSession`. UIKit has no pane concept; the nearest tool is `directionalLayoutMargins` and `NSDirectionalEdgeInsets` on the container view, with content that owns its margins setting `insetsLayoutMarginsFromSafeArea` and its own constraints.
 - **WinUI 3**: Define an interface `IPaneContentSpacingConsumer` with `void ApplyPaneSpacing(Thickness spacing)`. The pane control (a `UserControl` or a templated `ContentControl`) holds a `ContentPresenter` and tests `Content is IPaneContentSpacingConsumer`: if yes, it sets the presenter's `Margin` (or the template's padding) to `new Thickness(0)` and calls the method; if no, it sets `Padding` to a `Thickness(left, top, right, bottom)` built from the four values, mapping leading and trailing to left and right (swap them under right-to-left `FlowDirection`). Store the four values with `ApplicationData.Current.LocalSettings` or a settings service implementing `INotifyPropertyChanged`, and re-run the resolve step on `PropertyChanged` or in a `DependencyProperty` changed callback so the call repeats on each change, as in the source. Dispatch from `DispatcherQueue` to match the main-actor rule.
 
-## Reference Implementations
-
-| Platform | Location | Conformance |
-|----------|----------|-------------|
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/Panes/PaneContentSpacingConsuming.swift` | confirmed (1.0.0) |
-| apple | (planned) | planned |
-| web | (planned) | planned |
-| android | (planned) | planned |
-| windows | (planned) | planned |
-
 ## Design Decisions
 
 **Decision**: Choose who applies the gap by a protocol conformance, not by the pane inspecting what kind of content it holds.

@@ -350,7 +350,8 @@ picker) is a consumer of this contract, not part of it.
   hooks: commit, merge, rebase, interactive rebase, and an operation's
   continue and skip steps (an abort makes no commit and is local); adding a
   worktree (it checks out a whole tree and runs the post-checkout hook) and
-  updating submodules (each may be cloned) are long-running too. Both budgets
+  updating submodules (each may be cloned) are long-running too, and so are
+  an LFS fetch and an LFS pull, which download objects. Both budgets
   MUST be exposed as constants. A read's budget is unchanged.
 - **write-editor-override**: The perform verb MUST run with `-c
   core.editor=true`, so no write can stop to wait on an editor nobody is
@@ -556,6 +557,45 @@ picker) is a consumer of this contract, not part of it.
   are any, so an initialized superproject whose submodules were never
   cloned ends with each checked out at its recorded commit.
 
+### LFS
+
+- **lfs-pointer**: A Git LFS pointer MUST parse only from text of at most
+  1024 bytes whose first non-blank line is exactly `version
+  https://git-lfs.github.com/spec/v1` and which holds an `oid sha256:<64
+  hex digits>` line and a `size <non-negative integer>` line; lines may end
+  in CRLF and blank lines are ignored. Anything else is not a pointer. The
+  oid is kept as lowercase hex without its `sha256:` prefix, and its short
+  form is its first seven characters.
+- **lfs-state**: The LFS state verb MUST run `lfs version`; a failure of it
+  (git answers "'lfs' is not a git command" when git-lfs is not installed)
+  MUST return a not-installed state with no patterns and no files, never
+  an error. Otherwise it MUST run `lfs track` and `lfs ls-files` through
+  the same bottleneck as every other verb. Every git child's `PATH` MUST
+  be the inherited `PATH` followed by `/opt/homebrew/bin`, `/usr/local/bin`,
+  `/usr/bin` and `/bin` (each once), so git finds a Homebrew `git-lfs` in
+  an app launched from Finder; a configuration's own `PATH` outranks it. An
+  `ls-files` failure (a repository with no commit)
+  lists no files. The state is in use only when installed and it has a
+  tracked pattern or an LFS file.
+- **lfs-track-parse**: The tracked patterns MUST be the non-blank lines
+  between `Listing tracked patterns` and `Listing excluded patterns` (or
+  the end), trimmed, each without its trailing ` (<attributes file>)`.
+- **lfs-ls-files-parse**: Each `lfs ls-files` line `<oid> <*|-> <path>`
+  MUST map the path to downloaded (`*`) or pointer only (`-`); a line of
+  any other shape is skipped.
+- **lfs-tracked-path**: A path MUST count as stored in LFS when the state
+  is in use and `ls-files` lists it or a tracked pattern matches it by
+  `fnmatch`: a pattern with no slash against the file name, one with a
+  slash (a leading one dropped) against the whole path.
+- **lfs-diff-summary**: A file diff MUST summarise as an LFS diff when it
+  is not binary and both its sides parse as pointers, or one does and the
+  other side is missing (no lines); the old side is its context and removed
+  lines, the new side its context and added lines. The summary reads `LFS
+  object <short oid> · <size>`, sizes in `ByteCountFormatter`'s file style,
+  with `<old> → <new>` when both sides exist.
+- **lfs-actions**: The LFS fetch and LFS pull actions MUST run `lfs fetch`
+  and `lfs pull`, with no operands, as long-running writes.
+
 ### Execution, configuration and attribution
 
 - **executable-preflight**: The execution step MUST check that the
@@ -655,20 +695,24 @@ picker) is a consumer of this contract, not part of it.
   literal string `"unfinished"` when no exit status is available), and
   MUST NOT log the process's standard output or standard error to OSLog.
   The in-memory ring (command-log-ring) keeps a call's standard error only
-  when its exit status is present and non-zero, cut to its first 2048
-  UTF-8 bytes on a character boundary and passed through the URL user-info
-  rule; standard output is never kept anywhere.
+  when its exit status is present and non-zero, passed through the URL
+  user-info rule first and then cut to its first 2048 UTF-8 bytes on a
+  character boundary, so a credential the cut would split is already gone;
+  standard output is never kept anywhere.
 - **command-log-ring**: Besides OSLog, every recorded call MUST be appended
   to one shared in-memory ring, `GitCommandLog.book`, holding the newest
   500 entries, oldest first. An entry carries an increasing id, its date,
   the tool (`git` by default; `record(tool:)` names another, such as `gh`),
-  the verb followed by the redacted arguments, the working directory's path
+  the arguments as spawned after the tool — `-c <key=value>` for each
+  config override, then the verb, then its redacted arguments (the
+  positional rule applies to the verb's arguments; the URL rule to all of
+  them) — the working directory's path
   (empty when there is none), the caller as `<file>:<function>`, the
   duration rounded to milliseconds, the exit status (nil when unfinished)
   and the kept standard error. Its command line is the tool and the
-  arguments joined by spaces. `record`'s `tool:` and `standardError:`
-  parameters default to `git` and nil, so every existing caller is
-  unchanged. Nothing in the ring is persisted.
+  arguments joined by spaces, so it is the command that ran. `record`'s
+  `tool:`, `configOverrides:` and `standardError:` parameters default to
+  `git`, none and nil, so every existing caller is unchanged. Nothing in the ring is persisted.
 - **command-log-updates**: `GitCommandLogBook.updates()` MUST yield every
   entry appended after the call, in order, to each subscriber, buffering at
   most the ring's capacity of the newest; a subscriber whose stream ends is
@@ -909,6 +953,66 @@ input it cannot read rather than failing.
 - **blame-runs**: A blame's runs MUST be the maximal sequences of
   consecutive final lines that belong to one commit, in final-line order.
 
+### Reflog
+
+- **reflog-read**: `reflog(ref:limit:in:caller:)` MUST run
+  `reflog show --no-show-signature -z --format=%gd%x1f%H%x1f%gs%x1f%ct -n <limit> <ref>`
+  (`ref` defaulting to `HEAD`, a limit below 1 read as 1) and return its
+  entries newest first; a ref beginning with `-` MUST be refused as an
+  invalid argument before git runs.
+- **reflog-unborn**: A ref with no reflog that names no commit (an unborn
+  `HEAD`) MUST read as no entries rather than an error; any other failure
+  MUST be thrown.
+- **reflog-parse**: Each NUL-terminated record MUST be read as selector, sha,
+  subject and committer epoch separated by the unit separator, the subject
+  being every field between the sha and the epoch; a record with fewer than
+  four fields, an empty selector or sha, or an unreadable epoch MUST be
+  dropped.
+- **reflog-subject-split**: The subject MUST split at its first `": "` into
+  the action (`commit (amend)`, `checkout`, `rebase (finish)`) and the
+  message, so a message holding `": "` keeps it; a subject without one is all
+  action and an empty message.
+- **reflog-previous**: Each entry's previous sha MUST be the next (older)
+  record's sha, and the oldest entry read has none.
+- **undo-state**: `undoState(limit:in:caller:)` (limit 20) MUST read the
+  checked-out branch with `symbolic-ref -q HEAD` (exit 1, a detached HEAD,
+  reads as the ref `HEAD`), its tip with `resolveCommit`, and that ref's
+  reflog, so a branch's Undo never reads HEAD's reflog. Its `target` MUST be
+  the first entry whose sha differs from the tip (skipping a step that left
+  the tip in place, such as `reset: moving to HEAD`), nil with no tip or no
+  such entry; `last` is the newest entry.
+- **undo-preflight**: `undoPreflight(in:caller:)` MUST return the undo state,
+  the operation in progress and whether any file is staged or unstaged
+  (untracked included); its `target` is nil while an operation is in
+  progress.
+
+### Signatures
+
+- **signatures-read**: `signatures(for:in:caller:)` MUST run
+  `log --no-show-signature --no-walk=unsorted --ignore-missing --format=%H%x1f%G?%x1f%GS%x1f%GK%x1e <shas…> --`
+  in one call bounded by a 15 s budget (`signatureBudget`), and return each
+  commit's signature keyed by full sha. A sha the repository does not have
+  MUST be absent from the answer without failing the others. No shas MUST answer empty without
+  running git; a sha that is empty or not all hex digits MUST be refused as an
+  invalid argument before git runs, so nothing can be read as an option.
+- **signature-status**: The status MUST come from git's `%G?` letter: `G`
+  good, `B` bad, `U` unknown validity, `X` expired, `Y` expired key, `R`
+  revoked key, `E` cannot check, `N` unsigned; any other letter MUST read as
+  cannot check.
+- **signature-parse**: Records MUST be split on the record separator and
+  fields on the unit separator, each trimmed of whitespace; a record with no
+  sha or no status field MUST be dropped, and an empty signer (`%GS`) or key
+  (`%GK`) MUST be absent rather than empty.
+- **signature-summary**: A signature's summary MUST be its status's title
+  (`Good signature`, `Bad signature`, `Signature of unknown validity`,
+  `Expired signature`, `Signed with an expired key`, `Signed with a revoked
+  key`, `Signature cannot be checked`, `Not signed`) followed by ` by
+  <signer>` when git named a signer.
+- **signature-verification-config**: Verification MUST use only the
+  repository's and the user's own git configuration (`gpg.format`,
+  `gpg.ssh.allowedSignersFile`, the keyring); the client adds no signing
+  settings of its own.
+
 ## Appearance
 
 Not applicable — this is a headless git subprocess client, not a visual
@@ -1041,6 +1145,15 @@ component.
 | git-client-111 | command-log-ring | Record 520 calls `status <i>` into a ring of 500 | 500 entries, the first `status 20`; a `gh` call `pr list` reads `gh pr list`, 250 ms. |
 | git-client-112 | command-log-fields | Record status 0, nil and 128 with standard error `boom`; then 128 with `é`×3000 | Only the 128 entry keeps `boom`; the long one keeps 2048 bytes. |
 | git-client-113 | redaction-scope-and-positional-rule | `push` `["https://user:tok@github.com/o/r.git", "main"]` | `["push", "https://***@github.com/o/r.git", "main"]`. |
+| git-client-114 | command-log-ring | `perform(.commit(message: "secret"))` through a script standing in for git that records its argv | the entry's arguments start `-c core.editor=true commit`; its command line is `git ` plus the spawned argv with `secret` read as `<redacted:6>`. |
+| git-client-115 | command-log-fields | Standard error of filler then `https://user:ghp_secrettoken@example.com/…` whose user info straddles byte 2048, status 128 | at most 2048 bytes kept, starting with the filler and `https://`, and no `user:` or `ghp_`. |
+| git-client-116 | reflog-parse, reflog-subject-split | Records for `rebase (finish): returning to refs/heads/feature`, `checkout: moving from main to feature`, `commit (amend): fix: the typo`, `commit: two` | Actions `rebase (finish)`, `checkout`, `commit (amend)`, `commit`; the amend's message `fix: the typo`. |
+| git-client-117 | reflog-subject-split | The subjects `commit: fix: a: b` and `reset` | (`commit`, `fix: a: b`); (`reset`, empty). |
+| git-client-118 | reflog-read, reflog-previous | Three commits, then the third amended; read `HEAD` with limit 10, then 2 | Four entries, `commit (amend)` first, its previous sha the pre-amend commit; limit 2 gives the amend and the pre-amend commit. |
+| git-client-119 | reflog-unborn, reflog-read | A repository with no commits; then the ref `--all` | No entries; then invalid-argument. |
+| git-client-120 | undo-state | entries `main@{0}` and `main@{1}` at sha `e`×40, `main@{2}` at `d`×40, tip `e`×40; then no tip; then only the first two | target `main@{2}`; nil; nil. |
+| git-client-121 | undo-state, undo-preflight | two commits, then `switch -c feature`; then `switch --detach HEAD~1` | ref `refs/heads/feature`, one entry, no target; ref `HEAD`, target the second commit; no operation, clean. |
+| git-client-122 | undo-state | a repository with no commits | no tip, no entries, no target. |
 ## Edge Cases
 
 - **Null/empty input**: Parsing an empty status output MUST return an
@@ -1161,8 +1274,8 @@ metadata for debugging and audit, not product-analytics events.
   so a caller-supplied value or message never reaches log output in clear
   text, and replaces any URL's user information with `***`; standard-error
   text — which may itself echo a repository path — MUST NEVER reach OSLog.
-  The in-memory command-log ring keeps it for a failed call only, cut to
-  2048 bytes and URL-redacted, and never persists it.
+  The in-memory command-log ring keeps it for a failed call only, URL-redacted
+  before it is cut to 2048 bytes, and never persists it.
 - **Nothing leaves the device through this component**: every verb spawns
   a local git subprocess; nothing in this component performs network I/O
   itself, though the git binary it spawns may contact a remote if a future
@@ -1175,14 +1288,14 @@ configuration assigns.
 
 | Event | Level | Message shape |
 |-------|-------|---------------|
-| Every invocation attempt, regardless of outcome | info | `` `git <verb> <redacted-arguments> cwd=<path> from=<file>:<function> <ms>ms status=<exitStatus-or-"unfinished">` `` |
+| Every invocation attempt, regardless of outcome | info | `` `git [-c <key=value>]… <verb> <redacted-arguments> cwd=<path> from=<file>:<function> <ms>ms status=<exitStatus-or-"unfinished">` `` |
 
 The command log MUST NOT log the process's standard output or standard
 error to OSLog — only that a call happened and where it came from, so git
 usage can be counted, attributed, and audited without the log becoming a
 copy of the repository. The in-memory ring (`GitCommandLog.book`, see
-command-log-ring) keeps a failed call's standard error, truncated to 2048
-bytes and URL-redacted, for the Git window's Command Log; it is never
+command-log-ring) keeps a failed call's standard error, URL-redacted and
+then truncated to 2048 bytes, for the Git window's Command Log; it is never
 persisted and never written to OSLog. Arguments are logged at public visibility after passing through
 the redaction rule (see Behavioral Requirements and Privacy above), never
 collapsed as a whole, because that would hide the entire interpolation for
@@ -1426,3 +1539,5 @@ one.
 | 1.2.0 | 2026-11-14 | Mike Fullerton | History model: commit, ref, stash and submodule value types with their format strings and parsers, and the log request; output decoding falls back to Latin-1 per segment; diff, word-diff and blame models with their parsers and C-quoted path unquoting; read verbs (top level, log, refs, stashes, submodules, diff targets and options, blame, file contents) and accepted exit codes in the execution step. Final review: changed files without the patch, literal author and message search, precomposed paths, capped file contents, a named file-history limit. |
 | 2.0.0 | 2026-11-14 | Mike Fullerton | Write verbs: the action list and its exact command lines, one perform verb through the execution step with its own budgets (60 s, 600 s for remote verbs and commit) and core.editor=true, the remotes verb and the last commit message. An empty or dash-led ref, remote or commit is refused before anything runs, with a fifth error outcome, invalid-argument (the closed error taxonomy grows, hence major). Push to upstream (remote, branch, upstream branch) without `--set-upstream`; every child runs with `LC_MESSAGES=C`; the push-destination verb (`<branch>@{push}`). Patches from diff lines: a selection of one file's lines, forward and reversed line rules, recomputed hunk headers, the no-newline marker and a one-path file header; apply to the index or the work tree with the patch on standard input, never logged, an empty patch refused. Operations: the operation state (merge, rebase, cherry-pick, revert) read from the files at `rev-parse --git-path`, interactive only when `interactive` exists without `drop_redundant_commits`; merge with its fast-forward rule, rebase, and the continue, abort and skip steps, merge-skip refused before anything runs, every write under `GIT_EDITOR=true`. Conflicts: the seven conflict kinds kept per path, resolve by side and remove paths. Interactive rebase: the plan verb (first-parent, oldest first, merges and empty ranges refused), its validation, the todo with reword as pick plus an amending exec, run from an `adk-rebase` helper folder through `GIT_SEQUENCE_EDITOR` and removed once no operation is left. Worktrees and submodules: add and remove worktree (absolute paths only), locked worktrees, update submodules. Fix round 1: a reword amends only when its pick moved HEAD (reword-amends-only-its-pick, vector 099); every perform that runs removes an idle helper folder. The commit-messages verb: every commit's full message after onto in one `log` call (rebase-plan-messages, vectors 100-101). Residual review: `GIT_OPTIONAL_LOCKS=0` in the child's environment, the conflicted diff target (`--base`, HEAD when there is no base), and a symbolic link as the path's last component may not lead outside (vectors 105, 109). Residual round 2: an added-by-us conflict with nothing against HEAD shows the working file as added, and each conflicted file diff names its old side in `oldRevision` (vector 110). |
 | 2.1.0 | 2026-11-16 | Mike Fullerton | Command log: the in-memory ring (500 entries, updates, tool), standard error kept only on failure and never in OSLog, URL user-info redaction. |
+| 2.2.0 | 2026-11-16 | Mike Fullerton | Signatures: one `log --no-walk=unsorted` call for a list of shas (15 s budget), the eight `%G?` statuses, the parser and the summary; non-hex shas refused before git runs. |
+| 2.2.1 | 2026-11-16 | Mike Fullerton | Signatures fix round 1: `--ignore-missing` and a closing `--`, so a sha the repository lacks is absent instead of failing the batch. |
