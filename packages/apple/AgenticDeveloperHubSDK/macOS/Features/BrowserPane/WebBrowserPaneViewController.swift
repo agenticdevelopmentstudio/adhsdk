@@ -2342,6 +2342,42 @@ extension WebBrowserPaneViewController: PaneMenuProviding {
         return jars.canIsolate(.pane, context: paneContext)
     }
 
+    /// The WebKit store holding the site data of the jar `settings` — the
+    /// values the pane's settings show — now name, so Manage Site Data… acts
+    /// on the jar Storage says rather than the one the sheet opened on. While
+    /// the settings still name the jar the engine was built on, that store;
+    /// otherwise the store the next rebuild would put the pane on: the
+    /// pane's in-memory session for private browsing or a jar that would
+    /// fail closed, WebKit's default for the global jar, and a made jar's
+    /// own store. Never makes a jar's row: a worktree or pane jar not made
+    /// yet holds nothing, so it is an empty in-memory store.
+    func siteDataStore(under settings: SettingsStore) -> WKWebsiteDataStore {
+        if namesBuiltJar(under: settings) { return resolvedJar.webKitDataStore }
+        if settings.get(UserSettings.browserPrivateBrowsing) { return ephemeralSession.webKitDataStore }
+        let wanted = settings.get(UserSettings.browserPrivacyStorageJar)
+        guard wanted != .global, let jars = paneContext.jars else { return .default() }
+        if let jarID = jars.jarID(for: wanted, context: paneContext) {
+            return WKWebsiteDataStore(forIdentifier: jarID)
+        }
+        return jars.canIsolate(wanted, context: paneContext) ? .nonPersistent() : ephemeralSession.webKitDataStore
+    }
+
+    /// Whether `settings` still name the jar the current engine was built
+    /// on: private browsing for a private pane, otherwise the same Storage
+    /// jar (a jar that failed closed included, since a rebuild would fail
+    /// the same way onto the same in-memory session).
+    func namesBuiltJar(under settings: SettingsStore) -> Bool {
+        if settings.get(UserSettings.browserPrivateBrowsing) { return resolvedJar.isPrivateBrowsing }
+        return resolvedJar.jar == settings.get(UserSettings.browserPrivacyStorageJar)
+    }
+
+    /// What the jar `settings` now name is called, for the Site Data window's
+    /// title and its Remove All… confirmation.
+    static func siteDataJarName(under settings: SettingsStore) -> String {
+        if settings.get(UserSettings.browserPrivateBrowsing) { return "Private browsing, this pane only" }
+        return settings.get(UserSettings.browserPrivacyStorageJar).label
+    }
+
     /// The pane's settings, ready to present: their construction-time
     /// values are recorded now, unless another settings session already
     /// recorded them, and the last close rebuilds the engine for whatever of

@@ -39,9 +39,11 @@ final class BrowserPrivacySettingsPanel: BrowserTopicPanel {
     }
 
     private let editorWindow: (() -> NSWindow?)?
-    /// The store Manage Site Data… lists; `nil` leaves the Site Data group
-    /// out (a Chrome pane's sheet).
-    private let siteData: BrowserSiteData?
+    /// The store Manage Site Data… lists, asked each time it is pressed so
+    /// a pane's sheet lists the jar Storage names then, not the one the
+    /// sheet opened on; `nil` leaves the Site Data group out (a Chrome
+    /// pane's sheet).
+    private let siteData: (() -> BrowserSiteData?)?
     /// Whether the host records visits anywhere, in global scope. A pane
     /// answers for itself.
     private let hasHistoryStore: Bool
@@ -49,16 +51,17 @@ final class BrowserPrivacySettingsPanel: BrowserTopicPanel {
     private var siteDataWindow: BrowserSiteDataWindowController?
 
     /// - Parameters:
-    ///   - siteData: the store the Site Data window lists — the global jar's
-    ///     in the Settings window, the pane's own in its sheet; `nil` for no
-    ///     Site Data group.
+    ///   - siteData: the store the Site Data window lists, resolved when
+    ///     Manage Site Data… is pressed — the global jar's in the Settings
+    ///     window, the jar the pane's Storage setting names in its sheet;
+    ///     `nil` for no Site Data group.
     ///   - hasHistoryStore: whether the host records visits at all, for the
     ///     Settings window; a pane's sheet asks the pane.
     ///   - editorWindow: the window Edit Privacy Words… and Manage Site Data…
     ///     open over; `nil` uses the panel's own window.
     init(
         binding: BrowserSettingsBinding,
-        siteData: BrowserSiteData? = nil,
+        siteData: (() -> BrowserSiteData?)? = nil,
         hasHistoryStore: Bool = true,
         editorWindow: (() -> NSWindow?)? = nil
     ) {
@@ -552,15 +555,29 @@ final class BrowserPrivacySettingsPanel: BrowserTopicPanel {
         return group
     }
 
+    /// The name of the jar Manage Site Data… acts on: in a pane's sheet the
+    /// one its Storage (or Private browsing) setting names now, in the
+    /// Settings window the global jar.
+    var siteDataJarName: String {
+        binding.isPaneScope
+            ? WebBrowserPaneViewController.siteDataJarName(under: binding.store)
+            : BrowserStorageJar.global.label
+    }
+
+    /// Resolves the store when pressed, so a Storage change made in the
+    /// same sheet is the jar the window lists and Remove All… empties.
     private func manageSiteData() {
-        guard siteDataWindow == nil, let siteData,
+        guard siteDataWindow == nil, let siteData = siteData?(),
               let parent = editorWindow?() ?? view.window else { return }
+        let jarName = siteDataJarName
         let detail = binding.isPaneScope
-            ? "Cookies, caches and storage for every site in this jar are removed, and the panes on "
-                + "it are signed out of them. History and Chrome's data are not affected."
+            ? "Cookies, caches and storage for every site in the jar \u{201C}\(jarName)\u{201D} are "
+                + "removed, and the panes on it are signed out of them. History and Chrome's data are "
+                + "not affected."
             : "Cookies, caches and storage for every site in the global jar are removed, and Safari "
                 + "panes on it are signed out everywhere. History and Chrome's data are not affected."
-        let controller = BrowserSiteDataWindowController(siteData: siteData, removeAllDetail: detail)
+        let controller = BrowserSiteDataWindowController(
+            siteData: siteData, jarName: jarName, removeAllDetail: detail)
         siteDataWindow = controller
         controller.runModal(for: parent)
         siteDataWindow = nil

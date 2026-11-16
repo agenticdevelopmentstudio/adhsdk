@@ -38,9 +38,16 @@ final class BrowserPrivacySettingsDialog: NSObject, NSPopoverDelegate {
         guard let layered = pane.paneSettings, let session = pane.makePaneSettingsController() else { return }
         let binding = BrowserSettingsBinding(settings: layered.fallback, scope: .pane(layered, pane))
         let dialog = BrowserPrivacySettingsDialog(session: session, key: key)
+        // Resolved when Manage Site Data… is pressed, so it is the jar the
+        // popover's Storage names then; `nil` (a Chrome pane) has no group.
+        let siteData: (() -> BrowserSiteData?)? = pane is SafariBrowserPaneViewController
+            ? { [weak pane] in
+                pane.flatMap { BrowserSettingsPanelViewController.siteData(for: $0, under: layered) }
+            }
+            : nil
         let panel = BrowserPrivacySettingsPanel(
             binding: binding,
-            siteData: BrowserSettingsPanelViewController.siteData(for: pane)
+            siteData: siteData
         ) { [weak pane, weak dialog] in
             dialog?.popover.performClose(nil)
             return pane?.view.window

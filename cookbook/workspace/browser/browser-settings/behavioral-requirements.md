@@ -37,12 +37,18 @@
   Site Data…" button, with identifier `settings.browser.site-data.manage`, and
   MUST NOT show the site data table inline.
 - **site-data-window**: The Manage Site Data… button MUST open a window titled "Site
-  Data" that is modal to the application, resizable and movable by the user,
-  and holds the site data table (columns Site and Data) with a remove (−)
-  control, "Remove All…", "Refresh" and "Done".
+  Data — <jar>", where <jar> names the jar it acts on ("Shared by all browser
+  panes", "Shared within this worktree", "This pane only", or private
+  browsing), that is modal to the application, resizable and movable by the
+  user, and holds the site data table (columns Site and Data) with a remove (−)
+  control, "Remove All…", "Refresh" and "Done". Remove All…'s confirmation MUST
+  name the same jar.
 - **site-data-window-scope**: The Site Data window MUST, in the app's Settings
   window, list the global jar's site data; in a pane's settings sheet it MUST list
-  the site data of the store that pane's page uses.
+  the site data of the jar the sheet's Storage (and Private browsing) setting
+  names when the button is pressed — the store that pane's page uses while the
+  setting is unchanged, and the jar it names after a change made in the same
+  sheet, never the jar the sheet opened on.
 - **history-group-contents**: The History group MUST hold "Record history",
   "Keep visits for" and "Agent can see history", in that order; "Keep visits
   for" MUST appear only in the app's Settings window, since the visit store is

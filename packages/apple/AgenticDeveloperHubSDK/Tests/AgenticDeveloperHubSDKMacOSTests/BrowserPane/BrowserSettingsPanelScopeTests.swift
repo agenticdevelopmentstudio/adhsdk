@@ -227,6 +227,49 @@ final class BrowserSettingsPanelScopeTests: XCTestCase {
         XCTAssertEqual(BrowserSettingsPanelViewController.jarLabel(for: worktreePane), "wt")
     }
 
+    /// Manage Site Data… acts on the jar Storage names when it is pressed,
+    /// not the one the sheet opened on, and names that jar.
+    func testSiteDataFollowsTheStorageSettingTheSheetShows() throws {
+        let global = makeSettings()
+        let layered = makeLayered(over: global)
+        let pane = try makePane(settings: layered)
+        XCTAssertEqual(pane.resolvedJar.jar, .pane)
+        let panel = makePanel(settings: global, scope: .pane(layered, pane))
+        let privacy = try XCTUnwrap(panel.panels.compactMap { $0 as? BrowserPrivacySettingsPanel }.first)
+
+        // Unchanged: the store the page uses.
+        let own = try XCTUnwrap(BrowserSettingsPanelViewController.siteData(for: pane, under: layered))
+        XCTAssertTrue(own.dataStore === pane.webView.configuration.websiteDataStore)
+        XCTAssertEqual(privacy.siteDataJarName, BrowserStorageJar.pane.label)
+
+        // Storage moved to the shared jar in the sheet: the shared store,
+        // never the pane's own, and the window says so.
+        layered.set(BrowserStorageJar.global, for: UserSettings.browserPrivacyStorageJar)
+        let shared = try XCTUnwrap(BrowserSettingsPanelViewController.siteData(for: pane, under: layered))
+        XCTAssertTrue(shared.dataStore === WKWebsiteDataStore.default())
+        XCTAssertEqual(privacy.siteDataJarName, BrowserStorageJar.global.label)
+        XCTAssertEqual(
+            BrowserSiteDataWindowController.title(jarName: privacy.siteDataJarName),
+            "Site Data \u{2014} Shared by all browser panes"
+        )
+        XCTAssertEqual(
+            BrowserSiteDataViewController.removeAllMessage(jarName: "This pane only"),
+            "Remove all Safari site data in \u{201C}This pane only\u{201D}?"
+        )
+
+        // Private browsing: an in-memory store, never the shared one.
+        layered.set(true, for: UserSettings.browserPrivateBrowsing)
+        let privateData = try XCTUnwrap(BrowserSettingsPanelViewController.siteData(for: pane, under: layered))
+        XCTAssertFalse(privateData.dataStore.isPersistent)
+        XCTAssertNotEqual(privacy.siteDataJarName, BrowserStorageJar.global.label)
+
+        // Back to the jar it was built on: the page's store again.
+        layered.set(false, for: UserSettings.browserPrivateBrowsing)
+        layered.set(BrowserStorageJar.pane, for: UserSettings.browserPrivacyStorageJar)
+        let back = try XCTUnwrap(BrowserSettingsPanelViewController.siteData(for: pane, under: layered))
+        XCTAssertTrue(back.dataStore === pane.webView.configuration.websiteDataStore)
+    }
+
     func testResetInPaneScopeClearsOverrides() throws {
         let global = makeSettings()
         let layered = makeLayered(over: global)

@@ -28,10 +28,15 @@ final class BrowserSiteDataWindowController: NSWindowController, NSWindowDelegat
 
     /// - Parameters:
     ///   - siteData: the store the window lists and removes from.
+    ///   - jarName: the jar that store is, which the title and Remove All…'s
+    ///     confirmation name, so neither leaves the person guessing whether
+    ///     the shared jar or a pane's own is about to be emptied; `nil` for
+    ///     a plain "Site Data".
     ///   - removeAllDetail: what Remove All…'s confirmation says goes, which
     ///     depends on whose jar this is.
-    init(siteData: BrowserSiteData, removeAllDetail: String? = nil) {
-        let content = BrowserSiteDataViewController(siteData: siteData, removeAllDetail: removeAllDetail)
+    init(siteData: BrowserSiteData, jarName: String? = nil, removeAllDetail: String? = nil) {
+        let content = BrowserSiteDataViewController(
+            siteData: siteData, jarName: jarName, removeAllDetail: removeAllDetail)
         self.content = content
         let window = NSWindow(
             contentRect: NSRect(origin: .zero, size: Self.defaultSize),
@@ -39,7 +44,7 @@ final class BrowserSiteDataWindowController: NSWindowController, NSWindowDelegat
             backing: .buffered,
             defer: true
         )
-        window.title = "Site Data"
+        window.title = Self.title(jarName: jarName)
         window.contentMinSize = Self.minimumSize
         window.isReleasedWhenClosed = false
         window.setAccessibilityIdentifier("settings.browser.site-data.window")
@@ -52,6 +57,12 @@ final class BrowserSiteDataWindowController: NSWindowController, NSWindowDelegat
 
     @available(*, unavailable)
     required init?(coder: NSCoder) { fatalError("init(coder:) is not supported") }
+
+    /// "Site Data — <jar>", or "Site Data" with no jar named.
+    static func title(jarName: String?) -> String {
+        guard let jarName, !jarName.isEmpty else { return "Site Data" }
+        return "Site Data \u{2014} \(jarName)"
+    }
 
     /// Wide enough for both columns and the footer's four buttons.
     static let minimumSize = NSSize(width: 520, height: 320)
@@ -80,6 +91,8 @@ final class BrowserSiteDataWindowController: NSWindowController, NSWindowDelegat
 final class BrowserSiteDataViewController: NSViewController {
 
     private let siteData: BrowserSiteData
+    /// The jar the store is, named in Remove All…'s confirmation.
+    private let jarName: String?
     private let removeAllDetail: String?
     private let table = ComposableSettings.EditableTableCard(
         title: "Site Data",
@@ -102,8 +115,9 @@ final class BrowserSiteDataViewController: NSViewController {
 
     var onDone: (() -> Void)?
 
-    init(siteData: BrowserSiteData, removeAllDetail: String?) {
+    init(siteData: BrowserSiteData, jarName: String? = nil, removeAllDetail: String?) {
         self.siteData = siteData
+        self.jarName = jarName
         self.removeAllDetail = removeAllDetail
         super.init(nibName: nil, bundle: nil)
     }
@@ -195,7 +209,7 @@ final class BrowserSiteDataViewController: NSViewController {
 
     private func removeAll() {
         ComposableSettings.Alerts.confirmDestructive(
-            "Remove all Safari site data?",
+            Self.removeAllMessage(jarName: jarName),
             detail: removeAllDetail
                 ?? "Cookies, caches and storage for every site listed are removed. History is not affected.",
             actionTitle: "Remove All",
@@ -207,6 +221,12 @@ final class BrowserSiteDataViewController: NSViewController {
                 self.reload()
             }
         }
+    }
+
+    /// Remove All…'s question, naming the jar it empties when there is one.
+    static func removeAllMessage(jarName: String?) -> String {
+        guard let jarName, !jarName.isEmpty else { return "Remove all Safari site data?" }
+        return "Remove all Safari site data in \u{201C}\(jarName)\u{201D}?"
     }
 
     func reload() {

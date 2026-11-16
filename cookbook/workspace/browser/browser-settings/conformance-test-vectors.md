@@ -12,8 +12,8 @@
 | browser-settings-009 | privacy-security-title, privacy-security-existing-groups-first | Open Privacy and Security | Topic title "Privacy and Security"; first groups are General, Input, Focus and visibility, Coding Partner, Agent Privacy, Storage, Scripts |
 | browser-settings-010 | privacy-security-added-groups | Same topic | Groups after Scripts, in order: Cookies, Camera and Microphone, Protection, Site Data, History |
 | browser-settings-011 | manage-site-data-button | Open the Site Data group | One button "Manage Site Data…", id `settings.browser.site-data.manage`; no table in the topic |
-| browser-settings-012 | site-data-window | Press Manage Site Data… | A window titled "Site Data" opens, app-modal, resizable, movable, with columns Site and Data and −, Remove All…, Refresh, Done |
-| browser-settings-013 | site-data-window-scope | Press Manage Site Data… in a pane sheet whose pane has a jar of its own | The table lists that jar's site data, not the global jar's |
+| browser-settings-012 | site-data-window | Press Manage Site Data… | A window titled "Site Data — <jar>" opens, naming the jar, app-modal, resizable, movable, with columns Site and Data and −, Remove All…, Refresh, Done |
+| browser-settings-013 | site-data-window-scope | Press Manage Site Data… in a pane sheet whose pane has a jar of its own | The table lists that jar's site data, not the global jar's; after Storage is changed to "Shared by all browser panes" in the same sheet, it lists the global jar's and the title and Remove All… confirmation say so |
 | browser-settings-014 | history-group-contents | Open the History group in the Settings window, then in a pane sheet | Settings window: Record history, Keep visits for, Agent can see history; pane sheet: Record history, Agent can see history |
 | browser-settings-015 | history-recording-gate | Recording on, pane private browsing on; navigate | No visit recorded |
 | browser-settings-016 | history-recording-gate | Recording on, private browsing off; navigate | One visit recorded |

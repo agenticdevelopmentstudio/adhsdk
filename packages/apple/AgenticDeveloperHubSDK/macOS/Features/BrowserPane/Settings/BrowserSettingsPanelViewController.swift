@@ -182,7 +182,7 @@ public final class BrowserSettingsPanelViewController: ComposableSettings.Settin
         addPanel(BrowserAppearancePanel(binding: binding))
         addPanel(BrowserPrivacySettingsPanel(
             binding: binding,
-            siteData: showsSafariTopic ? (binding.pane.flatMap(Self.siteData(for:)) ?? siteData) : nil,
+            siteData: showsSafariTopic ? siteDataResolver : nil,
             hasHistoryStore: history != nil
         ))
         addPanel(BrowserDownloadsPanel(binding: binding))
@@ -244,6 +244,17 @@ public final class BrowserSettingsPanelViewController: ComposableSettings.Settin
         return BrowserExtensionProfile(pane.resolvedJar)
     }
 
+    /// The site data Manage Site Data… acts on, asked when it is pressed:
+    /// the global jar's in the Settings window, and in a pane's sheet the
+    /// jar its Storage setting names at that moment
+    /// (`site-data-window-scope`).
+    private var siteDataResolver: () -> BrowserSiteData? {
+        let global = siteData
+        guard let pane = binding.pane else { return { global } }
+        let settings = binding.store
+        return { [weak pane] in pane.flatMap { Self.siteData(for: $0, under: settings) } }
+    }
+
     /// The pane the Extensions topic opens a page (an extension's options,
     /// the Web Store) beside when the pane is on a jar of its own: the pane
     /// whose sheet it is. The Settings window lists the global jar, whose
@@ -261,6 +272,22 @@ public final class BrowserSettingsPanelViewController: ComposableSettings.Settin
     /// pane's sheet and its Privacy popover both list it.
     static func siteData(for pane: WebBrowserPaneViewController) -> BrowserSiteData? {
         guard let pane = pane as? SafariBrowserPaneViewController else { return nil }
+        return BrowserSiteData(dataStore: pane.webView.configuration.websiteDataStore)
+    }
+
+    /// The site data of the jar `settings` name for a Safari pane, asked when
+    /// Manage Site Data… is pressed, so a Storage change made in the same
+    /// sheet is the jar the window lists and Remove All… empties. The web
+    /// view's own store while the settings still name the jar it was built
+    /// on, since a private or fail-closed jar is a store no second call would
+    /// hand back. `nil` for a Chrome pane.
+    static func siteData(
+        for pane: WebBrowserPaneViewController, under settings: SettingsStore
+    ) -> BrowserSiteData? {
+        guard let pane = pane as? SafariBrowserPaneViewController else { return nil }
+        guard pane.namesBuiltJar(under: settings) else {
+            return BrowserSiteData(dataStore: pane.siteDataStore(under: settings))
+        }
         return BrowserSiteData(dataStore: pane.webView.configuration.websiteDataStore)
     }
 
