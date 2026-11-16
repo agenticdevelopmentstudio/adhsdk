@@ -23,6 +23,11 @@ final class BrowserAgentSourceViewController: NSViewController {
 
     private let scrollView: NSScrollView
     private var html = ""
+    /// The runs of `html`, lexed off the main thread; empty until they land,
+    /// when the source shows in the text color alone.
+    private var tokens: [(NSRange, BrowserAgentSourceHighlighter.Kind)] = []
+    /// The lex of the HTML showing, while it runs.
+    private(set) var highlighting: Task<Void, Never>?
     private var paletteObserver: ThemePaletteObserver?
 
     init() {
@@ -61,10 +66,23 @@ final class BrowserAgentSourceViewController: NSViewController {
         apply(scopedPalette)
     }
 
-    /// Shows `page` as its HTML.
+    /// Shows `page` as its HTML at once, then highlights it when the lex,
+    /// which runs off the main thread, lands. The same HTML again is a no-op.
     func show(_ page: AgentPage) {
-        html = page.html()
+        let newHTML = page.html()
+        guard newHTML != html else { return }
+        html = newHTML
+        tokens = []
         apply(scopedPalette)
+        highlighting?.cancel()
+        highlighting = Task { [weak self] in
+            let runs = await Task.detached(priority: .userInitiated) {
+                BrowserAgentSourceHighlighter.tokens(in: newHTML)
+            }.value
+            guard let self, !Task.isCancelled, self.html == newHTML else { return }
+            self.tokens = runs
+            self.apply(self.scopedPalette)
+        }
     }
 
     /// The palette of the scope the source view sits in (the app's until it
@@ -76,7 +94,8 @@ final class BrowserAgentSourceViewController: NSViewController {
         let colors = BrowserAgentSourceHighlighter.Colors(
             tag: theme.keywords.color, attributeName: theme.attributes.color,
             attributeValue: theme.strings.color, text: theme.text.color)
-        let styled = BrowserAgentSourceHighlighter.highlight(html, font: palette.font(.code), colors: colors)
+        let styled = BrowserAgentSourceHighlighter.highlight(
+            html, tokens: tokens, font: palette.font(.code), colors: colors)
         textView.backgroundColor = theme.background
         scrollView.backgroundColor = theme.background
         textView.textStorage?.setAttributedString(styled)
@@ -108,9 +127,16 @@ enum BrowserAgentSourceHighlighter {
 
     /// `source` styled: every character in `font`, colored by its kind.
     static func highlight(_ source: String, font: NSFont, colors: Colors) -> NSAttributedString {
+        highlight(source, tokens: tokens(in: source), font: font, colors: colors)
+    }
+
+    /// `source` styled by runs already lexed (`tokens(in:)`); no runs leaves
+    /// it all in the text color.
+    static func highlight(_ source: String, tokens runs: [(NSRange, Kind)], font: NSFont,
+                          colors: Colors) -> NSAttributedString {
         let styled = NSMutableAttributedString(
             string: source, attributes: [.font: font, .foregroundColor: colors.text])
-        for (range, kind) in tokens(in: source) where kind != .text {
+        for (range, kind) in runs where kind != .text {
             styled.addAttribute(.foregroundColor, value: colors.color(for: kind), range: range)
         }
         return styled

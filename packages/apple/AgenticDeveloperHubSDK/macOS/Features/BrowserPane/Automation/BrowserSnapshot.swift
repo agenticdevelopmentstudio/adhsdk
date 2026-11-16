@@ -80,7 +80,7 @@ public enum BrowserSnapshotRenderer {
 /// page world, because reading the page's own JavaScript is its purpose.
 public enum BrowserSnapshotRuntime {
     /// Equal to the `version` in `BrowserSnapshot.js`.
-    public static let version = 3
+    public static let version = 4
 
     /// The automation world's name, for an engine that names worlds itself.
     public static let worldName = "adkitchen.automation"

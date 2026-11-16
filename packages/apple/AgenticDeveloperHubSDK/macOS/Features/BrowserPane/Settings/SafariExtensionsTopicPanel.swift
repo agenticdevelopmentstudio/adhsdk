@@ -487,7 +487,12 @@ final class SafariExtensionsTopicPanel: BrowserTopicPanel {
             // The confirm sheet needs the open panel's sheet gone first.
             DispatchQueue.main.async {
                 MainActor.assumeIsolated {
-                    self.run { host in _ = try await host.installDownloaded(at: url, presentingOn: window) }
+                    // With no window to put a sheet on, the confirmation is
+                    // app-modal rather than a silent decline.
+                    self.run { host in
+                        _ = try await host.installDownloaded(
+                            at: url, presentingOn: window, appModalWithoutWindow: window == nil)
+                    }
                 }
             }
         }
@@ -542,7 +547,10 @@ final class SafariExtensionsTopicPanel: BrowserTopicPanel {
     }
 
     private func report(_ error: Error) {
-        guard let window = view.window else { return }
+        guard let window = view.window else {
+            NSAlert(error: error).runModal()
+            return
+        }
         NSAlert(error: error).beginSheetModal(for: window) { _ in }
     }
 }

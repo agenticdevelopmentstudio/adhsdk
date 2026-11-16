@@ -4,7 +4,10 @@ import Foundation
 /// reaches an agent in (the Agent Page Builder recipe).
 public enum AgentNodeKind: String, Codable, CaseIterable, Sendable {
     case document, landmark, heading, paragraph, text, list, listItem, link, button, textField, textArea,
-         checkbox, radio, select, option, table, rowGroup, row, cell, columnHeader, rowHeader, image, label
+         checkbox, radio, select, option, table, rowGroup, row, cell, columnHeader, rowHeader, image, label,
+         // ARIA grid roles, kept apart from table and cell so the snapshot
+         // prints `grid`, `treegrid` and `gridcell` as the legacy walk did.
+         grid, treeGrid, gridCell
 }
 
 /// What the agent walker may emit and the builder may keep: node kinds, and

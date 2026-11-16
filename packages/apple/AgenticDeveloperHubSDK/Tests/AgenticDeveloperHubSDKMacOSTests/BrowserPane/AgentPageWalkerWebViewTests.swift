@@ -133,28 +133,111 @@ final class AgentPageWalkerWebViewTests: XCTestCase {
         XCTAssertFalse(page.html().contains("Promo paragraph"))
     }
 
-    func test_scopeInsideExcludedSubtreeIsEmpty() async throws {
+    /// A scope inside an excluded subtree answers exactly as a scope that
+    /// names nothing, so the answer cannot tell the agent a withheld
+    /// element exists (final review A-I1). A CSS selector is not a scope.
+    func test_scopeInsideExcludedSubtreeReadsAsNoMatch() async throws {
+        let excluding = try store(agentSelectors: ["#side"])
         let first = await source(try emptyStore()).read(options: BrowserSnapshotOptions())
         let sideButton = try XCTUnwrap(firstNode(first.page, kind: .button, named: "Side button"))
 
-        var options = BrowserSnapshotOptions()
-        options.scope = sideButton.ref
-        let scoped = await source(try store(agentSelectors: ["#side"])).agentPage(options: options)
+        var withheld = BrowserSnapshotOptions()
+        withheld.scope = sideButton.ref
+        let scoped = await source(excluding).agentPage(options: withheld)
         XCTAssertNil(scoped.unavailableReason)
-        let root = try XCTUnwrap(scoped.root)
-        XCTAssertEqual(root.kind, .document)
-        XCTAssertTrue(root.children.isEmpty)
         XCTAssertFalse(tree(scoped).contains("Side button"))
+
+        var missing = BrowserSnapshotOptions()
+        missing.scope = "e9999"
+        let unmatched = await source(excluding).agentPage(options: missing)
+        XCTAssertEqual(tree(scoped), tree(unmatched))
+        XCTAssertEqual(scoped.html(), unmatched.html())
+
+        for selector in ["#side-button", "#side", "[id^='side']", "button"] {
+            var probe = BrowserSnapshotOptions()
+            probe.scope = selector
+            let probed = await source(excluding).agentPage(options: probe)
+            XCTAssertEqual(tree(probed), tree(unmatched), "\(selector) answered differently")
+        }
     }
 
-    func test_invalidExcludeSelectorIsIsolated() async throws {
+    /// An agent-list selector the page cannot evaluate would hide nothing,
+    /// so the page is withheld rather than shown unfiltered (A-M1).
+    func test_invalidExcludeSelectorFailsClosed() async throws {
         let reading = await source(try store(agentSelectors: ["::bad(", ".ad"]))
             .read(options: BrowserSnapshotOptions())
-        XCTAssertNil(reading.page.unavailableReason)
-        let text = tree(reading.page)
-        XCTAssertFalse(text.contains("Sponsored paragraph"), text)
-        XCTAssertTrue(text.contains("Keep link"), text)
-        XCTAssertTrue(reading.warnings.contains { $0.contains("::bad(") }, "\(reading.warnings)")
+        let reason = try XCTUnwrap(reading.page.unavailableReason)
+        XCTAssertTrue(reason.hasPrefix(AgentPage.unavailablePrefix), reason)
+        XCTAssertTrue(reason.contains(AgentPageBuilder.agentListReason), reason)
+        XCTAssertNil(reading.page.root)
+        XCTAssertNil(reading.generation)
+    }
+
+    /// A ref taken before its element joined the agent list stops resolving
+    /// once a walk has seen it excluded, even a reading walk that keeps the
+    /// refs, and every ref goes stale when the store changes (A-M2).
+    func test_refToNewlyExcludedElementIsStale() async throws {
+        // Both stores before the automation: adding to a store is a change to
+        // the lists, which by itself invalidates the automation's refs.
+        let empty = try emptyStore()
+        let withSide = try store(agentSelectors: ["#side"])
+        let automation = BrowserAutomation(driver: driver, console: BrowserConsoleLog())
+        let first = await source(empty).read(options: BrowserSnapshotOptions())
+        let generation = try XCTUnwrap(first.generation)
+        let sideButton = try XCTUnwrap(firstNode(first.page, kind: .button, named: "Side button"))
+        let press = try XCTUnwrap(firstNode(first.page, kind: .button, named: "Press me"))
+
+        let kept = await source(withSide).read(options: BrowserSnapshotOptions(), keepingRefs: true)
+        XCTAssertEqual(kept.generation, generation, "a reading walk keeps the generation")
+        do {
+            _ = try await automation.click(ref: sideButton.ref, generation: generation, native: false)
+            XCTFail("a withheld element was clicked")
+        } catch let error as BrowserAutomationError {
+            guard case .staleRef = error else { return XCTFail("\(error)") }
+        }
+
+        await automation.invalidateRefs()
+        do {
+            _ = try await automation.click(ref: press.ref, generation: generation, native: false)
+            XCTFail("a ref outlived a change to the hidden-items lists")
+        } catch let error as BrowserAutomationError {
+            guard case .staleRef = error else { return XCTFail("\(error)") }
+        }
+    }
+
+    /// Under Hide Images an image is never visited, so it spends no ref and
+    /// the refs the agent sees stay consecutive (A-M3).
+    func test_hiddenImagesSpendNoRefs() async throws {
+        await host.load(html: """
+            <!doctype html><html><body>
+            <a href="/one">One</a><img src="data:," alt="Logo" width="10" height="10">
+            <span role="img" aria-label="Badge">*</span><a href="/two">Two</a>
+            </body></html>
+            """)
+        let hiding = AgentPageSource(driver: driver, hiddenItems: try emptyStore(), privacy: { .off },
+                                     hideImages: { true })
+        let page = await hiding.agentPage(options: BrowserSnapshotOptions())
+        let refs = nodes(page.root).map(\.ref).filter { $0.hasPrefix("e") }
+        XCTAssertEqual(refs, ["e1", "e2"], tree(page))
+        XCTAssertFalse(tree(page).contains("Logo"), tree(page))
+    }
+
+    /// ARIA grid roles print as written, as today's snapshot prints them (A-I4).
+    func test_gridRolesKeepTodaysRoles() async throws {
+        await host.load(html: """
+            <!doctype html><html><body>
+            <div role="grid"><div role="row"><div role="gridcell">Alpha</div></div></div>
+            <div role="treegrid"><div role="row"><div role="gridcell">Beta</div></div></div>
+            </body></html>
+            """)
+        let reading = await source(try emptyStore()).read(options: BrowserSnapshotOptions())
+        let lines = tree(reading.page).split(separator: "\n").map { $0.trimmingCharacters(in: .whitespaces) }
+        XCTAssertEqual(Array(lines.dropFirst()), [
+            "- grid [ref=e1]:", "- row [ref=e2]:", "- gridcell \"Alpha\" [ref=e3]",
+            "- treegrid [ref=e4]:", "- row [ref=e5]:", "- gridcell \"Beta\" [ref=e6]"
+        ])
+        let html = reading.page.html()
+        XCTAssertTrue(html.contains("<table") && html.contains("<td"), html)
     }
 
     func test_tagBoundarySpaceSurvivesTheWalk() async throws {

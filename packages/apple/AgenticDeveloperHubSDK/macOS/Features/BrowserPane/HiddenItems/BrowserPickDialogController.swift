@@ -3,6 +3,7 @@
 //  AgenticDeveloperHubSDK
 //
 
+import AgenticDeveloperHubSDKCoreMacOS
 import AppKit
 
 /// The dialog a pick opens (recipe `workspace/browser/element-picker`):
@@ -13,8 +14,9 @@ import AppKit
 /// Remove this from view?                 [Cancel] [OK]
 /// ```
 ///
-/// A window of its own, run with `NSApp.runModal(for:)` rather than a sheet,
-/// so it can be dragged off the item it is about. The preview goes through
+/// A window of its own, run app-modal through the shared
+/// `AppModalWindowSession` rather than as a sheet, so it can be dragged off
+/// the item it is about. The preview goes through
 /// `preview`, which the selecting mode points at the engine's preview rule
 /// set; WebKit keeps running in the modal panel run-loop mode, so the page
 /// redraws while the dialog is up. Every way out clears the preview.
@@ -51,8 +53,8 @@ final class BrowserPickDialogController: NSObject, NSWindowDelegate {
     /// the dialog is dismissed from outside (`dismiss()`).
     private var onClose: ((Choice?) -> Void)?
     private var isFinished = false
-    private var isRunningModal = false
-    private var modalResult: Choice?
+    /// The app-modal session, from `present(over:)` until the dialog ends.
+    private var modalSession: AppModalWindowSession?
 
     init(candidate: BrowserPickCandidate, list: BrowserHiddenItemList,
          preview: @escaping ([String]?) -> Void,
@@ -189,10 +191,11 @@ final class BrowserPickDialogController: NSObject, NSWindowDelegate {
     // MARK: - Running
 
     /// Centres the dialog over `parent` (else the screen) and runs it
-    /// modally until OK, Cancel or `dismiss()`. Does nothing if the dialog
-    /// was dismissed before it could run.
-    func runModal(over parent: NSWindow?) {
-        guard !isFinished else { return }
+    /// app-modal until OK, Cancel or `dismiss()`. The session starts on the
+    /// run loop's next pass, so this returns at once. Does nothing if the
+    /// dialog was dismissed before it could run.
+    func present(over parent: NSWindow?) {
+        guard !isFinished, modalSession == nil else { return }
         applyPreview()
         if let parent {
             let frame = parent.frame
@@ -201,11 +204,9 @@ final class BrowserPickDialogController: NSObject, NSWindowDelegate {
         } else {
             window.center()
         }
-        isRunningModal = true
-        NSApp.runModal(for: window)
-        isRunningModal = false
-        window.orderOut(nil)
-        deliver(modalResult)
+        let session = AppModalWindowSession(window: window)
+        modalSession = session
+        session.start()
     }
 
     /// Ends the dialog with `choice` (nil for Cancel), clearing the preview.
@@ -213,28 +214,26 @@ final class BrowserPickDialogController: NSObject, NSWindowDelegate {
         guard !isFinished else { return }
         isFinished = true
         preview(nil)
-        if isRunningModal {
-            modalResult = choice
-            NSApp.stopModal()
-        } else {
-            window.orderOut(nil)
-            deliver(choice)
-        }
+        endSession()
+        deliver(choice)
     }
 
     /// Closes the dialog without saving and without calling `onClose`: the
-    /// selecting mode ended under it (navigation, tab switch, close). Safe
-    /// from a WebKit callback, which `stopModal` is not.
+    /// selecting mode ended under it (navigation, tab switch, close). The
+    /// shared session stops without an event, so a WebKit callback can call
+    /// this.
     func dismiss() {
         guard !isFinished else { return }
         isFinished = true
         onClose = nil
         preview(nil)
-        if isRunningModal {
-            NSApp.abortModal()
-        } else {
-            window.orderOut(nil)
-        }
+        endSession()
+    }
+
+    private func endSession() {
+        modalSession?.end()
+        modalSession = nil
+        window.orderOut(nil)
     }
 
     private func deliver(_ choice: Choice?) {

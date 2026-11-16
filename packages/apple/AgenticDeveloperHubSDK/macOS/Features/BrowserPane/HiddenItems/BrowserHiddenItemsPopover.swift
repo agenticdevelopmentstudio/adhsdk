@@ -251,8 +251,11 @@ final class BrowserHiddenItemsPopover: NSViewController, NSTableViewDataSource, 
         onSelect()
     }
 
+    /// The row is resolved when the click lands, not when the cell was made:
+    /// a reload in between can reorder or shorten `items`.
     @objc func rowToggled(_ sender: NSButton) {
-        guard items.indices.contains(sender.tag), let id = items[sender.tag].id else { return }
+        let row = tableView.row(for: sender)
+        guard items.indices.contains(row), let id = items[row].id else { return }
         let isOn = sender.state == .on
         write { try $0.setEnabled(id, isOn) }
     }
@@ -268,6 +271,7 @@ final class BrowserHiddenItemsPopover: NSViewController, NSTableViewDataSource, 
                 try await store.perform(change)
             } catch {
                 Self.logger.error("hidden items could not be changed: \(error.localizedDescription, privacy: .public)")
+                await MainActor.run { NSSound.beep() }
             }
         }
     }
@@ -281,7 +285,6 @@ final class BrowserHiddenItemsPopover: NSViewController, NSTableViewDataSource, 
         let item = items[row]
         let checkbox = NSButton(checkboxWithTitle: item.label, target: self, action: #selector(rowToggled(_:)))
         checkbox.state = item.enabled ? .on : .off
-        checkbox.tag = row
         checkbox.lineBreakMode = .byTruncatingTail
         checkbox.toolTip = item.label
         checkbox.setAccessibilityLabel(item.label)

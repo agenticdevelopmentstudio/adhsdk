@@ -81,7 +81,7 @@ final class BrowserJarTests: XCTestCase {
     }
 
     /// The last migration `ProjectDatabase` runs; raise it with each new one.
-    private let latestSchemaVersion = 6
+    private let latestSchemaVersion = ProjectDatabase.currentSchemaVersion
 
     /// A moment past the reconciler's grace period for new jars.
     private var later: Date { Date().addingTimeInterval(BrowserJarReconciler.newJarGracePeriod + 1) }

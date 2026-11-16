@@ -149,6 +149,40 @@ final class ProjectDatabaseTests: XCTestCase {
         XCTAssertEqual(try reopened.loadTabs(repoID: repo.id).tabs.map(\.title), ["Code"])
     }
 
+    /// A project saved before the global tab position wrote `'top'` as the
+    /// old default, which read as a choice; migration 7 makes it follow the
+    /// global position, and leaves a real multi-edge choice alone (final
+    /// review C-I1).
+    func testOldDefaultTopEdgesFollowTheGlobalPositionAfterUpgrade() throws {
+        let path = tempRoot.appendingPathComponent("edges.db").path
+        let defaulted = GitRepo(path: "/tmp/defaulted", name: "defaulted")
+        let chosen = GitRepo(path: "/tmp/chosen", name: "chosen")
+        try autoreleasepool {
+            let database = try ProjectDatabase(path: path)
+            try database.insert(defaulted)
+            try database.insert(chosen)
+            for repo in [defaulted, chosen] {
+                let leaf = LayoutNode.leaf(contentType: ComposableTabsViewID("test.editor"))
+                let tab = TabRecord(title: "Code", root: leaf)
+                try database.saveTabs([tab], activeTabID: tab.id, repoID: repo.id)
+            }
+        }
+        // As the pre-branch build left them: the default written out.
+        let update = "UPDATE project_state SET enabled_edges"
+        try executeRaw("\(update) = 'top' WHERE repo_id = '\(defaulted.id.uuidString)'", at: path)
+        try executeRaw("\(update) = 'top,left' WHERE repo_id = '\(chosen.id.uuidString)'", at: path)
+        try executeRaw("DELETE FROM schema_migrations WHERE version = 7", at: path)
+
+        let reopened = try ProjectDatabase(path: path)
+        XCTAssertNil(try reopened.loadTabs(repoID: defaulted.id).enabledEdges)
+        XCTAssertEqual(try reopened.loadTabs(repoID: chosen.id).enabledEdges, [.top, .left])
+        // After the upgrade, choosing top alone is a choice and stays one.
+        let leaf = LayoutNode.leaf(contentType: ComposableTabsViewID("test.editor"))
+        let tab = TabRecord(title: "Code", root: leaf)
+        try reopened.saveTabs([tab], activeTabID: tab.id, enabledEdges: [.top], repoID: defaulted.id)
+        XCTAssertEqual(try reopened.loadTabs(repoID: defaulted.id).enabledEdges, [.top])
+    }
+
     /// The same thing at its limit: every version row gone, so the whole chain
     /// re-runs over a schema that already has all of it.
     func testTheWholeMigrationChainIsSafeToReRunOverACurrentSchema() throws {

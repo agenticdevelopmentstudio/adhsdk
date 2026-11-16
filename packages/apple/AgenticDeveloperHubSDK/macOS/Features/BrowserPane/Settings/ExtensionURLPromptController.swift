@@ -19,8 +19,9 @@ final class ExtensionURLPromptController: NSObject, NSTextFieldDelegate {
     let okButton: NSButton
 
     init(accessibilityPrefix: String) {
+        // No instruction line: the placeholder shows the shape, and what URL…
+        // accepts is in the Extensions topic's help ("Installing").
         alert.messageText = "Add an Extension from a URL"
-        alert.informativeText = "An extension's ID, its Chrome Web Store link, or the address of a .crx file."
         okButton = alert.addButton(withTitle: "OK")
         alert.addButton(withTitle: "Cancel")
         super.init()

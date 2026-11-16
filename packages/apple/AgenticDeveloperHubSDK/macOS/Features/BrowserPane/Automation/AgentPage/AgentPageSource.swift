@@ -5,7 +5,7 @@ import Foundation
 /// snapshot runtime whose ref table the walker shares.
 public enum AgentPageWalkerRuntime {
     /// Must equal `VERSION` in `AgentPageWalker.js`.
-    public static let version = 5
+    public static let version = 6
 
     public static var source: String {
         get throws {
@@ -133,8 +133,8 @@ public struct AgentPageSource {
             let data = Data(json.utf8)
             let extras = try? JSONDecoder().decode(WalkExtras.self, from: data)
             // A failure payload carries no address and no content: nothing to bind.
-            guard let walkedAddress = extras?.url else { return reading(builder, data, extras) }
-            if walkedAddress == readURL?.absoluteString { return reading(builder, data, extras) }
+            guard let walkedAddress = extras?.url else { return await reading(builder, data, extras) }
+            if walkedAddress == readURL?.absoluteString { return await reading(builder, data, extras) }
             // The page changed between reading the list and walking. The walk
             // stands only if the walked page's own list is the one applied.
             let walkedURL = URL(string: walkedAddress)
@@ -143,7 +143,7 @@ public struct AgentPageSource {
             }
             do {
                 let walkedExcludes = try await agentSelectors(hiddenItems, for: walkedURL)
-                if Set(walkedExcludes) == Set(excludes) { return reading(builder, data, extras) }
+                if Set(walkedExcludes) == Set(excludes) { return await reading(builder, data, extras) }
             } catch {
                 return failed(builder, error)
             }
@@ -172,17 +172,20 @@ public struct AgentPageSource {
             "interactiveOnly": options.interactiveOnly,
             "maxDepth": options.depth ?? 0,
             "timeoutMs": timeoutMs,
-            "keepRefs": keepingRefs
+            "keepRefs": keepingRefs,
+            "hideImages": builder.hideImages
         ]
         let raw = try await driver.callAsyncFunction(
             body: "return globalThis.__adkAgentWalk({ allowlist, excludeSelectors, scopeRef, "
-                + "interactiveOnly, maxDepth, timeoutMs, keepRefs })",
+                + "interactiveOnly, maxDepth, timeoutMs, keepRefs, hideImages })",
             arguments: arguments, world: .automation)
         return raw as? String
     }
 
-    private func reading(_ builder: AgentPageBuilder, _ data: Data, _ extras: WalkExtras?) -> AgentPageReading {
-        let page = builder.build(payload: data, error: nil)
+    /// The decode, the tree build and the concealment run off the main
+    /// actor: a large page would otherwise cost frames on every read.
+    private func reading(_ builder: AgentPageBuilder, _ data: Data, _ extras: WalkExtras?) async -> AgentPageReading {
+        let page = await Task.detached(priority: .userInitiated) { builder.build(payload: data, error: nil) }.value
         return AgentPageReading(page: page, generation: page.unavailableReason == nil ? extras?.generation : nil,
                                 warnings: extras?.warnings ?? [], failure: nil)
     }
@@ -194,7 +197,7 @@ public struct AgentPageSource {
     }
 
     /// The payload keys the builder does not read.
-    private struct WalkExtras: Decodable {
+    private struct WalkExtras: Decodable, Sendable {
         let url: String?
         let generation: Int?
         let warnings: [String]?

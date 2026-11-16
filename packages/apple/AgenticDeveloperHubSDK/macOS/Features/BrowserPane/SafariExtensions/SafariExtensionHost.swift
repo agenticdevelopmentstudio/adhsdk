@@ -356,7 +356,14 @@ public final class SafariExtensionHost: NSObject {
     public func installAppExtension(_ source: SafariAppExtension, presentingOn window: NSWindow?) async throws -> Bool {
         guard libraryError == nil else { throw Failure.library(libraryError ?? "") }
         let id = source.bundleID
-        let staged = try library.stage(copyOf: source.resourcesURL, as: id)
+        let library = library
+        let resources = source.resourcesURL
+        let appex = source.appexURL
+        let staged = try await Task.detached(priority: .userInitiated) {
+            let staged = try library.stage(copyOf: resources, as: id)
+            try Self.refuseLinks(in: staged, id: id, from: appex, library: library)
+            return staged
+        }.value
         let appSource = SafariExtensionRecord.AppSource(source)
         let installed = try await installStaged(
             staged, id: id, presentingOn: window,
@@ -379,15 +386,21 @@ public final class SafariExtensionHost: NSObject {
     /// path as a store install, so declining leaves the library as it was.
     /// Anything else throws `Failure.unsupportedDownload` before the library
     /// is touched. Returns false when the person declined. The reading,
-    /// copying and unzipping run off the main actor.
-    public func installDownloaded(at url: URL, presentingOn window: NSWindow? = nil) async throws -> Bool {
+    /// copying and unzipping run off the main actor. With no window, the
+    /// confirmation is shown app-modally when `appModalWithoutWindow` is set,
+    /// and declined otherwise.
+    public func installDownloaded(
+        at url: URL, presentingOn window: NSWindow? = nil, appModalWithoutWindow: Bool = false
+    ) async throws -> Bool {
         guard libraryError == nil else { throw Failure.library(libraryError ?? "") }
         let provisional = WebStoreExtension.localID(forPath: url.standardizedFileURL.path)
         let library = library
         let staged = try await Task.detached(priority: .userInitiated) {
             try Self.stageDownloaded(url, as: provisional, in: library)
         }.value
-        return try await installLocal(staged: staged, provisionalID: provisional, presentingOn: window)
+        return try await installLocal(
+            staged: staged, provisionalID: provisional, presentingOn: window,
+            appModalWithoutWindow: appModalWithoutWindow)
     }
 
     /// Stages the item at `url` as `id`, or throws without leaving anything
@@ -426,15 +439,13 @@ public final class SafariExtensionHost: NSObject {
         throw Failure.symbolicLink(source, link)
     }
 
-    /// Installs the `.crx` at the http(s) address `url`: downloads it, then
+    /// Installs the `.crx` at the http(s) address `url`: downloads it, no
+    /// more than `SafariExtensionLibrary.maximumDownloadSize` of it, then
     /// installs it as `installDownloaded` would.
     public func install(fromAddress url: URL, presentingOn window: NSWindow?) async throws -> Bool {
         guard libraryError == nil else { throw Failure.library(libraryError ?? "") }
         guard ["http", "https"].contains(url.scheme?.lowercased() ?? "") else { throw Failure.unsupportedDownload(url) }
-        let (data, response) = try await URLSession.shared.data(from: url)
-        if let http = response as? HTTPURLResponse, !(200..<300).contains(http.statusCode) {
-            throw WebStoreExtension.Failure.download("HTTP \(http.statusCode)")
-        }
+        let data = try await SafariExtensionLibrary.download(from: url)
         let provisional = WebStoreExtension.localID(forPath: url.absoluteString)
         let library = library
         let staged = try await Task.detached(priority: .userInitiated) {
@@ -449,9 +460,18 @@ public final class SafariExtensionHost: NSObject {
     /// manifest's `key` when it has one (so the same extension keeps one id
     /// wherever it came from), else the provisional one made from where it
     /// came from.
-    private func installLocal(staged: URL, provisionalID: String, presentingOn window: NSWindow?) async throws -> Bool {
+    ///
+    /// A keyed id that is already installed is a takeover, whatever the
+    /// installed one came from: a manifest `key` is public, so anyone can
+    /// copy a trusted extension's. It is always confirmed as a replacement
+    /// naming the installed one, and the result is a local extension, which
+    /// the store's update check leaves alone.
+    private func installLocal(
+        staged: URL, provisionalID: String, presentingOn window: NSWindow?, appModalWithoutWindow: Bool = false
+    ) async throws -> Bool {
         var id = provisionalID
         var stagedURL = staged
+        var replacing: String?
         if let keyed = WebStoreExtension.id(ofManifestAt: staged.appendingPathComponent("manifest.json")),
            keyed != provisionalID {
             let destination = library.stagingDirectory(of: keyed)
@@ -464,9 +484,14 @@ public final class SafariExtensionHost: NSObject {
             }
             id = keyed
             stagedURL = destination
+            if let installed = entry(keyed) {
+                replacing = installed.webExtension?.displayName ?? keyed
+            }
         }
         return try await installStaged(
-            stagedURL, id: id, presentingOn: window, newRecord: SafariExtensionRecord(id: id, isFromWebStore: false))
+            stagedURL, id: id, presentingOn: window, replacing: replacing,
+            appModalWithoutWindow: appModalWithoutWindow,
+            newRecord: SafariExtensionRecord(id: id, isFromWebStore: false))
     }
 
     /// The Safari extensions installed on this Mac that are not in the
@@ -505,37 +530,53 @@ public final class SafariExtensionHost: NSObject {
         }
     }
 
-    private func install(crx: Data, id: String, presentingOn window: NSWindow?) async throws -> Bool {
-        let staged = try library.stage(crx, as: id)
+    /// The unzip runs off the main actor, and the staged tree is refused when
+    /// it holds a symbolic link, as every other install path does: `ditto`
+    /// restores links, and a CRX is only a zip.
+    func install(crx: Data, id: String, presentingOn window: NSWindow?) async throws -> Bool {
+        let library = library
+        let staged = try await Task.detached(priority: .userInitiated) {
+            let staged = try library.stage(crx, as: id)
+            try Self.refuseLinks(
+                in: staged, id: id, from: WebStoreExtension.downloadURL(id: id), library: library)
+            return staged
+        }.value
         return try await installStaged(
             staged, id: id, presentingOn: window, newRecord: SafariExtensionRecord(id: id, isFromWebStore: true))
     }
 
     /// Installs the files staged at `staged` as `id`, asking the person first
-    /// when it is new or asks for more than was granted. `newRecord` is the
-    /// record a first install starts from.
+    /// when it is new, asks for more than was granted, or `replacing` names
+    /// the installed extension other files are taking the place of. A
+    /// replacement is asked about with everything it requests, and keeps
+    /// nothing the installed one was granted. `newRecord` is the record a
+    /// first install starts from.
     private func installStaged(
-        _ staged: URL, id: String, presentingOn window: NSWindow?, newRecord: @autoclosure () -> SafariExtensionRecord
+        _ staged: URL, id: String, presentingOn window: NSWindow?, replacing: String? = nil,
+        appModalWithoutWindow: Bool = false, newRecord: @autoclosure () -> SafariExtensionRecord
     ) async throws -> Bool {
         let existing = entry(id)
+        let replacing = existing == nil ? nil : replacing
         do {
             let preview = try await WKWebExtension(resourceBaseURL: staged)
-            let granted = Set(existing?.record.grantedPermissions ?? [])
+            let granted = replacing == nil ? Set(existing?.record.grantedPermissions ?? []) : []
             // Sites the last version asked for were answered already, by
             // the install or by the site access setting since.
-            let answeredOrigins = Set(existing?.record.grantedOrigins ?? [])
-                .union(existing?.webExtension?.allRequestedMatchPatterns.map(\.string) ?? [])
+            let answeredOrigins = replacing == nil
+                ? Set(existing?.record.grantedOrigins ?? [])
+                    .union(existing?.webExtension?.allRequestedMatchPatterns.map(\.string) ?? [])
+                : []
             let newPermissions = preview.requestedPermissions.map(\.rawValue).filter { !granted.contains($0) }.sorted()
             let newOrigins = preview.allRequestedMatchPatterns.map(\.string)
                 .filter { !answeredOrigins.contains($0) }.sorted()
-            if existing == nil || !newPermissions.isEmpty || !newOrigins.isEmpty {
+            if existing == nil || replacing != nil || !newPermissions.isEmpty || !newOrigins.isEmpty {
+                let kind: InstallKind = replacing.map(InstallKind.replacement) ?? (existing == nil ? .new : .update)
                 let agreed: Bool
                 if let confirmInstall {
-                    agreed = await confirmInstall(preview, existing != nil, newPermissions, newOrigins, window)
-                } else if let window {
+                    agreed = await confirmInstall(preview, kind, newPermissions, newOrigins, window)
+                } else if window != nil || appModalWithoutWindow {
                     agreed = await confirm(
-                        preview, isUpdate: existing != nil, permissions: newPermissions, origins: newOrigins,
-                        on: window)
+                        preview, kind: kind, permissions: newPermissions, origins: newOrigins, on: window)
                 } else {
                     agreed = false
                 }
@@ -553,6 +594,15 @@ public final class SafariExtensionHost: NSObject {
         let wasEnabled = entry.record.isEnabled
         stop(entry)
         try library.commitStaged(id)
+        if replacing != nil {
+            // Other files now: not the store's, not an app's, and granted
+            // only what the person just agreed to.
+            entry.record.isFromWebStore = false
+            entry.record.appSource = nil
+            entry.sourceMissing = false
+            entry.record.grantedPermissions = []
+            entry.record.grantedOrigins = []
+        }
         let webExtension = try await WKWebExtension(resourceBaseURL: library.directory(of: id))
         entry.webExtension = webExtension
         entry.failure = nil
@@ -575,19 +625,42 @@ public final class SafariExtensionHost: NSObject {
         return true
     }
 
-    /// Asks whether to install (extension, is an update, new permissions,
-    /// new sites, window). Nil asks with the install sheet, and says no when
-    /// there is no window to show it on; tests set it to answer themselves.
-    var confirmInstall: (@MainActor (WKWebExtension, Bool, [String], [String], NSWindow?) async -> Bool)?
+    /// What an install confirmation is asking about.
+    enum InstallKind: Equatable {
+        /// An extension that is not installed.
+        case new
+        /// New files for an installed extension, asking for more access.
+        case update
+        /// Other files taking an installed extension's id; the name is the
+        /// installed one's.
+        case replacement(String)
+    }
 
-    /// The install sheet: what the extension is and what it may do.
+    /// Asks whether to install (extension, what kind of install, new
+    /// permissions, new sites, window). Nil asks with the install sheet, and
+    /// says no when there is no window to show it on unless the caller asked
+    /// for an app-modal one; tests set it to answer themselves.
+    var confirmInstall: (@MainActor (WKWebExtension, InstallKind, [String], [String], NSWindow?) async -> Bool)?
+
+    /// The install sheet: what the extension is and what it may do. With no
+    /// window it runs app-modally.
     private func confirm(
-        _ webExtension: WKWebExtension, isUpdate: Bool, permissions: [String], origins: [String], on window: NSWindow
+        _ webExtension: WKWebExtension, kind: InstallKind, permissions: [String], origins: [String],
+        on window: NSWindow?
     ) async -> Bool {
         let name = webExtension.displayName ?? "This extension"
         let alert = NSAlert()
-        alert.messageText = isUpdate ? "“\(name)” asks for more access" : "Add “\(name)”?"
         var lines: [String] = []
+        switch kind {
+        case .new:
+            alert.messageText = "Add “\(name)”?"
+        case .update:
+            alert.messageText = "“\(name)” asks for more access"
+        case .replacement(let installed):
+            alert.messageText = "Replace “\(installed)” with “\(name)”?"
+            lines.append("It has the same ID as the installed “\(installed)”, and installing it replaces "
+                + "that extension's files.")
+        }
         if let summary = webExtension.displayDescription, !summary.isEmpty { lines.append(summary) }
         if !permissions.isEmpty { lines.append("It can use: " + permissions.joined(separator: ", ") + ".") }
         if !origins.isEmpty {
@@ -597,8 +670,13 @@ public final class SafariExtensionHost: NSObject {
         }
         alert.informativeText = lines.joined(separator: "\n\n")
         alert.icon = webExtension.icon(for: CGSize(width: 64, height: 64))
-        alert.addButton(withTitle: isUpdate ? "Update" : "Add Extension")
+        switch kind {
+        case .new: alert.addButton(withTitle: "Add Extension")
+        case .update: alert.addButton(withTitle: "Update")
+        case .replacement: alert.addButton(withTitle: "Replace")
+        }
         alert.addButton(withTitle: "Cancel")
+        guard let window else { return alert.runModal() == .alertFirstButtonReturn }
         return await withCheckedContinuation { continuation in
             alert.beginSheetModal(for: window) { response in
                 continuation.resume(returning: response == .alertFirstButtonReturn)

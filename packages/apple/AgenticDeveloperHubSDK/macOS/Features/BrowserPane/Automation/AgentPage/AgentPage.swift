@@ -71,6 +71,10 @@ public struct AgentPage: Sendable, Equatable {
         self.unavailableReason = unavailableReason
     }
 
+    /// The page with nothing on it and no reason, shown by an agent view
+    /// while its first rebuild runs.
+    static let blank = AgentPage(url: nil, title: "", root: nil)
+
     /// The empty page carrying `reason`, prefixed with
     /// `Agent view unavailable: ` unless it already is.
     public static func unavailable(_ reason: String, url: URL?) -> AgentPage {
@@ -217,7 +221,7 @@ struct AgentSnapshotMapper {
     static let nameLimit = 100, valueLimit = 50
     static let genericKinds: Set<AgentNodeKind> = [.text, .paragraph, .label]
     static let nameFromContent: Set<AgentNodeKind> = [
-        .button, .link, .heading, .cell, .columnHeader, .rowHeader, .option
+        .button, .link, .heading, .cell, .gridCell, .columnHeader, .rowHeader, .option
     ]
     static let controls: Set<AgentNodeKind> = [.textField, .textArea, .select, .checkbox, .radio]
     static let valueShown: Set<AgentNodeKind> = [.textField, .textArea, .select]
@@ -317,6 +321,9 @@ struct AgentSnapshotMapper {
         case .rowGroup: return "rowgroup"
         case .row: return "row"
         case .cell: return "cell"
+        case .grid: return "grid"
+        case .treeGrid: return "treegrid"
+        case .gridCell: return "gridcell"
         case .columnHeader: return "columnheader"
         case .rowHeader: return "rowheader"
         case .image: return "img"
@@ -368,8 +375,8 @@ struct AgentTextRenderer {
     private var pieces: [String] = []
 
     private static let blocks: Set<AgentNodeKind> = [
-        .document, .landmark, .heading, .paragraph, .list, .listItem, .table, .rowGroup, .row, .select, .option,
-        .textArea
+        .document, .landmark, .heading, .paragraph, .list, .listItem, .table, .grid, .treeGrid, .rowGroup, .row,
+        .select, .option, .textArea
     ]
 
     mutating func visit(_ node: AgentNode) {
@@ -464,10 +471,10 @@ struct AgentHTMLRenderer {
             if let href = node.attributes["href"] { extra.append(("href", href)) }
             wrap("a", node, extra: extra)
         case .button: wrap("button", node, extra: [("type", "button")])
-        case .table: wrap("table", node)
+        case .table, .grid, .treeGrid: wrap("table", node)
         case .rowGroup: wrap("tbody", node)
         case .row: wrap("tr", node)
-        case .cell: wrap("td", node)
+        case .cell, .gridCell: wrap("td", node)
         case .columnHeader: wrap("th", node, extra: [("scope", "col")])
         case .rowHeader: wrap("th", node, extra: [("scope", "row")])
         case .label: wrap("label", node)

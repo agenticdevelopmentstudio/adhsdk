@@ -40,8 +40,8 @@ public final class BrowserHistoryWindowController: SingleWindowController {
             logger.info("history window not shown: no history store")
             return
         }
+        // `showWindow()` already makes it key and brings it forward.
         controller.showWindow()
-        controller.window?.makeKeyAndOrderFront(nil)
         controller.panel.focusList()
     }
 

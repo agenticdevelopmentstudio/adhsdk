@@ -143,6 +143,12 @@ public final class BrowserHistoryPanelViewController: NSViewController {
         Task { await model.reload() }
     }
 
+    /// Each time the panel comes back, so its relative times are current.
+    public override func viewWillAppear() {
+        super.viewWillAppear()
+        Task { await model.reload() }
+    }
+
     private func applyTheme(_ palette: SemanticPalette) {
         self.palette = palette
         let background = palette.windowBackgroundColor
@@ -204,15 +210,26 @@ public final class BrowserHistoryPanelViewController: NSViewController {
         }
     }
 
+    /// A double-click on a selected row opens every selected visit; on any
+    /// other row, that row's.
     @objc private func openClicked(_ sender: Any?) {
         let row = tableView.clickedRow
         guard model.visits.indices.contains(row) else { return }
-        open(model.visits[row].url)
+        if tableView.selectedRowIndexes.contains(row) {
+            openSelected()
+        } else {
+            open(model.visits[row].url)
+        }
     }
 
-    private func openSelected() {
-        guard let row = tableView.selectedRowIndexes.first, model.visits.indices.contains(row) else { return }
-        open(model.visits[row].url)
+    /// Return: every selected visit, in list order.
+    func openSelected() {
+        for visit in selectedVisits { open(visit.url) }
+    }
+
+    /// Selects the rows `rows`, for a test.
+    func selectRows(_ rows: IndexSet) {
+        tableView.selectRowIndexes(rows, byExtendingSelection: false)
     }
 
     /// Puts the keyboard in the list, for a host bringing the panel up.

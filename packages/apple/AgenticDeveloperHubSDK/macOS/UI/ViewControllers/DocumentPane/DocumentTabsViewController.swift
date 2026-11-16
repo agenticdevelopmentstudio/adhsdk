@@ -321,7 +321,7 @@ public final class DocumentTabsViewController: MultiTabbedViewController {
     @discardableResult
     public func selectTab(showing url: URL) -> Bool {
         guard let (tabID, editor) = tab(showing: url) else { return false }
-        selectTab(id: tabID, on: .top)
+        selectTab(id: tabID, on: primaryEdge)
         rememberFocus(of: editor)
         retitle(tabID)
         reportFocusedDocument()
@@ -334,7 +334,7 @@ public final class DocumentTabsViewController: MultiTabbedViewController {
 
     private func tab(showing url: URL) -> (UUID, DocumentEditorViewController)? {
         let target = url.canonicalFileURL
-        for tab in tabs(on: .top) {
+        for tab in tabs(on: primaryEdge) {
             guard let root = splitsByTabID[tab.id],
                   let editor = editors(in: root).first(where: { $0.fileURL?.canonicalFileURL == target })
             else { continue }

@@ -518,6 +518,7 @@ public final class WebKitBrowserEngine: WebKitPageDriver, BrowserEngine {
     /// Counts hidden-item reads, so the last one asked for is the one that
     /// stands when a store change and a navigation race.
     private var hiddenItemsGeneration = 0
+    private var isTornDown = false
 
     /// Re-renders the page showing whenever the hidden-items store changes,
     /// and once now for whatever the web view starts on.
@@ -534,33 +535,58 @@ public final class WebKitBrowserEngine: WebKitPageDriver, BrowserEngine {
     private func refreshHiddenItems(live: Bool) {
         let url = webView.url
         Task { [weak self] in
-            guard let self, let selectors = await self.readHiddenItemSelectors(for: url) else { return }
+            guard let self, case .selectors(let selectors) = await self.readHiddenItemSelectors(for: url) else {
+                return
+            }
             self.applyHiddenItems(selectors, live: live)
         }
     }
 
     /// Puts the rules for `url`, where the main frame is about to go, in the
-    /// next document's script, so a matching item is never drawn on it.
+    /// next document's script, so a matching item is never drawn on it. A
+    /// read that a store-change refresh supersedes reads again: that refresh
+    /// read the page being left, and returning empty-handed would start the
+    /// new document on the old site's rules.
     private func prepareHiddenItems(for url: URL?) async {
-        guard let selectors = await readHiddenItemSelectors(for: url) else { return }
-        applyHiddenItems(selectors, live: false)
+        for _ in 0..<Self.hiddenItemsPrepareAttempts {
+            switch await readHiddenItemSelectors(for: url) {
+            case .selectors(let selectors):
+                applyHiddenItems(selectors, live: false)
+                return
+            case .superseded:
+                // Teardown supersedes every read for good.
+                if isTornDown { return }
+                continue
+            case .failed:
+                return
+            }
+        }
     }
 
-    /// The user list's enabled selectors for `url`, read off the main thread;
-    /// nil when a newer read has started since, or the read failed (the page
-    /// keeps the rules it last had). No store means nothing hidden.
-    private func readHiddenItemSelectors(for url: URL?) async -> [String]? {
+    private static let hiddenItemsPrepareAttempts = 3
+
+    private enum HiddenItemsRead {
+        case selectors([String])
+        /// A newer read started while this one ran.
+        case superseded
+        case failed
+    }
+
+    /// The user list's enabled selectors for `url`, read off the main thread.
+    /// No store means nothing hidden; a failed read keeps the rules the page
+    /// last had.
+    private func readHiddenItemSelectors(for url: URL?) async -> HiddenItemsRead {
         hiddenItemsGeneration += 1
         let generation = hiddenItemsGeneration
-        guard let store = BrowserHiddenItemsStore.shared else { return [] }
+        guard let store = BrowserHiddenItemsStore.shared else { return .selectors([]) }
         do {
             let selectors = try await store.perform { try $0.enabledSelectors(list: .user, for: url) }
-            return generation == hiddenItemsGeneration ? selectors : nil
+            return generation == hiddenItemsGeneration ? .selectors(selectors) : .superseded
         } catch {
             let host = url?.host ?? "no address"
             logger.error(
                 "hidden items could not be read for \(host): \(error.localizedDescription, privacy: .public)")
-            return nil
+            return .failed
         }
     }
 
@@ -808,6 +834,7 @@ public final class WebKitBrowserEngine: WebKitPageDriver, BrowserEngine {
         downloads.removeAll()
         contentRulesGeneration += 1
         hiddenItemsGeneration += 1
+        isTornDown = true
         heldLoad = nil
         webView.stopLoading()
         webView.navigationDelegate = nil

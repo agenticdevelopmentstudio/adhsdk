@@ -225,6 +225,25 @@ open class WebBrowserPaneViewController: NSViewController {
         agentPrivacy(at: privacyWordsURL)
     }
 
+    /// What Agent Privacy means for `browser_history`: every enabled word
+    /// whatever its sites (`PrivacyWordsVault.everySiteFilter`). History spans
+    /// sites, so the words of the page in front would leave a word scoped to
+    /// another site in clear on that site's lines; concealing with every word
+    /// conceals more, the safe direction. `unavailable` and `conflicting` as
+    /// for `agentPrivacy()`.
+    public func agentHistoryPrivacy() -> BrowserAgentPrivacy {
+        guard isAgentPrivacyOn else { return .off }
+        guard let privacyVault else { return .unavailable }
+        do {
+            guard try privacyVault.load(), let filter = privacyVault.everySiteFilter else { return .unavailable }
+            return .checking(filter)
+        } catch {
+            logger.error(
+                "Agent Privacy could not read the privacy words: \(error.localizedDescription, privacy: .public)")
+            return .unavailable
+        }
+    }
+
     /// What Agent Privacy means at `url`. The words are the enabled words
     /// whose sites match it (`PrivacyWordsVault.filter(for:)`). Reads them
     /// without prompting; words that cannot be read that way make the pane
@@ -979,6 +998,7 @@ open class WebBrowserPaneViewController: NSViewController {
         addressBox.hideItemsButton.action = #selector(hideItemsButtonClicked(_:))
         hideFromAgentButton.target = self
         hideFromAgentButton.action = #selector(hideFromAgentButtonClicked(_:))
+        updateHideItemsAvailability()
         configureInstalledBar()
         let bar = NSStackView(views: [
             backButton, forwardButton, reloadButton, addressBox, refusalNotice, drivenBadge,
@@ -1185,6 +1205,24 @@ open class WebBrowserPaneViewController: NSViewController {
         popover.show(relativeTo: hideFromAgentButton)
     }
 
+    /// The two hide-items buttons are off on a page with no site (`file:`,
+    /// `about:`, `data:`), where an entry could only be saved for every
+    /// site. A button stays on while its own selecting runs, as the stop
+    /// control. Its tooltip is kept either way.
+    func updateHideItemsAvailability() {
+        let canSelect = BrowserSelectingMode.canSelect(on: engine.url)
+        let selecting = selectingMode?.isActive == true ? selectingMode?.list : nil
+        addressBox.hideItemsButton.isEnabled = canSelect || selecting == .user
+        hideFromAgentButton.isEnabled = canSelect || selecting == .agent
+    }
+
+    private func closeHiddenItemsPopovers() {
+        hiddenItemsPopover?.popover.close()
+        hiddenItemsPopover = nil
+        agentItemsPopover?.popover.close()
+        agentItemsPopover = nil
+    }
+
     private func openHiddenItemsStore() -> BrowserHiddenItemsStore? {
         guard let store = BrowserHiddenItemsStore.shared else {
             Self.logger.error("hidden items: no store is open")
@@ -1201,7 +1239,7 @@ open class WebBrowserPaneViewController: NSViewController {
     /// it beeps. One selecting mode per pane: a mode for another engine,
     /// list or view ends before the new one begins.
     func beginSelectingItems(store: BrowserHiddenItemsStore, list: BrowserHiddenItemList = .user) {
-        guard let webKit = engine as? WebKitBrowserEngine else {
+        guard let webKit = engine as? WebKitBrowserEngine, BrowserSelectingMode.canSelect(on: engine.url) else {
             NSSound.beep()
             return
         }
@@ -1635,6 +1673,8 @@ open class WebBrowserPaneViewController: NSViewController {
             showAddress(engine.url ?? tab.requestedURL ?? tab.pendingURL)
         }
         browserEngineHistoryDidChange(engine)
+        closeHiddenItemsPopovers()
+        updateHideItemsAvailability()
         announceTitleChange()
         if isAgentPrivacyOn { refreshAgentPrivacyStatus() }
         loadPendingPage(of: tab)
@@ -1907,6 +1947,7 @@ extension WebBrowserPaneViewController: BrowserEngineDelegate {
         // navigation commits (a reload then would cancel it) and on a
         // same-document change (`pushState`), which keeps its document and
         // the words it was drawn through. The commit sets them.
+        if isFront(engine) { updateHideItemsAvailability() }
         guard isFront(engine), let url = engine.url else { return }
         // A field being edited is the user's; overwriting it mid-keystroke
         // because a redirect landed would throw away what they typed. A field
@@ -1952,6 +1993,10 @@ extension WebBrowserPaneViewController: BrowserEngineDelegate {
         // Every tab's console starts over with its page, front or not.
         engine.consoleLog.clear()
         guard isFront(engine) else { return }
+        // A hidden-items popover lists and switches the site it opened on;
+        // the new page's site may be another.
+        closeHiddenItemsPopovers()
+        updateHideItemsAvailability()
         // The front page's site decides which words apply, and so whether
         // they can be (`conflicting`).
         if isAgentPrivacyOn { refreshAgentPrivacyStatus() }
@@ -2344,10 +2389,7 @@ extension WebBrowserPaneViewController: PaneContentTeardown {
     public func paneContentWillBeDiscarded() {
         endSelectingItems(.close)
         selectingMode = nil
-        hiddenItemsPopover?.popover.close()
-        hiddenItemsPopover = nil
-        agentItemsPopover?.popover.close()
-        agentItemsPopover = nil
+        closeHiddenItemsPopovers()
         firstResponderObservation = nil
         cancellables.removeAll()
         windowObservers.forEach { NotificationCenter.default.removeObserver($0) }

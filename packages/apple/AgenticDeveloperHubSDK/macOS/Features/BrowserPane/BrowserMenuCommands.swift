@@ -51,7 +51,9 @@ public final class BrowserMenuCommands {
     ///
     /// A keystroke reaches the registry's monitor before the menu, so each
     /// command performs itself; it declines — passing the key on — when the
-    /// key window has no pane that can go that way.
+    /// key window has no pane that can go that way, or when the browser pane
+    /// is not the one with keyboard focus, so ⌘[ and ⌘] still reach an editor
+    /// or terminal beside it.
     public static let keySection = KeyCommandSection(
         title: keySectionTitle,
         scope: .app,
@@ -59,25 +61,30 @@ public final class BrowserMenuCommands {
             KeyCommandDescriptor(
                 id: ItemID.back, title: "Back",
                 defaultShortcut: KeyboardShortcuts.Shortcut(.leftBracket, modifiers: .command),
-                perform: { navigate(WebBrowserPaneViewController.keyPane(), back: true) }),
+                perform: { navigate(WebBrowserPaneViewController.focusedKeyPane(), back: true) }),
             KeyCommandDescriptor(
                 id: ItemID.forward, title: "Forward",
                 defaultShortcut: KeyboardShortcuts.Shortcut(.rightBracket, modifiers: .command),
-                perform: { navigate(WebBrowserPaneViewController.keyPane(), back: false) })
+                perform: { navigate(WebBrowserPaneViewController.focusedKeyPane(), back: false) })
         ])
 
     private let keyPane: () -> WebBrowserPaneViewController?
+    private let canShowHistory: () -> Bool
     private let showHistory: () -> Void
 
     /// - Parameters:
     ///   - keyPane: The pane the page commands act on, asked each time an
     ///     item is validated or chosen; `nil` disables them.
+    ///   - canShowHistory: Whether there is a history to show; Show History
+    ///     is disabled while there is not.
     ///   - showHistory: What Show History does — open the History window.
     public init(
         keyPane: @escaping () -> WebBrowserPaneViewController? = { WebBrowserPaneViewController.keyPane() },
+        canShowHistory: @escaping () -> Bool = { BrowserHistoryWindowController.canShow },
         showHistory: @escaping () -> Void = { BrowserHistoryWindowController.show() }
     ) {
         self.keyPane = keyPane
+        self.canShowHistory = canShowHistory
         self.showHistory = showHistory
     }
 
@@ -85,6 +92,7 @@ public final class BrowserMenuCommands {
     public func contributions() -> [MenuContribution] {
         let keyPane = self.keyPane
         let showHistory = self.showHistory
+        let canShowHistory = self.canShowHistory
         return [
             MenuContribution(
                 slot: .browser, title: "Reload", order: 0, key: "r",
@@ -108,10 +116,12 @@ public final class BrowserMenuCommands {
                 identifier: ItemID.forward,
                 keyCommandID: ItemID.forward,
                 action: { _ = Self.navigate(keyPane(), back: false) }),
-            // Enabled whatever the key window is: the History window opens a
-            // visit in a new browser window when no pane is in front.
+            // Enabled whatever the key window is — the History window opens
+            // a visit in a new browser window when no pane is in front — but
+            // only while the host has given it a history to show.
             MenuContribution(
                 slot: .browser, title: "Show History", order: Self.showSectionOrder,
+                isEnabled: canShowHistory,
                 identifier: ItemID.showHistory,
                 action: showHistory),
             MenuContribution(
@@ -181,5 +191,25 @@ public extension WebBrowserPaneViewController {
             return focused
         }
         return nil
+    }
+
+    /// ``keyPane()`` only while that pane has keyboard focus — what a
+    /// keystroke acts on, where a menu item may act on the last focused pane.
+    static func focusedKeyPane() -> WebBrowserPaneViewController? {
+        focusedKeyPane(in: KeyCommandRegistry.shared.commandWindow)
+    }
+
+    /// ``focusedKeyPane()`` for `window` rather than the key window: a
+    /// standalone browser window's pane, or a pane whose view holds the
+    /// window's first responder. A child window (a Chrome pane's page) is
+    /// focus inside the pane it belongs to.
+    static func focusedKeyPane(in window: NSWindow?) -> WebBrowserPaneViewController? {
+        guard let window, let pane = keyPane(in: window) else { return nil }
+        let owner = window.commandOwner
+        if owner.windowController is WebBrowserWindowController { return pane }
+        if owner !== window { return pane }
+        guard let responder = window.firstResponder as? NSView,
+              let paneView = pane.viewIfLoaded else { return nil }
+        return responder.isDescendant(of: paneView) ? pane : nil
     }
 }

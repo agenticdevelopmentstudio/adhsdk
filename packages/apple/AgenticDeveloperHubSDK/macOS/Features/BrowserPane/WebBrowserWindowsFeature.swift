@@ -88,14 +88,13 @@ public final class WebBrowserWindowsFeature: AppFeature {
     private static let logger = Logger(subsystem: "AgenticDeveloperHubSDK", category: "BrowserHiddenItems")
 
     /// Opens `BrowserHiddenItems.db` in the app home (following
-    /// `APP_TEST_HOME`) unless a host or test already set one. A file that
-    /// cannot be opened leaves `shared` nil, which every consumer takes as
-    /// "no store": a degraded mode, not a launch failure.
+    /// `APP_TEST_HOME`) off the main thread, unless a host or test already
+    /// set one. A file that cannot be opened leaves `shared` nil, which every
+    /// consumer takes as "no store": a degraded mode, not a launch failure.
     private static func openHiddenItemsStore() {
-        guard BrowserHiddenItemsStore.shared == nil else { return }
-        do {
-            BrowserHiddenItemsStore.shared = try BrowserHiddenItemsStore.open(at: BrowserHiddenItemsStore.defaultURL)
-        } catch {
+        guard !BrowserHiddenItemsStore.hasShared else { return }
+        let logger = logger
+        BrowserHiddenItemsStore.openShared(at: BrowserHiddenItemsStore.defaultURL) { error in
             logger.error("hidden-items store unavailable: \(error.localizedDescription, privacy: .public)")
         }
     }

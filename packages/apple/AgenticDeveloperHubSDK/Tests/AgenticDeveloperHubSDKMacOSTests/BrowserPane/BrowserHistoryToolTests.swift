@@ -1,3 +1,4 @@
+import WebKit
 import XCTest
 @testable import AgenticDeveloperHubSDKMacOS
 @testable import AgenticDeveloperHubSDKCore
@@ -118,5 +119,65 @@ final class BrowserHistoryToolTests: XCTestCase {
         let backForward = (0..<300).map { BrowserVisitLine(title: "T\($0)", url: "https://t.example/\($0)", when: nil) }
         let cappedTab = try await run(.currentTab, limit: 500, backForward: backForward)
         XCTAssertEqual(lines(cappedTab).count, 200)
+    }
+
+    // A word scoped to another site is concealed on that site's lines while
+    // the pane is on a different site (final review A-I2 / C-C1).
+    func test_historyConcealsWordsScopedToAnotherSite() async throws {
+        let words = [
+            PrivacyWord(alias: "Globex", real: "Acme", sites: ["bank.example"]),
+            PrivacyWord(alias: "Initech", real: "Hooli", sites: [PrivacySitePattern.everywhere]),
+            PrivacyWord(alias: "Umbrella", real: "Wayne", isEnabled: false)
+        ]
+        let paneURL = URL(string: "https://news.example/")!
+        // The page in front's words alone would leave "Acme" in clear.
+        let paneOnly = BrowserAgentPrivacy.checking(words.filter(for: paneURL))
+        XCTAssertFalse(words.filter(for: paneURL).pairs.contains { $0.real == "Acme" })
+        let history = BrowserAgentPrivacy.checking(words.everySiteFilter).combined(with: paneOnly)
+        let backForward = [BrowserVisitLine(title: "Acme statement", url: "https://bank.example/Acme", when: nil),
+                           BrowserVisitLine(title: "Hooli Wayne", url: "https://news.example/", when: nil)]
+        let reply = try await run(.currentTab, backForward: backForward, privacy: history)
+        XCTAssertFalse(reply.contains("Acme"), reply)
+        XCTAssertTrue(reply.contains("Globex statement"), reply)
+        XCTAssertTrue(reply.contains("https://bank.example/Globex"), reply)
+        XCTAssertTrue(reply.contains("Initech"), reply)
+        XCTAssertTrue(reply.contains("Wayne"), "a disabled word is not applied: \(reply)")
+
+        let store = try makeStore(visits: 0)
+        try store.record(URL(string: "https://bank.example/Acme")!, title: "Acme statement")
+        let all = try await run(.all, store: store, privacy: history)
+        XCTAssertFalse(all.contains("Acme"), all)
+    }
+
+    /// A handle made without a history privacy while Agent Privacy is on
+    /// refuses history rather than concealing with the page's words alone.
+    @MainActor
+    func test_handleWithoutHistoryPrivacyFailsClosed() {
+        let automation = BrowserAutomation(webView: WKWebView(), console: BrowserConsoleLog())
+        let enabled = BrowserPaneHandle(id: "p", project: "", tab: "", automation: automation,
+                                        agentPrivacy: .enabled(TextSubstitutionFilter(pairs: [])), hidesImages: false)
+        XCTAssertEqual(enabled.historyPrivacy, .unavailable)
+        let off = BrowserPaneHandle(id: "p", project: "", tab: "", automation: automation, hidesImages: false)
+        XCTAssertEqual(off.historyPrivacy, .off)
+    }
+
+    // Local files never reach the agent through history (final review A-I3).
+    func test_historyLeavesOutLocalFiles() async throws {
+        let store = try makeStore(visits: 3)
+        for index in 0..<5 {
+            try store.record(URL(string: "file:///Users/someone/Clients/Report\(index).html")!,
+                             title: "Client report \(index)", at: Date(timeIntervalSince1970: 5_000 + Double(index)))
+        }
+        let recent = lines(try await run(.all, limit: 3, store: store))
+        XCTAssertEqual(recent.count, 3, "the limit counts only listed visits: \(recent)")
+        XCTAssertFalse(recent.contains { $0.contains("file:") || $0.contains("Client report") }, "\(recent)")
+        let searched = try await run(.all, query: "Report", store: store)
+        XCTAssertEqual(searched, BrowserHistoryTool.emptyReply)
+
+        let backForward = [BrowserVisitLine(title: "Local", url: "FILE:///tmp/a.html", when: nil),
+                           BrowserVisitLine(title: "Web", url: "https://web.example/", when: nil)]
+        let tab = lines(try await run(.currentTab, backForward: backForward))
+        XCTAssertEqual(tab.count, 1, "\(tab)")
+        XCTAssertTrue(tab[0].contains("https://web.example/"))
     }
 }

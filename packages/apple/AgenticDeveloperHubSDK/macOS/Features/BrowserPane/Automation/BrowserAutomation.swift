@@ -161,12 +161,37 @@ public final class BrowserAutomation: NSObject {
     private var lastRefusal: String?
     private var navigationsStarted = 0
     private var navigationsFinished = 0
+    private var hiddenItemsObservation: AnyCancellable?
 
     public init(driver: BrowserPageDriver, console: BrowserConsoleLog) {
         self.driver = driver
         self.console = console
         super.init()
         observeLoading()
+        observeHiddenItems()
+    }
+
+    /// Every ref the agent holds goes stale when the hidden-items lists
+    /// change: a ref handed out before its element joined the agent list
+    /// must not stay clickable until the next snapshot.
+    private func observeHiddenItems() {
+        hiddenItemsObservation = NotificationCenter.default
+            .publisher(for: BrowserHiddenItemsStore.didChangeNotification)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                Task { @MainActor in await self?.invalidateRefs() }
+            }
+    }
+
+    /// Bumps the page's ref generation, if the runtime is on the page; a
+    /// page without it holds no refs to invalidate.
+    func invalidateRefs() async {
+        lastSnapshotLines = nil
+        guard Self.isDrivable(currentURL) else { return }
+        _ = try? await driver.callAsyncFunction(
+            body: "if (window.__adkitchen && typeof window.__adkitchen.invalidate === 'function') "
+                + "{ window.__adkitchen.invalidate(); } return true;",
+            arguments: [:], world: .automation)
     }
 
     /// Points the automation at a new page: the pane's handle, the model's
@@ -205,7 +230,7 @@ public final class BrowserAutomation: NSObject {
 
     /// Whether this URL is one a model may drive. Local files are never
     /// driven: the user's own disk is not the model's to read through a pane.
-    public static func isDrivable(_ url: String) -> Bool {
+    nonisolated public static func isDrivable(_ url: String) -> Bool {
         !url.lowercased().hasPrefix("file:")
     }
 

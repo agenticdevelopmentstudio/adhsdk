@@ -170,6 +170,9 @@ final class BrowserPrivacySettingsPanel: BrowserTopicPanel {
 
     /// The help for the groups that were topics of their own, worded for
     /// the scope the panel is in.
+    /// Whether the visits this panel's Record history governs go anywhere.
+    private var recordsAnywhere: Bool { binding.pane?.hasHistoryStore ?? hasHistoryStore }
+
     private var addedHelpTopics: [ComposableSettings.PanelHelp.Topic] {
         var topics: [ComposableSettings.PanelHelp.Topic] = [
             .init(
@@ -232,6 +235,10 @@ final class BrowserPrivacySettingsPanel: BrowserTopicPanel {
                 + "written down: its address, its title and when. Off, nothing new is "
                 + "written and what is already recorded stays until you clear it. A "
                 + "pane in private browsing records nothing, whatever this says. "
+                + (recordsAnywhere
+                    ? ""
+                    : "This app has no history store, so nothing is recorded whatever Record "
+                        + "history says. ")
                 + (binding.isPaneScope
                     ? "Every browser pane records into the same history, so how long visits "
                         + "are kept is set in the Settings window. "
@@ -564,13 +571,11 @@ final class BrowserPrivacySettingsPanel: BrowserTopicPanel {
     /// history (`history-group-contents`).
     private func makeHistoryGroup() -> ComposableSettings.GroupView {
         let group = ComposableSettings.GroupView(withTitle: "History")
-        let recordsAnywhere = binding.pane?.hasHistoryStore ?? hasHistoryStore
+        // What Record history means without a store is in the History help
+        // topic, not under the checkbox.
         addCheckbox(
             "Record history", UserSettings.browserRecordsHistory,
             identifier: "settings.browser.history.record",
-            explanation: recordsAnywhere
-                ? nil
-                : "This app has no history store, so nothing is recorded whatever this says.",
             to: group
         )
         if !binding.isPaneScope {

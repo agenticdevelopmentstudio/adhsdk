@@ -130,9 +130,9 @@ final class SafariExtensionsTopicTests: XCTestCase {
         try Data(#"{"manifest_version":3,"name":"T","version":"1.0"}"#.utf8)
             .write(to: folder.appendingPathComponent("manifest.json"))
         var asked: [String] = []
-        host.confirmInstall = { preview, isUpdate, _, _, _ in
+        host.confirmInstall = { preview, kind, _, _, _ in
             asked.append(preview.displayName ?? "")
-            XCTAssertFalse(isUpdate)
+            XCTAssertEqual(kind, .new)
             return false
         }
         let installed = try await host.installDownloaded(at: folder)
@@ -172,6 +172,123 @@ final class SafariExtensionsTopicTests: XCTestCase {
         XCTAssertTrue(host.extensions().isEmpty)
     }
 
+    // MARK: - Install paths (final review C-I3, C-I4, C-M4, C-M5)
+
+    /// A public key in the manifest gives the extension Chrome's id for it.
+    private static let sharedKey = Data((0..<32).map { UInt8($0) }).base64EncodedString()
+
+    private func makeFolder(_ name: String, extensionName: String, key: String? = nil) throws -> URL {
+        let folder = root.appendingPathComponent(name, isDirectory: true)
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        var manifest: [String: Any] = ["manifest_version": 3, "name": extensionName, "version": "1.0"]
+        if let key { manifest["key"] = key }
+        try JSONSerialization.data(withJSONObject: manifest)
+            .write(to: folder.appendingPathComponent("manifest.json"))
+        return folder
+    }
+
+    /// `folder` as a zip, the way a CRX's payload is one; `ditto` keeps links.
+    private func zip(_ folder: URL) throws -> Data {
+        let file = root.appendingPathComponent("\(UUID().uuidString).zip")
+        let ditto = Process()
+        ditto.executableURL = URL(fileURLWithPath: "/usr/bin/ditto")
+        ditto.arguments = ["-c", "-k", folder.path, file.path]
+        try ditto.run()
+        ditto.waitUntilExit()
+        XCTAssertEqual(ditto.terminationStatus, 0)
+        return try Data(contentsOf: file)
+    }
+
+    /// A store package holding a symbolic link is refused before the
+    /// confirmation, as the downloaded and URL paths already were.
+    func test_storePackageWithSymbolicLinkIsRefused() async throws {
+        let host = makeHost()
+        let folder = try makeFolder("StoreLinked", extensionName: "S")
+        let outside = root.appendingPathComponent("secret.txt")
+        try Data("private".utf8).write(to: outside)
+        try FileManager.default.createSymbolicLink(
+            at: folder.appendingPathComponent("data.txt"), withDestinationURL: outside)
+        var asked = false
+        host.confirmInstall = { _, _, _, _, _ in
+            asked = true
+            return true
+        }
+        do {
+            _ = try await host.install(
+                crx: try zip(folder), id: "abcdefghijklmnopabcdefghijklmnop", presentingOn: nil)
+            XCTFail("a store package with a symbolic link installed")
+        } catch SafariExtensionHost.Failure.symbolicLink(_, let link) {
+            XCTAssertEqual(link, "data.txt")
+        }
+        XCTAssertFalse(asked)
+        XCTAssertTrue(host.extensions().isEmpty)
+    }
+
+    /// Files whose manifest key matches an installed store extension are a
+    /// replacement: always confirmed as one, naming the installed extension,
+    /// even when they ask for nothing new, and a local extension once
+    /// installed, so the store's update check leaves them alone.
+    func test_keyedTakeoverIsConfirmedAsAReplacement() async throws {
+        let host = makeHost()
+        let keyed = try XCTUnwrap(WebStoreExtension.id(ofKey: Self.sharedKey))
+        let store = try makeFolder("Store", extensionName: "Trusted", key: Self.sharedKey)
+        /// What the confirmation was asked and will answer, in a box the
+        /// sendable closure can share with the test.
+        @MainActor final class Confirmations {
+            var kinds: [SafariExtensionHost.InstallKind] = []
+            var answer = true
+        }
+        let confirmations = Confirmations()
+        host.confirmInstall = { _, kind, _, _, _ in
+            confirmations.kinds.append(kind)
+            return confirmations.answer
+        }
+        let storeInstalled = try await host.install(crx: try zip(store), id: keyed, presentingOn: nil)
+        XCTAssertTrue(storeInstalled)
+        XCTAssertEqual(host.extensions().map(\.isFromWebStore), [true])
+
+        let impostor = try makeFolder("Impostor", extensionName: "Impostor", key: Self.sharedKey)
+        confirmations.answer = false
+        let declined = try await host.installDownloaded(at: impostor)
+        XCTAssertFalse(declined)
+        XCTAssertEqual(confirmations.kinds, [.new, .replacement("Trusted")])
+        XCTAssertEqual(host.extensions().map(\.name), ["Trusted"], "declining keeps the installed one")
+        XCTAssertEqual(host.extensions().map(\.isFromWebStore), [true])
+
+        confirmations.answer = true
+        let replaced = try await host.installDownloaded(at: impostor)
+        XCTAssertTrue(replaced)
+        XCTAssertEqual(confirmations.kinds.last, .replacement("Trusted"))
+        XCTAssertEqual(host.extensions().map(\.id), [keyed])
+        XCTAssertEqual(host.extensions().map(\.name), ["Impostor"])
+        XCTAssertEqual(host.extensions().map(\.isFromWebStore), [false])
+    }
+
+    /// The link check fails closed: a folder that is itself a link, or is not
+    /// there to read, is reported rather than passed.
+    func test_symbolicLinkCheckFailsClosed() throws {
+        let folder = try makeFolder("Real", extensionName: "R")
+        XCTAssertNil(SafariExtensionLibrary.symbolicLink(in: folder))
+        let link = root.appendingPathComponent("Linked")
+        try FileManager.default.createSymbolicLink(at: link, withDestinationURL: folder)
+        XCTAssertEqual(SafariExtensionLibrary.symbolicLink(in: link), ".")
+        XCTAssertEqual(SafariExtensionLibrary.symbolicLink(in: root.appendingPathComponent("Missing")), ".")
+    }
+
+    /// A download larger than its limit is refused, not read into memory.
+    func test_downloadIsCapped() async throws {
+        let file = root.appendingPathComponent("big.crx")
+        try Data(repeating: 0x50, count: 4096).write(to: file)
+        do {
+            _ = try await SafariExtensionLibrary.download(from: file, limit: 1024)
+            XCTFail("a download over its limit was read")
+        } catch WebStoreExtension.Failure.download(let detail) {
+            XCTAssertTrue(detail.contains("larger than"), detail)
+        }
+        let small = try await SafariExtensionLibrary.download(from: file, limit: 8192)
+        XCTAssertEqual(small.count, 4096)
+    }
+
     // MARK: - URL…
 
     /// extensions-topic-019 to extensions-topic-021.
@@ -184,6 +301,9 @@ final class SafariExtensionsTopicTests: XCTestCase {
         XCTAssertFalse(ExtensionURLPromptController.isValid("ftp://x/y.crx"))
         XCTAssertFalse(ExtensionURLPromptController.isValid("   "))
         let prompt = ExtensionURLPromptController(accessibilityPrefix: "test")
+        // No instruction line in the alert; the help says what URL… takes
+        // (final review C-M6).
+        XCTAssertEqual(prompt.alert.informativeText, "")
         XCTAssertFalse(prompt.okButton.isEnabled)
         prompt.setText("https://x/y.crx")
         XCTAssertTrue(prompt.okButton.isEnabled)

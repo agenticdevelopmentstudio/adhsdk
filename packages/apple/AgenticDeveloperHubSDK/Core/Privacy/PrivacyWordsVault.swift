@@ -44,6 +44,12 @@ public final class PrivacyWordsVault: ObservableObject {
         words?.filter(for: url)
     }
 
+    /// Every enabled word whatever its sites, or nil while the words have not
+    /// been read (``PrivacyWord`` array's `everySiteFilter`).
+    public var everySiteFilter: TextSubstitutionFilter? {
+        words?.everySiteFilter
+    }
+
     /// The upgrade in progress, so private terminals starting together share
     /// one prompt rather than stacking one each.
     private var pendingUpgrade: Task<Void, Error>?

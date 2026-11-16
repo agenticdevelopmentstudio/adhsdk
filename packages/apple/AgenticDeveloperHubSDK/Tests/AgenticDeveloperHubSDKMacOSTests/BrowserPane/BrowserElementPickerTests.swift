@@ -73,6 +73,15 @@ final class BrowserElementPickerTests: XCTestCase {
         XCTAssertFalse(candidate(allLikeIt: nil, count: 0, page: 100).allLikeItAllowed)
     }
 
+    /// A bare tag, or the page's frame with a class, never hides "all items
+    /// like it", however few elements it matches.
+    func test_bareTagAndPageFrameAreNeverAllowed() {
+        for selector in ["div", "span", "p", "body.home", "main.content", "HTML.x", "head.x"] {
+            XCTAssertFalse(candidate(allLikeIt: selector, count: 2, page: 100).allLikeItAllowed, selector)
+        }
+        XCTAssertTrue(candidate(allLikeIt: "div.card", count: 2, page: 100).allLikeItAllowed)
+    }
+
     func test_scriptsAreBundled() throws {
         XCTAssertTrue(try BrowserElementPicker.finderSource.contains("globalThis.__adkFinder = finder"))
         XCTAssertTrue(try BrowserElementPicker.finderSource.contains("MIT License"))

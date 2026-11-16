@@ -15,7 +15,8 @@ public struct BrowserVisitLine: Sendable, Equatable {
 
 /// The `browser_history` tool's answer, apart from the pane it is asked
 /// about: what the pane's Agent can see history setting allows, concealed
-/// field by field with the pane's Agent Privacy (the Agent History Tool
+/// field by field with the privacy handed in, the pane's Agent Privacy over
+/// every enabled word whatever its sites (the Agent History Tool
 /// recipe). It reads nothing on the main actor: the back/forward list is
 /// handed in, read there by the caller, and the store is read through
 /// `BrowserHistoryStore.perform`, off the caller's thread.
@@ -48,17 +49,26 @@ struct BrowserHistoryTool {
         case .none:
             throw BrowserToolSet.ToolError(sentence: noneRefusal)
         case .currentTab:
-            visits = Array(backForward.filter { matches($0, query) }.prefix(limit))
+            visits = Array(backForward.filter { isShareable($0) && matches($0, query) }.prefix(limit))
         case .all:
             guard let store else { throw BrowserToolSet.ToolError(sentence: noStoreRefusal) }
             let rows = try await store.perform { store in
-                if let query { return try store.search(query, limit: limit) }
-                return try store.recent(limit: limit)
+                if let query { return try store.search(query, limit: limit, excludingLocalFiles: true) }
+                return try store.recent(limit: limit, excludingLocalFiles: true)
             }
             visits = rows.map { BrowserVisitLine(title: $0.title, url: $0.url.absoluteString, when: $0.visitedAt) }
+                .filter(isShareable)
         }
         if visits.isEmpty { return emptyReply }
         return visits.map { line($0, privacy) }.joined(separator: "\n")
+    }
+
+    /// Whether a visit may be listed at all: a local file never is, its
+    /// address or its title, as no tool drives or names one
+    /// (`BrowserAutomation.isDrivable`). The store leaves them out in SQL so
+    /// the limit counts only what is listed; this catches the rest.
+    private static func isShareable(_ visit: BrowserVisitLine) -> Bool {
+        BrowserAutomation.isDrivable(visit.url)
     }
 
     /// Whether a back/forward entry holds `query` in its title or address,

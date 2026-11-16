@@ -55,10 +55,18 @@ public struct BrowserPickCandidate: Decodable, Sendable, Equatable {
     }
 
     /// The All items like it choice is offered only for a looser selector that
-    /// matches at most half of the page's elements.
+    /// matches at most half of the page's elements, names at least one class
+    /// (a bare tag such as `div` hides most of a site) and is not the page's
+    /// frame (`html`, `head`, `body`, `main`).
     public var allLikeItAllowed: Bool {
-        allLikeIt != nil && allLikeItCount <= pageElementCount / 2
+        guard let allLikeIt, allLikeIt.contains(".") else { return false }
+        let tag = allLikeIt.prefix { $0 != "." }.lowercased()
+        guard !Self.neverLikeIt.contains(tag) else { return false }
+        return allLikeItCount <= pageElementCount / 2
     }
+
+    /// The tags whose elements hold the whole page.
+    static let neverLikeIt: Set<String> = ["html", "head", "body", "main"]
 }
 
 /// The selecting-mode script on one web view: outlines the element under the

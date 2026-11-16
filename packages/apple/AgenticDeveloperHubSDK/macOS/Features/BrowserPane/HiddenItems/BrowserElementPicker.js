@@ -76,11 +76,17 @@
     }
   }
 
+  // The page's frame, never a "like it" selector: hiding one hides the page.
+  const NEVER_LIKE_IT = new Set(['html', 'head', 'body', 'main']);
+
   // "All items like it": the tag and the stable class names, never the id.
+  // A tag alone is never one: `div` or `p` would hide most of the site.
   function allLikeItSelector(el) {
     try {
       const tag = el.tagName.toLowerCase();
+      if (NEVER_LIKE_IT.has(tag)) { return null; }
       const classes = Array.from(el.classList).filter(isStableClass);
+      if (classes.length === 0) { return null; }
       return tag + classes.map((name) => '.' + CSS.escape(name)).join('');
     } catch (e) {
       return null;

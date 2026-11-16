@@ -102,6 +102,8 @@ extension ProjectDatabase {
     /// `nil` writes no edges, keeping whatever choice is already stored (none,
     /// for a project that never had one), so seeding a window or saving its
     /// layout can never turn the app-wide default into a per-project choice.
+    /// An empty list clears a stored choice, so the project follows the
+    /// app-wide default again.
     public func saveTabs(
         _ tabs: [TabRecord],
         activeTabID: UUID?,

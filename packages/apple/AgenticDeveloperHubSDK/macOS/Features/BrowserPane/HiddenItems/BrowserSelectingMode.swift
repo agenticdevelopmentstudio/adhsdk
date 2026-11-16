@@ -131,6 +131,10 @@ final class BrowserSelectingMode {
     /// has two pickers.
     func begin() {
         guard state == .idle, let webView = pickWebView else { return }
+        guard Self.canSelect(on: engine?.url) else {
+            NSSound.beep()
+            return
+        }
         state = .selecting
         button.showSelecting(true)
         showNoticeIfFirstUse(in: webView.window)
@@ -139,6 +143,13 @@ final class BrowserSelectingMode {
         installPicker(on: webView)
         let place = logPlace
         Self.logger.info("selecting mode started on \(place, privacy: .public)")
+    }
+
+    /// Whether a pick on `url` can be saved for its own site. A page with no
+    /// host (`file:`, `about:`, `data:`) has no site to scope an entry to:
+    /// its default pattern is `*`, which would hide the item on every page.
+    nonisolated static func canSelect(on url: URL?) -> Bool {
+        PrivacySitePattern.defaultPattern(for: url) != PrivacySitePattern.everywhere
     }
 
     /// A new picker on `webView`, started after the previous start so two
@@ -273,6 +284,13 @@ final class BrowserSelectingMode {
     }
 
     private func save(_ choice: BrowserPickDialogController.Choice, label: String) {
+        // Fails closed: a pick whose address has no host is never saved as
+        // an entry for every site.
+        guard Self.canSelect(on: pickURL) else {
+            Self.logger.error("hidden item not saved: the page has no site")
+            NSSound.beep()
+            return
+        }
         let item = BrowserHiddenItem(
             list: list, site: PrivacySitePattern.defaultPattern(for: pickURL),
             selector: choice.selector, scope: choice.scope, label: label)
@@ -282,6 +300,7 @@ final class BrowserSelectingMode {
                 _ = try await store.perform { try $0.add(item) }
             } catch {
                 Self.logger.error("hidden item could not be saved: \(error.localizedDescription, privacy: .public)")
+                NSSound.beep()
             }
         }
     }
@@ -349,11 +368,11 @@ final class BrowserSelectingMode {
 
     // MARK: - Default presenters
 
-    /// On the run loop's next pass, not as a main-queue block: a modal loop
-    /// started from `DispatchQueue.main.async` would hold the main queue, and
-    /// with it every MainActor task in the app, until the dialog closed.
+    /// App-modal through `AppModalWindowSession`, which enters the modal
+    /// loop on the run loop's next pass rather than from a main-queue block,
+    /// so every MainActor task in the app keeps running while it is up.
     private static func runModalDialog(_ dialog: BrowserPickDialogController, parent: NSWindow?) {
-        performOnNextRunLoopPass { dialog.runModal(over: parent) }
+        dialog.present(over: parent)
     }
 
     /// An informational alert, as a sheet on the pane's window so nothing

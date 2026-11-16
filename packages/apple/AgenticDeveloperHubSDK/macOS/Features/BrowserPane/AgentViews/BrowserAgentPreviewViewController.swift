@@ -98,6 +98,9 @@ final class BrowserAgentPreviewViewController: NSViewController, WKNavigationDel
         shownPage = page
         allowedLoads += 1
         ownNavigation = webView.loadHTMLString(html, baseURL: nil)
+        // No navigation means no load is coming to spend the credit on, and
+        // nothing would end it: a spare credit must not wait for another.
+        if ownNavigation == nil { allowedLoads = max(0, allowedLoads - 1) }
     }
 
     /// The controller's latest own load ended: no credit outlives it. The

@@ -26,7 +26,7 @@ public final class ProjectDatabase {
     var database: OpaquePointer?
     public let databasePath: String
 
-    public static let currentSchemaVersion = 6
+    public static let currentSchemaVersion = 7
 
     /// `~/.<token>/Projects.db` — e.g. `~/.coffeegrinder/Projects.db`.
     ///
@@ -147,6 +147,9 @@ public final class ProjectDatabase {
             }
             if try schemaVersion() < 6 {
                 try migration006_repoKind()
+            }
+            if try schemaVersion() < 7 {
+                try migration007_edgesFollowGlobal()
             }
             try checkForeignKeys()
             try execute("COMMIT")
@@ -443,6 +446,18 @@ public final class ProjectDatabase {
             try execute("CREATE INDEX IF NOT EXISTS idx_git_repo_name ON git_repo(name)")
         }
         try execute("INSERT INTO schema_migrations (version) VALUES (6)")
+    }
+
+    /// Every project saved before the global tab position existed follows it.
+    /// The old code wrote `enabled_edges` on every save, `'top'` unless the
+    /// user chose otherwise, so a stored `'top'` is the old default rather
+    /// than a choice, yet it read as one and no such window followed View ▸
+    /// Tab Position. It becomes `''`, "no choice". A user who did choose top
+    /// alone sees no change, as the global position starts at top. The
+    /// `UPDATE` is safe to re-run (`idempotency`).
+    private func migration007_edgesFollowGlobal() throws {
+        try execute("UPDATE project_state SET enabled_edges = '' WHERE enabled_edges = 'top'")
+        try execute("INSERT INTO schema_migrations (version) VALUES (7)")
     }
 
     /// Fails the migration when any row points at a parent that is not

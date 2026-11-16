@@ -175,7 +175,7 @@ final class BrowserSelectingModeTests: XCTestCase {
         XCTAssertNil(mode.previewSelectors)
     }
 
-    func test_navigationEndsSelectingMode() throws {
+    func test_navigationEndsSelectingMode() async throws {
         settings.set(true, for: UserSettings.browserHiddenItemsNoticeShown)
         let pane = WebBrowserPaneViewController(
             makeEngine: { WebKitBrowserEngine(configuration: $0) },
@@ -184,6 +184,7 @@ final class BrowserSelectingModeTests: XCTestCase {
             homeURL: WebBrowserPaneViewController.blankPage)
         _ = pane.view
         defer { pane.paneContentWillBeDiscarded() }
+        try await pane.loadForTesting(page, html: Self.html)
         pane.beginSelectingItems(store: store)
         let mode = try XCTUnwrap(pane.selectingMode)
         XCTAssertEqual(mode.state, .selecting)
@@ -210,5 +211,64 @@ final class BrowserSelectingModeTests: XCTestCase {
         other.begin()
         other.end(.stop)
         XCTAssertEqual(noticeCount, 1)
+    }
+
+    /// A page with no host has no site to scope an entry to, so selecting
+    /// refuses to begin there rather than save an entry for every site.
+    func test_hostlessPageRefusesToBeginSelecting() async throws {
+        engine.webView.loadHTMLString(Self.html, baseURL: URL(fileURLWithPath: "/tmp/hidden-items-page.html"))
+        for _ in 0..<250 where engine.url?.isFileURL != true || engine.webView.isLoading {
+            try await Task.sleep(for: .milliseconds(20))
+        }
+        XCTAssertEqual(engine.url?.isFileURL, true)
+        let mode = makeMode()
+        mode.begin()
+        XCTAssertEqual(mode.state, .idle)
+        XCTAssertNil(mode.picker)
+        XCTAssertEqual(button.symbolName, BrowserHideItemsButton.idleSymbol)
+        XCTAssertEqual(noticeCount, 0)
+        XCTAssertEqual(try store.items(list: .user, for: URL(string: "https://example.com/")!), [])
+        XCTAssertFalse(BrowserSelectingMode.canSelect(on: URL(string: "about:blank")))
+        XCTAssertFalse(BrowserSelectingMode.canSelect(on: URL(string: "data:text/html,hi")))
+        XCTAssertFalse(BrowserSelectingMode.canSelect(on: nil))
+        XCTAssertTrue(BrowserSelectingMode.canSelect(on: page))
+    }
+
+    /// The pane turns both hide-items buttons off on a hostless page, keeps
+    /// their tooltips, refuses to select there, and turns them on again on
+    /// a page with a site.
+    func test_paneDisablesHideItemsButtonsOnHostlessPage() async throws {
+        settings.set(true, for: UserSettings.browserHiddenItemsNoticeShown)
+        let pane = WebBrowserPaneViewController(
+            makeEngine: { WebKitBrowserEngine(configuration: $0) },
+            engineKind: .safari, minimizedSymbol: "globe",
+            store: EphemeralPaneStateStore(), settings: settings, history: nil,
+            homeURL: WebBrowserPaneViewController.blankPage)
+        _ = pane.view
+        defer { pane.paneContentWillBeDiscarded() }
+        pane.updateHideItemsAvailability()
+        XCTAssertFalse(pane.addressBox.hideItemsButton.isEnabled)
+        XCTAssertFalse(pane.hideFromAgentButton.isEnabled)
+        XCTAssertEqual(pane.addressBox.hideItemsButton.toolTip, BrowserHideItemsButton.idleToolTip)
+        XCTAssertEqual(pane.hideFromAgentButton.toolTip, BrowserHideFromAgentButton.agentIdleToolTip)
+        pane.beginSelectingItems(store: store)
+        pane.beginSelectingItems(store: store, list: .agent)
+        XCTAssertNil(pane.selectingMode)
+        try await pane.loadForTesting(page, html: Self.html)
+        XCTAssertTrue(pane.addressBox.hideItemsButton.isEnabled)
+        XCTAssertTrue(pane.hideFromAgentButton.isEnabled)
+    }
+}
+
+extension WebBrowserPaneViewController {
+    /// Loads `html` as `url` in the front engine, as if served, and waits
+    /// for it to land and the pane to hear of it.
+    func loadForTesting(_ url: URL, html: String) async throws {
+        let webKit = try XCTUnwrap(engine as? WebKitBrowserEngine)
+        webKit.webView.loadSimulatedRequest(URLRequest(url: url), responseHTML: html)
+        for _ in 0..<250 where engine.url != url || webKit.webView.isLoading {
+            try await Task.sleep(for: .milliseconds(20))
+        }
+        XCTAssertEqual(engine.url, url)
     }
 }

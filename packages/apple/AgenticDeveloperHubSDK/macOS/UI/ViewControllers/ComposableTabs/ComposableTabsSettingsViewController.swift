@@ -21,14 +21,19 @@ public final class ComposableTabsSettingsViewController: NSViewController {
     ///   (`ComposableTabsViewRegistry.makeProjectSettingsTopics(for:)`). The
     ///   sheet shows them without knowing what they are about, so a view's
     ///   settings never need a change here (`open-closed`).
+    ///   - useGlobalTabPositions: Drops the project's Tab Bars choice so the
+    ///     window follows the app-wide tab positions again; `nil` hides the
+    ///     button.
     public init(
         isEdgeEnabled: @escaping (Edge) -> Bool,
         setEdgeEnabled: @escaping (Edge, Bool) -> Void,
+        useGlobalTabPositions: (() -> Void)? = nil,
         topics: [ComposableSettings.SettingsPanelViewController] = []
     ) {
         self.panels = ProjectSettingsSplitViewController(
             isEdgeEnabled: isEdgeEnabled,
             setEdgeEnabled: setEdgeEnabled,
+            useGlobalTabPositions: useGlobalTabPositions,
             topics: topics
         )
         super.init(nibName: nil, bundle: nil)
@@ -94,11 +99,13 @@ private final class ProjectSettingsSplitViewController: ComposableSettings.Split
     init(
         isEdgeEnabled: @escaping (Edge) -> Bool,
         setEdgeEnabled: @escaping (Edge, Bool) -> Void,
+        useGlobalTabPositions: (() -> Void)?,
         topics: [ComposableSettings.SettingsPanelViewController]
     ) {
         self.tabsPanel = ProjectTabsSettingsPanel(
             isEdgeEnabled: isEdgeEnabled,
-            setEdgeEnabled: setEdgeEnabled
+            setEdgeEnabled: setEdgeEnabled,
+            useGlobalTabPositions: useGlobalTabPositions
         )
         self.topics = topics
         super.init()
@@ -127,6 +134,8 @@ private final class ProjectTabsSettingsPanel: ComposableSettings.SettingsPanelVi
 
     private let isEdgeEnabled: (Edge) -> Bool
     private let setEdgeEnabled: (Edge, Bool) -> Void
+    private let useGlobalTabPositions: (() -> Void)?
+    private var checkboxes: [NSButton] = []
 
     /// Reading order round the window, so the list looks like the thing it
     /// describes.
@@ -134,10 +143,12 @@ private final class ProjectTabsSettingsPanel: ComposableSettings.SettingsPanelVi
 
     init(
         isEdgeEnabled: @escaping (Edge) -> Bool,
-        setEdgeEnabled: @escaping (Edge, Bool) -> Void
+        setEdgeEnabled: @escaping (Edge, Bool) -> Void,
+        useGlobalTabPositions: (() -> Void)?
     ) {
         self.isEdgeEnabled = isEdgeEnabled
         self.setEdgeEnabled = setEdgeEnabled
+        self.useGlobalTabPositions = useGlobalTabPositions
         super.init(with: ComposableSettings.SettingsPanelDescriptor(
             title: "Tabs",
             icon: NSImage(systemSymbolName: "rectangle.3.group", accessibilityDescription: "Tabs")
@@ -162,6 +173,13 @@ private final class ProjectTabsSettingsPanel: ComposableSettings.SettingsPanelVi
                     + "as you make them and are saved with the project. Spacing is the "
                     + "opposite: it belongs to every window, and is set under Settings > "
                     + "Appearance > Spacing."
+            ),
+            .init(
+                title: "Use Global Setting",
+                body: "Until you change this project's tab bars, its window follows the "
+                    + "app-wide tab position (View > Tab Position, or Settings > General). "
+                    + "Use Global Setting drops this project's own choice, so the window "
+                    + "follows the app-wide position again."
             )
         ])
     }
@@ -192,9 +210,29 @@ private final class ProjectTabsSettingsPanel: ComposableSettings.SettingsPanelVi
                 )
             }
             group.addSettingSubview(checkbox)
+            checkboxes.append(checkbox)
+        }
+
+        if useGlobalTabPositions != nil {
+            let button = NSButton(
+                title: "Use Global Setting",
+                target: self,
+                action: #selector(useGlobal(_:))
+            )
+            button.bezelStyle = .rounded
+            button.toolTip = "Follow the app-wide tab position instead of this project's own tab bars"
+            button.accessibilityID("project-settings.tabs.use-global")
+            group.addSettingSubview(button)
         }
 
         addGroup(group)
+    }
+
+    @objc private func useGlobal(_ sender: Any?) {
+        useGlobalTabPositions?()
+        for (index, checkbox) in checkboxes.enumerated() {
+            checkbox.state = isEdgeEnabled(Self.edges[index]) ? .on : .off
+        }
     }
 
     @objc private func toggleEdge(_ sender: NSButton) {

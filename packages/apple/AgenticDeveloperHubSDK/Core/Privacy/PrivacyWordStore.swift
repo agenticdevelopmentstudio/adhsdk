@@ -98,6 +98,13 @@ extension Array where Element == PrivacyWord {
     public func filter(for url: URL?) -> TextSubstitutionFilter {
         TextSubstitutionFilter(pairs: self.filter { $0.applies(at: url) }.map(\.pair))
     }
+
+    /// Every enabled word whatever its sites, as one filter: what conceals a
+    /// list that spans sites, such as the browser's history, where the words
+    /// of the page in front are not the words of each line.
+    public var everySiteFilter: TextSubstitutionFilter {
+        TextSubstitutionFilter(pairs: self.filter(\.isEnabled).map(\.pair))
+    }
 }
 
 /// The privacy words (``PrivacyWord``) kept in the keychain and nowhere

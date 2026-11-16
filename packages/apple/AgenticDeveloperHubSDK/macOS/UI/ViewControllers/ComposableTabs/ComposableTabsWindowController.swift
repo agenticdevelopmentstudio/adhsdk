@@ -800,6 +800,7 @@ public final class ComposableTabsWindowController: WindowController<NSViewContro
         let settings = ComposableTabsSettingsViewController(
             isEdgeEnabled: { [weak self] edge in self?.tabbed.isEdgeEnabled(edge) ?? false },
             setEdgeEnabled: { [weak self] edge, enabled in self?.setEdgeEnabled(edge, enabled) },
+            useGlobalTabPositions: { [weak self] in self?.useGlobalTabPositions() },
             topics: project.layout.registry.makeProjectSettingsTopics(for: project)
         )
         contentViewController.presentAsSheet(settings)
@@ -815,6 +816,18 @@ public final class ComposableTabsWindowController: WindowController<NSViewContro
         guard applyEdge(edge, enabled) else { return }
         hasExplicitEdgeChoice = true
         persistAllTabs()
+    }
+
+    /// Drops the project's own Tab Bars choice, so the window follows the
+    /// app-wide tab positions again, live, as a project that never chose does.
+    /// The stored choice is cleared first (`enabledEdges: []` writes "no
+    /// choice"), then the global edges are applied; that save writes no edges,
+    /// so the cleared choice stays cleared.
+    public func useGlobalTabPositions() {
+        guard !isReloadingTabs, !isClosing else { return }
+        hasExplicitEdgeChoice = false
+        persistAllTabs(clearingEdgeChoice: true)
+        followGlobalTabPositions()
     }
 
     /// Turns `edge` on or off and tops a newly enabled edge up, without making
@@ -840,7 +853,9 @@ public final class ComposableTabsWindowController: WindowController<NSViewContro
     /// its own — every enable before any disable, for the reason
     /// `enabledTabEdgeNames` gives — and saves the tabs any newly enabled edge
     /// gained. The save writes no edges, so the project keeps following.
-    private func followGlobalTabPositions() {
+    /// Internal for tests, which cannot see the setting's live delivery: the
+    /// static setting is bound to the `UserSettings.shared` of its first use.
+    func followGlobalTabPositions() {
         guard !hasExplicitEdgeChoice, !isReloadingTabs, !isClosing else { return }
         let wanted = ProjectWorkspace.globalEnabledEdges
         var changed = false
@@ -1872,14 +1887,21 @@ public final class ComposableTabsWindowController: WindowController<NSViewContro
     /// the mirror dresses calls back, and a write per tab would put a
     /// half-mirrored project in the database. The mirror's caller writes once,
     /// for all of them, when the mirror is done.
-    private func persistAllTabs() {
+    private func persistAllTabs(clearingEdgeChoice: Bool = false) {
         guard !isReloadingTabs, !isClosing, !isMirroringArrangement, !isAdoptingConfiguration else { return }
+        let edges: [Edge]?
+        if clearingEdgeChoice {
+            // An empty list is stored as "no choice".
+            edges = []
+        } else {
+            // Edges are written only once the user has chosen them; until
+            // then `nil` writes none, and the project keeps following.
+            edges = hasExplicitEdgeChoice ? Edge.allCases.filter { tabbed.isEdgeEnabled($0) } : nil
+        }
         project.persistTabs(
             currentTabRecords().map(\.record),
             activeTabID: tabbed.activeTabID,
-            // Edges are written only once the user has chosen them; until
-            // then `nil` writes none, and the project keeps following.
-            enabledEdges: hasExplicitEdgeChoice ? Edge.allCases.filter { tabbed.isEdgeEnabled($0) } : nil
+            enabledEdges: edges
         )
     }
 

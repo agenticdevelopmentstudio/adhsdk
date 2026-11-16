@@ -220,7 +220,7 @@ final class BrowserAgentViewsTests: XCTestCase {
 
     // MARK: Source
 
-    func test_sourceShowsSameHTML() {
+    func test_sourceShowsSameHTML() async throws {
         let page = samplePage()
         let source = BrowserAgentSourceViewController()
         _ = source.view
@@ -228,6 +228,17 @@ final class BrowserAgentViewsTests: XCTestCase {
         XCTAssertEqual(source.textView.string, page.html())
         XCTAssertFalse(source.textView.isEditable)
         XCTAssertTrue(source.textView.isSelectable)
+        // The highlight lands from the off-main lex, on the same text.
+        let plain = source.textView.textStorage?.attribute(.foregroundColor, at: 0, effectiveRange: nil) as? NSColor
+        await source.highlighting?.value
+        XCTAssertEqual(source.textView.string, page.html())
+        let storage = try XCTUnwrap(source.textView.textStorage)
+        var colors = Set<NSColor>()
+        storage.enumerateAttribute(.foregroundColor, in: NSRange(location: 0, length: storage.length)) { value, _, _ in
+            if let color = value as? NSColor { colors.insert(color) }
+        }
+        XCTAssertGreaterThan(colors.count, 1, "tags are colored apart from text")
+        XCTAssertNotNil(plain)
     }
 
     func test_sourceHighlightsFourKinds() {
@@ -283,6 +294,33 @@ final class BrowserAgentViewsTests: XCTestCase {
         views.setNeedsRefresh()
         try? await Task.sleep(nanoseconds: 200_000_000)
         XCTAssertEqual(counter.reads, 2, "Website never reads")
+    }
+
+    /// Coming back from Website never shows the page read before: the page
+    /// may have changed meanwhile, so the view is blank until the rebuild
+    /// lands (final review A-M5).
+    func test_returningFromWebsiteDoesNotShowThePreviousPage() async {
+        let counter = Counter()
+        let page = samplePage()
+        let views = BrowserAgentViews(
+            interval: 0.05,
+            ruleList: { try await BrowserContentRules.blockEverything() },
+            read: {
+                counter.reads += 1
+                if counter.reads > 1 { try? await Task.sleep(nanoseconds: 300_000_000) }
+                return page
+            })
+        views.setMode(.agentSource)
+        let first = await waitUntil { views.shownPage != nil }
+        XCTAssertTrue(first)
+        XCTAssertTrue(views.source.textView.string.contains("Body text"), views.source.textView.string)
+        views.setMode(.website)
+        views.setMode(.agentSource)
+        XCTAssertNil(views.shownPage, "the earlier page is not the current one")
+        XCTAssertFalse(views.source.textView.string.contains("Body text"), views.source.textView.string)
+        let rebuilt = await waitUntil { views.shownPage != nil }
+        XCTAssertTrue(rebuilt)
+        XCTAssertTrue(views.source.textView.string.contains("Body text"), views.source.textView.string)
     }
 
     // MARK: Parity with the tools

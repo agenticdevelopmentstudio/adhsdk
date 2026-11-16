@@ -191,15 +191,38 @@ public struct SafariExtensionLibrary: Sendable {
     /// The first symbolic link anywhere under `folder`, as a path relative to
     /// it; nil when there is none. A link is not followed, so one pointing
     /// out of the folder (at the home folder, say) is reported, not walked.
+    ///
+    /// It fails closed: a folder that is itself a link, or one that cannot be
+    /// read, is reported as `"."`, and an item whose type cannot be read is
+    /// reported as if it were a link, since a check that cannot look must not
+    /// say there is nothing there.
     public static func symbolicLink(in folder: URL) -> String? {
         let fileManager = FileManager.default
-        guard let walk = fileManager.enumerator(atPath: folder.path) else { return nil }
-        for case let relative as String in walk {
-            let type = (try? fileManager.attributesOfItem(
-                atPath: folder.appendingPathComponent(relative).path))?[.type] as? FileAttributeType
-            if type == .typeSymbolicLink { return relative }
+        // `attributesOfItem` does not follow a link, so this is an lstat.
+        guard let rootType = (try? fileManager.attributesOfItem(atPath: folder.path))?[.type] as? FileAttributeType,
+              rootType == .typeDirectory else { return "." }
+        var failed: String?
+        guard let walk = fileManager.enumerator(
+            at: folder, includingPropertiesForKeys: [.isSymbolicLinkKey], options: [],
+            errorHandler: { url, _ in
+                failed = relativePath(of: url, in: folder)
+                return false
+            }) else { return "." }
+        for case let url as URL in walk {
+            let relative = relativePath(of: url, in: folder)
+            guard let isLink = (try? url.resourceValues(forKeys: [.isSymbolicLinkKey]))?.isSymbolicLink else {
+                return relative
+            }
+            if isLink { return relative }
         }
-        return nil
+        return failed
+    }
+
+    /// `url`'s path below `folder`, or its last component when it is not
+    /// spelled under it.
+    private static func relativePath(of url: URL, in folder: URL) -> String {
+        let base = folder.path.hasSuffix("/") ? folder.path : folder.path + "/"
+        return url.path.hasPrefix(base) ? String(url.path.dropFirst(base.count)) : url.lastPathComponent
     }
 
     /// Moves `id`'s staged files into place, replacing the installed copy.
@@ -231,11 +254,41 @@ public struct SafariExtensionLibrary: Sendable {
 
     /// Downloads `id`'s package from the Chrome Web Store.
     public static func download(id: String, session: URLSession = .shared) async throws -> Data {
-        let (data, response) = try await session.data(from: WebStoreExtension.downloadURL(id: id))
+        let data = try await download(from: WebStoreExtension.downloadURL(id: id), session: session)
+        guard !data.isEmpty else { throw WebStoreExtension.Failure.download("the store sent nothing") }
+        return data
+    }
+
+    /// The most an extension download may be: a package larger than this is
+    /// refused rather than read into memory.
+    public static let maximumDownloadSize = 128 * 1024 * 1024
+
+    /// The body at `url`, read no further than `limit` bytes: a larger body,
+    /// announced or not, throws `Failure.download` and is not read on. A
+    /// non-2xx status throws too. Runs off the main actor (nonisolated).
+    public static func download(
+        from url: URL, limit: Int = maximumDownloadSize, session: URLSession = .shared
+    ) async throws -> Data {
+        let (bytes, response) = try await session.bytes(from: url)
         if let http = response as? HTTPURLResponse, !(200..<300).contains(http.statusCode) {
+            bytes.task.cancel()
             throw WebStoreExtension.Failure.download("HTTP \(http.statusCode)")
         }
-        guard !data.isEmpty else { throw WebStoreExtension.Failure.download("the store sent nothing") }
+        let tooLarge = WebStoreExtension.Failure.download(
+            "it is larger than \(ByteCountFormatter.string(fromByteCount: Int64(limit), countStyle: .file))")
+        if response.expectedContentLength > Int64(limit) {
+            bytes.task.cancel()
+            throw tooLarge
+        }
+        var data = Data()
+        if response.expectedContentLength > 0 { data.reserveCapacity(Int(response.expectedContentLength)) }
+        for try await byte in bytes {
+            guard data.count < limit else {
+                bytes.task.cancel()
+                throw tooLarge
+            }
+            data.append(byte)
+        }
         return data
     }
 

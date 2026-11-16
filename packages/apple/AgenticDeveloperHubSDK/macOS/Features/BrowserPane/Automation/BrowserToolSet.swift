@@ -573,10 +573,14 @@ public final class BrowserToolSet: ChatToolSource, @unchecked Sendable {
         let now = directory.browserPanes().first { $0.id == pane.id } ?? pane
         // Read here, on the main actor, and only when the setting allows it.
         let backForward = now.historyAccess == .currentTab ? now.backForward : []
+        // History lists other sites' pages, so each line is concealed with
+        // every enabled word whatever its sites, not only the page in
+        // front's (`historyPrivacy`); a closed side refuses.
+        let linePrivacy = now.historyPrivacy.combined(with: privacy)
         return try await concealed(name, args, privacy, paneID: pane.id) { args in
             try await BrowserHistoryTool.run(
                 access: now.historyAccess, query: args.optionalString("query"), limit: limit,
-                store: now.historyStore, backForward: backForward, privacy: privacy)
+                store: now.historyStore, backForward: backForward, privacy: linePrivacy)
         }
     }
 
@@ -810,11 +814,11 @@ public final class BrowserToolSet: ChatToolSource, @unchecked Sendable {
             "pane_id": paneID,
             "interactive_only": ToolJSONSchema.boolean("Only elements that can be acted on"),
             "depth": ToolJSONSchema.integer("Maximum tree depth"),
-            "scope": ToolJSONSchema.string("A ref or CSS selector to snapshot under"),
+            "scope": ToolJSONSchema.string("A ref from the last snapshot to snapshot under; a ref that names nothing gives the whole page"),
             "include_urls": ToolJSONSchema.boolean("Add [url=…] to links"),
             "delta": ToolJSONSchema.boolean("Only what changed since the last snapshot, in page order: lines added (with refs), lines removed, and lines renumbered (same line, new ref)")
         ]),
-        tool("browser_text", "The visible text of the page (its main region, else the whole body).", ["pane_id": paneID, "scope": ToolJSONSchema.string("A ref or CSS selector")]),
+        tool("browser_text", "The visible text of the page (its main region, else the whole body).", ["pane_id": paneID, "scope": ToolJSONSchema.string("A ref from the last snapshot; a ref that names nothing gives the whole page")]),
         tool("browser_find", "Find elements from the last snapshot (taking one if there is none) whose name or text contains the given text.", ["pane_id": paneID, "text": ToolJSONSchema.string("Text to look for, case-insensitive")], required: ["text"]),
         tool("browser_click", "Click an element by ref.", refGen.merging(["native": ToolJSONSchema.boolean("Send a real mouse click instead of a DOM click")]) { $1 }, required: ["ref", "generation"]),
         tool("browser_type", "Type text into a textbox, textarea or contenteditable key by key, appending to what is there. A select takes browser_select; a checkbox, radio or button takes browser_click.", refGen.merging(["text": ToolJSONSchema.string("Text to type"), "submit": ToolJSONSchema.boolean("Press Enter afterwards")]) { $1 }, required: ["ref", "generation", "text"]),

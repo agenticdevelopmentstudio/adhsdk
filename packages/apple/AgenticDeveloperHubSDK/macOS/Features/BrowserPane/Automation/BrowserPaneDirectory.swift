@@ -22,6 +22,13 @@ public struct BrowserPaneHandle {
     /// The pane's Agent Privacy, with the words as they stood when the handle
     /// was made — fresh for each call once it is dequeued, like `access`.
     public let agentPrivacy: BrowserAgentPrivacy
+    /// What `browser_history` conceals with: the pane's Agent Privacy over
+    /// every enabled word whatever its sites
+    /// (`WebBrowserPaneViewController.agentHistoryPrivacy()`), since history
+    /// lists other sites' pages. A handle made without one, while
+    /// `agentPrivacy` is on, gives `unavailable`, so history is refused
+    /// rather than concealed with only the page in front's words.
+    public let historyPrivacy: BrowserAgentPrivacy
     /// The pane's effective Agent can see history setting — its own
     /// override, else the global value — as it stood when the handle was
     /// made, fresh for each call like `access`.
@@ -40,6 +47,7 @@ public struct BrowserPaneHandle {
         engine: BrowserEngineKind = .safari,
         access: BrowserAgentAccess = .full, isPausedForAgent: Bool = false,
         agentPrivacy: BrowserAgentPrivacy = .off,
+        historyPrivacy: BrowserAgentPrivacy? = nil,
         historyAccess: BrowserAgentHistoryAccess = .none,
         historyStore: BrowserHistoryStore? = nil,
         hidesImages: Bool
@@ -48,6 +56,7 @@ public struct BrowserPaneHandle {
         self.engine = engine
         self.access = access; self.isPausedForAgent = isPausedForAgent
         self.agentPrivacy = agentPrivacy
+        self.historyPrivacy = historyPrivacy ?? (agentPrivacy.isOn ? .unavailable : .off)
         self.historyAccess = historyAccess
         self.historyStore = historyStore
         self.hidesImages = hidesImages

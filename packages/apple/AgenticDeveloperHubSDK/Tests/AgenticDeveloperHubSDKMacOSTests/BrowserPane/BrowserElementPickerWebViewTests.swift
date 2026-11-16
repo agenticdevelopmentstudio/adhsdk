@@ -97,6 +97,15 @@ final class BrowserElementPickerWebViewTests: XCTestCase {
         XCTAssertEqual(candidate.allLikeItCount, 2)
     }
 
+    /// A classless element has no "like it" selector: the bare tag would
+    /// hide every `div` on the site.
+    func test_classlessElementHasNoLooseSelector() async throws {
+        let candidate = try await pick("long")
+        XCTAssertNil(candidate.allLikeIt)
+        XCTAssertEqual(candidate.allLikeItCount, 0)
+        XCTAssertFalse(candidate.allLikeItAllowed)
+    }
+
     func test_looseSelectorAbsentWhenSameAsThisItem() async throws {
         let candidate = try await pick("only")
         XCTAssertNil(candidate.allLikeIt)

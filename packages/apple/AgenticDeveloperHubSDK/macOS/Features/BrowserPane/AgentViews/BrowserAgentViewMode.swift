@@ -153,14 +153,22 @@ final class BrowserAgentViews {
 
     /// Switches the mode. Entering an agent mode rebuilds at once; Website
     /// cancels whatever was pending, and the page underneath is untouched.
-    /// The last page goes into the newly shown view at once, so it keeps the
-    /// previous content while the rebuild runs rather than a stale one.
+    /// Moving between the two agent modes shows the last page at once, as it
+    /// is still the current one. Coming from Website it shows the blank page
+    /// until the rebuild lands: the page, its address or its agent list may
+    /// have changed since, and an earlier page must never pass for this one.
     func setMode(_ newMode: BrowserAgentViewMode) {
         guard newMode != mode else { return }
+        let previous = mode
         mode = newMode
         cancelPending()
         guard newMode != .website else { return }
-        if let shownPage { show(shownPage) }
+        if previous == .website {
+            shownPage = nil
+            display(.blank)
+        } else if let shownPage {
+            show(shownPage)
+        }
         startRebuild()
     }
 
@@ -209,6 +217,10 @@ final class BrowserAgentViews {
 
     private func show(_ page: AgentPage) {
         shownPage = page
+        display(page)
+    }
+
+    private func display(_ page: AgentPage) {
         switch mode {
         case .website: break
         case .agentPreview: preview.show(page)

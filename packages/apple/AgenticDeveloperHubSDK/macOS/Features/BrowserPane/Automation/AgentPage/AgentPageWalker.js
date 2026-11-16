@@ -6,9 +6,11 @@
 // selector each node records).
 //
 // `__adkAgentWalk({ allowlist, excludeSelectors, scopeRef, interactiveOnly,
-// maxDepth, timeoutMs, keepRefs })` returns a JSON string: the `AgentWalkerPayload`
-// (`{url, title, generation, warnings, root}`) AgentPageBuilder re-validates,
-// or `{"error": "timeout"}` when the walk outlives `timeoutMs` (default 1500).
+// maxDepth, timeoutMs, keepRefs, hideImages })` returns a JSON string: the
+// `AgentWalkerPayload` (`{url, title, generation, warnings, root}`)
+// AgentPageBuilder re-validates, `{"error": "timeout"}` when the walk outlives
+// `timeoutMs` (default 1500), or `{"error": "agent-list"}` when an agent-list
+// selector cannot be evaluated (fail closed: nothing is shown).
 //
 // It never visits a node — nor anything beneath it — that is hidden (computed
 // display none, computed visibility hidden, the `hidden` attribute,
@@ -19,7 +21,7 @@
 // stays what it was for the same page.
 (function () {
   'use strict';
-  const VERSION = 5;
+  const VERSION = 6;
   if (globalThis.__adkAgentWalkVersion === VERSION && typeof globalThis.__adkAgentWalk === 'function') { return; }
 
   const DEFAULT_TIMEOUT_MS = 1500;
@@ -56,8 +58,8 @@
     checkbox: 'checkbox', switch: 'checkbox', menuitemcheckbox: 'checkbox', radio: 'radio',
     menuitemradio: 'radio', textbox: 'textField', searchbox: 'textField', spinbutton: 'textField',
     slider: 'textField', combobox: 'select', listbox: 'select', option: 'option', heading: 'heading',
-    list: 'list', listitem: 'listItem', table: 'table', grid: 'table', treegrid: 'table', row: 'row',
-    rowgroup: 'rowGroup', cell: 'cell', gridcell: 'cell', columnheader: 'columnHeader',
+    list: 'list', listitem: 'listItem', table: 'table', grid: 'grid', treegrid: 'treeGrid', row: 'row',
+    rowgroup: 'rowGroup', cell: 'cell', gridcell: 'gridCell', columnheader: 'columnHeader',
     rowheader: 'rowHeader', img: 'image' };
   // The `type` a role-only text field carries, so the snapshot prints the
   // role the legacy walk printed (AgentSnapshotMapper reads `type`); a
@@ -66,8 +68,8 @@
   // Kinds the snapshot treats as generic: collapsed into one text line, or
   // flattened into their parent.
   const GENERIC_KINDS = new Set(['paragraph', 'label']);
-  const NAME_FROM_CONTENT = new Set(['button', 'link', 'heading', 'cell', 'columnHeader', 'rowHeader',
-    'option']);
+  const NAME_FROM_CONTENT = new Set(['button', 'link', 'heading', 'cell', 'gridCell', 'columnHeader',
+    'rowHeader', 'option']);
   // Roles the legacy walk named from content whose kind is not: they keep
   // that name when folded into checkbox and radio.
   const CONTENT_NAMED_ROLES = new Set(['switch', 'menuitemcheckbox', 'menuitemradio']);
@@ -102,8 +104,8 @@
     const tick = () => { if (Date.now() >= deadline) { throw TIMED_OUT; } };
     let finderLeftMs = timeoutMs * FINDER_SHARE;
 
-    // Every agent-list selector, each on its own: one the document cannot
-    // evaluate excludes nothing and is reported, and stops no other.
+    // Every agent-list selector. One the document cannot evaluate would
+    // exclude nothing, so the whole walk is refused rather than failing open.
     const warnings = [];
     const excluded = new Set();
     let selectors = options.excludeSelectors || [];
@@ -113,9 +115,11 @@
       try {
         document.querySelectorAll(selector).forEach((el) => excluded.add(el));
       } catch (e) {
-        warnings.push('invalid agent-list selector: ' + selector);
+        return { error: 'agent-list' };
       }
     }
+    // Images under Hide Images are never visited, so they spend no ref.
+    const hideImages = options.hideImages === true;
 
     const hiddenMemo = new Map(), classMemo = new Map(), descendantMemo = new Map();
 
@@ -123,6 +127,9 @@
       if (excluded.has(el)) { return true; }
       const tag = el.tagName.toLowerCase();
       if (SKIPPED_TAGS.has(tag)) { return true; }
+      if (hideImages && (tag === 'img' || collapse(el.getAttribute('role') || '').split(' ')[0] === 'img')) {
+        return true;
+      }
       if (el.hidden || el.hasAttribute('hidden') || el.getAttribute('aria-hidden') === 'true') { return true; }
       if (tag === 'input' && (el.getAttribute('type') || '').toLowerCase() === 'hidden') { return true; }
       if (tag === 'img' && el.getAttribute('alt') === '') { return true; }
@@ -454,7 +461,9 @@
       if (out.length > start && isSpace(out[out.length - 1])) { out.pop(); }
     }
 
-    // A scope inside anything hidden or excluded reads as an empty page.
+    // A scope inside anything hidden or excluded is answered exactly as a
+    // ref that names nothing: the whole page. Two different answers would
+    // tell the agent whether a withheld element exists.
     function scopeIsWithheld(el) {
       for (let at = el; at && at !== document.documentElement; at = at.parentElement) {
         if (at.nodeType === Node.ELEMENT_NODE && isHiddenUncached(at)) { return true; }
@@ -462,7 +471,11 @@
       return false;
     }
 
-    const scopeEl = options.scopeRef ? kitchen.resolveScope(options.scopeRef) : null;  // before refs reset
+    // The runtime refuses refs to withheld elements from here on (resolve
+    // and resolveScope), whatever walk handed them out.
+    if (typeof kitchen.setWithheld === 'function') { kitchen.setWithheld(Array.from(excluded)); }
+    const resolved = options.scopeRef ? kitchen.resolveScope(options.scopeRef) : null;  // before refs reset
+    const scopeEl = (resolved && !scopeIsWithheld(resolved)) ? resolved : null;
     // `keepRefs`: a reading walk that leaves the last snapshot's refs valid.
     const generation = kitchen.beginWalk(options.keepRefs === true);
     const depth = (typeof options.maxDepth === 'number' && options.maxDepth > 0) ? options.maxDepth : null;
@@ -471,13 +484,9 @@
 
     let root;
     if (scopeEl) {
-      if (scopeIsWithheld(scopeEl)) {
-        root = documentNode([]);
-      } else {
-        const built = [];
-        build(scopeEl, depth, built);
-        root = (built.length === 1 && built[0].kind !== 'text') ? built[0] : documentNode(built);
-      }
+      const built = [];
+      build(scopeEl, depth, built);
+      root = (built.length === 1 && built[0].kind !== 'text') ? built[0] : documentNode(built);
     } else {
       const children = [];
       if (document.body) { childrenOf(document.body, depth, children); }

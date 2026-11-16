@@ -43,10 +43,22 @@ public final class BrowserHistoryListModel {
     /// however the store's answers are ordered.
     private var generation = 0
     private var reloadTask: Task<Void, Never>?
+    nonisolated(unsafe) private var storeObserver: NSObjectProtocol?
 
     public init(store: BrowserHistoryStore, pageSize: Int = 200) {
         self.store = store
         self.pageSize = pageSize
+        // A write from anywhere — a pane recording a visit, another list's
+        // removal — rereads the list, which also brings its times up to date.
+        storeObserver = NotificationCenter.default.addObserver(
+            forName: BrowserHistoryStore.didChangeNotification, object: store, queue: .main
+        ) { [weak self] _ in
+            MainActor.assumeIsolated { self?.scheduleReload() }
+        }
+    }
+
+    deinit {
+        if let storeObserver { NotificationCenter.default.removeObserver(storeObserver) }
     }
 
     /// Rereads the list for the current filter and returns once the latest

@@ -119,4 +119,39 @@ final class BrowserHistoryListModelTests: XCTestCase {
         XCTAssertEqual(try store.count(), 0)
         XCTAssertTrue(model.visits.isEmpty)
     }
+
+    /// A visit recorded while the list is open appears in it (final review
+    /// C-M2).
+    func test_aVisitRecordedElsewhereRereadsTheList() async throws {
+        let store = try makeStore()
+        try record(store, "https://example.com/1", "One", at: 1_000)
+        let model = BrowserHistoryListModel(store: store)
+        await model.reload()
+        XCTAssertEqual(model.visits.map(\.title), ["One"])
+
+        let reread = expectation(description: "the list reread")
+        model.onChange = { if model.visits.count == 2 { reread.fulfill() } }
+        _ = try await store.perform { try $0.record(URL(string: "https://example.com/2")!, title: "Two") }
+        await fulfillment(of: [reread], timeout: 5)
+        XCTAssertEqual(model.visits.map(\.title), ["Two", "One"])
+    }
+
+    /// Return opens every selected visit, not only the first (final review
+    /// C-M2).
+    func test_panelOpensEverySelectedVisit() async throws {
+        let store = try makeStore()
+        try record(store, "https://example.com/1", "One", at: 1_000)
+        try record(store, "https://example.com/2", "Two", at: 2_000)
+        try record(store, "https://example.com/3", "Three", at: 3_000)
+        let model = BrowserHistoryListModel(store: store)
+        var opened: [String] = []
+        let panel = BrowserHistoryPanelViewController(model: model, open: { opened.append($0.absoluteString) })
+        _ = panel.view
+        await model.reload()
+
+        panel.selectRows(IndexSet([0, 2]))
+        panel.openSelected()
+
+        XCTAssertEqual(opened, ["https://example.com/3", "https://example.com/1"])
+    }
 }

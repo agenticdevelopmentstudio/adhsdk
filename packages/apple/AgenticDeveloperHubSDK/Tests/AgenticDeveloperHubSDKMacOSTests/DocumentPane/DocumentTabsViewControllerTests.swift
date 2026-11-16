@@ -24,6 +24,25 @@ final class DocumentTabsViewControllerTests: XCTestCase {
         XCTAssertNil(controller.focusedEditor?.fileURL, "a new tab arrives with an empty editor, never zero panes")
     }
 
+    /// With the tabs off the top edge, showing a file the window already holds
+    /// selects its tab rather than opening a second editor over the same file
+    /// (final review C-I2).
+    func testShowingAHeldFileOffTheTopEdgeSelectsItsTab() throws {
+        let controller = try makeController()
+        controller.overrideTabPositions(TabPositions([.left]))
+        controller.loadViewIfNeeded()
+        XCTAssertEqual(controller.primaryEdge, .left)
+        let url = URL(fileURLWithPath: "/tmp/example/Held.swift")
+
+        controller.show(url)
+        controller.openInNewTab(URL(fileURLWithPath: "/tmp/example/Other.swift"))
+        controller.show(url)
+
+        XCTAssertEqual(controller.tabs(on: .left).count, 2, "the held file must not get a second tab")
+        XCTAssertTrue(controller.holds(url))
+        XCTAssertEqual(controller.focusedEditor?.fileURL?.lastPathComponent, "Held.swift")
+    }
+
     func testTheTabIsTitledAfterTheFile() throws {
         let controller = try makeController()
         controller.loadViewIfNeeded()

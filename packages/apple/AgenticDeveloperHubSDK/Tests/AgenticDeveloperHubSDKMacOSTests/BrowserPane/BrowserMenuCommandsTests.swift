@@ -38,9 +38,19 @@ final class BrowserMenuCommandsTests: XCTestCase {
 
     private func contributions(
         pane: WebBrowserPaneViewController?,
+        canShowHistory: Bool = true,
         showHistory: @escaping () -> Void = {}
     ) -> [MenuContribution] {
-        BrowserMenuCommands(keyPane: { pane }, showHistory: showHistory).contributions()
+        BrowserMenuCommands(
+            keyPane: { pane }, canShowHistory: { canShowHistory }, showHistory: showHistory
+        ).contributions()
+    }
+
+    /// Show History is disabled while the host has set no history store
+    /// (final review C-M2).
+    func test_showHistoryDisabledWithoutAStore() throws {
+        let items = contributions(pane: nil, canShowHistory: false)
+        XCTAssertFalse(try item(BrowserMenuCommands.ItemID.showHistory, in: items).isEnabled())
     }
 
     private func item(_ id: String, in items: [MenuContribution]) throws -> MenuContribution {
@@ -141,5 +151,35 @@ final class BrowserMenuCommandsTests: XCTestCase {
         XCTAssertTrue(layered.get(UserSettings.browserPrivacyShowToolbar))
         XCTAssertFalse(global.get(UserSettings.browserPrivacyShowToolbar), "the global value moved")
         XCTAssertEqual(toggle.dynamicTitle?(), "Hide Privacy Toolbar")
+    }
+
+    /// ⌘[ and ⌘] act on a browser pane only while it has keyboard focus, so
+    /// the keys reach an editor or terminal beside it (final review C-M1).
+    func test_keyCommandsNeedThePaneFocused() throws {
+        final class Focusable: NSView {
+            override var acceptsFirstResponder: Bool { true }
+        }
+        let pane = makePane()
+        let window = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 400, height: 300),
+            styleMask: [.titled], backing: .buffered, defer: false)
+        window.isReleasedWhenClosed = false
+        defer { window.close() }
+        let content = NSView(frame: window.contentRect(forFrameRect: window.frame))
+        window.contentView = content
+        pane.view.frame = NSRect(x: 0, y: 0, width: 200, height: 300)
+        content.addSubview(pane.view)
+        let inside = Focusable(frame: NSRect(x: 0, y: 0, width: 10, height: 10))
+        pane.view.addSubview(inside)
+        let beside = Focusable(frame: NSRect(x: 210, y: 0, width: 10, height: 10))
+        content.addSubview(beside)
+        BrowserPaneFocus.shared.note(pane)
+
+        XCTAssertTrue(window.makeFirstResponder(beside))
+        XCTAssertTrue(WebBrowserPaneViewController.keyPane(in: window) === pane, "the menu still finds it")
+        XCTAssertNil(WebBrowserPaneViewController.focusedKeyPane(in: window))
+
+        XCTAssertTrue(window.makeFirstResponder(inside))
+        XCTAssertTrue(WebBrowserPaneViewController.focusedKeyPane(in: window) === pane)
     }
 }

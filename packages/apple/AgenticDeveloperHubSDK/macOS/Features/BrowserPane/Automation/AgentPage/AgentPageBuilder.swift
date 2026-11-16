@@ -80,8 +80,9 @@ public struct AgentPageBuilder: Sendable {
         guard let payload else { return .unavailable(Self.malformedReason, url: nil) }
         let decoder = JSONDecoder()
         guard let decoded = try? decoder.decode(AgentWalkerPayload.self, from: payload) else {
-            if let failure = try? decoder.decode(AgentWalkerFailure.self, from: payload), failure.error == "timeout" {
-                return .unavailable(Self.timeoutReason, url: nil)
+            if let failure = try? decoder.decode(AgentWalkerFailure.self, from: payload) {
+                if failure.error == "timeout" { return .unavailable(Self.timeoutReason, url: nil) }
+                if failure.error == "agent-list" { return .unavailable(Self.agentListReason, url: nil) }
             }
             return .unavailable(Self.malformedReason, url: nil)
         }
@@ -95,6 +96,9 @@ public struct AgentPageBuilder: Sendable {
 
     static let timeoutReason = "the page took too long to read."
     static let malformedReason = "the page's reading could not be understood."
+    /// An agent-list selector the page could not evaluate: it would hide
+    /// nothing, so nothing is shown.
+    static let agentListReason = "the agent's hidden-items list could not be applied to this page."
 
     // MARK: Nodes
 

@@ -154,4 +154,46 @@ final class TabPositionSettingTests: XCTestCase {
         XCTAssertGreaterThanOrEqual(accessoryFrame.minX, barFrame.maxX - 0.5, "it is not inside the left bar")
         XCTAssertFalse(accessory.isDescendant(of: leftBar))
     }
+
+    // MARK: - Project windows
+
+    /// A project with its own Tab Bars choice can be returned to following the
+    /// app-wide positions, and keeps following them once reopened (final
+    /// review C-I1).
+    func test_projectWindowUseGlobalSettingFollowsTheAppWidePositions() throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent("tab-positions-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let database = try ProjectDatabase(path: root.appendingPathComponent("Test.db").path)
+        let repo = GitRepo(path: root.path, name: "Test")
+        try database.insert(repo)
+        let project = ProjectWorkspace(repo: repo, database: database)
+        let stored = TabRecord(title: "Tab 1", root: project.layout.blueprint())
+        project.persistTabs([stored], activeTabID: stored.id, enabledEdges: [.top, .left])
+        UserSettings.tabsPositions.value = TabPositions([.right])
+
+        let window = ComposableTabsWindowController(project: project)
+        window.showWindow(nil)
+        defer { window.close() }
+        XCTAssertEqual(window.enabledTabEdgeNames, ["top", "left"], "the project's own choice wins")
+
+        window.useGlobalTabPositions()
+        XCTAssertEqual(window.enabledTabEdgeNames, ["right"])
+        XCTAssertNil(try database.loadTabs(repoID: repo.id).enabledEdges, "the stored choice is cleared")
+
+        // The static setting's live delivery is bound to the
+        // `UserSettings.shared` of its first use, not the one setUp swapped
+        // in, so the observer's action is run as it would be delivered.
+        UserSettings.tabsPositions.value = TabPositions([.bottom])
+        window.followGlobalTabPositions()
+        XCTAssertEqual(window.enabledTabEdgeNames, ["bottom"], "the window follows the setting")
+        XCTAssertNil(try database.loadTabs(repoID: repo.id).enabledEdges)
+
+        window.close()
+        let reopened = ComposableTabsWindowController(project: project)
+        reopened.showWindow(nil)
+        defer { reopened.close() }
+        XCTAssertEqual(reopened.enabledTabEdgeNames, ["bottom"], "reopened, it still follows")
+    }
 }

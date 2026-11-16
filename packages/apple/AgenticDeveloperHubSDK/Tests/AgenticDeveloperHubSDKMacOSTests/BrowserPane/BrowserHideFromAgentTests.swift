@@ -108,7 +108,7 @@ final class BrowserHideFromAgentTests: XCTestCase {
 
     // MARK: Tests
 
-    func test_buttonHasTooltipAndMenu() throws {
+    func test_buttonHasTooltipAndMenu() async throws {
         XCTAssertEqual(button.symbolName, "person.crop.circle.badge.xmark")
         XCTAssertEqual(button.toolTip, "Hide elements from agent")
         XCTAssertEqual(button.accessibilityIdentifier(), "browser.hide-from-agent")
@@ -137,6 +137,7 @@ final class BrowserHideFromAgentTests: XCTestCase {
         XCTAssertEqual(pane.hideFromAgentButton.superview?.accessibilityIdentifier(), "browser.privacy-strip-row")
         XCTAssertTrue(pane.hideFromAgentButton.target === pane)
         XCTAssertEqual(pane.hideFromAgentButton.action, #selector(pane.hideFromAgentButtonClicked(_:)))
+        try await pane.loadForTesting(page, html: Self.html)
         // Agent selecting from the pane drives this button, not the address box's.
         pane.beginSelectingItems(store: store, list: .agent)
         let paneMode = try XCTUnwrap(pane.selectingMode)

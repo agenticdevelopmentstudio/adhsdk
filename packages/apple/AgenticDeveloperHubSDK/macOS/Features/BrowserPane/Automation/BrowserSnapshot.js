@@ -7,7 +7,7 @@
   // Bumping the version re-installs over an older copy: its refs go stale (as after any
   // walk) and its MutationObserver stays behind, unused. Both are harmless. Keep it equal
   // to BrowserSnapshotRuntime.version.
-  if (window.__adkitchen && window.__adkitchen.version === 3) { return; }
+  if (window.__adkitchen && window.__adkitchen.version === 4) { return; }
 
   const refs = new Map();            // ref -> WeakRef<Element>
   window.__adkitchenRefs = refs;
@@ -88,11 +88,39 @@
     return ref;
   }
 
+  // A scope is a ref from the table, never a CSS selector: a selector would
+  // let a caller probe the page past the agent's view (an excluded element's
+  // attributes, character by character) by telling a match from none.
   function resolveScope(scope) {
-    if (!scope) { return null; }
+    if (typeof scope !== 'string' || !scope) { return null; }
     const held = refs.get(scope);
-    if (held) { return held.deref() || null; }
-    try { return document.querySelector(scope); } catch (e) { return null; }
+    if (!held) { return null; }
+    const el = held.deref();
+    return (el && el.isConnected && !isWithheld(el)) ? el : null;
+  }
+
+  // The elements the last agent walk withheld (its agent list and hidden
+  // rules), set by the walker. A ref handed out before an element joined the
+  // agent list resolves to nothing once a walk has seen it excluded.
+  let withheld = new WeakSet();
+  function setWithheld(elements) {
+    withheld = new WeakSet();
+    for (const el of elements || []) { withheld.add(el); }
+  }
+  function isWithheld(el) {
+    for (let at = el; at; at = at.parentElement) {
+      if (withheld.has(at)) { return true; }
+    }
+    return false;
+  }
+
+  // Every ref stale at once: the agent list changed, so a ref the agent
+  // holds may now name an element it may no longer be shown.
+  function invalidate() {
+    generation += 1;
+    refs.clear();
+    nextRef = 1;
+    return true;
   }
 
   function resolve(ref, gen) {
@@ -100,7 +128,7 @@
     const held = refs.get(ref);
     if (!held) { return { error: 'unknown' }; }
     const el = held.deref();
-    if (!el || !el.isConnected) { return { error: 'stale' }; }
+    if (!el || !el.isConnected || isWithheld(el)) { return { error: 'stale' }; }
     return { el: el };
   }
 
@@ -353,7 +381,7 @@
   }
 
   window.__adkitchen = {
-    version: 3,
+    version: 4,
     mutations: () => mutationCount,
     focusedLandmark: focusedLandmark,
     resolve: resolve,
@@ -361,5 +389,6 @@
     click: click, type: type, fill: fill, select: select, hover: hover, pressKey: pressKey,
     scroll: scroll, rect: rect, isVisible: isVisible,
     beginWalk: beginWalk, assignRef: assignRef, resolveScope: resolveScope,
+    setWithheld: setWithheld, invalidate: invalidate,
   };
 })();

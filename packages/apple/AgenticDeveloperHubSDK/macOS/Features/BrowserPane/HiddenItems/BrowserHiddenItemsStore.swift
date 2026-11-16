@@ -42,7 +42,81 @@ public final class BrowserHiddenItemsStore: @unchecked Sendable {
     /// The one store the browser feature opens at launch
     /// (`WebBrowserWindowsFeature`), shared by every pane; nil before launch
     /// or when the file could not be opened.
-    @MainActor public static var shared: BrowserHiddenItemsStore?
+    ///
+    /// The launch open runs off the main thread (``openShared(at:onFailure:)``).
+    /// A read that comes before it has finished waits for it rather than
+    /// answering "no store", which would show the agent what its list hides:
+    /// privacy fails closed. Setting it (a host, a test) replaces any open in
+    /// flight.
+    @MainActor public static var shared: BrowserHiddenItemsStore? {
+        get {
+            if let pendingOpen {
+                storedShared = pendingOpen.wait()
+                self.pendingOpen = nil
+            }
+            return storedShared
+        }
+        set {
+            pendingOpen = nil
+            storedShared = newValue
+        }
+    }
+
+    /// Whether ``shared`` is set or being opened, without waiting for it.
+    @MainActor public static var hasShared: Bool { storedShared != nil || pendingOpen != nil }
+
+    @MainActor private static var storedShared: BrowserHiddenItemsStore?
+    @MainActor private static var pendingOpen: PendingOpen?
+
+    /// Opens the store at `url` on a background queue as ``shared``. A file
+    /// that cannot be opened leaves ``shared`` nil and reports to
+    /// `onFailure`, on that queue.
+    @MainActor public static func openShared(
+        at url: URL, onFailure: @escaping @Sendable (Error) -> Void = { _ in }
+    ) {
+        let pending = PendingOpen()
+        pendingOpen = pending
+        DispatchQueue.global(qos: .userInitiated).async {
+            let store: BrowserHiddenItemsStore?
+            do {
+                store = try open(at: url)
+            } catch {
+                onFailure(error)
+                store = nil
+            }
+            pending.finish(store)
+            DispatchQueue.main.async {
+                MainActor.assumeIsolated {
+                    // Unless a read already took it, or a setter replaced it.
+                    guard pendingOpen === pending else { return }
+                    storedShared = store
+                    pendingOpen = nil
+                }
+            }
+        }
+    }
+
+    /// One background open, which a main-actor read can wait on.
+    private final class PendingOpen: @unchecked Sendable {
+        private let condition = NSCondition()
+        private var isDone = false
+        private var store: BrowserHiddenItemsStore?
+
+        func finish(_ store: BrowserHiddenItemsStore?) {
+            condition.lock()
+            self.store = store
+            isDone = true
+            condition.broadcast()
+            condition.unlock()
+        }
+
+        func wait() -> BrowserHiddenItemsStore? {
+            condition.lock()
+            defer { condition.unlock() }
+            while !isDone { condition.wait() }
+            return store
+        }
+    }
 
     /// `<app home>/BrowserHiddenItems.db`, the app home following
     /// `APP_TEST_HOME` when it is set.

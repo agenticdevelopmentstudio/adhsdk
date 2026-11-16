@@ -201,6 +201,31 @@ final class BrowserHiddenItemsStoreTests: XCTestCase {
             token: "AgenticDeveloperKitchen")
         XCTAssertEqual(url.path, "/tmp/scratch/.agenticdeveloperkitchen/BrowserHiddenItems.db")
     }
+
+    /// The launch open runs off the main thread, and a read before it is done
+    /// waits for the store rather than answering "no store" (final review
+    /// C-M3: privacy fails closed).
+    @MainActor
+    func test_sharedOpensInTheBackgroundAndAReadWaitsForIt() throws {
+        let saved = BrowserHiddenItemsStore.shared
+        defer { BrowserHiddenItemsStore.shared = saved }
+        BrowserHiddenItemsStore.shared = nil
+        XCTAssertFalse(BrowserHiddenItemsStore.hasShared)
+
+        BrowserHiddenItemsStore.openShared(at: fileURL)
+        XCTAssertTrue(BrowserHiddenItemsStore.hasShared)
+        let store = try XCTUnwrap(BrowserHiddenItemsStore.shared, "a read in the gap saw no store")
+        XCTAssertEqual(store.url, fileURL)
+        XCTAssertTrue(BrowserHiddenItemsStore.shared === store)
+
+        // A file that cannot be opened leaves no store, and says so.
+        let blocker = directory.appendingPathComponent("file")
+        try Data().write(to: blocker)
+        let failed = expectation(description: "failure reported")
+        BrowserHiddenItemsStore.openShared(at: blocker.appendingPathComponent("x.db")) { _ in failed.fulfill() }
+        XCTAssertNil(BrowserHiddenItemsStore.shared)
+        wait(for: [failed], timeout: 5)
+    }
 }
 
 /// What the change observer saw, behind a lock: the observer block is
