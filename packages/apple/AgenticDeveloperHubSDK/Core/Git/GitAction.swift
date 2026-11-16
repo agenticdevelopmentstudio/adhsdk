@@ -137,7 +137,7 @@ public enum GitAction: Sendable, Hashable {
         case .unstageAll: ["-q"]
         case .discard(let paths): ["--worktree", "--"] + Self.literal(paths)
         case .removeUntracked(let paths): ["-f", "-d", "--"] + Self.literal(paths)
-        case let .commit(message, amend): ["--cleanup=strip", "-m", message] + (amend ? ["--amend"] : [])
+        case let .commit(message, amend): ["--cleanup=whitespace", "-m", message] + (amend ? ["--amend"] : [])
         case .fetch(let remote): remote.map { ["--prune", $0] } ?? ["--all", "--prune"]
         case .pull: ["--no-edit"]
         case .push: []
@@ -163,7 +163,7 @@ public enum GitAction: Sendable, Hashable {
         case .stashDrop(let index): ["drop", "stash@{\(index)}"]
         case let .cherryPick(commit, mainline): Self.mainlineArguments(mainline) + [commit]
         case let .revert(commit, mainline): ["--no-edit"] + Self.mainlineArguments(mainline) + [commit]
-        case let .reset(commit, mode): ["--\(mode.rawValue)", commit]
+        case let .reset(commit, mode): ["--\(mode.rawValue)", commit, "--"]
         case .applyToIndex(_, let reverse): ["--cached"] + Self.applyArguments(reverse: reverse)
         case .applyToWorktree(_, let reverse): Self.applyArguments(reverse: reverse)
         case let .merge(ref, fastForward): ["--no-edit", fastForward.flag, ref]

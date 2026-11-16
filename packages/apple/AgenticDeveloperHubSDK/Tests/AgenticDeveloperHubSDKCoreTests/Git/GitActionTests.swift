@@ -41,8 +41,8 @@ struct GitActionTests {
     @Test("committing, with and without amend")
     func committing() {
         expect(.commit(message: "subject\n\nbody", amend: false), "commit",
-               ["--cleanup=strip", "-m", "subject\n\nbody"])
-        expect(.commit(message: "subject", amend: true), "commit", ["--cleanup=strip", "-m", "subject", "--amend"])
+               ["--cleanup=whitespace", "-m", "subject\n\nbody"])
+        expect(.commit(message: "subject", amend: true), "commit", ["--cleanup=whitespace", "-m", "subject", "--amend"])
     }
 
     @Test("fetch, pull and push")
@@ -108,9 +108,9 @@ struct GitActionTests {
 
     @Test("reset in every mode")
     func reset() {
-        expect(.reset(commit: "abc123", mode: .soft), "reset", ["--soft", "abc123"])
-        expect(.reset(commit: "abc123", mode: .mixed), "reset", ["--mixed", "abc123"])
-        expect(.reset(commit: "abc123", mode: .hard), "reset", ["--hard", "abc123"])
+        expect(.reset(commit: "abc123", mode: .soft), "reset", ["--soft", "abc123", "--"])
+        expect(.reset(commit: "abc123", mode: .mixed), "reset", ["--mixed", "abc123", "--"])
+        expect(.reset(commit: "abc123", mode: .hard), "reset", ["--hard", "abc123", "--"])
         #expect(GitResetMode.allCases == [.soft, .mixed, .hard])
     }
 

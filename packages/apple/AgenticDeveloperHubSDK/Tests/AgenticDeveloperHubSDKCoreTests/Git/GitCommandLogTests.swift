@@ -75,8 +75,8 @@ struct GitCommandLogTests {
     @Test("commit, tag and stash messages after -m are redacted; other arguments kept")
     func messagesAreRedacted() {
         #expect(GitCommandLog.redactedArguments(
-            verb: "commit", arguments: ["--cleanup=strip", "-m", "secret token", "--amend"]
-        ) == ["--cleanup=strip", "-m", "<redacted:12>", "--amend"])
+            verb: "commit", arguments: ["--cleanup=whitespace", "-m", "secret token", "--amend"]
+        ) == ["--cleanup=whitespace", "-m", "<redacted:12>", "--amend"])
         #expect(GitCommandLog.redactedArguments(
             verb: "tag", arguments: ["-a", "v1", "-m", "notes", "abc123"]
         ) == ["-a", "v1", "-m", "<redacted:5>", "abc123"])

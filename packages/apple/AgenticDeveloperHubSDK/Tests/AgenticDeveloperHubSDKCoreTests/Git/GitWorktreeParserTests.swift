@@ -4,6 +4,15 @@ import Testing
 
 @Suite("GitWorktree.parse")
 struct GitWorktreeParserTests {
+    @Test("-z output: NUL-terminated records keep a newline in a path")
+    func nulTerminated() {
+        let output = "worktree /repo\0HEAD abc\0branch refs/heads/main\0\0"
+            + "worktree /wt/two\nlines\0HEAD def\0detached\0\0"
+        let trees = GitWorktree.parse(porcelain: output)
+        #expect(trees.map(\.directory.path) == ["/repo", "/wt/two\nlines"])
+        #expect(trees.map(\.branch) == ["main", nil])
+        #expect(trees.map(\.isDetached) == [false, true])
+    }
     private let sample = """
     worktree /repo
     HEAD 1111111111111111111111111111111111111111

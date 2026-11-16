@@ -115,8 +115,11 @@ picker) is a consumer of this contract, not part of it.
   for-each-ref` against `refs/heads` with a `--format=<value>` argument,
   where the value is exactly `%(refname:short)%09%(HEAD)%09%(upstream:short)`.
 - **worktrees-listing**: The worktrees verb MUST invoke `git worktree list
-  --porcelain` and MUST return every worktree of the repository containing
-  the given directory, main worktree first.
+  --porcelain -z` and MUST return every worktree of the repository containing
+  the given directory, main worktree first. A git too old for `-z` exits 129
+  with its usage, and the verb MUST then read the list again without `-z`.
+  The parser MUST split records on NUL when the output holds one and on
+  newlines otherwise, so a path holding a newline stays one record.
 - **global-config-directory**: The three global-configuration verbs (read,
   set, unset) MUST run with the current user's home directory as the child
   process's working directory, never a repository directory, because `git
@@ -215,7 +218,10 @@ picker) is a consumer of this contract, not part of it.
   with exit status 128.
 - **file-contents**: The file-contents verb MUST return raw bytes, never
   decoded text. With no revision it MUST read the working file at the top
-  level joined with the path, returning nothing when it does not exist.
+  level joined with the path, returning nothing when it does not exist; a
+  path that is empty, or that leads outside the top level (through `../` or
+  a linked folder, compared with the folder's symbolic links resolved), MUST
+  surface as invalid-argument before anything is read.
   With a revision it MUST NOT pass the path inside a `<revision>:<path>`
   argument: Foundation hands arguments to git decomposed (NFD) and that
   form matches the index's precomposed names byte for byte, so a
@@ -263,7 +269,8 @@ picker) is a consumer of this contract, not part of it.
   reports it: stage → `add -- <paths>`;
   stage all → `add -A`; unstage → `reset -q -- <paths>`; unstage all →
   `reset -q`; discard → `restore --worktree -- <paths>`; remove untracked →
-  `clean -f -d -- <paths>`; commit → `commit --cleanup=strip -m <message>`,
+  `clean -f -d -- <paths>`; commit → `commit --cleanup=whitespace -m <message>`
+  (trailing whitespace and blank lines trimmed, a line starting with `#` kept),
   plus `--amend` when amending; fetch all → `fetch --all --prune`, fetch one
   → `fetch --prune <remote>`; pull → `pull --no-edit`; push → `push`; push
   setting upstream → `push --set-upstream <remote> <branch>`; push to
@@ -280,7 +287,8 @@ picker) is a consumer of this contract, not part of it.
   <message>` only when the message is present and non-empty; stash apply,
   pop and drop → `stash apply|pop|drop stash@{<index>}`; cherry-pick →
   `cherry-pick [-m <mainline>] <commit>`; revert → `revert --no-edit [-m
-  <mainline>] <commit>`; reset → `reset --soft|--mixed|--hard <commit>`; apply to the index → `apply
+  <mainline>] <commit>`; reset → `reset --soft|--mixed|--hard <commit> --`, the
+  `--` keeping a commit that shares a file's name a commit; apply to the index → `apply
   --cached --whitespace=nowarn [--reverse] -`; apply to the work tree →
   `apply --whitespace=nowarn [--reverse] -`, the patch on standard input;
   merge → `merge --no-edit --ff|--no-ff|--ff-only <ref>` (fast-forward
@@ -381,9 +389,18 @@ picker) is a consumer of this contract, not part of it.
   keep chosen lines, write an unchosen added line as context and drop an
   unchosen removed line, because a reversed patch is applied to the new
   side.
-- **patch-no-newline**: A no-newline-at-end marker MUST be written only when
-  the line before it was written (as itself or as context), and dropped with
-  it otherwise.
+- **patch-no-newline**: A no-newline-at-end marker MUST follow the last line
+  of each side of the written hunk that git marked as ending without a
+  newline, and no other line. When a dropped change moves one side's end, a
+  context line can end one side without a newline but not the other; that
+  line MUST be written as a removed line and an added line of the same text,
+  each followed by a marker only for its own side, which keeps both counts.
+  Appending `b` after an old side `x`, `a` with no final newline stages
+  `-a`, marker, `+a`, `+b`, marker, and the index reads `x\na\nb` byte for
+  byte.
+- **patch-carriage-returns**: A line's text MUST keep a carriage return git
+  wrote before its newline, so a patch built from a CRLF file's lines writes
+  each line back with its `\r` and applies cleanly; only display drops it.
 - **patch-hunk-headers**: A hunk with no chosen line MUST be left out. Each
   written hunk MUST count its lines anew (old = context + removed, new =
   context + added). Forward keeps the hunk's old start and sets the new start
@@ -488,7 +505,9 @@ picker) is a consumer of this contract, not part of it.
   then `pick <sha> <subject>`, then `exec test "$(git rev-parse HEAD)" =
   "$(cat '<helper>/head-<n>')" || git commit --amend --no-edit --allow-empty
   -F '<helper>/message-<n>'`, `n` counting rewords from 0 in todo order and
-  each path single-quoted for `sh` (each `'` written `'\''`).
+  each path single-quoted for `sh` (each `'` written `'\''`). `git` there is
+  the configured executable's path, single-quoted the same way, so the amend
+  runs the same git as the rebase; a bare `git` is written unquoted.
 - **reword-amends-only-its-pick**: A reword's amend MUST run only when its
   pick moved HEAD. A pick that stops (a conflict, a commit that became empty)
   and is then skipped leaves HEAD where it was, and git still runs the next
@@ -766,7 +785,8 @@ cannot read rather than failing the whole listing.
   plus `--fixed-strings` whenever author or message search is set (what a
   person types is text, not a pattern: `(x)` finds itself and a stray `[` is
   no error; `-S` is already literal and adds nothing), then the revisions (default `--branches --tags --remotes HEAD`), then
-  `--` and the path when a path is set. It MUST NOT pass `-z`.
+  `--` and the path as the pathspec `:(top,literal)<path>` when a path is set,
+  so `[ab].txt` follows only itself. It MUST NOT pass `-z`.
 - **log-query-follow**: A log request that follows renames MUST end with
   `--follow -- <path>` and MUST omit its revisions, because `git log
   --follow` takes exactly one path and walks from `HEAD`.
@@ -825,7 +845,10 @@ input it cannot read rather than failing.
   old and a new line number, a removed line only an old one and an added
   line only a new one, numbered from the hunk's starts; a `\ No newline at
   end of file` line MUST be kept as its own kind with no numbers. A line's
-  text MUST exclude its one-character prefix.
+  text MUST exclude its one-character prefix and MUST keep everything else
+  git wrote, a carriage return before the newline included: lines are split
+  on the newline scalar alone. A line's display text drops one trailing
+  carriage return.
 - **word-diff-tokens**: The changed words between a removed and an added
   line MUST be found by a longest-common-subsequence over word tokens —
   runs of letters, digits and underscores; runs of whitespace; and every
@@ -927,7 +950,7 @@ component.
 | git-client-060 | remotes-command | `remoteWithoutAURLIsNotListed`: `remote.ghost.prune` set with no URL, and `real` added with a URL; separately the verbose output `b\t/x (fetch)`, `b\t/x (push)`, `a\t`, `c\t/y (fetch)` | `["real"]`; `["b", "c"]`. |
 | git-client-061 | write-action-mapping | Discard `[ab].txt` beside a modified `a.txt`; remove untracked `*.log` beside an untracked `keep.log`; stage `app/[slug]/page.tsx` beside `app/s/page.tsx` | Only the named file changes each time; the arguments are `:(top,literal)<path>` after `--`. |
 | git-client-062 | write-operand-guard | Stage, unstage, discard and remove untracked with an empty path list | Each refused as invalid-argument before spawning; nothing in the tree changes. |
-| git-client-063 | redaction-scope-and-positional-rule | `commit` `["--cleanup=strip", "-m", "secret token", "--amend"]`; `tag` `["-a", "v1", "-m", "notes", "abc123"]`; `stash` `["push", "--include-untracked", "-m", "wip"]`; `cherry-pick` `["-m", "1", "abc123"]` | `<redacted:12>`, `<redacted:5>` and `<redacted:3>` in the message positions, everything else kept; cherry-pick unchanged. |
+| git-client-063 | redaction-scope-and-positional-rule | `commit` `["--cleanup=whitespace", "-m", "secret token", "--amend"]`; `tag` `["-a", "v1", "-m", "notes", "abc123"]`; `stash` `["push", "--include-untracked", "-m", "wip"]`; `cherry-pick` `["-m", "1", "abc123"]` | `<redacted:12>`, `<redacted:5>` and `<redacted:3>` in the message positions, everything else kept; cherry-pick unchanged. |
 | git-client-064 | patch-forward-lines, patch-hunk-headers | Hunk `@@ -1,2 +1,4 @@` `a`, `+x`, `+y`, `b`; choose `x` forward, then reversed | `@@ -1,2 +1,3 @@` ` a`, `+x`, ` b`; reversed `@@ -1,3 +1,4 @@` ` a`, `+x`, ` y`, ` b`. |
 | git-client-065 | patch-forward-lines, patch-reverse-lines | Hunk `a`, `-b`, `+c`, `d`; choose `c` | Forward `@@ -1,3 +1,4 @@` with ` b` as context; reversed `@@ -1,2 +1,3 @@` with `b` dropped. |
 | git-client-066 | patch-hunk-headers | Hunks `@@ -1,2 +1,4 @@` (choose `x` of `+x`, `+y`) and `@@ -10,3 +12,3 @@` (choose both changes) | Second hunk forward `@@ -10,3 +11,3 @@`, reversed `@@ -11,3 +12,3 @@`; with the first hunk unchosen, forward `@@ -10,3 +10,3 @@`. |
@@ -966,6 +989,13 @@ component.
 | git-client-099 | reword-amends-only-its-pick, interactive-rebase-cleanup | `main` with `base`; `feature` adds `x.txt` (`add x`) then changes it (`change x`); plan onto `main` dropping `add x` and rewording `change x` to `reworded x`, which stops on a conflict; then the skip step; separately, `x.txt` resolved, staged and the continue step | Skip: no operation, HEAD and `main` both `main`'s sha, HEAD's subject still `base`, no helper folder. Continue: no operation, one commit `reworded x` whose parent is `main`, no helper folder. |
 | git-client-100 | rebase-plan-messages | 086's branch with a fourth commit `add four` whose body is two lines; messages after `main`; then after `-x` | The keys are the plan's commits; HEAD's message is `add four`, a blank line, then the two body lines; `HEAD~3`'s is `add one`; `-x` refused as invalid-argument naming `log`. |
 | git-client-101 | rebase-plan-messages | The log text `aaa␟one\n\n␞\nbbb␟two\n\nbody ␟ kept\n␞\nbroken␞\n` (␟ the unit separator, ␞ the record separator) | `aaa` → `one`; `bbb` → `two`, a blank line, `body ␟ kept`; nothing for `broken`. |
+| git-client-102 | patch-no-newline | `f.txt` committed as `x\na` (no final newline), working `x\na\nb`; stage the hunk, then unstage `+b` alone | The index reads `x\na\nb`; after unstaging it reads `x\na\n`, byte for byte. |
+| git-client-103 | patch-no-newline | Forward: `-a`, marker, `+a`, `+b`, marker with `+b` chosen and `+a` alone dropped; reverse: ` x`, `-a`, marker, `+a`, `+b`, marker with `+b` chosen | Forward writes `-a`, marker, `+a`, `+b`, marker; reverse writes ` x`, ` a`, `+b`, marker. |
+| git-client-104 | patch-carriage-returns, diff-line-numbers | A CRLF file `one\r\ntwo\r\nthree\r\nfour\r\n` with `four` changed; stage the one added line | The line's text is `four\r` and its display text `four`; the index is the working file byte for byte. |
+| git-client-105 | file-contents | Working-file reads of `../<other>/s.txt`, `link/s.txt` (`link` a symbolic link out of the repository) and `""`, then `in.txt` | invalid-argument three times; `in.txt` reads `inside\n`. |
+| git-client-106 | worktrees-listing | `worktree /repo␀HEAD abc␀branch refs/heads/main␀␀worktree /wt/two\nlines␀HEAD def␀detached␀␀` (␀ a NUL) | Two worktrees, `/repo` on `main` and `/wt/two\nlines` detached. |
+| git-client-107 | write-action-mapping | Commit the message `#42 fix\n\n# not a comment  \n` | HEAD's message is `#42 fix\n\n# not a comment`. |
+| git-client-108 | submodule-update | Submodules `lib` and `other lib`, cloned without them; update `other lib` initializing | `other lib` current with `lib.txt` present; `lib` uninitialized. |
 ## Edge Cases
 
 - **Null/empty input**: Parsing an empty status output MUST return an

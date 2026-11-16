@@ -80,8 +80,7 @@ public protocol RepoStateReading: Sendable {
     func readState(at directory: URL) async throws -> RepoStateSnapshot
 }
 
-/// Reads it with git: `worktree list` and `for-each-ref refs/heads`, run
-/// together.
+/// Reads it through `GitClient.worktrees` and `GitClient.branches`, run together.
 public struct GitRepoStateReader: RepoStateReading {
     private let gitClient: GitClient
 

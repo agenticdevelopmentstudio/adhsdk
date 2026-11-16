@@ -62,6 +62,17 @@ struct GitClientWriteTests {
         #expect(try await client.lastCommitMessage(in: repository.root) == "first\n\nbody")
     }
 
+    @Test("a message line starting with # is committed verbatim")
+    func hashLinesAreKept() async throws {
+        let repository = try await GitTestRepository.make(prefix: "git-write-hash")
+        defer { repository.tearDown() }
+        try repository.write("alpha\n", to: "a.txt")
+        try await client.perform(.stageAll, in: repository.root)
+        try await client.perform(.commit(message: "#42 fix\n\n# not a comment  \n", amend: false),
+                                 in: repository.root)
+        #expect(try await client.lastCommitMessage(in: repository.root) == "#42 fix\n\n# not a comment")
+    }
+
     @Test("amend replaces the last commit")
     func amendReplacesTheLastCommit() async throws {
         let repository = try await GitTestRepository.make(prefix: "git-write-amend")

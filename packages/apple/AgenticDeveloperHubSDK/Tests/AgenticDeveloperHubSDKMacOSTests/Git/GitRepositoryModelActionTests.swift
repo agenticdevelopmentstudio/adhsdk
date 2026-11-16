@@ -211,4 +211,29 @@ struct GitRepositoryModelActionTests {
         #expect(request.isComplete(["v1", ""]))
         #expect(!request.isComplete(["v1"]))
     }
+
+    @Test("writeResolution writes inside the root, and refuses a path through a linked folder that leaves it")
+    func writeResolutionStaysInside() async throws {
+        let repository = try await GitTestRepository.make(prefix: "git-model-action")
+        defer { repository.tearDown() }
+        try await commitFile(repository, "base.txt", at: 100)
+        let outside = FileManager.default.temporaryDirectory
+            .appendingPathComponent("git-model-outside-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: outside, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: outside) }
+        try FileManager.default.createSymbolicLink(at: repository.root.appendingPathComponent("linked"),
+                                                   withDestinationURL: outside)
+        let model = makeModel(repository)
+
+        try await model.writeResolution("resolved\n", to: "base.txt")
+        let written = try String(contentsOf: repository.root.appendingPathComponent("base.txt"), encoding: .utf8)
+        #expect(written == "resolved\n")
+        await #expect(throws: GitClientError.self) {
+            try await model.writeResolution("escaped\n", to: "linked/escaped.txt")
+        }
+        #expect(!FileManager.default.fileExists(atPath: outside.appendingPathComponent("escaped.txt").path))
+        await #expect(throws: GitClientError.self) {
+            try await model.writeResolution("escaped\n", to: "../escaped.txt")
+        }
+    }
 }

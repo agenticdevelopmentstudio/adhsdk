@@ -11,7 +11,13 @@ public struct GitDiffLine: Sendable, Hashable {
     }
 
     public let kind: Kind
+    /// The line exactly as git wrote it, so a CRLF file's lines keep their `\r` and a
+    /// patch built from them applies.
     public let text: String
+    /// `text` without the `\r` of a CRLF line ending, for showing and comparing.
+    public var displayText: String {
+        text.unicodeScalars.last == "\r" ? String(text.unicodeScalars.dropLast()) : text
+    }
     /// The line's number in the old file; `nil` for added lines and markers.
     public let oldNumber: Int?
     /// The line's number in the new file; `nil` for removed lines and markers.

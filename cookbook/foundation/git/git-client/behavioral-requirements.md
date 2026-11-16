@@ -21,8 +21,11 @@
   for-each-ref` against `refs/heads` with a `--format=<value>` argument,
   where the value is exactly `%(refname:short)%09%(HEAD)%09%(upstream:short)`.
 - **worktrees-listing**: The worktrees verb MUST invoke `git worktree list
-  --porcelain` and MUST return every worktree of the repository containing
-  the given directory, main worktree first.
+  --porcelain -z` and MUST return every worktree of the repository containing
+  the given directory, main worktree first. A git too old for `-z` exits 129
+  with its usage, and the verb MUST then read the list again without `-z`.
+  The parser MUST split records on NUL when the output holds one and on
+  newlines otherwise, so a path holding a newline stays one record.
 - **global-config-directory**: The three global-configuration verbs (read,
   set, unset) MUST run with the current user's home directory as the child
   process's working directory, never a repository directory, because `git
@@ -121,7 +124,10 @@
   with exit status 128.
 - **file-contents**: The file-contents verb MUST return raw bytes, never
   decoded text. With no revision it MUST read the working file at the top
-  level joined with the path, returning nothing when it does not exist.
+  level joined with the path, returning nothing when it does not exist; a
+  path that is empty, or that leads outside the top level (through `../` or
+  a linked folder, compared with the folder's symbolic links resolved), MUST
+  surface as invalid-argument before anything is read.
   With a revision it MUST NOT pass the path inside a `<revision>:<path>`
   argument: Foundation hands arguments to git decomposed (NFD) and that
   form matches the index's precomposed names byte for byte, so a
@@ -169,7 +175,8 @@
   reports it: stage → `add -- <paths>`;
   stage all → `add -A`; unstage → `reset -q -- <paths>`; unstage all →
   `reset -q`; discard → `restore --worktree -- <paths>`; remove untracked →
-  `clean -f -d -- <paths>`; commit → `commit --cleanup=strip -m <message>`,
+  `clean -f -d -- <paths>`; commit → `commit --cleanup=whitespace -m <message>`
+  (trailing whitespace and blank lines trimmed, a line starting with `#` kept),
   plus `--amend` when amending; fetch all → `fetch --all --prune`, fetch one
   → `fetch --prune <remote>`; pull → `pull --no-edit`; push → `push`; push
   setting upstream → `push --set-upstream <remote> <branch>`; push to
@@ -186,7 +193,8 @@
   <message>` only when the message is present and non-empty; stash apply,
   pop and drop → `stash apply|pop|drop stash@{<index>}`; cherry-pick →
   `cherry-pick [-m <mainline>] <commit>`; revert → `revert --no-edit [-m
-  <mainline>] <commit>`; reset → `reset --soft|--mixed|--hard <commit>`; apply to the index → `apply
+  <mainline>] <commit>`; reset → `reset --soft|--mixed|--hard <commit> --`, the
+  `--` keeping a commit that shares a file's name a commit; apply to the index → `apply
   --cached --whitespace=nowarn [--reverse] -`; apply to the work tree →
   `apply --whitespace=nowarn [--reverse] -`, the patch on standard input;
   merge → `merge --no-edit --ff|--no-ff|--ff-only <ref>` (fast-forward
@@ -287,9 +295,18 @@
   keep chosen lines, write an unchosen added line as context and drop an
   unchosen removed line, because a reversed patch is applied to the new
   side.
-- **patch-no-newline**: A no-newline-at-end marker MUST be written only when
-  the line before it was written (as itself or as context), and dropped with
-  it otherwise.
+- **patch-no-newline**: A no-newline-at-end marker MUST follow the last line
+  of each side of the written hunk that git marked as ending without a
+  newline, and no other line. When a dropped change moves one side's end, a
+  context line can end one side without a newline but not the other; that
+  line MUST be written as a removed line and an added line of the same text,
+  each followed by a marker only for its own side, which keeps both counts.
+  Appending `b` after an old side `x`, `a` with no final newline stages
+  `-a`, marker, `+a`, `+b`, marker, and the index reads `x\na\nb` byte for
+  byte.
+- **patch-carriage-returns**: A line's text MUST keep a carriage return git
+  wrote before its newline, so a patch built from a CRLF file's lines writes
+  each line back with its `\r` and applies cleanly; only display drops it.
 - **patch-hunk-headers**: A hunk with no chosen line MUST be left out. Each
   written hunk MUST count its lines anew (old = context + removed, new =
   context + added). Forward keeps the hunk's old start and sets the new start
@@ -394,7 +411,9 @@
   then `pick <sha> <subject>`, then `exec test "$(git rev-parse HEAD)" =
   "$(cat '<helper>/head-<n>')" || git commit --amend --no-edit --allow-empty
   -F '<helper>/message-<n>'`, `n` counting rewords from 0 in todo order and
-  each path single-quoted for `sh` (each `'` written `'\''`).
+  each path single-quoted for `sh` (each `'` written `'\''`). `git` there is
+  the configured executable's path, single-quoted the same way, so the amend
+  runs the same git as the rebase; a bare `git` is written unquoted.
 - **reword-amends-only-its-pick**: A reword's amend MUST run only when its
   pick moved HEAD. A pick that stops (a conflict, a commit that became empty)
   and is then skipped leaves HEAD where it was, and git still runs the next
@@ -672,7 +691,8 @@ cannot read rather than failing the whole listing.
   plus `--fixed-strings` whenever author or message search is set (what a
   person types is text, not a pattern: `(x)` finds itself and a stray `[` is
   no error; `-S` is already literal and adds nothing), then the revisions (default `--branches --tags --remotes HEAD`), then
-  `--` and the path when a path is set. It MUST NOT pass `-z`.
+  `--` and the path as the pathspec `:(top,literal)<path>` when a path is set,
+  so `[ab].txt` follows only itself. It MUST NOT pass `-z`.
 - **log-query-follow**: A log request that follows renames MUST end with
   `--follow -- <path>` and MUST omit its revisions, because `git log
   --follow` takes exactly one path and walks from `HEAD`.
@@ -731,7 +751,10 @@ input it cannot read rather than failing.
   old and a new line number, a removed line only an old one and an added
   line only a new one, numbered from the hunk's starts; a `\ No newline at
   end of file` line MUST be kept as its own kind with no numbers. A line's
-  text MUST exclude its one-character prefix.
+  text MUST exclude its one-character prefix and MUST keep everything else
+  git wrote, a carriage return before the newline included: lines are split
+  on the newline scalar alone. A line's display text drops one trailing
+  carriage return.
 - **word-diff-tokens**: The changed words between a removed and an added
   line MUST be found by a longest-common-subsequence over word tokens —
   runs of letters, digits and underscores; runs of whitespace; and every

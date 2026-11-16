@@ -44,6 +44,8 @@ public final class GitSyntaxColoring {
         let theme = self.theme()
         do {
             return try await highlighter.highlight(text, scopeName: scopeName, theme: theme)
+        } catch is CancellationError {
+            return nil
         } catch {
             Self.logger.error("Syntax colouring failed: \(String(describing: type(of: error)), privacy: .public)")
             return nil

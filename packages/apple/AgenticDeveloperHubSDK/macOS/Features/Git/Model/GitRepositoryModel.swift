@@ -287,11 +287,15 @@ public final class GitRepositoryModel: GitRefsDataSource, GitHistoryDataSource, 
     /// writes itself, a merge view's result; every other change goes through `perform`.
     /// The write is atomic and off the main actor, keeps the file's POSIX permissions, and
     /// is followed by a working-copy refresh. A path that leaves the root is refused with
-    /// `GitClientError.invalidArgument` before anything is written. An atomic write
-    /// replaces a symbolic link with a regular file.
+    /// `GitClientError.invalidArgument` before anything is written; the root and the
+    /// file's folder are compared with their symbolic links resolved, so a linked folder
+    /// inside the root cannot lead the write outside it. An atomic write replaces a
+    /// symbolic link to the file itself with a regular file.
     public func writeResolution(_ text: String, to path: String) async throws {
-        let base = root.standardizedFileURL
-        let url = base.appendingPathComponent(path).standardizedFileURL
+        let base = root.resolvingSymlinksInPath().standardizedFileURL
+        let named = root.appendingPathComponent(path).standardizedFileURL
+        let url = named.deletingLastPathComponent().resolvingSymlinksInPath()
+            .appendingPathComponent(named.lastPathComponent)
         guard !path.isEmpty, url.path.hasPrefix(base.path + "/") else {
             let reason = "“\(path)” is not inside the repository."
             throw GitClientError.invalidArgument(verb: "resolve", argument: reason)

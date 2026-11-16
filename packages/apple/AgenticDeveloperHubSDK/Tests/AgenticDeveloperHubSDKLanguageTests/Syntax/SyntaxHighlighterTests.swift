@@ -135,6 +135,18 @@ struct SyntaxHighlighterTests {
         #expect(await engine.setThemeCount == 1)
     }
 
+    @Test("a cancelled request throws CancellationError before the engine is built")
+    func cancelledRequestStopsOnEntry() async throws {
+        let engine = try TextMateFixture.highlighter()
+        let theme = try TextMateFixture.theme("dark-plus")
+        let task = Task<[StyledLine]?, any Error> {
+            withUnsafeCurrentTask { $0?.cancel() }
+            return try await engine.highlight("let x = 1", scopeName: "source.swift", theme: theme)
+        }
+        await #expect(throws: CancellationError.self) { try await task.value }
+        #expect(await engine.engineCount == 0)
+    }
+
     @Test("the theme is handed to the bundle only when it changes")
     func themeSetOnlyWhenChanged() async throws {
         let engine = try TextMateFixture.highlighter()

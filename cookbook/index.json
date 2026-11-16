@@ -8574,25 +8574,25 @@
           "conformance": {
             "hash": "sha256:b50bb34041bdc58fd2ec6c240fd005eb3bc218b770698166c9aaa217f5240bac",
             "state": "confirmed",
-            "version": "1.1.1"
+            "version": "1.2.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Language/Syntax/TextMateResources.swift",
           "platform": "apple"
         },
         {
           "conformance": {
-            "hash": "sha256:6242ef5755654309ea01d109b1745056a6cf15f474e65e8746ed0d5d62e6f77e",
+            "hash": "sha256:f958b9cd3b28ac4b4679f92ab65da38c657247217c53d035633a2b69cdf9cffa",
             "state": "confirmed",
-            "version": "1.1.1"
+            "version": "1.2.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Language/Syntax/GrammarSource.swift",
           "platform": "apple"
         },
         {
           "conformance": {
-            "hash": "sha256:30954e12f689313a320127f0182ed30b173f4327e326398b92fd473f96af00a2",
+            "hash": "sha256:606cb07da8f9ed80a6ec6e4970d09416961fca7f73f177aea9e34552fa50f005",
             "state": "confirmed",
-            "version": "1.1.1"
+            "version": "1.2.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Language/Syntax/GrammarRegistry.swift",
           "platform": "apple"
@@ -8601,16 +8601,16 @@
           "conformance": {
             "hash": "sha256:222aea88714200f27cbdae0b05a14c25828b306a39f8b5ecb0918cdb2e75ba32",
             "state": "confirmed",
-            "version": "1.1.1"
+            "version": "1.2.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Language/Syntax/LanguageResolver.swift",
           "platform": "apple"
         },
         {
           "conformance": {
-            "hash": "sha256:736d5c96a5d23940e61ba6e42eb839480dc0c712e4116efc03e0ea5fd5d577fe",
+            "hash": "sha256:e9d8e224fdd517f54358b83b6173a7505b9eec52954e8fce318ae5a43fc6d406",
             "state": "confirmed",
-            "version": "1.1.1"
+            "version": "1.2.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Language/Syntax/SyntaxHighlighter.swift",
           "platform": "apple"
@@ -8619,7 +8619,7 @@
           "conformance": {
             "hash": "sha256:569685fea243c3963289a47530718a161b798799c1a8154596e6b3b9f4da0293",
             "state": "confirmed",
-            "version": "1.1.1"
+            "version": "1.2.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Language/Syntax/StyledLine.swift",
           "platform": "apple"
@@ -8628,7 +8628,7 @@
           "conformance": {
             "hash": "sha256:bec673d94de08b9913bd5d7cd4078c55358dbd4d847b12392f07972dd55d747f",
             "state": "confirmed",
-            "version": "1.1.1"
+            "version": "1.2.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/GrammarContributionPoint.swift",
           "platform": "macos"
@@ -9829,7 +9829,7 @@
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:53c8b00dd35c04683a8384d917dda741770bd50ec5fba6d4cc5bd638cc925f65",
+            "hash": "sha256:ddaaa5e9da78076bda7bb427ad36445e3251cde71342b44094e71e7602d9f103",
             "state": "confirmed",
             "version": "2.0.0"
           },
@@ -9847,7 +9847,7 @@
         },
         {
           "conformance": {
-            "hash": "sha256:7cfc7efd7b2eef6832ca92c6ebd56aeb7ec61cf649abbddc02ec2afad3261358",
+            "hash": "sha256:de5b2069f39407e38c64da81e9edb31c40cfa8e3091d2af575f664c8de1d3cfb",
             "state": "confirmed",
             "version": "2.0.0"
           },
@@ -9856,7 +9856,7 @@
         },
         {
           "conformance": {
-            "hash": "sha256:6c9d1ee2893079a216a535deed2df30e3277b88305836c6f3313e75b69933be3",
+            "hash": "sha256:26df9bb5d5a72a9a784d168254ecb4c287a1e125e3f8682c4239134f23d9f1a9",
             "state": "confirmed",
             "version": "2.0.0"
           },
@@ -9874,7 +9874,7 @@
         },
         {
           "conformance": {
-            "hash": "sha256:cdc2529d76e06bc8ae919bb718b2c5083fec1ed729651ae578c6b2e99880be90",
+            "hash": "sha256:5a56f27eba2dda3b757c607d6aadd80e1b52ca6e71ca0400e1d038d3b4158d2b",
             "state": "confirmed",
             "version": "2.0.0"
           },

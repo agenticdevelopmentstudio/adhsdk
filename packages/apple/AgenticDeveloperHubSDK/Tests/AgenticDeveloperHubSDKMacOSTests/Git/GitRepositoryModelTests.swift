@@ -383,7 +383,7 @@ struct GitRepositoryModelTests {
         #expect(recorder.calls.contains { $0.contains(.refs) })
     }
 
-    @Test("the deferred watcher reads the git and common directories one call each, whole")
+    @Test("the git and common directories the deferred watcher asks for are read one call each, whole")
     func deferredWatcherReadsEachDirectoryWhole() async throws {
         // A newline in the repository's own path, which one call naming both options
         // and splitting its output on newlines misread.
@@ -391,10 +391,8 @@ struct GitRepositoryModelTests {
         defer { repository.tearDown() }
         try await commitFile(repository, "one.txt", at: 100)
 
-        let gitDirectory = try await GitDeferredRepositoryWatcher.directory(
-            "--git-dir", of: repository.root, client: client)
-        let common = try await GitDeferredRepositoryWatcher.directory(
-            "--git-common-dir", of: repository.root, client: client)
+        let gitDirectory = try await client.gitDirectory(of: repository.root)
+        let common = try await client.commonDirectory(of: repository.root)
 
         let realGit = repository.url(".git").resolvingSymlinksInPath().path
         #expect(realGit.contains("\n"))

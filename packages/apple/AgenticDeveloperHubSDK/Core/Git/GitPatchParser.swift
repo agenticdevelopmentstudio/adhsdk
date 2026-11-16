@@ -14,8 +14,9 @@ struct GitPatchParser {
 
     static func parse(_ patch: String) -> [GitFileDiff] {
         var parser = GitPatchParser()
-        // "\r\n" is one Character in Swift, so it has to be named as a separator of its own.
-        var lines = patch.split(omittingEmptySubsequences: false) { $0 == "\n" || $0 == "\r\n" }
+        // Split on the "\n" scalar alone: a CRLF file's lines keep their "\r", which a patch
+        // built from them has to write back for `git apply` to match the file.
+        var lines = patch.unicodeScalars.split(separator: "\n", omittingEmptySubsequences: false).map(Substring.init)
         if lines.last?.isEmpty == true { lines.removeLast() }
         for line in lines {
             parser.consume(line)
@@ -228,7 +229,7 @@ private struct HunkBuilder {
         let ranges = close.map { body[..<$0.lowerBound] } ?? body
         var section = close.map { body[$0.upperBound...] } ?? ""
         section = section.drop { $0 == " " }
-        self.section = section.trimmingCharacters(in: .whitespaces)
+        self.section = section.trimmingCharacters(in: .whitespacesAndNewlines)
         let parts = ranges.split(separator: " ")
         let old = parts.first.flatMap { Self.range($0, sign: "-") }
         let new = parts.count > 1 ? Self.range(parts[1], sign: "+") : nil

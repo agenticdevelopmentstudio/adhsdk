@@ -245,4 +245,16 @@ struct GitDiffParserTests {
         #expect(files[0].newPath == "b.txt")
         #expect(GitDiff.parse(patch: "").files.isEmpty)
     }
+
+    @Test("a CRLF file's lines keep their carriage return; displayText drops it")
+    func carriageReturnsAreKept() throws {
+        let patch = "diff --git a/w.txt b/w.txt\n--- a/w.txt\n+++ b/w.txt\n@@ -1,2 +1,2 @@ head\r\n"
+            + " one\r\n-two\r\n+TWO\r\n"
+        let file = try #require(GitDiff.parse(patch: patch).files.first)
+        let lines = try #require(file.hunks.first).lines
+        #expect(lines.map(\.text) == ["one\r", "two\r", "TWO\r"])
+        #expect(lines.map(\.displayText) == ["one", "two", "TWO"])
+        #expect(file.hunks.first?.section == "head")
+        #expect(GitDiffLine(kind: .context, text: "a\r\r", oldNumber: 1, newNumber: 1).displayText == "a\r")
+    }
 }

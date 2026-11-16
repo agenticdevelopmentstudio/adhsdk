@@ -70,6 +70,16 @@ struct GitRebasePlanTests {
 
             """)
         #expect(candidate.rewordMessages == ["m", "m"])
+
+        let configured = GitRebasePlan(onto: "aaaa000", entries: [entries[1]])
+            .todo(git: "/opt/my git/bin/git") { "/h/\($0)" }
+        #expect(configured == """
+            exec '/opt/my git/bin/git' rev-parse HEAD > '/h/head-0'
+            pick bbbb001 subject 1
+            exec test "$('/opt/my git/bin/git' rev-parse HEAD)" = "$(cat '/h/head-0')" \
+            || '/opt/my git/bin/git' commit --amend --no-edit --allow-empty -F '/h/message-0'
+
+            """)
     }
 
     @Test("shell quoting wraps in single quotes and escapes each one")

@@ -96,14 +96,20 @@ public actor GitClient {
     }
 
     /// Every worktree of the repository containing `directory`, main one first.
+    ///
+    /// Read with `-z` (git 2.36+), so a path holding a newline stays one record. A git too
+    /// old for `-z` answers with its usage, exit status 129, and the list is read again
+    /// without it.
     public func worktrees(in directory: URL, caller: GitCaller = GitCaller()) async throws -> [GitWorktree] {
-        let output = try await execute(
-            verb: "worktree",
-            arguments: ["list", "--porcelain"],
-            directory: directory,
-            caller: caller,
-            configuration: await configurationProvider()
-        )
+        let configuration = await configurationProvider()
+        let output: String
+        do {
+            output = try await execute(verb: "worktree", arguments: ["list", "--porcelain", "-z"],
+                                       directory: directory, caller: caller, configuration: configuration)
+        } catch GitClientError.commandFailed(_, 129, _) {
+            output = try await execute(verb: "worktree", arguments: ["list", "--porcelain"],
+                                       directory: directory, caller: caller, configuration: configuration)
+        }
         return GitWorktree.parse(porcelain: output)
     }
 
@@ -276,6 +282,34 @@ public actor GitClient {
         )
         if path.hasSuffix("\n") { path.removeLast() }
         return URL(fileURLWithPath: path, isDirectory: true).standardizedFileURL
+    }
+
+    /// The absolute git directory of the working tree containing `directory`: `.git` for
+    /// the main worktree, `.git/worktrees/<name>` for a linked one.
+    ///
+    /// Asked on its own, so a path with a newline in it is read whole; only git's trailing
+    /// newline is dropped.
+    public func gitDirectory(of directory: URL, caller: GitCaller = GitCaller()) async throws -> URL {
+        try await absoluteDirectory("--git-dir", of: directory, caller: caller)
+    }
+
+    /// The absolute common git directory of the repository containing `directory`, which
+    /// every linked worktree shares with the main one (refs, config, objects). The same as
+    /// `gitDirectory(of:)` in the main worktree. Only git's trailing newline is dropped.
+    public func commonDirectory(of directory: URL, caller: GitCaller = GitCaller()) async throws -> URL {
+        try await absoluteDirectory("--git-common-dir", of: directory, caller: caller)
+    }
+
+    private func absoluteDirectory(_ option: String, of directory: URL, caller: GitCaller) async throws -> URL {
+        var path = try await execute(
+            verb: "rev-parse",
+            arguments: ["--path-format=absolute", option],
+            directory: directory,
+            caller: caller,
+            configuration: await configurationProvider()
+        )
+        if path.hasSuffix("\n") { path.removeLast() }
+        return URL(fileURLWithPath: path, isDirectory: true)
     }
 
     /// The commits `query` asks for, newest first in date order.
@@ -468,9 +502,11 @@ public actor GitClient {
 
     /// The bytes of `path` (top-level-relative), never decoded: at `revision` (`":0"` is the
     /// index entry, `":1"`–`":3"` a conflict's stages), or the working file when `revision`
-    /// is nil. Nil when the path is not a file there, including on an unborn HEAD, and nil
-    /// when `maximumBytes` is given and the file is larger: the size is checked first (the
-    /// file's attributes, or `cat-file -s`), so an oversized file is never read at all.
+    /// is nil. A working file must stay inside the top level, its folder's symbolic links
+    /// resolved: a `../` path or a linked folder leading out throws `invalidArgument`. Nil
+    /// when the path is not a file there, including on an unborn HEAD, and nil when
+    /// `maximumBytes` is given and the file is larger: the size is checked first (the file's
+    /// attributes, or `cat-file -s`), so an oversized file is never read at all.
     ///
     /// The path never travels inside a `<rev>:<path>` argument. Foundation's `Process` hands
     /// arguments over decomposed (NFD), and `rev-parse` matches that path byte for byte
@@ -486,7 +522,13 @@ public actor GitClient {
     ) async throws -> Data? {
         let top = try await topLevel(of: directory, caller: caller)
         guard let revision else {
-            let file = top.appendingPathComponent(path)
+            let base = top.resolvingSymlinksInPath().standardizedFileURL
+            let named = top.appendingPathComponent(path).standardizedFileURL
+            let file = named.deletingLastPathComponent().resolvingSymlinksInPath()
+                .appendingPathComponent(named.lastPathComponent)
+            guard !path.isEmpty, file.path.hasPrefix(base.path + "/") else {
+                throw GitClientError.invalidArgument(verb: "cat-file", argument: path)
+            }
             var isDirectory: ObjCBool = false
             guard FileManager.default.fileExists(atPath: file.path, isDirectory: &isDirectory),
                   !isDirectory.boolValue else { return nil }
@@ -675,6 +717,10 @@ public actor GitClient {
     ///
     /// An action's `standardInput` (an apply's patch) is written to git's standard input;
     /// only the arguments are logged, so a patch never reaches `GitCommandLog`.
+    ///
+    /// Pass the top level as `directory` for an apply (`applyToIndex`, `applyToWorktree`):
+    /// a patch's paths are top-level-relative, and `git apply` run in a subdirectory skips
+    /// every path outside it and still exits 0.
     @discardableResult
     public func perform(_ action: GitAction, in directory: URL, caller: GitCaller = GitCaller()) async throws
         -> String {
@@ -752,8 +798,9 @@ public actor GitClient {
         }
         let helper = try await gitPath(Self.rebaseHelperName, in: directory, caller: caller)
         let todo = helper.appendingPathComponent("todo")
+        let executable = await configurationProvider().executableURL.path
         do {
-            try Self.writeRebaseHelper(plan, at: helper, todo: todo)
+            try Self.writeRebaseHelper(plan, git: executable, at: helper, todo: todo)
         } catch {
             try? FileManager.default.removeItem(at: helper)
             throw GitClientError.launchFailed(verb: action.verb, reason: error.localizedDescription)
@@ -765,7 +812,7 @@ public actor GitClient {
     }
 
     /// Replaces the folder at `helper` with one holding `plan`'s todo and each reword's message.
-    private static func writeRebaseHelper(_ plan: GitRebasePlan, at helper: URL, todo: URL) throws {
+    private static func writeRebaseHelper(_ plan: GitRebasePlan, git: String, at helper: URL, todo: URL) throws {
         let files = FileManager.default
         if files.fileExists(atPath: helper.path) { try files.removeItem(at: helper) }
         try files.createDirectory(at: helper, withIntermediateDirectories: true)
@@ -773,7 +820,7 @@ public actor GitClient {
         for (index, message) in plan.rewordMessages.enumerated() {
             try Data(message.utf8).write(to: URL(fileURLWithPath: helperFile(GitRebasePlan.messageFileName(index))))
         }
-        try Data(plan.todo(helperFile: helperFile).utf8).write(to: todo)
+        try Data(plan.todo(git: git, helperFile: helperFile).utf8).write(to: todo)
     }
 
     /// Runs `body`, then, whether it returned or threw, removes the helper folder if the

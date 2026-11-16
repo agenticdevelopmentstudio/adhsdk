@@ -76,7 +76,11 @@ public actor SyntaxHighlighter {
     /// backtracks without end, say): that text stays uncoloured and the actor is free
     /// for the next call. A single regex match is not interruptible, so the limits bound
     /// the work between matches, not inside one.
+    ///
+    /// A cancelled task throws `CancellationError`, on entry and again just before the
+    /// bundle tokenizes, so a request overtaken by fast navigation never holds the actor.
     public func highlight(_ text: String, scopeName: String, theme: CodeTheme) async throws -> [StyledLine]? {
+        try Task.checkCancellation()
         guard let lengths = Self.lineLengthsWithinLimits(text),
               registry.hasGrammar(scopeName: scopeName) else { return nil }
         let context = try readyContext()
@@ -85,6 +89,7 @@ public actor SyntaxHighlighter {
             currentTheme = theme
             setThemeCount += 1
         }
+        try Task.checkCancellation()
         let json = try Self.settle(
             try call(context, "highlight", [text, scopeName, lineTimeLimit, timeBudget]), in: context, "highlight")
         if Self.timedOut(json: json) {

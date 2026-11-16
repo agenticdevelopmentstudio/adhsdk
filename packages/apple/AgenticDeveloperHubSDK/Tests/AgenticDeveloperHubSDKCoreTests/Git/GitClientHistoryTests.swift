@@ -443,6 +443,26 @@ struct GitClientHistoryTests {
         #expect(try await client.fileContents(path: "c d.txt", at: nil, in: nested) == Data("working\n".utf8))
     }
 
+    @Test("fileContents refuses a working file outside the top level, through ../ or a linked folder")
+    func fileContentsStaysInside() async throws {
+        let repository = try await GitTestRepository.make(prefix: "git-contents-inside")
+        let outside = try await GitTestRepository.make(prefix: "git-contents-outside")
+        defer {
+            repository.tearDown()
+            outside.tearDown()
+        }
+        try outside.write("secret\n", to: "s.txt")
+        try FileManager.default.createSymbolicLink(at: repository.url("link"), withDestinationURL: outside.root)
+        let escaping = "../" + outside.root.lastPathComponent + "/s.txt"
+        for path in [escaping, "link/s.txt", ""] {
+            await #expect(throws: GitClientError.self, "\(path)") {
+                try await client.fileContents(path: path, at: nil, in: repository.root)
+            }
+        }
+        try repository.write("inside\n", to: "in.txt")
+        #expect(try await client.fileContents(path: "in.txt", at: nil, in: repository.root) == Data("inside\n".utf8))
+    }
+
     @Test("fileContents reads the diff views' revision specs, <id>^1 and :0, for a path with spaces and Unicode")
     func fileContentsAtDiffRevisionsForAwkwardPath() async throws {
         let repository = try await GitTestRepository.make()

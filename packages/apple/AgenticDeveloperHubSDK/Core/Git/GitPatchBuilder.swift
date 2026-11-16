@@ -39,8 +39,9 @@ public enum GitPatchDirection: Sendable {
 /// unselected `+` becomes context; an unselected `-` is dropped. Either way the side the
 /// patch is applied to stays exactly what git diffed, so the patch applies cleanly.
 ///
-/// A `\ No newline at end of file` marker is kept only when the line it follows is kept
-/// (as itself or as context). A hunk with no selected change is left out. Each written
+/// A `\ No newline at end of file` marker follows the last line of each side that ends
+/// without one: where git put it, and after the other side's new last line when a dropped
+/// change moves that side's end (`placingMarkers`). A hunk with no selected change is left out. Each written
 /// hunk's counts are recomputed from its lines; the side being applied to keeps its start,
 /// and the other side's start moves by the net change of the hunks written before it.
 ///
@@ -99,32 +100,60 @@ public enum GitPatchBuilder {
 
     private static let noNewlineMarker = "\\ No newline at end of file"
 
+    /// One written line before markers are placed: its prefix, its text, and whether git
+    /// followed it with `\ No newline at end of file` in the diff.
+    private struct Entry {
+        let prefix: Character
+        let text: String
+        let endsWithoutNewline: Bool
+        var isOld: Bool { prefix != "+" }
+        var isNew: Bool { prefix != "-" }
+    }
+
     private static func writtenLines(of hunk: GitDiffHunk, selected: IndexSet, direction: GitPatchDirection)
         -> (lines: [String], oldCount: Int, newCount: Int) {
-        var lines: [String] = []
-        var oldCount = 0
-        var newCount = 0
-        var previousKept = false
+        var entries: [Entry] = []
         for (index, line) in hunk.lines.enumerated() {
-            let isSelected = selected.contains(index)
             let prefix: Character?
-            switch (line.kind, isSelected, direction) {
-            case (.noNewlineAtEnd, _, _):
-                if previousKept { lines.append(noNewlineMarker) }
-                continue
+            switch (line.kind, selected.contains(index), direction) {
+            case (.noNewlineAtEnd, _, _): continue
             case (.context, _, _): prefix = " "
             case (.added, true, _): prefix = "+"
             case (.removed, true, _): prefix = "-"
             case (.added, false, .forward), (.removed, false, .reverse): prefix = nil
             case (.added, false, .reverse), (.removed, false, .forward): prefix = " "
             }
-            previousKept = prefix != nil
             guard let prefix else { continue }
-            if prefix != "+" { oldCount += 1 }
-            if prefix != "-" { newCount += 1 }
-            lines.append("\(prefix)\(line.text)")
+            let next = hunk.lines.indices.contains(index + 1) ? hunk.lines[index + 1] : nil
+            entries.append(Entry(prefix: prefix, text: line.text,
+                                 endsWithoutNewline: next?.kind == .noNewlineAtEnd))
         }
-        return (lines, oldCount, newCount)
+        return placingMarkers(entries)
+    }
+
+    /// Writes `entries`, putting a marker after the last line of each side that git said
+    /// ends without a newline. A context line that ends one side without a newline but not
+    /// the other is written as a `-` and a `+` of the same text, each with its own marker
+    /// or none, which keeps both counts. The side being applied to keeps exactly the
+    /// markers git wrote, since its last line is the one git marked.
+    private static func placingMarkers(_ entries: [Entry]) -> (lines: [String], oldCount: Int, newCount: Int) {
+        let lastOld = entries.lastIndex { $0.isOld }
+        let lastNew = entries.lastIndex { $0.isNew }
+        var lines: [String] = []
+        for (index, entry) in entries.enumerated() {
+            let oldEnds = index == lastOld && entry.endsWithoutNewline
+            let newEnds = index == lastNew && entry.endsWithoutNewline
+            if entry.prefix == " ", oldEnds != newEnds {
+                lines.append("-\(entry.text)")
+                if oldEnds { lines.append(noNewlineMarker) }
+                lines.append("+\(entry.text)")
+                if newEnds { lines.append(noNewlineMarker) }
+                continue
+            }
+            lines.append("\(entry.prefix)\(entry.text)")
+            if oldEnds || newEnds { lines.append(noNewlineMarker) }
+        }
+        return (lines, entries.filter(\.isOld).count, entries.filter(\.isNew).count)
     }
 
     /// `@@ -oldStart,oldCount +newStart,newCount @@`. The side the patch is applied to (old

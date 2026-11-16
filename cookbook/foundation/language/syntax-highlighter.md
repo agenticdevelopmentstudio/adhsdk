@@ -2,11 +2,11 @@
 id: 6708bfd4-5b29-4bf9-b180-05904873906e
 title: "Syntax Highlighter"
 type: ingredient
-version: 1.2.0
+version: 1.2.1
 status: review
 language: en
 created: 2026-11-13
-modified: 2026-11-14
+modified: 2026-11-16
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -45,6 +45,7 @@ Colours source text with TextMate grammars. A `GrammarRegistry` answers grammar 
 - **first-source-wins**: `GrammarRegistry` MUST answer a scope's grammar text from the first source that has it, list each language id once (the first source's entry), and answer `scopeName(languageID:)` from that entry.
 - **resolution-order**: `LanguageResolver.languageID(for:)` MUST try, in order, the override closure, an exact file name match, an extension match ignoring case (longest multi-dot extension first, so `x.h.in` tries `.h.in` before `.in`), and otherwise answer nil. Among languages claiming the same file name or extension, the earlier language in the registry wins.
 - **limits**: `highlight` MUST answer nil, without running the engine, when the text is over `maximumBytes` (1 000 000 UTF-8 bytes) or any line is over `maximumLineLength` (10 000 UTF-16 units). It MUST also answer nil, leaving the engine usable for the next call, when tokenizing a line runs past `lineTimeLimit` (default 500 ms, passed to vscode-textmate's `tokenizeLine2`, which reports `stoppedEarly`) or the whole text runs past `timeBudget` (default 3 000 ms, checked between lines). vscode-textmate checks its limit between regex matches, so one match that backtracks without end is not interrupted.
+- **cancellation**: `highlight` MUST throw `CancellationError` when its task is cancelled, checked on entry and again just before the bundle tokenizes, so a request overtaken by navigation never holds the actor or builds the engine.
 - **unknown-scope**: `highlight` MUST answer nil when the registry has no grammar for the scope, asking `hasGrammar(scopeName:)` (a dictionary lookup for the bundled source, a file-existence check for a directory) rather than reading the grammar.
 - **line-split**: Lines MUST be split on `\r\n`, `\r` and `\n`, each one break, exactly as the bundle splits; the result MUST have one `StyledLine` per line, and a count that disagrees with the bundle's MUST throw.
 - **runs**: Each run's `range` MUST be the bundle's UTF-16 `[start, length]` within its line; a range outside the line MUST throw. `fontStyle` carries the bits italic 1, bold 2, underline 4, strikethrough 8.
@@ -94,6 +95,7 @@ Not applicable: The highlighter presents no UI.
 | syntax-highlighter-021 | directory-source, first-source-wins | a user `swift.tmLanguage.json` (`scopeName` `source.swift`, no `fileTypes`) ahead of the bundled source | the directory source has no languages; `x.swift` resolves to `swift`, whose scope is `source.swift` and whose extensions include `.swift`; the `source.swift` text is the user file's. |
 | syntax-highlighter-022 | limits | a grammar matching `a` once per character: a 9 000-character line with `lineTimeLimit` 1 ms, and fifty 2 000-character lines with `timeBudget` 0 | nil both times; a following one-line call is highlighted. |
 
+| syntax-highlighter-023 | cancellation | `highlight` called from a task already cancelled, on a new highlighter | throws `CancellationError`; no engine created. |
 ## Edge Cases
 
 - **Null / empty input**: An empty text is one line with no runs.
@@ -181,6 +183,7 @@ The bundle's `console` output and skipped user and extension grammar files go to
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.2.1 | 2026-11-16 | Mike Fullerton | Final review: -z worktrees, file-contents containment, --cleanup=whitespace, reset --, top-level apply, no-newline split and CRLF lines, configured git in the todo, literal log pathspec; cancellation |
 | 1.2.0 | 2026-11-14 | Mike Fullerton | Review fixes: a user grammar with no fileTypes no longer shadows a bundled language; tokenizing a line has a time limit |
 | 1.1.1 | 2026-11-13 | Mike Fullerton | A grammar adds a language only when its join yields an extension or file name; a contested scope is logged once while it stands |
 | 1.1.0 | 2026-11-13 | Mike Fullerton | Extension grammars: `ExtensionGrammarSource` from `contributes.grammars` joined with `contributes.languages` |

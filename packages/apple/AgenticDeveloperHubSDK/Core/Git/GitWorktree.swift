@@ -23,7 +23,8 @@ public struct GitWorktree: Sendable, Equatable, Hashable {
         self.isLocked = isLocked
     }
 
-    /// Parses `worktree list --porcelain` output into worktrees.
+    /// Parses `worktree list --porcelain` output into worktrees, NUL-terminated (`-z`) when
+    /// the output holds a NUL and newline-terminated otherwise.
     ///
     /// Records are separated by blank lines, but the parser does not rely on the
     /// blank line itself: it flushes the in-progress record whenever a new
@@ -59,7 +60,8 @@ public struct GitWorktree: Sendable, Equatable, Hashable {
             ))
         }
 
-        for rawLine in output.split(separator: "\n", omittingEmptySubsequences: false) {
+        let terminator: Character = output.contains("\0") ? "\0" : "\n"
+        for rawLine in output.split(separator: terminator, omittingEmptySubsequences: false) {
             let line = String(rawLine)
             if line.hasPrefix("worktree ") {
                 flush()

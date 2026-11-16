@@ -445,4 +445,32 @@ struct GitClientConflictTests {
         #expect(submodules.map(\.state) == [.current])
         #expect(FileManager.default.fileExists(atPath: cloned.url("lib/lib.txt").path))
     }
+
+    @Test("updateSubmodules with a path checks out that submodule and leaves the other alone")
+    func updateOneSubmoduleByPath() async throws {
+        let library = try await GitTestRepository.make(prefix: "submodule-library")
+        let superproject = try await GitTestRepository.make(prefix: "submodule-super")
+        var clone: GitTestRepository?
+        defer {
+            library.tearDown()
+            superproject.tearDown()
+            clone?.tearDown()
+        }
+        try await commitFile(library, "lib.txt", "lib\n", message: "library")
+        try await commitFile(superproject, "app.txt", "app\n", message: "app")
+        for path in ["lib", "other lib"] {
+            try await superproject.run(["-c", "protocol.file.allow=always", "submodule", "add", "-q",
+                                        library.root.path, path])
+        }
+        try await superproject.run(["commit", "-q", "-m", "add both"])
+
+        let cloned = try await GitTestRepository.clone(of: superproject, prefix: "submodule-clone")
+        clone = cloned
+        try await client.perform(.updateSubmodules(paths: ["other lib"], initialize: true), in: cloned.root)
+        let states = Dictionary(uniqueKeysWithValues: try await client.submodules(in: cloned.root)
+            .map { ($0.path, $0.state) })
+        #expect(states == ["lib": .uninitialized, "other lib": .current])
+        #expect(FileManager.default.fileExists(atPath: cloned.url("other lib/lib.txt").path))
+        #expect(!FileManager.default.fileExists(atPath: cloned.url("lib/lib.txt").path))
+    }
 }

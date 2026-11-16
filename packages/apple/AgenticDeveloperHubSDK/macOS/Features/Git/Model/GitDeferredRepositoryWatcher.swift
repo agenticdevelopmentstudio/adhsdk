@@ -51,8 +51,8 @@ final class GitDeferredRepositoryWatcher: GitRepositoryWatching {
             let gitDirectory: URL
             let commonDirectory: URL
             do {
-                gitDirectory = try await Self.directory("--git-dir", of: root, client: client)
-                commonDirectory = try await Self.directory("--git-common-dir", of: root, client: client)
+                gitDirectory = try await client.gitDirectory(of: root)
+                commonDirectory = try await client.commonDirectory(of: root)
             } catch {
                 Self.logger.error(
                     "Could not find the git directories: \(GitClientError.logDescription(of: error), privacy: .public)")
@@ -63,14 +63,6 @@ final class GitDeferredRepositoryWatcher: GitRepositoryWatching {
             self.watcher = watcher
             watcher.start(onChange: onChange)
         }
-    }
-
-    /// One absolute directory git reports for `option`, asked on its own so a path
-    /// with a newline in it is read whole; only git's trailing newline is dropped.
-    static func directory(_ option: String, of root: URL, client: GitClient) async throws -> URL {
-        var path = try await client.run("rev-parse", ["--path-format=absolute", option], in: root)
-        if path.hasSuffix("\n") { path.removeLast() }
-        return URL(fileURLWithPath: path, isDirectory: true)
     }
 }
 

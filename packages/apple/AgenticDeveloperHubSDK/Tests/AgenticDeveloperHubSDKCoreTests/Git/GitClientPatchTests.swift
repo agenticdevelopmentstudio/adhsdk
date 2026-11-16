@@ -168,6 +168,51 @@ struct GitClientPatchTests {
         }
     }
 
+    /// A repository with `committed` committed as `f.txt` and `working` in the work tree.
+    private func makeRepository(_ prefix: String, committed: String, working: String) async throws
+        -> GitTestRepository {
+        let repository = try await GitTestRepository.make(prefix: prefix)
+        do {
+            try repository.write(committed, to: "f.txt")
+            try await repository.run(["add", "f.txt"])
+            try await repository.run(["commit", "-q", "-m", "initial"])
+            try repository.write(working, to: "f.txt")
+            return repository
+        } catch {
+            repository.tearDown()
+            throw error
+        }
+    }
+
+    @Test("appending after an old side with no final newline stages and unstages byte for byte")
+    func appendAfterNoFinalNewline() async throws {
+        let repository = try await makeRepository("git-patch-eof", committed: "x\na", working: "x\na\nb")
+        defer { repository.tearDown() }
+        let unstaged = try #require(try await onlyFile(.unstaged(paths: []), in: repository))
+        let forward = try patch(selecting: "b", in: unstaged, .forward)
+        try await client.perform(.applyToIndex(patch: forward, reverse: false), in: repository.root)
+        #expect(try await indexBlob("f.txt", in: repository) == Data("x\na\nb".utf8))
+
+        let staged = try #require(try await onlyFile(.staged(paths: []), in: repository))
+        let reverse = try patch(selecting: "b", in: staged, .reverse)
+        try await client.perform(.applyToIndex(patch: reverse, reverse: true), in: repository.root)
+        // The other staged change, `a` gaining its newline, stays staged.
+        #expect(try await indexBlob("f.txt", in: repository) == Data("x\na\n".utf8))
+    }
+
+    @Test("staging one line of a CRLF file keeps every carriage return")
+    func stageOneLineOfACRLFFile() async throws {
+        let repository = try await makeRepository("git-patch-crlf", committed: "one\r\ntwo\r\nthree\r\n",
+                                                  working: "one\r\nTWO\r\nthree\r\nfour\r\n")
+        defer { repository.tearDown() }
+        let unstaged = try #require(try await onlyFile(.unstaged(paths: []), in: repository))
+        let forward = try patch(selecting: "four\r", in: unstaged, .forward)
+        try await client.perform(.applyToIndex(patch: forward, reverse: false), in: repository.root)
+        #expect(try await indexBlob("f.txt", in: repository) == Data("one\r\ntwo\r\nthree\r\nfour\r\n".utf8))
+        let rest = try #require(try await onlyFile(.unstaged(paths: []), in: repository))
+        #expect(changedTexts(rest) == ["two\r", "TWO\r"])
+    }
+
     @Test("an empty patch is refused before git runs")
     func emptyPatch() async throws {
         let repository = try await makeRepository("git-patch-empty")

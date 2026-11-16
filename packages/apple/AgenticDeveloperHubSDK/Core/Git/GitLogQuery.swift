@@ -40,10 +40,13 @@ public struct GitLogQuery: Sendable, Hashable {
         if let pickaxe { arguments.append("-S" + pickaxe) }
         if nameStatus { arguments.append("--name-status") }
         if let path {
+            // Literal and from the top: `[ab].txt` names that file alone, not `a.txt` and `b.txt`,
+            // and the path means the same from any directory. `--follow` counts it as one pathspec.
+            let pathspec = ":(top,literal)" + path
             if followRenames {
-                arguments += ["--follow", "--", path]
+                arguments += ["--follow", "--", pathspec]
             } else {
-                arguments += revisions + ["--", path]
+                arguments += revisions + ["--", pathspec]
             }
         } else {
             arguments += revisions

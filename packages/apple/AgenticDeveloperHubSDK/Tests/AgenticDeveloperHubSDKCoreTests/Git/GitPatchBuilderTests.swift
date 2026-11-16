@@ -209,6 +209,39 @@ struct GitPatchBuilderTests {
             """)
     }
 
+    /// `x`, then `-a` with no newline, `+a`, and `+b` with no newline: appending after an old
+    /// side that ended without one.
+    private static let appendedAfterNoNewline = modified([
+        hunk((1, 2), (1, 3), [context("x"), removed("a"), marker, added("a"), added("b"), marker])
+    ])
+
+    @Test("a dropped change that moves one side's end gets that side its own marker")
+    func markerFollowsTheMovedEnd() {
+        let marker = "\\ No newline at end of file"
+        // Forward, `+b` alone: `-a` turns into context that ends the old side without a
+        // newline but not the new one, so it is written as `-a` and `+a`.
+        #expect(Self.patch(Self.appendedAfterNoNewline, [0: [4]], .forward) == Self.header + """
+            @@ -1,2 +1,3 @@
+             x
+            -a
+            \(marker)
+            +a
+            +b
+            \(marker)
+
+            """)
+        // Reverse, `+b` alone: `-a` is dropped and `+a` is context, which ends the old side
+        // with a newline.
+        #expect(Self.patch(Self.appendedAfterNoNewline, [0: [4]], .reverse) == Self.header + """
+            @@ -1,2 +1,3 @@
+             x
+             a
+            +b
+            \(marker)
+
+            """)
+    }
+
     // MARK: - Files
 
     /// Naming both paths would make `git apply` rename the file as well: reversed, a staged

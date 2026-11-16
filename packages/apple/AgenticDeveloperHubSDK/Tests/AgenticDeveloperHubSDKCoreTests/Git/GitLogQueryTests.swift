@@ -22,7 +22,8 @@ struct GitLogQueryTests {
     func pathWithoutFollow() {
         var query = GitLogQuery()
         query.path = "a b.txt"
-        #expect(Array(query.arguments().suffix(6)) == ["--branches", "--tags", "--remotes", "HEAD", "--", "a b.txt"])
+        #expect(Array(query.arguments().suffix(6))
+                == ["--branches", "--tags", "--remotes", "HEAD", "--", ":(top,literal)a b.txt"])
     }
 
     @Test("following renames ends with --follow -- <path> and drops the revisions")
@@ -33,7 +34,7 @@ struct GitLogQueryTests {
         query.limit = 50
         query.skip = 100
         let arguments = query.arguments()
-        #expect(Array(arguments.suffix(3)) == ["--follow", "--", "a b.txt"])
+        #expect(Array(arguments.suffix(3)) == ["--follow", "--", ":(top,literal)a b.txt"])
         #expect(!arguments.contains("--branches"))
         #expect(!arguments.contains("HEAD"))
         #expect(arguments.contains("--max-count=50"))
@@ -47,7 +48,7 @@ struct GitLogQueryTests {
         query.path = "a b.txt"
         query.followRenames = true
         query.nameStatus = true
-        #expect(Array(query.arguments().suffix(4)) == ["--name-status", "--follow", "--", "a b.txt"])
+        #expect(Array(query.arguments().suffix(4)) == ["--name-status", "--follow", "--", ":(top,literal)a b.txt"])
     }
 
     @Test("author, message search and pickaxe map to flags")

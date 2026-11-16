@@ -66,7 +66,9 @@ public struct GitRebasePlan: Sendable, Hashable {
     private static let hexDigits = Set("0123456789abcdefABCDEF")
 
     /// The todo `GIT_SEQUENCE_EDITOR` copies over git's: `<action> <sha> <subject>` per entry,
-    /// the subject on one line. `helperFile(name)` is the path of `name` in the helper folder.
+    /// the subject on one line. `helperFile(name)` is the path of `name` in the helper folder;
+    /// `git` is the executable the `exec` lines run (`GitClientConfiguration.executableURL`),
+    /// shell-quoted, so a reword amends with the same git the rebase runs under.
     ///
     /// A reword is three lines, so the rebase never needs an editor: an `exec` that records
     /// HEAD in `head-<n>`, the pick, and an `exec` that amends HEAD with the message in
@@ -75,7 +77,8 @@ public struct GitRebasePlan: Sendable, Hashable {
     /// git still runs the next line, so an unconditional amend would rewrite the previous
     /// commit, `onto` included. A pick that ran, fast-forwarded or was continued always moves
     /// HEAD. `--allow-empty` keeps an emptied commit amendable.
-    func todo(helperFile: (String) -> String) -> String {
+    func todo(git: String = "git", helperFile: (String) -> String) -> String {
+        let git = git == "git" ? git : Self.shellQuoted(git)
         var lines: [String] = []
         var rewords = 0
         for entry in entries {
@@ -83,10 +86,10 @@ public struct GitRebasePlan: Sendable, Hashable {
             if entry.action == .reword {
                 let head = Self.shellQuoted(helperFile("head-\(rewords)"))
                 let message = Self.shellQuoted(helperFile(Self.messageFileName(rewords)))
-                lines.append("exec git rev-parse HEAD > \(head)")
+                lines.append("exec \(git) rev-parse HEAD > \(head)")
                 lines.append("pick \(entry.commit) \(subject)")
-                lines.append("exec test \"$(git rev-parse HEAD)\" = \"$(cat \(head))\""
-                             + " || git commit --amend --no-edit --allow-empty -F \(message)")
+                lines.append("exec test \"$(\(git) rev-parse HEAD)\" = \"$(cat \(head))\""
+                             + " || \(git) commit --amend --no-edit --allow-empty -F \(message)")
                 rewords += 1
             } else {
                 lines.append("\(entry.action.rawValue) \(entry.commit) \(subject)")

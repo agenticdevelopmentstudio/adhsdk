@@ -24,3 +24,4 @@
 | syntax-highlighter-021 | directory-source, first-source-wins | a user `swift.tmLanguage.json` (`scopeName` `source.swift`, no `fileTypes`) ahead of the bundled source | the directory source has no languages; `x.swift` resolves to `swift`, whose scope is `source.swift` and whose extensions include `.swift`; the `source.swift` text is the user file's. |
 | syntax-highlighter-022 | limits | a grammar matching `a` once per character: a 9 000-character line with `lineTimeLimit` 1 ms, and fifty 2 000-character lines with `timeBudget` 0 | nil both times; a following one-line call is highlighted. |
 
+| syntax-highlighter-023 | cancellation | `highlight` called from a task already cancelled, on a new highlighter | throws `CancellationError`; no engine created. |
