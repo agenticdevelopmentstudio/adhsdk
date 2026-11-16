@@ -267,6 +267,56 @@ final class AgentPageWalkerWebViewTests: XCTestCase {
         XCTAssertNil(reading.generation)
     }
 
+    /// A walk-local reference (`g` for a plain paragraph or label, `t` for a
+    /// text piece) is never in the snapshot runtime's ref table, so an action
+    /// given one is refused as an unknown ref, never resolved to an element.
+    func test_walkLocalRefsAreUnknownToActions() async throws {
+        let automation = BrowserAutomation(webView: host.webView, console: BrowserConsoleLog())
+        let snap = try await automation.agentSnapshot()
+        let refs = nodes(snap.page.root).map(\.ref)
+        let generic = try XCTUnwrap(refs.first { $0.hasPrefix("g") }, "the fixture's paragraphs carry g refs")
+        let text = try XCTUnwrap(refs.first { $0.hasPrefix("t") }, "the fixture's text carries t refs")
+        for ref in [generic, text] {
+            do {
+                _ = try await automation.click(ref: ref, generation: snap.generation, native: false)
+                XCTFail("\(ref) was clicked")
+            } catch let error as BrowserAutomationError {
+                guard case .unknownRef = error else { return XCTFail("\(ref): \(error)") }
+            }
+        }
+    }
+
+    /// The install guard compares the host's version with the one the walker
+    /// leaves on the page; if they differ the walker reinstalls on every read.
+    func test_walkerVersionMatchesTheHost() throws {
+        let source = try AgentPageWalkerRuntime.source
+        let pattern = try NSRegularExpression(pattern: #"const VERSION = (\d+);"#)
+        let range = NSRange(source.startIndex..., in: source)
+        let match = try XCTUnwrap(pattern.firstMatch(in: source, range: range), "no VERSION in the walker")
+        let digits = try XCTUnwrap(Range(match.range(at: 1), in: source))
+        XCTAssertEqual(Int(source[digits]), AgentPageWalkerRuntime.version)
+    }
+
+    /// Tables print as today's snapshot prints them: each `thead`, `tbody`
+    /// and `tfoot` (implicit or written) as a numbered rowgroup, `th` as
+    /// columnheader, and the explicit header and group roles kept.
+    func test_tablesKeepTodaysRoles() async throws {
+        await host.load(html: """
+            <!doctype html><html><body><table>
+            <thead><tr><th>Head</th></tr></thead>
+            <tbody><tr><td role="rowheader">Side</td><td>Body</td></tr></tbody>
+            </table><div role="rowgroup"><div role="row"><span role="columnheader">Col</span></div></div>
+            </body></html>
+            """)
+        let reading = await source(try emptyStore()).read(options: BrowserSnapshotOptions())
+        let lines = tree(reading.page).split(separator: "\n").map { $0.trimmingCharacters(in: .whitespaces) }
+        XCTAssertEqual(Array(lines.dropFirst()), [
+            "- table [ref=e1]:", "- rowgroup [ref=e2]:", "- row [ref=e3]:", "- columnheader \"Head\" [ref=e4]",
+            "- rowgroup [ref=e5]:", "- row [ref=e6]:", "- rowheader \"Side\" [ref=e7]", "- cell \"Body\" [ref=e8]",
+            "- rowgroup [ref=e9]:", "- row [ref=e10]:", "- columnheader \"Col\" [ref=e11]"
+        ])
+    }
+
     func test_largePageFitsTheBudget() async throws {
         // Finder may spend only a share of the budget; the rest of the page records the
         // structural path, so a page this size still reads.

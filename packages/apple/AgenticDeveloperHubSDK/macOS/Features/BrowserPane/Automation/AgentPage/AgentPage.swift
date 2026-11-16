@@ -216,7 +216,9 @@ struct AgentSnapshotMapper {
 
     static let nameLimit = 100, valueLimit = 50
     static let genericKinds: Set<AgentNodeKind> = [.text, .paragraph, .label]
-    static let nameFromContent: Set<AgentNodeKind> = [.button, .link, .heading, .cell, .option]
+    static let nameFromContent: Set<AgentNodeKind> = [
+        .button, .link, .heading, .cell, .columnHeader, .rowHeader, .option
+    ]
     static let controls: Set<AgentNodeKind> = [.textField, .textArea, .select, .checkbox, .radio]
     static let valueShown: Set<AgentNodeKind> = [.textField, .textArea, .select]
     static let interactiveKinds: Set<AgentNodeKind> = [
@@ -312,8 +314,11 @@ struct AgentSnapshotMapper {
         case .select: return "combobox"
         case .option: return "option"
         case .table: return "table"
+        case .rowGroup: return "rowgroup"
         case .row: return "row"
         case .cell: return "cell"
+        case .columnHeader: return "columnheader"
+        case .rowHeader: return "rowheader"
         case .image: return "img"
         case .paragraph, .label, .text: return "generic"
         }
@@ -363,7 +368,8 @@ struct AgentTextRenderer {
     private var pieces: [String] = []
 
     private static let blocks: Set<AgentNodeKind> = [
-        .document, .landmark, .heading, .paragraph, .list, .listItem, .table, .row, .select, .option, .textArea
+        .document, .landmark, .heading, .paragraph, .list, .listItem, .table, .rowGroup, .row, .select, .option,
+        .textArea
     ]
 
     mutating func visit(_ node: AgentNode) {
@@ -459,8 +465,11 @@ struct AgentHTMLRenderer {
             wrap("a", node, extra: extra)
         case .button: wrap("button", node, extra: [("type", "button")])
         case .table: wrap("table", node)
+        case .rowGroup: wrap("tbody", node)
         case .row: wrap("tr", node)
         case .cell: wrap("td", node)
+        case .columnHeader: wrap("th", node, extra: [("scope", "col")])
+        case .rowHeader: wrap("th", node, extra: [("scope", "row")])
         case .label: wrap("label", node)
         case .option:
             var extra: [(String, String)] = []

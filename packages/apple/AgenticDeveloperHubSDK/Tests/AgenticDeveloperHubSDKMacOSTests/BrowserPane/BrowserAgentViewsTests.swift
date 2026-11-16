@@ -165,13 +165,15 @@ final class BrowserAgentViewsTests: XCTestCase {
         let installed = await waitUntil { preview.shownHTML != nil }
         XCTAssertTrue(installed, "the page never loaded")
         let blank = URL(string: "about:blank")
-        let subframe = preview.decidePolicy(targetsMainFrame: false, url: blank, navigationType: .other)
-        XCTAssertEqual(subframe, .cancel, "a subframe's or a frameless load is never the controller's own")
-        let link = preview.decidePolicy(targetsMainFrame: true, url: blank, navigationType: .linkActivated)
+        let subframe = preview.decidePolicy(targetFrameIsMain: false, url: blank, navigationType: .other)
+        XCTAssertEqual(subframe, .cancel, "a subframe's load is never the controller's own")
+        let frameless = preview.decidePolicy(targetFrameIsMain: nil, url: blank, navigationType: .other)
+        XCTAssertEqual(frameless, .cancel, "a load with no target frame is never the controller's own")
+        let link = preview.decidePolicy(targetFrameIsMain: true, url: blank, navigationType: .linkActivated)
         XCTAssertEqual(link, .cancel, "a link the page follows is not the controller's load")
-        let first = preview.decidePolicy(targetsMainFrame: true, url: blank, navigationType: .other)
+        let first = preview.decidePolicy(targetFrameIsMain: true, url: blank, navigationType: .other)
         XCTAssertEqual(first, .allow, "the controller's own load goes through")
-        let second = preview.decidePolicy(targetsMainFrame: true, url: blank, navigationType: .other)
+        let second = preview.decidePolicy(targetFrameIsMain: true, url: blank, navigationType: .other)
         XCTAssertEqual(second, .cancel, "one load, one credit")
     }
 
@@ -189,11 +191,11 @@ final class BrowserAgentViewsTests: XCTestCase {
         preview.show(newest)
         XCTAssertEqual(preview.shownHTML, newest.html())
         let blank = URL(string: "about:blank")
-        let superseded = preview.decidePolicy(targetsMainFrame: true, url: blank, navigationType: .other)
+        let superseded = preview.decidePolicy(targetFrameIsMain: true, url: blank, navigationType: .other)
         XCTAssertEqual(superseded, .allow, "the superseded load's question is answered")
-        let latest = preview.decidePolicy(targetsMainFrame: true, url: blank, navigationType: .other)
+        let latest = preview.decidePolicy(targetFrameIsMain: true, url: blank, navigationType: .other)
         XCTAssertEqual(latest, .allow, "the newest page loads")
-        let extra = preview.decidePolicy(targetsMainFrame: true, url: blank, navigationType: .other)
+        let extra = preview.decidePolicy(targetFrameIsMain: true, url: blank, navigationType: .other)
         XCTAssertEqual(extra, .cancel, "two loads, two credits")
     }
 

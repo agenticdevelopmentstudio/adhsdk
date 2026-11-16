@@ -19,7 +19,7 @@
 // stays what it was for the same page.
 (function () {
   'use strict';
-  const VERSION = 4;
+  const VERSION = 5;
   if (globalThis.__adkAgentWalkVersion === VERSION && typeof globalThis.__adkAgentWalk === 'function') { return; }
 
   const DEFAULT_TIMEOUT_MS = 1500;
@@ -37,7 +37,8 @@
   const LANDMARK_TAGS = { header: 'banner', nav: 'navigation', main: 'main', footer: 'contentinfo',
     aside: 'complementary', form: 'form', section: 'region', article: 'article' };
   const TAG_KINDS = { button: 'button', summary: 'button', select: 'select', textarea: 'textArea',
-    option: 'option', img: 'image', table: 'table', tr: 'row', th: 'cell', td: 'cell', ul: 'list',
+    option: 'option', img: 'image', table: 'table', thead: 'rowGroup', tbody: 'rowGroup',
+    tfoot: 'rowGroup', tr: 'row', th: 'columnHeader', td: 'cell', ul: 'list',
     ol: 'list', li: 'listItem', p: 'paragraph', label: 'label' };
   const INPUT_KINDS = { button: 'button', submit: 'button', reset: 'button', image: 'button',
     checkbox: 'checkbox', radio: 'radio' };
@@ -56,7 +57,8 @@
     menuitemradio: 'radio', textbox: 'textField', searchbox: 'textField', spinbutton: 'textField',
     slider: 'textField', combobox: 'select', listbox: 'select', option: 'option', heading: 'heading',
     list: 'list', listitem: 'listItem', table: 'table', grid: 'table', treegrid: 'table', row: 'row',
-    cell: 'cell', gridcell: 'cell', columnheader: 'cell', rowheader: 'cell', img: 'image' };
+    rowgroup: 'rowGroup', cell: 'cell', gridcell: 'cell', columnheader: 'columnHeader',
+    rowheader: 'rowHeader', img: 'image' };
   // The `type` a role-only text field carries, so the snapshot prints the
   // role the legacy walk printed (AgentSnapshotMapper reads `type`); a
   // non-input slider or spinbutton also sends its `aria-valuenow` as value.
@@ -64,7 +66,8 @@
   // Kinds the snapshot treats as generic: collapsed into one text line, or
   // flattened into their parent.
   const GENERIC_KINDS = new Set(['paragraph', 'label']);
-  const NAME_FROM_CONTENT = new Set(['button', 'link', 'heading', 'cell', 'option']);
+  const NAME_FROM_CONTENT = new Set(['button', 'link', 'heading', 'cell', 'columnHeader', 'rowHeader',
+    'option']);
   // Roles the legacy walk named from content whose kind is not: they keep
   // that name when folded into checkbox and radio.
   const CONTENT_NAMED_ROLES = new Set(['switch', 'menuitemcheckbox', 'menuitemradio']);

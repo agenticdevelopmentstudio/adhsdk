@@ -4,7 +4,7 @@ import Foundation
 /// reaches an agent in (the Agent Page Builder recipe).
 public enum AgentNodeKind: String, Codable, CaseIterable, Sendable {
     case document, landmark, heading, paragraph, text, list, listItem, link, button, textField, textArea,
-         checkbox, radio, select, option, table, row, cell, image, label
+         checkbox, radio, select, option, table, rowGroup, row, cell, columnHeader, rowHeader, image, label
 }
 
 /// What the agent walker may emit and the builder may keep: node kinds, and
