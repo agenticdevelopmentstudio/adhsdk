@@ -596,12 +596,15 @@ public final class SafariExtensionHost: NSObject {
         try library.commitStaged(id)
         if replacing != nil {
             // Other files now: not the store's, not an app's, and granted
-            // only what the person just agreed to.
+            // only what the person just agreed to. The sheet asks nothing
+            // about private panes or file pages, so neither carries over.
             entry.record.isFromWebStore = false
             entry.record.appSource = nil
             entry.sourceMissing = false
             entry.record.grantedPermissions = []
             entry.record.grantedOrigins = []
+            entry.record.allowsPrivateBrowsing = nil
+            entry.record.allowsFileAccess = nil
         }
         let webExtension = try await WKWebExtension(resourceBaseURL: library.directory(of: id))
         entry.webExtension = webExtension

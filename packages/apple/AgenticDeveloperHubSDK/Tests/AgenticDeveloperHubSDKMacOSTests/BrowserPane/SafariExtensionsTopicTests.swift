@@ -264,6 +264,34 @@ final class SafariExtensionsTopicTests: XCTestCase {
         XCTAssertEqual(host.extensions().map(\.isFromWebStore), [false])
     }
 
+    /// A replacement is not handed the private browsing and file access the
+    /// installed extension was allowed: the Replace sheet never asks about
+    /// either.
+    func test_keyedTakeoverDoesNotInheritPrivateOrFileAccess() async throws {
+        let host = makeHost()
+        let keyed = try XCTUnwrap(WebStoreExtension.id(ofKey: Self.sharedKey))
+        let store = try makeFolder("Store", extensionName: "Trusted", key: Self.sharedKey)
+        host.confirmInstall = { _, _, _, _, _ in true }
+        let storeInstalled = try await host.install(crx: try zip(store), id: keyed, presentingOn: nil)
+        XCTAssertTrue(storeInstalled)
+        try host.setPrivateAccess(keyed, true)
+        try host.setFileAccess(keyed, true)
+        XCTAssertEqual(host.details(of: keyed)?.allowsPrivateBrowsing, true)
+        XCTAssertEqual(host.details(of: keyed)?.allowsFileAccess, true)
+
+        let impostor = try makeFolder("Impostor", extensionName: "Impostor", key: Self.sharedKey)
+        let replaced = try await host.installDownloaded(at: impostor)
+        XCTAssertTrue(replaced)
+        let details = try XCTUnwrap(host.details(of: keyed))
+        XCTAssertEqual(details.name, "Impostor")
+        XCTAssertFalse(details.allowsPrivateBrowsing)
+        XCTAssertFalse(details.allowsFileAccess)
+        let saved = try XCTUnwrap(SafariExtensionLibrary(root: root.appendingPathComponent("Library"))
+            .records().first { $0.id == keyed })
+        XCTAssertNotEqual(saved.allowsPrivateBrowsing, true)
+        XCTAssertNotEqual(saved.allowsFileAccess, true)
+    }
+
     /// The link check fails closed: a folder that is itself a link, or is not
     /// there to read, is reported rather than passed.
     func test_symbolicLinkCheckFailsClosed() throws {

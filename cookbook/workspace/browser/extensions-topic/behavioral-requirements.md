@@ -52,7 +52,8 @@
   site the new files ask for, since a manifest key is public. Once accepted,
   the extension MUST become a local one (not from the Web Store, not from an
   app, its source not missing) granted only what was just agreed to, so the
-  store's update check leaves it alone.
+  store's update check leaves it alone; private browsing and file access,
+  which the confirmation does not ask about, MUST be off.
 - **downloaded-refuses-links**: The extension host MUST refuse an item
   whose staged copy holds a symbolic link, with an error naming the item and
   the link, before the permission confirmation, and MUST leave nothing
