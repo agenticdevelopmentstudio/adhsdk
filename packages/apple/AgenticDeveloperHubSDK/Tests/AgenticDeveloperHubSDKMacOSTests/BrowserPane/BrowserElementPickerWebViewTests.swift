@@ -16,7 +16,8 @@ final class BrowserElementPickerWebViewTests: XCTestCase {
       <div class="css-1x2y3z ad-card" data-test="target">Sponsored stories</div>
       <div class="css-9q8w7e ad-card">Another sponsor</div>
       <div class="only" data-test="only">Lonely</div>
-      <span id="promo" class="a8f3k2q9 x_9f8e7d" data-test="random">Promo</span>
+      <span id="promo" class="a8f3k2q9 x_9f8e7d promo-tag" data-test="random">Promo</span>
+      <span class="b7e2c4d1 promo-tag">More promo</span>
       <div data-test="long">   \(BrowserElementPickerWebViewTests.longText)  </div>
       <img alt="Logo" data-test="img" src="data:image/gif;base64,R0lGODlhAQABAAAAACw=">
       <hr data-test="hr">
@@ -86,9 +87,14 @@ final class BrowserElementPickerWebViewTests: XCTestCase {
 
     func test_idAndGeneratedClassesNeverInLooseSelector() async throws {
         let candidate = try await pick("random")
-        if let loose = candidate.allLikeIt {
-            XCTAssertEqual(loose, "span", "neither the id nor a generated class")
+        let loose = try XCTUnwrap(candidate.allLikeIt, "two spans share promo-tag, so a loose selector exists")
+        XCTAssertFalse(loose.contains("#"), "no id: \(loose)")
+        XCTAssertTrue(loose.contains("promo-tag"), "the stable class is kept: \(loose)")
+        for generated in ["a8f3k2q9", "x_9f8e7d", "b7e2c4d1"] {
+            XCTAssertFalse(loose.contains(generated), "\(generated) looks generated: \(loose)")
         }
+        XCTAssertEqual(loose, "span.promo-tag")
+        XCTAssertEqual(candidate.allLikeItCount, 2)
     }
 
     func test_looseSelectorAbsentWhenSameAsThisItem() async throws {
