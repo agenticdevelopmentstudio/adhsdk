@@ -358,7 +358,9 @@ and pane. It is web-only for now.
   snake_case (`push_mode`, `default_enabled`) to `pushMode` and `defaultEnabled`,
   keeping `resource`, `scope`, `enabled` and `overridden` as they are.
 - **sync-tables-read-drains-list**: reading the catalog MUST drain the /v1 list
-  envelope, so every resource is returned however the server pages it.
+  envelope, so every resource is returned however the server pages it. It pages
+  by each row's `id`, which the backend sets to the row's resource, because the
+  /v1 gateway pages only by `id`.
 - **sync-tables-set-returns-catalog**: setting a resource MUST POST
   `{ enabled }` to its resource path and return the full refreshed catalog from the
   response's `tables`.
@@ -441,6 +443,7 @@ component not among these given sources.
 | ecosystem-config-034 | sync-tables-pane-family | The pane mounted with no `family`, then with `family="admin"`, both for "eco-1" | The first uses the `"ecosystem"` family; the two keep separate cached catalogs, keyed by family and ecosystem id |
 | ecosystem-config-035 | sync-tables-pane-sequential | Three rows selected, Sync, and the second write fails | The writes run one at a time; the run halts at the second until the user continues or stops; the first save stays in place |
 | ecosystem-config-036 | sync-tables-pane-reseed | A write returns a catalog | The cached catalog is replaced with the returned catalog, then refetched once the write settles |
+| ecosystem-config-038 | sync-tables-read-drains-list | A catalog row `{id:"content.feed", resource:"content.feed", …}` | The read pages from `content.feed` (the row's `id`) |
 | ecosystem-config-037 | auth-login-allow-list-dropped | The allow-list switch on with `alice@example.com`, Save, and the backend answers 200 with no `loginAllowedEmails`; then a save sending `null` answered the same way | The first save fails with "The sign-in list was not saved, so everyone can still sign in. This backend does not support the list yet.", and the switch and the row stay as typed; the `null` save succeeds |
 
 ## Edge Cases

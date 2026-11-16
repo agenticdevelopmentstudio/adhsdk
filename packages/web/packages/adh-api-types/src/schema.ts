@@ -18332,6 +18332,8 @@ export interface components {
         };
         /** @description One resource from the sync catalog as it stands for a given ecosystem: what the code ships as the default, and whether an operator has overridden it. */
         SyncEnrollmentRow: {
+            /** @description The resource again, as the object id the /v1 list pages by (starting_after) */
+            id: string;
             /** @description "<schema>.<table>", e.g. content.contacts */
             resource: string;
             /**
