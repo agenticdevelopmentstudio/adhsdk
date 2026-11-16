@@ -12,7 +12,7 @@ export interface RenderedHook<T, P> {
   unmount: () => void
 }
 
-export function renderHook<T, P = undefined>(hook: (props: P) => T, initialProps?: P): RenderedHook<T, P> {
+export function renderHook<T, P = undefined>(hook: (props: P) => T, initialProps?: NoInfer<P>): RenderedHook<T, P> {
   const result = { current: undefined as unknown as T }
   const container = document.createElement('div')
   const root = createRoot(container)
