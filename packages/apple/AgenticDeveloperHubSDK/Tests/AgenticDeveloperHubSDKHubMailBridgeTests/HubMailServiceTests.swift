@@ -6,7 +6,7 @@ import AgenticDeveloperHubSDKHubMail
 import AgenticDeveloperHubSDKHubAuth
 @testable import AgenticDeveloperHubSDKHubMailBridge
 
-/// Vectors hub-mail-bridge-023 to 029 and 038 to 041: sign-in opens the
+/// Vectors hub-mail-bridge-023 to 029, 038 to 041 and 043: sign-in opens the
 /// mirror behind one stable client, sign-out purges it (even one a previous
 /// launch left on disk), a sign-in waits for that purge, a refused token is
 /// renewed or retried, and the routed client follows a switch.
@@ -258,6 +258,28 @@ final class HubMailServiceTests: XCTestCase {
         XCTAssertTrue(connected)
         XCTAssertEqual(seen, [.connected, .failed(HubMailService.authRetryMessage), .connected])
         await service.signedOut()
+    }
+
+    // 043
+    func testEachCompletedPullMovesTheAccountsLastSync() async throws {
+        // The second pull finds the script empty and answers no changes.
+        let service = service()
+
+        await service.signedIn()
+        let first = try await firstSync(service)
+        XCTAssertNotNil(first)
+
+        try await Task.sleep(for: .milliseconds(5))
+        await service.syncNow()
+        let moved = try await eventually { try await firstSync(service) != first }
+        XCTAssertTrue(moved)
+        await service.signedOut()
+    }
+
+    /// The first account's `lastSyncAt`, once the pull that created it completed.
+    private func firstSync(_ service: HubMailService) async throws -> String? {
+        _ = try await eventually { try await service.client.accounts().first?.lastSyncAt != nil }
+        return try await service.client.accounts().first?.lastSyncAt
     }
 }
 

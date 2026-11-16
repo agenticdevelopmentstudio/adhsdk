@@ -10,4 +10,4 @@
 - The app stays signed in past the access token's lifetime: the next pull is refused, the engine pauses for auth and drops its periodic kicks, and the service renews the session and pulls again. While the hub cannot be reached to renew, the status says new mail is not arriving and the service tries again every `authRetryDelay`; a refresh token the hub rejects signs the user out instead.
 - A sign-in that arrives while a sign-out is still purging waits for the purge, then opens the mirror; otherwise the purge would delete the rows the new identity had just pulled.
 - `HubMailLocation.app(_:)` only names the file; a folder that does not exist yet is created when the database first opens, on sign-in or on a sign-out purge.
-
+- The background sync pulls new mail while the mail browser is open: the browser polls `listAccounts` and reloads when `lastSyncAt` moves, so the hub bridge reports the time of each completed pull rather than nil, which would never move.

@@ -160,6 +160,20 @@ final class HubMailBridgeTests: XCTestCase {
         XCTAssertEqual(accounts.map(\.id), ["c1", "c2"])
         XCTAssertEqual(accounts.map(\.email), ["me@x.com", "c2"])
         XCTAssertTrue(accounts.allSatisfy { $0.status == .active })
+        XCTAssertTrue(accounts.allSatisfy { $0.lastSyncAt == nil })
+    }
+
+    // 042
+    func testAccountsReportWhenTheMirrorLastSynced() async throws {
+        try upsertMessage("m1", Seed())
+        let synced = HubMailBridge(
+            store: store,
+            writeLabels: { _ in },
+            syncNow: {},
+            lastSyncAt: { "2026-11-16T10:00:00.000Z" })
+        let response = await synced.respond(to: .listAccounts)
+        guard case .accounts(let accounts) = response else { return XCTFail("\(response)") }
+        XCTAssertEqual(accounts.map(\.lastSyncAt), ["2026-11-16T10:00:00.000Z"])
     }
 
     func testAddressReadsTheAngleBracketPart() {

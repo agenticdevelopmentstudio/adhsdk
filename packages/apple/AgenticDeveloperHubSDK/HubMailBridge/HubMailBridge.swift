@@ -13,15 +13,21 @@ public final class HubMailBridge: Sendable {
     private let store: HubMailStore
     private let writeLabels: @Sendable (HubMailLabelWrite) async throws -> Void
     private let syncNow: @Sendable () async -> Void
+    private let lastSyncAt: @Sendable () -> String?
 
+    /// - Parameter lastSyncAt: when the mirror's last pull completed (ISO
+    ///   8601), reported as every account's `lastSyncAt` so a reader that
+    ///   polls `listAccounts` can tell new mail has arrived.
     public init(
         store: HubMailStore,
         writeLabels: @escaping @Sendable (HubMailLabelWrite) async throws -> Void,
-        syncNow: @escaping @Sendable () async -> Void
+        syncNow: @escaping @Sendable () async -> Void,
+        lastSyncAt: @escaping @Sendable () -> String? = { nil }
     ) {
         self.store = store
         self.writeLabels = writeLabels
         self.syncNow = syncNow
+        self.lastSyncAt = lastSyncAt
     }
 
     /// A label writer that posts through `sender` and treats an answer that
@@ -96,17 +102,19 @@ public final class HubMailBridge: Sendable {
     struct Owner {
         let id: String
         let email: String
+        let lastSyncAt: String?
 
         var account: MailAccount {
-            MailAccount(id: id, email: email, status: .active, lastSyncAt: nil, lastError: nil, settings: .default)
+            MailAccount(id: id, email: email, status: .active, lastSyncAt: lastSyncAt, lastError: nil, settings: .default)
         }
     }
 
     private func accounts() throws -> [Owner] {
-        try store.connections().map { id in
+        let synced = lastSyncAt()
+        return try store.connections().map { id in
             let sent = try store.messages(HubMailQuery(connectionId: id, labelIds: ["SENT"], limit: 1))
             let email = sent.messages.first?.from.flatMap(Self.address) ?? id
-            return Owner(id: id, email: email)
+            return Owner(id: id, email: email, lastSyncAt: synced)
         }
     }
 

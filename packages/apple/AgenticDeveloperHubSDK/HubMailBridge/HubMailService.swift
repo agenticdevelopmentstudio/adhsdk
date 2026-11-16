@@ -120,13 +120,15 @@ public final class HubMailService {
         }
         let sync = connection.sync
         self.sync = sync
+        let clock = SyncClock()
         current.bridge = HubMailBridge(
             store: sync.store,
             writeLabels: connection.writeLabels,
-            syncNow: { await sync.syncNow() }
+            syncNow: { await sync.syncNow() },
+            lastSyncAt: { clock.value }
         )
         status = .connected
-        watcher = watch(sync, refresh: connection.refreshSession)
+        watcher = watch(sync, clock: clock, refresh: connection.refreshSession)
         if let syncInterval {
             let trigger = PeriodicTriggerSource(interval: syncInterval)
             self.trigger = trigger
@@ -187,9 +189,11 @@ public final class HubMailService {
     /// each `.authRequired` renews the session and pulls again. A refusal
     /// right after a renewal, or a renewal that fails, shows
     /// `authRetryMessage` and tries again after `authRetryDelay`; the next
-    /// completed cycle clears it.
+    /// completed cycle clears it. Each completed cycle is also stamped on
+    /// `clock`, which the bridge reports as the accounts' `lastSyncAt`.
     private func watch(
         _ sync: HubMailSync,
+        clock: SyncClock,
         refresh: @escaping @Sendable () async -> Bool
     ) -> Task<Void, Never> {
         Task { [weak self] in
@@ -209,6 +213,7 @@ public final class HubMailService {
                         service.pull(sync, after: service.authRetryDelay)
                     }
                 case .idle:
+                    clock.stamp()
                     renewedSinceLastCycle = false
                     if case .failed = service.status { service.status = .connected }
                 default:
@@ -235,6 +240,18 @@ public final class HubMailService {
 }
 
 /// The bridge `client` answers through, read off the main actor.
+/// When the open mirror's last pull completed, read by the bridge from any thread.
+final class SyncClock: Sendable {
+    private let lock = OSAllocatedUnfairLock<String?>(initialState: nil)
+
+    var value: String? { lock.withLock { $0 } }
+
+    func stamp(_ date: Date = Date()) {
+        let text = date.formatted(Date.ISO8601FormatStyle(includingFractionalSeconds: true))
+        lock.withLock { $0 = text }
+    }
+}
+
 private final class BridgeBox: Sendable {
     private let lock = OSAllocatedUnfairLock<HubMailBridge?>(initialState: nil)
 
