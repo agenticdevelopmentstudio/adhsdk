@@ -223,13 +223,17 @@ struct GitWorkingCopyViewControllerTests {
         #expect(delegate.intents == [.openMerge("both.txt")])
     }
 
-    @Test("selecting a conflict shows its unstaged diff and clears the other lists")
+    @Test("selecting a conflict with markers opens the merge view; one without shows its conflicted diff")
     func conflictSelection() {
         let (workingCopy, delegate) = loaded(Self.conflictSource())
         select(workingCopy.unstagedList, row: 0)
         select(workingCopy.conflictsList, row: 1)
-        #expect(delegate.events == [.unstaged(paths: ["b"]), .unstaged(paths: ["both.txt"])])
+        #expect(delegate.events == [.unstaged(paths: ["b"])], "a marked conflict reports no diff target")
+        #expect(delegate.intents == [.openMerge("both.txt")])
         #expect(workingCopy.unstagedList.tableView.selectedRow == -1)
+        select(workingCopy.conflictsList, row: 2)
+        #expect(delegate.events == [.unstaged(paths: ["b"]), .conflicted(path: "gone.txt")])
+        #expect(delegate.intents == [.openMerge("both.txt")])
         select(workingCopy.stagedList, row: 0)
         #expect(workingCopy.conflictsList.tableView.selectedRow == -1)
     }

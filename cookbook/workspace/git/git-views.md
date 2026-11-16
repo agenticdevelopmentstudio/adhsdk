@@ -2,7 +2,7 @@
 id: bdd3a72d-8810-439b-bad7-ec16233cb2a3
 title: "Git Views"
 type: ingredient
-version: 1.12.1
+version: 1.12.2
 status: review
 language: en
 created: 2026-11-13
@@ -121,7 +121,7 @@ The **diff** (`GitDiffViewController`) shows one file's change for a `GitDiffTar
 - **wc-double-click**: Double-clicking a staged row MUST send `.unstage` with its paths, an unstaged row `.stage([path])`, through the changed-files list's `onDoubleClick`.
 - **wc-commit-box**: Under the two lists, the commit box MUST offer a plain-text message, an `Amend` checkbox and a `Commit` button (⌘↩). Commit is enabled only when the message trimmed of whitespace and newlines is not empty and there are staged changes (the data source's `staged` is not empty) or Amend is on. Pressing it sends `.commit(message:amend:)` with the message exactly as typed.
 - **wc-amend**: Ticking or unticking Amend MUST send `.amendChanged(_:)` with its new state; the owner may then fill the message. `canAmend` (set by the owner, false until it is told otherwise) disables the checkbox and unticks it when false, without a delegate call. `commitDidSucceed()` empties the message and unticks Amend, without a delegate call.
-- **wc-conflicts-list**: While the data source's `conflicts` is not empty, a third list, `Conflicts` (context `conflicts`, view `git.fileList.conflicts`, header `Conflicts (<count>)`, no button), MUST sit above Staged, holding each conflicted path sorted, status `.conflicted`; with no conflicts its pane is hidden. A conflicted path MUST NOT also be listed under Unstaged, so the Unstaged header counts only the rest. Selecting a conflict calls `workingCopy(_:didSelect:)` with `.unstaged(paths: [path])`, and selecting in any of the three lists clears the other two.
+- **wc-conflicts-list**: While the data source's `conflicts` is not empty, a third list, `Conflicts` (context `conflicts`, view `git.fileList.conflicts`, header `Conflicts (<count>)`, no button), MUST sit above Staged, holding each conflicted path sorted, status `.conflicted`; with no conflicts its pane is hidden. A conflicted path MUST NOT also be listed under Unstaged, so the Unstaged header counts only the rest. Selecting a conflict whose kind `hasMarkers` MUST send `.openMerge(path)` and nothing else; selecting one without markers calls `workingCopy(_:didSelect:)` with `.conflicted(path:)`, a diff of the working file against the merge base, so the pane is never blank; selecting in any of the three lists clears the other two.
 - **wc-conflict-menu**: A conflict row's context menu MUST hold `Open in Merge View` (`.openMerge(path)`) and a separator, both only when its kind `hasMarkers` (so not for DU, UD, AU, UA or DD), then `Resolve Using Ours…` (`.resolve([path], .ours)`), `Resolve Using Theirs…` (`.resolve([path], .theirs)`) and `Mark Resolved` (`.markResolved([path])`). Double-clicking a conflict with markers sends `.openMerge(path)`; one without sends nothing. Confirming is the owner's.
 - **wc-ui-thread**: The working copy MUST be used on the UI thread.
 
@@ -368,7 +368,7 @@ The root view carries `git.fileHistory`, the split `git.fileHistory.split`, the 
 | git-views-083 | wc-conflict-menu | the menu of `both.txt` (UU); fire each item | `Open in Merge View`, a separator, `Resolve Using Ours…`, `Resolve Using Theirs…`, `Mark Resolved`; `.openMerge`, `.resolve(.ours)`, `.resolve(.theirs)`, `.markResolved` |
 | git-views-084 | wc-conflict-menu | the menu of `gone.txt` (DU) | `Resolve Using Ours…`, `Resolve Using Theirs…`, `Mark Resolved`, no Open |
 | git-views-085 | wc-conflict-menu | double-click `both.txt`, then `gone.txt` | `.openMerge("both.txt")` only |
-| git-views-086 | wc-conflicts-list | select `b`, then `both.txt`, then a staged row | `.unstaged([b])`, `.unstaged([both.txt])`; each selection clears the other lists |
+| git-views-086 | wc-conflicts-list | select `b`, then `both.txt` (UU), then `gone.txt` (DU), then a staged row | `.unstaged([b])`; `.openMerge("both.txt")` and no selection event; `.conflicted(path: "gone.txt")`; each selection clears the other lists |
 | git-views-087 | history-menu | three commits, `headCommit` the first; the menus of rows 0, 1 and 2; then `operationState` merging | `Interactive Rebase from Here…` absent on row 0, present on rows 1 and 2; then absent on both |
 | git-views-088 | sidebar-worktree-menus | the full source (worktrees `/repo` main, `/w/feature`); the `Worktrees` header's menu, `feature`'s menu; then with `/w/feature` as the source's root | `New Worktree…` → `.newWorktree(branch: nil)`; `Open`, `Remove…` → `.openDirectory(/w/feature)`, `.removeWorktree(feature)`; then `Open` alone |
 | git-views-089 | sidebar-worktree-menus | `dev` checked out in `/w/feature`; `dev`'s menu; `main` (head)'s menu | neither holds `Check Out in New Worktree…` |
@@ -486,18 +486,18 @@ The commit detail, the diff, the blame and the file history each log a failed lo
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/` | confirmed (1.12.1) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Git/GitHistorySearch.swift` | confirmed (1.12.1) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Git/GitFileListItem.swift` | confirmed (1.12.1) |
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitDiffLineModels.swift` | confirmed (1.12.1) |
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitSyntaxColoring.swift` | confirmed (1.12.1) |
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitDiffViewController.swift` | confirmed (1.12.1) |
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitBlameViewController.swift` | confirmed (1.12.1) |
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitFileHistoryViewController.swift` | confirmed (1.12.1) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/SourcesUI/macOS/Theme/ThemedViews.swift` | confirmed (1.12.1) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Git/GitFileStatus.swift` | confirmed (1.12.1) |
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitOperationBannerViewController.swift` | confirmed (1.12.1) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitWorkingCopyViewController.swift` | confirmed (1.12.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/` | confirmed (1.12.2) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Git/GitHistorySearch.swift` | confirmed (1.12.2) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Git/GitFileListItem.swift` | confirmed (1.12.2) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitDiffLineModels.swift` | confirmed (1.12.2) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitSyntaxColoring.swift` | confirmed (1.12.2) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitDiffViewController.swift` | confirmed (1.12.2) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitBlameViewController.swift` | confirmed (1.12.2) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitFileHistoryViewController.swift` | confirmed (1.12.2) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/SourcesUI/macOS/Theme/ThemedViews.swift` | confirmed (1.12.2) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Git/GitFileStatus.swift` | confirmed (1.12.2) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitOperationBannerViewController.swift` | confirmed (1.12.2) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitWorkingCopyViewController.swift` | confirmed (1.12.2) |
 
 ## Design Decisions
 
@@ -609,3 +609,4 @@ The commit detail, the diff, the blame and the file history each log a failed lo
 | 1.11.0 | 2026-11-16 | Mike Fullerton | History menu: Interactive Rebase from Here…, left out on HEAD's row and during an operation; the data source gives the HEAD commit and the operation state; vector 087 |
 | 1.12.0 | 2026-11-16 | Mike Fullerton | Worktree and submodule menus: New Worktree… on the Worktrees header, Open and Remove… on a linked worktree (Open alone on the window's own), Check Out in New Worktree… on a branch checked out nowhere, Update All on the Submodules header, Open and Update on a submodule; new intents newWorktree, removeWorktree, updateSubmodule, updateAllSubmodules, openDirectory. |
 | 1.12.1 | 2026-11-16 | Mike Fullerton | Final review: word-emphasis budget, selection kept across reloads, non-ancestor rebase rows; reword field newlines, row heights, Move Up/Down; selectRows; merge view cap |
+| 1.12.2 | 2026-11-16 | Mike Fullerton | Selecting a conflict with markers opens the merge view; one without shows its .conflicted diff (vector 086) |

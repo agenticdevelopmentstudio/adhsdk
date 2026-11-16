@@ -115,6 +115,12 @@
   /dev/null <path>` in the top level, accepting exit statuses 0 and 1
   (`--no-index` exits 1 when the files differ); an exit status of 1 with no
   output (git could not read the file) MUST surface as command-failed.
+- **diff-conflicted**: The conflicted target MUST run the diff with `--base`
+  (the working file against the merge base, stage 1), so a conflict whose
+  plain diff is only `* Unmerged path` (a delete on either side) still shows
+  a patch; when that yields no file (there is no base stage, as in
+  both-added) it MUST run `--end-of-options HEAD` instead. Both take the
+  path as the one `:(top,literal)` pathspec.
 - **blame-command**: The blame verb MUST run `git -c core.quotePath=false
   -c core.precomposeUnicode=true blame --porcelain [<commit>] -- <path>` in the top level, omitting the
   commit to blame the working tree, and MUST parse the output with the
@@ -126,8 +132,10 @@
   decoded text. With no revision it MUST read the working file at the top
   level joined with the path, returning nothing when it does not exist; a
   path that is empty, or that leads outside the top level (through `../` or
-  a linked folder, compared with the folder's symbolic links resolved), MUST
-  surface as invalid-argument before anything is read.
+  a linked folder, compared with the folder's symbolic links resolved, or
+  through a symbolic link as the path's last component, compared with that
+  link resolved), MUST surface as invalid-argument before anything is read;
+  a link to a file inside the top level reads that file.
   With a revision it MUST NOT pass the path inside a `<revision>:<path>`
   argument: Foundation hands arguments to git decomposed (NFD) and that
   form matches the index's precomposed names byte for byte, so a
@@ -468,6 +476,11 @@
   or `LANG`, so the character set, and with it path encoding, stays the
   user's; a parent `LC_ALL` therefore still outranks it. Caller-supplied
   extra environment wins over it like over the prompt default.
+- **environment-optional-locks-off**: The execution step MUST set
+  `GIT_OPTIONAL_LOCKS=0` in the spawned child's environment, so a
+  background `git status` never takes `index.lock` and never makes a
+  concurrent `git commit` in the user's terminal fail; writes still take
+  the locks they need. Caller-supplied extra environment wins over it.
 - **total-failure-mapping**: The execution step MUST map every error the
   underlying process-launch mechanism throws onto exactly one of a
   timed-out outcome (for exceeding the configured wall-clock budget) or a

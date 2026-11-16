@@ -2,7 +2,7 @@
 id: 6a830cf8-0b95-4ffd-b175-f5cf481490c4
 title: "Git Window"
 type: ingredient
-version: 1.10.2
+version: 1.10.3
 status: review
 language: en
 created: 2026-11-14
@@ -117,7 +117,7 @@ The branch card's [branch management](cookbook:92f11498-2cb2-4b04-92b9-560d9f2de
 - **ref-drop-on-history**: A ref dropped on the history list MUST pop up the sidebar's `dropMenu(forRefNamed:)` over the history table through the sidebar's `menuPresenter`; a ref with no drop menu is refused by the history's `refDropValidator` and pops up nothing.
 - **commit-actions**: Cherry-pick and Revert MUST pass `mainline: 1` for a commit with more than one parent. A soft or mixed reset MUST run at once; a hard one MUST confirm `Reset <branch> to <shortID>?` / `Uncommitted changes are lost.` (destructive) first, naming `HEAD` when detached, where a reset is allowed.
 - **conflicts-resolve**: Resolve Using Ours… and Resolve Using Theirs… MUST confirm `Resolve N file(s) using ours?` (or theirs) / `Their changes to it are lost.` (`Our changes`, `them` for several) with the destructive action `Use Ours` or `Use Theirs`; declined, nothing runs. Confirmed, a path whose chosen side exists (`GitConflictKind.hasOurs` / `hasTheirs`) runs `.resolve(paths:side:)` then `.stage(paths:)`; one whose chosen side is a deletion runs `.removePaths`. Mark Resolved MUST run `.stage(paths:)` at once. Discard All MUST leave conflicted paths out. Stage All MUST stage only what the Unstaged list shows: with no conflicts `.stageAll`; with conflicts `.stage(paths:)` over the unstaged paths that are not conflicted (literal pathspecs), and nothing at all when none are left, so no conflict is marked resolved with its markers in it.
-- **merge-view**: `.openMerge(path)` MUST read the working file (`contents(path:at: nil, maximumBytes: GitMergeViewController.maximumFileBytes)`, 1 MiB), decode it as UTF-8 and parse it into a `GitConflictDocument` off the UI thread, then show it in the bottom pane's merge view; a file over the cap, or one that does not decode or parse, shows its unstaged diff instead, and a failed read fails under `Open failed`. The merge view's `.save(path:text:)` MUST write the text through the model's `writeResolution` (`Save failed` on error), then run `.stage([path])`, then return the bottom pane to the diff; `.cancel` returns it at once. Neither confirms. When a model change leaves the shown path no longer conflicted, the bottom pane MUST return to the diff.
+- **merge-view**: `.openMerge(path)` MUST read the working file (`contents(path:at: nil, maximumBytes: GitMergeViewController.maximumFileBytes)`, 1 MiB), decode it as UTF-8 and parse it into a `GitConflictDocument` off the UI thread, then show it in the bottom pane's merge view; a file over the cap, or one that does not decode or parse, shows its `.conflicted(path:)` diff instead, and a failed read fails under `Open failed`. The merge view's `.save(path:text:)` MUST write the text through the model's `writeResolution` (`Save failed` on error), then run `.stage([path])`, then return the bottom pane to the diff; `.cancel` returns it at once. Neither confirms. When a model change leaves the shown path no longer conflicted, the bottom pane MUST return to the diff.
 ## Appearance
 
 The project window's frame and unified toolbar: the project window's title item, then the six verbs, then the project window's search field (placeholder `Search History` while the history pane is the searchable one) and help. The title is `Git: <name> → <branch>`. Panes: the overview at least 230 points and about a fifth of the width, the history at least 260 and about half, the commit at least 240 (about 65 % of the right column's height when terminals sit under it); inside the commit pane the detail and the bottom pane are each at least 160 points high. The overview's title bar carries the busy spinner and Refresh (`arrow.clockwise`). Every pane is the git views' own, themed by them.
@@ -215,6 +215,8 @@ The window keeps the project window's identifiers. Its panes carry `git.window.o
 | git-window-076 | search-drives-history | a detached HEAD, the window on the working copy; search `one` | the centre shows the history; the selection is the history; no sidebar row selected. |
 | git-window-077 | worktrees | remove a clean linked worktree; remove a dirty one, declining then accepting the force | `onRemoveDirectory` gets the folder's canonical path once per removal and nothing when declined; the feature closes the window open on it and nothing for another path. |
 | git-window-078 | worktrees | `worktreeFolder` for root `/work/app`, branch `topic/x`: ``, whitespace, `side`, `../elsewhere/side`, ` side `, `~/trees/side`, `/abs/side` | `/work/app-topic-x` twice, `/work/side`, `/elsewhere/side`, `/work/side`, `<home>/trees/side`, `/abs/side`. |
+| git-window-079 | merge-view | UU `f.txt` and UD `gone.txt` from merging `main` into `side`; select `gone.txt`, then `f.txt` | `gone.txt`'s diff shows `base` and `kept on side` (its unstaged diff is empty); `f.txt` opens the merge view. |
+| git-window-080 | merge-view | an AA conflict, `side` against `main`, diffed as `.conflicted` | a context line `side` and an added line `main`, against HEAD. |
 ## Edge Cases
 
 - **Symlinked spelling**: `/tmp/r` and `/private/tmp/r` resolve to one key and one window.
@@ -282,9 +284,9 @@ Under the `Loggable` categories of `GitWindowFeature`, `GitWindowSession` and `G
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Window/` | confirmed (1.10.2) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Window/GitWindowSession.swift` | confirmed (1.10.2) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Window/GitWindowSession+Actions.swift` | confirmed (1.10.2) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Window/` | confirmed (1.10.3) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Window/GitWindowSession.swift` | confirmed (1.10.3) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Window/GitWindowSession+Actions.swift` | confirmed (1.10.3) |
 
 ## Design Decisions
 
@@ -351,6 +353,7 @@ Under the `Loggable` categories of `GitWindowFeature`, `GitWindowSession` and `G
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.10.3 | 2026-11-16 | Mike Fullerton | The merge view's fallback is the .conflicted diff (vectors 079-080) |
 | 1.10.2 | 2026-11-16 | Mike Fullerton | Git window keeps its rows with StandaloneWindowRows: closed windows and forgotten rows are deleted, quiet lookups stay put, removed worktrees close their window, detached-HEAD search |
 | 1.10.1 | 2026-11-16 | Mike Fullerton | Final review: word-emphasis budget, selection kept across reloads, non-ancestor rebase rows; reword field newlines, row heights, Move Up/Down; selectRows; merge view cap |
 | 1.10.0 | 2026-11-16 | Mike Fullerton | Worktrees and submodules from the sidebar: New Worktree asks Branch and Folder (empty: beside the root), checks out an existing branch or creates one, and opens the new worktree; Remove confirms and asks again before forcing a dirty one; Update and Update All run updateSubmodules, initialising as needed; Open bypasses the funnel. |

@@ -209,6 +209,12 @@ picker) is a consumer of this contract, not part of it.
   /dev/null <path>` in the top level, accepting exit statuses 0 and 1
   (`--no-index` exits 1 when the files differ); an exit status of 1 with no
   output (git could not read the file) MUST surface as command-failed.
+- **diff-conflicted**: The conflicted target MUST run the diff with `--base`
+  (the working file against the merge base, stage 1), so a conflict whose
+  plain diff is only `* Unmerged path` (a delete on either side) still shows
+  a patch; when that yields no file (there is no base stage, as in
+  both-added) it MUST run `--end-of-options HEAD` instead. Both take the
+  path as the one `:(top,literal)` pathspec.
 - **blame-command**: The blame verb MUST run `git -c core.quotePath=false
   -c core.precomposeUnicode=true blame --porcelain [<commit>] -- <path>` in the top level, omitting the
   commit to blame the working tree, and MUST parse the output with the
@@ -220,8 +226,10 @@ picker) is a consumer of this contract, not part of it.
   decoded text. With no revision it MUST read the working file at the top
   level joined with the path, returning nothing when it does not exist; a
   path that is empty, or that leads outside the top level (through `../` or
-  a linked folder, compared with the folder's symbolic links resolved), MUST
-  surface as invalid-argument before anything is read.
+  a linked folder, compared with the folder's symbolic links resolved, or
+  through a symbolic link as the path's last component, compared with that
+  link resolved), MUST surface as invalid-argument before anything is read;
+  a link to a file inside the top level reads that file.
   With a revision it MUST NOT pass the path inside a `<revision>:<path>`
   argument: Foundation hands arguments to git decomposed (NFD) and that
   form matches the index's precomposed names byte for byte, so a
@@ -562,6 +570,11 @@ picker) is a consumer of this contract, not part of it.
   or `LANG`, so the character set, and with it path encoding, stays the
   user's; a parent `LC_ALL` therefore still outranks it. Caller-supplied
   extra environment wins over it like over the prompt default.
+- **environment-optional-locks-off**: The execution step MUST set
+  `GIT_OPTIONAL_LOCKS=0` in the spawned child's environment, so a
+  background `git status` never takes `index.lock` and never makes a
+  concurrent `git commit` in the user's terminal fail; writes still take
+  the locks they need. Caller-supplied extra environment wins over it.
 - **total-failure-mapping**: The execution step MUST map every error the
   underlying process-launch mechanism throws onto exactly one of a
   timed-out outcome (for exceeding the configured wall-clock budget) or a
@@ -992,10 +1005,11 @@ component.
 | git-client-102 | patch-no-newline | `f.txt` committed as `x\na` (no final newline), working `x\na\nb`; stage the hunk, then unstage `+b` alone | The index reads `x\na\nb`; after unstaging it reads `x\na\n`, byte for byte. |
 | git-client-103 | patch-no-newline | Forward: `-a`, marker, `+a`, `+b`, marker with `+b` chosen and `+a` alone dropped; reverse: ` x`, `-a`, marker, `+a`, `+b`, marker with `+b` chosen | Forward writes `-a`, marker, `+a`, `+b`, marker; reverse writes ` x`, ` a`, `+b`, marker. |
 | git-client-104 | patch-carriage-returns, diff-line-numbers | A CRLF file `one\r\ntwo\r\nthree\r\nfour\r\n` with `four` changed; stage the one added line | The line's text is `four\r` and its display text `four`; the index is the working file byte for byte. |
-| git-client-105 | file-contents | Working-file reads of `../<other>/s.txt`, `link/s.txt` (`link` a symbolic link out of the repository) and `""`, then `in.txt` | invalid-argument three times; `in.txt` reads `inside\n`. |
+| git-client-105 | file-contents | Working-file reads of `../<other>/s.txt`, `link/s.txt` (`link` a symbolic link out of the repository), `file-link` (a link to `<other>/s.txt`), `relative-link` (a link to `link/s.txt`) and `""`, then `in.txt` and `in-link` (a link to `in.txt`) | invalid-argument five times; `in.txt` and `in-link` read `inside\n`. |
 | git-client-106 | worktrees-listing | `worktree /repo␀HEAD abc␀branch refs/heads/main␀␀worktree /wt/two\nlines␀HEAD def␀detached␀␀` (␀ a NUL) | Two worktrees, `/repo` on `main` and `/wt/two\nlines` detached. |
 | git-client-107 | write-action-mapping | Commit the message `#42 fix\n\n# not a comment  \n` | HEAD's message is `#42 fix\n\n# not a comment`. |
 | git-client-108 | submodule-update | Submodules `lib` and `other lib`, cloned without them; update `other lib` initializing | `other lib` current with `lib.txt` present; `lib` uninitialized. |
+| git-client-109 | environment-optional-locks-off | A script standing in for git that prints `$GIT_OPTIONAL_LOCKS` | `0`. |
 ## Edge Cases
 
 - **Null/empty input**: Parsing an empty status output MUST return an
@@ -1051,7 +1065,7 @@ component.
 | executable path | string (file path) | `/usr/bin/git` | Path to the git binary the client spawns. |
 | timeout | number (seconds) | `5` | Wall-clock budget for one invocation. |
 | submodule handling | enumeration (ignore / include) | ignore | When set to ignore, the status verb appends `--ignore-submodules`. |
-| extra environment | key-value map of strings | empty | Merged over the `GIT_TERMINAL_PROMPT=0` and `LC_MESSAGES=C` defaults in the spawned child's environment; lets a caller (a test, in particular) redirect something like `GIT_CONFIG_GLOBAL` without mutating process-wide state. |
+| extra environment | key-value map of strings | empty | Merged over the `GIT_TERMINAL_PROMPT=0`, `LC_MESSAGES=C` and `GIT_OPTIONAL_LOCKS=0` defaults in the spawned child's environment; lets a caller (a test, in particular) redirect something like `GIT_CONFIG_GLOBAL` without mutating process-wide state. |
 | caller attribution | captured at the call site | captured automatically | Identifies the calling file and function that invoked a verb, with no effort required from the caller. |
 | git executable path setting | string | `"/usr/bin/git"` | Read when deriving configuration from settings, into the executable path. |
 | git status timeout setting | integer (seconds) | `5` | Read when deriving configuration from settings, into the timeout, clamped to a minimum of `1`. |
@@ -1372,4 +1386,4 @@ one.
 | 1.0.2 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to foundation/git/. |
 | 1.2.0 | 2026-11-14 | Mike Fullerton | History model: commit, ref, stash and submodule value types with their format strings and parsers, and the log request; output decoding falls back to Latin-1 per segment; diff, word-diff and blame models with their parsers and C-quoted path unquoting; read verbs (top level, log, refs, stashes, submodules, diff targets and options, blame, file contents) and accepted exit codes in the execution step. Final review: changed files without the patch, literal author and message search, precomposed paths, capped file contents, a named file-history limit. |
-| 2.0.0 | 2026-11-14 | Mike Fullerton | Write verbs: the action list and its exact command lines, one perform verb through the execution step with its own budgets (60 s, 600 s for remote verbs and commit) and core.editor=true, the remotes verb and the last commit message. An empty or dash-led ref, remote or commit is refused before anything runs, with a fifth error outcome, invalid-argument (the closed error taxonomy grows, hence major). Push to upstream (remote, branch, upstream branch) without `--set-upstream`; every child runs with `LC_MESSAGES=C`; the push-destination verb (`<branch>@{push}`). Patches from diff lines: a selection of one file's lines, forward and reversed line rules, recomputed hunk headers, the no-newline marker and a one-path file header; apply to the index or the work tree with the patch on standard input, never logged, an empty patch refused. Operations: the operation state (merge, rebase, cherry-pick, revert) read from the files at `rev-parse --git-path`, interactive only when `interactive` exists without `drop_redundant_commits`; merge with its fast-forward rule, rebase, and the continue, abort and skip steps, merge-skip refused before anything runs, every write under `GIT_EDITOR=true`. Conflicts: the seven conflict kinds kept per path, resolve by side and remove paths. Interactive rebase: the plan verb (first-parent, oldest first, merges and empty ranges refused), its validation, the todo with reword as pick plus an amending exec, run from an `adk-rebase` helper folder through `GIT_SEQUENCE_EDITOR` and removed once no operation is left. Worktrees and submodules: add and remove worktree (absolute paths only), locked worktrees, update submodules. Fix round 1: a reword amends only when its pick moved HEAD (reword-amends-only-its-pick, vector 099); every perform that runs removes an idle helper folder. The commit-messages verb: every commit's full message after onto in one `log` call (rebase-plan-messages, vectors 100-101). |
+| 2.0.0 | 2026-11-14 | Mike Fullerton | Write verbs: the action list and its exact command lines, one perform verb through the execution step with its own budgets (60 s, 600 s for remote verbs and commit) and core.editor=true, the remotes verb and the last commit message. An empty or dash-led ref, remote or commit is refused before anything runs, with a fifth error outcome, invalid-argument (the closed error taxonomy grows, hence major). Push to upstream (remote, branch, upstream branch) without `--set-upstream`; every child runs with `LC_MESSAGES=C`; the push-destination verb (`<branch>@{push}`). Patches from diff lines: a selection of one file's lines, forward and reversed line rules, recomputed hunk headers, the no-newline marker and a one-path file header; apply to the index or the work tree with the patch on standard input, never logged, an empty patch refused. Operations: the operation state (merge, rebase, cherry-pick, revert) read from the files at `rev-parse --git-path`, interactive only when `interactive` exists without `drop_redundant_commits`; merge with its fast-forward rule, rebase, and the continue, abort and skip steps, merge-skip refused before anything runs, every write under `GIT_EDITOR=true`. Conflicts: the seven conflict kinds kept per path, resolve by side and remove paths. Interactive rebase: the plan verb (first-parent, oldest first, merges and empty ranges refused), its validation, the todo with reword as pick plus an amending exec, run from an `adk-rebase` helper folder through `GIT_SEQUENCE_EDITOR` and removed once no operation is left. Worktrees and submodules: add and remove worktree (absolute paths only), locked worktrees, update submodules. Fix round 1: a reword amends only when its pick moved HEAD (reword-amends-only-its-pick, vector 099); every perform that runs removes an idle helper folder. The commit-messages verb: every commit's full message after onto in one `log` call (rebase-plan-messages, vectors 100-101). Residual review: `GIT_OPTIONAL_LOCKS=0` in the child's environment, the conflicted diff target (`--base`, HEAD when there is no base), and a symbolic link as the path's last component may not lead outside (vectors 105, 109). |

@@ -253,6 +253,7 @@ public final class GitWorkingCopyViewController: NSViewController {
 
     /// The diff a selected item of `list` shows.
     private func target(for item: GitFileListItem, in list: GitFileListViewController) -> GitDiffTarget {
+        if list === conflictsList { return .conflicted(path: item.path) }
         if list === stagedList { return .staged(paths: [item.path]) }
         if item.status == .untracked { return .untracked(path: item.path) }
         return .unstaged(paths: [item.path])
@@ -260,6 +261,9 @@ public final class GitWorkingCopyViewController: NSViewController {
 }
 
 extension GitWorkingCopyViewController: GitFileListDelegate {
+    /// A conflicted file with markers opens in the merge view, as a double-click does; any
+    /// other selection is reported as its diff target (a conflict without markers as
+    /// `.conflicted`, its working file against the merge base).
     public func fileList(_ list: GitFileListViewController, didSelect item: GitFileListItem?) {
         guard let item else {
             delegate?.workingCopy(self, didSelect: nil)
@@ -267,6 +271,10 @@ extension GitWorkingCopyViewController: GitFileListDelegate {
         }
         for other in [conflictsList, stagedList, unstagedList] where other !== list {
             other.clearSelection()
+        }
+        if list === conflictsList, source.conflicts[item.path]?.hasMarkers == true {
+            request(.openMerge(item.path))
+            return
         }
         delegate?.workingCopy(self, didSelect: target(for: item, in: list))
     }

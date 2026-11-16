@@ -327,7 +327,7 @@ final class GitWindowSession {
     static func file(of target: GitDiffTarget) -> String? {
         switch target {
         case .unstaged(let paths), .staged(let paths): return paths.first
-        case .untracked(let path): return path
+        case .untracked(let path), .conflicted(let path): return path
         case .commit(_, let paths), .range(_, _, let paths): return paths.last
         }
     }

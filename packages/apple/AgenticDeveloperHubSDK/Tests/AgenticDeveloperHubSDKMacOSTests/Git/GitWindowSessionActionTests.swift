@@ -1440,6 +1440,65 @@ struct GitWindowSessionActionTests {
         #expect(indexed.isEmpty)
     }
 
+    @Test("selecting a UD conflict shows its working file against the base; a UU one opens the merge view")
+    func selectingAConflict() async throws {
+        let repository = try await GitTestRepository.make(prefix: "git-actions")
+        defer { repository.tearDown() }
+        try await commitFile(repository, "f.txt", "one\ntwo\nthree\n", at: 100)
+        try await commitFile(repository, "gone.txt", "base\n", at: 110)
+        try await repository.run(["checkout", "--quiet", "-b", "side"])
+        try await commitFile(repository, "f.txt", "ONE side\ntwo\nthree\n", at: 200)
+        try await commitFile(repository, "gone.txt", "kept on side\n", at: 210)
+        try await repository.run(["checkout", "--quiet", "main"])
+        try await commitFile(repository, "f.txt", "ONE main\ntwo\nthree\n", at: 300)
+        try await repository.run(["rm", "--quiet", "--", "gone.txt"])
+        try await repository.commit("delete gone.txt", at: Self.epoch + 310)
+        try await repository.run(["checkout", "--quiet", "side"])
+        _ = try? await repository.run(["merge", "--no-edit", "main"])
+        let presenter = StubPresenter()
+        let (model, session) = await makeSession(repository, presenter: presenter)
+        #expect(model.conflicts == ["f.txt": .bothModified, "gone.txt": .deletedByThem])
+
+        let plain = try await model.diff(.unstaged(paths: ["gone.txt"]), options: GitDiffOptions())
+        #expect(plain.files.isEmpty, "a plain diff of an unmerged path is blank")
+        let conflicted = try await fileDiff(model, .conflicted(path: "gone.txt"))
+        #expect(conflicted.newPath == "gone.txt")
+        let lines = conflicted.hunks.flatMap(\.lines).map(\.text)
+        #expect(lines.contains("base") && lines.contains("kept on side"))
+
+        let list = session.workingCopy.conflictsList
+        #expect(list.files.map(\.path) == ["f.txt", "gone.txt"])
+        list.tableView.selectRowIndexes(IndexSet(integer: 1), byExtendingSelection: false)
+        #expect(session.bottom.content === session.diff)
+        #expect(session.diff.isShowingWorkingCopy)
+
+        list.tableView.selectRowIndexes(IndexSet(integer: 0), byExtendingSelection: false)
+        await session.actionTask?.value
+        #expect(session.bottom.content === session.merge)
+        #expect(session.merge.path == "f.txt")
+        #expect(presenter.failures.isEmpty)
+    }
+
+    @Test("a both-added conflict, with no base stage, diffs against HEAD")
+    func bothAddedConflictDiffsAgainstHead() async throws {
+        let repository = try await GitTestRepository.make(prefix: "git-actions")
+        defer { repository.tearDown() }
+        try await commitFile(repository, "base.txt", "base\n", at: 100)
+        try await repository.run(["checkout", "--quiet", "-b", "side"])
+        try await commitFile(repository, "new.txt", "side\n", at: 200)
+        try await repository.run(["checkout", "--quiet", "main"])
+        try await commitFile(repository, "new.txt", "main\n", at: 300)
+        try await repository.run(["checkout", "--quiet", "side"])
+        _ = try? await repository.run(["merge", "--no-edit", "main"])
+        let (model, _) = await makeSession(repository, presenter: StubPresenter())
+        #expect(model.conflicts == ["new.txt": .bothAdded])
+
+        let file = try await fileDiff(model, .conflicted(path: "new.txt"))
+        let lines = file.hunks.flatMap(\.lines)
+        #expect(lines.contains { $0.kind == .context && $0.text == "side" }, "HEAD's line is context")
+        #expect(lines.contains { $0.kind == .added && $0.text == "main" })
+    }
+
     @Test("Discard All Changes… leaves conflicted files alone")
     func discardAllSkipsConflicts() async throws {
         let repository = try await GitTestRepository.make(prefix: "git-actions")

@@ -148,27 +148,43 @@ public final class GitRebaseEditorViewController: NSViewController {
     }
 
     /// Sets the reword message of the entry at `row`, growing or shrinking the row to show
-    /// all of its lines.
+    /// all of its lines, wrapped ones included.
     func setMessage(_ message: String, at row: Int) {
         guard plan.entries.indices.contains(row) else { return }
-        let lines = Self.lineCount(plan.entries[row].message)
+        let before = height(ofRow: row)
         plan.entries[row].message = message
-        if isViewLoaded, Self.lineCount(message) != lines {
+        if isViewLoaded, height(ofRow: row) != before {
             tableView.noteHeightOfRows(withIndexesChanged: IndexSet(integer: row))
         }
         updateStart()
     }
 
-    /// The height of a row: one line, or a reword's whole message.
+    /// The height of a row: one line, or a reword's whole message as the Subject column
+    /// wraps it, measured by a field of the cell's own kind at the column's width (the theme
+    /// sets its font), and never less than one line per line of the message.
     func height(ofRow row: Int) -> CGFloat {
         guard plan.entries.indices.contains(row), plan.entries[row].action == .reword else {
             return Self.rowHeight
         }
-        // The theme sets the field's font, so a field of its own measures the line.
+        let message = plan.entries[row].message ?? ""
         let font = measuringField.font ?? NSFont.systemFont(ofSize: NSFont.systemFontSize)
         let lineHeight = NSLayoutManager().defaultLineHeight(for: font)
-        let lines = CGFloat(Self.lineCount(plan.entries[row].message))
-        return max(Self.rowHeight, ceil(lines * lineHeight) + 8)
+        let lines = ceil(CGFloat(Self.lineCount(message)) * lineHeight) + 8
+        measuringField.stringValue = message
+        // What wrapping at the column's width adds over the same text unwrapped: the cell's
+        // height at that width less its height at an unbounded one, so a message that fits
+        // on its lines adds nothing.
+        func cellHeight(width: CGFloat) -> CGFloat {
+            let bounds = NSRect(x: 0, y: 0, width: width, height: .greatestFiniteMagnitude)
+            return ceil(measuringField.cell?.cellSize(forBounds: bounds).height ?? 0)
+        }
+        let wrapping = max(0, cellHeight(width: subjectWidth) - cellHeight(width: .greatestFiniteMagnitude))
+        return max(Self.rowHeight, lines + wrapping)
+    }
+
+    /// The Subject column's width, which a reword's message wraps at.
+    var subjectWidth: CGFloat {
+        tableView.tableColumns.first { $0.identifier == Column.subject.identifier }?.width ?? Column.subject.width
     }
 
     static let rowHeight: CGFloat = 26
@@ -179,10 +195,13 @@ public final class GitRebaseEditorViewController: NSViewController {
 
     /// Moves the entry at `source` to sit above the row `destination` was before the move
     /// (`entries.count` for the end), as a table drop names it.
+    /// A reword field being edited (⌥⌘↑ reaches the button while the field editor has the
+    /// keys) is edited again after the reload, with its insertion point where it was.
     func moveEntry(from source: Int, to destination: Int) {
         let entries = plan.entries
         guard entries.indices.contains(source), (0...entries.count).contains(destination),
               destination != source, destination != source + 1 else { return }
+        let editing = editingMessage()
         let entry = plan.entries.remove(at: source)
         let target = destination > source ? destination - 1 : destination
         plan.entries.insert(entry, at: target)
@@ -190,9 +209,34 @@ public final class GitRebaseEditorViewController: NSViewController {
             tableView.reloadData()
             tableView.selectRowIndexes(IndexSet(integer: target), byExtendingSelection: false)
             tableView.scrollRowToVisible(target)
+            if let editing { resumeEditing(editing) }
         }
         updateStart()
         updateMoveButtons()
+    }
+
+    /// The reword field being edited, as its entry's commit and the field editor's
+    /// selection; nil when no field is.
+    private func editingMessage() -> (commit: String, selection: NSRange)? {
+        guard let editor = view.window?.firstResponder as? NSTextView, editor.isFieldEditor,
+              let field = (editor.delegate as? NSObject) as? GitRebaseMessageField else { return nil }
+        let row = tableView.row(for: field)
+        guard plan.entries.indices.contains(row) else { return nil }
+        return (plan.entries[row].commit, editor.selectedRange())
+    }
+
+    /// Edits `editing`'s entry's field again, wherever its row now is, with the selection
+    /// it had (clamped to the text).
+    private func resumeEditing(_ editing: (commit: String, selection: NSRange)) {
+        let column = tableView.column(withIdentifier: Column.subject.identifier)
+        guard column >= 0, let row = row(of: editing.commit),
+              let field = tableView.view(atColumn: column, row: row, makeIfNecessary: true)
+                as? GitRebaseMessageField,
+              view.window?.makeFirstResponder(field) == true else { return }
+        let length = (field.stringValue as NSString).length
+        let location = min(editing.selection.location, length)
+        field.currentEditor()?.selectedRange = NSRange(location: location,
+                                                       length: min(editing.selection.length, length - location))
     }
 
     /// Moves the selected entry one row up (`offset` -1) or down (+1); nothing at an end.
@@ -316,6 +360,12 @@ extension GitRebaseEditorViewController: NSTableViewDelegate {
 
     public func tableViewSelectionDidChange(_ notification: Notification) {
         updateMoveButtons()
+    }
+
+    /// A wider or narrower Subject column wraps a reword's message differently.
+    public func tableViewColumnDidResize(_ notification: Notification) {
+        guard tableView.numberOfRows > 0 else { return }
+        tableView.noteHeightOfRows(withIndexesChanged: IndexSet(integersIn: 0..<tableView.numberOfRows))
     }
 
     private static let shaIdentifier = NSUserInterfaceItemIdentifier("git.rebase.shaCell")

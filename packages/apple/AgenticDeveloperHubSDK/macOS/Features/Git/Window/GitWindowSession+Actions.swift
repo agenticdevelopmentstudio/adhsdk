@@ -133,8 +133,8 @@ extension GitWindowSession {
 
     /// Reads the working file and shows it in the merge view; a file larger than
     /// `GitMergeViewController.maximumFileBytes`, not UTF-8, or holding no conflict the
-    /// parser accepts shows its diff instead. The file is decoded and parsed off the main
-    /// thread.
+    /// parser accepts shows its `.conflicted` diff (against the merge base) instead. The
+    /// file is decoded and parsed off the main thread.
     private func openMerge(_ path: String) async {
         let data: Data?
         do {
@@ -150,7 +150,7 @@ extension GitWindowSession {
             return GitConflictDocument.parse(text)
         }.value
         guard let document = parsed else {
-            showDiff(target: .unstaged(paths: [path]), file: path)
+            showDiff(target: .conflicted(path: path), file: path)
             return
         }
         merge.show(path: path, document: document)

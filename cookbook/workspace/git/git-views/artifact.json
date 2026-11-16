@@ -4,7 +4,7 @@
     "id": "bdd3a72d-8810-439b-bad7-ec16233cb2a3",
     "title": "Git Views",
     "type": "ingredient",
-    "version": "1.12.1",
+    "version": "1.12.2",
     "status": "review",
     "language": "en",
     "created": "2026-11-13",
@@ -45,7 +45,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "26d84c1952a5a13f",
+  "synced": "37887b306f32ab25",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

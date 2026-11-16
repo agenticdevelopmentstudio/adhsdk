@@ -103,6 +103,60 @@ struct GitRebaseEditorViewControllerTests {
         #expect(editor.height(ofRow: 1) == GitRebaseEditorViewController.rowHeight)
     }
 
+    @Test("a reword line too long for the Subject column wraps, and its row is tall enough for the wrap")
+    func wrappedRewordRowHeight() throws {
+        let editor = Self.editor()
+        editor.setAction(.reword, at: 0)
+        editor.setMessage("short", at: 0)
+        let oneLine = editor.height(ofRow: 0)
+        let long = Array(repeating: "a long subject line that wraps", count: 8).joined(separator: " ")
+        editor.setMessage(long, at: 0)
+        #expect(!long.contains("\n"))
+        let wrapped = editor.height(ofRow: 0)
+        #expect(wrapped > oneLine, "one line of text, several lines on screen")
+
+        let field: GitRebaseMessageField = try #require(cell(editor, "subject", row: 0))
+        field.stringValue = long
+        let bounds = NSRect(x: 0, y: 0, width: editor.subjectWidth, height: .greatestFiniteMagnitude)
+        let needed = try #require(field.cell?.cellSize(forBounds: bounds).height)
+        #expect(wrapped >= needed, "the row holds the field at the column's width")
+
+        let column = try #require(editor.tableView.tableColumns.first { $0.identifier.rawValue == "subject" })
+        column.width *= 2
+        #expect(editor.height(ofRow: 0) < wrapped, "a wider column wraps less")
+    }
+
+    @Test("⌥⌘↓ while a reword field is being edited moves the row and keeps the edit and its insertion point")
+    func moveWhileEditingKeepsTheEdit() throws {
+        let editor = Self.editor()
+        let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 700, height: 400), styleMask: [.titled],
+                              backing: .buffered, defer: true)
+        window.contentView = editor.view
+        window.layoutIfNeeded()
+        let ids = editor.plan.entries.map(\.commit)
+        editor.setAction(.reword, at: 0)
+        editor.tableView.selectRowIndexes(IndexSet(integer: 0), byExtendingSelection: false)
+        let column = editor.tableView.column(withIdentifier: NSUserInterfaceItemIdentifier("subject"))
+        let field = try #require(editor.tableView.view(atColumn: column, row: 0, makeIfNecessary: true)
+            as? GitRebaseMessageField)
+        #expect(window.makeFirstResponder(field))
+        field.currentEditor()?.selectedRange = NSRange(location: 3, length: 0)
+
+        let event = try #require(NSEvent.keyEvent(
+            with: .keyDown, location: .zero, modifierFlags: [.option, .command], timestamp: 0,
+            windowNumber: window.windowNumber, context: nil, characters: "\u{F701}",
+            charactersIgnoringModifiers: "\u{F701}", isARepeat: false, keyCode: 125))
+        #expect(window.contentView?.performKeyEquivalent(with: event) == true)
+
+        #expect(editor.plan.entries.map(\.commit) == [ids[1], ids[0], ids[2]])
+        let editorView = try #require(window.firstResponder as? NSTextView, "still editing")
+        #expect(editorView.isFieldEditor)
+        let editing = try #require((editorView.delegate as? NSObject) as? GitRebaseMessageField)
+        #expect(editor.tableView.row(for: editing) == 1, "the moved row's field")
+        #expect(editorView.selectedRange() == NSRange(location: 3, length: 0))
+        #expect(editorView.string == "commit 0\n\nbody 0")
+    }
+
     @Test("Move Up and Move Down move the selected row one place, disabled at the ends")
     func moveButtons() {
         let editor = Self.editor()

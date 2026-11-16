@@ -435,6 +435,9 @@ public actor GitClient {
         case .untracked(let path):
             return try await untrackedDiff(path: path, arguments: arguments, directory: directory, caller: caller,
                                            configuration: configuration)
+        case .conflicted(let path):
+            return try await conflictedDiff(path: path, arguments: arguments, directory: directory, caller: caller,
+                                            configuration: configuration)
         }
         if !paths.isEmpty {
             arguments += ["--"] + paths.map { ":(top,literal)\($0)" }
@@ -502,8 +505,9 @@ public actor GitClient {
 
     /// The bytes of `path` (top-level-relative), never decoded: at `revision` (`":0"` is the
     /// index entry, `":1"`–`":3"` a conflict's stages), or the working file when `revision`
-    /// is nil. A working file must stay inside the top level, its folder's symbolic links
-    /// resolved: a `../` path or a linked folder leading out throws `invalidArgument`. Nil
+    /// is nil. A working file must stay inside the top level, every symbolic link resolved,
+    /// its folder's and its own: a `../` path, a linked folder or a linked file leading out
+    /// throws `invalidArgument`; a link to a file inside is read through. Nil
     /// when the path is not a file there, including on an unborn HEAD, and nil when
     /// `maximumBytes` is given and the file is larger: the size is checked first (the file's
     /// attributes, or `cat-file -s`), so an oversized file is never read at all.
@@ -524,8 +528,13 @@ public actor GitClient {
         guard let revision else {
             let base = top.resolvingSymlinksInPath().standardizedFileURL
             let named = top.appendingPathComponent(path).standardizedFileURL
-            let file = named.deletingLastPathComponent().resolvingSymlinksInPath()
+            var file = named.deletingLastPathComponent().resolvingSymlinksInPath()
                 .appendingPathComponent(named.lastPathComponent)
+            // A symbolic link as the file itself is followed to the end, and where it lands
+            // must be inside too.
+            if (try? FileManager.default.destinationOfSymbolicLink(atPath: file.path)) != nil {
+                file = file.resolvingSymlinksInPath()
+            }
             guard !path.isEmpty, file.path.hasPrefix(base.path + "/") else {
                 throw GitClientError.invalidArgument(verb: "cat-file", argument: path)
             }
@@ -644,6 +653,27 @@ public actor GitClient {
         return GitDiff.parse(patch: GitOutputDecoding.string(result.standardOutput))
     }
 
+    /// `diff --base` for one unmerged path (git's "* Unmerged path" notice above the patch
+    /// is no part of it), else, when that names no file (there is no base stage), the
+    /// working file against `HEAD`.
+    private func conflictedDiff(
+        path: String,
+        arguments: [String],
+        directory: URL,
+        caller: GitCaller,
+        configuration: GitClientConfiguration
+    ) async throws -> GitDiff {
+        let pathspec = ["--", ":(top,literal)\(path)"]
+        let base = GitDiff.parse(patch: try await execute(
+            verb: "diff", arguments: arguments + ["--base"] + pathspec, directory: directory, caller: caller,
+            configuration: configuration, configOverrides: Self.diffConfigOverrides))
+        if !base.files.isEmpty { return base }
+        let head = try await execute(
+            verb: "diff", arguments: arguments + ["--end-of-options", "HEAD"] + pathspec, directory: directory,
+            caller: caller, configuration: configuration, configOverrides: Self.diffConfigOverrides)
+        return GitDiff.parse(patch: head)
+    }
+
     // MARK: - Verbs no typed method models
 
     /// Runs `git <verb> <arguments>` in `directory` and returns its standard output.
@@ -676,7 +706,13 @@ public actor GitClient {
     /// keeps git's messages in English, so a caller that reads one (a branch "not fully
     /// merged") works in any locale. Only messages: `LC_CTYPE` and `LC_ALL` are left
     /// alone, so path encoding is the user's. A parent `LC_ALL` still outranks it.
-    static let baseEnvironment = ["GIT_TERMINAL_PROMPT": "0", "LC_MESSAGES": "C"]
+    /// `GIT_OPTIONAL_LOCKS=0` stops a read (`git status` above all) from taking
+    /// `index.lock` for its stat-cache refresh, so a background refresh never makes the
+    /// user's own git fail with "index.lock: File exists" (as `ReadOnlyGit` does). Writes
+    /// still take their mandatory locks: only the optional refresh is skipped.
+    static let baseEnvironment = [
+        "GIT_TERMINAL_PROMPT": "0", "LC_MESSAGES": "C", "GIT_OPTIONAL_LOCKS": "0"
+    ]
 
     /// The least time a local write is given: a minute, whatever the (read) timeout says.
     public static let writeBudget: TimeInterval = 60

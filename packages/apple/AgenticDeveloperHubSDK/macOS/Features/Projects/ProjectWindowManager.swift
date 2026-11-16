@@ -527,7 +527,9 @@ public final class ProjectWindowManager: ProjectOpening, ObservableObject {
     }
 
     /// Opens a standalone window over `repo` — any row that is not a
-    /// `.project` — or brings forward the one already open on it. What
+    /// `.project` — or returns the one already open on it, bringing that
+    /// forward only when `activates` is true (a quiet lookup leaves it where
+    /// it is). What
     /// `openFileBrowserWindow` and `openDocumentWindow` call, and what the
     /// Git window opens through. Its title follows the row's kind
     /// (`ComposableTabsWindowController.title(kind:name:directory:branch:)`).

@@ -79,3 +79,5 @@
 | git-window-076 | search-drives-history | a detached HEAD, the window on the working copy; search `one` | the centre shows the history; the selection is the history; no sidebar row selected. |
 | git-window-077 | worktrees | remove a clean linked worktree; remove a dirty one, declining then accepting the force | `onRemoveDirectory` gets the folder's canonical path once per removal and nothing when declined; the feature closes the window open on it and nothing for another path. |
 | git-window-078 | worktrees | `worktreeFolder` for root `/work/app`, branch `topic/x`: ``, whitespace, `side`, `../elsewhere/side`, ` side `, `~/trees/side`, `/abs/side` | `/work/app-topic-x` twice, `/work/side`, `/elsewhere/side`, `/work/side`, `<home>/trees/side`, `/abs/side`. |
+| git-window-079 | merge-view | UU `f.txt` and UD `gone.txt` from merging `main` into `side`; select `gone.txt`, then `f.txt` | `gone.txt`'s diff shows `base` and `kept on side` (its unstaged diff is empty); `f.txt` opens the merge view. |
+| git-window-080 | merge-view | an AA conflict, `side` against `main`, diffed as `.conflicted` | a context line `side` and an added line `main`, against HEAD. |

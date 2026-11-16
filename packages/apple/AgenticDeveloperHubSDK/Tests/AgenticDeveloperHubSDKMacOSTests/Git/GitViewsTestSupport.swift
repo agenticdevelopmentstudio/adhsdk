@@ -64,6 +64,7 @@ final class GitViewsFakeContentSource: GitContentSource {
         case .unstaged: "unstaged"
         case .staged: "staged"
         case .untracked(let path): "untracked:\(path)"
+        case .conflicted(let path): "conflicted:\(path)"
         }
     }
 

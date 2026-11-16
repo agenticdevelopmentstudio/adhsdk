@@ -86,7 +86,7 @@
 | git-views-083 | wc-conflict-menu | the menu of `both.txt` (UU); fire each item | `Open in Merge View`, a separator, `Resolve Using Ours…`, `Resolve Using Theirs…`, `Mark Resolved`; `.openMerge`, `.resolve(.ours)`, `.resolve(.theirs)`, `.markResolved` |
 | git-views-084 | wc-conflict-menu | the menu of `gone.txt` (DU) | `Resolve Using Ours…`, `Resolve Using Theirs…`, `Mark Resolved`, no Open |
 | git-views-085 | wc-conflict-menu | double-click `both.txt`, then `gone.txt` | `.openMerge("both.txt")` only |
-| git-views-086 | wc-conflicts-list | select `b`, then `both.txt`, then a staged row | `.unstaged([b])`, `.unstaged([both.txt])`; each selection clears the other lists |
+| git-views-086 | wc-conflicts-list | select `b`, then `both.txt` (UU), then `gone.txt` (DU), then a staged row | `.unstaged([b])`; `.openMerge("both.txt")` and no selection event; `.conflicted(path: "gone.txt")`; each selection clears the other lists |
 | git-views-087 | history-menu | three commits, `headCommit` the first; the menus of rows 0, 1 and 2; then `operationState` merging | `Interactive Rebase from Here…` absent on row 0, present on rows 1 and 2; then absent on both |
 | git-views-088 | sidebar-worktree-menus | the full source (worktrees `/repo` main, `/w/feature`); the `Worktrees` header's menu, `feature`'s menu; then with `/w/feature` as the source's root | `New Worktree…` → `.newWorktree(branch: nil)`; `Open`, `Remove…` → `.openDirectory(/w/feature)`, `.removeWorktree(feature)`; then `Open` alone |
 | git-views-089 | sidebar-worktree-menus | `dev` checked out in `/w/feature`; `dev`'s menu; `main` (head)'s menu | neither holds `Check Out in New Worktree…` |

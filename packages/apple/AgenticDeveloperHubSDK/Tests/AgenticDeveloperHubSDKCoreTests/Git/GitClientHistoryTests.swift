@@ -453,14 +453,22 @@ struct GitClientHistoryTests {
         }
         try outside.write("secret\n", to: "s.txt")
         try FileManager.default.createSymbolicLink(at: repository.url("link"), withDestinationURL: outside.root)
+        try FileManager.default.createSymbolicLink(at: repository.url("file-link"),
+                                                   withDestinationURL: outside.url("s.txt"))
+        try FileManager.default.createSymbolicLink(atPath: repository.url("relative-link").path,
+                                                   withDestinationPath: "link/s.txt")
         let escaping = "../" + outside.root.lastPathComponent + "/s.txt"
-        for path in [escaping, "link/s.txt", ""] {
+        for path in [escaping, "link/s.txt", "file-link", "relative-link", ""] {
             await #expect(throws: GitClientError.self, "\(path)") {
                 try await client.fileContents(path: path, at: nil, in: repository.root)
             }
         }
         try repository.write("inside\n", to: "in.txt")
         #expect(try await client.fileContents(path: "in.txt", at: nil, in: repository.root) == Data("inside\n".utf8))
+        try FileManager.default.createSymbolicLink(
+            atPath: repository.url("in-link").path, withDestinationPath: "in.txt")
+        #expect(try await client.fileContents(path: "in-link", at: nil, in: repository.root) == Data("inside\n".utf8),
+                "a link to a file inside is read through")
     }
 
     @Test("fileContents reads the diff views' revision specs, <id>^1 and :0, for a path with spaces and Unicode")

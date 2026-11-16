@@ -443,6 +443,23 @@ struct GitClientLocaleTests {
         #expect(GitClient.baseEnvironment["LC_ALL"] == nil)
         #expect(GitClient.baseEnvironment["LC_CTYPE"] == nil)
     }
+
+    /// A background `git status` must not take `index.lock`, or the user's own git fails.
+    @Test("every child gets GIT_OPTIONAL_LOCKS=0")
+    func optionalLocksAreOff() async throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("git-client-locks-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let script = directory.appendingPathComponent("env-git")
+        try "#!/bin/sh\necho \"$GIT_OPTIONAL_LOCKS\"\n".write(to: script, atomically: true, encoding: .utf8)
+        try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: script.path)
+        let client = GitClient(configuration: GitClientConfiguration(executableURL: script, timeout: 10))
+
+        let output = try await client.run("status", [], in: directory)
+
+        #expect(output.trimmingCharacters(in: .newlines) == "0")
+    }
 }
 
 /// `pushDestination(of:)` is git's own `<branch>@{push}`: it follows `push.default`, refuses

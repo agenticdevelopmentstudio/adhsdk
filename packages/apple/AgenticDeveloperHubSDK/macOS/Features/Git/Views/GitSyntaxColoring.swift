@@ -77,13 +77,15 @@ public final class GitSyntaxColoring {
 
     /// Where a diff target's old and new sides are read from: the working copy's unstaged
     /// change is the index against the working file, a staged one `HEAD` against the index,
-    /// an untracked file only the working file, a commit its first parent against itself,
-    /// and a range its two ends.
+    /// an untracked file only the working file, a conflicted one its merge base (stage 1)
+    /// against the working file, a commit its first parent against itself, and a range its
+    /// two ends.
     public static func revisions(for target: GitDiffTarget) -> (old: Revision, new: Revision) {
         switch target {
         case .unstaged: (.at(":0"), .workingFile)
         case .staged: (.at("HEAD"), .at(":0"))
         case .untracked: (.absent, .workingFile)
+        case .conflicted: (.at(":1"), .workingFile)
         case .commit(let id, _): (.at(id + "^1"), .at(id))
         case .range(let from, let until, _): (.at(from), .at(until))
         }

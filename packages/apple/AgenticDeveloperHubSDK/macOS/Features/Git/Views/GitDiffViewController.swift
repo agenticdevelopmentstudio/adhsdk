@@ -164,11 +164,11 @@ public final class GitDiffViewController: NSViewController {
         load()
     }
 
-    /// Whether the shown target is the working copy (staged, unstaged or untracked),
+    /// Whether the shown target is the working copy (staged, unstaged, untracked or conflicted),
     /// whose diff changes as files are edited.
     public var isShowingWorkingCopy: Bool {
         switch request?.target {
-        case .unstaged, .staged, .untracked: true
+        case .unstaged, .staged, .untracked, .conflicted: true
         case .commit, .range, .none: false
         }
     }
@@ -419,7 +419,7 @@ public final class GitDiffViewController: NSViewController {
         switch target {
         case .commit(let id, _): deleted ? id + "^1" : id
         case .range(let from, let until, _): deleted ? from : until
-        case .unstaged, .staged, .untracked: deleted ? "HEAD" : nil
+        case .unstaged, .staged, .untracked, .conflicted: deleted ? "HEAD" : nil
         }
     }
 
@@ -452,7 +452,7 @@ public final class GitDiffViewController: NSViewController {
             if let lineSelection {
                 menu.addItem(menuItem("Unstage Lines", "unstageLines", .unstage(lineSelection)))
             }
-        case .commit, .range, .untracked:
+        case .commit, .range, .untracked, .conflicted:
             return nil
         }
         return menu
