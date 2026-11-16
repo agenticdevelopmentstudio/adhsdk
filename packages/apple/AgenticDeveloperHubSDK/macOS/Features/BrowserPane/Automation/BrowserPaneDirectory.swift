@@ -42,7 +42,7 @@ public struct BrowserPaneHandle {
         agentPrivacy: BrowserAgentPrivacy = .off,
         historyAccess: BrowserAgentHistoryAccess = .none,
         historyStore: BrowserHistoryStore? = nil,
-        hidesImages: Bool = false
+        hidesImages: Bool
     ) {
         self.id = id; self.project = project; self.tab = tab; self.automation = automation
         self.engine = engine

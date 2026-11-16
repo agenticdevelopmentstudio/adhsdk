@@ -31,7 +31,7 @@ final class FakeBrowserDirectory: BrowserPaneDirectory {
         openedEngines.append(engine)
         if openFails { throw BrowserAutomationError.openRefused }
         let page = OffscreenWebView()
-        let handle = BrowserPaneHandle(id: "new-\(panes.count)", project: "proj", tab: "Tab", automation: BrowserAutomation(webView: page.webView, console: BrowserConsoleLog()), engine: engine, access: openAccess)
+        let handle = BrowserPaneHandle(id: "new-\(panes.count)", project: "proj", tab: "Tab", automation: BrowserAutomation(webView: page.webView, console: BrowserConsoleLog()), engine: engine, access: openAccess, hidesImages: false)
         panes.append(handle)
         return handle
     }
@@ -61,7 +61,7 @@ final class BrowserToolSetTests: XCTestCase {
         await pages["B"]!.load(html: "<title>Beta</title><a href=\"/x\">Two</a>")
         directory = FakeBrowserDirectory(pages: pages)
         for (id, page) in pages.sorted(by: { $0.key < $1.key }) {
-            directory.panes.append(BrowserPaneHandle(id: id, project: "proj", tab: "Tab \(id)", automation: BrowserAutomation(webView: page.webView, console: BrowserConsoleLog())))
+            directory.panes.append(BrowserPaneHandle(id: id, project: "proj", tab: "Tab \(id)", automation: BrowserAutomation(webView: page.webView, console: BrowserConsoleLog()), hidesImages: false))
         }
         hiddenItemsDirectory = FileManager.default.temporaryDirectory
             .appendingPathComponent("BrowserToolSetTests-\(UUID().uuidString)")
@@ -202,7 +202,7 @@ final class BrowserToolSetTests: XCTestCase {
             page.webView.loadFileURL(url, allowingReadAccessTo: url.deletingLastPathComponent())
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { done.resume() }
         }
-        directory.panes = [BrowserPaneHandle(id: "F", project: "p", tab: "t", automation: BrowserAutomation(webView: page.webView, console: BrowserConsoleLog()))]
+        directory.panes = [BrowserPaneHandle(id: "F", project: "p", tab: "t", automation: BrowserAutomation(webView: page.webView, console: BrowserConsoleLog()), hidesImages: false)]
         let reply = await call("browser_snapshot")
         XCTAssertTrue(reply.isError)
         XCTAssertEqual(reply.content, "pane F shows a local file, which models may not drive")
@@ -238,7 +238,7 @@ final class BrowserToolSetTests: XCTestCase {
         await page.navigate(to: URL(string: "https://web.test/")!, html: "<title>Web</title><p>web</p>")
         XCTAssertEqual(page.webView.backForwardList.backItem?.url.isFileURL, true,
                        "nothing to go back to: \(String(describing: page.webView.backForwardList.backItem?.url))")
-        directory.panes = [BrowserPaneHandle(id: "F", project: "p", tab: "t", automation: BrowserAutomation(webView: page.webView, console: BrowserConsoleLog()))]
+        directory.panes = [BrowserPaneHandle(id: "F", project: "p", tab: "t", automation: BrowserAutomation(webView: page.webView, console: BrowserConsoleLog()), hidesImages: false)]
         let back = await call("browser_back")
         XCTAssertTrue(back.isError)
         XCTAssertEqual(back.content, "the pane shows a local file, which models may not drive")
@@ -257,7 +257,7 @@ final class BrowserToolSetTests: XCTestCase {
         try "<title>Secret</title><p>local</p>".write(to: url, atomically: true, encoding: .utf8)
         await page.navigate(to: URL(string: "https://web.test/")!, html: "<title>Web</title><p>web</p>")
         let automation = BrowserAutomation(webView: page.webView, console: BrowserConsoleLog())
-        directory.panes = [BrowserPaneHandle(id: "F", project: "p", tab: "t", automation: automation)]
+        directory.panes = [BrowserPaneHandle(id: "F", project: "p", tab: "t", automation: automation, hidesImages: false)]
         let calls: [(String, [String: Any])] = [
             ("browser_console", [:]), ("browser_wait_for", ["load": true]), ("browser_screenshot", [:])
         ]
@@ -285,7 +285,7 @@ final class BrowserToolSetTests: XCTestCase {
         defer { try? FileManager.default.removeItem(at: url) }
         try "<title>Secret</title><p>local</p>".write(to: url, atomically: true, encoding: .utf8)
         _ = await page.load(fileURL: url)
-        directory.panes = [BrowserPaneHandle(id: "F", project: "p", tab: "t", automation: BrowserAutomation(webView: page.webView, console: BrowserConsoleLog()))]
+        directory.panes = [BrowserPaneHandle(id: "F", project: "p", tab: "t", automation: BrowserAutomation(webView: page.webView, console: BrowserConsoleLog()), hidesImages: false)]
         let list = await call("browser_list")
         XCTAssertFalse(list.isError)
         XCTAssertFalse(list.content.contains(url.lastPathComponent), list.content)
@@ -409,7 +409,7 @@ final class BrowserToolSetTests: XCTestCase {
 
     /// The handle for page `id` with the given access and pause state.
     private func handle(_ id: String, access: BrowserAgentAccess = .full, pausedForAgent: Bool = false) -> BrowserPaneHandle {
-        BrowserPaneHandle(id: id, project: "proj", tab: "Tab \(id)", automation: directory.panes.first { $0.id == id }!.automation, access: access, isPausedForAgent: pausedForAgent)
+        BrowserPaneHandle(id: id, project: "proj", tab: "Tab \(id)", automation: directory.panes.first { $0.id == id }!.automation, access: access, isPausedForAgent: pausedForAgent, hidesImages: false)
     }
 
     func testHiddenPaneIsNotListed() async {
@@ -568,7 +568,7 @@ final class BrowserToolSetTests: XCTestCase {
     ])
 
     private func privateHandle(_ id: String, _ privacy: BrowserAgentPrivacy) -> BrowserPaneHandle {
-        BrowserPaneHandle(id: id, project: "proj", tab: "Tab \(id)", automation: directory.panes.first { $0.id == id }!.automation, agentPrivacy: privacy)
+        BrowserPaneHandle(id: id, project: "proj", tab: "Tab \(id)", automation: directory.panes.first { $0.id == id }!.automation, agentPrivacy: privacy, hidesImages: false)
     }
 
     func testAgentPrivacyConcealsWhatAModelReads() async {
@@ -670,7 +670,7 @@ final class BrowserToolSetTests: XCTestCase {
         XCTAssertEqual(rows.map { $0["agent_privacy"] as? Bool }, [false, true])
         directory.panes = [handle("A"), BrowserPaneHandle(
             id: "B", project: "beta-portal", tab: "Beta Q3",
-            automation: directory.panes[1].automation, agentPrivacy: .enabled(privateWords))]
+            automation: directory.panes[1].automation, agentPrivacy: .enabled(privateWords), hidesImages: false)]
         reply = await call("browser_list")
         rows = try! JSONSerialization.jsonObject(with: Data(reply.content.utf8)) as! [[String: Any]]
         XCTAssertEqual(rows.last?["project"] as? String, "gamma-portal", "the project name is concealed")

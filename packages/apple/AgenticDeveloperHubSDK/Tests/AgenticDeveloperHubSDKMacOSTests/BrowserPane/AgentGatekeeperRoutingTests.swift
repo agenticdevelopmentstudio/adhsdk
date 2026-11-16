@@ -63,7 +63,7 @@ final class AgentGatekeeperRoutingTests: XCTestCase {
         let automation = directory?.panes.first?.automation
             ?? BrowserAutomation(webView: page.webView, console: BrowserConsoleLog())
         return BrowserPaneHandle(id: "A", project: "proj", tab: "Tab A", automation: automation,
-                                 agentPrivacy: privacy)
+                                 agentPrivacy: privacy, hidesImages: false)
     }
 
     private func store(agentSelectors: [String] = []) throws -> BrowserHiddenItemsStore {

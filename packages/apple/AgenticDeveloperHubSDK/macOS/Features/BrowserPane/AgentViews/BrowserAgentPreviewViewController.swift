@@ -44,13 +44,13 @@ final class BrowserAgentPreviewViewController: NSViewController, WKNavigationDel
     /// picker can install itself again in the new document.
     var onPageLoad: (() -> Void)?
 
-    /// Whether the controller's own latest load has yet to be asked about:
-    /// 1 lets exactly one `about:blank` navigation through, 0 lets none.
-    /// Set (never added to) by each load, so a load superseded before
-    /// WebKit asked about it leaves no credit behind, and cleared when the
-    /// load it was for finishes or fails.
+    /// How many of the controller's own loads WebKit may still ask about.
+    /// Each load adds one, so two loads in quick succession can both be
+    /// answered (WebKit may ask about the superseded one first). Zeroed only
+    /// when the latest own load finishes or fails, so a superseded load's
+    /// leftover credit lives no longer than the newest load.
     private var allowedLoads = 0
-    /// The load `allowedLoads` is for.
+    /// The latest own load: the one whose end zeroes `allowedLoads`.
     private var ownNavigation: WKNavigation?
     private var waitingPage: AgentPage?
 
@@ -96,11 +96,12 @@ final class BrowserAgentPreviewViewController: NSViewController, WKNavigationDel
         let html = page.html()
         shownHTML = html
         shownPage = page
-        allowedLoads = 1
+        allowedLoads += 1
         ownNavigation = webView.loadHTMLString(html, baseURL: nil)
     }
 
-    /// The controller's own load ended: no credit outlives it.
+    /// The controller's latest own load ended: no credit outlives it. The
+    /// end of a superseded load changes nothing.
     private func ownLoadEnded(_ navigation: WKNavigation?) {
         guard let navigation, navigation === ownNavigation else { return }
         ownNavigation = nil

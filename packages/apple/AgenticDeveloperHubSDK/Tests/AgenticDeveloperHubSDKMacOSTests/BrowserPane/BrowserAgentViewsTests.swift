@@ -204,6 +204,31 @@ final class BrowserAgentViewsTests: XCTestCase {
         XCTAssertEqual(second, .cancel, "one load, one credit")
     }
 
+    /// Two `show` calls in quick succession: WebKit may ask about the
+    /// superseded load before the newest one, so both questions must be
+    /// answered `.allow`, or the newest page is cancelled and an older
+    /// document stays on screen.
+    func test_previewTwoQuickShowsLetTheNewestPageLoad() async {
+        let preview = BrowserAgentPreviewViewController()
+        preview.webView.navigationDelegate = nil
+        let installed = await waitUntil { preview.ruleList != nil }
+        XCTAssertTrue(installed, "the block-everything list was never installed")
+        let first = samplePage()
+        let newest = AgentPage.unavailable("the walk failed.", url: nil)
+        preview.show(first)
+        preview.show(newest)
+        XCTAssertEqual(preview.shownHTML, newest.html())
+        let blank = URL(string: "about:blank")
+        let webView = preview.webView
+        let main = FakeFrame(main: true)
+        let superseded = await preview.webView(webView, decidePolicyFor: FakeAction(url: blank, frame: main))
+        XCTAssertEqual(superseded, .allow, "the superseded load's question is answered")
+        let latest = await preview.webView(webView, decidePolicyFor: FakeAction(url: blank, frame: main))
+        XCTAssertEqual(latest, .allow, "the newest page loads")
+        let extra = await preview.webView(webView, decidePolicyFor: FakeAction(url: blank, frame: main))
+        XCTAssertEqual(extra, .cancel, "two loads, two credits")
+    }
+
     // MARK: Source
 
     func test_sourceShowsSameHTML() {
