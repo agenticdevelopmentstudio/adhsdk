@@ -108,9 +108,11 @@ public final class BrowserSettingsPanelViewController: ComposableSettings.Settin
                         + "drawn by WebKit or by Chromium. These topics decide how their pages "
                         + "load, what they remember about where you have been, what sites may "
                         + "keep and do, and where downloads land. Chrome holds what only "
-                        + "Chromium has; General's AirPlay and Web Inspector, and Privacy and "
-                        + "Security's Protection and Site Data, are Safari's alone; every other "
-                        + "setting applies to both. Pick a topic on the left."
+                        + "Chromium has; General's AirPlay and Web Inspector, Privacy and "
+                        + "Security's Protection and Site Data, and Extensions are Safari's "
+                        + "alone; every other setting applies to both. The history itself is "
+                        + "not a setting: Browser ▸ Show History opens it. Pick a topic on "
+                        + "the left."
             )
         ]
         if binding.isPaneScope {

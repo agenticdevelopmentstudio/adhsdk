@@ -244,4 +244,97 @@ final class BrowserPaneToolbarTests: XCTestCase {
         let pane = makePane(ownToolbar: false)
         XCTAssertFalse(navigation(pane).contains(where: \.isHidden))
     }
+
+    // MARK: - Tooltips
+
+    /// Every button under `view`, however deep: a stack view's hidden views
+    /// are detached, so what this finds is what the pane is showing.
+    private func buttons(in view: NSView) -> [NSButton] {
+        view.subviews.flatMap { subview -> [NSButton] in
+            ((subview as? NSButton).map { [$0] } ?? []) + buttons(in: subview)
+        }
+    }
+
+    /// How a failure names the button: its identifier, else its
+    /// accessibility label, else its title.
+    private func describe(_ button: NSButton) -> String {
+        let identifier = button.accessibilityIdentifier()
+        if !identifier.isEmpty { return identifier }
+        if let label = button.accessibilityLabel(), !label.isEmpty { return label }
+        return button.title.isEmpty ? String(describing: button) : button.title
+    }
+
+    /// The owner's rule: every toolbar button in a browser pane has a
+    /// tooltip naming its action. Walked over the real pane, both engines,
+    /// with the privacy toolbar off and on (the privacy button moves between
+    /// the two rows) and with several tabs, so the tabs' close buttons are in
+    /// the walk.
+    func test_everyToolbarButtonHasTooltip() {
+        for ownToolbar in [false, true] {
+            let pane = makePane(ownToolbar: ownToolbar)
+            pane.newTab(nil)
+            pane.newTab(nil)
+            pane.view.frame = NSRect(x: 0, y: 0, width: 1000, height: 600)
+            for showsStrip in [false, true] {
+                pane.isPrivacyStripShown = showsStrip
+                pane.refreshAddressRowControls()
+                pane.view.layoutSubtreeIfNeeded()
+                let context = "(own toolbar \(ownToolbar), privacy toolbar \(showsStrip))"
+
+                let found = buttons(in: pane.view)
+                for button in found {
+                    XCTAssertFalse((button.toolTip ?? "").isEmpty, "\(describe(button)) has no tooltip \(context)")
+                }
+                var expected: [NSButton] = [pane.newTabButton, pane.privacyButton, pane.menuButton]
+                if !ownToolbar { expected += [pane.backButton, pane.forwardButton, pane.reloadButton] }
+                for button in expected {
+                    XCTAssertTrue(found.contains { $0 === button }, "the walk missed \(describe(button)) \(context)")
+                }
+                XCTAssertTrue(
+                    found.contains { $0.accessibilityIdentifier().hasPrefix("tab-bar.close.") },
+                    "the walk found no tab's close button \(context)")
+            }
+        }
+    }
+
+    /// The tooltips name the action, not the symbol, and the identifiers UI
+    /// tests address stay put.
+    func test_toolbarTooltipsNameTheirAction() {
+        let pane = makePane(ownToolbar: false)
+        XCTAssertEqual(pane.backButton.toolTip, "Go Back")
+        XCTAssertEqual(pane.forwardButton.toolTip, "Go Forward")
+        XCTAssertEqual(pane.reloadButton.toolTip, "Reload Page")
+        XCTAssertEqual(pane.newTabButton.toolTip, "Open a New Tab")
+        XCTAssertEqual(pane.privacyButton.toolTip, "Show This Tab's Privacy Settings")
+        XCTAssertEqual(pane.menuButton.toolTip, "Show Browser Menu")
+        XCTAssertEqual(pane.reloadButton.accessibilityIdentifier(), "browser.reload")
+        XCTAssertEqual(pane.newTabButton.accessibilityIdentifier(), "browser.new tab")
+        XCTAssertEqual(pane.privacyButton.accessibilityIdentifier(), "browser.privacy")
+        XCTAssertEqual(pane.menuButton.accessibilityIdentifier(), "browser.menu")
+    }
+
+    /// A Safari pane's extension toolbar: Add Extension and the extensions
+    /// menu have tooltips, and an extension's button always has one, falling
+    /// back from its action's label to its name to a generic one. A host over
+    /// a scratch library, never the person's.
+    func test_safariExtensionToolbarButtonsHaveTooltips() throws {
+        guard #available(macOS 15.4, *) else { throw XCTSkip("Safari extensions need macOS 15.4") }
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent("BrowserPaneToolbarTests-\(UUID().uuidString)", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let host = SafariExtensionHost(
+            profile: .global, library: SafariExtensionLibrary(root: root.appendingPathComponent("Library")))
+        let pane = makePane(ownToolbar: false)
+        let window = SafariExtensionWindow(pane: pane, host: host)
+        let toolbar = SafariExtensionToolbar(window: window, host: host)
+        pane.addToolbarAccessory(toolbar)
+
+        XCTAssertEqual(toolbar.addButton.toolTip, "Add This Extension from the Chrome Web Store")
+        XCTAssertEqual(toolbar.overflowButton.toolTip, "Show More Extensions")
+
+        XCTAssertEqual(SafariExtensionToolbar.actionToolTip(label: "Block Ads", displayName: "uBlock"), "Block Ads")
+        XCTAssertEqual(SafariExtensionToolbar.actionToolTip(label: "", displayName: "uBlock"), "uBlock")
+        XCTAssertEqual(SafariExtensionToolbar.actionToolTip(label: "", displayName: ""), "Run Extension")
+        XCTAssertEqual(SafariExtensionToolbar.actionToolTip(label: "", displayName: nil), "Run Extension")
+    }
 }

@@ -79,4 +79,16 @@
 - **no-inline-help-labels**: The topics MUST NOT add explanatory or empty-state
   text to their views for the moved or new controls; explanation of what a
   control does MUST go in the topic's help content.
+- **toolbar-buttons-have-tooltips**: A browser pane MUST give every button in
+  its toolbar rows (the address row, the privacy toolbar, the tab strip's
+  new-tab and close buttons, and a Safari pane's extension buttons) a
+  non-empty tooltip that names the button's action ("Reload Page"), not its
+  symbol; an extension's button with no label of its own MUST fall back to
+  the extension's name, then to a generic action name.
+- **help-covers-regrouped-topics**: The Behavior, Appearance and Privacy and
+  Security topics MUST each have help content with one topic per group they
+  show in that scope, and no topic for a group the scope does not show; the
+  History help MUST say that the visits are seen and cleared from Browser ▸
+  Show History, and "Agent can see history" MUST have a help topic of its
+  own.
 

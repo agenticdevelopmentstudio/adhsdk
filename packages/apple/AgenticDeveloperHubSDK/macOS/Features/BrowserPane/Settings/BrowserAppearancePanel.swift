@@ -24,6 +24,8 @@ final class BrowserAppearancePanel: BrowserTopicPanel {
         super.init(title: "Appearance", symbol: "textformat.size", binding: binding)
     }
 
+    /// The tab position row is a pane's alone, so in the Settings window the
+    /// Tab Position help says where the app-wide value is instead.
     override var helpContent: ComposableSettings.PanelHelp? {
         ComposableSettings.PanelHelp(topics: [
             .init(
@@ -34,11 +36,15 @@ final class BrowserAppearancePanel: BrowserTopicPanel {
             ),
             .init(
                 title: "Tab Position",
-                body: "In a pane's settings: which edges of this pane show its tab bar. "
-                    + "Without an override the pane follows the app's own tab position, "
-                    + "set in System ▸ General or View ▸ Tab Position; changing a switch "
-                    + "here gives the pane its own, and Use Global Setting in the row's "
-                    + "menu goes back. At least one edge stays on."
+                body: binding.isPaneScope
+                    ? "Which edges of this pane show its tab bar. Without an override the "
+                        + "pane follows the app's own tab position, set in System ▸ General "
+                        + "or View ▸ Tab Position; changing a switch here gives the pane its "
+                        + "own, and Use Global Setting in the row's menu goes back. At least "
+                        + "one edge stays on."
+                    : "Which edges a browser pane shows its tabs on follows the app's own "
+                        + "tab position, set in System ▸ General or View ▸ Tab Position. A "
+                        + "single pane can override it in its own settings, under Appearance."
             )
         ])
     }
@@ -67,10 +73,10 @@ final class BrowserAppearancePanel: BrowserTopicPanel {
         _ = zoomView.slider.accessibilityID("settings.browser.general.zoom")
         binding.add(zoomView, model: zoom, key: UserSettings.browserPageZoom, to: group)
 
+        // What it does is in the topic's help (`no-inline-help-labels`).
         let fontSize = binding.range(
             "Minimum font size", UserSettings.browserMinimumFontSize,
-            bounds: BrowserSettings.minimumFontSizeRange,
-            explanation: "In points. Zero lets each page choose its own."
+            bounds: BrowserSettings.minimumFontSizeRange
         )
         let fontView = ComposableSettings.IntegerFieldView(viewModel: fontSize)
         _ = fontView.textField.accessibilityID("settings.browser.general.minimum-font-size")

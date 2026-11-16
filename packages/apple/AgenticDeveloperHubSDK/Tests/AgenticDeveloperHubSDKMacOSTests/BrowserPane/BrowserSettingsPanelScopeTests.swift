@@ -551,6 +551,10 @@ final class BrowserSettingsPanelScopeTests: XCTestCase {
     /// Use Global Setting puts it back on the global value.
     func test_paneHistoryGroupAndAgentAccessOverride() throws {
         let global = makeSettings()
+        let key = UserSettings.browserAgentHistoryAccess
+        // A global value off the default, so going back to it is observable:
+        // with both at None, Use Global Setting would change nothing to see.
+        global.set(BrowserAgentHistoryAccess.all, for: key)
         let layered = makeLayered(over: global)
         let pane = try makePane(settings: layered)
         let panel = makePanel(settings: global, scope: .pane(layered, pane))
@@ -561,18 +565,18 @@ final class BrowserSettingsPanelScopeTests: XCTestCase {
         ])
         XCTAssertFalse(historyRows.contains(UserSettings.browserHistoryRetention.name))
 
-        let key = UserSettings.browserAgentHistoryAccess
         let row = try XCTUnwrap(panel.binding.rows(named: key.name).first)
         let model = try XCTUnwrap(row.model as? ComposableSettings.ChoiceViewModel<BrowserAgentHistoryAccess>)
         let marker = try XCTUnwrap(row.marker, "a pane row carries an override marker")
         XCTAssertFalse(marker.isShowingOverride)
+        XCTAssertEqual(model.value, .all, "the row starts on the global value")
 
         model.settingObserver.value = .currentTab
         settle()
 
         XCTAssertTrue(layered.hasOverride(key))
         XCTAssertEqual(layered.get(key), .currentTab)
-        XCTAssertEqual(global.get(key), BrowserAgentHistoryAccess.none, "the global value is untouched")
+        XCTAssertEqual(global.get(key), .all, "the global value is untouched")
         XCTAssertTrue(marker.isShowingOverride)
         XCTAssertTrue(row.hasOverride())
 
@@ -583,6 +587,61 @@ final class BrowserSettingsPanelScopeTests: XCTestCase {
         XCTAssertFalse(layered.hasOverride(key))
         XCTAssertFalse(row.hasOverride())
         XCTAssertFalse(marker.isShowingOverride)
-        XCTAssertEqual(model.value, global.get(key))
+        XCTAssertEqual(layered.get(key), .all, "the pane follows the global value again")
+        XCTAssertEqual(model.value, .all, "the row shows the global value again")
+    }
+
+    // MARK: - Help
+
+    private func helpTitles(_ topic: String, in panel: BrowserSettingsPanelViewController) throws -> [String] {
+        let panel = try XCTUnwrap(panel.panels.first { $0.descriptor.title == topic }, "no \(topic) topic")
+        return try XCTUnwrap(panel.helpContent, "\(topic) has no help").topics.map(\.title)
+    }
+
+    private func helpBody(
+        _ title: String, of topic: String, in panel: BrowserSettingsPanelViewController
+    ) throws -> String {
+        let panel = try XCTUnwrap(panel.panels.first { $0.descriptor.title == topic })
+        let help = try XCTUnwrap(panel.helpContent?.topics.first { $0.title == title }, "no \(title) help")
+        return help.body
+    }
+
+    /// browser-settings-028: the regrouped topics' help follows the groups
+    /// each scope shows, History's help sends the reader to Browser ▸ Show
+    /// History, and Agent can see history has a topic of its own.
+    func test_regroupedTopicsHelpFollowsTheScope() throws {
+        let global = makeSettings()
+        let window = makePanel(settings: global)
+        let layered = makeLayered(over: global)
+        let sheet = makePanel(settings: global, scope: .pane(layered, try makePane(settings: layered)))
+
+        XCTAssertEqual(try helpTitles("Behavior", in: window), ["Open Sites in Tabs", "Page", "Home Page", "Playback"])
+        XCTAssertEqual(try helpTitles("Behavior", in: sheet), ["Page", "Home Page", "Playback"],
+                       "Open sites in tabs is not in a pane's sheet, nor is its help")
+        XCTAssertEqual(try helpTitles("Appearance", in: window), ["Page", "Tab Position"])
+        XCTAssertEqual(try helpTitles("Appearance", in: sheet), ["Page", "Tab Position"])
+
+        for panel in [window, sheet] {
+            let privacy = try helpTitles("Privacy and Security", in: panel)
+            XCTAssertTrue(privacy.contains("Agent Can See History"))
+            XCTAssertTrue(privacy.contains("History"))
+            XCTAssertTrue(try helpBody("History", of: "Privacy and Security", in: panel)
+                .contains("Browser ▸ Show History"))
+        }
+    }
+
+    /// browser-settings-026: the moved Behavior and Appearance controls carry
+    /// no explanation of what they do; Autoplay's note says when it applies,
+    /// which differs by scope and engine, and stays.
+    func test_regroupedRowsHaveNoInlineHelp() throws {
+        let panel = makePanel(settings: makeSettings())
+        for key in [
+            UserSettings.browserJavaScriptEnabled.name, UserSettings.browserBlocksPopups.name,
+            UserSettings.browserHomePage.name, UserSettings.browserMinimumFontSize.name,
+            UserSettings.browserLockdownMode.name, UserSettings.browserHistoryRetention.name
+        ] {
+            let row = try XCTUnwrap(panel.binding.rows(named: key).first, "no row for \(key)")
+            XCTAssertNil(row.model?.explanation, "\(key) explains itself inline")
+        }
     }
 }

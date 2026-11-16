@@ -237,13 +237,20 @@ final class BrowserPrivacySettingsPanel: BrowserTopicPanel {
                         + "are kept is set in the Settings window. "
                     : "Keep visits for decides how long a visit is kept: anything older is "
                         + "forgotten the next time a browser pane opens. ")
-                + "The visits themselves are listed, searched and cleared in the History "
-                + "window, from the Browser menu. Agent can see history decides what the "
-                + "agent may read when it asks for history: All history is every recorded "
-                + "visit, as the History window shows them; Current tab only is the back "
-                + "and forward list of the tab it is driving; None, the default, refuses. "
+                + "To see, search or clear the visits, choose Browser ▸ Show History: the "
+                + "History window lists them, and its Clear History… removes them. "
+                + "Nothing here clears history."
+        ))
+        topics.append(.init(
+            title: "Agent Can See History",
+            body: "What the agent may read when it asks a browser for history. All history "
+                + "is every recorded visit, as the History window shows them; Current tab "
+                + "only is the back and forward list of the tab it is driving, and nothing "
+                + "else; None, the default, refuses the request. It decides only what the "
+                + "agent reads: what is recorded is Record history's to decide. "
                 + (binding.isPaneScope
-                    ? "Set here, it applies to this browser alone."
+                    ? "Set here, it applies to this browser alone; Use Global Setting in the "
+                        + "row's menu goes back to the Settings window's value."
                     : "Set here, it applies to every web browser that does not set its own.")
         ))
         topics.append(.init(
@@ -474,7 +481,7 @@ final class BrowserPrivacySettingsPanel: BrowserTopicPanel {
         addCheckbox(
             "Private browsing", UserSettings.browserPrivateBrowsing,
             identifier: "settings.browser.cookies.private-browsing",
-            explanation: "New browser panes keep nothing once closed. Applies to panes opened after the change.",
+            explanation: "Applies to panes opened after the change.",
             to: group
         )
         return group
@@ -512,12 +519,10 @@ final class BrowserPrivacySettingsPanel: BrowserTopicPanel {
             explanation: binding.safariConstructionNote(for: UserSettings.browserUpgradesToHTTPS.name),
             to: group
         )
+        // What it does is in the topic's help (`no-inline-help-labels`).
         addCheckbox(
             "Lockdown Mode", UserSettings.browserLockdownMode,
-            identifier: "settings.browser.safari.lockdown",
-            explanation: "Refuses some web technologies for a smaller attack surface. "
-                + "Applies to the next page each pane loads.",
-            to: group
+            identifier: "settings.browser.safari.lockdown", to: group
         )
         return group
     }
@@ -570,8 +575,7 @@ final class BrowserPrivacySettingsPanel: BrowserTopicPanel {
         if !binding.isPaneScope {
             let retention = binding.choice(
                 "Keep visits for", UserSettings.browserHistoryRetention,
-                choices: BrowserHistoryRetention.allCases.map { .init(label: $0.label, value: $0) },
-                explanation: "Older visits are forgotten when a browser pane opens."
+                choices: BrowserHistoryRetention.allCases.map { .init(label: $0.label, value: $0) }
             )
             let retentionView = ComposableSettings.PopupMenuChoiceView(viewModel: retention)
             _ = retentionView.popUpButton.accessibilityID("settings.browser.history.retention")

@@ -926,10 +926,17 @@ open class WebBrowserPaneViewController: NSViewController {
         let root = ThemedBackgroundView(role: .windowBackground)
         view = root
 
-        configureButton(backButton, symbol: "chevron.left", label: "Back", action: #selector(goBack))
-        configureButton(forwardButton, symbol: "chevron.right", label: "Forward", action: #selector(goForward))
-        configureButton(reloadButton, symbol: "arrow.clockwise", label: "Reload", action: #selector(reload))
-        configureButton(newTabButton, symbol: "plus", label: "New Tab", action: #selector(newTab(_:)))
+        configureButton(
+            backButton, symbol: "chevron.left", label: "Back", toolTip: "Go Back", action: #selector(goBack))
+        configureButton(
+            forwardButton, symbol: "chevron.right", label: "Forward", toolTip: "Go Forward",
+            action: #selector(goForward))
+        configureButton(
+            reloadButton, symbol: "arrow.clockwise", label: "Reload", toolTip: "Reload Page",
+            action: #selector(reload))
+        configureButton(
+            newTabButton, symbol: "plus", label: "New Tab", toolTip: "Open a New Tab",
+            action: #selector(newTab(_:)))
         newTabButton.setAccessibilityIdentifier("browser.newtab")
         // Among tabs, a bare glyph, as a browser draws its new-tab control.
         newTabButton.isBordered = false
@@ -1001,13 +1008,14 @@ open class WebBrowserPaneViewController: NSViewController {
     private var itemsInStrip: [BrowserPrivacyStatus.Item] = []
 
     private func configureInstalledBar() {
-        configureButton(privacyButton, symbol: "eye", label: "Privacy", action: #selector(showPrivacyDialog))
-        privacyButton.toolTip = "This tab's privacy settings"
+        configureButton(
+            privacyButton, symbol: "eye", label: "Privacy", toolTip: "Show This Tab's Privacy Settings",
+            action: #selector(showPrivacyDialog))
         privacyButton.setAccessibilityIdentifier("browser.privacy")
         configureButton(
-            menuButton, symbol: "line.3.horizontal", label: "Browser Menu", action: #selector(showBrowserMenu(_:)))
+            menuButton, symbol: "line.3.horizontal", label: "Browser Menu", toolTip: "Show Browser Menu",
+            action: #selector(showBrowserMenu(_:)))
         menuButton.setAccessibilityIdentifier("browser.menu")
-        menuButton.toolTip = "Browser menu: settings, log and more"
         for button in [privacyButton, menuButton] {
             button.isBordered = false
         }
@@ -1308,13 +1316,20 @@ open class WebBrowserPaneViewController: NSViewController {
         refreshBarInsets()
     }
 
-    private func configureButton(_ button: NSButton, symbol: String, label: String, action: Selector) {
+    /// One of the pane's toolbar buttons: `label` is its symbol's
+    /// accessibility description and names its identifier
+    /// (`browser.<label>`, which UI tests and automation address, so it stays
+    /// put); `toolTip` names what pressing it does ("Reload Page"), since
+    /// every toolbar button has one.
+    private func configureButton(
+        _ button: NSButton, symbol: String, label: String, toolTip: String, action: Selector
+    ) {
         button.image = NSImage(systemSymbolName: symbol, accessibilityDescription: label)
         button.symbolConfiguration = NSImage.SymbolConfiguration(pointSize: 16, weight: .regular)
         button.imagePosition = .imageOnly
         button.bezelStyle = .texturedRounded
         button.isBordered = true
-        button.toolTip = label
+        button.toolTip = toolTip
         button.target = self
         button.action = action
         button.setAccessibilityIdentifier("browser." + label.lowercased())

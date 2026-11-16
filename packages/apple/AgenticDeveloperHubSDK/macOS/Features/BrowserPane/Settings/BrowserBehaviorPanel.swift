@@ -23,44 +23,51 @@ final class BrowserBehaviorPanel: BrowserTopicPanel {
         super.init(title: "Behavior", symbol: "hand.tap", binding: binding)
     }
 
+    /// One topic per group the topic shows: Open Sites in Tabs only in the
+    /// Settings window, where its group is.
     override var helpContent: ComposableSettings.PanelHelp? {
-        ComposableSettings.PanelHelp(topics: [
+        let windows: [ComposableSettings.PanelHelp.Topic] = binding.isPaneScope ? [] : [
             .init(
                 title: "Open Sites in Tabs",
                 body: "File ▸ New (⌘N) over a web browser window normally opens another web "
                     + "browser window. With this on, it opens a new tab in the window in front "
                     + "instead, as File ▸ New Tab does. It is set for the whole app, so it is "
                     + "in the Settings window only."
-            ),
-            .init(
-                title: "Page",
-                body: "JavaScript off applies to the next page each pane loads, and most "
-                    + "of the web stops working without it; in a Chrome pane it applies at once. "
-                    + "Block pop-up windows refuses a window a page opens on its own; a link that "
-                    + "opens a new window still loads, in the same pane."
-            ),
-            .init(
-                title: "Home Page",
-                body: "What a new browser pane opens on when it has no page to go back to. "
-                    + "Blank opens an empty page, with the address bar ready. A bare host "
-                    + "such as example.com gets https:// in front, exactly as it would in "
-                    + "the address bar. A pane that was closed on a page reopens on that "
-                    + "page, not the home page."
-            ),
-            .init(
-                title: "Playback",
-                body: "Autoplay decides whether a page may start video or audio without a "
-                    + "click: allowed, only without sound (the usual browser default — a "
-                    + "muted video plays, one with sound waits), or never. A Safari pane "
-                    + "fixes it when the pane is created: in the Settings window it applies "
-                    + "to Safari panes opened after the change, and in a Safari pane's "
-                    + "settings when the sheet closes. Chromium reads it once when it "
-                    + "starts, so Chrome panes follow it the next time the app opens. Never "
-                    + "in a Chrome pane still lets a muted video play: Chromium has no "
-                    + "policy that stops one. AirPlay is Safari's alone and is in General."
             )
-        ])
+        ]
+        return ComposableSettings.PanelHelp(topics: windows + Self.pageHelpTopics)
     }
+
+    private static let pageHelpTopics: [ComposableSettings.PanelHelp.Topic] = [
+        .init(
+            title: "Page",
+            body: "Enable JavaScript, turned off, applies to the next page each pane loads, "
+                + "and most of the web stops working without it; in a Chrome pane it applies "
+                + "at once. "
+                + "Block pop-up windows refuses a window a page opens on its own; a link that "
+                + "opens a new window still loads, in the same pane."
+        ),
+        .init(
+            title: "Home Page",
+            body: "What a new browser pane opens on when it has no page to go back to. "
+                + "Blank opens an empty page, with the address bar ready. A bare host "
+                + "such as example.com gets https:// in front, exactly as it would in "
+                + "the address bar. A pane that was closed on a page reopens on that "
+                + "page, not the home page."
+        ),
+        .init(
+            title: "Playback",
+            body: "Autoplay decides whether a page may start video or audio without a "
+                + "click: allowed, only without sound (the usual browser default — a "
+                + "muted video plays, one with sound waits), or never. A Safari pane "
+                + "fixes it when the pane is created: in the Settings window it applies "
+                + "to Safari panes opened after the change, and in a Safari pane's "
+                + "settings when the sheet closes. Chromium reads it once when it "
+                + "starts, so Chrome panes follow it the next time the app opens. Never "
+                + "in a Chrome pane still lets a muted video play: Chromium has no "
+                + "policy that stops one. AirPlay is Safari's alone and is in General."
+        )
+    ]
 
     /// Every control's title, then the other words someone might search by.
     static let keywords: [String] = [
@@ -96,10 +103,8 @@ final class BrowserBehaviorPanel: BrowserTopicPanel {
     private func makePageGroup() -> ComposableSettings.GroupView {
         let group = ComposableSettings.GroupView(withTitle: "Page")
 
-        let javaScript = binding.model(
-            "Enable JavaScript", UserSettings.browserJavaScriptEnabled,
-            explanation: "Applies to the next page each pane loads."
-        )
+        // What it does is in the topic's help (`no-inline-help-labels`).
+        let javaScript = binding.model("Enable JavaScript", UserSettings.browserJavaScriptEnabled)
         let javaScriptView = ComposableSettings.CheckboxView(with: javaScript)
         _ = javaScriptView.toggle.accessibilityID("settings.browser.general.javascript")
         binding.add(javaScriptView, model: javaScript, key: UserSettings.browserJavaScriptEnabled, to: group)
@@ -114,10 +119,8 @@ final class BrowserBehaviorPanel: BrowserTopicPanel {
 
     private func makeHomeGroup() -> ComposableSettings.GroupView {
         let group = ComposableSettings.GroupView(withTitle: "Home Page")
-        let home = binding.model(
-            "Address", UserSettings.browserHomePage,
-            explanation: "Blank opens an empty page. A host without a scheme gets https:// in front."
-        )
+        // What it does is in the topic's help (`no-inline-help-labels`).
+        let home = binding.model("Address", UserSettings.browserHomePage)
         let field = ComposableSettings.TextEditView(with: home)
         field.textField.placeholderString = "example.com"
         _ = field.textField.accessibilityID("settings.browser.general.home-page")

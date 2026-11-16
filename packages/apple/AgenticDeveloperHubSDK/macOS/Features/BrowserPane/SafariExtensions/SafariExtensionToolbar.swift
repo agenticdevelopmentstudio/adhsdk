@@ -19,9 +19,11 @@ final class SafariExtensionToolbar: NSStackView {
     private weak var extensionWindow: SafariExtensionWindow?
     private weak var host: SafariExtensionHost?
     private var buttons: [ActionButton] = []
-    private let addButton: NSButton
+    /// Add Extension, while the tab in front is a store page for an
+    /// extension not yet installed.
+    let addButton: NSButton
     /// The extensions menu: the unpinned extensions, and their popups' anchor.
-    private let overflowButton: NSButton
+    let overflowButton: NSButton
     private var unpinned: [WKWebExtensionContext] = []
     nonisolated(unsafe) private var observers: [NSObjectProtocol] = []
     private var isInstalling = false
@@ -42,6 +44,7 @@ final class SafariExtensionToolbar: NSStackView {
         addButton.controlSize = .small
         addButton.image = NSImage(systemSymbolName: "puzzlepiece.extension", accessibilityDescription: nil)
         addButton.imagePosition = .imageLeading
+        addButton.toolTip = "Add This Extension from the Chrome Web Store"
         addButton.target = self
         addButton.action = #selector(addFromStore)
         addButton.setAccessibilityIdentifier("safari-extension-add")
@@ -51,7 +54,7 @@ final class SafariExtensionToolbar: NSStackView {
         overflowButton.imagePosition = .imageOnly
         overflowButton.image = NSImage(
             systemSymbolName: "puzzlepiece.extension", accessibilityDescription: "Extensions")
-        overflowButton.toolTip = "Extensions"
+        overflowButton.toolTip = "Show More Extensions"
         overflowButton.target = self
         overflowButton.action = #selector(showOverflowMenu)
         overflowButton.setAccessibilityIdentifier("safari-extension-overflow")
@@ -237,6 +240,15 @@ final class SafariExtensionToolbar: NSStackView {
         }
     }
 
+    /// An extension button's tooltip: the action's own label, else the
+    /// extension's name, else a generic one — never empty, since every
+    /// toolbar button has a tooltip.
+    static func actionToolTip(label: String, displayName: String?) -> String {
+        if !label.isEmpty { return label }
+        if let displayName, !displayName.isEmpty { return displayName }
+        return "Run Extension"
+    }
+
     static func report(_ error: Error, on window: NSWindow) {
         let alert = NSAlert(error: error)
         alert.beginSheetModal(for: window) { _ in }
@@ -293,7 +305,8 @@ private final class ActionButton: NSButton {
         let icon = action.icon(for: CGSize(width: 16, height: 16))
             ?? context.webExtension.icon(for: CGSize(width: 16, height: 16))
         image = icon ?? NSImage(systemSymbolName: "puzzlepiece.extension", accessibilityDescription: nil)
-        let label = action.label.isEmpty ? (context.webExtension.displayName ?? "") : action.label
+        let label = SafariExtensionToolbar.actionToolTip(
+            label: action.label, displayName: context.webExtension.displayName)
         toolTip = label
         setAccessibilityLabel(label)
         isEnabled = action.isEnabled
