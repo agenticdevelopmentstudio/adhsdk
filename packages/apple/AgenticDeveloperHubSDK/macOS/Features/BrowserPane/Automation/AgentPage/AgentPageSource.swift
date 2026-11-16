@@ -5,7 +5,7 @@ import Foundation
 /// snapshot runtime whose ref table the walker shares.
 public enum AgentPageWalkerRuntime {
     /// Must equal `VERSION` in `AgentPageWalker.js`.
-    public static let version = 2
+    public static let version = 3
 
     public static var source: String {
         get throws {
@@ -60,8 +60,12 @@ public struct AgentPageReading: Sendable {
 /// `AgentPageBuilder`, which re-validates and conceals it. Every failure —
 /// the walker missing, throwing, outliving its timeout, or returning what
 /// does not decode, and the agent list failing to read — is the unavailable
-/// page, never partial content. No store (`hiddenItems` nil) is no
-/// exclusions, as an empty list is (recipe edge case "Missing file").
+/// page, never partial content. No store (`hiddenItems` nil) is the
+/// unavailable page too: at runtime the shared store is nil only when its
+/// database could not be opened, and an agent list that cannot be read must
+/// not fail open. The excludes are bound to the page actually walked: the
+/// walk reports its address, and a page whose agent list differs from the
+/// one applied is walked once more with its own, then refused.
 @MainActor
 public struct AgentPageSource {
     public static let defaultTimeoutMs = 1500
@@ -101,48 +105,84 @@ public struct AgentPageSource {
         return rendering
     }
 
-    public func read(options: BrowserSnapshotOptions) async -> AgentPageReading {
+    /// `keepingRefs`: a reading walk (text, find, wait_for, the focused
+    /// element) that leaves the ref table and generation of the agent's last
+    /// snapshot as they are, so the refs it holds stay valid; elements new
+    /// since then get fresh refs. A snapshot walks without it.
+    public func read(options: BrowserSnapshotOptions, keepingRefs: Bool = false) async -> AgentPageReading {
         let builder = AgentPageBuilder(privacy: privacy(), hideImages: hideImages())
-        let url = driver.url
-        guard BrowserAutomation.isDrivable(url?.absoluteString ?? "about:blank") else {
-            return failed(builder, BrowserAutomationError.localFile)
-        }
-
-        var excludes: [String] = []
-        if let hiddenItems {
+        guard let hiddenItems else { return failed(builder, AgentPageSourceError.agentListUnavailable) }
+        var readURL = driver.url
+        for _ in 0..<Self.walkAttempts {
+            guard BrowserAutomation.isDrivable(readURL?.absoluteString ?? "about:blank") else {
+                return failed(builder, BrowserAutomationError.localFile)
+            }
+            let excludes: [String]
+            let json: String
             do {
-                excludes = try await hiddenItems.perform { try $0.enabledSelectors(list: .agent, for: url) }
+                excludes = try await agentSelectors(hiddenItems, for: readURL)
+                guard let walked = try await walk(builder: builder, excludes: excludes, options: options,
+                                                  keepingRefs: keepingRefs) else {
+                    return AgentPageReading(page: builder.build(payload: nil, error: nil), generation: nil,
+                                            warnings: [], failure: nil)
+                }
+                json = walked
             } catch {
-                // A list that exists but cannot be read must not fail open.
                 return failed(builder, error)
             }
+            let data = Data(json.utf8)
+            let extras = try? JSONDecoder().decode(WalkExtras.self, from: data)
+            // A failure payload carries no address and no content: nothing to bind.
+            guard let walkedAddress = extras?.url else { return reading(builder, data, extras) }
+            if walkedAddress == readURL?.absoluteString { return reading(builder, data, extras) }
+            // The page changed between reading the list and walking. The walk
+            // stands only if the walked page's own list is the one applied.
+            let walkedURL = URL(string: walkedAddress)
+            guard BrowserAutomation.isDrivable(walkedURL?.absoluteString ?? "about:blank") else {
+                return failed(builder, BrowserAutomationError.localFile)
+            }
+            do {
+                let walkedExcludes = try await agentSelectors(hiddenItems, for: walkedURL)
+                if Set(walkedExcludes) == Set(excludes) { return reading(builder, data, extras) }
+            } catch {
+                return failed(builder, error)
+            }
+            readURL = walkedURL
         }
+        return failed(builder, AgentPageSourceError.pageChanged)
+    }
 
-        let raw: Any?
-        do {
-            try await AgentPageWalkerRuntime.install(on: driver)
-            let arguments: [String: Any] = [
-                "allowlist": try builder.allowlist.jsonString(),
-                "excludeSelectors": excludes,
-                "scopeRef": options.scope ?? NSNull(),
-                "interactiveOnly": options.interactiveOnly,
-                "maxDepth": options.depth ?? 0,
-                "timeoutMs": timeoutMs
-            ]
-            raw = try await driver.callAsyncFunction(
-                body: "return globalThis.__adkAgentWalk({ allowlist, excludeSelectors, scopeRef, "
-                    + "interactiveOnly, maxDepth, timeoutMs })",
-                arguments: arguments, world: .automation)
-        } catch {
-            return failed(builder, error)
-        }
-        guard let json = raw as? String else {
-            return AgentPageReading(page: builder.build(payload: nil, error: nil), generation: nil,
-                                    warnings: [], failure: nil)
-        }
-        let data = Data(json.utf8)
+    /// Two walks: the second covers one navigation between reading the
+    /// list and walking; a page still moving after that is refused.
+    static let walkAttempts = 2
+
+    private func agentSelectors(_ store: BrowserHiddenItemsStore, for url: URL?) async throws -> [String] {
+        try await store.perform { try $0.enabledSelectors(list: .agent, for: url) }
+    }
+
+    /// The walker's JSON for the current document, or nil when it returned
+    /// something other than a string.
+    private func walk(builder: AgentPageBuilder, excludes: [String],
+                      options: BrowserSnapshotOptions, keepingRefs: Bool = false) async throws -> String? {
+        try await AgentPageWalkerRuntime.install(on: driver)
+        let arguments: [String: Any] = [
+            "allowlist": try builder.allowlist.jsonString(),
+            "excludeSelectors": excludes,
+            "scopeRef": options.scope ?? NSNull(),
+            "interactiveOnly": options.interactiveOnly,
+            "maxDepth": options.depth ?? 0,
+            "timeoutMs": timeoutMs,
+            "keepRefs": keepingRefs
+        ]
+        let raw = try await driver.callAsyncFunction(
+            body: "return globalThis.__adkAgentWalk({ allowlist, excludeSelectors, scopeRef, "
+                + "interactiveOnly, maxDepth, timeoutMs, keepRefs })",
+            arguments: arguments, world: .automation)
+        return raw as? String
+    }
+
+    private func reading(_ builder: AgentPageBuilder, _ data: Data, _ extras: WalkExtras?) -> AgentPageReading {
         let page = builder.build(payload: data, error: nil)
-        let extras = try? JSONDecoder().decode(WalkExtras.self, from: data)
         return AgentPageReading(page: page, generation: page.unavailableReason == nil ? extras?.generation : nil,
                                 warnings: extras?.warnings ?? [], failure: nil)
     }
@@ -155,7 +195,37 @@ public struct AgentPageSource {
 
     /// The payload keys the builder does not read.
     private struct WalkExtras: Decodable {
+        let url: String?
         let generation: Int?
         let warnings: [String]?
     }
 }
+
+/// Why `AgentPageSource` withheld a page before or after walking it.
+enum AgentPageSourceError: Error, CustomStringConvertible {
+    /// No hidden-items store: its database could not be opened.
+    case agentListUnavailable
+    /// The page kept changing under the walk, so no agent list could be
+    /// bound to it.
+    case pageChanged
+
+    var description: String {
+        switch self {
+        case .agentListUnavailable: "the agent's hidden-items list could not be opened."
+        case .pageChanged: "the page changed while it was being read."
+        }
+    }
+}
+
+extension AgentPageSourceError: LocalizedError {
+    var errorDescription: String? { description }
+}
+
+/// What the browser tools read the agent's page through: `AgentPageSource`
+/// in the app, a spy in tests (the recipe's `single-gatekeeper` check).
+@MainActor
+protocol AgentPageReader {
+    func read(options: BrowserSnapshotOptions, keepingRefs: Bool) async -> AgentPageReading
+}
+
+extension AgentPageSource: AgentPageReader {}

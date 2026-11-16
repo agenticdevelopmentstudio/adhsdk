@@ -24,13 +24,31 @@
   only the already-loaded document and the local agent list; it makes no
   network request.
 - **Missing file or unreachable server**: The agent list's store missing
-  or unopened means no exclusions are applied, as when the list is empty;
-  the walker script missing from the bundle is a walker error and yields
-  the unavailable page.
+  or unopened yields the unavailable page, as an unreadable list does: at
+  runtime the shared store is absent only when its database could not be
+  opened, and the agent list failing must not fail open (MUST,
+  `fail-closed-on-walker-failure`). An empty list is no exclusions. The
+  walker script missing from the bundle is a walker error and yields the
+  unavailable page.
 - **Cancellation and timeouts**: The walker stops after its timeout
   (default 1500 milliseconds) and the page is unavailable (MUST,
   `fail-closed-on-walker-failure`). A navigation during a walk makes its
   references stale under the existing generation rule.
+- **Navigation between reading the list and walking**: The agent-list
+  selectors are read for one address and the walk runs on whatever document
+  is current. The walk reports the address it walked; when that differs from
+  the address the list was read for, the walk stands only if the walked
+  page's own enabled selectors are the ones applied. Otherwise the page is
+  walked once more with its own list, and a page still changing after that
+  is the unavailable page (MUST, `no-partial-content-on-failure`). One
+  site's exclusions are never applied to another site's page.
+- **Very large pages**: The selector each node records costs a search per
+  node. The walker gives that search a share of its budget (a third) and
+  records the cheaper structural path (`tag:nth-child(n) > …`) for every
+  node after the share is spent, so a large page finishes where today's
+  snapshot does. Selectors never decide exclusion: the agent list is
+  evaluated before the walk, and a selector it cannot evaluate excludes
+  nothing and is warned, as `invalid-exclude-selector-isolated` says.
 - **Privacy words change mid-read**: The concealment in force when the
   build starts conceals the whole result; the tool reply is concealed
   again with the words of the moment it returns, as replies are today.

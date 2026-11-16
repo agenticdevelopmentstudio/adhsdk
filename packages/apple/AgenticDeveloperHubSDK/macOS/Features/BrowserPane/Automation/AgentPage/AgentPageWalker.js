@@ -6,7 +6,7 @@
 // selector each node records).
 //
 // `__adkAgentWalk({ allowlist, excludeSelectors, scopeRef, interactiveOnly,
-// maxDepth, timeoutMs })` returns a JSON string: the `AgentWalkerPayload`
+// maxDepth, timeoutMs, keepRefs })` returns a JSON string: the `AgentWalkerPayload`
 // (`{url, title, generation, warnings, root}`) AgentPageBuilder re-validates,
 // or `{"error": "timeout"}` when the walk outlives `timeoutMs` (default 1500).
 //
@@ -19,13 +19,19 @@
 // stays what it was for the same page.
 (function () {
   'use strict';
-  const VERSION = 2;
+  const VERSION = 3;
   if (globalThis.__adkAgentWalkVersion === VERSION && typeof globalThis.__adkAgentWalk === 'function') { return; }
 
   const DEFAULT_TIMEOUT_MS = 1500;
   // One finder call's budget. A node finder cannot place in time records the
   // structural path instead, so one hard element cannot spend the whole walk.
   const FINDER_TIMEOUT_MS = 25;
+  // Finder's share of the whole walk's budget. Once finder has spent it,
+  // every later node records the structural path, which costs one sibling
+  // scan per ancestor; a large page then still finishes where today's
+  // snapshot does. Selectors never decide what is excluded (the agent list
+  // is evaluated before the walk), so the cheaper path strips nothing less.
+  const FINDER_SHARE = 1 / 3;
   const TIMED_OUT = { timedOut: true };
 
   const LANDMARK_TAGS = { header: 'banner', nav: 'navigation', main: 'main', footer: 'contentinfo',
@@ -59,6 +65,9 @@
   // flattened into their parent.
   const GENERIC_KINDS = new Set(['paragraph', 'label']);
   const NAME_FROM_CONTENT = new Set(['button', 'link', 'heading', 'cell', 'option']);
+  // Roles the legacy walk named from content whose kind is not: they keep
+  // that name when folded into checkbox and radio.
+  const CONTENT_NAMED_ROLES = new Set(['switch', 'menuitemcheckbox', 'menuitemradio']);
   const CONTROLS = new Set(['textField', 'textArea', 'select', 'checkbox', 'radio']);
   const CONTROL_TAGS = new Set(['input', 'select', 'textarea', 'button']);
   // Elements whose contents are never page content an agent reads.
@@ -88,6 +97,7 @@
       ? options.timeoutMs : DEFAULT_TIMEOUT_MS;
     const deadline = Date.now() + timeoutMs;
     const tick = () => { if (Date.now() >= deadline) { throw TIMED_OUT; } };
+    let finderLeftMs = timeoutMs * FINDER_SHARE;
 
     // Every agent-list selector, each on its own: one the document cannot
     // evaluate excludes nothing and is reported, and stops no other.
@@ -140,22 +150,35 @@
       return el.tagName.toLowerCase() === 'input' && (el.getAttribute('type') || '').toLowerCase() === 'password';
     }
 
-    // `{kind, role?, type?}`, or null for an element the snapshot treats as
-    // generic (flattened or collapsed into text).
+    // An element the legacy walk counted as interactive although nothing
+    // else classifies it (legacy `isInteractive`): editable, its own or
+    // inherited, is a text field; an `onclick` or a `tabindex` of 0 or more
+    // is a button. Either keeps the ref today's snapshot gave it. `implicit`
+    // lets `build` keep the children of one that wraps other content.
+    function interactiveKind(el) {
+      if (el.isContentEditable) { return { kind: 'textField', implicit: true }; }
+      if (el.hasAttribute('onclick')) { return { kind: 'button', implicit: true }; }
+      const tabindex = el.getAttribute('tabindex');
+      if (tabindex !== null && Number(tabindex) >= 0) { return { kind: 'button', implicit: true }; }
+      return null;
+    }
+
+    // `{kind, role?, type?, implicit?, contentNamed?}`, or null for an
+    // element the snapshot treats as generic (flattened or collapsed).
     function classifyUncached(el) {
       const tag = el.tagName.toLowerCase();
       const explicit = collapse(el.getAttribute('role') || '').split(' ')[0];
       if (explicit && VALID_ROLES.has(explicit)) {
-        if (explicit === 'none' || explicit === 'presentation') { return null; }
+        if (explicit === 'none' || explicit === 'presentation') { return interactiveKind(el); }
         if (LANDMARK_ROLES.has(explicit)) { return { kind: 'landmark', role: explicit }; }
         const kind = ROLE_KINDS[explicit];
-        if (!kind) { return null; }
+        if (!kind) { return interactiveKind(el); }
         if (kind === 'textField') {
           return { kind: kind, type: ROLE_TYPES[explicit] || (isPasswordInput(el) ? 'password' : undefined) };
         }
-        return { kind: kind };
+        return CONTENT_NAMED_ROLES.has(explicit) ? { kind: kind, contentNamed: true } : { kind: kind };
       }
-      if (tag === 'a') { return el.hasAttribute('href') ? { kind: 'link' } : null; }
+      if (tag === 'a') { return el.hasAttribute('href') ? { kind: 'link' } : interactiveKind(el); }
       if (tag === 'input') {
         const type = (el.getAttribute('type') || 'text').toLowerCase();
         if (type in INPUT_KINDS) { return { kind: INPUT_KINDS[type] }; }
@@ -163,9 +186,11 @@
       }
       if (/^h[1-6]$/.test(tag)) { return { kind: 'heading' }; }
       if (tag in LANDMARK_TAGS) { return { kind: 'landmark', role: LANDMARK_TAGS[tag] }; }
-      if (tag in TAG_KINDS) { return { kind: TAG_KINDS[tag] }; }
-      if (el.isContentEditable && el.getAttribute('contenteditable') !== null) { return { kind: 'textField' }; }
-      return null;
+      if (tag in TAG_KINDS) {
+        const kind = TAG_KINDS[tag];
+        return GENERIC_KINDS.has(kind) ? (interactiveKind(el) || { kind: kind }) : { kind: kind };
+      }
+      return interactiveKind(el);
     }
 
     function classify(el) {
@@ -238,7 +263,8 @@
       const aria = (n) => el.getAttribute(n);
       if (el.checked === true || aria('aria-checked') === 'true') { states.add('checked'); }
       if (el.disabled === true || aria('aria-disabled') === 'true') { states.add('disabled'); }
-      if (aria('aria-expanded') === 'true' || (el.tagName.toLowerCase() === 'details' && el.open)) { states.add('expanded'); }
+      const openDetails = el.tagName.toLowerCase() === 'details' && el.open;
+      if (aria('aria-expanded') === 'true' || openDetails) { states.add('expanded'); }
       if (el.selected === true || aria('aria-selected') === 'true') { states.add('selected'); }
       if (aria('aria-pressed') === 'true') { states.add('pressed'); }
       if (el.required === true || aria('aria-required') === 'true') { states.add('required'); }
@@ -250,7 +276,8 @@
       const tag = el.tagName.toLowerCase();
       if (tag === 'input') {
         const type = (el.getAttribute('type') || 'text').toLowerCase();
-        if (['password', 'checkbox', 'radio', 'button', 'submit', 'reset', 'image', 'file'].includes(type)) { return null; }
+        const valueless = ['password', 'checkbox', 'radio', 'button', 'submit', 'reset', 'image', 'file'];
+        if (valueless.includes(type)) { return null; }
         return el.value ? el.value : null;
       }
       if (tag === 'select' || tag === 'textarea') { return el.value ? el.value : null; }
@@ -272,12 +299,19 @@
       return steps.join(' > ');
     }
 
+    // Finder's selector while finder's share of the budget lasts, then the
+    // structural path, which names exactly this element too.
     function selectorOf(el) {
-      if (typeof globalThis.__adkFinder === 'function') {
+      if (typeof globalThis.__adkFinder === 'function' && finderLeftMs >= 1) {
+        const started = Date.now();
         try {
-          const budget = Math.max(1, Math.min(FINDER_TIMEOUT_MS, deadline - Date.now()));
+          const budget = Math.max(1, Math.min(FINDER_TIMEOUT_MS, finderLeftMs, deadline - started));
           return globalThis.__adkFinder(el, { timeoutMs: budget });
-        } catch (e) { /* the structural path below still names exactly this element */ }
+        } catch (e) {
+          /* the structural path below */
+        } finally {
+          finderLeftMs -= Date.now() - started;
+        }
       }
       return structuralPath(el);
     }
@@ -366,7 +400,11 @@
       const node = elementNode(el, info);
       const named = node.attrs && (node.attrs['aria-label'] || node.attrs.alt || node.attrs.title
         || node.attrs.placeholder);
-      if (NAME_FROM_CONTENT.has(info.kind) && !named) {
+      // An implicit button (a clickable card, say) that holds links or
+      // controls keeps them as children, as the legacy walk did.
+      const fromContent = (NAME_FROM_CONTENT.has(info.kind) || info.contentNamed === true)
+        && !(info.implicit && hasNonGenericDescendant(el));
+      if (fromContent && !named) {
         // Named by its contents, which the snapshot then does not show: the
         // whole visible text rides as the node's own, whatever the depth.
         const text = visibleText(el, false);
@@ -412,7 +450,8 @@
     }
 
     const scopeEl = options.scopeRef ? kitchen.resolveScope(options.scopeRef) : null;  // before refs reset
-    const generation = kitchen.beginWalk();
+    // `keepRefs`: a reading walk that leaves the last snapshot's refs valid.
+    const generation = kitchen.beginWalk(options.keepRefs === true);
     const depth = (typeof options.maxDepth === 'number' && options.maxDepth > 0) ? options.maxDepth : null;
     const title = document.title || '';
     const documentNode = (children) => ({ ref: 'doc', kind: 'document', children: children });

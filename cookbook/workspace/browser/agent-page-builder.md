@@ -329,13 +329,31 @@ landmarks, headings — to build its result.)
   only the already-loaded document and the local agent list; it makes no
   network request.
 - **Missing file or unreachable server**: The agent list's store missing
-  or unopened means no exclusions are applied, as when the list is empty;
-  the walker script missing from the bundle is a walker error and yields
-  the unavailable page.
+  or unopened yields the unavailable page, as an unreadable list does: at
+  runtime the shared store is absent only when its database could not be
+  opened, and the agent list failing must not fail open (MUST,
+  `fail-closed-on-walker-failure`). An empty list is no exclusions. The
+  walker script missing from the bundle is a walker error and yields the
+  unavailable page.
 - **Cancellation and timeouts**: The walker stops after its timeout
   (default 1500 milliseconds) and the page is unavailable (MUST,
   `fail-closed-on-walker-failure`). A navigation during a walk makes its
   references stale under the existing generation rule.
+- **Navigation between reading the list and walking**: The agent-list
+  selectors are read for one address and the walk runs on whatever document
+  is current. The walk reports the address it walked; when that differs from
+  the address the list was read for, the walk stands only if the walked
+  page's own enabled selectors are the ones applied. Otherwise the page is
+  walked once more with its own list, and a page still changing after that
+  is the unavailable page (MUST, `no-partial-content-on-failure`). One
+  site's exclusions are never applied to another site's page.
+- **Very large pages**: The selector each node records costs a search per
+  node. The walker gives that search a share of its budget (a third) and
+  records the cheaper structural path (`tag:nth-child(n) > …`) for every
+  node after the share is spent, so a large page finishes where today's
+  snapshot does. Selectors never decide exclusion: the agent list is
+  evaluated before the walk, and a selector it cannot evaluate excludes
+  nothing and is warned, as `invalid-exclude-selector-isolated` says.
 - **Privacy words change mid-read**: The concealment in force when the
   build starts conceals the whole result; the tool reply is concealed
   again with the words of the moment it returns, as replies are today.
@@ -350,7 +368,7 @@ landmarks, headings — to build its result.)
 | `allowlist` | node kinds plus per-kind attribute sets | the standard allowlist (Design Decisions) | What may enter the result; passed to the walker each walk. |
 | `privacy` | agent privacy state (off, enabled with words, unavailable, conflicting) | the pane's Agent Privacy | Drives concealment and the fail-closed vault rule. |
 | `hideImages` | boolean | the Hide Images setting | Drops image nodes when on. |
-| `excludeSelectors` | list of selectors | the site's enabled agent-list entries; empty with no store | Subtrees the walker never visits. |
+| `excludeSelectors` | list of selectors | the site's enabled agent-list entries; no store is the unavailable page | Subtrees the walker never visits. |
 | `scope` | reference or selector | none | Subtree of the walk to render. |
 | `interactiveOnly`, `depth`, `includeURLs`, `delta` | as today's snapshot options | as today | Unchanged snapshot options. |
 | `timeoutMs` | integer milliseconds | 1500 | Walker deadline. |
@@ -504,6 +522,46 @@ else the whole body") stays true.
 **Rationale**: `snapshot-tool-contract-unchanged`.
 **Approved**: pending
 
+**Decision**: An element the legacy snapshot counted as interactive that
+nothing else classifies keeps its reference: one that is editable (its own
+`contenteditable` or inherited) is a text field, and one with an `onclick`
+or a `tabindex` of 0 or more is a button. Such a button is named from its
+content unless it holds links or controls, which then stay its children.
+**Rationale**: `snapshot-tool-contract-unchanged`: the snapshot tool
+promises "refs for every interactive element", and custom controls are
+common; with privacy on there is no coordinate-click fallback.
+**Approved**: pending
+
+**Decision**: Roles with no allowlist kind (dialog, alert, status, menu,
+menubar, toolbar, tablist, tabpanel, tree, rowgroup, progressbar, meter,
+group, figure, separator, tooltip, radiogroup, and the like) are flattened
+into their parent: their children are walked, the role itself is not
+emitted. Such an element that is interactive by the rule above keeps a
+reference as a button.
+**Rationale**: The allowlist is fixed ("tighter is fine"), and
+over-stripping is the accepted failure.
+**Approved**: pending
+
+**Decision**: Roles are renamed to the allowlist kind they fold into:
+`th`, `columnheader`, `rowheader` and `gridcell` print as cell; `grid` and
+`treegrid` as table; `listbox` as combobox (a select); `tab`, `menuitem`
+and `treeitem` as button; `switch` and `menuitemcheckbox` as checkbox and
+`menuitemradio` as radio; `searchbox`, `spinbutton` and `slider` as text
+fields typed search, number and range. The folded `switch`,
+`menuitemcheckbox` and `menuitemradio` keep the legacy name from content.
+**Rationale**: Forced by the allowlist's kinds. The tree's format (syntax,
+references, states, levels) is unchanged, and folding to clickable kinds
+keeps the references.
+**Approved**: pending
+
+**Decision**: Frames (`iframe`, `frame`) and embedded documents (`object`,
+`embed`) are not walked, and the frame node itself is not emitted.
+**Rationale**: The agent-list selectors were picked against the top
+document, so what a frame holds is content the user never reviewed for the
+agent and the list cannot be trusted to cover; uncertain content is
+stripped. (A same-origin frame's document could be queried; it is not, by
+choice.)
+**Approved**: pending
 ## Compliance
 
 | Check | Status | Category |

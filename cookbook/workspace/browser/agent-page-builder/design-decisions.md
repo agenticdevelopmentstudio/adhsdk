@@ -55,3 +55,43 @@ else the whole body") stays true.
 **Rationale**: `snapshot-tool-contract-unchanged`.
 **Approved**: pending
 
+**Decision**: An element the legacy snapshot counted as interactive that
+nothing else classifies keeps its reference: one that is editable (its own
+`contenteditable` or inherited) is a text field, and one with an `onclick`
+or a `tabindex` of 0 or more is a button. Such a button is named from its
+content unless it holds links or controls, which then stay its children.
+**Rationale**: `snapshot-tool-contract-unchanged`: the snapshot tool
+promises "refs for every interactive element", and custom controls are
+common; with privacy on there is no coordinate-click fallback.
+**Approved**: pending
+
+**Decision**: Roles with no allowlist kind (dialog, alert, status, menu,
+menubar, toolbar, tablist, tabpanel, tree, rowgroup, progressbar, meter,
+group, figure, separator, tooltip, radiogroup, and the like) are flattened
+into their parent: their children are walked, the role itself is not
+emitted. Such an element that is interactive by the rule above keeps a
+reference as a button.
+**Rationale**: The allowlist is fixed ("tighter is fine"), and
+over-stripping is the accepted failure.
+**Approved**: pending
+
+**Decision**: Roles are renamed to the allowlist kind they fold into:
+`th`, `columnheader`, `rowheader` and `gridcell` print as cell; `grid` and
+`treegrid` as table; `listbox` as combobox (a select); `tab`, `menuitem`
+and `treeitem` as button; `switch` and `menuitemcheckbox` as checkbox and
+`menuitemradio` as radio; `searchbox`, `spinbutton` and `slider` as text
+fields typed search, number and range. The folded `switch`,
+`menuitemcheckbox` and `menuitemradio` keep the legacy name from content.
+**Rationale**: Forced by the allowlist's kinds. The tree's format (syntax,
+references, states, levels) is unchanged, and folding to clickable kinds
+keeps the references.
+**Approved**: pending
+
+**Decision**: Frames (`iframe`, `frame`) and embedded documents (`object`,
+`embed`) are not walked, and the frame node itself is not emitted.
+**Rationale**: The agent-list selectors were picked against the top
+document, so what a frame holds is content the user never reviewed for the
+agent and the list cannot be trusted to cover; uncertain content is
+stripped. (A same-origin frame's document could be queried; it is not, by
+choice.)
+**Approved**: pending

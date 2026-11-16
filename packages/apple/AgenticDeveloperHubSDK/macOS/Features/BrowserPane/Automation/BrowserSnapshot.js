@@ -4,6 +4,8 @@
 // DOM is shared across worlds; `window` and element expandos are not.
 // Installed once per document (version-checked); every call returns plain JSON.
 (function () {
+  // Bumping the version re-installs over an older copy: its refs go stale (as after any
+  // snapshot) and its MutationObserver stays behind, unused. Both are harmless.
   if (window.__adkitchen && window.__adkitchen.version === 2) { return; }
 
   const refs = new Map();            // ref -> WeakRef<Element>
@@ -159,7 +161,15 @@
     return null;
   }
 
+  // An element that already holds a live ref in this table keeps it, so a
+  // walk that keeps the refs (`beginWalk(true)`) hands out the same refs the
+  // agent's last snapshot did.
   function assignRef(el) {
+    const prior = el.__adkitchenRef;
+    if (prior) {
+      const held = refs.get(prior);
+      if (held && held.deref() === el) { return prior; }
+    }
     const ref = 'e' + (nextRef++);
     refs.set(ref, new WeakRef(el));
     el.__adkitchenRef = ref;
@@ -566,11 +576,15 @@
   // walk is a snapshot, so it advances the generation and restarts the refs
   // exactly as `snapshot` does, and registers every element ref it emits
   // through `assignRef`, so click, type, fill, select and hover resolve the
-  // walker's refs as they resolve a snapshot's.
-  function beginWalk() {
+  // walker's refs as they resolve a snapshot's. A walk that only reads
+  // (text, find, wait_for, the focused element) passes `keep`: the table and
+  // the generation stay as the last snapshot left them, so the agent's refs
+  // stay valid, and elements new since then get fresh refs after the rest.
+  function beginWalk(keep) {
+    hiddenMemo.clear(); roleMemo.clear(); descendantMemo.clear();
+    if (keep === true && refs.size > 0) { return generation; }
     generation += 1;
     refs.clear();
-    hiddenMemo.clear(); roleMemo.clear(); descendantMemo.clear();
     nextRef = 1;
     return generation;
   }
