@@ -18,7 +18,10 @@
   of the command window, kept only when that window is a
   `WebBrowserWindowController`'s, when the command window is a child whose
   `commandOwner` is another window, or when the first responder is a view
-  inside the pane's view. The items' stable ids are
+  inside the pane's view. The Back and Forward items take theirs from the
+  injected `focusedPane`, which defaults to that same `focusedKeyPane()`, so
+  an item carrying ⌘[ or ⌘] never enables for an unfocused pane. The items'
+  stable ids are
   `BrowserMenuCommands.ItemID` (`browser.reload` … `browser.toggle-privacy-toolbar`),
   which `MenuManager` prefixes into `menu.browser.*` accessibility identifiers,
   and the separator falls before `BrowserMenuCommands.showSectionOrder` (100). Engine calls are

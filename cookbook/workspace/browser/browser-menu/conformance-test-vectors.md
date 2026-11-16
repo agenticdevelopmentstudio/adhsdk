@@ -23,4 +23,5 @@
 | browser-menu-020 | bridge-is-generic | A contribution in another slot names a key command id; another names none and a fixed key | The first follows the registry; the second keeps its fixed key |
 | browser-menu-021 | show-history-always-enabled | No history store set; validate Show History with and without a target | Disabled both times |
 | browser-menu-022 | back-forward-keys-need-focus | Project window whose last-focused browser pane can go back; first responder in an editor pane beside it; run the `browser.back` key command | The pane does not go back; with the first responder inside the pane it does |
+| browser-menu-023 | back-forward-keys-need-focus | Target pane can go back and forward but does not have keyboard focus; validate and choose Back and Forward, then Reload | Back and Forward are disabled and record no call; Reload is enabled and records reload |
 

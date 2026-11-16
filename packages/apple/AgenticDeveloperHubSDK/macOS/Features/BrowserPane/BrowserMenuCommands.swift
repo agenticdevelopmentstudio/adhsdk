@@ -11,9 +11,13 @@ import AgenticDeveloperHubSDKCoreUI
 /// The Browser menu: Reload, Stop, Back and Forward for the browser pane in
 /// the key window, then Show History and Show / Hide Privacy Toolbar.
 ///
-/// Every page command acts on one pane, the one `keyPane` answers — by
-/// default `WebBrowserPaneViewController.keyPane()`, the key window's — and
-/// disables when there is none rather than reaching into a window the person
+/// Reload, Stop and the privacy toolbar toggle act on one pane, the one
+/// `keyPane` answers — by default `WebBrowserPaneViewController.keyPane()`,
+/// the key window's. Back and Forward act on the one `focusedPane` answers —
+/// by default `focusedKeyPane()`, that pane only while it has keyboard focus —
+/// because their items carry ⌘[ and ⌘]: an item enabled for a pane merely
+/// focused last would take those keys from an editor or terminal beside it.
+/// Each disables when its pane is missing rather than reaching into a window the person
 /// is not looking at (`principle-of-least-astonishment`). The provider is
 /// injected so the rules can be tested without a key window
 /// (`dependency-injection`).
@@ -69,21 +73,28 @@ public final class BrowserMenuCommands {
         ])
 
     private let keyPane: () -> WebBrowserPaneViewController?
+    private let focusedPane: () -> WebBrowserPaneViewController?
     private let canShowHistory: () -> Bool
     private let showHistory: () -> Void
 
     /// - Parameters:
     ///   - keyPane: The pane the page commands act on, asked each time an
     ///     item is validated or chosen; `nil` disables them.
+    ///   - focusedPane: The pane Back and Forward act on, asked the same way:
+    ///     the key pane only while it has keyboard focus; `nil` disables them.
     ///   - canShowHistory: Whether there is a history to show; Show History
     ///     is disabled while there is not.
     ///   - showHistory: What Show History does — open the History window.
     public init(
         keyPane: @escaping () -> WebBrowserPaneViewController? = { WebBrowserPaneViewController.keyPane() },
+        focusedPane: @escaping () -> WebBrowserPaneViewController? = {
+            WebBrowserPaneViewController.focusedKeyPane()
+        },
         canShowHistory: @escaping () -> Bool = { BrowserHistoryWindowController.canShow },
         showHistory: @escaping () -> Void = { BrowserHistoryWindowController.show() }
     ) {
         self.keyPane = keyPane
+        self.focusedPane = focusedPane
         self.canShowHistory = canShowHistory
         self.showHistory = showHistory
     }
@@ -91,6 +102,7 @@ public final class BrowserMenuCommands {
     /// The Browser menu's items, in menu order, all in `.browser`.
     public func contributions() -> [MenuContribution] {
         let keyPane = self.keyPane
+        let focusedPane = self.focusedPane
         let showHistory = self.showHistory
         let canShowHistory = self.canShowHistory
         return [
@@ -106,16 +118,16 @@ public final class BrowserMenuCommands {
                 action: { keyPane()?.engine.stopLoading() }),
             MenuContribution(
                 slot: .browser, title: "Back", order: 2,
-                isEnabled: { keyPane()?.engine.canGoBack == true },
+                isEnabled: { focusedPane()?.engine.canGoBack == true },
                 identifier: ItemID.back,
                 keyCommandID: ItemID.back,
-                action: { _ = Self.navigate(keyPane(), back: true) }),
+                action: { _ = Self.navigate(focusedPane(), back: true) }),
             MenuContribution(
                 slot: .browser, title: "Forward", order: 3,
-                isEnabled: { keyPane()?.engine.canGoForward == true },
+                isEnabled: { focusedPane()?.engine.canGoForward == true },
                 identifier: ItemID.forward,
                 keyCommandID: ItemID.forward,
-                action: { _ = Self.navigate(keyPane(), back: false) }),
+                action: { _ = Self.navigate(focusedPane(), back: false) }),
             // Enabled whatever the key window is — the History window opens
             // a visit in a new browser window when no pane is in front — but
             // only while the host has given it a history to show.
@@ -193,8 +205,10 @@ public extension WebBrowserPaneViewController {
         return nil
     }
 
-    /// ``keyPane()`` only while that pane has keyboard focus — what a
-    /// keystroke acts on, where a menu item may act on the last focused pane.
+    /// ``keyPane()`` only while that pane has keyboard focus — what ⌘[ and ⌘]
+    /// act on, as key commands and as the Back and Forward items that carry
+    /// them, where Reload, Stop and the toolbar toggle act on the last focused
+    /// pane.
     static func focusedKeyPane() -> WebBrowserPaneViewController? {
         focusedKeyPane(in: KeyCommandRegistry.shared.commandWindow)
     }

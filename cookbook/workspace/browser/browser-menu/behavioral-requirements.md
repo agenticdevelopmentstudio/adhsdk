@@ -55,7 +55,9 @@
   the window's first responder is inside it (a Chrome pane's attached page
   window counts as inside it). With an editor or terminal focused beside
   the pane they MUST do nothing to the pane, so the keys reach that view.
-  The menu items themselves keep acting on the target pane.
+  The Back and Forward menu items carry those keys, so they MUST follow the
+  same rule: enabled, and acting, only for the focused pane, never for a
+  target pane that was merely focused last.
 - **menu-key-follows-binding**: A menu item that carries a key command id
   MUST display, as its key equivalent and modifiers, the registry's current
   shortcut for that id, and MUST update it whenever the registry announces

@@ -38,11 +38,13 @@ final class BrowserMenuCommandsTests: XCTestCase {
 
     private func contributions(
         pane: WebBrowserPaneViewController?,
+        paneFocused: Bool = true,
         canShowHistory: Bool = true,
         showHistory: @escaping () -> Void = {}
     ) -> [MenuContribution] {
         BrowserMenuCommands(
-            keyPane: { pane }, canShowHistory: { canShowHistory }, showHistory: showHistory
+            keyPane: { pane }, focusedPane: { paneFocused ? pane : nil },
+            canShowHistory: { canShowHistory }, showHistory: showHistory
         ).contributions()
     }
 
@@ -151,6 +153,30 @@ final class BrowserMenuCommandsTests: XCTestCase {
         XCTAssertTrue(layered.get(UserSettings.browserPrivacyShowToolbar))
         XCTAssertFalse(global.get(UserSettings.browserPrivacyShowToolbar), "the global value moved")
         XCTAssertEqual(toggle.dynamicTitle?(), "Hide Privacy Toolbar")
+    }
+
+    /// The Back and Forward items carry ⌘[ and ⌘], so with the key pane not
+    /// focused — an editor or terminal beside it has the first responder —
+    /// they are disabled and do nothing, and the keys reach that view; the
+    /// other page items keep acting on the key pane (review f15).
+    func test_backAndForwardItemsNeedThePaneFocused() throws {
+        let pane = makePane()
+        let stub = try XCTUnwrap(engine)
+        stub.canGoBack = true
+        stub.canGoForward = true
+        let items = contributions(pane: pane, paneFocused: false)
+        let back = try item(BrowserMenuCommands.ItemID.back, in: items)
+        let forward = try item(BrowserMenuCommands.ItemID.forward, in: items)
+        XCTAssertFalse(back.isEnabled())
+        XCTAssertFalse(forward.isEnabled())
+        back.action()
+        forward.action()
+        XCTAssertEqual(stub.navigationCalls, [])
+
+        let reload = try item(BrowserMenuCommands.ItemID.reload, in: items)
+        XCTAssertTrue(reload.isEnabled())
+        reload.action()
+        XCTAssertEqual(stub.navigationCalls, ["reload"])
     }
 
     /// ⌘[ and ⌘] act on a browser pane only while it has keyboard focus, so
