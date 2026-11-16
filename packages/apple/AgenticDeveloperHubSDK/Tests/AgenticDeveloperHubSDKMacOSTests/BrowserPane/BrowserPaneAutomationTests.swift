@@ -76,7 +76,7 @@ final class BrowserPaneAutomationTests: XCTestCase {
     }
 
     /// The `[ref=...]` on the first snapshot line that names `role`.
-    private func ref(ofRole role: String, in snapshot: BrowserSnapshot) -> String? {
+    private func ref(ofRole role: String, in snapshot: AgentTestSnapshot) -> String? {
         for line in snapshot.text.split(separator: "\n") where line.contains("- \(role)") {
             guard let start = line.range(of: "[ref=") else { continue }
             let rest = line[start.upperBound...]
@@ -193,7 +193,7 @@ final class BrowserPaneAutomationTests: XCTestCase {
     func testAlertDuringAnActionIsDismissedAndReported() async throws {
         let pane = makePane()
         await load("<button id='b' onclick=\"alert('careful')\">Go</button>", into: pane)
-        let snapshot = try await pane.automation.snapshot(BrowserSnapshotOptions())
+        let snapshot = try await pane.automation.agentSnapshot(BrowserSnapshotOptions())
         let button = try XCTUnwrap(ref(ofRole: "button", in: snapshot))
         let automation = pane.automation
         let delta = try await automation.drive {

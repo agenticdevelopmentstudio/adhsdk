@@ -48,9 +48,8 @@ public final class BrowserToolSet: ChatToolSource, @unchecked Sendable {
         self.settings = settings
         self.hiddenItems = hiddenItems
         self.agentPages = agentPages ?? { pane, privacy in
-            let hideImages = settings.get(UserSettings.browserPrivacyHideImages)
-            return AgentPageSource(driver: pane.automation.driver, hiddenItems: hiddenItems(),
-                                   privacy: { privacy }, hideImages: { hideImages })
+            AgentPageSource.reading(pane.automation.driver, hiddenItems: hiddenItems(), privacy: privacy,
+                                    settings: settings)
         }
     }
 
@@ -354,6 +353,9 @@ public final class BrowserToolSet: ChatToolSource, @unchecked Sendable {
     @MainActor
     private func agentReply(_ delta: BrowserActionDelta, _ agent: AgentView) async throws -> String {
         var focused: String?
+        // A focus read on a page the action itself moved to a local file
+        // throws `localFile`, and the reply is that sentence, not the delta:
+        // deliberate, since nothing of a local file may reach the agent.
         if let ref = delta.focusedRef {
             var options = BrowserSnapshotOptions()
             options.scope = ref
@@ -633,6 +635,8 @@ public final class BrowserToolSet: ChatToolSource, @unchecked Sendable {
         case "browser_wait_for":
             let condition = try waitCondition(args)
             let result = try await automation.wait(for: condition, timeout: args.optionalDouble("timeout")) {
+                // A failed read (cancelled, or a local file) is "not yet":
+                // the wait's next pass surfaces either from its own checks.
                 guard let page = try? await agent.read(BrowserSnapshotOptions(), keepingRefs: true).page else {
                     return nil
                 }
@@ -741,10 +745,10 @@ public final class BrowserToolSet: ChatToolSource, @unchecked Sendable {
             let privacy = pane.agentPrivacy
             let drivable = BrowserAutomation.isDrivable(pane.url)
             // The title is the page's words: through the agent page's string
-            // path (recipe `titles-dialogs-focus-through-string-path`).
-            let title = privacy.closedRefusal() == nil
-                ? AgentPageBuilder(privacy: privacy, hideImages: false).conceal(pane.title)
-                : privacy.concealing(pane.title)
+            // path (recipe `titles-dialogs-focus-through-string-path`), which
+            // writes nothing of a closed pane's; the list says so in words.
+            let concealed = AgentPageBuilder(privacy: privacy, hideImages: false).conceal(pane.title)
+            let title = concealed.isEmpty && privacy.closedRefusal() != nil ? "(concealed)" : concealed
             return [
                 "id": pane.id, "title": drivable ? title : Self.localFileName,
                 "url": drivable ? privacy.concealing(pane.url) : Self.localFileName,

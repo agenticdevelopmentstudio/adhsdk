@@ -95,3 +95,68 @@ final class OffscreenWebView: NSObject, WKNavigationDelegate, WKUIDelegate {
         completionHandler()
     }
 }
+
+/// What `browser_snapshot` prints of a page, through the agent page with an
+/// empty agent list and privacy off: the only snapshot there is.
+struct AgentTestSnapshot {
+    let text: String
+    let generation: Int
+    let page: AgentPage
+}
+
+/// One empty agent list for every automation test, made once per run.
+@MainActor
+enum AgentTestPages {
+    private static var shared: BrowserHiddenItemsStore?
+
+    static func store() throws -> BrowserHiddenItemsStore {
+        if let shared { return shared }
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("AgentTestPages-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        let store = try BrowserHiddenItemsStore.open(
+            at: directory.appendingPathComponent(BrowserHiddenItemsStore.fileName))
+        shared = store
+        return store
+    }
+}
+
+/// Test reads of a page. The raw reads are gone from `BrowserAutomation`
+/// (every read a model gets is the agent page's), so a test reads the agent
+/// page as the tools do, or the page's own text in the page world.
+@MainActor
+extension BrowserAutomation {
+    private func agentSource() throws -> AgentPageSource {
+        AgentPageSource(driver: driver, hiddenItems: try AgentTestPages.store(),
+                        privacy: { .off }, hideImages: { false })
+    }
+
+    /// A snapshot walk, rendered as `browser_snapshot` renders it (delta included).
+    func agentSnapshot(_ options: BrowserSnapshotOptions = .init()) async throws -> AgentTestSnapshot {
+        let source = try agentSource()
+        let reading = await source.read(options: options, keepingRefs: false)
+        if let failure = reading.failure { throw failure }
+        let tree = reading.page.snapshotTree(AgentPageSource.renderingOptions(options))
+        return AgentTestSnapshot(text: agentSnapshotText(tree, delta: options.delta),
+                                 generation: reading.generation ?? 0, page: reading.page)
+    }
+
+    /// The agent page's whole text, from a walk that keeps the refs: what
+    /// `browser_wait_for` polls.
+    func agentText() async -> String? {
+        guard let source = try? agentSource() else { return nil }
+        let page = await source.read(options: BrowserSnapshotOptions(), keepingRefs: true).page
+        return BrowserToolSet.wholeText(page)
+    }
+
+    /// The page's own `innerText` of `scope` (main, else body), read in the
+    /// page world: the test's view of what the page did, not the agent's.
+    func pageText(scope: String?) async throws -> String {
+        let body = "const el = scope ? document.querySelector(scope)"
+            + " : (document.querySelector('main') || document.body);"
+            + " return el ? el.innerText : '';"
+        let value = try await driver.callAsyncFunction(body: body, arguments: ["scope": scope ?? NSNull()],
+                                                       world: .page)
+        return value as? String ?? ""
+    }
+}

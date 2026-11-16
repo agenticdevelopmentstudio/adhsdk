@@ -361,6 +361,13 @@ landmarks, headings — to build its result.)
   `titles-dialogs-focus-through-string-path` — content under an excluded
   ancestor never reaches the agent by either path.
 
+- **Refs after the agent list grows**: Only a walk hands out references,
+  and it never gives one to an excluded element, so no action resolves a
+  reference the agent page did not show. A reading walk (text, find,
+  wait_for, the focused element) keeps the last snapshot's references, so
+  an element excluded after that snapshot, by an agent-list entry added
+  mid-session, keeps the reference that snapshot gave it until the next
+  snapshot restarts the references and advances the generation.
 ## Configuration
 
 | Option | Type | Default | Description |
@@ -474,6 +481,7 @@ model can read would be a route around the gatekeeper.
 | macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Automation/AgentPage/AgentPageWalker.js` | planned |
 | macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Automation/AgentPage/AgentPageSource.swift` | planned |
 | macos | `packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/BrowserPane/AgentPageWalkerWebViewTests.swift` | unverified |
+| macos | `packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/BrowserPane/AgentGatekeeperRoutingTests.swift` | unverified |
 
 ## Design Decisions
 

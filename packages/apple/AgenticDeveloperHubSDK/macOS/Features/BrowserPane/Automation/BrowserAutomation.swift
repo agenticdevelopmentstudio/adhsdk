@@ -21,6 +21,8 @@ public struct BrowserActionDelta: Sendable {
     public var navigated = false
     public var pending = false
     public var changed = false
+    /// The focused element as the agent page renders it: nil from the
+    /// action itself, set by `agentView(conceal:focused:)`.
     public var focused: String?
     /// The ref of the landmark, form or dialog holding the focus, when the
     /// page changed and one holds it: what the agent's view of the focused
@@ -81,6 +83,15 @@ public enum BrowserWaitCondition: Sendable, Equatable {
         case .url(let fragment): return "url containing \"\(fragment)\""
         case .load: return "load"
         case .idle: return "idle"
+        }
+    }
+
+    /// Whether this condition looks for text, which only the agent page's
+    /// text may answer (`BrowserAutomation.wait(for:timeout:pageText:)`).
+    var isText: Bool {
+        switch self {
+        case .text, .anyText: return true
+        case .ref, .url, .load, .idle: return false
         }
     }
 }
@@ -309,29 +320,11 @@ public final class BrowserAutomation: NSObject {
 
     // MARK: Reading
 
-    public func snapshot(_ options: BrowserSnapshotOptions) async throws -> BrowserSnapshot {
-        let raw = try await call("snapshot", ["opts": options.jsArguments])
-        // `JSONSerialization.data` raises an Objective-C exception, not a Swift
-        // error, on anything that is not JSON (a NaN, a Date), so check first.
-        guard JSONSerialization.isValidJSONObject(raw as Any) else {
-            throw BrowserAutomationError.script("the snapshot is not JSON")
-        }
-        let data = try JSONSerialization.data(withJSONObject: raw as Any)
-        let payload = try JSONDecoder().decode(BrowserSnapshotPayload.self, from: data)
-        var snapshot = BrowserSnapshot(payload: payload, includeURLs: options.includeURLs)
-        if options.delta, let previous = lastSnapshotLines {
-            snapshot.text = Self.delta(from: previous, to: snapshot.text)
-        }
-        lastSnapshotLines = BrowserSnapshot(payload: payload, includeURLs: options.includeURLs).text
-            .split(separator: "\n").map(String.init)
-        return snapshot
-    }
-
     private var lastSnapshotLines: [String]?
 
     /// `browser_snapshot`'s text for an agent page's rendered tree: with
     /// `delta`, only what changed since the last snapshot (`delta(from:to:)`),
-    /// and recorded as the last either way, as `snapshot(_:)` records its own.
+    /// and recorded as the last either way.
     public func agentSnapshotText(_ tree: String, delta: Bool) -> String {
         let lines = tree.split(separator: "\n").map(String.init)
         defer { lastSnapshotLines = lines }
@@ -421,19 +414,6 @@ public final class BrowserAutomation: NSObject {
         }
         for k in 0..<(a.count - endA) { out.append(.matched(endA + k, endB + k)) }
         return out
-    }
-
-    public func find(_ text: String) async throws -> [BrowserFindMatch] {
-        let raw = try await call("find", ["text": text]) as? [[String: Any]] ?? []
-        return raw.compactMap { match in
-            guard let ref = match["ref"] as? String else { return nil }
-            return BrowserFindMatch(ref: ref, role: match["role"] as? String ?? "generic",
-                                    name: match["name"] as? String ?? "")
-        }
-    }
-
-    public func text(scope: String?) async throws -> String {
-        try await call("text", ["scope": scope ?? NSNull()]) as? String ?? ""
     }
 
     // MARK: Actions
@@ -660,30 +640,32 @@ public final class BrowserAutomation: NSObject {
         if delta.navigated { delta.url = currentURL; delta.title = currentTitle }
         let mutationsAfter = (try? await call("mutations") as? Int) ?? mutationsBefore
         delta.changed = delta.navigated || mutationsAfter != mutationsBefore
+        // Only the focused landmark's ref, which mints none: the element
+        // itself is read, and rendered, from the agent page by the caller
+        // (`agentView(conceal:focused:)`). A raw walk here would hand refs to
+        // elements the agent's list hides.
         if delta.changed && !delta.navigated && !delta.pending,
            let ref = try? await call("focusedLandmark") as? String {
             delta.focusedRef = ref
-        }
-        if let ref = delta.focusedRef,
-           let raw = try? await call("landmarkSnapshot", ["ref": ref, "depth": 4]),
-           JSONSerialization.isValidJSONObject(raw as Any),
-           let data = try? JSONSerialization.data(withJSONObject: raw as Any),
-           let node = try? JSONDecoder().decode(BrowserSnapshotNode.self, from: data) {
-            delta.focused = BrowserSnapshotRenderer.render(node, includeURLs: false)
         }
         return delta
     }
 
     // MARK: Waiting
 
-    /// `pageText`, when given, is the text a text condition is looked for in:
-    /// the agent page's (`browser_wait_for`, recipe `wait-for-uses-agent-text`),
-    /// read once per pass, nil while that page is unavailable, which never
-    /// satisfies. Without it the page's own `innerText` is searched.
+    /// `pageText` is the text a text condition is looked for in: the agent
+    /// page's (`browser_wait_for`, recipe `wait-for-uses-agent-text`), read
+    /// once per pass, nil while that page is unavailable, which never
+    /// satisfies. A text condition without it is refused before the first
+    /// pass: the page's own text is never searched, so a wait is no route
+    /// from the raw page to a model.
     public func wait(
         for condition: BrowserWaitCondition, timeout: TimeInterval?,
         pageText: (@MainActor () async -> String?)? = nil
     ) async throws -> BrowserWaitResult {
+        if pageText == nil, condition.isText {
+            throw BrowserAutomationError.script("a text wait needs the agent page's text")
+        }
         let limit = min(max(timeout ?? Self.defaultTimeout, 0.05), Self.maximumTimeout)
         let deadline = Date().addingTimeInterval(limit)
         var idleSince: Date?
@@ -694,19 +676,12 @@ public final class BrowserAutomation: NSObject {
             try ensureDrivable()
             let satisfied: Bool
             switch condition {
-            case .text(let t) where pageText != nil:
+            case .text(let t):
                 let text: String? = await pageText?()
                 satisfied = text.map { Self.text($0, contains: t) } ?? false
-            case .anyText(let texts) where pageText != nil:
+            case .anyText(let texts):
                 let text: String? = await pageText?()
                 satisfied = text.map { text in texts.contains { Self.text(text, contains: $0) } } ?? false
-            case .text(let t): satisfied = (try? await call("hasText", ["needle": t]) as? Bool) ?? false
-            case .anyText(let texts):
-                var found = false
-                for t in texts where !found {
-                    found = (try? await call("hasText", ["needle": t]) as? Bool) ?? false
-                }
-                satisfied = found
             case .ref(let r, let g): satisfied = (try? await call("isVisible", ["ref": r, "gen": g]) as? Bool) ?? false
             case .url(let u): satisfied = currentURL.contains(u)
             case .load: satisfied = !driver.isLoading && driver.url != nil

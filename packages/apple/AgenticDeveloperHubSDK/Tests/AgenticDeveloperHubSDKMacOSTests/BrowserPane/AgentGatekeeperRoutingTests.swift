@@ -113,7 +113,97 @@ final class AgentGatekeeperRoutingTests: XCTestCase {
         AgentPageReading(page: page, generation: generation, warnings: [], failure: nil)
     }
 
+    /// The generation and the first ref of a `role` line in a `browser_snapshot` reply.
+    private static func target(_ role: String, in reply: String) throws -> (ref: String, generation: Int) {
+        var ref: String?
+        var generation: Int?
+        for line in reply.split(separator: "\n") {
+            let trimmed = line.trimmingCharacters(in: .whitespaces)
+            if trimmed.hasPrefix("generation: ") { generation = Int(trimmed.dropFirst("generation: ".count)) }
+            if ref == nil, trimmed.hasPrefix("- \(role)"),
+               let range = trimmed.range(of: #"\[ref=e\d+\]"#, options: .regularExpression) {
+                ref = String(trimmed[range].dropFirst(5).dropLast())
+            }
+        }
+        return (try XCTUnwrap(ref, reply), try XCTUnwrap(generation, reply))
+    }
+
+    /// The ref the automation world's table holds for the element `selector`
+    /// names, or nil when no ref resolves to it.
+    private func heldRef(_ selector: String) async throws -> String? {
+        let found = try await page.webView.callAsyncJavaScript(
+            "const el = document.querySelector(selector);"
+                + " for (const [ref, held] of window.__adkitchenRefs) { if (held.deref() === el) { return ref; } }"
+                + " return null;",
+            arguments: ["selector": selector], in: nil, contentWorld: BrowserSnapshotRuntime.world)
+        return found as? String
+    }
+
     // MARK: Tests
+
+    /// The refs an action resolves are the agent page's: an action leaves
+    /// an element the agent's list hides without a ref, so no guessed ref
+    /// reaches it, and the reply's focused landmark omits it.
+    func test_excludedElementGetsNoRefAfterAction() async throws {
+        await page.load(html: """
+            <form id="f"><input id="q"><button id="secret" type="button">Secret</button><span id="out"></span></form>
+            <script>q.addEventListener('input', () => out.textContent = 'typed')</script>
+            """)
+        let tools = makeTools(store: try store(agentSelectors: ["#secret"]))
+        let snap = try await call(tools, "browser_snapshot")
+        XCTAssertFalse(snap.content.contains("Secret"), snap.content)
+        let field = try Self.target("textbox", in: snap.content)
+
+        let fill = try await call(tools, "browser_fill",
+                                  ["ref": field.ref, "generation": field.generation, "value": "x"])
+        XCTAssertFalse(fill.isError, fill.content)
+        XCTAssertTrue(fill.content.contains("typed"), fill.content)
+        XCTAssertFalse(fill.content.contains("Secret"), fill.content)
+        let secretRef = try await heldRef("#secret")
+        XCTAssertNil(secretRef, "an action must not hand a ref to an element the agent's list hides")
+        let fieldRef = try await heldRef("#q")
+        XCTAssertEqual(fieldRef, field.ref)
+    }
+
+    /// Focus moved into a landmark the agent's list hides: the reply names
+    /// nothing of it.
+    func test_focusInsideExcludedLandmarkIsOmitted() async throws {
+        await page.load(html: """
+            <form id="f"><input id="inner"><span id="out"></span></form>
+            <button id="go" onclick="inner.focus(); out.textContent = 'moved'">Go</button>
+            """)
+        let tools = makeTools(store: try store(agentSelectors: ["#f"]))
+        let snap = try await call(tools, "browser_snapshot")
+        let button = try Self.target("button", in: snap.content)
+        let click = try await call(tools, "browser_click", ["ref": button.ref, "generation": button.generation])
+        XCTAssertFalse(click.isError, click.content)
+        XCTAssertFalse(click.content.contains("moved"), click.content)
+        XCTAssertFalse(click.content.contains("textbox"), click.content)
+        XCTAssertFalse(click.content.contains("- form"), click.content)
+    }
+
+    /// A dialog's message reaches the agent through the string path.
+    func test_dialogMessageConcealedInActionReply() async throws {
+        directory.panes = [pane(privacy: .enabled(privateWords))]
+        page.automation = directory.panes.first?.automation
+        await page.load(html: "<button onclick=\"alert('Beta Two')\">Warn</button>")
+        let tools = makeTools(store: try store())
+        let snap = try await call(tools, "browser_snapshot")
+        let button = try Self.target("button", in: snap.content)
+        let click = try await call(tools, "browser_click", ["ref": button.ref, "generation": button.generation])
+        XCTAssertFalse(click.isError, click.content)
+        XCTAssertTrue(click.content.contains("Gamma Zwei"), click.content)
+        XCTAssertFalse(click.content.contains("Beta"), click.content)
+    }
+
+    /// No agent list to read fails closed: the raw tools are refused with
+    /// the agent page's unavailable reason.
+    func test_rawPageRefusalWithoutStoreIsUnavailable() async throws {
+        let tools = makeTools(store: nil)
+        let pane = try XCTUnwrap(directory.panes.first)
+        let refusal = await tools.rawPageRefusal(pane: pane, tool: "browser_evaluate")
+        XCTAssertTrue(refusal?.hasPrefix(AgentPage.unavailablePrefix) ?? false, refusal ?? "nil")
+    }
 
     func test_snapshotTextFindShareBuilder() async throws {
         let spy = SpyAgentPageReader(Self.reading(Self.agentPage))

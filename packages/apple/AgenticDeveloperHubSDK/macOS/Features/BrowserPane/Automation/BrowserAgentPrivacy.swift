@@ -63,7 +63,7 @@ public enum BrowserAgentPrivacy: Sendable, Equatable {
     /// them outright rather than leak through them. They see the raw page
     /// past the agent's view, so a site with agent-list entries (items hidden
     /// from the agent) refuses them too, with `agentListRefusal`
-    /// (`BrowserToolSet.rawPageRefusal(pane:)`, recipe
+    /// (`BrowserToolSet.rawPageRefusal(pane:tool:)`, recipe
     /// `raw-page-tools-refused-when-filtered`).
     public static let refusedToolNames: Set<String> = [
         "browser_screenshot", "browser_click_at", "browser_evaluate"
