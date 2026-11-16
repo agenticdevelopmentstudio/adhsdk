@@ -41,5 +41,7 @@
 | hub-mail-bridge-039 | service-sign-in-waits | While connected, `signedOut()` and `signedIn()` run concurrently, each with one message to pull | status `.connected`; accounts `c1` |
 | hub-mail-bridge-040 | service-renews-refused-token | The first pull is refused with `.unauthorized`, the second returns message `m1` for `c1`; `refreshSession` returns true | `refreshSession` called once; accounts `c1`; status `.connected` |
 | hub-mail-bridge-041 | service-renews-refused-token | The first pull is refused with `.unauthorized`, the second returns `m1` for `c1`; `refreshSession` returns false; `authRetryDelay` 50 ms | statuses `.connected`, `.failed(authRetryMessage)`, `.connected`; accounts `c1` |
+| hub-mail-bridge-042 | accounts-from-connections | Connection `c1`; a bridge whose `lastSyncAt` answers `2026-11-16T10:00:00.000Z` | account `c1` has that `lastSyncAt` |
+| hub-mail-bridge-043 | service-renews-refused-token | Sign in and pull `m1` for `c1`, then pull again with no changes | the account's `lastSyncAt` is set after the first pull and moves after the second |
 | hub-mail-bridge-037 | location-value | Derived: two `HubMailLocation` values with the same `databaseURL` and `deviceId`, then one with a different `deviceId` | the first two compare equal; the third does not |
 
