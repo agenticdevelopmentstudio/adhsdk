@@ -67,6 +67,12 @@ describe('processMarkdown', () => {
     expect(result.html).toContain('x')
   })
 
+  it('keeps the highlighted pre focusable, so a keyboard user can scroll a wide block', async () => {
+    const result = await processMarkdown('```ts\nconst x = 1\n```')
+    expect(result.html).toMatch(/<pre[^>]*class="shiki[^"]*"/)
+    expect(result.html).toMatch(/<pre[^>]*tabindex="0"/)
+  })
+
   // c6: XSS inert — raw HTML in markdown is dropped by remark-rehype
   // (allowDangerousHtml defaults to false) and any survivor would be stripped
   // by rehype-sanitize's allowlist.

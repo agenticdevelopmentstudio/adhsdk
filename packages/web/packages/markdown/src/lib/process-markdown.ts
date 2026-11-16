@@ -77,9 +77,11 @@ function getHighlighter(): Promise<Highlighter> {
 
 /**
  * Allowlist sanitize schema. Attribute keys use hast property names (camelCase:
- * `className`, `tabIndex`, `style`). Allows a safe prose subset plus the
- * `className`/`style` shiki emits on `pre`/`code`/`span` (the dual-theme CSS
- * variables that drive code-block colors).
+ * `className`, `tabIndex`, `style`), and hast-util-sanitize matches them exactly.
+ * Allows a safe prose subset plus what shiki puts on its nodes: on `pre`, the raw
+ * lowercase properties `class` ("shiki …") and `tabindex` ("0"), and on
+ * `pre`/`code`/`span`, the `style` carrying the dual-theme CSS variables that
+ * drive code-block colors.
  *
  * Event handlers (on*), `javascript:` URLs, and <script>/<style>/<iframe> are
  * intentionally absent — this is an allowlist, not a denylist.
@@ -110,8 +112,9 @@ const sanitizeSchema = {
     ins: ['dateTime', 'cite'],
     li: ['className'],
     ol: ['reversed', 'start', 'type'],
-    // shiki emits the hast property `class` (not `className`); allow it so `pre.shiki` survives.
-    pre: ['className', 'class', 'style', 'tabIndex'],
+    // shiki emits the raw hast properties `class` and `tabindex` (not `className`/`tabIndex`);
+    // allow both spellings so `pre.shiki` survives and stays keyboard-focusable.
+    pre: ['className', 'class', 'style', 'tabIndex', 'tabindex'],
     q: ['cite'],
     span: ['className', 'style'],
     table: ['align', 'cellPadding', 'cellSpacing'],
