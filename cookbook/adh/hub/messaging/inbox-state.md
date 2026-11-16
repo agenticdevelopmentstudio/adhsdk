@@ -2,11 +2,11 @@
 id: 8da824cf-e518-4cee-b897-3a8e17f9c32a
 title: "Inbox State"
 type: ingredient
-version: 1.2.2
+version: 2.0.0
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-11-14
+modified: 2026-11-16
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -173,6 +173,12 @@ guidance this recipe was authored under.
   random-UUID generator when one is available, and MUST otherwise generate one from the current
   timestamp and a random suffix, before `POST`-ing `{ body, clientMessageId }` to
   `{DM_BASE}/<enc(chatId)>/messages`.
+- **dm-composer-reset-on-chatid-change**: the DM composer (the draft, the sending flag and the
+  send error) MUST start empty for each `chatId`, so a draft typed in one conversation is never
+  shown in, or sent to, another.
+- **dm-composer-late-result-ignored**: a send that settles after `chatId` has changed MUST NOT
+  clear the new conversation's draft, set its send error or clear its sending flag; the send
+  itself still goes to the conversation it was started in.
 - **dm-thread-send-merges-and-broadcasts**: on a successful send, the DM thread state MUST merge
   the server-returned message into `messages` via the same merge step and MUST broadcast a wake
   signal exactly once.
@@ -283,6 +289,8 @@ Not applicable — this is the DM and notification data-and-transport layer, not
 | hub-domain-hooks-031 | session-refresh-waterfall | Any plain HTTP call in this recipe first responds `401`; refresh succeeds | Exactly one retried request is sent with the new token; a `401` on that retry throws a typed HTTP error, status `401` — owned by the shared authenticated request client, not these hooks |
 | hub-domain-hooks-032 | sse-token-rides-the-query-string | The live-connection transport opens the DM thread's live connection with a current access token `"tok"` | The constructed live-connection URL ends in `access_token=tok` — owned by the shared live-connection transport, not these hooks |
 | hub-domain-hooks-033 | thread-message-bleed-on-chatid-switch | The send action is called for `chatId = "c1"`; before the POST resolves, `chatId` changes to `"c2"` | `messages` contains no message with `chatId` `\"c1\"` after the POST resolves; the send action resolves without error |
+| hub-domain-hooks-035 | dm-composer-reset-on-chatid-change | A draft `"hi Alice"` typed for `chatId` `"c1"`; `chatId` then changes to `"c2"` | The draft is `""` for `"c2"` |
+| hub-domain-hooks-036 | dm-composer-late-result-ignored | A send for `"c1"` is in flight; `chatId` changes to `"c2"` and `"hi Bob"` is typed; the `"c1"` send then resolves (and, in a second case, rejects with 403) | The draft stays `"hi Bob"`, with no send error and `sending` false |
 | hub-domain-hooks-034 | dm-thread-reset-on-chatid-change | `chatId` `"c1"` loads one message; `chatId` then changes to `"c2"`, whose history load returns no messages | `messages` is `[]` for `"c2"`; the `"c1"` message is not shown |
 
 ## Edge Cases
@@ -417,7 +425,7 @@ with no diagnostic output anywhere in this recipe.
 ## Platform Notes
 
 - **React/Web** (source platform): `packages/web/packages/messaging/src/hooks/use-dms.ts` and
-  `use-notifications.ts` hold the hooks; both build on `authedJson`/`authedRequest`/`AuthHttpError`
+  `use-notifications.ts` hold the hooks, and `use-dm-composer.ts` the composer `DmThread` mounts; both build on `authedJson`/`authedRequest`/`AuthHttpError`
   from `@adh-sdk/auth/client`, `useAuth` from `@adh-sdk/auth`, and the shared
   `connectSse`/`SseHandle` from `@adh-sdk/data/stream` — the one live-connection transport
   every real-time consumer in the web app now shares, per that package's own top-of-file comment.
@@ -556,7 +564,7 @@ data — none of the three crashes the hook or blanks the UI.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
-| 1.2.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (use-notifications.test.ts, use-dms.test.ts, 30 of 33 vectors); unit-test-coverage now partial. |
+| 2.0.0 | 2026-11-16 | Mike Fullerton | The DM composer starts empty for each conversation and ignores a send that settles after a switch |
 | 1.2.1 | 2026-10-04 | Mike Fullerton | Design Decisions keep the Decision / Rationale / Approved triple; each decision's platform line is folded into its rationale. |
 | 1.2.0 | 2026-10-04 | Mike Fullerton | Resolve open-question markers against the code; restate unimplemented behavior as current behavior with pending Decisions. |
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to adh/hub/messaging/. |

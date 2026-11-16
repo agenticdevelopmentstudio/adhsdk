@@ -121,6 +121,12 @@
   random-UUID generator when one is available, and MUST otherwise generate one from the current
   timestamp and a random suffix, before `POST`-ing `{ body, clientMessageId }` to
   `{DM_BASE}/<enc(chatId)>/messages`.
+- **dm-composer-reset-on-chatid-change**: the DM composer (the draft, the sending flag and the
+  send error) MUST start empty for each `chatId`, so a draft typed in one conversation is never
+  shown in, or sent to, another.
+- **dm-composer-late-result-ignored**: a send that settles after `chatId` has changed MUST NOT
+  clear the new conversation's draft, set its send error or clear its sending flag; the send
+  itself still goes to the conversation it was started in.
 - **dm-thread-send-merges-and-broadcasts**: on a successful send, the DM thread state MUST merge
   the server-returned message into `messages` via the same merge step and MUST broadcast a wake
   signal exactly once.

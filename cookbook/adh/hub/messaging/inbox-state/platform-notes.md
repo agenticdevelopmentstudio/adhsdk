@@ -1,6 +1,6 @@
 
 - **React/Web** (source platform): `packages/web/packages/messaging/src/hooks/use-dms.ts` and
-  `use-notifications.ts` hold the hooks; both build on `authedJson`/`authedRequest`/`AuthHttpError`
+  `use-notifications.ts` hold the hooks, and `use-dm-composer.ts` the composer `DmThread` mounts; both build on `authedJson`/`authedRequest`/`AuthHttpError`
   from `@adh-sdk/auth/client`, `useAuth` from `@adh-sdk/auth`, and the shared
   `connectSse`/`SseHandle` from `@adh-sdk/data/stream` — the one live-connection transport
   every real-time consumer in the web app now shares, per that package's own top-of-file comment.

@@ -1,7 +1,7 @@
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
-| 1.2.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (use-notifications.test.ts, use-dms.test.ts, 30 of 33 vectors); unit-test-coverage now partial. |
+| 2.0.0 | 2026-11-16 | Mike Fullerton | The DM composer starts empty for each conversation and ignores a send that settles after a switch |
 | 1.2.1 | 2026-10-04 | Mike Fullerton | Design Decisions keep the Decision / Rationale / Approved triple; each decision's platform line is folded into its rationale. |
 | 1.2.0 | 2026-10-04 | Mike Fullerton | Resolve open-question markers against the code; restate unimplemented behavior as current behavior with pending Decisions. |
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to adh/hub/messaging/. |
