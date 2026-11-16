@@ -1090,10 +1090,9 @@ public actor GitClient {
             // merges on top so a caller (a test redirecting
             // `GIT_CONFIG_GLOBAL`, say) can add overrides of its own without
             // touching process-wide state — see
-            // `GitClientConfiguration.extraEnvironment`.
-            environment: Self.baseEnvironment
-                .merging(configuration.extraEnvironment) { _, override in override }
-                .merging(environment) { _, override in override },
+            // `GitClientConfiguration.extraEnvironment`. `childEnvironment` also
+            // repairs PATH, so git finds git-lfs when launched from Finder.
+            environment: Self.childEnvironment(configuration: configuration, environment: environment),
             environmentPolicy: .mergeOverParent,
             currentDirectoryURL: directory
         )

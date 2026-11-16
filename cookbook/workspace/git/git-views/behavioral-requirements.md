@@ -111,8 +111,10 @@
   whose path is stored in LFS (git-client's lfs-tracked-path) MUST show an
   `externaldrive` symbol after its title (`git.workingCopy.lfsBadge`,
   tooltip `Stored in Git LFS`); other rows, and every row of a repository
-  not using LFS, show none. The model loads the LFS state with the refs, so
-  a refs change re-reads the badges without re-reading the lists.
+  not using LFS, show none. The badge is an accessibility image element
+  labelled `Stored in Git LFS`. The model loads the LFS state with the refs,
+  so a refs change re-reads the badges without re-reading the lists, and a
+  change to any `.gitattributes` file counts as a refs change too.
 - **lfs-fetch-menu**: While the repository uses LFS, the toolbar's Fetch
   button MUST open a menu under itself of `Fetch`, `Fetch LFS Objects`
   (`git.toolbar.lfsFetch`) and `Pull LFS Objects` (`git.toolbar.lfsPull`);

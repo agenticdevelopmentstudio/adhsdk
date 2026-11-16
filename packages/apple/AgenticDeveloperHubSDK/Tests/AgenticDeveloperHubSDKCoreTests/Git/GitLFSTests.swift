@@ -162,14 +162,37 @@ struct GitLFSTests {
         #expect(state.files.isEmpty)
         #expect(!state.isInUse)
     }
+
+    @Test("a git child's PATH adds Homebrew's bin to a Finder-launched app's system PATH")
+    func childPathIsRepaired() {
+        let environment = GitClient.childEnvironment(
+            configuration: .default, environment: [:], parent: ["PATH": "/usr/bin:/bin:/usr/sbin:/sbin"]
+        )
+        let path = (environment["PATH"] ?? "").split(separator: ":").map(String.init)
+        #expect(path.contains("/opt/homebrew/bin"))
+        #expect(path.contains("/usr/local/bin"))
+        #expect(Array(path.prefix(4)) == ["/usr/bin", "/bin", "/usr/sbin", "/sbin"])
+        #expect(environment["GIT_TERMINAL_PROMPT"] == "0")
+    }
+
+    @Test("a configuration's PATH still outranks the repaired one")
+    func configurationPathWins() {
+        let configuration = GitClientConfiguration(
+            executableURL: GitClientConfiguration.default.executableURL, timeout: 10,
+            extraEnvironment: ["PATH": "/custom"]
+        )
+        let environment = GitClient.childEnvironment(configuration: configuration, environment: [:], parent: [:])
+        #expect(environment["PATH"] == "/custom")
+    }
 }
 
-/// Whether `/usr/bin/git lfs version` succeeds here, with this process's environment, which
-/// is the one a `GitClient` child inherits.
+/// Whether `/usr/bin/git lfs version` succeeds here, with the PATH a `GitClient` child gets.
 private let gitLFSInstalled: Bool = {
     let process = Process()
     process.executableURL = URL(fileURLWithPath: "/usr/bin/git")
     process.arguments = ["lfs", "version"]
+    process.environment = ProcessInfo.processInfo.environment
+        .merging(GitClient.childEnvironment(configuration: .default, environment: [:])) { _, new in new }
     process.standardOutput = FileHandle.nullDevice
     process.standardError = FileHandle.nullDevice
     do {

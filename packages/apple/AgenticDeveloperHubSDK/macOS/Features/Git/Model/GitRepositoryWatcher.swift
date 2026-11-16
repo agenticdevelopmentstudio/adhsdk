@@ -130,10 +130,13 @@ public final class GitRepositoryWatcher: GitRepositoryWatching, @unchecked Senda
     /// `MERGE_HEAD`, `CHERRY_PICK_HEAD`, `REVERT_HEAD` and anything under `rebase-merge/`,
     /// `rebase-apply/` or `sequencer/` is an operation; a worktree's entry appearing or going, or another
     /// worktree's `worktrees/<name>/HEAD` moving, is refs (the refs reload lists worktrees).
-    /// Lock files, objects and everything else mean nothing.
+    /// Lock files, objects and everything else mean nothing. A `.gitattributes` file is
+    /// refs too, because the refs reload is what re-reads the LFS state.
     public static func classify(relativePath: String) -> Set<GitRepositoryChange> {
         let components = relativePath.split(separator: "/", omittingEmptySubsequences: true)
-        guard components.first == ".git" else { return [.workingCopy] }
+        guard components.first == ".git" else {
+            return components.last == ".gitattributes" ? [.workingCopy, .refs] : [.workingCopy]
+        }
         let rest = components.dropFirst()
         guard let first = rest.first, let last = rest.last, !last.hasSuffix(".lock") else { return [] }
         let single = rest.count == 1

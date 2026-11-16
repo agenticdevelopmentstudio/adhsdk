@@ -230,6 +230,9 @@ final class GitFileListCellView: NSView {
         lfsBadge.accessibilityID("git.workingCopy.lfsBadge")
         lfsBadge.toolTip = "Stored in Git LFS"
         lfsBadge.setAccessibilityLabel("Stored in Git LFS")
+        // ThemedSymbolImageView starts out hidden from accessibility; the badge is information.
+        lfsBadge.setAccessibilityElement(true)
+        lfsBadge.setAccessibilityRole(.image)
         lfsBadge.isHidden = true
         for view in [statusLabel, iconView, titleLabel, lfsBadge] { stack.addArrangedSubview(view) }
         stack.accessibilityID("git.fileList.fileStack")

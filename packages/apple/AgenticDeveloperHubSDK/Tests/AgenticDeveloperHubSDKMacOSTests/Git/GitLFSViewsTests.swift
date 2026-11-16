@@ -41,7 +41,7 @@ struct GitLFSViewsTests {
                                                settings: UserSettings(with: InMemorySettingsStorageProvider()))
         controller.loadViewIfNeeded()
 
-        controller.show(target: .unstaged, file: "a.bin")
+        controller.show(target: .unstaged(paths: ["a.bin"]), file: "a.bin")
         await controller.loadTask?.value
 
         let oldSize = ByteCountFormatter.string(fromByteCount: 2048, countStyle: .file)
@@ -60,7 +60,7 @@ struct GitLFSViewsTests {
                                                settings: UserSettings(with: InMemorySettingsStorageProvider()))
         controller.loadViewIfNeeded()
 
-        controller.show(target: .unstaged, file: "a.swift")
+        controller.show(target: .unstaged(paths: ["a.swift"]), file: "a.swift")
         await controller.loadTask?.value
 
         #expect(controller.lfsLabel.isHidden)
@@ -82,6 +82,8 @@ struct GitLFSViewsTests {
         let plain = try #require(list.tableView(list.tableView, viewFor: nil, row: 1) as? GitFileListCellView)
         #expect(tracked.lfsBadge.accessibilityIdentifier() == "git.workingCopy.lfsBadge")
         #expect(tracked.lfsBadge.toolTip == "Stored in Git LFS")
+        #expect(tracked.lfsBadge.isAccessibilityElement())
+        #expect(tracked.lfsBadge.accessibilityLabel() == "Stored in Git LFS")
         #expect(tracked.lfsBadge.symbolName == "externaldrive")
         #expect(!tracked.lfsBadge.isHidden)
         #expect(plain.lfsBadge.isHidden)
@@ -125,5 +127,12 @@ struct GitLFSViewsTests {
         #expect(!identifiers.contains("git.toolbar.lfsFetch"))
         #expect(!identifiers.contains("git.toolbar.lfsPull"))
         #expect(identifiers.contains("git.toolbar.fetch"))
+    }
+
+    @Test("a .gitattributes change reloads the refs, which re-reads the LFS state")
+    func gitattributesReloadsRefs() {
+        #expect(GitRepositoryWatcher.classify(relativePath: ".gitattributes") == [.workingCopy, .refs])
+        #expect(GitRepositoryWatcher.classify(relativePath: "assets/.gitattributes") == [.workingCopy, .refs])
+        #expect(GitRepositoryWatcher.classify(relativePath: "README.md") == [.workingCopy])
     }
 }

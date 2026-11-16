@@ -476,8 +476,11 @@
   (git answers "'lfs' is not a git command" when git-lfs is not installed)
   MUST return a not-installed state with no patterns and no files, never
   an error. Otherwise it MUST run `lfs track` and `lfs ls-files` through
-  the same bottleneck as every other verb, so git finds `git-lfs` on the
-  inherited `PATH`; an `ls-files` failure (a repository with no commit)
+  the same bottleneck as every other verb. Every git child's `PATH` MUST
+  be the inherited `PATH` followed by `/opt/homebrew/bin`, `/usr/local/bin`,
+  `/usr/bin` and `/bin` (each once), so git finds a Homebrew `git-lfs` in
+  an app launched from Finder; a configuration's own `PATH` outranks it. An
+  `ls-files` failure (a repository with no commit)
   lists no files. The state is in use only when installed and it has a
   tracked pattern or an LFS file.
 - **lfs-track-parse**: The tracked patterns MUST be the non-blank lines
