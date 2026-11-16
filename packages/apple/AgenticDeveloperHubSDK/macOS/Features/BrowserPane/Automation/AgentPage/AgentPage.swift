@@ -18,9 +18,14 @@ public struct AgentNode: Sendable, Hashable {
     public let value: String?
     public let selector: String
     public let children: [AgentNode]
+    /// The subtree's text the way `textContent` reads it — the page's own
+    /// pieces concatenated with no separator, images contributing none —
+    /// concealed once as a whole, so a privacy word split across inline
+    /// elements (`Ac<b>me</b>`) is concealed as the word it reads as.
+    let contentText: String
 
     init(ref: String, kind: AgentNodeKind, text: String, attributes: [String: String], value: String?,
-         selector: String, children: [AgentNode]) {
+         selector: String, children: [AgentNode], contentText: String) {
         self.ref = ref
         self.kind = kind
         self.text = text
@@ -28,6 +33,7 @@ public struct AgentNode: Sendable, Hashable {
         self.value = value
         self.selector = selector
         self.children = children
+        self.contentText = contentText
     }
 
     /// The node's states, in vocabulary order.
@@ -160,16 +166,17 @@ enum AgentPageText {
     }
 
     /// Every text in `node`'s subtree, its own first, concatenated with no
-    /// separator as an element's `textContent` is (`a<b>b</b>` gives "ab");
-    /// images contribute none, as `textContent` holds no alt.
+    /// separator as an element's `textContent` is (`a<b>b</b>` gives "ab"),
+    /// and concealed after joining, never piece by piece; images contribute
+    /// none, as `textContent` holds no alt.
     static func allText(_ node: AgentNode) -> String {
-        if node.kind == .image { return "" }
-        var parts: [String] = node.text.isEmpty ? [] : [node.text]
-        for child in node.children {
-            let text = allText(child)
-            if !text.isEmpty { parts.append(text) }
-        }
-        return parts.joined()
+        node.kind == .image ? "" : node.contentText
+    }
+
+    /// Whether `node`'s children are all text: a run the page reads as one
+    /// string, which the renderings print joined and concealed as a whole.
+    static func isTextRun(_ node: AgentNode) -> Bool {
+        node.kind != .image && !node.children.isEmpty && node.children.allSatisfy { $0.kind == .text }
     }
 }
 
@@ -333,11 +340,12 @@ struct AgentSnapshotMapper {
 
     /// A value as the legacy walk showed one: text fields (a slider's or
     /// spinbutton's `aria-valuenow` among them), text areas and selects —
-    /// a checkbox's or radio's is its state — collapsed, cut, empty as none.
+    /// a checkbox's or radio's is its state. As the legacy walk does, an
+    /// empty value is none, tested before collapsing, so a value of only
+    /// whitespace is kept and prints as `[value=""]`; then collapsed and cut.
     private func legacyValue(_ node: AgentNode) -> String? {
-        guard Self.valueShown.contains(node.kind), let value = node.value else { return nil }
-        let collapsed = AgentPageText.collapse(value)
-        return collapsed.isEmpty ? nil : AgentPageText.cut(collapsed, Self.valueLimit)
+        guard Self.valueShown.contains(node.kind), let value = node.value, !value.isEmpty else { return nil }
+        return AgentPageText.cut(AgentPageText.collapse(value), Self.valueLimit)
     }
 }
 
@@ -356,8 +364,12 @@ struct AgentTextRenderer {
         if node.kind == .image { return }
         let block = Self.blocks.contains(node.kind)
         if block { flush() }
-        if !node.text.isEmpty { pieces.append(node.text) }
-        for child in node.children { visit(child) }
+        if AgentPageText.isTextRun(node) {
+            pieces.append(AgentPageText.allText(node))
+        } else {
+            if !node.text.isEmpty { pieces.append(node.text) }
+            for child in node.children { visit(child) }
+        }
         if block { flush() }
     }
 
@@ -402,7 +414,13 @@ struct AgentHTMLRenderer {
     }
 
     /// `node`'s text and children, without an element for `node` itself.
+    /// A run of text alone is written as the node's joined, concealed
+    /// text, so adjacent pieces cannot read as a privacy word together.
     mutating func content(of node: AgentNode) {
+        if AgentPageText.isTextRun(node) {
+            output += Self.escape(AgentPageText.allText(node))
+            return
+        }
         if !node.text.isEmpty { output += Self.escape(node.text) }
         for child in node.children { element(child) }
     }

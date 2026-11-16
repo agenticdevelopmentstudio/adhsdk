@@ -55,6 +55,12 @@
   node text, value, page title, every attribute value and every `href` —
   through the privacy concealment in force before the node holding it is
   created, so no real privacy word reaches the result in any rendering.
+  Text that a rendering joins from several pieces — a subtree's text read
+  the `textContent` way for a generic line, a name taken from content or
+  an option, and a run of text pieces in the text and HTML renderings —
+  MUST be joined from the unconcealed pieces and concealed once as a
+  whole, never assembled from pieces concealed one by one, so a privacy
+  word split across inline elements (`Ac<b>me</b>`) is still concealed.
 - **hide-images**: When the Hide Images setting is on, the component MUST
   drop every image node; when it is off, an image MUST enter the result
   only as its alternative text, never as an image source.
@@ -62,8 +68,10 @@
   value only for text fields, text areas, selects, checkboxes and radio
   buttons, and MUST never keep the value of a password field. The snapshot
   rendering MUST print the value of a text field, text area or select as
-  today's snapshot does (whitespace collapsed, cut at 50 characters, an
-  empty value printed as none). An element with the `slider` or
+  today's snapshot does: an empty value is printed as none, tested before
+  whitespace is collapsed, so a value of only whitespace is kept and
+  printed as `[value=""]`; otherwise whitespace collapsed and cut at 50
+  characters. An element with the `slider` or
   `spinbutton` role that is not an `input` reaches the component as a text
   field of type `range` or `number` whose value is its `aria-valuenow`, and
   that value MUST be kept and printed the same way.

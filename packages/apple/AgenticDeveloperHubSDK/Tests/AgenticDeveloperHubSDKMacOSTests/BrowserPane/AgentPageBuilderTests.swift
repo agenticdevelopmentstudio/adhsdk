@@ -135,13 +135,15 @@ final class AgentPageBuilderTests: XCTestCase {
     func test_textAreaValueShownAsLegacy() {
         let page = build(document([
             node("e1", "textArea", text: "Notes", value: "Line one\n   line two"),
-            node("e2", "textArea", text: "Empty", value: "")
+            node("e2", "textArea", text: "Empty", value: ""),
+            node("e3", "textArea", text: "Blank", value: "\n   ")
         ]), title: "T")
         XCTAssertEqual(page.node(ref: "e1")?.value, "Line one\n   line two")
         XCTAssertEqual(page.snapshotTree(BrowserSnapshotOptions()), """
         - document "T":
           - textbox "Notes" [ref=e1] [value="Line one line two"]
           - textbox "Empty" [ref=e2]
+          - textbox "Blank" [ref=e3] [value=""]
 
         """)
         XCTAssertTrue(page.html().contains(">Line one\n   line two</textarea>"), page.html())
@@ -159,6 +161,33 @@ final class AgentPageBuilderTests: XCTestCase {
           - button "Signin" [ref=e4]
 
         """)
+    }
+
+    func test_privacyWordSplitAcrossTagsConcealed() {
+        // `<p>Ac<b>me</b></p>`, `<button>Ac<b>me</b></button>`, an option and a
+        // heading the same way: each piece alone holds no privacy word, the
+        // joined text does, and is concealed once it is joined.
+        let page = build(document([
+            node("e1", "paragraph", children: [node("e2", "text", text: "Ac"), node("e3", "text", text: "me")]),
+            node("e4", "button", text: "Ac", children: [node("e5", "text", text: "me")]),
+            node("e6", "heading", attrs: ["level": "2"], children: [
+                node("e7", "text", text: "Ac"), node("e8", "text", text: "me Co")
+            ]),
+            node("e9", "select", text: "Pick", children: [
+                node("e10", "option", children: [node("e11", "text", text: "Ac"), node("e12", "text", text: "me")])
+            ])
+        ]), privacy: acme, title: "T")
+        for rendering in allRenderings(page) {
+            XCTAssertFalse(rendering.contains("Acme"), rendering)
+            XCTAssertTrue(rendering.contains("Zed"), rendering)
+        }
+        let tree = page.snapshotTree(BrowserSnapshotOptions())
+        XCTAssertTrue(tree.contains("- text: Zed\n"), tree)
+        XCTAssertTrue(tree.contains("- button \"Zed\" [ref=e4]"), tree)
+        XCTAssertTrue(tree.contains("- heading \"Zed Co\" [ref=e6] [level=2]"), tree)
+        XCTAssertTrue(tree.contains("- option \"Zed\" [ref=e10]"), tree)
+        XCTAssertTrue(page.html().contains(">Zed</option>"), page.html())
+        XCTAssertTrue(page.text().contains("Zed"), page.text())
     }
 
     func test_sliderAndSpinbuttonValueKept() {
@@ -275,6 +304,7 @@ final class AgentPageBuilderTests: XCTestCase {
                 node("e10", "checkbox", text: "Remember me", attrs: ["states": "checked"], value: "on"),
                 node("e11", "button", text: "Sign in", attrs: ["states": "disabled bogus"]),
                 node("e12", "textArea", text: "Notes", value: "Line one\n  two"),
+                node("e18", "textArea", text: "Blank", value: "  "),
                 node("e13", "paragraph", children: [node("e14", "text", text: "a"), node("e15", "text", text: "b")]),
                 node("e16", "textField", attrs: ["type": "range", "aria-label": "Volume"], value: "40"),
                 node("e17", "textField", text: "Count", attrs: ["type": "number"], value: "3")
@@ -295,6 +325,7 @@ final class AgentPageBuilderTests: XCTestCase {
             {"role": "checkbox", "name": "Remember me", "ref": "e10", "states": ["checked"], "children": []},
             {"role": "button", "name": "Sign in", "ref": "e11", "states": ["disabled"], "children": []},
             {"role": "textbox", "name": "Notes", "ref": "e12", "states": [], "value": "Line one two", "children": []},
+            {"role": "textbox", "name": "Blank", "ref": "e18", "states": [], "value": "", "children": []},
             {"role": "text", "text": "ab"},
             {"role": "slider", "name": "Volume", "ref": "e16", "states": [], "value": "40", "children": []},
             {"role": "spinbutton", "name": "Count", "ref": "e17", "states": [], "value": "3", "children": []}]}]}
@@ -328,6 +359,7 @@ final class AgentPageBuilderTests: XCTestCase {
             - checkbox "Remember me" [ref=e10] [checked]
             - button "Sign in" [ref=e11] [disabled]
             - textbox "Notes" [ref=e12] [value="Line one two"]
+            - textbox "Blank" [ref=e18] [value=""]
             - text: ab
             - slider "Volume" [ref=e16] [value="40"]
             - spinbutton "Count" [ref=e17] [value="3"]

@@ -100,6 +100,13 @@ public struct AgentPageBuilder: Sendable {
 
     /// `raw` re-validated, or `nil` to drop it and its whole subtree.
     private func node(from raw: RawNode, base: URL?) -> AgentNode? {
+        built(from: raw, base: base)?.node
+    }
+
+    /// `raw` re-validated, with its subtree's unconcealed text joined the
+    /// `textContent` way; that text never leaves the builder unconcealed —
+    /// it is concealed once, whole, into the node's `contentText`.
+    private func built(from raw: RawNode, base: URL?) -> (node: AgentNode, content: String)? {
         guard let kind = AgentNodeKind(rawValue: raw.kind), allowlist.kinds.contains(kind) else { return nil }
         if hideImages && kind == .image { return nil }
         guard Self.isValidRef(raw.ref) else { return nil }
@@ -135,9 +142,13 @@ public struct AgentPageBuilder: Sendable {
         let isPassword = rawAttributes["type"]?.trimmingCharacters(in: .whitespaces).lowercased() == "password"
         let value = (Self.valueKinds.contains(kind) && !isPassword) ? raw.value.map(conceal) : nil
 
-        let children = (raw.children ?? []).compactMap { node(from: $0, base: base) }
-        return AgentNode(ref: raw.ref, kind: kind, text: conceal(raw.text ?? ""), attributes: attributes,
-                         value: value, selector: raw.selector ?? "", children: children)
+        let built = (raw.children ?? []).compactMap { self.built(from: $0, base: base) }
+        let ownText = raw.text ?? ""
+        let content = kind == .image ? "" : ownText + built.map(\.content).joined()
+        let node = AgentNode(ref: raw.ref, kind: kind, text: conceal(ownText), attributes: attributes,
+                             value: value, selector: raw.selector ?? "", children: built.map(\.node),
+                             contentText: conceal(content))
+        return (node, content)
     }
 
     /// A ref the walker assigned: short, letters, digits, `-` and `_` only.

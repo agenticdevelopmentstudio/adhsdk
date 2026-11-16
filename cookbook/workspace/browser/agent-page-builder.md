@@ -139,6 +139,12 @@ recipe is written before it.
   node text, value, page title, every attribute value and every `href` —
   through the privacy concealment in force before the node holding it is
   created, so no real privacy word reaches the result in any rendering.
+  Text that a rendering joins from several pieces — a subtree's text read
+  the `textContent` way for a generic line, a name taken from content or
+  an option, and a run of text pieces in the text and HTML renderings —
+  MUST be joined from the unconcealed pieces and concealed once as a
+  whole, never assembled from pieces concealed one by one, so a privacy
+  word split across inline elements (`Ac<b>me</b>`) is still concealed.
 - **hide-images**: When the Hide Images setting is on, the component MUST
   drop every image node; when it is off, an image MUST enter the result
   only as its alternative text, never as an image source.
@@ -146,8 +152,10 @@ recipe is written before it.
   value only for text fields, text areas, selects, checkboxes and radio
   buttons, and MUST never keep the value of a password field. The snapshot
   rendering MUST print the value of a text field, text area or select as
-  today's snapshot does (whitespace collapsed, cut at 50 characters, an
-  empty value printed as none). An element with the `slider` or
+  today's snapshot does: an empty value is printed as none, tested before
+  whitespace is collapsed, so a value of only whitespace is kept and
+  printed as `[value=""]`; otherwise whitespace collapsed and cut at 50
+  characters. An element with the `slider` or
   `spinbutton` role that is not an `input` reaches the component as a text
   field of type `range` or `number` whose value is its `aria-valuenow`, and
   that value MUST be kept and printed the same way.
@@ -256,7 +264,7 @@ landmarks, headings — to build its result.)
 | agent-page-builder-011 | fail-closed-on-vault | Privacy unavailable; a valid payload | Empty page, reason set, no root |
 | agent-page-builder-012 | fail-closed-on-vault | Privacy conflicting; a valid payload | Empty page, reason set, no root |
 | agent-page-builder-013 | html-rendering-safe | Text node `<script>x</script>` and a node whose page element had a `style` attribute | The HTML contains `&lt;script&gt;x&lt;/script&gt;`, no `<script` element and no `style=` attribute; every emitted element has `data-adk-ref` |
-| agent-page-builder-014 | snapshot-tool-contract-unchanged | A fixture payload and the equivalent legacy snapshot tree | The snapshot rendering's lines equal the legacy renderer's lines for that tree, with and without include URLs, with depth unset, 0 and -1; the fixture holds a text area value, inline text split across two text nodes, a slider and a spinbutton |
+| agent-page-builder-014 | snapshot-tool-contract-unchanged | A fixture payload and the equivalent legacy snapshot tree | The snapshot rendering's lines equal the legacy renderer's lines for that tree, with and without include URLs, with depth unset, 0 and -1; the fixture holds a text area value, a whitespace-only text area value, inline text split across two text nodes, a slider and a spinbutton |
 | agent-page-builder-015 | always-runs | Privacy off; a payload with an unknown kind | The unknown node is still dropped |
 | agent-page-builder-016 | walker-skips-hidden-nodes | Live page with four elements hidden by display none, visibility hidden, the `hidden` attribute and `aria-hidden="true"` | None of the four appears in the result |
 | agent-page-builder-017 | walker-skips-agent-list | Agent list for the site holds `.ad`; the page has a `.ad` element with a child paragraph | Neither the element nor its paragraph appears |
@@ -282,6 +290,8 @@ landmarks, headings — to build its result.)
 | agent-page-builder-037 | value-kept-only-for-form-controls | A text area labelled "Notes" with value "Line one" newline "   line two" | The snapshot prints `textbox "Notes"` with `[value="Line one line two"]`; the HTML text area holds the value |
 | agent-page-builder-038 | snapshot-tool-contract-unchanged | A paragraph with text children "a" and "b"; a button with text "Sign" and a text child "in" | The snapshot prints `text: ab` and `button "Signin"` |
 | agent-page-builder-039 | value-kept-only-for-form-controls | A text field of type `range` named "Volume" with value "40" and one of type `number` labelled "Count" with value "3" | The snapshot prints `slider "Volume"` with `[value="40"]` and `spinbutton "Count"` with `[value="3"]` |
+| agent-page-builder-040 | value-kept-only-for-form-controls | A text area labelled "Blank" with a value of a newline and three spaces | The snapshot prints `textbox "Blank"` with `[value=""]` |
+| agent-page-builder-041 | concealed-before-insertion | Privacy words {Acme}; a paragraph with text pieces "Ac" and "me", a button "Ac" with a text child "me", a heading with pieces "Ac" and "me Co", an option with pieces "Ac" and "me" | "Acme" appears in no rendering; the snapshot prints `text: Zed`, `button "Zed"`, `heading "Zed Co"` and `option "Zed"`, and the HTML option reads "Zed" |
 ## Edge Cases
 
 - **Null and empty input**: An empty document yields a page with a
@@ -424,6 +434,7 @@ model can read would be a route around the gatekeeper.
 | macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Automation/AgentPage/AgentPageBuilder.swift` | planned |
 | macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Automation/AgentPage/AgentPageWalker.js` | planned |
 | macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Automation/AgentPage/AgentPageSource.swift` | planned |
+| macos | `packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/BrowserPane/AgentPageWalkerWebViewTests.swift` | unverified |
 
 ## Design Decisions
 
