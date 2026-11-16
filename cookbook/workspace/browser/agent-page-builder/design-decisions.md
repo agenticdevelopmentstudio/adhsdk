@@ -12,9 +12,12 @@ landmarks) made concrete; the spec allows tighter.
 
 **Decision**: To reproduce today's tree format line for line, a landmark
 carries its landmark role (main, navigation, banner, contentinfo,
-complementary, search, form, region) and nodes carry the legacy states
-(checked, disabled, expanded, selected, required) as allowlisted values
-from fixed vocabularies; a value outside the vocabulary is dropped.
+complementary, search, form, region, article) and nodes carry the legacy
+states (checked, disabled, expanded, selected, pressed, required) as
+allowlisted values from fixed vocabularies; a value outside the vocabulary
+is dropped. The walker sends them as the attributes `role` (on a landmark)
+and `states` (space-separated, on any node); the allowlist's JSON carries
+both vocabularies as `landmarkRoles` and `states`.
 **Rationale**: `snapshot-tool-contract-unchanged` needs the roles and
 states the legacy renderer prints; fixed vocabularies keep them from
 carrying page text. This is beyond the spec's attribute list and needs the
