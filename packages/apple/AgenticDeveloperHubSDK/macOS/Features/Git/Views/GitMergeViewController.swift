@@ -25,6 +25,9 @@ public enum GitMergeIntent: Equatable, Sendable {
 /// colouring lands; a later `show` drops an earlier one's colours. Used on the main thread.
 @MainActor
 public final class GitMergeViewController: NSViewController {
+    /// The largest working file the merge view opens; a larger one opens as its diff, so
+    /// laying out three panes never stalls the main thread on a huge file.
+    public static let maximumFileBytes = 1 << 20
 
     public weak var delegate: GitMergeViewDelegate?
 
@@ -215,6 +218,7 @@ public final class GitMergeViewController: NSViewController {
         positionLabel.accessibilityID("git.merge.position")
         let spacer = NSView()
         spacer.setContentHuggingPriority(.init(1), for: .horizontal)
+        spacer.accessibilityID("git.merge.spacer")
         for view in [previousButton, nextButton, positionLabel, oursButton, theirsButton, bothButton, baseButton,
                      spacer, cancelButton, saveButton] {
             controlsRow.addArrangedSubview(view)

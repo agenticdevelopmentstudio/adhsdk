@@ -63,6 +63,67 @@ struct GitRebaseEditorViewControllerTests {
         #expect(sha.accessibilityIdentifier() == "git.rebase.sha")
         let subject: NSTextField = try #require(cell(editor, "subject", row: 0))
         #expect(subject.accessibilityIdentifier() == "git.rebase.subject")
+        #expect(editor.moveUpButton.accessibilityIdentifier() == "git.rebase.moveUp")
+        #expect(editor.moveDownButton.accessibilityIdentifier() == "git.rebase.moveDown")
+        #expect(action.accessibilityIdentifier() == "git.rebase.actionCell")
+    }
+
+    @Test("Return in a reword's field types a newline and never finishes the editor")
+    func returnInRewordInsertsNewline() throws {
+        let editor = Self.editor()
+        var results: [GitRebasePlan?] = []
+        editor.onFinish = { results.append($0) }
+        editor.setAction(.reword, at: 0)
+        let field: GitRebaseMessageField = try #require(cell(editor, "subject", row: 0))
+        let textView = NSTextView()
+        textView.string = "subject"
+        textView.setSelectedRange(NSRange(location: 7, length: 0))
+        for command in [#selector(NSResponder.insertNewline(_:)), #selector(NSResponder.insertLineBreak(_:))] {
+            #expect(field.control(field, textView: textView, doCommandBy: command))
+        }
+        #expect(textView.string == "subject\n\n")
+        #expect(!field.control(field, textView: textView, doCommandBy: #selector(NSResponder.cancelOperation(_:))))
+        #expect(results.isEmpty)
+        #expect(field.lineBreakMode == .byWordWrapping)
+        #expect(field.cell?.wraps == true)
+        #expect(!field.usesSingleLineMode)
+    }
+
+    @Test("a reword's row is as tall as its message, and grows and shrinks with it")
+    func rewordRowHeight() {
+        let editor = Self.editor()
+        #expect(editor.height(ofRow: 0) == GitRebaseEditorViewController.rowHeight)
+        editor.setAction(.reword, at: 0)
+        let threeLines = editor.height(ofRow: 0)
+        #expect(threeLines > GitRebaseEditorViewController.rowHeight, "commit 0, a blank line, body 0")
+        editor.setMessage("one\ntwo\nthree\nfour\nfive", at: 0)
+        #expect(editor.height(ofRow: 0) > threeLines)
+        editor.setMessage("one", at: 0)
+        #expect(editor.height(ofRow: 0) == GitRebaseEditorViewController.rowHeight)
+        #expect(editor.height(ofRow: 1) == GitRebaseEditorViewController.rowHeight)
+    }
+
+    @Test("Move Up and Move Down move the selected row one place, disabled at the ends")
+    func moveButtons() {
+        let editor = Self.editor()
+        let ids = editor.plan.entries.map(\.commit)
+        #expect(!editor.moveUpButton.isEnabled)
+        #expect(!editor.moveDownButton.isEnabled)
+        editor.tableView.selectRowIndexes(IndexSet(integer: 0), byExtendingSelection: false)
+        #expect(!editor.moveUpButton.isEnabled)
+        #expect(editor.moveDownButton.isEnabled)
+        editor.moveDownButton.performClick(nil)
+        #expect(editor.plan.entries.map(\.commit) == [ids[1], ids[0], ids[2]])
+        #expect(editor.tableView.selectedRow == 1)
+        editor.moveDownButton.performClick(nil)
+        #expect(editor.plan.entries.map(\.commit) == [ids[1], ids[2], ids[0]])
+        #expect(!editor.moveDownButton.isEnabled)
+        editor.moveUpButton.performClick(nil)
+        editor.moveUpButton.performClick(nil)
+        #expect(editor.plan.entries.map(\.commit) == [ids[0], ids[1], ids[2]])
+        #expect(editor.tableView.selectedRow == 0)
+        #expect(!editor.moveUpButton.isEnabled)
+        #expect(editor.moveUpButton.keyEquivalentModifierMask == [.option, .command])
     }
 
     @Test("choosing an action in a row's pop-up updates the plan")

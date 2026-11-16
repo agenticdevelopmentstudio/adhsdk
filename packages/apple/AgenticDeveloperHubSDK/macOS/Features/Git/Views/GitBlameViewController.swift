@@ -9,37 +9,25 @@ import os
     func blame(_ blame: GitBlameViewController, didSelectCommit id: String)
 }
 
-/// A blame as one `LineViewerDataSource`: the file's lines, syntax coloured, with the
-/// short sha, the author's initials and the day of the commit in three gutter columns on
-/// the first line of each run of lines from one commit.
-@MainActor
-final class GitBlameLineModel: LineViewerDataSource {
-
+/// A blame's rows and their commits, worked out off the main thread (a blame of a large
+/// file is as many rows as it has lines): the file's lines, syntax coloured, with the short
+/// sha, the author's initials and the day of the commit in three gutter columns on the
+/// first line of each run of lines from one commit.
+struct GitBlameRows: Sendable {
     let rows: [LineViewerRow]
     /// Each row's commit, by row.
     let commitIDs: [String]
 
-    static let dayWidth = 10
-
-    /// The gutter's day, `yyyy-MM-dd` in the local time zone; one for every model.
-    private static let dayFormatter: DateFormatter = {
-        let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "en_US_POSIX")
-        formatter.timeZone = .current
-        formatter.dateFormat = "yyyy-MM-dd"
-        return formatter
-    }()
-
     init(blame: GitBlame, colours: [StyledLine]?) {
-        let formatter = Self.dayFormatter
         let firstLines = Set(blame.runs.map(\.finalLines.lowerBound))
         var rows: [LineViewerRow] = []
+        rows.reserveCapacity(blame.lines.count)
         for (index, line) in blame.lines.enumerated() {
             var gutter: [String?] = []
             if firstLines.contains(line.finalLine) {
                 let commit = blame.commits[line.commitID]
                 let initials = commit.map { PersonInitials.of(name: $0.author.name, fallback: $0.author.email) } ?? ""
-                let day = commit.map { formatter.string(from: $0.author.date) } ?? ""
+                let day = commit.map { Self.day(of: $0.author.date) } ?? ""
                 gutter = [String(line.commitID.prefix(8)), initials, day]
             }
             let runs = (colours.flatMap { index < $0.count ? $0[index].runs : nil } ?? []).map {
@@ -49,6 +37,32 @@ final class GitBlameLineModel: LineViewerDataSource {
         }
         self.rows = rows
         commitIDs = blame.lines.map(\.commitID)
+    }
+
+    /// The gutter's day, `yyyy-MM-dd` in the local time zone.
+    static func day(of date: Date) -> String {
+        let parts = Calendar(identifier: .gregorian).dateComponents(in: .current, from: date)
+        return String(format: "%04d-%02d-%02d", parts.year ?? 0, parts.month ?? 0, parts.day ?? 0)
+    }
+}
+
+/// A blame as one `LineViewerDataSource`, over rows `GitBlameRows` worked out.
+@MainActor
+final class GitBlameLineModel: LineViewerDataSource {
+
+    let rows: [LineViewerRow]
+    /// Each row's commit, by row.
+    let commitIDs: [String]
+
+    static let dayWidth = 10
+
+    init(_ content: GitBlameRows) {
+        rows = content.rows
+        commitIDs = content.commitIDs
+    }
+
+    convenience init(blame: GitBlame, colours: [StyledLine]?) {
+        self.init(GitBlameRows(blame: blame, colours: colours))
     }
 
     var gutterColumnCount: Int { 3 }
@@ -155,12 +169,17 @@ public final class GitBlameViewController: NSViewController {
                 Self.logger.error("Git blame failed: \(description, privacy: .public)")
                 self.errorLabel.show(error: error)
             case .success(let blame):
-                self.setModel(GitBlameLineModel(blame: blame, colours: nil))
+                // The rows and the text to colour are built off the main thread: one per line.
+                let plain = await Task.detached { GitBlameRows(blame: blame, colours: nil) }.value
+                guard generation == self.generation else { return }
+                self.setModel(GitBlameLineModel(plain))
                 guard let coloring, !blame.lines.isEmpty else { return }
-                let text = blame.lines.map(\.text).joined(separator: "\n")
-                let colours = await coloring.lines(for: Data(text.utf8), path: path)
+                let text = await Task.detached { Data(blame.lines.map(\.text).joined(separator: "\n").utf8) }.value
+                let colours = await coloring.lines(for: text, path: path)
                 guard generation == self.generation, let colours else { return }
-                self.setModel(GitBlameLineModel(blame: blame, colours: colours))
+                let coloured = await Task.detached { GitBlameRows(blame: blame, colours: colours) }.value
+                guard generation == self.generation else { return }
+                self.setModel(GitBlameLineModel(coloured))
             }
         }
     }

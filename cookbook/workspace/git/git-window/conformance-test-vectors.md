@@ -72,3 +72,4 @@
 | git-window-069 | worktrees | branch `side`; Check Out in New Worktree on `side`, the fields answered `side` and an absolute folder | `Branch` prefilled `side`; the worktree at that folder on `side`, no new branch |
 | git-window-070 | worktrees | a linked worktree with an untracked file; Remove…, confirmed twice; then the same with the second declined | two confirmations, the second `Remove worktree with uncommitted changes?`, both destructive; the worktree gone; declined, it stays and no failure |
 | git-window-071 | submodules | a clone whose submodule `lib` is uninitialized; Update on its row | `.updateSubmodules([lib], initialize: true)`; `lib` current, `lib/lib.txt` checked out |
+| git-window-072 | merge-view | a both-modified conflict whose file, markers kept, is padded past `GitMergeViewController.maximumFileBytes` | Open in Merge View shows the diff; no failure. |

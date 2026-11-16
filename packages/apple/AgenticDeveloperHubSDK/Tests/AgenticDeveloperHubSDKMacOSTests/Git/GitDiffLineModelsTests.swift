@@ -121,6 +121,18 @@ struct GitDiffLineModelsTests {
         #expect(off.allSatisfy { Self.emphasis($0).isEmpty })
     }
 
+    @Test("past the word-diff budget, rows keep their line backgrounds with no emphasis")
+    func emphasisFallsBackToLineLevel() {
+        let diff = Fixture.twoHunks()
+        let spent = GitDiffEmphasis(diff: diff, enabled: true, budget: GitWordDiff.Budget(cells: 0))
+        let rows = Self.rows(GitInlineDiffModel(diff: diff, oldLines: nil, newLines: nil, emphasis: spent))
+        let plain = Self.rows(GitInlineDiffModel(diff: diff, oldLines: nil, newLines: nil, wordHighlights: false))
+        #expect(rows.allSatisfy { Self.emphasis($0).isEmpty })
+        #expect(rows.map(\.background) == plain.map(\.background))
+        #expect(rows.map(\.text) == plain.map(\.text))
+        #expect(!GitDiffEmphasis(diff: diff, enabled: true).runs(inHunk: 0).isEmpty)
+    }
+
     @Test("syntax runs land on the matching old or new line number")
     func inlineSyntaxRuns() throws {
         let old = Self.styled(11, Self.red)

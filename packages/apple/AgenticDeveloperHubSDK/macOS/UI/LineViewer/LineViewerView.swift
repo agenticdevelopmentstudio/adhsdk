@@ -864,6 +864,14 @@ final class LineViewerView: NSView {
         setSelection(IndexSet())
     }
 
+    /// Selects `rows`, dropping any past the end or folded away.
+    func select(_ rows: IndexSet) {
+        var valid = rows.filteredIndexSet { $0 >= 0 && $0 < rowCount }
+        for fold in folds { valid.remove(integersIn: fold.hidden) }
+        anchorRow = valid.first
+        setSelection(valid)
+    }
+
     /// The visible data rows between two data rows, inclusive, skipping folded ones.
     private func rows(from anchor: Int, to row: Int) -> IndexSet {
         var result = IndexSet(integersIn: min(anchor, row)...max(anchor, row))

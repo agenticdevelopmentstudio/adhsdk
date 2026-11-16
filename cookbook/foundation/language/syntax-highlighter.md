@@ -149,13 +149,13 @@ The bundle's `console` output and skipped user and extension grammar files go to
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Language/Syntax/TextMateResources.swift` | confirmed (1.1.1) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Language/Syntax/GrammarSource.swift` | confirmed (1.1.1) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Language/Syntax/GrammarRegistry.swift` | confirmed (1.1.1) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Language/Syntax/LanguageResolver.swift` | confirmed (1.1.1) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Language/Syntax/SyntaxHighlighter.swift` | confirmed (1.1.1) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Language/Syntax/StyledLine.swift` | confirmed (1.1.1) |
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/GrammarContributionPoint.swift` | confirmed (1.1.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Language/Syntax/TextMateResources.swift` | confirmed (1.2.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Language/Syntax/GrammarSource.swift` | confirmed (1.2.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Language/Syntax/GrammarRegistry.swift` | confirmed (1.2.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Language/Syntax/LanguageResolver.swift` | confirmed (1.2.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Language/Syntax/SyntaxHighlighter.swift` | confirmed (1.2.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Language/Syntax/StyledLine.swift` | confirmed (1.2.1) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/GrammarContributionPoint.swift` | confirmed (1.2.1) |
 
 ## Design Decisions
 

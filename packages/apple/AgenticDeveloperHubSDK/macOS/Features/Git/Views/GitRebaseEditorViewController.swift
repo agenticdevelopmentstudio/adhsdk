@@ -3,10 +3,11 @@ import AgenticDeveloperHubSDKCore
 
 /// The git window's interactive rebase editor (recipe `workspace/git/git-rebase-editor`):
 /// a plan's entries, oldest at the top, each with its action, short sha and subject. Rows
-/// are dragged to reorder; a reword's subject becomes an editable field holding its
-/// message. Start Rebase is enabled only while the plan is valid, with the reason it is
-/// not as its tooltip. The editor runs nothing: `onFinish` gets the edited plan, or nil
-/// for Cancel. Used on the main thread.
+/// are dragged to reorder, or moved with Move Up and Move Down (⌥⌘↑, ⌥⌘↓); a reword's
+/// subject becomes a multi-line field holding its whole message, in a row tall enough to
+/// show it, where Return types a newline and never starts the rebase. Start Rebase is
+/// enabled only while the plan is valid, with the reason it is not as its tooltip. The
+/// editor runs nothing: `onFinish` gets the edited plan, or nil for Cancel. Used on the main thread.
 @MainActor
 public final class GitRebaseEditorViewController: NSViewController {
 
@@ -18,7 +19,10 @@ public final class GitRebaseEditorViewController: NSViewController {
     let tableView = ThemedTableView()
     let cancelButton = NSButton(title: "Cancel", target: nil, action: nil)
     let startButton = NSButton(title: "Start Rebase", target: nil, action: nil)
+    let moveUpButton = NSButton(title: "Move Up", target: nil, action: nil)
+    let moveDownButton = NSButton(title: "Move Down", target: nil, action: nil)
     private let scrollView = ThemedScrollView()
+    private lazy var measuringField = GitRebaseMessageField()
 
     /// The pasteboard type a dragged row carries: its index, meaningful only to this table.
     static let rowPasteboardType = NSPasteboard.PasteboardType("com.agenticdeveloperhub.git.rebase.row")
@@ -64,7 +68,7 @@ public final class GitRebaseEditorViewController: NSViewController {
             tableView.addTableColumn(tableColumn)
         }
         tableView.headerView = ThemedTableHeaderView()
-        tableView.rowHeight = 26
+        tableView.rowHeight = Self.rowHeight
         tableView.intercellSpacing = NSSize(width: 6, height: 2)
         tableView.allowsMultipleSelection = false
         tableView.allowsEmptySelection = true
@@ -81,7 +85,9 @@ public final class GitRebaseEditorViewController: NSViewController {
         scrollView.autohidesScrollers = true
 
         for (button, name, action) in [(cancelButton, "cancel", #selector(cancelPressed(_:))),
-                                       (startButton, "start", #selector(startPressed(_:)))] {
+                                       (startButton, "start", #selector(startPressed(_:))),
+                                       (moveUpButton, "moveUp", #selector(moveUpPressed(_:))),
+                                       (moveDownButton, "moveDown", #selector(moveDownPressed(_:)))] {
             button.target = self
             button.action = action
             button.bezelStyle = .push
@@ -89,9 +95,16 @@ public final class GitRebaseEditorViewController: NSViewController {
         }
         cancelButton.keyEquivalent = "\u{1b}"
         startButton.keyEquivalent = "\r"
+        // NSUpArrowFunctionKey and NSDownArrowFunctionKey.
+        moveUpButton.keyEquivalent = "\u{F700}"
+        moveDownButton.keyEquivalent = "\u{F701}"
+        for button in [moveUpButton, moveDownButton] {
+            button.keyEquivalentModifierMask = [.option, .command]
+        }
         let spacer = NSView()
         spacer.setContentHuggingPriority(.init(1), for: .horizontal)
-        let buttons = NSStackView(views: [spacer, cancelButton, startButton])
+        spacer.accessibilityID("git.rebase.spacer")
+        let buttons = NSStackView(views: [moveUpButton, moveDownButton, spacer, cancelButton, startButton])
         buttons.orientation = .horizontal
         buttons.spacing = 8
         buttons.accessibilityID("git.rebase.buttons")
@@ -114,6 +127,7 @@ public final class GitRebaseEditorViewController: NSViewController {
         view = root
         preferredContentSize = NSSize(width: 680, height: 380)
         updateStart()
+        updateMoveButtons()
     }
 
     // MARK: - Editing
@@ -133,11 +147,34 @@ public final class GitRebaseEditorViewController: NSViewController {
         updateStart()
     }
 
-    /// Sets the reword message of the entry at `row`.
+    /// Sets the reword message of the entry at `row`, growing or shrinking the row to show
+    /// all of its lines.
     func setMessage(_ message: String, at row: Int) {
         guard plan.entries.indices.contains(row) else { return }
+        let lines = Self.lineCount(plan.entries[row].message)
         plan.entries[row].message = message
+        if isViewLoaded, Self.lineCount(message) != lines {
+            tableView.noteHeightOfRows(withIndexesChanged: IndexSet(integer: row))
+        }
         updateStart()
+    }
+
+    /// The height of a row: one line, or a reword's whole message.
+    func height(ofRow row: Int) -> CGFloat {
+        guard plan.entries.indices.contains(row), plan.entries[row].action == .reword else {
+            return Self.rowHeight
+        }
+        // The theme sets the field's font, so a field of its own measures the line.
+        let font = measuringField.font ?? NSFont.systemFont(ofSize: NSFont.systemFontSize)
+        let lineHeight = NSLayoutManager().defaultLineHeight(for: font)
+        let lines = CGFloat(Self.lineCount(plan.entries[row].message))
+        return max(Self.rowHeight, ceil(lines * lineHeight) + 8)
+    }
+
+    static let rowHeight: CGFloat = 26
+
+    private static func lineCount(_ message: String?) -> Int {
+        max(1, (message ?? "").split(separator: "\n", omittingEmptySubsequences: false).count)
     }
 
     /// Moves the entry at `source` to sit above the row `destination` was before the move
@@ -152,8 +189,27 @@ public final class GitRebaseEditorViewController: NSViewController {
         if isViewLoaded {
             tableView.reloadData()
             tableView.selectRowIndexes(IndexSet(integer: target), byExtendingSelection: false)
+            tableView.scrollRowToVisible(target)
         }
         updateStart()
+        updateMoveButtons()
+    }
+
+    /// Moves the selected entry one row up (`offset` -1) or down (+1); nothing at an end.
+    func moveSelected(by offset: Int) {
+        let row = tableView.selectedRow
+        guard plan.entries.indices.contains(row), plan.entries.indices.contains(row + offset) else { return }
+        moveEntry(from: row, to: offset < 0 ? row - 1 : row + 2)
+    }
+
+    @objc private func moveUpPressed(_ sender: Any?) { moveSelected(by: -1) }
+
+    @objc private func moveDownPressed(_ sender: Any?) { moveSelected(by: 1) }
+
+    fileprivate func updateMoveButtons() {
+        let row = tableView.selectedRow
+        moveUpButton.isEnabled = row > 0 && row < plan.entries.count
+        moveDownButton.isEnabled = row >= 0 && row < plan.entries.count - 1
     }
 
     private func updateStart() {
@@ -227,32 +283,57 @@ extension GitRebaseEditorViewController: NSTableViewDelegate {
         let entry = plan.entries[row]
         switch column {
         case .action:
-            let cell = GitRebaseActionCellView()
+            let cell = reused(GitRebaseActionCellView.reuseIdentifier) { GitRebaseActionCellView() }
             cell.configure(entry.action) { [weak self] action in
                 guard let self, let row = self.row(of: entry.commit) else { return }
                 self.setAction(action, at: row)
             }
             return cell
         case .sha:
-            let label = ThemedLabel(role: .secondaryText, textRole: .code)
-            label.lineBreakMode = .byTruncatingTail
+            let label = reused(Self.shaIdentifier) { Self.label(role: .secondaryText, textRole: .code, id: "sha") }
             label.stringValue = String(entry.commit.prefix(8))
-            label.accessibilityID("git.rebase.sha")
             return label
         case .subject:
             guard entry.action == .reword else {
-                let label = ThemedLabel(role: .primaryText, textRole: .body)
-                label.lineBreakMode = .byTruncatingTail
+                let label = reused(Self.subjectIdentifier) {
+                    Self.label(role: .primaryText, textRole: .body, id: "subject")
+                }
                 label.stringValue = entry.subject
-                label.accessibilityID("git.rebase.subject")
                 return label
             }
-            let field = GitRebaseMessageField(message: entry.message ?? "") { [weak self] text in
+            let field = reused(GitRebaseMessageField.reuseIdentifier) { GitRebaseMessageField() }
+            field.configure(message: entry.message ?? "") { [weak self] text in
                 guard let self, let row = self.row(of: entry.commit) else { return }
                 self.setMessage(text, at: row)
             }
             return field
         }
+    }
+
+    public func tableView(_ tableView: NSTableView, heightOfRow row: Int) -> CGFloat {
+        height(ofRow: row)
+    }
+
+    public func tableViewSelectionDidChange(_ notification: Notification) {
+        updateMoveButtons()
+    }
+
+    private static let shaIdentifier = NSUserInterfaceItemIdentifier("git.rebase.shaCell")
+    private static let subjectIdentifier = NSUserInterfaceItemIdentifier("git.rebase.subjectCell")
+
+    /// The table's spare view for `identifier`, or a new one from `make` tagged with it.
+    private func reused<View: NSView>(_ identifier: NSUserInterfaceItemIdentifier, _ make: () -> View) -> View {
+        if let view = tableView.makeView(withIdentifier: identifier, owner: nil) as? View { return view }
+        let view = make()
+        view.identifier = identifier
+        return view
+    }
+
+    private static func label(role: ThemeRole, textRole: TextRole, id: String) -> ThemedLabel {
+        let label = ThemedLabel(role: role, textRole: textRole)
+        label.lineBreakMode = .byTruncatingTail
+        label.accessibilityID("git.rebase.\(id)")
+        return label
     }
 }
 
@@ -261,11 +342,13 @@ extension GitRebaseEditorViewController: NSTableViewDelegate {
 /// The action column's pop-up: the six actions by name.
 @MainActor
 final class GitRebaseActionCellView: NSTableCellView {
+    static let reuseIdentifier = NSUserInterfaceItemIdentifier("git.rebase.actionCell")
     let popUp = NSPopUpButton(frame: .zero, pullsDown: false)
     private var onChange: ((GitRebaseEntry.Action) -> Void)?
 
     init() {
         super.init(frame: .zero)
+        accessibilityID("git.rebase.actionCell")
         popUp.addItems(withTitles: GitRebaseEntry.Action.allCases.map(\.rawValue))
         popUp.controlSize = .small
         popUp.target = self
@@ -296,18 +379,20 @@ final class GitRebaseActionCellView: NSTableCellView {
     }
 }
 
-/// A reword's subject cell: an editable field holding the new message, reporting each change.
+/// A reword's subject cell: an editable, wrapping field holding the whole message, one
+/// line per line of it, reporting each change. Return types a newline here, so it never
+/// reaches the window's default button (Start Rebase).
 @MainActor
 final class GitRebaseMessageField: ThemedTextField, NSTextFieldDelegate {
-    private let onChange: (String) -> Void
+    static let reuseIdentifier = NSUserInterfaceItemIdentifier("git.rebase.messageCell")
+    private var onChange: ((String) -> Void)?
 
-    init(message: String, onChange: @escaping (String) -> Void) {
-        self.onChange = onChange
-        super.init(string: message)
-        lineBreakMode = .byTruncatingTail
+    init() {
+        super.init(string: "")
+        lineBreakMode = .byWordWrapping
         usesSingleLineMode = false
-        cell?.wraps = false
-        cell?.isScrollable = true
+        cell?.wraps = true
+        cell?.isScrollable = false
         setAccessibilityLabel("Message")
         accessibilityID("git.rebase.message")
         delegate = self
@@ -316,11 +401,25 @@ final class GitRebaseMessageField: ThemedTextField, NSTextFieldDelegate {
     @available(*, unavailable)
     required init?(coder: NSCoder) { fatalError("init(coder:) is not supported") }
 
+    func configure(message: String, onChange: @escaping (String) -> Void) {
+        self.onChange = nil
+        stringValue = message
+        self.onChange = onChange
+    }
+
     func controlTextDidChange(_ obj: Notification) {
-        onChange(stringValue)
+        onChange?(stringValue)
     }
 
     func controlTextDidEndEditing(_ obj: Notification) {
-        onChange(stringValue)
+        onChange?(stringValue)
+    }
+
+    /// Return and Enter insert a newline into the message instead of ending the edit.
+    func control(_ control: NSControl, textView: NSTextView, doCommandBy commandSelector: Selector) -> Bool {
+        guard commandSelector == #selector(NSResponder.insertNewline(_:))
+            || commandSelector == #selector(NSResponder.insertLineBreak(_:)) else { return false }
+        textView.insertNewlineIgnoringFieldEditor(nil)
+        return true
     }
 }

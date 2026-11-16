@@ -66,6 +66,7 @@ public final class GitFileHistoryViewController: NSViewController {
         scrollView.accessibilityID("git.fileHistory.scroll")
 
         let listPane = NSView()
+        listPane.accessibilityID("git.fileHistory.list")
         errorLabel.accessibilityID("git.fileHistory.error")
         errorLabel.isSelectable = true
         errorLabel.isHidden = true

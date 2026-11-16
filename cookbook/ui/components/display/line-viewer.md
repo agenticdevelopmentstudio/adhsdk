@@ -2,11 +2,11 @@
 id: 5f9e0c63-382d-4803-bd50-a8fb90ea9e4d
 title: "Line Viewer"
 type: ingredient
-version: 1.4.0
+version: 1.4.1
 status: review
 language: en
 created: 2026-11-13
-modified: 2026-11-15
+modified: 2026-11-16
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -44,7 +44,7 @@ A read-only, virtualised view of many lines of text: each row is a text line or 
 - **gutter-columns**: Gutter column `c` MUST be `gutterColumnWidth(c) + 2` advances of `0` wide (one advance of padding each side), columns laid out left to right. A value MUST be right-aligned in its column's content area, left-aligned when wider than it, and clipped to it: nothing a value draws may reach another column.
 - **pinned-gutter**: The gutter MUST stay at the visible left edge while the text scrolls horizontally under it (its x equals the clip view's horizontal origin) and scroll vertically with the rows. A click on the pinned gutter is a gutter click wherever the text is scrolled.
 - **folding**: With `foldsAtHeaders`, clicking a header row MUST hide the rows after it up to (not including) the next header or the end, and clicking it again MUST show them. Folding MUST remove hidden rows from the selection. A header click MUST NOT change the selection. Without `foldsAtHeaders` a header row selects like any row.
-- **selection**: A click MUST select the clicked row; shift-click MUST extend from the anchor row; command-click MUST toggle the row; dragging MUST extend from the anchor. Every change MUST call `lineViewer(_:didSelectRows:)` with data-source row indices. `selectedRows` is in data-source indices.
+- **selection**: A click MUST select the clicked row; shift-click MUST extend from the anchor row; command-click MUST toggle the row; dragging MUST extend from the anchor. Every change MUST call `lineViewer(_:didSelectRows:)` with data-source row indices. `selectedRows` is in data-source indices. `selectRows(_:)` MUST select the given data rows, dropping any past the end or folded away, set the anchor to the first, and call `lineViewer(_:didSelectRows:)` once when the selection changes, so a host can restore a selection after a reload.
 - **gutter-click**: A click inside gutter column `c` of row `r` MUST call `lineViewer(_:didClickGutterColumn: c, row: r)` and MUST NOT change the selection.
 - **copy**: Copy (Cmd-C, `copy(_:)`) MUST put the selected rows' `text`, in row order, joined by `\n` with no trailing newline, on the general pasteboard as a plain string; with nothing selected the menu item MUST be disabled and the pasteboard left alone.
 - **context-menu**: A right-click (`menu(for:)`) on a row MUST, when `menuProvider` is set, first select the clicked row (as a plain click, the anchor too) if it is not already in the selection, leaving a selection that holds it alone, then return `menuProvider(clickedRow, selectedRows)` in data-source indices; with no provider, or below the last row, it MUST return the view's default menu and leave the selection alone. The viewer knows nothing of what the menu does.
@@ -159,7 +159,7 @@ Not applicable: The viewer logs nothing.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/LineViewer/` | confirmed (1.4.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/LineViewer/` | confirmed (1.4.1) |
 
 ## Design Decisions
 
@@ -204,6 +204,7 @@ Not applicable: The viewer logs nothing.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.4.1 | 2026-11-16 | Mike Fullerton | Final review: word-emphasis budget, selection kept across reloads, non-ancestor rebase rows; reword field newlines, row heights, Move Up/Down; selectRows; merge view cap |
 | 1.4.0 | 2026-11-15 | Mike Fullerton | A right-click with a `menuProvider` set selects the clicked row when it is outside the selection and returns the provider's menu; `clearSelection()`; vectors 018-019 |
 | 1.3.0 | 2026-11-13 | Mike Fullerton | Long rows index their runs once and each frame touches only the runs under the slice or drawn glyphs; the cache limits are soft and the cache is trimmed back to them when a frame ends. |
 | 1.2.0 | 2026-11-13 | Mike Fullerton | Long ASCII rows in a column-true font are sliced by column with no layout; other long rows use a cache sized to twice the visible rows that never evicts a row of the current frame; a row's content MUST NOT change between reloadData() calls. |

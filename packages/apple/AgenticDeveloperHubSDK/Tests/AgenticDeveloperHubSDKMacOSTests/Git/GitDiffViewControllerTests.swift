@@ -423,6 +423,30 @@ struct GitDiffViewControllerTests {
         return (controller, delegate)
     }
 
+    @Test("a reload reading the same diff keeps the selection; one that changes the selected lines clears it")
+    func reloadKeepsSelection() async {
+        let source = GitViewsFakeContentSource()
+        source.diffs["unstaged"] = GitDiff(files: [Fixture.twoHunks()])
+        let controller = Self.controller(source)
+        controller.show(target: .unstaged(paths: ["a.swift"]), file: "a.swift")
+        await controller.loadTask?.value
+        let viewer = controller.inlineViewer
+        _ = Self.menu(viewer, select: 2...3, click: 2)
+        #expect(viewer.selectedRows == IndexSet(2...3))
+        let rows = Self.texts(viewer.dataSource)
+
+        controller.reload()
+        await controller.loadTask?.value
+        #expect(Self.texts(viewer.dataSource) == rows)
+        #expect(viewer.selectedRows == IndexSet(2...3), "the same diff read again keeps the selection")
+
+        source.diffs["unstaged"] = Self.oneLine("a.swift", "other")
+        controller.reload()
+        await controller.loadTask?.value
+        #expect(Self.texts(viewer.dataSource) != rows)
+        #expect(viewer.selectedRows.isEmpty, "no stale row stays selected")
+    }
+
     @Test("an unstaged diff offers stage and discard of the hunk and the selected lines")
     func unstagedMenu() async {
         let (controller, _) = await Self.loaded(.unstaged(paths: ["a.swift"]))

@@ -77,6 +77,12 @@ public final class GitDiffViewController: NSViewController {
     /// defaults: ignoring whitespace gives hunks git cannot apply against the real files.
     private var fileDiffOptions: GitDiffOptions?
     private var colouredSides: (old: [StyledLine]?, new: [StyledLine]?)?
+    /// The word highlighting last worked out, reused while the diff and the toggle stay the
+    /// same, so colouring a diff in does not run its word diff a second time.
+    private var emphasis: GitDiffEmphasis?
+    /// The target and file the viewers' rows were last built for; a selection is kept
+    /// across a rebuild only for the same one.
+    private var renderedRequest: (target: GitDiffTarget, file: String)?
     /// The viewers hold their data sources weakly; these keep them alive.
     private var inlineModel: GitInlineDiffModel?
     private var sideModels: (left: GitDiffSideModel, right: GitDiffSideModel)?
@@ -175,6 +181,7 @@ public final class GitDiffViewController: NSViewController {
         request = nil
         fileDiff = nil
         colouredSides = nil
+        emphasis = nil
         errorLabel.show(error: nil)
         updateButtons()
         render()
@@ -207,11 +214,17 @@ public final class GitDiffViewController: NSViewController {
                 return
             case .success(let diff):
                 let fileDiff = Self.file(request.file, in: diff)
+                // A reload that read the same diff keeps its rows (and their colours) until
+                // the recolouring lands, rather than building them uncoloured first.
+                let unchanged = fileDiff != nil && fileDiff == self.fileDiff && options == self.fileDiffOptions
+                    && self.fileDiffRequest.map { $0.target == request.target && $0.file == request.file } == true
                 self.fileDiff = fileDiff
                 self.fileDiffRequest = request
                 self.fileDiffOptions = options
-                self.colouredSides = nil
-                self.render()
+                if !unchanged {
+                    self.colouredSides = nil
+                    self.render()
+                }
                 guard let fileDiff, let coloring, !fileDiff.isBinary else { return }
                 let sides = await coloring.sides(of: fileDiff, target: request.target, source: source)
                 guard generation == self.generation else { return }
@@ -225,27 +238,69 @@ public final class GitDiffViewController: NSViewController {
         diff.files.first { $0.newPath == path } ?? diff.files.first { $0.oldPath == path }
     }
 
-    /// Rebuilds the shown layout's rows from the diff and colours already read.
+    /// Rebuilds the shown layout's rows from the diff and colours already read. A viewer's
+    /// selection survives when every selected row shows the same hunk line, with the same
+    /// text, afterwards; otherwise it is cleared, so no stale row is ever selected.
     private func render() {
         guard isViewLoaded else { return }
         let words = settings.get(UserSettings.gitDiffWordHighlight)
         let sides = colouredSides
+        let viewers = [inlineViewer, leftViewer, rightViewer]
+        let current = fileDiff == nil ? nil : fileDiffRequest
+        let sameFile = current != nil && renderedRequest?.target == current?.target
+            && renderedRequest?.file == current?.file
+        let before = viewers.map { sameFile ? selectedLineRows(in: $0) : [:] }
+        renderedRequest = current
         inlineModel = nil
         sideModels = nil
         if let fileDiff {
+            let emphasis = emphasis(for: fileDiff, enabled: words)
             switch layout {
             case .inline:
                 inlineModel = GitInlineDiffModel(diff: fileDiff, oldLines: sides?.old, newLines: sides?.new,
-                                                 wordHighlights: words)
+                                                 emphasis: emphasis)
             case .sideBySide:
                 sideModels = GitSideBySideDiffModel.make(diff: fileDiff, oldLines: sides?.old,
-                                                         newLines: sides?.new, wordHighlights: words)
+                                                         newLines: sides?.new, emphasis: emphasis)
             }
         }
         inlineViewer.dataSource = inlineModel
         leftViewer.dataSource = sideModels?.left
         rightViewer.dataSource = sideModels?.right
-        for viewer in [inlineViewer, leftViewer, rightViewer] { viewer.reloadData() }
+        for (viewer, selected) in zip(viewers, before) {
+            viewer.reloadData()
+            guard !selected.isEmpty, selectedLineRows(in: viewer, rows: IndexSet(selected.keys)) == selected else {
+                continue
+            }
+            viewer.selectRows(IndexSet(selected.keys))
+        }
+    }
+
+    /// What `viewer`'s selected rows (or `rows`) show, by row: each one's line ref and
+    /// text. A row past the end is left out, so the comparison after a reload fails.
+    private func selectedLineRows(in viewer: LineViewerViewController,
+                                  rows: IndexSet? = nil) -> [Int: SelectedLine] {
+        let refs = lineRefs(for: viewer)
+        guard let source = viewer.dataSource else { return [:] }
+        var result: [Int: SelectedLine] = [:]
+        for row in rows ?? viewer.selectedRows where refs.indices.contains(row) && row < source.rowCount {
+            result[row] = SelectedLine(ref: refs[row], text: source.row(at: row).text)
+        }
+        return result
+    }
+
+    private struct SelectedLine: Equatable {
+        let ref: GitDiffLineRef?
+        let text: String
+    }
+
+    /// The cached word highlighting when it was worked out for `fileDiff` and `enabled`,
+    /// else a fresh one, which becomes the cache.
+    private func emphasis(for fileDiff: GitFileDiff, enabled: Bool) -> GitDiffEmphasis {
+        if let emphasis, emphasis.matches(fileDiff, enabled: enabled) { return emphasis }
+        let fresh = GitDiffEmphasis(diff: fileDiff, enabled: enabled)
+        emphasis = fresh
+        return fresh
     }
 
     // MARK: - Controls
@@ -284,6 +339,7 @@ public final class GitDiffViewController: NSViewController {
 
         let spacer = NSView()
         spacer.setContentHuggingPriority(.init(1), for: .horizontal)
+        spacer.accessibilityID("git.diff.spacer")
         for view in [layoutControl, ignoreWhitespaceButton, wordHighlightButton, spacer, blameButton, historyButton] {
             controlsRow.addArrangedSubview(view)
         }

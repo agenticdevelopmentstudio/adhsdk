@@ -75,6 +75,13 @@ public final class LineViewerViewController: NSViewController {
         documentView.reload()
     }
 
+    /// Selects data rows `rows` (any past the end or folded away are dropped), telling the
+    /// delegate when the selection changes.
+    public func selectRows(_ rows: IndexSet) {
+        loadViewIfNeeded()
+        documentView.select(rows)
+    }
+
     /// Empties the selection, telling the delegate when it changes.
     public func clearSelection() {
         loadViewIfNeeded()

@@ -584,7 +584,8 @@ struct GitHistoryViewControllerTests {
         history.select(commitID: Self.sha("c000"))
         let menu = try #require(history.contextMenu(forRow: 2))
         let reset = try #require(menu.items.first { $0.title == "Reset Current Branch to Here" }?.submenu)
-        for title in ["Checkout", "New Branch…", "New Tag…", "Cherry-pick", "Revert", "Interactive Rebase from Here…"] {
+        let titles = ["Checkout", "New Branch…", "New Tag…", "Cherry-pick", "Revert", "Interactive Rebase from Here…"]
+        for title in titles {
             try fire(menu.items.first { $0.title == title })
         }
         for title in ["Soft", "Mixed", "Hard…"] {

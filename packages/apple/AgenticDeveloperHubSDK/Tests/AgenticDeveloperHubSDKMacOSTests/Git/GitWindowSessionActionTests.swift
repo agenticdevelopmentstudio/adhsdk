@@ -1355,6 +1355,24 @@ struct GitWindowSessionActionTests {
         #expect(presenter.failures.isEmpty)
     }
 
+    @Test("a conflicted file over the merge view's cap shows its diff, markers and all")
+    func oversizedConflictShowsTheDiff() async throws {
+        let repository = try await GitTestRepository.make(prefix: "git-actions")
+        defer { repository.tearDown() }
+        try await bothModifiedConflict(repository)
+        let marked = try String(contentsOf: repository.url("f.txt"), encoding: .utf8)
+        #expect(GitConflictDocument.parse(marked) != nil)
+        let padding = String(repeating: "padding line\n", count: GitMergeViewController.maximumFileBytes / 13 + 1)
+        try repository.write(marked + padding, to: "f.txt")
+        let presenter = StubPresenter()
+        let (_, session) = await makeSession(repository, presenter: presenter)
+
+        await act(session, .workingCopy(.openMerge("f.txt")))
+        #expect(session.bottom.content === session.diff)
+        #expect(session.bottom.content !== session.merge)
+        #expect(presenter.failures.isEmpty)
+    }
+
     @Test("Mark Resolved stages the file as it stands, asking nothing")
     func markResolvedStages() async throws {
         let repository = try await GitTestRepository.make(prefix: "git-actions")

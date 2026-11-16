@@ -4,6 +4,34 @@ import Testing
 
 @Suite("GitWordDiff")
 struct GitWordDiffTests {
+    @Test("within a budget: the same ranges as unbudgeted, with the table's cells spent")
+    func budgetedPairMatchesUnbudgeted() throws {
+        var budget = GitWordDiff.Budget()
+        let ranges = try #require(GitWordDiff.changedRanges(old: "let x = 1", new: "let y = 1", budget: &budget))
+        let plain = GitWordDiff.changedRanges(old: "let x = 1", new: "let y = 1")
+        #expect(ranges.old == plain.old)
+        #expect(ranges.new == plain.new)
+        #expect(budget.remainingCells < GitWordDiff.Budget.maximumDiffCells)
+    }
+
+    @Test("a line over the length limit, a pair over the table limit, or a spent budget: no ranges")
+    func overBudgetIsNil() {
+        var budget = GitWordDiff.Budget()
+        let long = String(repeating: "x", count: GitWordDiff.Budget.maximumLineLength + 1)
+        #expect(GitWordDiff.changedRanges(old: long, new: "y", budget: &budget) == nil)
+        #expect(budget.remainingCells == GitWordDiff.Budget.maximumDiffCells)
+
+        // About 400 tokens a side, under the length limit: a table of some 160,000 cells.
+        let old = (0..<200).map { "a\($0)" }.joined(separator: " ")
+        let new = (0..<200).map { "b\($0)" }.joined(separator: " ")
+        #expect(old.utf16.count <= GitWordDiff.Budget.maximumLineLength)
+        #expect(GitWordDiff.changedRanges(old: old, new: new, budget: &budget) == nil)
+        #expect(budget.remainingCells == GitWordDiff.Budget.maximumDiffCells)
+
+        var spent = GitWordDiff.Budget(cells: 1)
+        #expect(GitWordDiff.changedRanges(old: "one two", new: "three four", budget: &spent) == nil)
+        #expect(spent.remainingCells == 1)
+    }
     @Test("only the changed word is marked, in UTF-16 offsets")
     func changedRangesMarksOnlyTheChangedWord() {
         let changed = GitWordDiff.changedRanges(old: "let x = 1", new: "let y = 1")

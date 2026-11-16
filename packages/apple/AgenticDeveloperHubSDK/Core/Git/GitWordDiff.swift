@@ -14,7 +14,56 @@ public enum GitWordDiff {
         if old == new { return ([], []) }
         let oldTokens = tokens(of: old)
         let newTokens = tokens(of: new)
-        // Tokens are compared as interned integers, which keeps the LCS table loop cheap.
+        let (oldIDs, newIDs) = interned(oldTokens, newTokens)
+        let (oldChanged, newChanged) = changedTokens(oldIDs, newIDs)
+        return (ranges(oldTokens, changed: oldChanged), ranges(newTokens, changed: newChanged))
+    }
+
+    /// What one diff may spend on word highlighting, so a diff of long or many changed
+    /// lines builds its rows in bounded time on the main thread. A pair over a limit gets
+    /// no word ranges at all: the line-level backgrounds alone, never a guess.
+    public struct Budget: Sendable {
+        /// A line longer than this (UTF-16 units) is never word-diffed.
+        public static let maximumLineLength = 2_000
+        /// One pair's LCS table (after the common prefix and suffix) may not exceed this.
+        public static let maximumPairCells = 100_000
+        /// The whole diff's LCS tables may not exceed this together.
+        public static let maximumDiffCells = 2_000_000
+
+        /// The cells still to spend; a pair that needs more gets no ranges.
+        public private(set) var remainingCells: Int
+
+        public init(cells: Int = Budget.maximumDiffCells) {
+            remainingCells = cells
+        }
+
+        mutating func spend(_ cells: Int) {
+            remainingCells -= cells
+        }
+    }
+
+    /// `changedRanges(old:new:)` within `budget`: nil, spending nothing, when either line
+    /// is longer than `Budget.maximumLineLength` or the pair's table would exceed
+    /// `Budget.maximumPairCells` or what is left of the budget. Otherwise the ranges, with
+    /// the table's cells taken from the budget.
+    public static func changedRanges(old: String, new: String,
+                                     budget: inout Budget) -> (old: [NSRange], new: [NSRange])? {
+        if old == new { return ([], []) }
+        guard old.utf16.count <= Budget.maximumLineLength, new.utf16.count <= Budget.maximumLineLength else {
+            return nil
+        }
+        let oldTokens = tokens(of: old)
+        let newTokens = tokens(of: new)
+        let (oldIDs, newIDs) = interned(oldTokens, newTokens)
+        let limit = min(Budget.maximumPairCells, max(budget.remainingCells, 0))
+        let result = lcs(oldIDs, newIDs, maximumCells: limit)
+        guard result.fitted else { return nil }
+        budget.spend(result.cells)
+        return (ranges(oldTokens, changed: result.old), ranges(newTokens, changed: result.new))
+    }
+
+    /// Both lines' tokens as interned integers, which keeps the LCS table loop cheap.
+    private static func interned(_ old: [Token], _ new: [Token]) -> ([Int], [Int]) {
         var ids: [Substring: Int] = [:]
         func intern(_ token: Token) -> Int {
             if let id = ids[token.text] { return id }
@@ -22,8 +71,8 @@ public enum GitWordDiff {
             ids[token.text] = id
             return id
         }
-        let (oldChanged, newChanged) = changedTokens(oldTokens.map(intern), newTokens.map(intern))
-        return (ranges(oldTokens, changed: oldChanged), ranges(newTokens, changed: newChanged))
+        let oldIDs = old.map(intern)
+        return (oldIDs, new.map(intern))
     }
 
     /// Pairs the removed and added lines of each change block in a hunk, in order
@@ -100,6 +149,14 @@ public enum GitWordDiff {
 
     /// Flags, per token, whether it is outside the longest common subsequence.
     static func changedTokens(_ old: [Int], _ new: [Int]) -> ([Bool], [Bool]) {
+        let result = lcs(old, new, maximumCells: maximumTableCells)
+        return (result.old, result.new)
+    }
+
+    /// The LCS flags, the table's cell count, and whether it fitted in `maximumCells`.
+    /// When it did not, the trimmed middle is left marked changed as a whole.
+    private static func lcs(_ old: [Int], _ new: [Int], maximumCells: Int)
+        -> (old: [Bool], new: [Bool], cells: Int, fitted: Bool) {
         var oldChanged = Array(repeating: true, count: old.count)
         var newChanged = Array(repeating: true, count: new.count)
         var prefix = 0
@@ -119,7 +176,8 @@ public enum GitWordDiff {
         let newMiddle = Array(new[prefix..<(new.count - suffix)])
         let rows = oldMiddle.count
         let columns = newMiddle.count
-        guard rows > 0, columns > 0, rows * columns <= maximumTableCells else { return (oldChanged, newChanged) }
+        guard rows > 0, columns > 0 else { return (oldChanged, newChanged, 0, true) }
+        guard rows * columns <= maximumCells else { return (oldChanged, newChanged, 0, false) }
 
         // table[row * width + column] = LCS length of oldMiddle[row...] and newMiddle[column...].
         let width = columns + 1
@@ -145,7 +203,7 @@ public enum GitWordDiff {
                 column += 1
             }
         }
-        return (oldChanged, newChanged)
+        return (oldChanged, newChanged, rows * columns, true)
     }
 
     /// Merges the ranges of adjacent changed tokens.

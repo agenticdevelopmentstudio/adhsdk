@@ -30,7 +30,14 @@ public final class GitInlineDiffModel: LineViewerDataSource {
     public let lineRefs: [GitDiffLineRef?]
     private let numberWidth: Int
 
-    public init(diff: GitFileDiff, oldLines: [StyledLine]?, newLines: [StyledLine]?, wordHighlights: Bool) {
+    public convenience init(diff: GitFileDiff, oldLines: [StyledLine]?, newLines: [StyledLine]?,
+                            wordHighlights: Bool) {
+        self.init(diff: diff, oldLines: oldLines, newLines: newLines,
+                  emphasis: GitDiffEmphasis(diff: diff, enabled: wordHighlights))
+    }
+
+    /// The rows with `emphasis` already worked out, so recolouring does not redo the word diff.
+    public init(diff: GitFileDiff, oldLines: [StyledLine]?, newLines: [StyledLine]?, emphasis: GitDiffEmphasis) {
         numberWidth = GitDiffRows.numberWidth(diff)
         guard !diff.isBinary else {
             rows = [GitDiffRows.binary]
@@ -42,7 +49,7 @@ public final class GitInlineDiffModel: LineViewerDataSource {
         for (hunkIndex, hunk) in diff.hunks.enumerated() {
             rows.append(GitDiffRows.header(hunk))
             refs.append(GitDiffLineRef(hunk: hunkIndex, line: nil))
-            let emphasis = GitDiffRows.emphasis(in: hunk, enabled: wordHighlights)
+            let emphasis = emphasis.runs(inHunk: hunkIndex)
             for (index, line) in hunk.lines.enumerated() {
                 refs.append(GitDiffLineRef(hunk: hunkIndex, line: index))
                 let syntax: [LineViewerRun]
@@ -62,7 +69,7 @@ public final class GitInlineDiffModel: LineViewerDataSource {
                     rows.append(GitDiffRows.noNewline(line))
                     continue
                 }
-                rows.append(LineViewerRow(text: line.text, runs: syntax + (emphasis[index] ?? []),
+                rows.append(LineViewerRow(text: line.displayText, runs: syntax + (emphasis[index] ?? []),
                                           background: background,
                                           gutter: [line.oldNumber.map(String.init), line.newNumber.map(String.init)]))
             }
@@ -109,6 +116,14 @@ public enum GitSideBySideDiffModel {
     @MainActor
     public static func make(diff: GitFileDiff, oldLines: [StyledLine]?, newLines: [StyledLine]?,
                             wordHighlights: Bool) -> (left: GitDiffSideModel, right: GitDiffSideModel) {
+        make(diff: diff, oldLines: oldLines, newLines: newLines,
+             emphasis: GitDiffEmphasis(diff: diff, enabled: wordHighlights))
+    }
+
+    /// The two sides with `emphasis` already worked out.
+    @MainActor
+    public static func make(diff: GitFileDiff, oldLines: [StyledLine]?, newLines: [StyledLine]?,
+                            emphasis: GitDiffEmphasis) -> (left: GitDiffSideModel, right: GitDiffSideModel) {
         let width = GitDiffRows.numberWidth(diff)
         guard !diff.isBinary else {
             return (GitDiffSideModel(rows: [GitDiffRows.binary], lineRefs: [nil], numberWidth: width),
@@ -129,7 +144,7 @@ public enum GitSideBySideDiffModel {
             let header = GitDiffRows.header(hunk)
             left.append(header, GitDiffLineRef(hunk: hunkIndex, line: nil))
             right.append(header, GitDiffLineRef(hunk: hunkIndex, line: nil))
-            let emphasis = GitDiffRows.emphasis(in: hunk, enabled: wordHighlights)
+            let emphasis = emphasis.runs(inHunk: hunkIndex)
             var previous: GitDiffLine.Kind?
             for (index, line) in hunk.lines.enumerated() {
                 let marks = emphasis[index] ?? []
@@ -206,7 +221,7 @@ enum GitDiffRows {
 
     static func sideRow(_ line: GitDiffLine, number: Int?, lines: [StyledLine]?, marks: [LineViewerRun],
                         background: LineViewerBackground) -> LineViewerRow {
-        LineViewerRow(text: line.text, runs: (syntax(lines, number) ?? []) + marks, background: background,
+        LineViewerRow(text: line.displayText, runs: (syntax(lines, number) ?? []) + marks, background: background,
                       gutter: [number.map(String.init)])
     }
 
@@ -219,23 +234,52 @@ enum GitDiffRows {
         }
     }
 
-    /// The emphasis runs of each paired removed and added line, by index into `hunk.lines`;
-    /// empty when word highlighting is off.
-    static func emphasis(in hunk: GitDiffHunk, enabled: Bool) -> [Int: [LineViewerRun]] {
-        guard enabled else { return [:] }
-        var result: [Int: [LineViewerRun]] = [:]
-        for pair in GitWordDiff.pairs(in: hunk) {
-            let ranges = GitWordDiff.changedRanges(old: hunk.lines[pair.removed].text,
-                                                   new: hunk.lines[pair.added].text)
-            result[pair.removed] = ranges.old.map { LineViewerRun(range: $0, highlight: .emphasis) }
-            result[pair.added] = ranges.new.map { LineViewerRun(range: $0, highlight: .emphasis) }
-        }
-        return result
-    }
-
     /// Wide enough for the diff's largest line number, and never under 3.
     static func numberWidth(_ diff: GitFileDiff) -> Int {
         let largest = diff.hunks.flatMap(\.lines).reduce(0) { max($0, $1.oldNumber ?? 0, $1.newNumber ?? 0) }
         return max(3, String(largest).count)
+    }
+}
+
+/// The word-highlight runs of a whole file diff: per hunk, the `.emphasis` runs of each
+/// paired removed and added line by index into the hunk's `lines`. Worked out once per
+/// diff and toggle within one `GitWordDiff.Budget`, so a long line or a diff of many pairs
+/// falls back to line-level highlighting instead of stalling the main thread.
+public struct GitDiffEmphasis: Sendable {
+    private let hunks: [[Int: [LineViewerRun]]]
+    /// The diff this was worked out for, and whether highlighting was on.
+    let diff: GitFileDiff
+    let enabled: Bool
+
+    /// Nothing when `enabled` is false. `budget` is what the whole diff may spend.
+    public init(diff: GitFileDiff, enabled: Bool, budget: GitWordDiff.Budget = GitWordDiff.Budget()) {
+        self.diff = diff
+        self.enabled = enabled
+        guard enabled else {
+            hunks = []
+            return
+        }
+        var budget = budget
+        hunks = diff.hunks.map { hunk in
+            var result: [Int: [LineViewerRun]] = [:]
+            for pair in GitWordDiff.pairs(in: hunk) {
+                guard let ranges = GitWordDiff.changedRanges(old: hunk.lines[pair.removed].displayText,
+                                                             new: hunk.lines[pair.added].displayText,
+                                                             budget: &budget) else { continue }
+                result[pair.removed] = ranges.old.map { LineViewerRun(range: $0, highlight: .emphasis) }
+                result[pair.added] = ranges.new.map { LineViewerRun(range: $0, highlight: .emphasis) }
+            }
+            return result
+        }
+    }
+
+    /// Hunk `index`'s runs by line index; empty past the end or when highlighting is off.
+    public func runs(inHunk index: Int) -> [Int: [LineViewerRun]] {
+        hunks.indices.contains(index) ? hunks[index] : [:]
+    }
+
+    /// Whether this was worked out for `diff` with highlighting `enabled`.
+    func matches(_ diff: GitFileDiff, enabled: Bool) -> Bool {
+        self.enabled == enabled && self.diff == diff
     }
 }

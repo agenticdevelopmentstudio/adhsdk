@@ -131,18 +131,25 @@ extension GitWindowSession {
         if !removed.isEmpty { await execute(.removePaths(paths: removed)) }
     }
 
-    /// Reads the working file and shows it in the merge view; a file that is not UTF-8 or
-    /// holds no conflict the parser accepts shows its diff instead.
+    /// Reads the working file and shows it in the merge view; a file larger than
+    /// `GitMergeViewController.maximumFileBytes`, not UTF-8, or holding no conflict the
+    /// parser accepts shows its diff instead. The file is decoded and parsed off the main
+    /// thread.
     private func openMerge(_ path: String) async {
         let data: Data?
         do {
-            data = try await whileGitRuns { try await model.contents(path: path, at: nil, maximumBytes: nil) }
+            data = try await whileGitRuns {
+                try await model.contents(path: path, at: nil, maximumBytes: GitMergeViewController.maximumFileBytes)
+            }
         } catch {
             showFailure(title: "Open failed", error: error)
             return
         }
-        guard let data, let text = String(data: data, encoding: .utf8),
-              let document = GitConflictDocument.parse(text) else {
+        let parsed = await Task.detached { () -> GitConflictDocument? in
+            guard let data, let text = String(data: data, encoding: .utf8) else { return nil }
+            return GitConflictDocument.parse(text)
+        }.value
+        guard let document = parsed else {
             showDiff(target: .unstaged(paths: [path]), file: path)
             return
         }

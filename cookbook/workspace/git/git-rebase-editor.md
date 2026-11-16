@@ -2,7 +2,7 @@
 id: 241d5e8b-3395-4093-ad77-1e138b7fe3a1
 title: "Git Rebase Editor"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-16
@@ -38,14 +38,15 @@ The git window's interactive rebase editor (`GitRebaseEditorViewController`): on
 ### Rows
 
 - **rebase-rows**: The table MUST show one row per plan entry in the plan's order, oldest at the top, in three columns: `action`, a pop-up of the six actions by name (`pick`, `reword`, `edit`, `squash`, `fixup`, `drop`) with the entry's selected; `sha`, the commit's first 8 characters; `subject`, the entry's subject.
-- **rebase-reword-field**: For a `reword` entry the subject cell MUST be an editable text field holding the entry's message (its whole message, body included), and every keystroke and the end of editing MUST set that message in `plan`. Every other action shows the subject as a label; the message is not shown for them.
+- **rebase-reword-field**: For a `reword` entry the subject cell MUST be an editable text field holding the entry's message (its whole message, body included), and every keystroke and the end of editing MUST set that message in `plan`. The field MUST wrap and show every line of the message, and the row MUST be as tall as the message's lines, growing and shrinking as lines are added or removed. Return and Enter in the field MUST insert a newline into the message and never end the edit, so they never reach `Start Rebase`. Every other action shows the subject as a label; the message is not shown for them.
 - **rebase-action-change**: Choosing an action in a row's pop-up MUST set that entry's action in `plan` and redraw the row. Switching to `reword` an entry with no message MUST fill the message with its subject, so the field never starts empty.
 - **rebase-reorder**: Rows MUST be draggable to a new place, drop-above as the table names it: the entry moves to sit above the row it was dropped on (after the last for the end), and the moved row is selected. A drop onto its own place moves nothing. The drag MUST carry the row's index on a pasteboard type local to the table (`com.agenticdeveloperhub.git.rebase.row`), and the table MUST accept only drags it started.
+- **rebase-move-buttons**: `Move Up` (`git.rebase.moveUp`, ⌥⌘↑) and `Move Down` (`git.rebase.moveDown`, ⌥⌘↓) MUST move the selected row one place up or down, as a drop would, keeping it selected. Each MUST be disabled while there is no selection or the selected row is already at that end, so reordering never needs a drag.
 
 ### Buttons
 
 - **rebase-start-enablement**: `Start Rebase` MUST be enabled exactly while `plan.validationError` is nil, re-checked after every change, and carry that reason as its tooltip while it is not (no tooltip otherwise). The reason is never shown as inline text.
-- **rebase-finish**: `Start Rebase` MUST end any field editing and call `onFinish` with `plan`; `Cancel` MUST call `onFinish` with nil. Either clears `onFinish` first, so it is called at most once. Return is Start's key equivalent and Escape Cancel's.
+- **rebase-finish**: `Start Rebase` MUST end any field editing and call `onFinish` with `plan`; `Cancel` MUST call `onFinish` with nil. Either clears `onFinish` first, so it is called at most once. Return is Start's key equivalent and Escape Cancel's, except inside a reword's field, which takes Return as a newline (**rebase-reword-field**).
 - **rebase-runs-nothing**: The editor MUST NOT run git; running the plan is the caller's.
 - **rebase-ui-thread**: The editor MUST be used on the UI thread.
 ## Appearance
@@ -75,6 +76,9 @@ The fixture is a plan of three entries `commit 0`, `commit 1`, `commit 2`, all p
 | git-rebase-editor-008 | rebase-start-enablement | reword row 1; message `   `; then `fine` | enabled; disabled with the reason; enabled |
 | git-rebase-editor-009 | rebase-finish | Cancel, twice | `onFinish(nil)` once |
 | git-rebase-editor-010 | rebase-finish | fixup row 0 and Start; then pick row 0, drop row 2, move 1 to 0, Start | nothing; then `onFinish` once with the plan, actions `pick`, `pick`, `drop` |
+| git-rebase-editor-011 | rebase-reword-field, rebase-finish | reword row 0; `insertNewline:` then `insertLineBreak:` in its field at the end of `subject` | both handled; the text is `subject\n\n`; `onFinish` not called; `cancelOperation:` not handled. |
+| git-rebase-editor-012 | rebase-reword-field | reword row 0 (`commit 0\n\nbody 0`); then five lines; then `one` | taller than a plain row; taller still; a plain row again. |
+| git-rebase-editor-013 | rebase-move-buttons | nothing selected; select row 0; Move Down twice; Move Up twice | both disabled; Up disabled; order 1 0 2 then 1 2 0 with Down disabled; order 0 1 2, row 0 selected, Up disabled. |
 ## Edge Cases
 
 - **Null / empty input**: an empty plan shows no rows and Start disabled (`validationError` reports it); the window never builds one, since the plan verb refuses an empty range.
@@ -120,8 +124,8 @@ The editor logs nothing.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitRebaseEditorViewController.swift` | confirmed (1.0.0) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Window/GitActionPresenting.swift` | confirmed (1.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitRebaseEditorViewController.swift` | confirmed (1.0.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Window/GitActionPresenting.swift` | confirmed (1.0.1) |
 
 ## Design Decisions
 
@@ -152,4 +156,5 @@ The editor logs nothing.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-16 | Mike Fullerton | Final review: word-emphasis budget, selection kept across reloads, non-ancestor rebase rows; reword field newlines, row heights, Move Up/Down; selectRows; merge view cap |
 | 1.0.0 | 2026-11-16 | Mike Fullerton | Initial creation: action pop-ups, drag to reorder, a reword's message in place, Start enabled only for a valid plan with the reason as tooltip, Cancel; vectors 001-010 |
