@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import type { ClientAuthPolicy } from '@adh-sdk/data/ecosystem-config'
 import {
   MAX_LOGIN_ALLOWED_EMAILS,
+  allowListDropped,
   cleanEmailList,
   policyError,
   policyPatch,
@@ -57,6 +58,15 @@ describe('the login allow-list in the client auth model', () => {
     expect(policyError(list([at254]))).toBeNull()
     expect(policyError(list([`a${at254}`]))).toMatch(/is not an email address/)
     expect(policyError(list(['first.last+tag@sub.example.co.uk']))).toBeNull()
+  })
+
+  it('ecosystem-config-037: a list the backend did not keep is a drop; an absent list reads as everyone', () => {
+    const { loginAllowedEmails: _absent, ...old } = BASE
+    expect(allowListDropped({ loginAllowedEmails: ['a@x.com'] }, old)).toBe(true)
+    expect(allowListDropped({ loginAllowedEmails: [] }, old)).toBe(true)
+    expect(allowListDropped({ loginAllowedEmails: null }, old)).toBe(false)
+    expect(allowListDropped({ loginAllowedEmails: ['a@x.com'] }, list(['A@x.com']))).toBe(false)
+    expect(allowListDropped({ signupMode: 'closed' }, old)).toBe(false)
   })
 })
 

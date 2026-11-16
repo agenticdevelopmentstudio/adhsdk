@@ -11483,7 +11483,7 @@
           "conformance": {
             "hash": "sha256:1f3c916b83725bf0e9b7ad022dec29d2c85088032a8c7eb235aab0a06d046c66",
             "state": "confirmed",
-            "version": "1.3.0"
+            "version": "2.0.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Hub/Features/EcosystemConfig/",
           "platform": "apple"
@@ -11499,7 +11499,7 @@
         },
         {
           "conformance": {
-            "hash": "sha256:445fd8c1878833e320ab31324244c970e99e0124d14b4afa2a6c442bdf0f7b56",
+            "hash": "sha256:85552a156b2e9b6b5b8bc7c4cbf6f47cbe0a8fffae25bbd26079b68b2fdb0cc4",
             "state": "confirmed",
             "version": "2.0.0"
           },
@@ -11519,7 +11519,7 @@
           "conformance": {
             "hash": "sha256:a1ede291ed575461e085628942b1db967431a165fa230328781d7ff125bef94e",
             "state": "confirmed",
-            "version": "1.3.0"
+            "version": "2.0.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Hub/Features/EcosystemConfig/AuthSettingsTopic.swift",
           "platform": "apple"
@@ -11528,7 +11528,7 @@
           "conformance": {
             "hash": "sha256:9e6625db11a199d8efd34e4ae31aa805ee7ec43163f698089156d7783d40fcd7",
             "state": "confirmed",
-            "version": "1.3.0"
+            "version": "2.0.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Hub/Features/EcosystemConfig/EcosystemConfigModels.swift",
           "platform": "apple"
@@ -11537,7 +11537,7 @@
           "conformance": {
             "hash": "sha256:b3bbb0955bf97a1163b845b3bb074bcc4e1de1c1b6869a87bcd4b01c3982bf6f",
             "state": "confirmed",
-            "version": "1.3.0"
+            "version": "2.0.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Hub/Features/EcosystemConfig/FeatureFlagsTopic.swift",
           "platform": "apple"
@@ -11546,7 +11546,7 @@
           "conformance": {
             "hash": "sha256:a758847896c500089efb3fd2ed7d61b640af957f520c808459a476b8fa2cf221",
             "state": "confirmed",
-            "version": "1.3.0"
+            "version": "2.0.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Hub/Features/EcosystemConfig/ServerBagsTopic.swift",
           "platform": "apple"
@@ -11555,7 +11555,7 @@
           "conformance": {
             "hash": "sha256:82d28274ce3e7a8523e0e3b467e380697f437576c4eb582b1cd2c8349618131b",
             "state": "confirmed",
-            "version": "1.3.0"
+            "version": "2.0.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Hub/Features/EcosystemConfig/SigninAppsTopic.swift",
           "platform": "apple"
@@ -11564,7 +11564,7 @@
           "conformance": {
             "hash": "sha256:dac965479ede94515ca8b4b084f9e4cba3cb1b72ef4434757ec67ae51ff94498",
             "state": "confirmed",
-            "version": "1.3.0"
+            "version": "2.0.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Hub/Features/EcosystemConfig/StorageTokensRail.swift",
           "platform": "apple"
@@ -11573,7 +11573,7 @@
           "conformance": {
             "hash": "sha256:415c23a40dcc4bb4fb685defb0fb562f726041e86fd0f1c9d236a1fc12229c02",
             "state": "confirmed",
-            "version": "1.3.0"
+            "version": "2.0.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Hub/Features/EcosystemConfig/StorageTokensTopic.swift",
           "platform": "apple"
@@ -11627,7 +11627,7 @@
           "conformance": {
             "hash": "sha256:22efa47a101cef43d50ca48ddd8669b981c0aac53abe7a9178b495925561d97c",
             "state": "confirmed",
-            "version": "1.3.0"
+            "version": "2.0.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKHubTests/EcosystemConfigTopicsTests.swift",
           "platform": "apple"
@@ -11636,7 +11636,7 @@
           "conformance": {
             "hash": "sha256:ee580db0adb6daa64341c2796f67627b726288526921366e7b9a142482d2d2ee",
             "state": "confirmed",
-            "version": "1.3.0"
+            "version": "2.0.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Hub/Features/Ecosystems/EcosystemTopic.swift",
           "platform": "apple"
@@ -11645,7 +11645,7 @@
           "conformance": {
             "hash": "sha256:f6a595f4c2eda10151bc8d33da9a027c86c54280fbf8785dce5b6497067db2db",
             "state": "confirmed",
-            "version": "1.3.0"
+            "version": "2.0.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Hub/Features/Ecosystems/EcosystemsModels.swift",
           "platform": "apple"
@@ -11654,7 +11654,7 @@
           "conformance": {
             "hash": "sha256:e3dfd5e6342101bf9b0afe7e0510fa34a4331f3f38d212b310a188208a106f30",
             "state": "confirmed",
-            "version": "1.3.0"
+            "version": "2.0.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Hub/Features/Support/Slug.swift",
           "platform": "apple"
@@ -11663,7 +11663,7 @@
           "conformance": {
             "hash": "sha256:a2c98658ba5fe9be9db86c282b94dd072df946a2e48b437d5adefa2f9f103e71",
             "state": "confirmed",
-            "version": "1.3.0"
+            "version": "2.0.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Hub/Features/Support/HubDates.swift",
           "platform": "apple"
@@ -11672,7 +11672,7 @@
           "conformance": {
             "hash": "sha256:4f6423589716f93a62e12b112b6ef7f0d2159c5fa4b57ae29a838043ce7468f7",
             "state": "confirmed",
-            "version": "1.3.0"
+            "version": "2.0.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Hub/Features/Support/HubText.swift",
           "platform": "apple"
@@ -11681,7 +11681,7 @@
           "conformance": {
             "hash": "sha256:45ab728b5d2e31520e88d23a5ece7c378da5c32c53e608a4dbabca5b1666147f",
             "state": "confirmed",
-            "version": "1.3.0"
+            "version": "2.0.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Hub/Features/Support/JSONValue.swift",
           "platform": "apple"
@@ -11690,16 +11690,16 @@
           "conformance": {
             "hash": "sha256:8a499c3aafcc872ca94c938dcb7eba5a6ff18bbb749f99be4a91abfd7463d6d2",
             "state": "confirmed",
-            "version": "1.3.0"
+            "version": "2.0.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Hub/Features/Applications/ApplicationsTopic.swift",
           "platform": "apple"
         },
         {
           "conformance": {
-            "hash": "sha256:c46fb23cc5d14fbbff65a25b677aad6fb66157eb2cf7ed16e829683122a687a9",
+            "hash": "sha256:ffea5e8459aed310722be04f7f62fce5c9a5b432bfc3883169d06e736811c4f0",
             "state": "confirmed",
-            "version": "1.3.0"
+            "version": "2.0.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/project.yml",
           "platform": "apple"
@@ -11733,7 +11733,7 @@
         },
         {
           "conformance": {
-            "hash": "sha256:52a8685e138982e18c2d463ccdbb7472cad9177742c6c3335e8f5463043ccf62",
+            "hash": "sha256:291d12b95da9f75cfa9f1e4c4b61e08e4ad2f1e80a055dffc8bc27df62af10ac",
             "state": "confirmed",
             "version": "2.0.0"
           },
@@ -11751,7 +11751,7 @@
         },
         {
           "conformance": {
-            "hash": "sha256:a61ffcd60179ac9afe1b57cd96c1e0e68ce2f025e0feed8c62868380688e8c34",
+            "hash": "sha256:258ea67c9187d25f9c02864ef9d2d1d8879de6a9eeb03a27644a185c45998739",
             "state": "confirmed",
             "version": "2.0.0"
           },
@@ -11760,7 +11760,7 @@
         },
         {
           "conformance": {
-            "hash": "sha256:da0a0c12dc72d668cc418613ff98a285317544d2dcf78506b3327fc540558ff9",
+            "hash": "sha256:f13cce21d0e05dfe22b95588a089e04214b36e91f01b206c0cfd9b91ebfab64c",
             "state": "confirmed",
             "version": "2.0.0"
           },
@@ -11769,7 +11769,7 @@
         },
         {
           "conformance": {
-            "hash": "sha256:22387492c4ac23278e76ad5fe30c8f9437ef789365f2c04aecc6735a1f5377db",
+            "hash": "sha256:8941b7e4e791b02a711848cccaaad1311b09fa1e5057c95a85d332deb9d9b7f6",
             "state": "confirmed",
             "version": "2.0.0"
           },

@@ -125,6 +125,14 @@ fetch-based operations with no view code of its own.
   local part with no whitespace and no quote, and a domain of at least two
   non-empty dot-separated labels) — the backend's own bounds, mirrored so the
   refusal comes before the round trip. The backend stays authoritative.
+- **auth-login-allow-list-dropped**: when a save sent `loginAllowedEmails` and
+  the saved policy comes back without that list (a backend that predates the
+  allow-list strips the unknown field and still answers 200), the save MUST fail
+  with "The sign-in list was not saved, so everyone can still sign in. This
+  backend does not support the list yet." The draft MUST keep the owner's list and
+  the switch, rather than re-seeding them off. The cache still takes the answer,
+  because the other fields did save. An absent list reads as `null`, so sending
+  `null` to such a backend is not a failure.
 
 ### Sign-in Apps
 
@@ -433,6 +441,7 @@ component not among these given sources.
 | ecosystem-config-034 | sync-tables-pane-family | The pane mounted with no `family`, then with `family="admin"`, both for "eco-1" | The first uses the `"ecosystem"` family; the two keep separate cached catalogs, keyed by family and ecosystem id |
 | ecosystem-config-035 | sync-tables-pane-sequential | Three rows selected, Sync, and the second write fails | The writes run one at a time; the run halts at the second until the user continues or stops; the first save stays in place |
 | ecosystem-config-036 | sync-tables-pane-reseed | A write returns a catalog | The cached catalog is replaced with the returned catalog, then refetched once the write settles |
+| ecosystem-config-037 | auth-login-allow-list-dropped | The allow-list switch on with `alice@example.com`, Save, and the backend answers 200 with no `loginAllowedEmails`; then a save sending `null` answered the same way | The first save fails with "The sign-in list was not saved, so everyone can still sign in. This backend does not support the list yet.", and the switch and the row stay as typed; the `null` save succeeds |
 
 ## Edge Cases
 
@@ -715,31 +724,31 @@ kind.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/EcosystemConfig/` | confirmed (1.3.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/EcosystemConfig/` | confirmed (2.0.0) |
 | web | `packages/web/packages/data/src/ecosystem-config/` | confirmed (2.0.0) |
 | web | `packages/web/packages/features/ecosystem-config/src/` | confirmed (2.0.0) |
 | web | `packages/web/packages/data/src/ecosystem-config/sync-tables.ts` | confirmed (2.0.0) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/EcosystemConfig/AuthSettingsTopic.swift` | confirmed (1.3.0) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/EcosystemConfig/EcosystemConfigModels.swift` | confirmed (1.3.0) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/EcosystemConfig/FeatureFlagsTopic.swift` | confirmed (1.3.0) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/EcosystemConfig/ServerBagsTopic.swift` | confirmed (1.3.0) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/EcosystemConfig/SigninAppsTopic.swift` | confirmed (1.3.0) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/EcosystemConfig/StorageTokensRail.swift` | confirmed (1.3.0) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/EcosystemConfig/StorageTokensTopic.swift` | confirmed (1.3.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/EcosystemConfig/AuthSettingsTopic.swift` | confirmed (2.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/EcosystemConfig/EcosystemConfigModels.swift` | confirmed (2.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/EcosystemConfig/FeatureFlagsTopic.swift` | confirmed (2.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/EcosystemConfig/ServerBagsTopic.swift` | confirmed (2.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/EcosystemConfig/SigninAppsTopic.swift` | confirmed (2.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/EcosystemConfig/StorageTokensRail.swift` | confirmed (2.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/EcosystemConfig/StorageTokensTopic.swift` | confirmed (2.0.0) |
 | web | `packages/web/packages/data/src/ecosystem-config/feature-flags.ts` | confirmed (2.0.0) |
 | web | `packages/web/packages/data/src/ecosystem-config/server-bags.ts` | confirmed (2.0.0) |
 | web | `packages/web/packages/data/src/ecosystem-config/client-auth.ts` | confirmed (2.0.0) |
 | web | `packages/web/packages/data/src/ecosystem-config/storage-tokens.ts` | confirmed (2.0.0) |
 | web | `packages/web/packages/data/src/ecosystem-config/wire.ts` | confirmed (2.0.0) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKHubTests/EcosystemConfigTopicsTests.swift` | confirmed (1.3.0) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/Ecosystems/EcosystemTopic.swift` | confirmed (1.3.0) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/Ecosystems/EcosystemsModels.swift` | confirmed (1.3.0) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/Support/Slug.swift` | confirmed (1.3.0) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/Support/HubDates.swift` | confirmed (1.3.0) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/Support/HubText.swift` | confirmed (1.3.0) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/Support/JSONValue.swift` | confirmed (1.3.0) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/Applications/ApplicationsTopic.swift` | confirmed (1.3.0) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/project.yml` | confirmed (1.3.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKHubTests/EcosystemConfigTopicsTests.swift` | confirmed (2.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/Ecosystems/EcosystemTopic.swift` | confirmed (2.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/Ecosystems/EcosystemsModels.swift` | confirmed (2.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/Support/Slug.swift` | confirmed (2.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/Support/HubDates.swift` | confirmed (2.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/Support/HubText.swift` | confirmed (2.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/Support/JSONValue.swift` | confirmed (2.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/Applications/ApplicationsTopic.swift` | confirmed (2.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/project.yml` | confirmed (2.0.0) |
 | web | `packages/web/packages/features/ecosystem-config/src/dialog-state/bag-dialog-state.ts` | confirmed (2.0.0) |
 | web | `packages/web/packages/features/ecosystem-config/src/dialog-state/flag-dialog-state.ts` | confirmed (2.0.0) |
 | web | `packages/web/packages/features/ecosystem-config/src/ApplicationClientAuthSection.tsx` | confirmed (2.0.0) |

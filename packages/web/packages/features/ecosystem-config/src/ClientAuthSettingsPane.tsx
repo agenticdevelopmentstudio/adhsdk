@@ -16,7 +16,13 @@ import {
   type DetailsSection,
 } from "@adh-sdk/resource";
 import { ClientAuthPolicyFields } from "./ClientAuthFields";
-import { policyError, policyPatch, samePolicy } from "./client-auth-model";
+import {
+  ALLOW_LIST_NOT_SAVED,
+  allowListDropped,
+  policyError,
+  policyPatch,
+  samePolicy,
+} from "./client-auth-model";
 
 /** The cache key the ecosystem's client auth is read under. An application's override section
  *  reads the same entry for the providers and the ecosystem's settings. */
@@ -82,6 +88,9 @@ export function ClientAuthSettingsPane({
       }
       const updated = await clientAuthApi.updateEcosystem(ecosystemId, { settings });
       writeConfig(ecosystemId, updated);
+      // The other fields did save, so the cache takes the answer. The draft keeps the owner's
+      // list and the save fails loudly, instead of re-seeding the switch back off.
+      if (allowListDropped(settings, updated.settings)) throw new Error(ALLOW_LIST_NOT_SAVED);
       draft.commit(updated);
     },
     reset: () => {
