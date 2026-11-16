@@ -141,6 +141,37 @@ final class SafariExtensionsTopicTests: XCTestCase {
         XCTAssertTrue(host.extensions().isEmpty)
     }
 
+    /// A folder holding a symbolic link (here, one out of the folder) is
+    /// refused before the confirmation, and nothing stays staged.
+    func test_downloadedRefusesSymbolicLinks() async throws {
+        let host = makeHost()
+        let folder = root.appendingPathComponent("Linked", isDirectory: true)
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        try Data(#"{"manifest_version":3,"name":"L","version":"1.0"}"#.utf8)
+            .write(to: folder.appendingPathComponent("manifest.json"))
+        let outside = root.appendingPathComponent("secret.txt")
+        try Data("private".utf8).write(to: outside)
+        try FileManager.default.createSymbolicLink(
+            at: folder.appendingPathComponent("data.txt"), withDestinationURL: outside)
+        var asked = false
+        host.confirmInstall = { _, _, _, _, _ in
+            asked = true
+            return true
+        }
+        do {
+            _ = try await host.installDownloaded(at: folder)
+            XCTFail("a folder with a symbolic link installed")
+        } catch SafariExtensionHost.Failure.symbolicLink(let url, let link) {
+            XCTAssertEqual(url.lastPathComponent, "Linked")
+            XCTAssertEqual(link, "data.txt")
+        }
+        XCTAssertFalse(asked)
+        let staging = root.appendingPathComponent("Library/Staging")
+        let left = (try? FileManager.default.contentsOfDirectory(atPath: staging.path)) ?? []
+        XCTAssertEqual(left, [])
+        XCTAssertTrue(host.extensions().isEmpty)
+    }
+
     // MARK: - URL…
 
     /// extensions-topic-019 to extensions-topic-021.

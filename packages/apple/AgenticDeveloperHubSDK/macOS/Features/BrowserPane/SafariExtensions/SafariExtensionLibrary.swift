@@ -188,6 +188,20 @@ public struct SafariExtensionLibrary: Sendable {
         return staged
     }
 
+    /// The first symbolic link anywhere under `folder`, as a path relative to
+    /// it; nil when there is none. A link is not followed, so one pointing
+    /// out of the folder (at the home folder, say) is reported, not walked.
+    public static func symbolicLink(in folder: URL) -> String? {
+        let fileManager = FileManager.default
+        guard let walk = fileManager.enumerator(atPath: folder.path) else { return nil }
+        for case let relative as String in walk {
+            let type = (try? fileManager.attributesOfItem(
+                atPath: folder.appendingPathComponent(relative).path))?[.type] as? FileAttributeType
+            if type == .typeSymbolicLink { return relative }
+        }
+        return nil
+    }
+
     /// Moves `id`'s staged files into place, replacing the installed copy.
     @discardableResult
     public func commitStaged(_ id: String) throws -> URL {

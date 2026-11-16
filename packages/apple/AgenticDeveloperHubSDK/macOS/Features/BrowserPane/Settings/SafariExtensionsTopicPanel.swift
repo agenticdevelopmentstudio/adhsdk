@@ -344,10 +344,10 @@ final class SafariExtensionsTopicPanel: BrowserTopicPanel {
         popover.contentViewController = content
         popover.contentSize = Self.detailsSize
         popover.delegate = self
-        detailsView = details
-        detailsPopover = popover
         let gear = tableView.column(withIdentifier: NSUserInterfaceItemIdentifier("gear"))
         guard gear >= 0, tableView.window != nil else { return }
+        detailsView = details
+        detailsPopover = popover
         popover.show(relativeTo: tableView.frameOfCell(atColumn: gear, row: row), of: tableView, preferredEdge: .maxY)
     }
 

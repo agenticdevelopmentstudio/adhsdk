@@ -378,26 +378,52 @@ public final class SafariExtensionHost: NSObject {
     /// `manifest.json`. It goes through the same stage → confirm → commit
     /// path as a store install, so declining leaves the library as it was.
     /// Anything else throws `Failure.unsupportedDownload` before the library
-    /// is touched. Returns false when the person declined.
+    /// is touched. Returns false when the person declined. The reading,
+    /// copying and unzipping run off the main actor.
     public func installDownloaded(at url: URL, presentingOn window: NSWindow? = nil) async throws -> Bool {
         guard libraryError == nil else { throw Failure.library(libraryError ?? "") }
+        let provisional = WebStoreExtension.localID(forPath: url.standardizedFileURL.path)
+        let library = library
+        let staged = try await Task.detached(priority: .userInitiated) {
+            try Self.stageDownloaded(url, as: provisional, in: library)
+        }.value
+        return try await installLocal(staged: staged, provisionalID: provisional, presentingOn: window)
+    }
+
+    /// Stages the item at `url` as `id`, or throws without leaving anything
+    /// staged. A folder is copied as it is, so it is refused when it holds a
+    /// symbolic link: a link out of the library (to the home folder, say)
+    /// would hand the extension files its permission sheet never named.
+    nonisolated private static func stageDownloaded(
+        _ url: URL, as id: String, in library: SafariExtensionLibrary
+    ) throws -> URL {
         var isDirectory: ObjCBool = false
         guard FileManager.default.fileExists(atPath: url.path, isDirectory: &isDirectory) else {
             throw Failure.unsupportedDownload(url)
         }
         let staged: URL
-        let provisional = WebStoreExtension.localID(forPath: url.standardizedFileURL.path)
         if isDirectory.boolValue {
             guard FileManager.default.fileExists(atPath: url.appendingPathComponent("manifest.json").path) else {
                 throw Failure.unsupportedDownload(url)
             }
-            staged = try library.stage(copyOf: url, as: provisional)
+            staged = try library.stage(copyOf: url, as: id)
         } else if ["crx", "zip"].contains(url.pathExtension.lowercased()) {
-            staged = try library.stage(Data(contentsOf: url), as: provisional)
+            staged = try library.stage(Data(contentsOf: url), as: id)
         } else {
             throw Failure.unsupportedDownload(url)
         }
-        return try await installLocal(staged: staged, provisionalID: provisional, presentingOn: window)
+        try refuseLinks(in: staged, id: id, from: url, library: library)
+        return staged
+    }
+
+    /// Throws `Failure.symbolicLink` and discards `id`'s staging when the
+    /// staged tree holds a symbolic link.
+    nonisolated private static func refuseLinks(
+        in staged: URL, id: String, from source: URL, library: SafariExtensionLibrary
+    ) throws {
+        guard let link = SafariExtensionLibrary.symbolicLink(in: staged) else { return }
+        library.discardStaged(id)
+        throw Failure.symbolicLink(source, link)
     }
 
     /// Installs the `.crx` at the http(s) address `url`: downloads it, then
@@ -410,7 +436,12 @@ public final class SafariExtensionHost: NSObject {
             throw WebStoreExtension.Failure.download("HTTP \(http.statusCode)")
         }
         let provisional = WebStoreExtension.localID(forPath: url.absoluteString)
-        let staged = try library.stage(data, as: provisional)
+        let library = library
+        let staged = try await Task.detached(priority: .userInitiated) {
+            let staged = try library.stage(data, as: provisional)
+            try Self.refuseLinks(in: staged, id: provisional, from: url, library: library)
+            return staged
+        }.value
         return try await installLocal(staged: staged, provisionalID: provisional, presentingOn: window)
     }
 
@@ -453,12 +484,18 @@ public final class SafariExtensionHost: NSObject {
         /// Downloaded… was handed something that is not a `.crx`, a `.zip`
         /// or a folder with `manifest.json`.
         case unsupportedDownload(URL)
+        /// A downloaded extension holds a symbolic link (the path inside it).
+        case symbolicLink(URL, String)
 
         public var errorDescription: String? {
             switch self {
             case .unsupportedDownload(let url):
                 "“\(url.lastPathComponent)” is not an extension. Choose a .crx or .zip file, "
                     + "or a folder with a manifest.json."
+
+            case let .symbolicLink(url, link):
+                "“\(url.lastPathComponent)” was not installed: it holds a symbolic link (\(link)), "
+                    + "and an extension may only contain its own files."
 
             case .library(let detail): detail
             case .notInstalled(let id): "No extension \(id) is installed."
