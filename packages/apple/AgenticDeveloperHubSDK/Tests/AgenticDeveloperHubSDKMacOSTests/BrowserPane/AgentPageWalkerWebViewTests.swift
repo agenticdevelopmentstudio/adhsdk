@@ -188,7 +188,7 @@ final class AgentPageWalkerWebViewTests: XCTestCase {
     func test_timeoutIsUnavailable() async throws {
         let rows = (0..<3000).map { "<div><span>Row \($0)</span><a href=\"/r\($0)\">Link \($0)</a></div>" }
         await host.load(html: "<!doctype html><html><body>\(rows.joined())</body></html>")
-        let reading = await source(nil, timeoutMs: 0).read(options: BrowserSnapshotOptions())
+        let reading = await source(try emptyStore(), timeoutMs: 0).read(options: BrowserSnapshotOptions())
         let reason = try XCTUnwrap(reading.page.unavailableReason)
         XCTAssertTrue(reason.hasPrefix(AgentPage.unavailablePrefix), reason)
         XCTAssertNil(reading.page.root)
