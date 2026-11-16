@@ -284,7 +284,11 @@ MUST NOT carry page content.
   `NSAttributedString` attributes from the theme. Refresh listens for the
   engine's navigation finish, `UserSettings` changes of the privacy keys,
   privacy-word changes and `BrowserHiddenItemsStore.didChangeNotification`,
-  and calls `AgentPageSource.agentPage(options:)`. Under UIKit,
+  and calls `AgentPageSource.read(options:keepingRefs: true)` (a reading
+  walk, so the agent's refs stay valid), built by the same
+  `AgentPageSource.reading(_:hiddenItems:privacy:settings:)` the tools use.
+  The agent view is laid over the tab's page holder, which is hidden, not
+  removed, so the live page keeps its state. Under UIKit,
   `UISegmentedControl` and a read-only `UITextView`; the web view is the
   same.
 - **WinUI 3**: A `Segmented` control (Windows Community Toolkit) with
@@ -332,6 +336,12 @@ HTML rendering of it rather than a separate view.
 else, failures included.
 **Approved**: pending
 
+**Decision**: An agent view reads the page with a reading walk that keeps
+the agent's ref table, never a snapshot walk.
+**Rationale**: Looking at what the agent sees must not change it: a
+snapshot walk would renumber the refs the agent holds from its last
+snapshot.
+**Approved**: pending
 ## Compliance
 
 | Check | Status | Category |

@@ -542,6 +542,7 @@ open class WebBrowserPaneViewController: NSViewController {
         if addressField.currentEditor() == nil { showAddress(engine.url ?? activeTab.requestedURL) }
         announceTitleChange()
         refreshAgentPrivacyStatus()
+        refreshAgentViews()
     }
 
     /// Brings what the pane says of Agent Privacy — the toolbar's Privacy
@@ -739,7 +740,13 @@ open class WebBrowserPaneViewController: NSViewController {
                 if key == UserSettings.browserTabsPositions.name { self.applyTabPositionsOverride() }
                 if key == UserSettings.browserPrivacyStorageJar.name { self.storageJarSettingDidChange() }
                 if key == UserSettings.browserAgentPrivacy.name { self.refreshPageWordFilter() }
+                if BrowserAgentViews.refreshSettingNames.contains(key) { self.refreshAgentViews() }
             }
+            .store(in: &cancellables)
+        // The agent list changes what the agent receives on every page.
+        NotificationCenter.default.publisher(for: BrowserHiddenItemsStore.didChangeNotification)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in self?.refreshAgentViews() }
             .store(in: &cancellables)
         // A pane overriding the cookie setting hides the shared value's
         // changes from `settings`, but on a shared store it is the shared
@@ -985,7 +992,7 @@ open class WebBrowserPaneViewController: NSViewController {
         // after the privacy button instead of one of them stretching.
         let spacer = NSView()
         spacer.setContentHuggingPriority(.init(1), for: .horizontal)
-        let strip = NSStackView(views: [privacyStrip, spacer])
+        let strip = NSStackView(views: [privacyStrip, spacer, agentViewControl])
         strip.spacing = 10
         strip.edgeInsets = NSEdgeInsets(top: 0, left: 8, bottom: 0, right: 12)
         strip.alignment = .centerY
@@ -1011,6 +1018,10 @@ open class WebBrowserPaneViewController: NSViewController {
 
     /// The strip's row, hidden with the toggle off.
     private weak var privacyStripRow: NSView?
+    /// The Agent view control (`browser.agent-view`, spec section 2.4), last
+    /// in the strip's row: the front tab's mode.
+    private(set) lazy var agentViewControl = NSSegmentedControl.browserAgentViewControl(
+        target: self, action: #selector(agentViewControlChanged(_:)))
     /// The items `privacyStrip` last drew, so a refresh that changes none of
     /// them leaves its views alone.
     private var itemsInStrip: [BrowserPrivacyStatus.Item] = []
@@ -1555,6 +1566,8 @@ open class WebBrowserPaneViewController: NSViewController {
         }
         rememberAddress()
         persistTabs()
+        syncAgentViewControl()
+        tab.agentViews?.rebuildNow()
         eventLog.record(channel: "pane", event: "tab", decision: .info, detail: engine.url?.host ?? "")
     }
 
@@ -1716,6 +1729,7 @@ open class WebBrowserPaneViewController: NSViewController {
         // Out of the list first, so any neighbour the strip brings forward is
         // activated with this one already gone.
         tabs.removeAll { $0 === tab }
+        tab.agentViews?.cancelPending()
         tab.engine.delegate = nil
         tab.engine.teardown()
         tabStrip.removeTab(id: tab.id)
@@ -1738,6 +1752,7 @@ open class WebBrowserPaneViewController: NSViewController {
             acceptsCookies: Self.acceptsCookies(settings: settings, ownsDataStore: resolvedJar.isOwnedByPane))
         onEngineMade?(made)
         tab.content.show(made.view)
+        tab.agentViews?.setNeedsRefresh()
         if tab === activeTab {
             engine = made
             builtAutomation?.retarget(to: made, console: made.consoleLog)
@@ -1880,6 +1895,7 @@ extension WebBrowserPaneViewController: BrowserEngineDelegate {
         persistTabs()
         guard isFront(engine) else { return }
         updateJarLabel(finished: true)
+        refreshAgentViews()
     }
 
     public func browserEngine(_ engine: BrowserEngine, didFailNavigationWith error: Error) {
@@ -2317,6 +2333,74 @@ extension WebBrowserPaneViewController: MultiTabbedViewControllerDelegate {
 
 // MARK: - Tab model
 
+// MARK: - Agent views
+
+extension WebBrowserPaneViewController {
+
+    /// The front tab's agent view mode.
+    var agentViewMode: BrowserAgentViewMode { activeTab.agentViews?.mode ?? .website }
+
+    /// The front tab's agent views, `nil` until the tab first leaves Website.
+    var activeAgentViews: BrowserAgentViews? { activeTab.agentViews }
+
+    @objc fileprivate func agentViewControlChanged(_ sender: NSSegmentedControl) {
+        setAgentViewMode(.mode(atSegment: sender.selectedSegment))
+    }
+
+    /// Shows the front tab as `mode`. The page under an agent view is left
+    /// as it is; the focus follows the view that is shown.
+    func setAgentViewMode(_ mode: BrowserAgentViewMode) {
+        let tab = activeTab
+        guard mode != .website || tab.agentViews != nil else { return syncAgentViewControl() }
+        let views = agentViews(of: tab)
+        let window = viewIfLoaded?.window
+        let responder = window?.firstResponder
+        let focusWasInPage = pageHolds(responder)
+        let focusWasInOverlay = views.contentView.map { overlay in
+            (responder as? NSView)?.isDescendant(of: overlay) ?? false
+        } ?? false
+        views.setMode(mode)
+        tab.content.showOverlay(views.contentView)
+        syncAgentViewControl()
+        guard let window else { return }
+        if let overlay = views.contentView {
+            if focusWasInPage || focusWasInOverlay { window.makeFirstResponder(focusTarget(in: overlay, of: views)) }
+        } else if focusWasInOverlay {
+            window.makeFirstResponder(tab.engine.view)
+        }
+    }
+
+    private func focusTarget(in overlay: NSView, of views: BrowserAgentViews) -> NSView {
+        views.mode == .agentSource ? views.source.textView : overlay
+    }
+
+    /// The control showing the front tab's mode.
+    private func syncAgentViewControl() {
+        agentViewControl.selectedSegment = agentViewMode.segment
+    }
+
+    /// Asks the front tab's agent views, if it shows one, to rebuild.
+    private func refreshAgentViews() {
+        activeTab.agentViews?.setNeedsRefresh()
+    }
+
+    /// `tab`'s agent views, made on first use. Each read builds its source
+    /// as the browser tools do (`AgentPageSource.reading`), on the tab's own
+    /// engine and the privacy of the tab's own page, keeping the agent's refs.
+    private func agentViews(of tab: BrowserTab) -> BrowserAgentViews {
+        if let views = tab.agentViews { return views }
+        let views = BrowserAgentViews { [weak self, weak tab] in
+            guard let self, let tab else { return AgentPage.unavailable("the tab has closed", url: nil) }
+            let source = AgentPageSource.reading(
+                tab.engine, hiddenItems: BrowserHiddenItemsStore.shared,
+                privacy: self.agentPrivacy(at: Self.privacyWordsURL(tab.engine.url)), settings: self.settings)
+            return await source.read(options: BrowserSnapshotOptions(), keepingRefs: true).page
+        }
+        tab.agentViews = views
+        return views
+    }
+}
+
 /// One tab of a browser pane: the engine drawing it and what the pane keeps
 /// per page. A class, so a rebuilt engine is swapped in place and every
 /// reference to the tab still names it.
@@ -2337,6 +2421,9 @@ private final class BrowserTab {
     /// The tab whose page opened this one, which comes forward again when
     /// this one's page closes itself.
     weak var opener: BrowserTab?
+    /// The tab's Agent preview and Agent source, made the first time it
+    /// leaves Website; `nil` is Website.
+    var agentViews: BrowserAgentViews?
     /// Whether a page opened this tab, which is what lets its page close it
     /// again; kept apart from `opener`, which lets go when the opener's tab
     /// closes first.
@@ -2368,10 +2455,37 @@ private final class BrowserTab {
 private final class BrowserTabContentViewController: NSViewController {
     private var pageView: NSView?
     private var holder: NSView?
+    /// An agent view shown over the page. The page's holder is hidden, not
+    /// removed, so the page keeps its state and Website restores it as it
+    /// was (`website-mode-restores-page`).
+    private var overlay: NSView?
 
     override func loadView() {
         view = NSView()
         if let pageView { install(pageView) }
+        installOverlay()
+    }
+
+    /// Shows `newOverlay` over the page, or the page again for `nil`.
+    func showOverlay(_ newOverlay: NSView?) {
+        guard newOverlay !== overlay else { return }
+        overlay?.removeFromSuperview()
+        overlay = newOverlay
+        guard isViewLoaded else { return }
+        installOverlay()
+    }
+
+    private func installOverlay() {
+        holder?.isHidden = overlay != nil
+        guard let overlay else { return }
+        overlay.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(overlay)
+        NSLayoutConstraint.activate([
+            overlay.topAnchor.constraint(equalTo: view.topAnchor),
+            overlay.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            overlay.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            overlay.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+        ])
     }
 
     /// Shows `page`, in place of whatever engine view was there.
@@ -2393,6 +2507,8 @@ private final class BrowserTabContentViewController: NSViewController {
             frameHolder.bottomAnchor.constraint(equalTo: view.bottomAnchor)
         ])
         holder = frameHolder
+        // A new engine under an agent view stays under it.
+        frameHolder.isHidden = overlay != nil
     }
 }
 

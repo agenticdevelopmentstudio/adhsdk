@@ -83,4 +83,35 @@ public enum BrowserContentRules {
         }
         return try await store.compileContentRuleList(forIdentifier: identifier, encodedContentRuleList: json)
     }
+
+    // MARK: - Block everything
+
+    /// The Agent preview's rules (recipe `workspace/browser/agent-views`,
+    /// `preview-blocks-network`): every URL, every resource type, blocked.
+    public static let blockEverythingJSON = #"[{"trigger":{"url-filter":".*"},"action":{"type":"block"}}]"#
+
+    /// The compiled block-everything list, once this process has one.
+    @MainActor private static var blockEverythingList: WKContentRuleList?
+
+    /// The block-everything list: compiled once per process, and kept in the
+    /// default store after that under an identifier carrying a hash of its
+    /// rules, as the third-party lists are.
+    @MainActor
+    public static func blockEverything() async throws -> WKContentRuleList {
+        if let blockEverythingList { return blockEverythingList }
+        guard let store = WKContentRuleListStore.default() else { throw StoreUnavailable() }
+        let digest = SHA256.hash(data: Data(blockEverythingJSON.utf8))
+        let hex = digest.map { String(format: "%02x", $0) }.joined()
+        let identifier = "adk.block-everything.\(hex.prefix(12))"
+        let list: WKContentRuleList?
+        if let cached = try? await store.contentRuleList(forIdentifier: identifier) {
+            list = cached
+        } else {
+            list = try await store.compileContentRuleList(
+                forIdentifier: identifier, encodedContentRuleList: blockEverythingJSON)
+        }
+        guard let list else { throw StoreUnavailable() }
+        blockEverythingList = list
+        return list
+    }
 }

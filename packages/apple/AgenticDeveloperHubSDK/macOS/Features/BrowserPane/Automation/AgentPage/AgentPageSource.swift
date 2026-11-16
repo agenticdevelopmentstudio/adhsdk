@@ -1,4 +1,5 @@
 import Foundation
+import AgenticDeveloperHubSDKCore
 
 /// `AgentPageWalker.js` and the finder it records selectors with, loaded
 /// into the automation world (`BrowserScriptWorld.automation`) beside the
@@ -229,3 +230,17 @@ protocol AgentPageReader {
 }
 
 extension AgentPageSource: AgentPageReader {}
+
+extension AgentPageSource {
+    /// The source every reader of a pane's page builds — the browser tools
+    /// and the Agent preview and Agent source views alike (`dry`): the
+    /// agent list, `privacy` as the read runs under it, and Hide Images as
+    /// `settings` holds it now. Built afresh for each read, so each read
+    /// sees the settings of its moment.
+    static func reading(_ driver: BrowserPageDriver, hiddenItems: BrowserHiddenItemsStore?,
+                        privacy: BrowserAgentPrivacy, settings: SettingsStore) -> AgentPageSource {
+        let hideImages = settings.get(UserSettings.browserPrivacyHideImages)
+        return AgentPageSource(driver: driver, hiddenItems: hiddenItems,
+                               privacy: { privacy }, hideImages: { hideImages })
+    }
+}

@@ -18256,6 +18256,20 @@
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/AgentViews/BrowserAgentSourceViewController.swift",
           "platform": "macos"
+        },
+        {
+          "conformance": {
+            "state": "unverified"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/BrowserContentRules.swift",
+          "platform": "macos"
+        },
+        {
+          "conformance": {
+            "state": "unverified"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/BrowserPane/BrowserAgentViewsTests.swift",
+          "platform": "macos"
         }
       ],
       "kind": "ingredient",

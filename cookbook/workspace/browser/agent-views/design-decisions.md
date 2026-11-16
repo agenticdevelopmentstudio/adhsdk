@@ -27,3 +27,9 @@ HTML rendering of it rather than a separate view.
 else, failures included.
 **Approved**: pending
 
+**Decision**: An agent view reads the page with a reading walk that keeps
+the agent's ref table, never a snapshot walk.
+**Rationale**: Looking at what the agent sees must not change it: a
+snapshot walk would renumber the refs the agent holds from its last
+snapshot.
+**Approved**: pending
