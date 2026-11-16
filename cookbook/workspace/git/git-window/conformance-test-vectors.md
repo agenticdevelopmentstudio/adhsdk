@@ -81,3 +81,4 @@
 | git-window-078 | worktrees | `worktreeFolder` for root `/work/app`, branch `topic/x`: ``, whitespace, `side`, `../elsewhere/side`, ` side `, `~/trees/side`, `/abs/side` | `/work/app-topic-x` twice, `/work/side`, `/elsewhere/side`, `/work/side`, `<home>/trees/side`, `/abs/side`. |
 | git-window-079 | merge-view | UU `f.txt` and UD `gone.txt` from merging `main` into `side`; select `gone.txt`, then `f.txt` | `gone.txt`'s diff shows `base` and `kept on side` (its unstaged diff is empty); `f.txt` opens the merge view. |
 | git-window-080 | merge-view | an AA conflict, `side` against `main`, diffed as `.conflicted` | a context line `side` and an added line `main`, against HEAD. |
+| git-window-081 | merge-view | the conflicts of 079; select `f.txt` and at once `gone.txt`; then, with `isActing` true, select `f.txt` | the diff shows `gone.txt` and the merge view was never shown; then the merge view shows `f.txt`. |

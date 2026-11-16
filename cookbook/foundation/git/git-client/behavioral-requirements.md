@@ -119,8 +119,12 @@
   (the working file against the merge base, stage 1), so a conflict whose
   plain diff is only `* Unmerged path` (a delete on either side) still shows
   a patch; when that yields no file (there is no base stage, as in
-  both-added) it MUST run `--end-of-options HEAD` instead. Both take the
-  path as the one `:(top,literal)` pathspec.
+  both-added) it MUST run `--end-of-options HEAD` instead; when that is
+  empty too and the working file exists (added by us, the working file being
+  ours), it MUST show the working file as all added, as an untracked file's
+  diff does. Both diffs take the path as the one `:(top,literal)` pathspec.
+  Each file's `oldRevision` MUST name the old side used: `:1` for the base,
+  `HEAD` for the fallback, nil when there is no old side.
 - **blame-command**: The blame verb MUST run `git -c core.quotePath=false
   -c core.precomposeUnicode=true blame --porcelain [<commit>] -- <path>` in the top level, omitting the
   commit to blame the working tree, and MUST parse the output with the

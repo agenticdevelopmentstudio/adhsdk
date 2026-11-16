@@ -19,6 +19,10 @@ public struct GitFileDiff: Sendable, Hashable, Identifiable {
     public let change: Change
     public let isBinary: Bool
     public let hunks: [GitDiffHunk]
+    /// Where the old side was read from, when the target leaves that to the client: a
+    /// conflicted path's diff sets `:1` (its merge base) or `HEAD`, whichever it used, and
+    /// leaves nil when the old side is nothing. Nil for every other target.
+    public var oldRevision: String?
 
     public init(oldPath: String?, newPath: String?, change: Change, isBinary: Bool, hunks: [GitDiffHunk]) {
         self.oldPath = oldPath

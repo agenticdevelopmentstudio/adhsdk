@@ -655,7 +655,9 @@ public actor GitClient {
 
     /// `diff --base` for one unmerged path (git's "* Unmerged path" notice above the patch
     /// is no part of it), else, when that names no file (there is no base stage), the
-    /// working file against `HEAD`.
+    /// working file against `HEAD`, else, when that is empty too (an added-by-us conflict
+    /// whose working file is ours), the working file as all added, so the detail is never
+    /// blank while there is a file to show. Each file's `oldRevision` names the side used.
     private func conflictedDiff(
         path: String,
         arguments: [String],
@@ -663,15 +665,26 @@ public actor GitClient {
         caller: GitCaller,
         configuration: GitClientConfiguration
     ) async throws -> GitDiff {
+        func marked(_ diff: GitDiff, _ revision: String?) -> GitDiff {
+            GitDiff(files: diff.files.map { file in
+                var file = file
+                file.oldRevision = file.oldPath == nil ? nil : revision
+                return file
+            })
+        }
         let pathspec = ["--", ":(top,literal)\(path)"]
         let base = GitDiff.parse(patch: try await execute(
             verb: "diff", arguments: arguments + ["--base"] + pathspec, directory: directory, caller: caller,
             configuration: configuration, configOverrides: Self.diffConfigOverrides))
-        if !base.files.isEmpty { return base }
-        let head = try await execute(
+        if !base.files.isEmpty { return marked(base, ":1") }
+        let head = GitDiff.parse(patch: try await execute(
             verb: "diff", arguments: arguments + ["--end-of-options", "HEAD"] + pathspec, directory: directory,
-            caller: caller, configuration: configuration, configOverrides: Self.diffConfigOverrides)
-        return GitDiff.parse(patch: head)
+            caller: caller, configuration: configuration, configOverrides: Self.diffConfigOverrides))
+        if !head.files.isEmpty { return marked(head, "HEAD") }
+        let top = try await topLevel(of: directory, caller: caller)
+        guard FileManager.default.fileExists(atPath: top.appendingPathComponent(path).path) else { return head }
+        return try await untrackedDiff(path: path, arguments: arguments, directory: directory, caller: caller,
+                                       configuration: configuration)
     }
 
     // MARK: - Verbs no typed method models

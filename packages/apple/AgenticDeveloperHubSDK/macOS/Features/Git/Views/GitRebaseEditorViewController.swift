@@ -182,9 +182,12 @@ public final class GitRebaseEditorViewController: NSViewController {
         return max(Self.rowHeight, lines + wrapping)
     }
 
-    /// The Subject column's width, which a reword's message wraps at.
+    /// The width a reword's field gets, which its message wraps at: the frame the table lays
+    /// the Subject cell view out in (`frameOfCell`), the same for every row.
     var subjectWidth: CGFloat {
-        tableView.tableColumns.first { $0.identifier == Column.subject.identifier }?.width ?? Column.subject.width
+        let column = tableView.column(withIdentifier: Column.subject.identifier)
+        guard column >= 0 else { return Column.subject.width }
+        return tableView.frameOfCell(atColumn: column, row: 0).width
     }
 
     static let rowHeight: CGFloat = 26
@@ -218,7 +221,7 @@ public final class GitRebaseEditorViewController: NSViewController {
     /// The reword field being edited, as its entry's commit and the field editor's
     /// selection; nil when no field is.
     private func editingMessage() -> (commit: String, selection: NSRange)? {
-        guard let editor = view.window?.firstResponder as? NSTextView, editor.isFieldEditor,
+        guard let editor = viewIfLoaded?.window?.firstResponder as? NSTextView, editor.isFieldEditor,
               let field = (editor.delegate as? NSObject) as? GitRebaseMessageField else { return nil }
         let row = tableView.row(for: field)
         guard plan.entries.indices.contains(row) else { return nil }

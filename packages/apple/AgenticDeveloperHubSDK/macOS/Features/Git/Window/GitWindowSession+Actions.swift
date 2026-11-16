@@ -87,7 +87,9 @@ extension GitWindowSession {
             if amend { await fillAmendMessage() }
         case let .resolve(paths, side): await resolve(paths, using: side)
         case .markResolved(let paths): await execute(.stage(paths: paths))
-        case .openMerge(let path): await openMerge(path)
+        case .openMerge(let path):
+            openMerge(path)
+            await mergeOpenTask?.value
         }
     }
 
@@ -133,28 +135,36 @@ extension GitWindowSession {
 
     /// Reads the working file and shows it in the merge view; a file larger than
     /// `GitMergeViewController.maximumFileBytes`, not UTF-8, or holding no conflict the
-    /// parser accepts shows its `.conflicted` diff (against the merge base) instead. The
-    /// file is decoded and parsed off the main thread.
-    private func openMerge(_ path: String) async {
-        let data: Data?
-        do {
-            data = try await whileGitRuns {
-                try await model.contents(path: path, at: nil, maximumBytes: GitMergeViewController.maximumFileBytes)
+    /// parser accepts shows its `.conflicted` diff instead. The file is decoded and parsed
+    /// off the main thread. Opening is a read, so it is not gated by `isActing`: selecting
+    /// a conflict during a fetch still opens it. Each open supersedes the one before, and
+    /// any selection made while it reads (`showDiff`, `clearDiff`) supersedes it, so only
+    /// the latest selection's result is shown.
+    func openMerge(_ path: String) {
+        let generation = supersedeBottomPane()
+        mergeOpenTask = Task { [weak self] in
+            guard let self else { return }
+            let data: Data?
+            do {
+                data = try await self.model.contents(
+                    path: path, at: nil, maximumBytes: GitMergeViewController.maximumFileBytes)
+            } catch {
+                guard generation == self.bottomGeneration, !Task.isCancelled else { return }
+                self.showFailure(title: "Open failed", error: error)
+                return
             }
-        } catch {
-            showFailure(title: "Open failed", error: error)
-            return
+            let parsed = await Task.detached { () -> GitConflictDocument? in
+                guard let data, let text = String(data: data, encoding: .utf8) else { return nil }
+                return GitConflictDocument.parse(text)
+            }.value
+            guard generation == self.bottomGeneration, !Task.isCancelled else { return }
+            guard let document = parsed else {
+                self.showDiff(target: .conflicted(path: path), file: path)
+                return
+            }
+            self.merge.show(path: path, document: document)
+            self.bottom.show(self.merge)
         }
-        let parsed = await Task.detached { () -> GitConflictDocument? in
-            guard let data, let text = String(data: data, encoding: .utf8) else { return nil }
-            return GitConflictDocument.parse(text)
-        }.value
-        guard let document = parsed else {
-            showDiff(target: .conflicted(path: path), file: path)
-            return
-        }
-        merge.show(path: path, document: document)
-        bottom.show(merge)
     }
 
     /// Save writes the resolved text, stages it and returns to the diff; Cancel returns at once.

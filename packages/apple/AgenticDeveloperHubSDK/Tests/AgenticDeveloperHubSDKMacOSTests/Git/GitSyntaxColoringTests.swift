@@ -83,6 +83,20 @@ struct GitSyntaxColoringTests {
                 == (old: Rev.at("a1"), new: Rev.at("b2")))
     }
 
+    @Test("a conflicted diff's old side is read from the revision the diff itself used")
+    func conflictedRevisionsFollowTheDiff() {
+        typealias Rev = GitSyntaxColoring.Revision
+        let target = GitDiffTarget.conflicted(path: "a")
+        var file = GitFileDiff(oldPath: "a", newPath: "a", change: .modified, isBinary: false, hunks: [])
+        #expect(GitSyntaxColoring.revisions(for: target) == (old: Rev.at(":1"), new: Rev.workingFile))
+        file.oldRevision = ":1"
+        #expect(GitSyntaxColoring.revisions(for: target, diff: file) == (old: Rev.at(":1"), new: Rev.workingFile))
+        file.oldRevision = "HEAD"
+        #expect(GitSyntaxColoring.revisions(for: target, diff: file) == (old: Rev.at("HEAD"), new: Rev.workingFile))
+        file.oldRevision = nil
+        #expect(GitSyntaxColoring.revisions(for: target, diff: file) == (old: Rev.absent, new: Rev.workingFile))
+    }
+
     @Test("a rename reads the old path at the parent and the new path at the commit")
     func sidesOfRename() async throws {
         let coloring = try GitTextMateFixture.coloring()

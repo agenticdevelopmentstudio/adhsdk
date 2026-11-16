@@ -4,7 +4,7 @@
     "id": "6a830cf8-0b95-4ffd-b175-f5cf481490c4",
     "title": "Git Window",
     "type": "ingredient",
-    "version": "1.10.3",
+    "version": "1.10.4",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -39,7 +39,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "3d74d1a50bf5aa7b",
+  "synced": "51b7aded99c58f49",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

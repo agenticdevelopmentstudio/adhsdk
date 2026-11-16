@@ -78,10 +78,20 @@ public final class GitSyntaxColoring {
     /// Where a diff target's old and new sides are read from: the working copy's unstaged
     /// change is the index against the working file, a staged one `HEAD` against the index,
     /// an untracked file only the working file, a conflicted one its merge base (stage 1)
-    /// against the working file, a commit its first parent against itself, and a range its
-    /// two ends.
+    /// against the working file (or what its diff fell back to, `revisions(for:diff:)`), a
+    /// commit its first parent against itself, and a range its two ends.
     public static func revisions(for target: GitDiffTarget) -> (old: Revision, new: Revision) {
-        switch target {
+        revisions(for: target, diff: nil)
+    }
+
+    /// `revisions(for:)`, except that a conflicted diff's old side is read from the revision
+    /// the diff itself used (`diff.oldRevision`: the merge base, or `HEAD` when there is no
+    /// base stage), so the colouring and the lines come from one source.
+    public static func revisions(for target: GitDiffTarget, diff: GitFileDiff?) -> (old: Revision, new: Revision) {
+        if case .conflicted = target, let diff {
+            return (diff.oldRevision.map(Revision.at) ?? .absent, .workingFile)
+        }
+        return switch target {
         case .unstaged: (.at(":0"), .workingFile)
         case .staged: (.at("HEAD"), .at(":0"))
         case .untracked: (.absent, .workingFile)
@@ -98,7 +108,7 @@ public final class GitSyntaxColoring {
     /// logged and that side is nil.
     public func sides(of diff: GitFileDiff, target: GitDiffTarget,
                       source: GitContentSource) async -> (old: [StyledLine]?, new: [StyledLine]?) {
-        let revisions = Self.revisions(for: target)
+        let revisions = Self.revisions(for: target, diff: diff)
         let old = await side(path: diff.oldPath, revision: revisions.old, source: source)
         // A caller that has moved on cancels its task; the second read would be wasted.
         if Task.isCancelled { return (old, nil) }

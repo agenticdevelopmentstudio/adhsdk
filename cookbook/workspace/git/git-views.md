@@ -2,7 +2,7 @@
 id: bdd3a72d-8810-439b-bad7-ec16233cb2a3
 title: "Git Views"
 type: ingredient
-version: 1.12.2
+version: 1.12.3
 status: review
 language: en
 created: 2026-11-13
@@ -133,7 +133,7 @@ The **diff** (`GitDiffViewController`) shows one file's change for a `GitDiffTar
 - **diff-word-emphasis**: With `wordHighlights` on, each removed line paired with an added line by `GitWordDiff.pairs(in:)` MUST carry one run with highlight `.emphasis` (no foreground) per range `GitWordDiff.changedRanges(old:new:budget:)` reports for its side; with it off, no row carries an emphasis run. The emphasis MUST be worked out under one `GitWordDiff.Budget` for the whole file diff (a cap on tokens per line and on table cells across every pair), and a pair the budget cannot cover MUST carry no emphasis runs, falling back to line-level colour alone, so a huge diff never stalls the UI thread. The view MUST keep the emphasis it worked out for the loaded diff and setting and reuse it across rebuilds.
 - **diff-syntax-runs**: A removed line MUST carry the runs of `oldLines[old − 1]`, an added line those of `newLines[new − 1]`, and a context line those of `newLines[new − 1]`, else `oldLines[old − 1]`; nil lines or a number past the end carry no syntax runs. Emphasis runs follow the syntax runs.
 - **diff-coloring**: `GitSyntaxColoring.lines(for:path:)` MUST return nil for nil data, for data over `SyntaxHighlighter.maximumBytes`, for a path whose language the resolver does not know or whose scope has no grammar, and when the highlighter returns nil (a line over `maximumLineLength`); otherwise the highlighter's lines for the data decoded as the diff's own lines are, each line UTF-8 else ISO Latin-1 (so one stray byte does not move the runs of the other lines), with a lone carriage return (one not before a newline) replaced by a space, since the diff splits on newlines only and the highlighter would also break there, decoded off the UI thread. A highlighter that throws is logged and gives nil. `sides(of:target:source:)` MUST resolve each side's language before reading it, so a path with no known language or grammar is never read, and MUST read each side with `maximumBytes: SyntaxHighlighter.maximumBytes`, so a file too large to colour is never read whole.
-- **diff-coloring-revisions**: The old side MUST be read with `contents(path: oldPath, at:)` at `:0` for unstaged, `HEAD` for staged, `<id>^1` for a commit and `from` for a range, and is absent for an untracked file; the new side with `contents(path: newPath, at:)` at the working file (nil) for unstaged and untracked, `:0` for staged, the commit's id and `to` for a range. A side whose path is nil (an added file's old side, a deleted file's new side) is not read. A read that throws is logged and leaves that side uncoloured.
+- **diff-coloring-revisions**: The old side MUST be read with `contents(path: oldPath, at:)` at `:0` for unstaged, `HEAD` for staged, `<id>^1` for a commit and `from` for a range, and is absent for an untracked file; for a conflicted target it MUST be read at the file diff's `oldRevision` (the merge base `:1`, or `HEAD` when the diff fell back to it; absent when nil), so the colours and the lines come from one source; the new side with `contents(path: newPath, at:)` at the working file (nil) for unstaged, untracked and conflicted, `:0` for staged, the commit's id and `to` for a range. A side whose path is nil (an added file's old side, a deleted file's new side) is not read. A read that throws is logged and leaves that side uncoloured.
 - **diff-show**: `GitDiffViewController.show(target:file:)` MUST ask the content source for `diff(target, options:)` with `ignoreWhitespace` from its setting, show the file diff whose new path is `file`, else whose old path is `file` (with neither, no rows), at once uncoloured, then read both sides through `GitSyntaxColoring` and show them coloured. A reload that reads a diff equal to the one shown, for the same target, file and options, MUST keep the shown rows until the colouring lands rather than rebuilding them uncoloured first. A viewer's selection MUST survive a rebuild when every selected row shows the same hunk line with the same text afterwards, and is cleared otherwise. Without a coloring the diff stays uncoloured. A diff that throws MUST be logged by `GitClientError.logDescription` and leave the viewer empty with the error's description shown (`git.diff.error`, danger colour); the next `show` or `clear()` hides it.
 - **diff-latest-wins**: The latest `show(target:file:)` or `clear()` MUST win: a diff or colouring requested by an earlier call never changes the view, whichever order they finish in, decided by the view's own counter, bumped before it awaits.
 - **diff-controls**: The view MUST offer a segmented control `Inline` / `Side by Side`, checkboxes `Ignore Whitespace` and `Word Highlighting`, and buttons `Blame` and `History`. The three settings MUST be read from and written to `UserSettings` keys `git_diff_layout` (`inline` or `sideBySide`, default `inline`), `git_diff_ignore_whitespace` (default false) and `git_diff_word_highlight` (default true). Changing the layout or word highlighting MUST rebuild from the loaded diff without asking the source again; changing ignore-whitespace MUST ask for the shown target again. Side by side locks the two sides' vertical scroll together.
@@ -375,6 +375,7 @@ The root view carries `git.fileHistory`, the split `git.fileHistory.split`, the 
 | git-views-090 | sidebar-submodule-menus | submodule `lib/sub dir` (uninitialized); the `Submodules` header's menu, the row's menu | `Update All` → `.updateAllSubmodules`; `Open`, `Update` → `.openDirectory(<root>/lib/sub dir)`, `.updateSubmodule(lib/sub dir)` |
 | git-views-091 | diff-word-emphasis | the pair `one two` / `three four` under `Budget(cells: 1)`; 200 pairs of 200-word lines under the default budget | no emphasis runs; the rows are those with word highlighting off. |
 | git-views-092 | diff-show | two hunks unstaged, rows 2–3 selected; reload reading the same diff; then reload reading a one-line diff | the rows and selection unchanged; then new rows and no selection. |
+| git-views-093 | diff-coloring-revisions | `.conflicted(a)` without a diff; with a file diff whose `oldRevision` is `:1`, `HEAD`, nil | `:1`/working; `:1`/working; `HEAD`/working; none/working. |
 ## Edge Cases
 
 - **Null / empty input**: An unborn repository lists only the working copy (and its worktree).
@@ -486,18 +487,18 @@ The commit detail, the diff, the blame and the file history each log a failed lo
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/` | confirmed (1.12.2) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Git/GitHistorySearch.swift` | confirmed (1.12.2) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Git/GitFileListItem.swift` | confirmed (1.12.2) |
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitDiffLineModels.swift` | confirmed (1.12.2) |
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitSyntaxColoring.swift` | confirmed (1.12.2) |
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitDiffViewController.swift` | confirmed (1.12.2) |
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitBlameViewController.swift` | confirmed (1.12.2) |
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitFileHistoryViewController.swift` | confirmed (1.12.2) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/SourcesUI/macOS/Theme/ThemedViews.swift` | confirmed (1.12.2) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Git/GitFileStatus.swift` | confirmed (1.12.2) |
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitOperationBannerViewController.swift` | confirmed (1.12.2) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitWorkingCopyViewController.swift` | confirmed (1.12.2) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/` | confirmed (1.12.3) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Git/GitHistorySearch.swift` | confirmed (1.12.3) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Git/GitFileListItem.swift` | confirmed (1.12.3) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitDiffLineModels.swift` | confirmed (1.12.3) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitSyntaxColoring.swift` | confirmed (1.12.3) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitDiffViewController.swift` | confirmed (1.12.3) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitBlameViewController.swift` | confirmed (1.12.3) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitFileHistoryViewController.swift` | confirmed (1.12.3) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/SourcesUI/macOS/Theme/ThemedViews.swift` | confirmed (1.12.3) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Git/GitFileStatus.swift` | confirmed (1.12.3) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitOperationBannerViewController.swift` | confirmed (1.12.3) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitWorkingCopyViewController.swift` | confirmed (1.12.3) |
 
 ## Design Decisions
 
@@ -610,3 +611,4 @@ The commit detail, the diff, the blame and the file history each log a failed lo
 | 1.12.0 | 2026-11-16 | Mike Fullerton | Worktree and submodule menus: New Worktree… on the Worktrees header, Open and Remove… on a linked worktree (Open alone on the window's own), Check Out in New Worktree… on a branch checked out nowhere, Update All on the Submodules header, Open and Update on a submodule; new intents newWorktree, removeWorktree, updateSubmodule, updateAllSubmodules, openDirectory. |
 | 1.12.1 | 2026-11-16 | Mike Fullerton | Final review: word-emphasis budget, selection kept across reloads, non-ancestor rebase rows; reword field newlines, row heights, Move Up/Down; selectRows; merge view cap |
 | 1.12.2 | 2026-11-16 | Mike Fullerton | Selecting a conflict with markers opens the merge view; one without shows its .conflicted diff (vector 086) |
+| 1.12.3 | 2026-11-16 | Mike Fullerton | A conflicted diff's old side is coloured from the revision the diff used (vector 093) |

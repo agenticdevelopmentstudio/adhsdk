@@ -70,6 +70,12 @@ final class GitWindowSession {
     /// True while an action runs; a request made meanwhile is ignored. Set only by
     /// `perform(_:)`.
     var isActing = false
+    /// The merge-view open in flight or last finished; tests await it. Set only by
+    /// `openMerge(_:)` (GitWindowSession+Actions.swift), which is not gated by `isActing`.
+    var mergeOpenTask: Task<Void, Never>?
+    /// Bumped whenever the bottom pane is pointed at something new, so a merge open that a
+    /// newer selection overtook shows nothing. Bumped only by `supersedeBottomPane()`.
+    private(set) var bottomGeneration = 0
 
     private(set) var selection: Selection = .workingCopy
     /// The commit the selected ref pointed at when it was last shown in the history;
@@ -146,6 +152,7 @@ final class GitWindowSession {
     func stop() {
         searchTask?.cancel()
         actionTask?.cancel()
+        mergeOpenTask?.cancel()
         model.stop()
     }
 
@@ -307,8 +314,18 @@ final class GitWindowSession {
     // MARK: - Bottom pane
 
     func showDiff(target: GitDiffTarget, file: String) {
+        supersedeBottomPane()
         bottom.show(diff)
         diff.show(target: target, file: file)
+    }
+
+    /// Drops a merge open in flight and returns the generation the next bottom-pane
+    /// change must still hold when it lands.
+    @discardableResult
+    func supersedeBottomPane() -> Int {
+        mergeOpenTask?.cancel()
+        bottomGeneration += 1
+        return bottomGeneration
     }
 
     /// Returns the bottom pane to the diff when the merge view shows a path that is no
@@ -319,6 +336,7 @@ final class GitWindowSession {
     }
 
     private func clearDiff() {
+        supersedeBottomPane()
         bottom.show(diff)
         diff.clear()
     }
@@ -429,6 +447,10 @@ extension GitWindowSession: GitWorkingCopyDelegate {
     }
 
     func workingCopy(_ workingCopy: GitWorkingCopyViewController, didRequest intent: GitWorkingCopyIntent) {
+        if case .openMerge(let path) = intent {
+            openMerge(path)
+            return
+        }
         perform(.workingCopy(intent))
     }
 }

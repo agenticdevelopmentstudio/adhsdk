@@ -110,3 +110,4 @@
 | git-client-107 | write-action-mapping | Commit the message `#42 fix\n\n# not a comment  \n` | HEAD's message is `#42 fix\n\n# not a comment`. |
 | git-client-108 | submodule-update | Submodules `lib` and `other lib`, cloned without them; update `other lib` initializing | `other lib` current with `lib.txt` present; `lib` uninitialized. |
 | git-client-109 | environment-optional-locks-off | A script standing in for git that prints `$GIT_OPTIONAL_LOCKS` | `0`. |
+| git-client-110 | diff-conflicted | A rename/rename: `a.txt` renamed to `b.txt` here and to `c.txt` on `side`, `side` merged; diff `.conflicted(b.txt)` (AU, working file equal to HEAD); also a UD and an AA conflict | `b.txt` all added, `oldRevision` nil; the UD diff's `oldRevision` `:1`; the AA one's `HEAD`. |

@@ -22,3 +22,4 @@
 | 1.12.0 | 2026-11-16 | Mike Fullerton | Worktree and submodule menus: New Worktree… on the Worktrees header, Open and Remove… on a linked worktree (Open alone on the window's own), Check Out in New Worktree… on a branch checked out nowhere, Update All on the Submodules header, Open and Update on a submodule; new intents newWorktree, removeWorktree, updateSubmodule, updateAllSubmodules, openDirectory. |
 | 1.12.1 | 2026-11-16 | Mike Fullerton | Final review: word-emphasis budget, selection kept across reloads, non-ancestor rebase rows; reword field newlines, row heights, Move Up/Down; selectRows; merge view cap |
 | 1.12.2 | 2026-11-16 | Mike Fullerton | Selecting a conflict with markers opens the merge view; one without shows its .conflicted diff (vector 086) |
+| 1.12.3 | 2026-11-16 | Mike Fullerton | A conflicted diff's old side is coloured from the revision the diff used (vector 093) |

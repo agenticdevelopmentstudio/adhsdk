@@ -115,11 +115,14 @@ struct GitRebaseEditorViewControllerTests {
         let wrapped = editor.height(ofRow: 0)
         #expect(wrapped > oneLine, "one line of text, several lines on screen")
 
+        let subject = editor.tableView.column(withIdentifier: NSUserInterfaceItemIdentifier("subject"))
+        let fieldWidth = editor.tableView.frameOfCell(atColumn: subject, row: 0).width
+        #expect(editor.subjectWidth == fieldWidth, "measured at the frame the Subject cell view is laid out in")
         let field: GitRebaseMessageField = try #require(cell(editor, "subject", row: 0))
         field.stringValue = long
         let bounds = NSRect(x: 0, y: 0, width: editor.subjectWidth, height: .greatestFiniteMagnitude)
         let needed = try #require(field.cell?.cellSize(forBounds: bounds).height)
-        #expect(wrapped >= needed, "the row holds the field at the column's width")
+        #expect(wrapped >= needed, "the row holds the field at its own width")
 
         let column = try #require(editor.tableView.tableColumns.first { $0.identifier.rawValue == "subject" })
         column.width *= 2
@@ -213,6 +216,15 @@ struct GitRebaseEditorViewControllerTests {
         editor.setAction(.reword, at: 2)
         #expect(editor.plan.entries[2].message == "commit 2")
         #expect(editor.startButton.isEnabled)
+    }
+
+    @Test("moving an entry before the view loads reorders the plan without loading the view")
+    func moveBeforeLoadLeavesTheViewUnloaded() {
+        let editor = GitRebaseEditorViewController(plan: Self.plan())
+        let ids = editor.plan.entries.map(\.commit)
+        editor.moveEntry(from: 0, to: 3)
+        #expect(editor.plan.entries.map(\.commit) == [ids[1], ids[2], ids[0]])
+        #expect(!editor.isViewLoaded)
     }
 
     @Test("moving a row reorders the plan's entries, drop-above as the table names it")

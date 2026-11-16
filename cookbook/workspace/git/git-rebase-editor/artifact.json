@@ -4,7 +4,7 @@
     "id": "241d5e8b-3395-4093-ad77-1e138b7fe3a1",
     "title": "Git Rebase Editor",
     "type": "ingredient",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "status": "review",
     "language": "en",
     "created": "2026-11-16",
@@ -35,7 +35,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "6dce90f36d7eee0f",
+  "synced": "25d1280fea3a7edd",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

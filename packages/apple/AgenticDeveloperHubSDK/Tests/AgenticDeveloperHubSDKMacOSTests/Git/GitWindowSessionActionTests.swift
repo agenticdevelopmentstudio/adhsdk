@@ -1465,6 +1465,7 @@ struct GitWindowSessionActionTests {
         #expect(conflicted.newPath == "gone.txt")
         let lines = conflicted.hunks.flatMap(\.lines).map(\.text)
         #expect(lines.contains("base") && lines.contains("kept on side"))
+        #expect(conflicted.oldRevision == ":1")
 
         let list = session.workingCopy.conflictsList
         #expect(list.files.map(\.path) == ["f.txt", "gone.txt"])
@@ -1473,9 +1474,47 @@ struct GitWindowSessionActionTests {
         #expect(session.diff.isShowingWorkingCopy)
 
         list.tableView.selectRowIndexes(IndexSet(integer: 0), byExtendingSelection: false)
-        await session.actionTask?.value
+        await session.mergeOpenTask?.value
         #expect(session.bottom.content === session.merge)
         #expect(session.merge.path == "f.txt")
+        #expect(presenter.failures.isEmpty)
+    }
+
+    @Test("a newer selection wins over a merge open still reading, and an open is not dropped while busy")
+    func conflictOpenIsUngatedAndLatestWins() async throws {
+        let repository = try await GitTestRepository.make(prefix: "git-actions")
+        defer { repository.tearDown() }
+        try await commitFile(repository, "f.txt", "one\ntwo\nthree\n", at: 100)
+        try await commitFile(repository, "gone.txt", "base\n", at: 110)
+        try await repository.run(["checkout", "--quiet", "-b", "side"])
+        try await commitFile(repository, "f.txt", "ONE side\ntwo\nthree\n", at: 200)
+        try await commitFile(repository, "gone.txt", "kept on side\n", at: 210)
+        try await repository.run(["checkout", "--quiet", "main"])
+        try await commitFile(repository, "f.txt", "ONE main\ntwo\nthree\n", at: 300)
+        try await repository.run(["rm", "--quiet", "--", "gone.txt"])
+        try await repository.commit("delete gone.txt", at: Self.epoch + 310)
+        try await repository.run(["checkout", "--quiet", "side"])
+        _ = try? await repository.run(["merge", "--no-edit", "main"])
+        let presenter = StubPresenter()
+        let (_, session) = await makeSession(repository, presenter: presenter)
+        let list = session.workingCopy.conflictsList
+        #expect(list.files.map(\.path) == ["f.txt", "gone.txt"])
+
+        // Marked f.txt, then unmarked gone.txt before f.txt's read returns: gone.txt's diff stays.
+        list.tableView.selectRowIndexes(IndexSet(integer: 0), byExtendingSelection: false)
+        list.tableView.selectRowIndexes(IndexSet(integer: 1), byExtendingSelection: false)
+        await session.mergeOpenTask?.value
+        #expect(session.bottom.content === session.diff)
+        #expect(session.diff.isShowingWorkingCopy)
+        #expect(session.merge.path == nil)
+
+        // Another action running does not drop the open.
+        session.isActing = true
+        list.tableView.selectRowIndexes(IndexSet(integer: 0), byExtendingSelection: false)
+        await session.mergeOpenTask?.value
+        #expect(session.bottom.content === session.merge)
+        #expect(session.merge.path == "f.txt")
+        session.isActing = false
         #expect(presenter.failures.isEmpty)
     }
 
@@ -1497,6 +1536,31 @@ struct GitWindowSessionActionTests {
         let lines = file.hunks.flatMap(\.lines)
         #expect(lines.contains { $0.kind == .context && $0.text == "side" }, "HEAD's line is context")
         #expect(lines.contains { $0.kind == .added && $0.text == "main" })
+        #expect(file.oldRevision == "HEAD", "the colouring reads the old side where the diff did")
+    }
+
+    @Test("an added-by-us conflict whose working file is ours shows the file as added, not a blank detail")
+    func addedByUsConflictIsNotBlank() async throws {
+        let repository = try await GitTestRepository.make(prefix: "git-actions")
+        defer { repository.tearDown() }
+        try await commitFile(repository, "base.txt", "base\n", at: 100)
+        try await commitFile(repository, "a.txt", "ours\n", at: 200)
+        // A rename/rename: a.txt to b.txt here, to c.txt on side. b.txt is ours alone (stage
+        // 2, AU) and its working file is HEAD's, so neither a base nor HEAD shows a change.
+        try await repository.run(["checkout", "--quiet", "-b", "side"])
+        try await repository.run(["mv", "--", "a.txt", "c.txt"])
+        try await repository.commit("to c", at: Self.epoch + 300)
+        try await repository.run(["checkout", "--quiet", "main"])
+        try await repository.run(["mv", "--", "a.txt", "b.txt"])
+        try await repository.commit("to b", at: Self.epoch + 310)
+        _ = try? await repository.run(["merge", "--no-edit", "side"])
+        let (model, _) = await makeSession(repository, presenter: StubPresenter())
+        #expect(model.conflicts["b.txt"] == .addedByUs)
+
+        let file = try await fileDiff(model, .conflicted(path: "b.txt"))
+        #expect(file.newPath == "b.txt")
+        #expect(file.oldRevision == nil)
+        #expect(file.hunks.flatMap(\.lines).contains { $0.kind == .added && $0.text == "ours" })
     }
 
     @Test("Discard All Changes… leaves conflicted files alone")
