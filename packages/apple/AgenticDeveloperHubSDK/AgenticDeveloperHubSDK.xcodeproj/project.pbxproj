@@ -9231,7 +9231,6 @@
 		93783CB43D754915C131FAF8 /* AgenticDeveloperHubSDKHTDV-iOS.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = "AgenticDeveloperHubSDKHTDV-iOS.framework"; sourceTree = BUILT_PRODUCTS_DIR; };
 		9384E9B4E1EF998D1F7EC107 /* PartnerNotifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PartnerNotifier.swift; sourceTree = "<group>"; };
 		93BA08D2488AF2E0DE35385E /* WorkTrackingXPCProtocolConformanceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkTrackingXPCProtocolConformanceTests.swift; sourceTree = "<group>"; };
-		93E3505AD60FBC910845558E /* LLMChatWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LLMChatWindowController.swift; sourceTree = "<group>"; };
 		93EEFFAB63B70C1571AEF16E /* TerminalSessionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalSessionManager.swift; sourceTree = "<group>"; };
 		93F813C52166AEFE7E3244F5 /* SharedWindowLifecycleSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedWindowLifecycleSource.swift; sourceTree = "<group>"; };
 		942F2535866BED2AC8F2BBDC /* TerminalPaneConnectable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalPaneConnectable.swift; sourceTree = "<group>"; };
