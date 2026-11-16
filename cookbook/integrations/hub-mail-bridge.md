@@ -2,7 +2,7 @@
 id: e12914f0-3a3b-4fb7-ac0c-6332de37de4f
 title: "Hub Mail Bridge"
 type: ingredient
-version: 1.3.3
+version: 1.3.4
 status: review
 language: en
 created: 2026-11-14
@@ -77,9 +77,10 @@ What it does with each request:
 - **service-sign-out**: `signedOut()` MUST stop answering through the bridge at once, stop the trigger, set `.signedOut`, purge the mirror through `HubMailSync.signOut()` and stop the engine. A purge failure MUST set `.failed` saying the copy could not be cleared. Called while `.failed` with no sync, it MUST return to `.signedOut`.
 - **service-purge-left-over**: `signedOut()` with no mirror open (a launch whose restore ended signed out, or a failed sign-in) MUST still open the mirror through `connect` and purge it the same way, so mail a previous launch's identity left on disk is never served to the next identity; a `connect` that throws MUST leave the status `.signedOut`.
 - **service-sign-in-waits**: `signedIn()` MUST wait for a `signedOut()` purge still running before it opens the mirror, and a second `signedOut()` MUST wait for the first, so no purge ever deletes rows a newer sign-in pulled.
+- **service-renews-refused-token**: while connected, the service MUST read the sync's events. On `.authRequired` it MUST call the connection's `refreshSession` and, when that returns true, pull again at once with a manual kick (the engine drops other kicks while paused for auth). When the renewal returns false, or the hub refuses the pull again before a cycle completes, it MUST set `.failed(HubMailService.authRetryMessage)`, keep answering reads from the mirror, and pull again after `authRetryDelay`. The next completed cycle (`.idle`) MUST return the status to `.connected`. Sign-out MUST cancel the watch and any scheduled pull.
 - **service-follows-session**: `follow(_:)` MUST sign in on `.signedIn`, sign out on `.signedOut`, and leave the mirror alone on `.restoring` and `.error`.
 - **service-status-callback**: `onChange` MUST be called on the main actor once for every change of `status`, and never when it is set to the value it already has.
-- **live-shares-session**: `HubMailService.live` MUST build one `SessionController` that both the returned `HubAccount` and the service follow, pull with the stored session's credentials, and send label writes through the hub client so its middleware refreshes an expired token. The database MUST open on the first sign-in or the first sign-out (whichever comes first), creating its folder, and stay open.
+- **live-shares-session**: `HubMailService.live` MUST build one `SessionController` that both the returned `HubAccount` and the service follow, pull with the stored session's credentials, renew a refused pull's session by calling the hub client (whose middleware rotates the stored session the pulls read), and send label writes through the same client. The database MUST open on the first sign-in or the first sign-out (whichever comes first), creating its folder, and stay open.
 - **live-at-location**: `HubMailService.live(at:syncInterval:)` MUST build the same session as `live(databaseURL:deviceId:syncInterval:)`, with the location's `databaseURL` and `deviceId`, `syncInterval` defaulting to 300, and the default Keychain session store and bundle sign-in configuration.
 - **location-value**: `HubMailLocation` MUST carry a `databaseURL` and a `deviceId` and compare equal when both match.
 - **location-app-file**: `HubMailLocation.app(_ appFolder:)` MUST put the mirror at `<Application Support>/<appFolder>/hub-mail.db`, the first Application Support directory of the user domain, in its own file apart from every other database the app keeps, so signing out purges hub mail alone. It MUST NOT create the folder; the first sign-in or sign-out does.
@@ -155,6 +156,8 @@ Not applicable: no visual or interactive element.
 | hub-mail-bridge-036 | live-at-location | Derived: `live(at: location)` and `live(databaseURL:deviceId:)` with the location's two values | both build the same session; `syncInterval` is 300 when not passed |
 | hub-mail-bridge-038 | service-purge-left-over | One service signs in and pulls `c1`, then is dropped without signing out; a second service over the same database follows `.signedOut` | status `.signedOut`; the store has no connections |
 | hub-mail-bridge-039 | service-sign-in-waits | While connected, `signedOut()` and `signedIn()` run concurrently, each with one message to pull | status `.connected`; accounts `c1` |
+| hub-mail-bridge-040 | service-renews-refused-token | The first pull is refused with `.unauthorized`, the second returns message `m1` for `c1`; `refreshSession` returns true | `refreshSession` called once; accounts `c1`; status `.connected` |
+| hub-mail-bridge-041 | service-renews-refused-token | The first pull is refused with `.unauthorized`, the second returns `m1` for `c1`; `refreshSession` returns false; `authRetryDelay` 50 ms | statuses `.connected`, `.failed(authRetryMessage)`, `.connected`; accounts `c1` |
 | hub-mail-bridge-037 | location-value | Derived: two `HubMailLocation` values with the same `databaseURL` and `deviceId`, then one with a different `deviceId` | the first two compare equal; the third does not |
 
 ## Edge Cases
@@ -167,6 +170,7 @@ Not applicable: no visual or interactive element.
 - Two apps that share one `UserDefaults` and one key share one device id; an app wanting its own passes a different `deviceIdKey`.
 - Deleting the defaults loses the device id, so the next launch is a new device to the hub and starts a new cursor.
 - A launch whose restore ends signed out finds the mirror the previous launch's identity left on disk (the app quit while signed in); `signedOut()` opens it and purges it, so a different identity signing in next never reads that mail.
+- The app stays signed in past the access token's lifetime: the next pull is refused, the engine pauses for auth and drops its periodic kicks, and the service renews the session and pulls again. While the hub cannot be reached to renew, the status says new mail is not arriving and the service tries again every `authRetryDelay`; a refresh token the hub rejects signs the user out instead.
 - A sign-in that arrives while a sign-out is still purging waits for the purge, then opens the mirror; otherwise the purge would delete the rows the new identity had just pulled.
 - `HubMailLocation.app(_:)` only names the file; a folder that does not exist yet is created when the database first opens, on sign-in or on a sign-out purge.
 
@@ -292,6 +296,7 @@ Vectors 001 to 032 have a named test in `AgenticDeveloperHubSDKHubMailBridgeTest
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.3.4 | 2026-11-16 | Mike Fullerton | A refused pull token is renewed and the pull retried (review f2) |
 | 1.3.3 | 2026-11-16 | Mike Fullerton | Sign-out purges a mirror a previous launch left; a sign-in waits for a running purge |
 | 1.3.2 | 2026-11-14 | Mike Fullerton | Defined the not-ok write failure and restated the move rule as separate cases, split the device-id key row, gave syncInterval its default per entry point, recorded the stale-pull label gap as prudent debt, added vectors 033 to 037 and marked unit-test-coverage partial, stated retention and the persisted device id in Privacy, marked two strings user-facing, renamed the States column, replaced hardcoded app names, moved the shared location rules into Configuration, unified the Email App name, and fixed blank lines before headings. |
 | 1.3.1 | 2026-11-14 | Mike Fullerton | WinUI 3 translation guidance |

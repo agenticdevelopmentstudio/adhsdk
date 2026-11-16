@@ -39,5 +39,7 @@
 | hub-mail-bridge-036 | live-at-location | Derived: `live(at: location)` and `live(databaseURL:deviceId:)` with the location's two values | both build the same session; `syncInterval` is 300 when not passed |
 | hub-mail-bridge-038 | service-purge-left-over | One service signs in and pulls `c1`, then is dropped without signing out; a second service over the same database follows `.signedOut` | status `.signedOut`; the store has no connections |
 | hub-mail-bridge-039 | service-sign-in-waits | While connected, `signedOut()` and `signedIn()` run concurrently, each with one message to pull | status `.connected`; accounts `c1` |
+| hub-mail-bridge-040 | service-renews-refused-token | The first pull is refused with `.unauthorized`, the second returns message `m1` for `c1`; `refreshSession` returns true | `refreshSession` called once; accounts `c1`; status `.connected` |
+| hub-mail-bridge-041 | service-renews-refused-token | The first pull is refused with `.unauthorized`, the second returns `m1` for `c1`; `refreshSession` returns false; `authRetryDelay` 50 ms | statuses `.connected`, `.failed(authRetryMessage)`, `.connected`; accounts `c1` |
 | hub-mail-bridge-037 | location-value | Derived: two `HubMailLocation` values with the same `databaseURL` and `deviceId`, then one with a different `deviceId` | the first two compare equal; the third does not |
 

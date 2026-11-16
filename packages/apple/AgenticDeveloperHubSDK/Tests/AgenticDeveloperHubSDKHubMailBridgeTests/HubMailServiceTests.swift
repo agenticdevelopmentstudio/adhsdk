@@ -6,10 +6,10 @@ import AgenticDeveloperHubSDKHubMail
 import AgenticDeveloperHubSDKHubAuth
 @testable import AgenticDeveloperHubSDKHubMailBridge
 
-/// Vectors hub-mail-bridge-023 to 029, 038 and 039: sign-in opens the mirror
-/// behind one stable client, sign-out purges it (even one a previous launch
-/// left on disk), a sign-in waits for that purge, and the routed client
-/// follows a switch.
+/// Vectors hub-mail-bridge-023 to 029 and 038 to 041: sign-in opens the
+/// mirror behind one stable client, sign-out purges it (even one a previous
+/// launch left on disk), a sign-in waits for that purge, a refused token is
+/// renewed or retried, and the routed client follows a switch.
 @MainActor
 final class HubMailServiceTests: XCTestCase {
 
@@ -58,15 +58,26 @@ final class HubMailServiceTests: XCTestCase {
 
     private func service(
         transport: ScriptedSyncTransport? = nil,
-        fails: Bool = false
+        fails: Bool = false,
+        refresh: @escaping @Sendable () async -> Bool = { false },
+        authRetryDelay: Duration = .seconds(60)
     ) -> HubMailService {
         let database = database!
         let transport = transport ?? oneMessagePull()
-        return HubMailService(syncInterval: nil) {
+        return HubMailService(syncInterval: nil, authRetryDelay: authRetryDelay) {
             if fails { throw CocoaError(.fileReadNoPermission) }
             let sync = try HubMailSync(database: database, transport: transport, deviceId: "test-device")
-            return HubMailService.Connection(sync: sync, writeLabels: { _ in })
+            return HubMailService.Connection(sync: sync, writeLabels: { _ in }, refreshSession: refresh)
         }
+    }
+
+    /// Polls `condition` for up to three seconds.
+    private func eventually(_ condition: () async throws -> Bool) async rethrows -> Bool {
+        for _ in 0..<300 {
+            if try await condition() { return true }
+            try? await Task.sleep(for: .milliseconds(10))
+        }
+        return false
     }
 
     private func remoteMessage(_ body: () async throws -> Void) async -> String? {
@@ -215,6 +226,39 @@ final class HubMailServiceTests: XCTestCase {
         XCTAssertEqual(try await service.client.accounts().map(\.id), ["c1"])
         await service.signedOut()
     }
+
+    // 040
+    func testARefusedTokenIsRenewedAndThePullRuns() async throws {
+        let renewals = Counter()
+        let transport = ScriptedSyncTransport(pulls: [.failure(.unauthorized), messagePull()])
+        let service = service(transport: transport, refresh: { await renewals.increment(); return true })
+
+        await service.signedIn()
+
+        let pulled = try await eventually { try await service.client.accounts().map(\.id) == ["c1"] }
+        XCTAssertTrue(pulled)
+        let count = await renewals.value
+        XCTAssertEqual(count, 1)
+        XCTAssertEqual(service.status, .connected)
+        await service.signedOut()
+    }
+
+    // 041
+    func testAFailedRenewalShowsTheRetryAndTheNextPullClearsIt() async throws {
+        let transport = ScriptedSyncTransport(pulls: [.failure(.unauthorized), messagePull()])
+        let service = service(transport: transport, refresh: { false }, authRetryDelay: .milliseconds(50))
+        var seen: [HubMailService.Status] = []
+        service.onChange = { seen.append(service.status) }
+
+        await service.signedIn()
+
+        let recovered = try await eventually { try await service.client.accounts().map(\.id) == ["c1"] }
+        XCTAssertTrue(recovered)
+        let connected = await eventually { service.status == .connected }
+        XCTAssertTrue(connected)
+        XCTAssertEqual(seen, [.connected, .failed(HubMailService.authRetryMessage), .connected])
+        await service.signedOut()
+    }
 }
 
 /// A switch the routed client reads from any thread.
@@ -230,4 +274,9 @@ private final class SourceBox: @unchecked Sendable {
         get { lock.withLock { current } }
         set { lock.withLock { current = newValue } }
     }
+}
+
+private actor Counter {
+    private(set) var value = 0
+    func increment() { value += 1 }
 }
