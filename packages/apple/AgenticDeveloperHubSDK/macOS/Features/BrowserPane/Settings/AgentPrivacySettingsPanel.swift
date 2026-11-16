@@ -7,7 +7,7 @@ import AppKit
 
 import AgenticDeveloperHubSDKCore
 
-/// The Agent Privacy group of the Browser panel's Privacy topic
+/// The Agent Privacy group of the Browser panel's Privacy and Security topic
 /// (`BrowserPrivacySettingsPanel`): whether models see a browser through the
 /// privacy words, and the words themselves — the private terminal's privacy
 /// applied to a page.

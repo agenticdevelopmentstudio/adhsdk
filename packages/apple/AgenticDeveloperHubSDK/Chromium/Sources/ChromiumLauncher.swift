@@ -85,7 +85,7 @@ public enum ChromiumLauncher {
 
     /// Chromium's `--autoplay-policy` for the Autoplay setting. "Never" is
     /// Chromium's strictest policy, which still lets a muted video play: it
-    /// has no policy that stops one, and the Media topic says so.
+    /// has no policy that stops one, and Behavior's Playback help says so.
     static func autoplayPolicy(_ policy: BrowserAutoplayPolicy) -> String {
         switch policy {
         case .allowed: "no-user-gesture-required"

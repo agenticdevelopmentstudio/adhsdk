@@ -163,7 +163,8 @@ final class BrowserPrivacySettingsPanel: BrowserTopicPanel {
         .init(
             title: "Chrome Panes",
             body: "Every setting here applies to Chrome panes as well as Safari ones, "
-                + "with one difference: Chrome does not honour Autoplay set to Never."
+                + "except Protection and Site Data, which only WebKit has and which a "
+                + "Chrome pane's settings leave out."
         )
     ]
 

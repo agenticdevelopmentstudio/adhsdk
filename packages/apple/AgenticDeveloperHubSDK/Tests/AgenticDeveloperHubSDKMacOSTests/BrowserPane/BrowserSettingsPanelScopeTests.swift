@@ -110,7 +110,7 @@ final class BrowserSettingsPanelScopeTests: XCTestCase {
         )
         XCTAssertFalse(
             panel.panels.contains { $0.descriptor.title == "Agent Privacy" },
-            "Agent Privacy is a group of the Privacy topic, not a topic of its own"
+            "Agent Privacy is a group of the Privacy and Security topic, not a topic of its own"
         )
         XCTAssertEqual(
             panel.binding.rows(named: UserSettings.browserAgentPrivacy.name).count, 1,
@@ -503,5 +503,86 @@ final class BrowserSettingsPanelScopeTests: XCTestCase {
         XCTAssertEqual(global.get(UserSettings.browserPrivacyPointerTracking), .always)
         model.settingObserver.value = true
         XCTAssertEqual(global.get(UserSettings.browserPrivacyPointerTracking), .never)
+    }
+
+    // MARK: - Every key has a home
+
+    /// Answers the Chrome topics' reads with nothing, so the Settings window
+    /// lists them and their rows exist.
+    @MainActor
+    private final class NoChromeMaintenance: BrowserEngineMaintenance {
+        var engineVersion: String { "test" }
+        func removeAllCookies() async {}
+        func extensions(in profile: BrowserExtensionProfile) async throws -> [BrowserExtension] { [] }
+        func setExtension(_ id: String, enabled: Bool, in profile: BrowserExtensionProfile) async throws {}
+        func removeExtension(_ id: String, in profile: BrowserExtensionProfile) async throws {}
+        func checkForExtensionUpdates(in profile: BrowserExtensionProfile) async throws {}
+        func endExtensionManagement() {}
+    }
+
+    /// After the regroup no browser key is orphaned: each one is a row in the
+    /// Settings window (Chrome's topics included) or in a Safari pane's sheet,
+    /// where the pane-only tab position lives.
+    func test_everyBrowserKeyHasAHome() throws {
+        let global = makeSettings()
+        let window = BrowserSettingsPanelViewController(
+            history: nil,
+            siteData: BrowserSiteData(dataStore: .nonPersistent()),
+            settings: global,
+            chrome: NoChromeMaintenance()
+        )
+        _ = window.view
+        window.panels.forEach { _ = $0.view }
+
+        let layered = makeLayered(over: global)
+        let sheet = makePanel(settings: global, scope: .pane(layered, try makePane(settings: layered)))
+
+        let shown = Set(window.binding.rows.map(\.name)).union(sheet.binding.rows.map(\.name))
+        for name in BrowserSettings.allKeyNames {
+            XCTAssertTrue(shown.contains(name), "\(name) is a row in no topic")
+        }
+    }
+
+    // MARK: - History in a pane's sheet
+
+    /// browser-settings-014 (pane half) and browser-settings-019: a pane's
+    /// History group has Record history and Agent can see history but not
+    /// the global-only Keep visits for; a pane write marks the agent row, and
+    /// Use Global Setting puts it back on the global value.
+    func test_paneHistoryGroupAndAgentAccessOverride() throws {
+        let global = makeSettings()
+        let layered = makeLayered(over: global)
+        let pane = try makePane(settings: layered)
+        let panel = makePanel(settings: global, scope: .pane(layered, pane))
+
+        let historyRows = panel.binding.rows.filter { $0.group == "History" }.map(\.name)
+        XCTAssertEqual(historyRows, [
+            UserSettings.browserRecordsHistory.name, UserSettings.browserAgentHistoryAccess.name
+        ])
+        XCTAssertFalse(historyRows.contains(UserSettings.browserHistoryRetention.name))
+
+        let key = UserSettings.browserAgentHistoryAccess
+        let row = try XCTUnwrap(panel.binding.rows(named: key.name).first)
+        let model = try XCTUnwrap(row.model as? ComposableSettings.ChoiceViewModel<BrowserAgentHistoryAccess>)
+        let marker = try XCTUnwrap(row.marker, "a pane row carries an override marker")
+        XCTAssertFalse(marker.isShowingOverride)
+
+        model.settingObserver.value = .currentTab
+        settle()
+
+        XCTAssertTrue(layered.hasOverride(key))
+        XCTAssertEqual(layered.get(key), .currentTab)
+        XCTAssertEqual(global.get(key), BrowserAgentHistoryAccess.none, "the global value is untouched")
+        XCTAssertTrue(marker.isShowingOverride)
+        XCTAssertTrue(row.hasOverride())
+
+        let item = marker.useGlobalItem
+        _ = item.target?.perform(item.action, with: item)
+        settle()
+
+        XCTAssertFalse(layered.hasOverride(key))
+        XCTAssertFalse(row.hasOverride())
+        XCTAssertFalse(marker.isShowingOverride)
+        XCTAssertEqual(model.value, global.get(key))
     }
 }
