@@ -2,7 +2,7 @@
 id: 8a4aca5f-977b-4f4c-86f6-16f4150132ac
 title: "Browser Menu"
 type: ingredient
-version: 0.1.2
+version: 0.1.3
 status: draft
 language: en
 created: 2026-11-15
@@ -114,7 +114,9 @@ features design, section 1.2, and its phase 1 plan, Task 3).
   the window's first responder is inside it (a Chrome pane's attached page
   window counts as inside it). With an editor or terminal focused beside
   the pane they MUST do nothing to the pane, so the keys reach that view.
-  The menu items themselves keep acting on the target pane.
+  The Back and Forward menu items carry those keys, so they MUST follow the
+  same rule: enabled, and acting, only for the focused pane, never for a
+  target pane that was merely focused last.
 - **menu-key-follows-binding**: A menu item that carries a key command id
   MUST display, as its key equivalent and modifiers, the registry's current
   shortcut for that id, and MUST update it whenever the registry announces
@@ -204,6 +206,7 @@ features design, section 1.2, and its phase 1 plan, Task 3).
 | browser-menu-020 | bridge-is-generic | A contribution in another slot names a key command id; another names none and a fixed key | The first follows the registry; the second keeps its fixed key |
 | browser-menu-021 | show-history-always-enabled | No history store set; validate Show History with and without a target | Disabled both times |
 | browser-menu-022 | back-forward-keys-need-focus | Project window whose last-focused browser pane can go back; first responder in an editor pane beside it; run the `browser.back` key command | The pane does not go back; with the first responder inside the pane it does |
+| browser-menu-023 | back-forward-keys-need-focus | Target pane can go back and forward but does not have keyboard focus; validate and choose Back and Forward, then Reload | Back and Forward are disabled and record no call; Reload is enabled and records reload |
 
 ## Edge Cases
 
@@ -300,7 +303,10 @@ Not applicable: the design asks for no log line of the menu's own.
   of the command window, kept only when that window is a
   `WebBrowserWindowController`'s, when the command window is a child whose
   `commandOwner` is another window, or when the first responder is a view
-  inside the pane's view. The items' stable ids are
+  inside the pane's view. The Back and Forward items take theirs from the
+  injected `focusedPane`, which defaults to that same `focusedKeyPane()`, so
+  an item carrying ⌘[ or ⌘] never enables for an unfocused pane. The items'
+  stable ids are
   `BrowserMenuCommands.ItemID` (`browser.reload` … `browser.toggle-privacy-toolbar`),
   which `MenuManager` prefixes into `menu.browser.*` accessibility identifiers,
   and the separator falls before `BrowserMenuCommands.showSectionOrder` (100). Engine calls are
@@ -385,6 +391,7 @@ checks are run when the code lands and the recipe is confirmed against it.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 0.1.3 | 2026-11-16 | Mike Fullerton | Review fix: Back and Forward run only for the focused browser pane. |
 | 0.1.2 | 2026-11-16 | Mike Fullerton | Show History enabled only with a history store; Back and Forward keys act only on a focused pane. |
 | 0.1.1 | 2026-11-15 | Mike Fullerton | macOS implementation: dynamicTitle, ItemID, showSectionOrder, keyPane(in:) and the command-window rule recorded in platform notes |
 | 0.1.0 | 2026-11-15 | Mike Fullerton | Initial creation (design-first, from the more privacy features design) |

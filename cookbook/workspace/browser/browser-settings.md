@@ -2,7 +2,7 @@
 id: 5a246e6c-2125-4427-a8ab-2f43f2fecba5
 title: "Web Browser Settings Topics"
 type: ingredient
-version: 0.1.6
+version: 0.1.7
 status: draft
 language: en
 created: 2026-11-15
@@ -104,12 +104,18 @@ because each topic's search keywords move with its controls.
   Site Data…" button, with identifier `settings.browser.site-data.manage`, and
   MUST NOT show the site data table inline.
 - **site-data-window**: The Manage Site Data… button MUST open a window titled "Site
-  Data" that is modal to the application, resizable and movable by the user,
-  and holds the site data table (columns Site and Data) with a remove (−)
-  control, "Remove All…", "Refresh" and "Done".
+  Data — <jar>", where <jar> names the jar it acts on ("Shared by all browser
+  panes", "Shared within this worktree", "This pane only", or private
+  browsing), that is modal to the application, resizable and movable by the
+  user, and holds the site data table (columns Site and Data) with a remove (−)
+  control, "Remove All…", "Refresh" and "Done". Remove All…'s confirmation MUST
+  name the same jar.
 - **site-data-window-scope**: The Site Data window MUST, in the app's Settings
   window, list the global jar's site data; in a pane's settings sheet it MUST list
-  the site data of the store that pane's page uses.
+  the site data of the jar the sheet's Storage (and Private browsing) setting
+  names when the button is pressed — the store that pane's page uses while the
+  setting is unchanged, and the jar it names after a change made in the same
+  sheet, never the jar the sheet opened on.
 - **history-group-contents**: The History group MUST hold "Record history",
   "Keep visits for" and "Agent can see history", in that order; "Keep visits
   for" MUST appear only in the app's Settings window, since the visit store is
@@ -229,8 +235,8 @@ because each topic's search keywords move with its controls.
 | browser-settings-009 | privacy-security-title, privacy-security-existing-groups-first | Open Privacy and Security | Topic title "Privacy and Security"; first groups are General, Input, Focus and visibility, Coding Partner, Agent Privacy, Storage, Scripts |
 | browser-settings-010 | privacy-security-added-groups | Same topic | Groups after Scripts, in order: Cookies, Camera and Microphone, Protection, Site Data, History |
 | browser-settings-011 | manage-site-data-button | Open the Site Data group | One button "Manage Site Data…", id `settings.browser.site-data.manage`; no table in the topic |
-| browser-settings-012 | site-data-window | Press Manage Site Data… | A window titled "Site Data" opens, app-modal, resizable, movable, with columns Site and Data and −, Remove All…, Refresh, Done |
-| browser-settings-013 | site-data-window-scope | Press Manage Site Data… in a pane sheet whose pane has a jar of its own | The table lists that jar's site data, not the global jar's |
+| browser-settings-012 | site-data-window | Press Manage Site Data… | A window titled "Site Data — <jar>" opens, naming the jar, app-modal, resizable, movable, with columns Site and Data and −, Remove All…, Refresh, Done |
+| browser-settings-013 | site-data-window-scope | Press Manage Site Data… in a pane sheet whose pane has a jar of its own | The table lists that jar's site data, not the global jar's; after Storage is changed to "Shared by all browser panes" in the same sheet, it lists the global jar's and the title and Remove All… confirmation say so |
 | browser-settings-014 | history-group-contents | Open the History group in the Settings window, then in a pane sheet | Settings window: Record history, Keep visits for, Agent can see history; pane sheet: Record history, Agent can see history |
 | browser-settings-015 | history-recording-gate | Recording on, pane private browsing on; navigate | No visit recorded |
 | browser-settings-016 | history-recording-gate | Recording on, private browsing off; navigate | One visit recorded |
@@ -487,6 +493,7 @@ Notes: no compliance checks have been run against the code yet.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 0.1.7 | 2026-11-16 | Mike Fullerton | Review fix: Manage Site Data resolves its jar on click and names it in the title and confirmation. |
 | 0.1.6 | 2026-11-16 | Mike Fullerton | The no-history-store note moves from under Record history to the History help topic. |
 | 0.1.5 | 2026-11-16 | Mike Fullerton | Privacy toolbar row with the hide-from-agent button and agent view control; agentHidesImages; notice-shown key is global only. |
 | 0.1.4 | 2026-11-15 | Mike Fullerton | help-covers-regrouped-topics allows a where-to-find-it topic that names where the control lives |

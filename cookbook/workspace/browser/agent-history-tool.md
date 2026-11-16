@@ -2,7 +2,7 @@
 id: 4ef7f4f9-1fa0-4267-ad82-0f35ba92a7d1
 title: "Agent History Tool"
 type: ingredient
-version: 0.1.3
+version: 0.1.4
 status: draft
 language: en
 created: 2026-11-15
@@ -117,6 +117,11 @@ features design, section 1.4, and its phase 1 plan, Tasks 7 and 10).
   concealment MUST use every enabled privacy word whatever site it is
   scoped to, never only the words that apply to the page in front, combined
   with the privacy the call runs under.
+- **query-matches-concealed-text**: When agent privacy is on, `query` MUST
+  be matched against each visit's concealed title and address — what the
+  agent would be shown — never the real text, under either access, with
+  `limit` applied after that match and the newest first; otherwise whether a
+  query returns visits would confirm a guess at a concealed word.
 - **no-local-files**: The tool MUST NOT list a visit whose address is a
   local file (`file:`), its title or its address, under either access; under
   All history such visits MUST be left out before `limit` is applied, so the
@@ -205,7 +210,7 @@ features design, section 1.4, and its phase 1 plan, Tasks 7 and 10).
 | agent-history-tool-020 | no-local-files | Access All history; the newest visit is `file:///Users/me/notes.html`, then two `https` visits; `limit` 2 | Two lines, both `https`; no `file:` address or its title appears |
 | agent-history-tool-021 | no-local-files | Access Current tab only; the back/forward list holds a `file:` entry and an `https` entry | Only the `https` entry is listed |
 | agent-history-tool-022 | closed-privacy-refuses, conceal-with-every-word | Agent privacy on; the page's words readable; the every-site words unreadable | The call fails with the closed-privacy refusal; no visit returned |
-
+| agent-history-tool-023 | query-matches-concealed-text | Agent privacy on with "Acme" shown as "Globex"; a visit titled "Acme statement"; `query` "acme", then "globex" | "acme" replies that no visits were found; "globex" lists the visit as "Globex statement" |
 ## Edge Cases
 
 - **Null and empty input**: No query lists recent visits (MUST, see
@@ -299,7 +304,9 @@ reach the agent as tool errors.
   visit `BrowserAutomation.isDrivable` refuses (a `file:` address; the store
   reads with `recent(limit:excludingLocalFiles: true)` and
   `search(_:limit:excludingLocalFiles: true)`, whose SQL adds
-  `url NOT LIKE 'file:%'` before the limit), concealing each field
+  `url NOT LIKE 'file:%'` before the limit; under Agent Privacy a query
+  skips that SQL search and walks `recent(limit:before:excludingLocalFiles: true)`
+  a `matchPageSize` page at a time, matching the concealed fields), concealing each field
   through the agent page's string path,
   `AgentPageBuilder(privacy:hideImages: false).conceal`, which applies
   `BrowserAgentPrivacy.concealing(_:)` (whose filter already adds the
@@ -386,6 +393,7 @@ checks are run when the code lands and the recipe is confirmed against it.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 0.1.4 | 2026-11-16 | Mike Fullerton | Under Agent Privacy a browser_history query matches the concealed title and address, never the real text. |
 | 0.1.3 | 2026-11-16 | Mike Fullerton | browser_history conceals with every enabled privacy word, never lists file: URLs, and is refused while the privacy side is closed. |
 | 0.1.2 | 2026-11-16 | Mike Fullerton | Concealing through AgentPageBuilder(privacy:hideImages: false).conceal; BrowserPaneHandle.hidesImages is required and unused here. |
 | 0.1.1 | 2026-11-15 | Mike Fullerton | The tool's pane argument is pane_id, as every other browser tool's is |

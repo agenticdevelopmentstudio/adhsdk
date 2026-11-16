@@ -2,7 +2,7 @@
 id: 213f008f-6e11-4d6d-ba91-dbcd7e9330cc
 title: "Extensions Settings Topic"
 type: ingredient
-version: 0.2.1
+version: 0.2.2
 status: draft
 language: en
 created: 2026-11-15
@@ -114,7 +114,10 @@ than replacing the list.
   site the new files ask for, since a manifest key is public. Once accepted,
   the extension MUST become a local one (not from the Web Store, not from an
   app, its source not missing) granted only what was just agreed to, so the
-  store's update check leaves it alone.
+  store's update check leaves it alone; private browsing and file access,
+  which the confirmation does not ask about, MUST be off, and its sites MUST
+  be the ones its kept site access setting grants (the listed sites under
+  "On specific sites"), so it runs where its details page says.
 - **downloaded-refuses-links**: The extension host MUST refuse an item
   whose staged copy holds a symbolic link, with an error naming the item and
   the link, before the permission confirmation, and MUST leave nothing
@@ -424,6 +427,7 @@ Notes: no compliance checks have been run; the code does not exist yet.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 0.2.2 | 2026-11-16 | Mike Fullerton | Review fix: a keyed replacement resets private and file access and re-grants the sites it lists. |
 | 0.2.1 | 2026-11-16 | Mike Fullerton | Every install stages off the main thread and refuses links (fail closed); 128 MB download cap; keyed takeover confirmed as a replacement; app-modal confirm and errors without a window; URL prompt has no instruction line. |
 | 0.2.0 | 2026-11-15 | Mike Fullerton | downloaded-refuses-links and downloaded-off-main: a downloaded folder with a symbolic link is refused, and staging runs off the main thread |
 | 0.1.1 | 2026-11-15 | Mike Fullerton | Platform notes follow the implementation: header buttons as header-view subviews, installDownloaded(at:presentingOn:), install(fromAddress:), key- or path-derived ids |

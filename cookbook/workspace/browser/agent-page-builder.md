@@ -2,7 +2,7 @@
 id: 8bd94d87-6096-4fb1-82a7-d5f712c2958f
 title: "Agent Page Builder (Agent Gatekeeper)"
 type: ingredient
-version: 0.1.3
+version: 0.1.4
 status: draft
 language: en
 created: 2026-11-15
@@ -147,8 +147,8 @@ only change what it filters.
   Text that a rendering joins from several pieces — a subtree's text read
   the `textContent` way for a generic line, a name taken from content or
   an option, and a run of text pieces in the text and HTML renderings —
-  MUST be joined from the unconcealed pieces, then collapsed and trimmed
-  once, then concealed once as a whole, never assembled from pieces
+  MUST be joined from the unconcealed pieces, then collapsed (line by line,
+  per text-keeps-line-structure) and trimmed once, then concealed once as a whole, never assembled from pieces
   concealed one by one, so a privacy word split across inline elements
   (`Ac<b>me</b>`) is still concealed.
 - **text-pieces-keep-boundary-space**: The walker MUST send each text
@@ -158,6 +158,19 @@ only change what it filters.
   joined text keeps the word boundary `innerText` reads: `Buy <b>now</b>`
   MUST read "Buy now" in the text, HTML and content-name renderings, while
   the snapshot tree MUST still print each piece trimmed, as today.
+- **text-keeps-line-structure**: The walker MUST send the line breaks
+  `innerText` reads as a newline in the text it emits: a shown `<br>`, the
+  edges of a block box it flattens or reads through (a `div`, any element
+  whose computed display is not inline, `contents` or ruby; a table cell's
+  edges are a space), and the newlines of a text node whose element
+  preserves them (`<pre>`, `white-space: pre*`). The text rendering MUST
+  start a new line at each, dropping empty lines; the HTML rendering MUST
+  write each run of them as one `<br>` carrying the node's `data-adk-ref`;
+  the snapshot tree and every name MUST read them as a space. Text holding
+  a break MUST be concealed with its breaks kept only when that equals,
+  breaks read as spaces, the text concealed as one line; otherwise it MUST
+  be the one-line concealment, so a break never carries a privacy word
+  (`Acme<br>Corp` for "Acme Corp") past the filter.
 - **hide-images**: When the Hide Images setting is on, the component MUST
   drop every image node; when it is off, an image MUST enter the result
   only as its alternative text, never as an image source. With Hide
@@ -383,11 +396,24 @@ landmarks, headings — to build its result.)
   site's exclusions are never applied to another site's page.
 - **Very large pages**: The selector each node records costs a search per
   node. The walker gives that search a share of its budget (a third) and
-  records the cheaper structural path (`tag:nth-child(n) > …`) for every
-  node after the share is spent, so a large page finishes where today's
-  snapshot does. Selectors never decide exclusion: the agent list is
+  records the cheaper structural path (`html > body > tag:nth-of-type(n) >
+  …`) for every node after the share is spent, so a large page finishes
+  where today's snapshot does. That path is stored as an agent-list entry,
+  so it MUST keep naming its element when the host's own `<style>`
+  elements come and go: `body` takes no index and every other step counts
+  only siblings of its own kind. Selectors never decide exclusion: the agent list is
   evaluated before the walk, and a selector it cannot evaluate refuses the
   walk, as `invalid-exclude-selector-fails-closed` says.
+- **The page root on the agent list**: The walk starts beneath `body`, so
+  an agent-list entry matching `html` or `body` (or a hidden `body`) is
+  checked before it: the agent gets the empty document with an empty
+  title, whatever scope it asked for, and no reference into the page
+  resolves (MUST, `walker-skips-agent-list`, `withheld-refs-stale`).
+- **A withheld option**: A select's value is its first selected option
+  the agent may see, so an option on the agent list (or hidden, or in a
+  withheld group) never reaches the agent as its select's value, and the
+  select action answers a withheld option's value or label exactly as one
+  that names nothing (MUST, `walker-skips-agent-list`).
 - **Privacy words change mid-read**: The concealment in force when the
   build starts conceals the whole result; the tool reply is concealed
   with the start and end words together, per
@@ -604,7 +630,10 @@ those states already close the pane to tools.
 **Decision**: HTML mapping: landmark → `section` (or `nav`/`main`/`header`/
 `footer` by role), heading → `h1`–`h6` by level, paragraph → `p`, list →
 `ul`, list item → `li`, link → `a` with the sanitized `href`, button →
-`button`, text field → `input` (disabled), text area → `textarea`
+`button`, text field → `input` (disabled; a `contenteditable` or
+`role=textbox` field holding content → `<div class="adk-textfield"
+role="textbox" aria-disabled="true">` holding that content, the text the
+agent reads), text area → `textarea`
 (disabled, holding its value), checkbox/radio → `input` of that type (disabled), select →
 `select` (disabled), option → `option`, table/row/cell → `table`/`tr`/`td`,
 label → `label`, image → `<span class="adk-image">[image: alt]</span>`,
@@ -697,6 +726,7 @@ plan's tests are `AgentPageBuilderTests` (builder, pure),
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 0.1.4 | 2026-11-16 | Mike Fullerton | Review fixes: the page root is refused, the structural path is stable across injected styles, sibling indexes are linear, a withheld option does not leak, and text keeps its line breaks. |
 | 0.1.3 | 2026-11-16 | Mike Fullerton | Scope refs only; withheld scope and invalid agent-list selectors fail closed; grid kinds; walker v6, snapshot v4; work off the main actor; refs stale on withheld or hidden-item changes; claims the privacy word files. |
 | 0.1.2 | 2026-11-16 | Mike Fullerton | Walker version 5: tables keep today's rowgroup, columnheader and rowheader roles (allowlist kinds row group, column header, row header; vector 047) |
 | 0.1.1 | 2026-11-16 | Mike Fullerton | Pane's effective Hide Images shared by tools and agent views via BrowserToolSet.agentPageSource; replies concealed with the start and end privacy combined. |

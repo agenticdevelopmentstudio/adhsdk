@@ -565,6 +565,14 @@ bundle identifier; category is this component's name.
   makes no HTTP call and reads no `Windows.Storage` file directly.
 - **confines-to-ui-thread** (scope): The manager has no thread-safety guarantee of its own; every stored property and method is reached only from the UI thread.
 
+## Reference Implementations
+
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectWindowManager.swift` | confirmed (1.3.0) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectWindowManager.swift` | confirmed (1.3.0) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/StandaloneWindowRows.swift` | confirmed (1.3.0) |
+
 ## Design Decisions
 
 **Decision**: `openProject(_:)` calls `refreshOpenWorkspaceIDs()` — and

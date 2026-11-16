@@ -4,7 +4,7 @@
     "id": "5a246e6c-2125-4427-a8ab-2f43f2fecba5",
     "title": "Web Browser Settings Topics",
     "type": "ingredient",
-    "version": "0.1.6",
+    "version": "0.1.7",
     "status": "draft",
     "language": "en",
     "created": "2026-11-15",
@@ -45,7 +45,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "bf2fbe46c25cfcb9",
+  "synced": "2dc3473eab7f83b8",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

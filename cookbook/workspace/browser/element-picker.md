@@ -2,7 +2,7 @@
 id: 8b187d98-795b-4a9d-9441-e7b8629fefe4
 title: "Element Picker"
 type: ingredient
-version: 0.1.2
+version: 0.1.3
 status: draft
 language: en
 created: 2026-11-15
@@ -144,6 +144,13 @@ that items which load again, such as ads, can reappear.
   does.
 - **this-item-unique**: The This item selector MUST match exactly one
   element in the page at pick time, the picked one.
+- **this-item-not-root**: A pick of the page's root, its `html`, `head` or
+  `body` element, MUST carry no This item selector, and a This item
+  selector that names only them (`body`, `html > body`, `:root`) MUST be
+  refused, for both the distracting-items and the hide-from-agent lists:
+  a click on blank space beside a layout hits `<body>`, and saving it
+  would hide the whole page. The pick is refused as
+  `pick-without-selector-refused` says.
 - **all-like-it-stable-classes**: The All items like it selector MUST be
   built from the element's tag and class names only, MUST NOT use ids, and
   MUST NOT use any class name that looks generated: one containing three
@@ -161,9 +168,15 @@ that items which load again, such as ads, can reappear.
   element), or cannot be computed, the pick MUST carry no All items like it
   selector.
 - **pick-without-selector-refused**: A pick with no This item selector
-  (finder failed or threw, for instance inside a shadow root, an SVG `use`
-  or a frame) MUST be refused with a beep: no dialog opens and selecting
-  mode continues.
+  (finder failed or threw, for instance inside a shadow root or an SVG
+  `use`) MUST be refused with a beep: no dialog opens and selecting mode
+  continues.
+- **frame-click-picks-frame**: While selecting, every `iframe` and `frame`
+  element MUST take no pointer events, so a click over a frame never
+  reaches the frame's document (an ad served in a frame never opens its
+  link). That click, and the outline under the pointer, MUST resolve to the
+  frame element itself in the main document; `stop` MUST give the frames
+  their pointer events back.
 - **loose-selector-disabled**: The All items like it choice MUST be
   disabled when there is no looser selector, with the tooltip "No looser
   selector is available", and when it matches more than half of the
@@ -291,7 +304,8 @@ switch or close).
 | element-picker-029 | all-like-it-needs-a-class | Candidates with `allLikeIt` `div` (count 2 of 100), and `main.page` (count 1 of 100) | Both have All items like it disabled |
 | element-picker-030 | all-like-it-needs-a-class | Pick a `<div>` with no class, then the `<body>` | Neither pick carries an All items like it selector |
 | element-picker-031 | popover-transient | Open the popover; the page commits a navigation | The popover closes |
-
+| element-picker-032 | frame-click-picks-frame | Selecting on a page with an `<iframe>` in a `<div>`; click the `<div>` at the frame's centre; stop | The pick's This item matches the `<iframe>`; the frame's pointer events are `none` while selecting and restored after stop |
+| element-picker-033 | this-item-not-root | Pick `<body>`, then `<html>`; deliver picks with This item `body`, `html > body` and `:root` for the user and the agent lists | No pick carries a This item selector or reaches the dialog; a beep each time; selecting continues |
 ## Edge Cases
 
 - **Null and empty input**: A pick with no This item selector is refused
@@ -324,9 +338,11 @@ switch or close).
   removes the outline, listeners and handler and clears the preview (MUST,
   see `stop-cleans-up`).
 - **Frames and shadow roots**: The picker runs in the main frame. An
-  element inside a cross-origin frame cannot be reached; clicking the frame
-  picks the frame element itself. An element inside a shadow root may get
-  no unique document selector and is then refused.
+  element inside a frame, same-origin or cross-origin, cannot be reached;
+  while selecting every frame element takes no pointer events, so a click
+  over a frame is swallowed in the main frame and picks the frame element
+  itself (MUST, see `frame-click-picks-frame`). An element inside a shadow
+  root may get no unique document selector and is then refused.
 - **Pages that re-render**: An item the page rebuilds under new class
   names may escape its selector and reappear; that is what the first-use
   notice warns of.
@@ -536,6 +552,7 @@ Notes: no compliance checks have been run against the code yet.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 0.1.3 | 2026-11-16 | Mike Fullerton | Review fixes: frames ignore the pointer while picking, and the page root is refused for both hide lists. |
 | 0.1.2 | 2026-11-16 | Mike Fullerton | Hostless pages refused; All items like it needs a class and skips html/head/body/main; dialog through AppModalWindowSession; popovers close with the page; row lookup at click; failed saves beep. |
 | 0.1.1 | 2026-11-16 | Mike Fullerton | No-looser-selector tooltip, start failure beeps and ends selecting, popover toggle by event number. |
 | 0.1.0 | 2026-11-15 | Mike Fullerton | Initial creation (design-first, from the more privacy features design) |
