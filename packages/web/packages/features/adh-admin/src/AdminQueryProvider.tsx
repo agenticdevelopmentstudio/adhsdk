@@ -34,6 +34,11 @@ export const ADMIN_QUERY_KEY_PREFIXES: readonly (readonly string[])[] = [
   ["system", "reserved-identifiers"],
   ["llm-sync-status"],
   ["llm-sync-keys"],
+  // The Sync pane's catalog, read by the shared `SyncTablesEditor` under a key this package never
+  // spells, so the literal-key scan cannot see it. Three segments: the hub's ecosystem-owner sync
+  // page reads the same catalog under the `ecosystem` family on the same client, and keeps the
+  // toolkit default.
+  ["ecosystem-config", "sync-tables", "admin"],
 ];
 
 /** Pin the admin freshness onto `client`. Idempotent: `setQueryDefaults` replaces by key. */

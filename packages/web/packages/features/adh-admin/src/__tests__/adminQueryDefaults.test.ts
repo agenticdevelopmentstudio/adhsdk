@@ -2,6 +2,7 @@ import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { QueryClient } from "@tanstack/react-query";
 import { describe, expect, it } from "vitest";
+import { syncTablesKey } from "@adh-sdk/ecosystem-config";
 
 import {
   ADMIN_QUERY_KEY_PREFIXES,
@@ -63,6 +64,17 @@ describe("admin query freshness", () => {
       (head) => client.getQueryDefaults([...head, "x"]).staleTime !== ADMIN_STALE_TIME,
     );
     expect(uncovered).toEqual([]);
+  });
+
+  it("pins the Sync pane's catalog, which the shared editor keys under the admin family", () => {
+    // Not a literal in this package, so the scan above cannot find it.
+    const client = applyAdminQueryDefaults(new QueryClient());
+    expect(client.getQueryDefaults([...syncTablesKey("admin", "eco-1")]).staleTime).toBe(
+      ADMIN_STALE_TIME,
+    );
+    expect(
+      client.getQueryDefaults([...syncTablesKey("ecosystem", "eco-1")]).staleTime,
+    ).toBeUndefined();
   });
 
   it("leaves a non-admin read under a shared first word alone", () => {
