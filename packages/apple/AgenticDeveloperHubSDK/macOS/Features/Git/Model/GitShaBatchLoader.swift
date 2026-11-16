@@ -14,10 +14,11 @@ import Foundation
 /// batch. A sha a successful batch did not answer is not asked for again. A batch that
 /// throws is reported to `onFailure`, and its shas are not asked for again until
 /// `failureCooldown` has passed, so a verifier that keeps timing out is not re-run on every
-/// scroll. `onLoad` runs after each batch that cached (or, after `invalidate()`, removed) anything.
-/// Used on the main thread.
+/// scroll. `onLoad` runs after each batch that changed the cache: a new value, a value that
+/// differs from the cached one, or (after `invalidate()`) a removal. A re-answer equal to the
+/// cached value is not a change. Used on the main thread.
 @MainActor
-public final class GitShaBatchLoader<Value: Sendable> {
+public final class GitShaBatchLoader<Value: Sendable & Equatable> {
     public typealias Provider = @Sendable ([String]) async throws -> [String: Value]
 
     /// How long a request waits before its batch starts: 150ms. Tests may shorten it.
@@ -104,8 +105,9 @@ public final class GitShaBatchLoader<Value: Sendable> {
     }
 
     private func needsLoad(_ sha: String) -> Bool {
-        guard (values[sha] == nil || stale.contains(sha)) && !running.contains(sha) && !unanswered.contains(sha)
-        else { return false }
+        let wanted = (values[sha] == nil || stale.contains(sha)) && !running.contains(sha)
+            && !unanswered.contains(sha)
+        guard wanted else { return false }
         guard let failed = failedAt[sha] else { return true }
         return ContinuousClock.now - failed >= failureCooldown
     }
@@ -141,8 +143,8 @@ public final class GitShaBatchLoader<Value: Sendable> {
                 failedAt[sha] = nil
                 let wasStale = stale.remove(sha) != nil
                 if let value = loaded[sha] {
+                    if values[sha] != value { cachedAny = true }
                     values[sha] = value
-                    cachedAny = true
                 } else {
                     if wasStale, values.removeValue(forKey: sha) != nil { cachedAny = true }
                     unanswered.insert(sha)

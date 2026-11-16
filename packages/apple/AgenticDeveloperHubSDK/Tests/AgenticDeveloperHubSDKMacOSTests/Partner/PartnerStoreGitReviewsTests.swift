@@ -38,12 +38,15 @@ final class PartnerStoreGitReviewsTests: XCTestCase {
         XCTAssertEqual(try store.reviews(repoPath: "/r/repo-a", shas: []), [:])
     }
 
-    func testASupersededReviewIsLeftOut() throws {
+    func testASupersededReviewIsReturned() throws {
         var superseded = makeReview("a", sha: "s1")
         superseded.supersededBy = ["s9"]
         try store.insertReview(superseded)
         try store.insertReview(makeReview("b", sha: "s2"))
-        XCTAssertEqual(Set(try store.reviews(repoPath: "/r/repo-a", shas: ["s1", "s2"]).keys), ["s2"])
+        let found = try store.reviews(repoPath: "/r/repo-a", shas: ["s1", "s2"])
+        XCTAssertEqual(Set(found.keys), ["s1", "s2"])
+        XCTAssertEqual(found["s1"]?.id, "a")
+        XCTAssertEqual(found["s1"]?.supersededBy, ["s9"])
     }
 
     func testTwoRepoIdsAtOnePathAnswerTheRowWrittenLast() throws {

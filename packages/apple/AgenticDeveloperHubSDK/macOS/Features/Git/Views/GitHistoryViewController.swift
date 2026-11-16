@@ -225,18 +225,21 @@ public final class GitHistoryViewController: NSViewController {
     /// (150ms) and each request replaces the queued one, so a scroll runs one `git log` for
     /// the rows where it stopped, and the history never waits on it.
     func requestVisibleSignatures() {
-        let shas = visibleCommitIDs
-        guard !shas.isEmpty else { return }
-        source.requestSignatures(for: shas)
+        requestVisible { source.requestSignatures(for: $0) }
     }
 
     /// Asks the data source for the visible rows' Coding Partner reviews (recipe
     /// `workspace/git/git-views`, "Reviews") at the same moments as the signatures, and when
     /// the review store reports a change. Debounced and coalesced the same way.
     public func requestVisibleReviews() {
+        requestVisible { source.requestReviews(for: $0) }
+    }
+
+    /// Hands the visible rows' shas to `send`, unless no row is visible.
+    private func requestVisible(_ send: ([String]) -> Void) {
         let shas = visibleCommitIDs
         guard !shas.isEmpty else { return }
-        source.requestReviews(for: shas)
+        send(shas)
     }
 
     // MARK: - Selection

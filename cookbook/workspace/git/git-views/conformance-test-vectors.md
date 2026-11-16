@@ -120,3 +120,4 @@
 | git-views-117 | review-loader-invalidate | `a1` cached as `done`; the answer becomes none; `invalidate()`; request `a1` | `a1` reads nil; `onLoad` still called. |
 | git-views-118 | review-loader-invalidate | `a1` unanswered and requested twice (one batch); the answer becomes `queued`; `invalidate()`; request `a1` | Two batches in all; `a1` reads `queued`. |
 | git-views-119 | review-loader-invalidate | `a1` cached as `queued`; the answer becomes `done`; request `a1` without `invalidate()` | One batch; `a1` still reads `queued`. |
+| git-views-120 | review-loader-invalidate | `a1` cached as `done`; the answer stays `done`; `invalidate()`; request `a1` | Two batches; `a1` reads `done`; `onLoad` once in all. |

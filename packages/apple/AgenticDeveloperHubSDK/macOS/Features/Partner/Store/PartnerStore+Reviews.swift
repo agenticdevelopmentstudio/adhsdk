@@ -73,10 +73,11 @@ extension PartnerStore {
     }
 
     /// The reviews of `shas` in the repository at exactly `repoPath`, by sha, for the Git
-    /// window (recipe `workspace/git/git-views`, "Reviews"). A sha with no review is absent,
-    /// and so is one whose review a later commit's superseded. When more than one repo id
-    /// shares the path, the row written last wins. Read-only; the shas are asked for in
-    /// chunks of 500, under SQLite's bind limit.
+    /// window (recipe `workspace/git/git-views`, "Reviews"). A sha with no review is absent.
+    /// Every row counts, superseded included: `supersededBy` lists the later commits the
+    /// reviewer was told about, not a replacement. When a sha has more than one row (one per
+    /// repo id sharing the path), the row written last wins. Read-only; the shas are asked
+    /// for in chunks of 500, under SQLite's bind limit.
     public func reviews(repoPath: String, shas: [String]) throws -> [String: PartnerReview] {
         let wanted = Array(Set(shas))
         guard !wanted.isEmpty else { return [:] }
@@ -89,7 +90,7 @@ extension PartnerStore {
                     SELECT \(Self.reviewColumns) FROM review WHERE repo_path = ? AND sha IN (\(marks))
                     ORDER BY rowid
                 """, [.text(repoPath)] + chunk.map { .text($0) }, Self.review)
-                for row in rows where row.supersededBy.isEmpty { found[row.sha] = row }
+                for row in rows { found[row.sha] = row }
             }
             return found
         }

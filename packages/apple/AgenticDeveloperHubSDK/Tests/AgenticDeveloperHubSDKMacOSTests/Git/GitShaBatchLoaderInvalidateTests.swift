@@ -66,6 +66,24 @@ struct GitShaBatchLoaderInvalidateTests {
         #expect(loads == 2)
     }
 
+    @Test("after invalidate a re-answer equal to the cached value does not run onLoad")
+    func identicalReanswer() async {
+        let answers = ChangingAnswers()
+        await answers.set("a1", "done")
+        var loads = 0
+        let loader = loader(answers) { loads += 1 }
+        loader.request(["a1"])
+        await settle(loader)
+        #expect(loads == 1)
+
+        loader.invalidate()
+        loader.request(["a1"])
+        await settle(loader)
+        #expect(await answers.batches == [["a1"], ["a1"]])
+        #expect(loader.value(for: "a1") == "done")
+        #expect(loads == 1)
+    }
+
     @Test("a sha that was unanswered is asked for again after invalidate")
     func asksUnansweredAgain() async {
         let answers = ChangingAnswers()
