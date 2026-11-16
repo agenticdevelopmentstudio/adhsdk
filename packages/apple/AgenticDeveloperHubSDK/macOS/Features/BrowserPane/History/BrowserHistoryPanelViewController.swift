@@ -138,6 +138,7 @@ public final class BrowserHistoryPanelViewController: NSViewController {
 
     public override func viewDidLoad() {
         super.viewDidLoad()
+        model.onWillChange = { [weak self] in self?.modelWillChange() }
         model.onChange = { [weak self] in self?.modelChanged() }
         searchField.stringValue = model.filter
         Task { await model.reload() }
@@ -157,19 +158,29 @@ public final class BrowserHistoryPanelViewController: NSViewController {
         scrollView.backgroundColor = background
         tableView.backgroundColor = background
         searchField.applyTheme(palette)
-        reloadKeepingSelection()
+        reloadKeepingSelection(Set(selectedVisitIDs))
     }
 
     // MARK: - Model
 
-    private func modelChanged() {
-        reloadKeepingSelection()
+    /// The ids selected when the model last said it was about to replace
+    /// its visits, read while the table's row indexes still name them.
+    private var selectionBeforeChange: Set<Int64>?
+
+    private func modelWillChange() {
+        selectionBeforeChange = Set(selectedVisitIDs)
     }
 
-    /// Reloads the rows and selects again whichever of the selected visits
-    /// are still listed.
-    private func reloadKeepingSelection() {
-        let selected = Set(selectedVisits.map(\.id))
+    private func modelChanged() {
+        let selected = selectionBeforeChange ?? []
+        selectionBeforeChange = nil
+        reloadKeepingSelection(selected)
+    }
+
+    /// Reloads the rows and selects again whichever of the visits `selected`
+    /// names are still listed — by id, never by row, since a visit recorded
+    /// at the top moves every other one down.
+    private func reloadKeepingSelection(_ selected: Set<Int64>) {
         tableView.reloadData()
         let rows = IndexSet(model.visits.indices.filter { selected.contains(model.visits[$0].id) })
         tableView.selectRowIndexes(rows, byExtendingSelection: false)
@@ -180,6 +191,11 @@ public final class BrowserHistoryPanelViewController: NSViewController {
         tableView.selectedRowIndexes.compactMap { row in
             model.visits.indices.contains(row) ? model.visits[row] : nil
         }
+    }
+
+    /// The selected visits' ids, in list order.
+    var selectedVisitIDs: [Int64] {
+        selectedVisits.map(\.id)
     }
 
     private func updateButtons() {

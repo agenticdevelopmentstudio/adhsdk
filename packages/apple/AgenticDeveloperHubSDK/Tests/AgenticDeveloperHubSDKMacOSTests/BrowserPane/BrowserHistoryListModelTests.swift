@@ -154,4 +154,36 @@ final class BrowserHistoryListModelTests: XCTestCase {
 
         XCTAssertEqual(opened, ["https://example.com/3", "https://example.com/1"])
     }
+
+    /// A visit recorded at the top while a row is selected keeps the same
+    /// visit selected, not the one that moved into its row (review f6).
+    func test_panelSelectionSurvivesAReloadByVisitID() async throws {
+        let store = try makeStore()
+        try record(store, "https://example.com/a", "A", at: 1_000)
+        let b = try record(store, "https://example.com/b", "B", at: 2_000)
+        let c = try record(store, "https://example.com/c", "C", at: 3_000)
+        let model = BrowserHistoryListModel(store: store)
+        let panel = BrowserHistoryPanelViewController(model: model, open: { _ in })
+        _ = panel.view
+        await model.reload()
+        XCTAssertEqual(model.visits.map(\.title), ["C", "B", "A"])
+
+        panel.selectRows(IndexSet([1]))
+        XCTAssertEqual(panel.selectedVisitIDs, [b])
+
+        let panelChanged = model.onChange
+        let reread = expectation(description: "the list reread")
+        model.onChange = {
+            panelChanged?()
+            if model.visits.count == 4 { reread.fulfill() }
+        }
+        _ = try await store.perform {
+            try $0.record(URL(string: "https://example.com/n")!, title: "N", at: Date(timeIntervalSince1970: 4_000))
+        }
+        await fulfillment(of: [reread], timeout: 5)
+
+        XCTAssertEqual(model.visits.map(\.title), ["N", "C", "B", "A"])
+        XCTAssertEqual(panel.selectedVisitIDs, [b])
+        XCTAssertNotEqual(panel.selectedVisitIDs, [c])
+    }
 }

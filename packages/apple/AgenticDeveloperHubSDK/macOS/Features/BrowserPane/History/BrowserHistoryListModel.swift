@@ -33,6 +33,11 @@ public final class BrowserHistoryListModel {
         }
     }
 
+    /// Called on the main actor just before `visits` is replaced, while it
+    /// still holds the rows a view shows — the moment to note which visits
+    /// are selected, since a row index means a different visit afterwards.
+    public var onWillChange: (() -> Void)?
+
     /// Called on the main actor each time `visits` is replaced.
     public var onChange: (() -> Void)?
 
@@ -116,6 +121,7 @@ public final class BrowserHistoryListModel {
             guard let self, self.generation == generation else { return }
             switch answer {
             case .success(let visits):
+                self.onWillChange?()
                 self.visits = visits
                 self.onChange?()
             case .failure(let error):
