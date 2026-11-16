@@ -56,6 +56,8 @@ public final class GitDiffViewController: NSViewController {
     let splitView = ThemedSplitView()
     /// The failed diff's description, over the empty viewer; hidden otherwise.
     let errorLabel = ThemedLabel.wrapping("", width: 400, role: .danger, textRole: .body)
+    /// The one summary row of an LFS pointer diff, in place of the pointer text; hidden otherwise.
+    let lfsLabel = GitDiffViewController.makeLFSLabel()
 
     /// The diff request (and its colouring) in flight or last finished; tests await it.
     private(set) var loadTask: Task<Void, Never>?
@@ -135,6 +137,7 @@ public final class GitDiffViewController: NSViewController {
             errorLabel.trailingAnchor.constraint(lessThanOrEqualTo: root.trailingAnchor, constant: -12),
             errorLabel.topAnchor.constraint(equalTo: inlineView.topAnchor, constant: 10)
         ])
+        place(lfsLabel, in: root, under: inlineView)
         view = root
         applyLayout()
         render()
@@ -225,7 +228,9 @@ public final class GitDiffViewController: NSViewController {
                     self.colouredSides = nil
                     self.render()
                 }
-                guard let fileDiff, let coloring, !fileDiff.isBinary else { return }
+                guard let fileDiff, let coloring, !fileDiff.isBinary, GitLFSDiffSummary.of(fileDiff) == nil else {
+                    return
+                }
                 let sides = await coloring.sides(of: fileDiff, target: request.target, source: source)
                 guard generation == self.generation else { return }
                 self.colouredSides = sides
@@ -253,7 +258,9 @@ public final class GitDiffViewController: NSViewController {
         renderedRequest = current
         inlineModel = nil
         sideModels = nil
-        if let fileDiff {
+        let lfsSummary = fileDiff.flatMap(GitLFSDiffSummary.of)
+        showLFS(lfsSummary)
+        if let fileDiff, lfsSummary == nil {
             let emphasis = emphasis(for: fileDiff, enabled: words)
             switch layout {
             case .inline:

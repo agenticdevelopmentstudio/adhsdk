@@ -33,6 +33,8 @@ import AgenticDeveloperHubSDKCore
     var unstaged: [GitFileChange] { get }
     /// The unmerged paths, each with how it is unmerged; each is also in `unstaged`.
     var conflicts: [String: GitConflictKind] { get }
+    /// Whether and how the repository uses Git LFS; nil until known. Defaults to nil.
+    var lfs: GitLFSState? { get }
 }
 
 /// Content read on demand: diffs, a commit's file list, file bytes, blame and a file's history.

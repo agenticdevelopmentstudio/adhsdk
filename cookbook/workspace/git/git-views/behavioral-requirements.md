@@ -57,6 +57,16 @@
 - **detail-clear**: `show(commit: nil)` MUST empty the header and the list, hide a shown failure, collapse the header to no height, and cancel any diff in flight.
 - **detail-ui-thread**: The commit detail MUST be used on the UI thread; the diff is awaited, never blocked on.
 
+### Agent sessions
+
+- **sessions-model**: An agent session (`GitAgentSession`) MUST carry the daemon's id, its title (nil when unnamed), its working directory, its branch (nil when unknown) and its start and last-activity dates; its display title is the title, or the id's first eight characters when there is none. Sessions come from a `GitSessionsProviding`, which answers the sessions under a list of roots active since a date and never throws; the Git views never write to it.
+- **sessions-match-commit**: The sessions beside a commit MUST be those whose working directory is one of the roots (the repository's top level and its worktrees) or under one, compared by path component so `/a/bc` is not under `/a/b`, and that either ran on the commit's branch (an empty branch counts as unknown) or were active at its committer date within ten minutes' slack, inclusive (`startedAt - 600 ≤ date ≤ lastActivityAt + 600`); newest start first, ties by id.
+- **sessions-match-branch**: The sessions beside a branch MUST be those under the roots whose branch is that branch's short name, in the same order.
+- **sessions-daemon-adapter**: `GitDaemonSessions` MUST read a daemon read-only, with one `sessions(status: nil, project: <root>, sinceHours:, includeCounts: false)` call per root, merged by id with the first seen kept; `sinceHours` is the whole hours since the date, rounded up, between 1 and 2160 (90 days). A row with no id or an unreadable start is dropped; an unreadable or earlier last activity is the start; empty title and branch strings are nil; an unreachable daemon answers none.
+- **detail-sessions-section**: The commit detail MUST show its matched sessions (`agentSessionMatches`) as an `Agent Sessions` section (`git.commit.sessions`, caption `git.commit.sessions.caption`) after the commit message in the header, one row per session (`git.commit.sessions.row`) titled `<display title> · <branch> · <start–last activity>` (the branch only when known; the span by `DateIntervalFormatter`, medium date, short time) with the working directory as its tooltip. The section MUST be hidden when nothing matches and absent without `agentSessionMatches`; it is re-matched on every `show(commit:)` and on `reloadAgentSessions()`.
+- **detail-sessions-open**: Clicking a row MUST call `onOpenAgentSession` once with that session's id; while `onOpenAgentSession` is nil the rows are disabled.
+- **sidebar-sessions-submenu**: A local branch's context menu MUST end, after a separator, with an `Agent Sessions` submenu (`git.sidebar.menu.sessions`) holding the branch's sessions (`agentSessionsOnBranch`), at most 20, one item each (`git.sidebar.menu.sessions.item`, titled like a detail row, the working directory as its tooltip); choosing one MUST call `onOpenAgentSession` with its id, and while that is nil the items are disabled. With no sessions, or no `agentSessionsOnBranch`, there is no separator and no submenu.
+
 ### Working copy
 
 - **wc-lists**: The working copy MUST show two changed-files lists, `Staged` (context `staged`) over the data source's `staged` files and `Unstaged` (context `unstaged`) over its `unstaged` files, in the data source's order, each item `GitFileListItem(change:)`, each under a header titled `Staged (<count>)` or `Unstaged (<count>)`.
@@ -89,6 +99,27 @@
 - **diff-staging-menu**: A right-click on a row of the diff MUST offer, through the line viewer's `menuProvider`, on an `.unstaged` target `Stage Hunk` (`git.diff.menu.stageHunk`), `Stage Lines` (`stageLines`), a separator, `Discard Hunk…` (`discardHunk`) and `Discard Lines…` (`discardLines`); on a `.staged` target `Unstage Hunk` (`unstageHunk`) and `Unstage Lines` (`unstageLines`). The Lines items are present only when the selection holds an added or removed line. There is no menu for a commit, range or untracked target, for a file `GitPatchBuilder.canBuild` refuses, for a row with no hunk, or for a diff read with options other than the defaults (ignore-whitespace on), whose hunks are not the ones git would apply a patch against.
 - **diff-staging-intents**: The diff MUST NOT run git. Each item is one call of the delegate's `diff(_:didRequest:)` with a `GitDiffIntent` (`.stage`, `.unstage`, `.discard`) of a `GitPatchSelection` of the shown file: Hunk is `GitPatchSelection.hunk` of the clicked row's hunk (a filler's is the hunk of the row above it); Lines is every added or removed line among the clicked viewer's selected rows, grouped by hunk, read through that viewer's own `lineRefs` alone: side by side, the two viewers keep separate selections, so the left viewer's rows give removed lines and the right viewer's added lines, and a row never brings in its partner on the other side. The viewers' selection is cleared after.
 - **diff-ui-thread**: The diff, its models and its coloring MUST be used on the UI thread; every read and highlight is awaited, never blocked on.
+
+### LFS
+
+- **lfs-diff-row**: When the shown file diff summarises as an LFS diff
+  (git-client's lfs-diff-summary), the diff view MUST show that summary as
+  its one row (`git.diff.lfs`, secondary text) instead of the pointer text,
+  build no viewer rows and colour nothing; any other diff hides the row.
+- **lfs-badge**: While the working copy's data source reports an LFS state
+  that is in use, each row of the Conflicts, Staged and Unstaged lists
+  whose path is stored in LFS (git-client's lfs-tracked-path) MUST show an
+  `externaldrive` symbol after its title (`git.workingCopy.lfsBadge`,
+  tooltip `Stored in Git LFS`); other rows, and every row of a repository
+  not using LFS, show none. The model loads the LFS state with the refs, so
+  a refs change re-reads the badges without re-reading the lists.
+- **lfs-fetch-menu**: While the repository uses LFS, the toolbar's Fetch
+  button MUST open a menu under itself of `Fetch`, `Fetch LFS Objects`
+  (`git.toolbar.lfsFetch`) and `Pull LFS Objects` (`git.toolbar.lfsPull`);
+  otherwise it fetches at once, and the two LFS items are not offered. The
+  toolbar's items are the same either way. Neither LFS item confirms; a
+  failure shows under `Fetch LFS objects failed` or `Pull LFS objects
+  failed`.
 
 ### Blame
 

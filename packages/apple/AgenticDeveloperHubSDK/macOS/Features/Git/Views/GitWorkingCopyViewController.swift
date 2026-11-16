@@ -55,7 +55,7 @@ public final class GitWorkingCopyViewController: NSViewController {
     }
 
     let splitView = ThemedSplitView()
-    private let source: GitWorkingCopyDataSource
+    let source: GitWorkingCopyDataSource
 
     public init(source: GitWorkingCopyDataSource) {
         self.source = source
@@ -114,6 +114,7 @@ public final class GitWorkingCopyViewController: NSViewController {
         }
         let staged = source.staged.map(GitFileListItem.init(change:))
         let unstaged = source.unstaged.filter { conflictKinds[$0.path] == nil }.map(GitFileListItem.init(change:))
+        reloadLFS()
         conflictsHeader.stringValue = "Conflicts (\(conflicts.count))"
         conflictsList.files = conflicts
         if splitView.arrangedSubviews.count > 3 {

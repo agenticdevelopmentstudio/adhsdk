@@ -35,6 +35,12 @@ public final class GitFileListViewController: NSViewController {
     /// Called with a double-clicked row's item.
     public var onDoubleClick: ((GitFileListItem) -> Void)?
 
+    /// Whether a path is stored in Git LFS, which badges its row; nil badges none. Setting
+    /// it redraws the rows.
+    public var isLFSTracked: ((String) -> Bool)? {
+        didSet { if isViewLoaded { tableView.reloadData() } }
+    }
+
     let tableView = ThemedTableView()
     /// The table's menu, refilled from `menuProvider` each time it opens.
     private let rowMenu = NSMenu()
@@ -164,6 +170,7 @@ extension GitFileListViewController: NSTableViewDelegate {
         let cell = tableView.makeView(withIdentifier: GitFileListCellView.identifier, owner: self)
             as? GitFileListCellView ?? GitFileListCellView()
         cell.configure(files[row])
+        cell.lfsBadge.isHidden = !(isLFSTracked?(files[row].path) ?? false)
         return cell
     }
 
@@ -194,6 +201,8 @@ final class GitFileListCellView: NSView {
     let statusLabel = NSTextField(labelWithString: "")
     let iconView = ThemedSymbolImageView(symbolName: "doc", role: .secondaryText)
     let titleLabel = ThemedLabel(role: .primaryText, textRole: .body)
+    /// Shown for a path stored in Git LFS.
+    let lfsBadge = ThemedSymbolImageView(symbolName: "externaldrive", role: .secondaryText)
     let stack = NSStackView()
 
     /// The SF Symbol for `path`'s extension, `doc` when there is none to name.
@@ -218,7 +227,11 @@ final class GitFileListCellView: NSView {
         titleLabel.lineBreakMode = .byTruncatingMiddle
         titleLabel.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
 
-        for view in [statusLabel, iconView, titleLabel] { stack.addArrangedSubview(view) }
+        lfsBadge.accessibilityID("git.workingCopy.lfsBadge")
+        lfsBadge.toolTip = "Stored in Git LFS"
+        lfsBadge.setAccessibilityLabel("Stored in Git LFS")
+        lfsBadge.isHidden = true
+        for view in [statusLabel, iconView, titleLabel, lfsBadge] { stack.addArrangedSubview(view) }
         stack.accessibilityID("git.fileList.fileStack")
         stack.orientation = .horizontal
         stack.alignment = .centerY

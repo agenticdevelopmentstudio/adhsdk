@@ -21,6 +21,12 @@ extension GitWindowSession {
         case merge(GitMergeIntent)
         /// The toolbar's verbs.
         case fetch, pull, push, newBranch, stash, popStash
+        /// The Fetch menu's LFS verbs, shown while the repository uses LFS.
+        case lfsFetch, lfsPull
+        /// The reflog browser's reset, checkout or new branch at an entry.
+        case reflog(GitReflogIntent)
+        /// The toolbar's and the Git menu's Undo: a mixed reset to HEAD@{1}.
+        case undo
     }
 
     // MARK: - Toolbar verbs
@@ -37,6 +43,8 @@ extension GitWindowSession {
     func stash() { perform(.stash) }
     /// Pops the newest stash, when there is one.
     func popStash() { perform(.popStash) }
+    /// Moves HEAD back to HEAD@{1} with a mixed reset, when there is an `undoTarget`.
+    func undo() { perform(.undo) }
 
     // MARK: - The funnel
 
@@ -63,11 +71,15 @@ extension GitWindowSession {
         case .merge(let intent): await run(intent)
         case .fetch: await execute(.fetch(remote: nil))
         case .pull: await execute(.pull)
+        case .lfsFetch: await execute(.lfsFetch)
+        case .lfsPull: await execute(.lfsPull)
         case .push: await pushHead()
         case .newBranch: await createBranch(at: nil, describedAs: nil)
         case .stash: await stashChanges()
         case .popStash:
             if !model.stashes.isEmpty { await execute(.stashPop(index: 0)) }
+        case .reflog(let intent): await run(intent)
+        case .undo: await undoLastAction()
         }
     }
 
@@ -293,6 +305,43 @@ extension GitWindowSession {
             guard await presenter.confirm(confirmation) else { return }
         }
         await execute(.reset(commit: commit.id, mode: mode))
+    }
+
+    // MARK: - Reflog and Undo
+
+    /// A reflog entry's reset (hard confirms first, as the history's does), detached
+    /// checkout or new branch.
+    private func run(_ intent: GitReflogIntent) async {
+        switch intent {
+        case let .reset(entry, mode):
+            if mode == .hard {
+                guard let presenter else { return }
+                let branch = model.headBranch?.name ?? "HEAD"
+                let confirmation = GitConfirmation(
+                    title: "Reset \(branch) to \(entry.shortSha)?", message: "Uncommitted changes are lost.",
+                    actionTitle: "Reset", isDestructive: true)
+                guard await presenter.confirm(confirmation) else { return }
+            }
+            await execute(.reset(commit: entry.sha, mode: mode))
+        case .checkout(let entry): await execute(.checkoutDetached(commit: entry.sha))
+        case .createBranch(let entry): await createBranch(at: entry.sha, describedAs: entry.shortSha)
+        }
+    }
+
+    /// Always a mixed reset to HEAD@{1}, which loses nothing the reflog cannot restore, so
+    /// it runs at once on a clean tree and confirms only on a dirty one (ruling R5).
+    /// Nothing happens without an `undoTarget`.
+    private func undoLastAction() async {
+        guard let target = model.undoTarget, let last = model.lastReflogEntry else { return }
+        if !model.staged.isEmpty || !model.unstaged.isEmpty {
+            guard let presenter else { return }
+            let confirmation = GitConfirmation(
+                title: "Undo \"\(last.message)\"?",
+                message: "HEAD moves back to \(target.shortSha); changes stay in the working copy.",
+                actionTitle: "Undo", isDestructive: false)
+            guard await presenter.confirm(confirmation) else { return }
+        }
+        await execute(.reset(commit: target.sha, mode: .mixed))
     }
 
     private func createTag(at commit: GitCommit) async {
@@ -746,6 +795,8 @@ extension GitAction {
         case .addWorktree: "Add worktree failed"
         case .removeWorktree: "Remove worktree failed"
         case .updateSubmodules: "Update submodules failed"
+        case .lfsFetch: "Fetch LFS objects failed"
+        case .lfsPull: "Pull LFS objects failed"
         }
     }
 }

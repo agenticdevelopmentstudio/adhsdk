@@ -97,6 +97,12 @@ public enum GitAction: Sendable, Hashable {
     /// `submodule update [--init] --recursive [-- paths]`. An empty path list means every
     /// submodule, as git reads it, and is not refused.
     case updateSubmodules(paths: [String], initialize: Bool)
+    /// `lfs fetch`: downloads the LFS objects the current checkout needs, without touching
+    /// the working tree.
+    case lfsFetch
+    /// `lfs pull`: `lfs fetch` and then replaces the pointer files in the working tree with
+    /// their objects.
+    case lfsPull
 
     /// The git subcommand.
     public var verb: String {
@@ -125,6 +131,7 @@ public enum GitAction: Sendable, Hashable {
         case .interactiveRebase: "rebase"
         case .addWorktree, .removeWorktree: "worktree"
         case .updateSubmodules: "submodule"
+        case .lfsFetch, .lfsPull: "lfs"
         }
     }
 
@@ -180,6 +187,8 @@ public enum GitAction: Sendable, Hashable {
         case let .updateSubmodules(paths, initialize):
             ["update"] + (initialize ? ["--init"] : []) + ["--recursive"]
                 + (paths.isEmpty ? [] : ["--"] + Self.literal(paths))
+        case .lfsFetch: ["fetch"]
+        case .lfsPull: ["pull"]
         }
     }
 
@@ -187,11 +196,12 @@ public enum GitAction: Sendable, Hashable {
     /// remote, and whatever makes commits, which runs the repository's hooks: a commit, a
     /// merge, a rebase, and an operation's continue or skip. An abort makes no commit. Adding
     /// a worktree checks out a whole tree and runs the post-checkout hook, and updating
-    /// submodules clones and checks out each one.
+    /// submodules clones and checks out each one. An LFS fetch or pull downloads objects.
     public var isLongRunning: Bool {
         switch self {
         case .commit, .fetch, .pull, .push, .pushSettingUpstream, .pushToUpstream, .deleteRemoteBranch,
-             .pushTag, .merge, .rebase, .interactiveRebase, .addWorktree, .updateSubmodules:
+             .pushTag, .merge, .rebase, .interactiveRebase, .addWorktree, .updateSubmodules, .lfsFetch,
+             .lfsPull:
             true
         case .operation(_, let step): step != .abort
         default: false
@@ -205,7 +215,7 @@ public enum GitAction: Sendable, Hashable {
         switch self {
         case .stage, .stageAll, .unstage, .unstageAll, .discard, .removeUntracked, .commit, .pull, .push,
              .stashSave, .stashApply, .stashPop, .stashDrop, .applyToIndex, .applyToWorktree, .operation,
-             .resolve, .removePaths, .removeWorktree, .updateSubmodules:
+             .resolve, .removePaths, .removeWorktree, .updateSubmodules, .lfsFetch, .lfsPull:
             []
         case .fetch(let remote): remote.map { [$0] } ?? []
         case let .pushSettingUpstream(remote, branch): [remote, branch]

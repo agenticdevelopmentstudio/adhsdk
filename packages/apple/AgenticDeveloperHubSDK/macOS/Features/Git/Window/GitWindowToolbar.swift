@@ -64,7 +64,8 @@ final class GitWindowToolbar: NSObject {
              action: #selector(GitWindowToolbar.toggleCommandLog(_:)))
     ]
 
-    @objc func fetch(_ sender: Any?) { session?.fetch() }
+    /// Fetches, or while the repository uses LFS shows the Fetch menu (`GitWindowToolbar+LFS`).
+    @objc func fetch(_ sender: Any?) { fetchPressed(sender) }
     @objc func pull(_ sender: Any?) { session?.pull() }
     @objc func push(_ sender: Any?) { session?.push() }
     @objc func newBranch(_ sender: Any?) { session?.newBranch() }

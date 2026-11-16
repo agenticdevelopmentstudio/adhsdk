@@ -27,6 +27,8 @@ final class GitWindowSession {
         /// The history with no row selected: a search typed over the working copy
         /// on a detached HEAD, which has no branch row.
         case history
+        /// The reflog browser.
+        case reflog
     }
 
     let model: GitRepositoryModel
@@ -41,6 +43,10 @@ final class GitWindowSession {
     /// Every git and gh call made in this repository or its worktrees; the terminal
     /// region's Command Log pane vends it (`GitWindowPanes.commandLog`).
     let commandLog: GitCommandLogViewController
+    /// HEAD's reflog, in the centre pane while the sidebar's Reflog row is selected.
+    let reflog = GitReflogViewController()
+    /// The reflog read in flight or last finished; tests await it.
+    private(set) var reflogLoadTask: Task<Void, Never>?
     /// The in-progress operation banner, above the overview pane's content.
     let banner = GitOperationBannerViewController()
 
@@ -92,10 +98,24 @@ final class GitWindowSession {
     private(set) var searchTask: Task<Void, Never>?
     private let client: GitClient
     private var observation: AnyObject?
+    /// The agent sessions under this repository; nil without a provider, which leaves
+    /// every agent-session section and submenu absent (GitWindowSession+AgentSessions.swift).
+    let agentSessionCache: GitAgentSessionCache?
+    /// Opens an agent session by id; nil leaves its rows and menu items unclickable.
+    var onOpenAgentSession: ((String) -> Void)? {
+        didSet { applyOpenAgentSession() }
+    }
 
-    init(model: GitRepositoryModel, client: GitClient, coloring: GitSyntaxColoring?) {
+    init(model: GitRepositoryModel, client: GitClient, coloring: GitSyntaxColoring?,
+         sessions: (any GitSessionsProviding)? = nil) {
         self.model = model
         self.client = client
+        agentSessionCache = sessions.map { provider in
+            GitAgentSessionCache(provider: provider) { [weak model] in
+                guard let model else { return [] }
+                return GitWindowSession.agentSessionRoots(model)
+            }
+        }
         sidebar = GitRefsSidebarViewController(source: model)
         history = GitHistoryViewController(source: model)
         workingCopy = GitWorkingCopyViewController(source: model)
@@ -117,6 +137,7 @@ final class GitWindowSession {
         centre.onSearch = { [weak self] text in self?.search(text) }
         sidebar.delegate = self
         history.delegate = self
+        reflog.delegate = self
         workingCopy.delegate = self
         detail.delegate = self
         diff.delegate = self
@@ -139,6 +160,7 @@ final class GitWindowSession {
         observation = model.observe { [weak self] changes in
             self?.modelDidChange(changes)
         }
+        configureAgentSessions()
     }
 
     /// One divider layout per repository, so two Git windows never share theirs.
@@ -151,6 +173,8 @@ final class GitWindowSession {
     /// Reads every part of the model and starts watching the repository.
     func start() async {
         await model.start()
+        // Once the worktrees are known, so the first read covers every root.
+        agentSessionCache?.refreshIfStale()
     }
 
     /// Stops watching the repository and drops a search and an action in flight; the
@@ -172,7 +196,7 @@ final class GitWindowSession {
     /// detached HEAD there is no branch row: the history is shown with no row
     /// selected, so the sidebar never claims the working copy is on screen.
     func search(_ text: String) {
-        if selection == .workingCopy,
+        if selection == .workingCopy || selection == .reflog,
            !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
            !selectCheckedOutBranch() {
             selection = .history
@@ -214,9 +238,10 @@ final class GitWindowSession {
             onRefsChange?()
         }
         if changes.contains(.history) { history.reload() }
-        if workingCopyChanged { workingCopy.reload() }
+        if workingCopyChanged { workingCopy.reload() } else if changes.contains(.refs) { workingCopy.reloadLFS() }
         if workingCopyChanged || changes.contains(.refs) { workingCopy.canAmend = model.hasCommits }
         if !changes.isDisjoint(with: [.refs, .history]) { reapplyRefSelection() }
+        if selection == .reflog, !changes.isDisjoint(with: [.refs, .history]) { reloadReflog() }
         if workingCopyChanged { leaveResolvedMerge() }
 
         switch bottom.content {
@@ -242,6 +267,7 @@ final class GitWindowSession {
         workingCopy.reload()
         workingCopy.canAmend = model.hasCommits
         reapplyRefSelection()
+        if selection == .reflog { reloadReflog() }
         leaveResolvedMerge()
         switch bottom.content {
         case let shown as GitDiffViewController: shown.reload()
@@ -398,6 +424,17 @@ extension GitWindowSession: GitRefsSidebarDelegate {
         clearDiff()
     }
 
+    func sidebarDidSelectReflog(_ sidebar: GitRefsSidebarViewController) {
+        selection = .reflog
+        loadGeneration += 1
+        appliedRefTarget = nil
+        detailHost.clearError()
+        detail.show(commit: nil)
+        centre.show(reflog)
+        clearDiff()
+        reloadReflog()
+    }
+
     func sidebar(_ sidebar: GitRefsSidebarViewController, didSelectStash stash: GitStash) {
         selection = .stash(stash.id)
         appliedRefTarget = nil
@@ -416,6 +453,46 @@ extension GitWindowSession: GitRefsSidebarDelegate {
             return
         }
         perform(.ref(intent))
+    }
+}
+
+// MARK: - GitReflogDelegate
+
+extension GitWindowSession: GitReflogDelegate {
+    /// Reads HEAD's reflog (200 entries) into the browser; a failure is logged and the
+    /// list keeps what it showed.
+    func reloadReflog() {
+        let model = model
+        let reflog = reflog
+        reflogLoadTask?.cancel()
+        reflogLoadTask = Task {
+            do {
+                let entries = try await model.reflog(limit: 200)
+                // A newer read overtook this one.
+                guard !Task.isCancelled else { return }
+                reflog.show(entries)
+            } catch {
+                guard !Task.isCancelled else { return }
+                let description = GitClientError.logDescription(of: error)
+                Self.logger.error("Could not read the reflog: \(description, privacy: .public)")
+            }
+        }
+    }
+
+    /// A selected entry's commit shows in the detail, as a history row's does.
+    func reflog(_ reflog: GitReflogViewController, didSelect entry: GitReflogEntry?) {
+        detailHost.clearError()
+        clearDiff()
+        guard let entry else {
+            loadGeneration += 1
+            detail.show(commit: nil)
+            return
+        }
+        loadCommit(id: entry.sha)
+    }
+
+    func reflog(_ reflog: GitReflogViewController, didRequest intent: GitReflogIntent) {
+        perform(.reflog(intent))
     }
 }
 
@@ -678,7 +755,11 @@ final class GitWindowHistoryPaneViewController: GitWindowContainerViewController
     required init?(coder: NSCoder) { fatalError("init(coder:) is not supported") }
 
     override func contentDidChange() {
-        paneTitle = content is GitWorkingCopyViewController ? "Working Copy" : "History"
+        switch content {
+        case is GitWorkingCopyViewController: paneTitle = "Working Copy"
+        case is GitReflogViewController: paneTitle = "Reflog"
+        default: paneTitle = "History"
+        }
     }
 
     var paneSearchPlaceholder: String { "Search History" }

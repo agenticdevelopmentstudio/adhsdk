@@ -22,6 +22,12 @@ public final class GitRepositoryModel: GitRefsDataSource, GitHistoryDataSource, 
     public private(set) var worktrees: [GitWorktree] = []
     /// The commit HEAD resolves to; nil on an unborn HEAD, an orphan branch included.
     public private(set) var headCommit: String?
+    /// HEAD's two newest reflog entries, loaded with the refs, for Undo
+    /// (`GitRepositoryModel+Reflog`); empty before the first load and on an unborn HEAD.
+    public private(set) var headReflog: [GitReflogEntry] = []
+    /// Whether and how the repository uses Git LFS; nil until it first loads, with the
+    /// refs, and kept at its last good value when a load fails.
+    public private(set) var lfs: GitLFSState?
 
     public private(set) var commits: [GitCommit] = []
     public private(set) var graphRows: [CommitGraphLayout<String>.Row] = []
@@ -212,7 +218,11 @@ public final class GitRepositoryModel: GitRefsDataSource, GitHistoryDataSource, 
         async let submodules = Self.load { try await client.submodules(in: root) }
         async let worktrees = Self.load { try await client.worktrees(in: root) }
         async let head = Self.load { try await client.resolveCommit("HEAD", in: root) }
+        async let lfs = Self.load { try await client.lfsState(in: root) }
+        async let reflog = Self.load { try await client.reflog(limit: 2, in: root) }
         let loaded = await (refs: refs, stashes: stashes, submodules: submodules, worktrees: worktrees, head: head)
+        let lfsLoaded = await lfs
+        let reflogLoaded = await reflog
         guard generation == refsGeneration else { return false }
 
         var applied = false
@@ -253,6 +263,22 @@ public final class GitRepositoryModel: GitRefsDataSource, GitHistoryDataSource, 
                 applied = true
             }
         case .failure(let error): logFailure("HEAD", error)
+        }
+        switch lfsLoaded {
+        case .success(let value):
+            if value != self.lfs {
+                self.lfs = value
+                applied = true
+            }
+        case .failure(let error): logFailure("LFS", error)
+        }
+        switch reflogLoaded {
+        case .success(let value):
+            if value != headReflog {
+                headReflog = value
+                applied = true
+            }
+        case .failure(let error): logFailure("reflog", error)
         }
         return applied
     }
@@ -342,6 +368,11 @@ public final class GitRepositoryModel: GitRefsDataSource, GitHistoryDataSource, 
     public private(set) var isPerforming = false
     private var performingCount = 0 {
         didSet { isPerforming = performingCount > 0 }
+    }
+
+    /// HEAD's reflog, newest first, at most `limit` entries, for the reflog browser.
+    public func reflog(limit: Int) async throws -> [GitReflogEntry] {
+        try await client.reflog(limit: limit, in: root)
     }
 
     /// The checked-out local branch; nil on a detached HEAD or before the refs load.

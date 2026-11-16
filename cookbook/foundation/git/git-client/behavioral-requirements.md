@@ -256,7 +256,8 @@
   hooks: commit, merge, rebase, interactive rebase, and an operation's
   continue and skip steps (an abort makes no commit and is local); adding a
   worktree (it checks out a whole tree and runs the post-checkout hook) and
-  updating submodules (each may be cloned) are long-running too. Both budgets
+  updating submodules (each may be cloned) are long-running too, and so are
+  an LFS fetch and an LFS pull, which download objects. Both budgets
   MUST be exposed as constants. A read's budget is unchanged.
 - **write-editor-override**: The perform verb MUST run with `-c
   core.editor=true`, so no write can stop to wait on an editor nobody is
@@ -461,6 +462,42 @@
   [--init] --recursive`, limited to the named paths after `--` when there
   are any, so an initialized superproject whose submodules were never
   cloned ends with each checked out at its recorded commit.
+
+### LFS
+
+- **lfs-pointer**: A Git LFS pointer MUST parse only from text of at most
+  1024 bytes whose first non-blank line is exactly `version
+  https://git-lfs.github.com/spec/v1` and which holds an `oid sha256:<64
+  hex digits>` line and a `size <non-negative integer>` line; lines may end
+  in CRLF and blank lines are ignored. Anything else is not a pointer. The
+  oid is kept as lowercase hex without its `sha256:` prefix, and its short
+  form is its first seven characters.
+- **lfs-state**: The LFS state verb MUST run `lfs version`; a failure of it
+  (git answers "'lfs' is not a git command" when git-lfs is not installed)
+  MUST return a not-installed state with no patterns and no files, never
+  an error. Otherwise it MUST run `lfs track` and `lfs ls-files` through
+  the same bottleneck as every other verb, so git finds `git-lfs` on the
+  inherited `PATH`; an `ls-files` failure (a repository with no commit)
+  lists no files. The state is in use only when installed and it has a
+  tracked pattern or an LFS file.
+- **lfs-track-parse**: The tracked patterns MUST be the non-blank lines
+  between `Listing tracked patterns` and `Listing excluded patterns` (or
+  the end), trimmed, each without its trailing ` (<attributes file>)`.
+- **lfs-ls-files-parse**: Each `lfs ls-files` line `<oid> <*|-> <path>`
+  MUST map the path to downloaded (`*`) or pointer only (`-`); a line of
+  any other shape is skipped.
+- **lfs-tracked-path**: A path MUST count as stored in LFS when the state
+  is in use and `ls-files` lists it or a tracked pattern matches it by
+  `fnmatch`: a pattern with no slash against the file name, one with a
+  slash (a leading one dropped) against the whole path.
+- **lfs-diff-summary**: A file diff MUST summarise as an LFS diff when it
+  is not binary and both its sides parse as pointers, or one does and the
+  other side is missing (no lines); the old side is its context and removed
+  lines, the new side its context and added lines. The summary reads `LFS
+  object <short oid> · <size>`, sizes in `ByteCountFormatter`'s file style,
+  with `<old> → <new>` when both sides exist.
+- **lfs-actions**: The LFS fetch and LFS pull actions MUST run `lfs fetch`
+  and `lfs pull`, with no operands, as long-running writes.
 
 ### Execution, configuration and attribution
 
