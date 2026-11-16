@@ -548,24 +548,46 @@ public final class WebKitBrowserEngine: WebKitPageDriver, BrowserEngine {
     /// read the page being left, and returning empty-handed would start the
     /// new document on the old site's rules.
     private func prepareHiddenItems(for url: URL?) async {
-        for _ in 0..<Self.hiddenItemsPrepareAttempts {
-            switch await readHiddenItemSelectors(for: url) {
-            case .selectors(let selectors):
-                applyHiddenItems(selectors, live: false)
-                return
-            case .superseded:
-                // Teardown supersedes every read for good.
-                if isTornDown { return }
-                continue
-            case .failed:
-                return
-            }
-        }
+        let selectors = await Self.preparedHiddenItemSelectors(
+            isTornDown: { [weak self] in self?.isTornDown ?? true },
+            read: { [weak self] checksGeneration in
+                guard let self else { return .superseded }
+                return await self.readHiddenItemSelectors(for: url, checkingGeneration: checksGeneration)
+            })
+        if let selectors { applyHiddenItems(selectors, live: false) }
     }
 
-    private static let hiddenItemsPrepareAttempts = 3
+    static let hiddenItemsPrepareAttempts = 3
 
-    private enum HiddenItemsRead {
+    /// The selectors a navigation's document starts with, or nil to keep the
+    /// current ones (torn down, or a read that failed outright). Up to
+    /// ``hiddenItemsPrepareAttempts`` reads that a newer one may supersede;
+    /// when every one is, a last read that nothing supersedes decides, and
+    /// if even that fails the document starts with none rather than the
+    /// previous site's (fail closed: another site's rules never stand).
+    static func preparedHiddenItemSelectors(
+        attempts: Int = hiddenItemsPrepareAttempts,
+        isTornDown: () -> Bool,
+        read: (_ checksGeneration: Bool) async -> HiddenItemsRead
+    ) async -> [String]? {
+        for _ in 0..<attempts {
+            switch await read(true) {
+            case .selectors(let selectors):
+                return selectors
+            case .superseded:
+                // Teardown supersedes every read for good.
+                if isTornDown() { return nil }
+                continue
+            case .failed:
+                return nil
+            }
+        }
+        if isTornDown() { return nil }
+        if case .selectors(let selectors) = await read(false) { return selectors }
+        return []
+    }
+
+    enum HiddenItemsRead: Equatable {
         case selectors([String])
         /// A newer read started while this one ran.
         case superseded
@@ -574,14 +596,18 @@ public final class WebKitBrowserEngine: WebKitPageDriver, BrowserEngine {
 
     /// The user list's enabled selectors for `url`, read off the main thread.
     /// No store means nothing hidden; a failed read keeps the rules the page
-    /// last had.
-    private func readHiddenItemSelectors(for url: URL?) async -> HiddenItemsRead {
-        hiddenItemsGeneration += 1
+    /// last had. The store is awaited, never blocked on: an engine made at
+    /// launch reads before the store's background open is done.
+    /// `checkingGeneration` false neither claims a generation nor can be
+    /// superseded: the last word of a navigation every read of which was.
+    private func readHiddenItemSelectors(for url: URL?, checkingGeneration: Bool = true) async -> HiddenItemsRead {
+        if checkingGeneration { hiddenItemsGeneration += 1 }
         let generation = hiddenItemsGeneration
-        guard let store = BrowserHiddenItemsStore.shared else { return .selectors([]) }
+        guard let store = await BrowserHiddenItemsStore.sharedStore() else { return .selectors([]) }
         do {
             let selectors = try await store.perform { try $0.enabledSelectors(list: .user, for: url) }
-            return generation == hiddenItemsGeneration ? .selectors(selectors) : .superseded
+            let current = !checkingGeneration || generation == hiddenItemsGeneration
+            return current ? .selectors(selectors) : .superseded
         } catch {
             let host = url?.host ?? "no address"
             logger.error(

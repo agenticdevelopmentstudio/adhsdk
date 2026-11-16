@@ -344,7 +344,7 @@ final class BrowserAgentViewsTests: XCTestCase {
     /// receives": with a pane override of Hide Images, the tools' reader
     /// (through the handle, filled as the app's directory adapter fills it)
     /// and the views' reader get the same value.
-    func test_toolsAndViewsGetSameHideImages() {
+    func test_toolsAndViewsGetSameHideImages() async {
         let (pane, layered) = makeLayeredPane()
         for override in [true, false] {
             layered.set(override, for: UserSettings.browserPrivacyHideImages)
@@ -353,7 +353,7 @@ final class BrowserAgentViewsTests: XCTestCase {
                 id: "pane", project: "project", tab: "tab", automation: pane.automation,
                 hidesImages: pane.agentHidesImages)
             let tools = BrowserToolSet.agentPageSource(for: handle, privacy: .off, hiddenItems: nil)
-            let views = pane.agentPageSource(engine: pane.engine)
+            let views = await pane.agentPageSource(engine: pane.engine)
             XCTAssertEqual(tools.hidesImages, override)
             XCTAssertEqual(views.hidesImages, tools.hidesImages, "tools and views read one value")
         }

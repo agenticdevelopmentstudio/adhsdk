@@ -7,6 +7,43 @@ import XCTest
 @MainActor
 final class BrowserHiddenItemsStyleTests: XCTestCase {
 
+    // MARK: - Preparing a navigation's rules
+
+    /// Every read superseded: a last read nothing supersedes decides, never
+    /// the previous site's rules (re-review follow-up).
+    func test_prepareEndsWithAnUncheckedReadWhenEveryReadIsSuperseded() async {
+        var asked: [Bool] = []
+        let selectors = await WebKitBrowserEngine.preparedHiddenItemSelectors(
+            isTornDown: { false },
+            read: { checks in
+                asked.append(checks)
+                return checks ? .superseded : .selectors(["#new-site"])
+            })
+        XCTAssertEqual(selectors, ["#new-site"])
+        XCTAssertEqual(asked, [true, true, true, false])
+    }
+
+    /// The last read failing starts the document with no rules: fail closed
+    /// against the previous site's (re-review follow-up).
+    func test_prepareStartsWithNoRulesWhenTheLastReadFails() async {
+        let selectors = await WebKitBrowserEngine.preparedHiddenItemSelectors(
+            isTornDown: { false },
+            read: { checks in checks ? .superseded : .failed })
+        XCTAssertEqual(selectors, [])
+    }
+
+    func test_prepareKeepsTheRulesOnTeardownOrAnOutrightFailure() async {
+        let tornDown = await WebKitBrowserEngine.preparedHiddenItemSelectors(
+            isTornDown: { true }, read: { _ in .superseded })
+        XCTAssertNil(tornDown)
+        let failed = await WebKitBrowserEngine.preparedHiddenItemSelectors(
+            isTornDown: { false }, read: { _ in .failed })
+        XCTAssertNil(failed)
+        let first = await WebKitBrowserEngine.preparedHiddenItemSelectors(
+            isTornDown: { false }, read: { _ in .selectors(["#ad"]) })
+        XCTAssertEqual(first, ["#ad"])
+    }
+
     // MARK: - Script text
 
     func test_cssOneRulePerSelector() {

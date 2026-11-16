@@ -35,6 +35,8 @@ public final class BrowserToolSet: ChatToolSource, @unchecked Sendable {
 
     @MainActor
     public convenience init(directory: any BrowserPaneDirectory, settings: SettingsStore = UserSettings.shared) {
+        // The blocking getter is right here: a tool call drives a page the
+        // engine has already read its rules for, so the launch open is done.
         self.init(directory: directory, settings: settings, hiddenItems: { BrowserHiddenItemsStore.shared })
     }
 

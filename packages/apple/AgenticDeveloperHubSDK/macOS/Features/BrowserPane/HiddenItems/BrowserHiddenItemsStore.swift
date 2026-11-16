@@ -48,6 +48,11 @@ public final class BrowserHiddenItemsStore: @unchecked Sendable {
     /// answering "no store", which would show the agent what its list hides:
     /// privacy fails closed. Setting it (a host, a test) replaces any open in
     /// flight.
+    ///
+    /// This getter blocks the main thread while the open runs, so it is for
+    /// callers after launch (an agent's tool call) only. Anything that can run
+    /// while the app is launching (an engine's first read, a toolbar button)
+    /// awaits ``sharedStore()`` instead.
     @MainActor public static var shared: BrowserHiddenItemsStore? {
         get {
             if let pendingOpen {
@@ -60,6 +65,21 @@ public final class BrowserHiddenItemsStore: @unchecked Sendable {
             pendingOpen = nil
             storedShared = newValue
         }
+    }
+
+    /// ``shared`` without blocking: awaits an open in flight and answers what
+    /// it opened, or nil when the file could not be opened (every consumer
+    /// takes nil as "no store", never as an empty list it may show past).
+    @MainActor public static func sharedStore() async -> BrowserHiddenItemsStore? {
+        guard let pending = pendingOpen else { return storedShared }
+        let store = await pending.value()
+        if pendingOpen === pending {
+            storedShared = store
+            pendingOpen = nil
+            return store
+        }
+        // A setter or a newer open replaced this one while it ran.
+        return await sharedStore()
     }
 
     /// Whether ``shared`` is set or being opened, without waiting for it.
@@ -96,18 +116,37 @@ public final class BrowserHiddenItemsStore: @unchecked Sendable {
         }
     }
 
-    /// One background open, which a main-actor read can wait on.
+    /// One background open, which a main-actor read can wait on, blocking
+    /// (``shared``) or awaiting (``sharedStore()``).
     private final class PendingOpen: @unchecked Sendable {
         private let condition = NSCondition()
         private var isDone = false
         private var store: BrowserHiddenItemsStore?
+        private var waiters: [CheckedContinuation<BrowserHiddenItemsStore?, Never>] = []
 
         func finish(_ store: BrowserHiddenItemsStore?) {
             condition.lock()
             self.store = store
             isDone = true
+            let resumed = waiters
+            waiters = []
             condition.broadcast()
             condition.unlock()
+            for waiter in resumed { waiter.resume(returning: store) }
+        }
+
+        func value() async -> BrowserHiddenItemsStore? {
+            await withCheckedContinuation { continuation in
+                condition.lock()
+                guard isDone else {
+                    waiters.append(continuation)
+                    condition.unlock()
+                    return
+                }
+                let store = store
+                condition.unlock()
+                continuation.resume(returning: store)
+            }
         }
 
         func wait() -> BrowserHiddenItemsStore? {

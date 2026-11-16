@@ -226,6 +226,33 @@ final class BrowserHiddenItemsStoreTests: XCTestCase {
         XCTAssertNil(BrowserHiddenItemsStore.shared)
         wait(for: [failed], timeout: 5)
     }
+
+    /// ``sharedStore()`` awaits the open in flight rather than blocking the
+    /// main thread on it, and answers nil when the open failed (re-review
+    /// follow-up).
+    @MainActor
+    func test_sharedStoreAwaitsTheOpenAndFailsClosedToNil() async throws {
+        let saved = BrowserHiddenItemsStore.shared
+        defer { BrowserHiddenItemsStore.shared = saved }
+        BrowserHiddenItemsStore.shared = nil
+        let none = await BrowserHiddenItemsStore.sharedStore()
+        XCTAssertNil(none)
+
+        BrowserHiddenItemsStore.openShared(at: fileURL)
+        let awaited = await BrowserHiddenItemsStore.sharedStore()
+        let store = try XCTUnwrap(awaited, "an await in the gap saw no store")
+        XCTAssertEqual(store.url, fileURL)
+        let again = await BrowserHiddenItemsStore.sharedStore()
+        XCTAssertTrue(again === store)
+        XCTAssertTrue(BrowserHiddenItemsStore.shared === store, "the blocking getter agrees")
+
+        let blocker = directory.appendingPathComponent("file")
+        try Data().write(to: blocker)
+        BrowserHiddenItemsStore.openShared(at: blocker.appendingPathComponent("x.db"))
+        let failed = await BrowserHiddenItemsStore.sharedStore()
+        XCTAssertNil(failed)
+        XCTAssertFalse(BrowserHiddenItemsStore.hasShared)
+    }
 }
 
 /// What the change observer saw, behind a lock: the observer block is

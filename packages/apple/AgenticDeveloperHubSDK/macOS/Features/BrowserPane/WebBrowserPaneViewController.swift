@@ -1162,12 +1162,14 @@ open class WebBrowserPaneViewController: NSViewController {
             hiddenItemsPopover = nil
             return
         }
-        guard let store = openHiddenItemsStore() else { return }
-        let popover = BrowserHiddenItemsPopover(list: .user, store: store, url: engine.url) { [weak self] in
-            self?.beginSelectingItems(store: store)
+        Task { [weak self] in
+            guard let self, let store = await self.openHiddenItemsStore() else { return }
+            let popover = BrowserHiddenItemsPopover(list: .user, store: store, url: self.engine.url) { [weak self] in
+                self?.beginSelectingItems(store: store)
+            }
+            self.hiddenItemsPopover = popover
+            popover.show(relativeTo: self.addressBox.hideItemsButton)
         }
-        hiddenItemsPopover = popover
-        popover.show(relativeTo: addressBox.hideItemsButton)
     }
 
     /// The privacy toolbar's "Hide elements from agent": stops agent-list
@@ -1191,18 +1193,22 @@ open class WebBrowserPaneViewController: NSViewController {
     /// "Select Items to Hide from the Agent": agent-list selecting on the
     /// view showing, the live page or the Agent preview.
     @objc func selectItemsToHideFromAgent(_ sender: Any?) {
-        guard let store = openHiddenItemsStore() else { return }
-        beginSelectingItems(store: store, list: .agent)
+        Task { [weak self] in
+            guard let self, let store = await self.openHiddenItemsStore() else { return }
+            self.beginSelectingItems(store: store, list: .agent)
+        }
     }
 
     /// "Hidden from the Agent…": the agent list's popover for the front page.
     @objc func showHiddenFromAgent(_ sender: Any?) {
-        guard let store = openHiddenItemsStore() else { return }
-        let popover = BrowserHiddenItemsPopover(list: .agent, store: store, url: engine.url) { [weak self] in
-            self?.beginSelectingItems(store: store, list: .agent)
+        Task { [weak self] in
+            guard let self, let store = await self.openHiddenItemsStore() else { return }
+            let popover = BrowserHiddenItemsPopover(list: .agent, store: store, url: self.engine.url) { [weak self] in
+                self?.beginSelectingItems(store: store, list: .agent)
+            }
+            self.agentItemsPopover = popover
+            popover.show(relativeTo: self.hideFromAgentButton)
         }
-        agentItemsPopover = popover
-        popover.show(relativeTo: hideFromAgentButton)
     }
 
     /// The two hide-items buttons are off on a page with no site (`file:`,
@@ -1223,8 +1229,10 @@ open class WebBrowserPaneViewController: NSViewController {
         agentItemsPopover = nil
     }
 
-    private func openHiddenItemsStore() -> BrowserHiddenItemsStore? {
-        guard let store = BrowserHiddenItemsStore.shared else {
+    /// The shared store, awaited rather than blocked on: a button pressed
+    /// while the launch open runs waits for it without stalling the app.
+    private func openHiddenItemsStore() async -> BrowserHiddenItemsStore? {
+        guard let store = await BrowserHiddenItemsStore.sharedStore() else {
             Self.logger.error("hidden items: no store is open")
             NSSound.beep()
             return nil
@@ -2516,7 +2524,7 @@ extension WebBrowserPaneViewController {
         if let views = tab.agentViews { return views }
         let views = BrowserAgentViews { [weak self, weak tab] in
             guard let self, let tab else { return AgentPage.unavailable("the tab has closed", url: nil) }
-            let source = self.agentPageSource(engine: tab.engine)
+            let source = await self.agentPageSource(engine: tab.engine)
             return await source.read(options: BrowserSnapshotOptions(), keepingRefs: true).page
         }
         tab.agentViews = views
@@ -2525,10 +2533,12 @@ extension WebBrowserPaneViewController {
 
     /// The source the agent views read `engine`'s page through: the agent
     /// list, the privacy of that page, and the pane's `agentHidesImages`,
-    /// the same value the tools receive on the pane's handle.
-    func agentPageSource(engine tabEngine: BrowserEngine) -> AgentPageSource {
+    /// the same value the tools receive on the pane's handle. The store is
+    /// awaited, never blocked on: a tab restored in an agent view reads
+    /// while the launch open may still run.
+    func agentPageSource(engine tabEngine: BrowserEngine) async -> AgentPageSource {
         AgentPageSource.reading(
-            tabEngine, hiddenItems: BrowserHiddenItemsStore.shared,
+            tabEngine, hiddenItems: await BrowserHiddenItemsStore.sharedStore(),
             privacy: agentPrivacy(at: Self.privacyWordsURL(tabEngine.url)), hideImages: agentHidesImages)
     }
 }
