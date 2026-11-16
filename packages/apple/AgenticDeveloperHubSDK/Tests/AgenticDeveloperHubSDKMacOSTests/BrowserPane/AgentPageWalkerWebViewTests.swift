@@ -321,6 +321,6 @@ private final class MovedPageDriver: BrowserPageDriver {
             return result
         }
         payload["url"] = walkedAddresses.removeFirst()
-        return String(decoding: try JSONSerialization.data(withJSONObject: payload), as: UTF8.self)
+        return String(bytes: try JSONSerialization.data(withJSONObject: payload), encoding: .utf8)
     }
 }
