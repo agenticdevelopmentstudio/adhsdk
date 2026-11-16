@@ -53,6 +53,9 @@ export function createHubMailClient(options: HubMailClientOptions): HubMailClien
     } catch (err) {
       if (gen !== generation) return
       if (statusOf(err) !== 410) throw err
+      // The snapshot is about to be emptied: until the re-pull lands it holds nothing true, so the
+      // next read must pull again rather than serve the empty snapshot as if it were synced.
+      pulled = false
       snapshot.clear()
       cursor = ''
       await pullPages(gen)
