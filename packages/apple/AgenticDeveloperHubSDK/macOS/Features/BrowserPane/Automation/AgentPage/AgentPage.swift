@@ -19,9 +19,10 @@ public struct AgentNode: Sendable, Hashable {
     public let selector: String
     public let children: [AgentNode]
     /// The subtree's text the way `textContent` reads it — the page's own
-    /// pieces concatenated with no separator, images contributing none —
-    /// concealed once as a whole, so a privacy word split across inline
-    /// elements (`Ac<b>me</b>`) is concealed as the word it reads as.
+    /// pieces concatenated with their boundary spaces, images contributing
+    /// none — collapsed, then concealed once as a whole, so `Buy <b>now</b>`
+    /// reads "Buy now" and a privacy word split across inline elements
+    /// (`Ac<b>me</b>`) is concealed as the word it reads as.
     let contentText: String
 
     init(ref: String, kind: AgentNodeKind, text: String, attributes: [String: String], value: String?,
@@ -165,10 +166,10 @@ enum AgentPageText {
         text.count > limit ? String(text.prefix(limit)) + "…" : text
     }
 
-    /// Every text in `node`'s subtree, its own first, concatenated with no
-    /// separator as an element's `textContent` is (`a<b>b</b>` gives "ab"),
-    /// and concealed after joining, never piece by piece; images contribute
-    /// none, as `textContent` holds no alt.
+    /// Every text in `node`'s subtree, its own first, concatenated as an
+    /// element's `textContent` is — `a<b>b</b>` gives "ab", `a <b>b</b>`
+    /// "a b" — collapsed, and concealed after joining, never piece by piece;
+    /// images contribute none, as `textContent` holds no alt.
     static func allText(_ node: AgentNode) -> String {
         node.kind == .image ? "" : node.contentText
     }
@@ -351,7 +352,9 @@ struct AgentSnapshotMapper {
 
 // MARK: - Text rendering
 
-/// One line per block, inline text joined by spaces, as `innerText` reads.
+/// One line per block, as `innerText` reads: a run of text pieces as its
+/// joined, concealed text (the page's own boundary spaces kept), other
+/// inline text joined by spaces.
 struct AgentTextRenderer {
     private var lines: [String] = []
     private var pieces: [String] = []

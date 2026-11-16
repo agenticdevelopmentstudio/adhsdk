@@ -19,7 +19,7 @@
 // stays what it was for the same page.
 (function () {
   'use strict';
-  const VERSION = 1;
+  const VERSION = 2;
   if (globalThis.__adkAgentWalkVersion === VERSION && typeof globalThis.__adkAgentWalk === 'function') { return; }
 
   const DEFAULT_TIMEOUT_MS = 1500;
@@ -66,6 +66,11 @@
     'object', 'embed']);
 
   const collapse = (s) => (s || '').replace(/\s+/g, ' ').trim();
+  // Whitespace runs collapsed but the edges kept: a text node's leading or
+  // trailing space is the boundary `innerText` reads between it and the
+  // next piece (`Buy <b>now</b>` is "Buy now"), so text nodes carry it and
+  // the builder joins the pieces before collapsing and concealing once.
+  const squash = (s) => (s || '').replace(/\s+/g, ' ');
 
   function walk(args) {
     const options = args || {};
@@ -182,8 +187,9 @@
     }
 
     // The text an element shows, skipping everything hidden or excluded
-    // beneath it (where `textContent` would include it), collapsed.
-    function visibleText(el, skipControls) {
+    // beneath it (where `textContent` would include it), collapsed — or,
+    // with `keepEdges`, squashed with its boundary spaces kept.
+    function visibleText(el, skipControls, keepEdges) {
       const parts = [];
       (function gather(node) {
         for (const child of node.childNodes) {
@@ -197,7 +203,7 @@
           }
         }
       })(el);
-      return collapse(parts.join(''));
+      return keepEdges ? squash(parts.join('')) : collapse(parts.join(''));
     }
 
     // The legacy name's first sources: `aria-labelledby`'s targets (only the
@@ -335,8 +341,8 @@
 
       if (isGeneric(info)) {
         if (!hasNonGenericDescendant(el)) {
-          const text = visibleText(el, false);
-          if (!text) { return; }
+          const text = visibleText(el, false, !info);
+          if (!collapse(text)) { return; }
           if (info) {
             const node = elementNode(el, info);
             node.text = text;
@@ -378,14 +384,23 @@
     function childrenOf(el, depthLeft, out) {
       const next = depthLeft === null ? null : depthLeft - 1;
       if (next === -1) { return; }
+      const start = out.length;
+      const isSpace = (node) => node && node.kind === 'text' && node.text === ' ';
       for (const child of el.childNodes) {
         if (child.nodeType === Node.TEXT_NODE) {
-          const text = collapse(child.textContent);
-          if (text) { out.push(textNode(text)); }
+          // Squashed, not trimmed. A whitespace-only node is kept as one
+          // space between two contributions, never leading or doubled.
+          const text = squash(child.textContent);
+          if (text === ' ') {
+            if (out.length > start && !isSpace(out[out.length - 1])) { out.push(textNode(text)); }
+          } else if (text) {
+            out.push(textNode(text));
+          }
         } else if (child.nodeType === Node.ELEMENT_NODE) {
           build(child, next, out);
         }
       }
+      if (out.length > start && isSpace(out[out.length - 1])) { out.pop(); }
     }
 
     // A scope inside anything hidden or excluded reads as an empty page.

@@ -142,9 +142,17 @@ recipe is written before it.
   Text that a rendering joins from several pieces — a subtree's text read
   the `textContent` way for a generic line, a name taken from content or
   an option, and a run of text pieces in the text and HTML renderings —
-  MUST be joined from the unconcealed pieces and concealed once as a
-  whole, never assembled from pieces concealed one by one, so a privacy
-  word split across inline elements (`Ac<b>me</b>`) is still concealed.
+  MUST be joined from the unconcealed pieces, then collapsed and trimmed
+  once, then concealed once as a whole, never assembled from pieces
+  concealed one by one, so a privacy word split across inline elements
+  (`Ac<b>me</b>`) is still concealed.
+- **text-pieces-keep-boundary-space**: The walker MUST send each text
+  piece with its whitespace runs collapsed to one space but its leading
+  and trailing space kept, and MUST keep a whitespace-only text node as one
+  space between two contributions (never leading, trailing or doubled), so
+  joined text keeps the word boundary `innerText` reads: `Buy <b>now</b>`
+  MUST read "Buy now" in the text, HTML and content-name renderings, while
+  the snapshot tree MUST still print each piece trimmed, as today.
 - **hide-images**: When the Hide Images setting is on, the component MUST
   drop every image node; when it is off, an image MUST enter the result
   only as its alternative text, never as an image source.
@@ -292,6 +300,8 @@ landmarks, headings — to build its result.)
 | agent-page-builder-039 | value-kept-only-for-form-controls | A text field of type `range` named "Volume" with value "40" and one of type `number` labelled "Count" with value "3" | The snapshot prints `slider "Volume"` with `[value="40"]` and `spinbutton "Count"` with `[value="3"]` |
 | agent-page-builder-040 | value-kept-only-for-form-controls | A text area labelled "Blank" with a value of a newline and three spaces | The snapshot prints `textbox "Blank"` with `[value=""]` |
 | agent-page-builder-041 | concealed-before-insertion | Privacy words {Acme}; a paragraph with text pieces "Ac" and "me", a button "Ac" with a text child "me", a heading with pieces "Ac" and "me Co", an option with pieces "Ac" and "me" | "Acme" appears in no rendering; the snapshot prints `text: Zed`, `button "Zed"`, `heading "Zed Co"` and `option "Zed"`, and the HTML option reads "Zed" |
+| agent-page-builder-042 | text-pieces-keep-boundary-space | A list item with text pieces "Buy " and "now"; a button "Buy " with a text child "now "; a paragraph with pieces " Sign " and "up" | The text reads "Buy now", "Buy now", "Sign up" on three lines; the HTML has `>Buy now</li>` and `>Buy now</button>`; the tree prints `text: Buy`, `text: now`, `button "Buy now"` and `text: Sign up`; "Buynow" appears nowhere |
+| agent-page-builder-043 | text-pieces-keep-boundary-space, concealed-before-insertion | Live page: `<li>Buy <b>now</b></li>`, `<li><span>Pay</span> <span>later</span></li>`, `<li>Ac<b>me</b></li>`; then privacy words {Acme} | The text reads "Buy now", "Pay later", "Acme"; the tree prints no empty text line; with privacy on, "Acme" appears in neither the text nor the HTML |
 ## Edge Cases
 
 - **Null and empty input**: An empty document yields a page with a

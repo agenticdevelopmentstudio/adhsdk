@@ -190,6 +190,33 @@ final class AgentPageBuilderTests: XCTestCase {
         XCTAssertTrue(page.text().contains("Zed"), page.text())
     }
 
+    func test_tagBoundarySpaceKept() {
+        // `<li>Buy <b>now</b></li>` and `<button>Buy <b>now</b></button>`: the walker
+        // keeps "Buy "'s trailing space, so every rendering reads "Buy now" as
+        // `innerText` does, and the tree keeps the legacy per-piece text lines.
+        let page = build(document([
+            node("e1", "list", children: [
+                node("e2", "listItem", children: [node("t1", "text", text: "Buy "), node("t2", "text", text: "now")])
+            ]),
+            node("e3", "button", text: "Buy ", children: [node("t3", "text", text: "now ")]),
+            node("e4", "paragraph", children: [node("t4", "text", text: " Sign "), node("t5", "text", text: "up")])
+        ]), title: "T")
+        XCTAssertEqual(page.text(), "Buy now\nBuy now\nSign up")
+        XCTAssertTrue(page.html().contains(">Buy now</li>"), page.html())
+        XCTAssertTrue(page.html().contains(">Buy now</button>"), page.html())
+        XCTAssertEqual(page.snapshotTree(BrowserSnapshotOptions()), """
+        - document "T":
+          - list [ref=e1]:
+            - listitem [ref=e2]:
+              - text: Buy
+              - text: now
+          - button "Buy now" [ref=e3]
+          - text: Sign up
+
+        """)
+        for rendering in allRenderings(page) { XCTAssertFalse(rendering.contains("Buynow"), rendering) }
+    }
+
     func test_sliderAndSpinbuttonValueKept() {
         // A `role=slider` or `role=spinbutton` element arrives from the walker
         // as a text field of type range or number, its value `aria-valuenow`.

@@ -5,7 +5,7 @@ import Foundation
 /// snapshot runtime whose ref table the walker shares.
 public enum AgentPageWalkerRuntime {
     /// Must equal `VERSION` in `AgentPageWalker.js`.
-    public static let version = 1
+    public static let version = 2
 
     public static var source: String {
         get throws {
@@ -26,7 +26,8 @@ public enum AgentPageWalkerRuntime {
         get throws {
             let finder = try BrowserElementPicker.finderSource
             let walker = try source
-            return "if (globalThis.__adkAgentWalkVersion === \(version) && typeof globalThis.__adkAgentWalk === 'function'"
+            return "if (globalThis.__adkAgentWalkVersion === \(version) "
+                + "&& typeof globalThis.__adkAgentWalk === 'function'"
                 + " && typeof globalThis.__adkFinder === 'function') { return true; }\n;\n"
                 + finder + "\n;\n" + walker + "\n;\nreturn true;"
         }

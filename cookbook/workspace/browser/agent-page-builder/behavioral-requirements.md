@@ -58,9 +58,17 @@
   Text that a rendering joins from several pieces — a subtree's text read
   the `textContent` way for a generic line, a name taken from content or
   an option, and a run of text pieces in the text and HTML renderings —
-  MUST be joined from the unconcealed pieces and concealed once as a
-  whole, never assembled from pieces concealed one by one, so a privacy
-  word split across inline elements (`Ac<b>me</b>`) is still concealed.
+  MUST be joined from the unconcealed pieces, then collapsed and trimmed
+  once, then concealed once as a whole, never assembled from pieces
+  concealed one by one, so a privacy word split across inline elements
+  (`Ac<b>me</b>`) is still concealed.
+- **text-pieces-keep-boundary-space**: The walker MUST send each text
+  piece with its whitespace runs collapsed to one space but its leading
+  and trailing space kept, and MUST keep a whitespace-only text node as one
+  space between two contributions (never leading, trailing or doubled), so
+  joined text keeps the word boundary `innerText` reads: `Buy <b>now</b>`
+  MUST read "Buy now" in the text, HTML and content-name renderings, while
+  the snapshot tree MUST still print each piece trimmed, as today.
 - **hide-images**: When the Hide Images setting is on, the component MUST
   drop every image node; when it is off, an image MUST enter the result
   only as its alternative text, never as an image source.

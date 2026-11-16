@@ -104,8 +104,10 @@ public struct AgentPageBuilder: Sendable {
     }
 
     /// `raw` re-validated, with its subtree's unconcealed text joined the
-    /// `textContent` way; that text never leaves the builder unconcealed —
-    /// it is concealed once, whole, into the node's `contentText`.
+    /// `textContent` way — the walker's text pieces keep their boundary
+    /// spaces, so `Buy <b>now</b>` joins as "Buy now" and `Ac<b>me</b>` as
+    /// "Acme". That text never leaves the builder unconcealed: it is
+    /// collapsed and trimmed once, then concealed once, into `contentText`.
     private func built(from raw: RawNode, base: URL?) -> (node: AgentNode, content: String)? {
         guard let kind = AgentNodeKind(rawValue: raw.kind), allowlist.kinds.contains(kind) else { return nil }
         if hideImages && kind == .image { return nil }
@@ -147,7 +149,7 @@ public struct AgentPageBuilder: Sendable {
         let content = kind == .image ? "" : ownText + built.map(\.content).joined()
         let node = AgentNode(ref: raw.ref, kind: kind, text: conceal(ownText), attributes: attributes,
                              value: value, selector: raw.selector ?? "", children: built.map(\.node),
-                             contentText: conceal(content))
+                             contentText: conceal(AgentPageText.collapse(content)))
         return (node, content)
     }
 

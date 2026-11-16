@@ -139,6 +139,35 @@ final class AgentPageWalkerWebViewTests: XCTestCase {
         XCTAssertTrue(reading.warnings.contains { $0.contains("::bad(") }, "\(reading.warnings)")
     }
 
+    func test_tagBoundarySpaceSurvivesTheWalk() async throws {
+        await host.load(html: """
+        <!doctype html><html><body><ul>
+          <li>Buy <b>now</b></li>
+          <li><span>Pay</span> <span>later</span></li>
+          <li>Ac<b>me</b></li>
+        </ul></body></html>
+        """)
+        let page = await source(nil).agentPage(options: BrowserSnapshotOptions())
+        XCTAssertNil(page.unavailableReason)
+        XCTAssertEqual(page.text(), "Buy now\nPay later\nAcme")
+        let html = page.html()
+        XCTAssertTrue(html.contains(">Buy now</li>"), html)
+        XCTAssertTrue(html.contains(">Pay later</li>"), html)
+        let text = tree(page)
+        XCTAssertTrue(text.contains("- text: Buy\n"), text)
+        XCTAssertTrue(text.contains("- text: now\n"), text)
+        XCTAssertFalse(text.contains("- text: \n"), text)
+
+        // A privacy word split with no space is still concealed as one word.
+        let filter = TextSubstitutionFilter(pairs: [.init(alias: "Zed", real: "Acme")])
+        let concealing = AgentPageSource(driver: driver, hiddenItems: nil, privacy: { .enabled(filter) },
+                                         hideImages: { false })
+        let concealed = await concealing.agentPage(options: BrowserSnapshotOptions())
+        XCTAssertFalse(concealed.text().contains("Acme"), concealed.text())
+        XCTAssertTrue(concealed.text().contains("Zed"), concealed.text())
+        XCTAssertFalse(concealed.html().contains("Acme"), concealed.html())
+    }
+
     func test_timeoutIsUnavailable() async throws {
         let rows = (0..<3000).map { "<div><span>Row \($0)</span><a href=\"/r\($0)\">Link \($0)</a></div>" }
         await host.load(html: "<!doctype html><html><body>\(rows.joined())</body></html>")
