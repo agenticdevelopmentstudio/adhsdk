@@ -7,7 +7,9 @@ extension GitWorkingCopyViewController {
     /// badges none. `reload()` calls it, and so does a refs change, which is when the
     /// model reloads LFS.
     public func reloadLFS() {
-        let tracked: ((String) -> Bool)? = source.lfs.flatMap { lfs in lfs.isInUse ? lfs.isTracked : nil }
+        let state: GitLFSState? = source.lfs
+        var tracked: ((String) -> Bool)?
+        if let state, state.isInUse { tracked = { path in state.isTracked(path) } }
         for list in [conflictsList, stagedList, unstagedList] { list.isLFSTracked = tracked }
     }
 }

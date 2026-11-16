@@ -65,18 +65,43 @@ public final class GitRepositoryModel: GitRefsDataSource, GitHistoryDataSource, 
     /// Commit signatures, checked lazily for the rows the history draws and cached by sha
     /// for the model's life (GitRepositoryModel+Signatures.swift). Each batch that lands
     /// posts `.history`; one that fails is logged.
-    private(set) lazy var signatureLoader = GitShaBatchLoader<GitSignature>(
-        provider: { [client = self.client, root = self.root] shas in
-            try await client.signatures(for: shas, in: root)
-        },
-        onLoad: { [weak self] in self?.notify([.history]) },
-        onFailure: { [weak self] error in self?.logFailure("signatures", error) }
-    )
+    private(set) lazy var signatureLoader = makeSignatureLoader()
 
-    public init(root: URL, client: GitClient = .shared, watcher: GitRepositoryWatching) {
+    // Built in a method, not in the lazy initializer: the compiler cannot evaluate the
+    // loader's main-actor default arguments there.
+    private func makeSignatureLoader() -> GitShaBatchLoader<GitSignature> {
+        GitShaBatchLoader<GitSignature>(
+            provider: { [client, root] shas in
+                try await client.signatures(for: shas, in: root)
+            },
+            onLoad: { [weak self] in self?.notify([.history]) },
+            onFailure: { [weak self] error in self?.logFailure("signatures", error) }
+        )
+    }
+
+    /// Where the history's Coding Partner reviews are read from; nil leaves every review
+    /// absent (GitRepositoryModel+Reviews.swift). Read-only: the model never writes one.
+    public let reviewsProvider: (any GitReviewsProviding)?
+
+    /// The reviews of the rows the history draws, cached by sha until `invalidateReviews()`;
+    /// nil without a provider. Each batch that lands posts `.history`.
+    private(set) lazy var reviewLoader: GitShaBatchLoader<GitCommitReview>? = makeReviewLoader()
+
+    private func makeReviewLoader() -> GitShaBatchLoader<GitCommitReview>? {
+        guard let provider = reviewsProvider else { return nil }
+        let path = root.path
+        return GitShaBatchLoader<GitCommitReview>(
+            provider: { shas in await provider.reviews(repoPath: path, shas: shas) },
+            onLoad: { [weak self] in self?.notify([.history]) }
+        )
+    }
+
+    public init(root: URL, client: GitClient = .shared, watcher: GitRepositoryWatching,
+                reviews: (any GitReviewsProviding)? = nil) {
         self.root = root
         self.client = client
         self.watcher = watcher
+        self.reviewsProvider = reviews
     }
 
     // MARK: Lifecycle
