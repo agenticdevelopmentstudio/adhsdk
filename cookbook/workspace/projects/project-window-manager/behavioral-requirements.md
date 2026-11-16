@@ -42,7 +42,7 @@
   manager holds whose project id names an open Document window, of either
   sort; a controller it does not hold MUST answer false.
 - **standalone-rows-one-row-per-canonical-path**: The standalone window
-  rows helper (shared by File Browser and Document windows) MUST look a
+  rows helper (shared by File Browser, Document and Git windows) MUST look a
   window's row up by its path and its kind together, MUST insert a row of
   that kind the first time a path is asked for, named by the caller or,
   failing that, by the path's last component (the path itself for the
@@ -237,6 +237,10 @@
   a close callback; it MUST bring an already open window for that id
   forward instead of building a second, and MUST honour quiet presentation
   when activating.
+- **standalone-existing-window-activates-only-when-asked**: Opening a
+  standalone window that is already open MUST return that window, and MUST
+  show it, order it front and activate the app only when asked to
+  activate; opened without activating it MUST be left where it is.
 - **document-windows-have-no-footer**: A window for a repository of a Document kind MUST be created without the footer bar, as it is created without pane chrome; every other kind keeps both.
 - **standalone-toolbar-items**: Opening a standalone window MUST pass the
   toolbar items it is given (none by default) to the window it makes, which

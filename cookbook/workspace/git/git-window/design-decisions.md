@@ -1,5 +1,5 @@
 
-**Decision**: The window set is keyed by the canonical top level, resolved through git before the set is asked.
+**Decision**: A window is keyed by the canonical top level, resolved through git before its row is looked up.
 **Rationale**: A window is a repository, not a directory; resolving first means a subdirectory and its root can never become two windows.
 **Approved**: pending
 
@@ -32,7 +32,11 @@
 **Approved**: pending
 
 **Decision**: An existing window opened with `activates` false is returned untouched.
-**Rationale**: Restore and scripts must never take the foreground; the keyed window set's bring-forward always activates, so the feature answers that case itself.
+**Rationale**: Restore and scripts must never take the foreground; `ProjectWindowManager.openStandaloneWindow` shows, orders front and activates an open window only when asked to activate, and the feature wires a window's session only when it opens it.
+**Approved**: pending
+
+**Decision**: The Git window keeps its rows with `StandaloneWindowRows`, as the File Browser and Document windows do, rather than a bookkeeping set of its own.
+**Rationale**: One copy of the canonical spelling, the row lookup and the restore list; it also deletes a closed window's row and saved frame, and at launch every row not about to reopen, so the database does not keep a row for every repository ever opened.
 **Approved**: pending
 
 **Decision**: Questions go through a `GitActionPresenting` protocol, with `NSAlert` sheets as its one AppKit implementation.

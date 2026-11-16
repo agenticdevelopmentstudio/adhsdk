@@ -15,4 +15,5 @@
 - **Refresh with nothing changed**: a commit picked by hand in the history stays selected.
 - **Fast typing in search**: the history view serialises queries; the window only forwards text.
 - **Quick selection changes**: generations drop stale stash and subtitle loads; the views drop their own.
+- **Removing a worktree whose window is open**: the removing window tells the feature, which closes the worktree's window as the user would, so its root is forgotten and its row deleted; a worktree removed outside the app leaves its window open, and at the next launch its root is no longer a repository and is dropped.
 - **Offline / disconnected state**: Not applicable: no network.

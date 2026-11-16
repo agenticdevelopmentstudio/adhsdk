@@ -4,7 +4,7 @@
     "id": "6a830cf8-0b95-4ffd-b175-f5cf481490c4",
     "title": "Git Window",
     "type": "ingredient",
-    "version": "1.10.1",
+    "version": "1.10.2",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -28,7 +28,7 @@
     "depends-on": [
       "bdd3a72d-8810-439b-bad7-ec16233cb2a3",
       "a2394ca0-3988-410b-9fc8-e0c9e253fc94",
-      "274f0727-b9b3-4fd3-9dea-b7e1bfbe92fc",
+      "7f1b8bef-e78e-4cac-be55-c948fe9062e5",
       "6708bfd4-5b29-4bf9-b180-05904873906e",
       "add92e9b-94e5-412c-970f-5ea8e2eb9eed"
     ],
@@ -39,7 +39,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "e2fb9fb7fc3c18dd",
+  "synced": "f4c58d05251b7205",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

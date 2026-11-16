@@ -90,7 +90,7 @@ struct GitWindowFeatureTests {
         let identifiers = ProjectWindowTestSupport.buildToolbarItems(controller).map(\.rawValue)
         let verbs = ["fetch", "pull", "push", "branch", "stash", "pop"].map { "git.toolbar.\($0)" }
 
-        #expect(Array(identifiers.prefix(6)) == verbs)
+        #expect(Array(identifiers.prefix(7)) == ["project.toolbar.title"] + verbs)
         let toolbar = try #require(feature.toolbars[controller.project.id])
         #expect(toolbar.session === feature.sessions[controller.project.id])
         let fetch = try #require(
@@ -100,6 +100,102 @@ struct GitWindowFeatureTests {
 
         controller.window?.close()
         #expect(feature.toolbars.isEmpty, "closing the window drops its toolbar")
+    }
+
+    @Test("closing a window forgets its root and, a turn later, deletes its row")
+    func closeDiscardsTheRow() async throws {
+        let repository = try await GitTestRepository.make(prefix: "git-window-feature-close")
+        defer { repository.tearDown() }
+        let setting = makeSetting()
+        defer { setting.remove() }
+        defer { removeDatabase() }
+        let feature = try makeFeature(setting)
+        defer { feature.unregister() }
+        let database = try ProjectDatabase(path: databaseURL.path)
+        let key = repository.root.canonicalFileURL.path
+
+        let controller = try #require(await feature.open(path: repository.root, activates: false))
+        #expect(try database.repo(path: key, kind: .gitWindow) != nil)
+        controller.window?.close()
+        #expect(setting.value.isEmpty)
+        await nextMainTurn()
+
+        #expect(try database.repo(path: key, kind: .gitWindow) == nil)
+    }
+
+    @Test("restore reopens a remembered repository quietly, drops the rest and deletes rows not reopening")
+    func restoreDiscardsForgottenRows() async throws {
+        let repository = try await GitTestRepository.make(prefix: "git-window-feature-restore")
+        defer { repository.tearDown() }
+        let missing = FileManager.default.temporaryDirectory
+            .appendingPathComponent("git-window-gone-\(UUID().uuidString)").path
+        let setting = makeSetting()
+        defer { setting.remove() }
+        defer { removeDatabase() }
+        let key = repository.root.canonicalFileURL.path
+        setting.value = [missing, key]
+        let feature = try makeFeature(setting)
+        defer { feature.unregister() }
+        let database = try ProjectDatabase(path: databaseURL.path)
+        let stale = GitRepo(path: "/nowhere/closed-before-discard", name: "stale", kind: .gitWindow)
+        try database.insert(stale)
+
+        feature.restoreOpenWindows()
+
+        #expect(setting.value == [key])
+        #expect(try database.repo(path: stale.path, kind: .gitWindow) == nil)
+        let row = try #require(try database.repo(path: key, kind: .gitWindow))
+        #expect(Array(feature.sessions.keys) == [row.id], "the remembered repository reopened")
+        let controller = try #require(await feature.open(path: repository.root, activates: false))
+        #expect(controller.project.id == row.id)
+        controller.window?.close()
+    }
+
+    @Test("an open window found without activating is not ordered front")
+    func quietLookupLeavesTheWindow() async throws {
+        let repository = try await GitTestRepository.make(prefix: "git-window-feature-quiet")
+        defer { repository.tearDown() }
+        let setting = makeSetting()
+        defer { setting.remove() }
+        defer { removeDatabase() }
+        let feature = try makeFeature(setting)
+        defer { feature.unregister() }
+
+        let controller = try #require(await feature.open(path: repository.root, activates: false))
+        defer { controller.window?.close() }
+        controller.window?.orderOut(nil)
+        let again = await feature.open(path: repository.root, activates: false)
+
+        #expect(again === controller)
+        #expect(controller.window?.isVisible == false)
+    }
+
+    @Test("removing a worktree closes the window open on it, and nothing else")
+    func removedWorktreeClosesItsWindow() async throws {
+        let repository = try await GitTestRepository.make(prefix: "git-window-feature-worktree")
+        defer { repository.tearDown() }
+        let setting = makeSetting()
+        defer { setting.remove() }
+        defer { removeDatabase() }
+        let feature = try makeFeature(setting)
+        defer { feature.unregister() }
+
+        let controller = try #require(await feature.open(path: repository.root, activates: false))
+        defer { controller.window?.close() }
+        feature.closeWindow(at: URL(fileURLWithPath: "/nowhere/else", isDirectory: true))
+        #expect(controller.window?.isVisible == true)
+
+        feature.closeWindow(at: repository.root.canonicalFileURL)
+        #expect(controller.window?.isVisible == false)
+        #expect(feature.sessions.isEmpty)
+        #expect(setting.value.isEmpty)
+    }
+
+    /// Lets work queued on the main queue (a closed window's row discard) run.
+    private func nextMainTurn() async {
+        await withCheckedContinuation { continuation in
+            DispatchQueue.main.async { continuation.resume() }
+        }
     }
 
     @Test("a directory outside any repository opens nothing and remembers nothing")

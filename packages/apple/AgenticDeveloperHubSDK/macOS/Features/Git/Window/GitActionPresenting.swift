@@ -70,10 +70,10 @@ public protocol GitActionPresenting: AnyObject {
     func editRebase(_ plan: GitRebasePlan) async -> GitRebasePlan?
 }
 
-/// `GitActionPresenting` as `NSAlert` sheets on the Git window. Never runs a modal
-/// loop and never activates the app: with no window to attach to it answers no
-/// (false / nil) and logs. A sheet still up when its window closes is ended and
-/// answered as cancelled, so whoever waits on it always resumes.
+/// `GitActionPresenting` as `NSAlert` sheets and the rebase editor's window sheet on
+/// the Git window. Never runs a modal loop and never activates the app: with no window
+/// to attach to it answers no (false / nil) and logs. A sheet still up when its window
+/// closes is ended and answered as cancelled, so whoever waits on it always resumes.
 @MainActor
 public final class GitAlertPresenter: GitActionPresenting {
     /// Begins `alert` as a sheet on a window, calling the handler when it ends.

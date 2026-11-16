@@ -67,7 +67,7 @@ public final class GitRefsSidebarViewController: NSViewController {
     /// The id of the row last reported to the delegate as selected. A
     /// submodule or worktree row is an action, not a place, so it never
     /// becomes the selection.
-    private var selectedID: String?
+    private(set) var selectedID: String?
 
     private enum Target {
         case workingCopy
@@ -217,6 +217,13 @@ public final class GitRefsSidebarViewController: NSViewController {
     func selectWorkingCopy() {
         selectedID = Self.workingCopyID
         list.selectItem(withId: Self.workingCopyID)
+    }
+
+    /// Leaves no row selected, without telling the delegate: the owner shows
+    /// something no row stands for (a detached HEAD's history).
+    func clearSelection() {
+        selectedID = nil
+        list.deselectAll()
     }
 
     /// Selects the row of the ref named `fullName` and tells the delegate, as a

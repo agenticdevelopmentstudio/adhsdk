@@ -548,9 +548,12 @@ public final class ProjectWindowManager: ProjectOpening, ObservableObject {
     ) -> ComposableTabsWindowController? {
         precondition(repo.kind != .project, "a project opens through openProject(_:)")
         if let existing = controllers[repo.id] {
-            existing.showWindow(nil)
-            existing.window?.makeKeyAndOrderFront(nil)
-            if activates { activateApp() }
+            // Found without activating (a launch restore, a quiet lookup): left where it is.
+            if activates {
+                existing.showWindow(nil)
+                existing.window?.makeKeyAndOrderFront(nil)
+                activateApp()
+            }
             return existing
         }
         guard let database else {

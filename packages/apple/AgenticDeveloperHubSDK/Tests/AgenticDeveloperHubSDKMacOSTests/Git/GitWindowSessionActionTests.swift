@@ -1647,16 +1647,20 @@ struct GitWindowSessionActionTests {
         }
         try await commitFile(repository, "a.txt", "a\n", at: 100)
         try await repository.run(["worktree", "add", "-q", "-b", "dirty", folder.path])
+        let canonical = folder.canonicalFileURL.path
         try "x\n".write(to: folder.appendingPathComponent("untracked.txt"), atomically: true, encoding: .utf8)
         let presenter = StubPresenter()
         presenter.confirmAnswers = [true, false]
         let (model, session) = await makeSession(repository, presenter: presenter)
+        var removed: [URL] = []
+        session.onRemoveDirectory = { removed.append($0) }
         let tree = try #require(model.worktrees.first { !$0.isMain })
 
         await act(session, .ref(.removeWorktree(tree)))
         #expect(presenter.confirmations.count == 2)
         #expect(presenter.failures.isEmpty)
         #expect(model.worktrees.count == 2)
+        #expect(removed.isEmpty, "a worktree kept closes no window")
 
         presenter.confirmAnswers = [true, true]
         await act(session, .ref(.removeWorktree(tree)))
@@ -1671,6 +1675,7 @@ struct GitWindowSessionActionTests {
         #expect(presenter.confirmations.first?.actionTitle == "Remove")
         #expect(model.worktrees.count == 1)
         #expect(!FileManager.default.fileExists(atPath: folder.path))
+        #expect(removed.map(\.path) == [canonical])
     }
 
     @Test("a clean worktree is removed after one confirmation")
@@ -1684,9 +1689,12 @@ struct GitWindowSessionActionTests {
         }
         try await commitFile(repository, "a.txt", "a\n", at: 100)
         try await repository.run(["worktree", "add", "-q", "-b", "clean", folder.path])
+        let canonical = folder.canonicalFileURL.path
         let presenter = StubPresenter()
         presenter.confirmAnswers = [true]
         let (model, session) = await makeSession(repository, presenter: presenter)
+        var removed: [URL] = []
+        session.onRemoveDirectory = { removed.append($0) }
         let tree = try #require(model.worktrees.first { !$0.isMain })
 
         await act(session, .ref(.removeWorktree(tree)))
@@ -1694,6 +1702,24 @@ struct GitWindowSessionActionTests {
         #expect(presenter.confirmations.count == 1)
         #expect(presenter.failures.isEmpty)
         #expect(model.worktrees.count == 1)
+        #expect(removed.map(\.path) == [canonical], "the removed worktree's window is told to close")
+    }
+
+    @Test("a new worktree's folder: blank derives it, relative is beside the root, ~ is home, absolute is kept")
+    func worktreeFolderSpellings() {
+        let root = URL(fileURLWithPath: "/work/app", isDirectory: true)
+        let home = FileManager.default.homeDirectoryForCurrentUser.path
+        func folder(_ typed: String, _ branch: String = "topic/x") -> String {
+            GitWindowSession.worktreeFolder(typed, branch: branch, root: root).path
+        }
+
+        #expect(folder("") == "/work/app-topic-x")
+        #expect(folder("  \t\n ") == "/work/app-topic-x", "whitespace alone is blank")
+        #expect(folder("side") == "/work/side")
+        #expect(folder("../elsewhere/side") == "/elsewhere/side")
+        #expect(folder(" side ") == "/work/side", "the typed folder is trimmed")
+        #expect(folder("~/trees/side") == (home as NSString).appendingPathComponent("trees/side"))
+        #expect(folder("/abs/side") == "/abs/side")
     }
 
     @Test("Update on an uninitialized submodule initializes and checks it out")

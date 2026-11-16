@@ -24,6 +24,9 @@ final class GitWindowSession {
         case ref(String)
         /// A stash, by its commit's sha.
         case stash(String)
+        /// The history with no row selected: a search typed over the working copy
+        /// on a detached HEAD, which has no branch row.
+        case history
     }
 
     let model: GitRepositoryModel
@@ -49,6 +52,8 @@ final class GitWindowSession {
 
     /// Called when a submodule or worktree row asks for a window of its own.
     var onOpenDirectory: ((URL) -> Void)?
+    /// Called when a worktree this window removed is gone, so a window open on it closes.
+    var onRemoveDirectory: ((URL) -> Void)?
     /// Called when the refs change, so the window can read its branch again.
     var onRefsChange: (() -> Void)?
 
@@ -148,11 +153,15 @@ final class GitWindowSession {
 
     /// Sends the search text to the history; the history decides which call is latest.
     /// A search typed over the working copy picks the checked-out branch first, as a
-    /// click on it would, so the history it filters is the one on screen.
+    /// click on it would, so the history it filters is the one on screen. On a
+    /// detached HEAD there is no branch row: the history is shown with no row
+    /// selected, so the sidebar never claims the working copy is on screen.
     func search(_ text: String) {
         if selection == .workingCopy,
            !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
            !selectCheckedOutBranch() {
+            selection = .history
+            sidebar.clearSelection()
             centre.show(history)
         }
         let history = history
@@ -366,7 +375,7 @@ extension GitWindowSession: GitRefsSidebarDelegate {
     }
 }
 
-// MARK: - GitHistoryDelegate
+// MARK: - GitOperationBannerDelegate
 
 extension GitWindowSession: GitOperationBannerDelegate {
     func banner(_ banner: GitOperationBannerViewController, didRequest intent: GitOperationIntent) {
@@ -375,6 +384,8 @@ extension GitWindowSession: GitOperationBannerDelegate {
         }
     }
 }
+
+// MARK: - GitHistoryDelegate
 
 extension GitWindowSession: GitHistoryDelegate {
     func history(_ history: GitHistoryViewController, didSelect commit: GitCommit?) {
@@ -484,12 +495,14 @@ class GitWindowContainerViewController: NSViewController, PaneTitleProviding {
     override func loadView() {
         let root = NSView()
         root.accessibilityID(identifierString)
+        contentHost.accessibilityID("\(identifierString).content")
         var views: [NSView] = [contentHost]
         if let header {
             addChild(header)
             views.insert(header.view, at: 0)
         }
         let stack = NSStackView(views: views)
+        stack.accessibilityID("\(identifierString).stack")
         stack.orientation = .vertical
         stack.spacing = 0
         stack.distribution = .fill

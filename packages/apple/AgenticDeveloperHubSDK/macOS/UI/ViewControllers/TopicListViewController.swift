@@ -508,6 +508,14 @@ open class TopicListViewController: NSViewController {
         selectRow(forId: id)
     }
 
+    /// Leaves no row selected, without firing `onSelect`; a selection held for
+    /// the view's load is dropped too.
+    open func deselectAll() {
+        pendingSelectionID = nil
+        guard isViewLoaded else { return }
+        suppressingSelectionCallbacks { outlineView.deselectAll(nil) }
+    }
+
     /// `selectItem(withId:)` without the loaded-view check — `loadView` needs
     /// it before `isViewLoaded` turns true.
     private func selectRow(forId id: String) {

@@ -369,12 +369,17 @@ extension GitWindowSession {
     private func remove(_ worktree: GitWorktree) async {
         guard let presenter else { return }
         let path = worktree.directory.path
+        // Spelled while the folder exists: a deleted folder's symlinks no longer resolve.
+        let removed = worktree.directory.canonicalFileURL
         let confirmation = GitConfirmation(
             title: "Remove worktree \(worktree.directory.lastPathComponent)?",
             message: "Its folder, \(path), is deleted.", actionTitle: "Remove", isDestructive: true)
         guard await presenter.confirm(confirmation) else { return }
         let action = GitAction.removeWorktree(path: path, force: false)
-        guard let error = await attempt(action) else { return }
+        guard let error = await attempt(action) else {
+            onRemoveDirectory?(removed)
+            return
+        }
         guard Self.isDirtyWorktree(error) else {
             showFailure(title: action.failureTitle, error: error)
             return
@@ -384,7 +389,9 @@ extension GitWindowSession {
             message: "Its uncommitted changes and untracked files are lost.", actionTitle: "Remove",
             isDestructive: true)
         guard await presenter.confirm(again) else { return }
-        await execute(.removeWorktree(path: path, force: true))
+        if await execute(.removeWorktree(path: path, force: true)) {
+            onRemoveDirectory?(removed)
+        }
     }
 
     // MARK: - Operation in progress
@@ -527,7 +534,7 @@ extension GitWindowSession {
         } catch {
             guard !(error is CancellationError) else { return }
             Self.logger.error("Push failed: \(GitClientError.logDescription(of: error), privacy: .public)")
-            presenter?.showFailure(
+            showFailure(
                 title: "Push failed",
                 message: "\(branch.name) has no push destination. \(GitClientError.userMessage(of: error))")
             return

@@ -103,7 +103,7 @@ property and method is confined there by that declaration alone.
   manager holds whose project id names an open Document window, of either
   sort; a controller it does not hold MUST answer false.
 - **standalone-rows-one-row-per-canonical-path**: The standalone window
-  rows helper (shared by File Browser and Document windows) MUST look a
+  rows helper (shared by File Browser, Document and Git windows) MUST look a
   window's row up by its path and its kind together, MUST insert a row of
   that kind the first time a path is asked for, named by the caller or,
   failing that, by the path's last component (the path itself for the
@@ -298,6 +298,10 @@ property and method is confined there by that declaration alone.
   a close callback; it MUST bring an already open window for that id
   forward instead of building a second, and MUST honour quiet presentation
   when activating.
+- **standalone-existing-window-activates-only-when-asked**: Opening a
+  standalone window that is already open MUST return that window, and MUST
+  show it, order it front and activate the app only when asked to
+  activate; opened without activating it MUST be left where it is.
 - **document-windows-have-no-footer**: A window for a repository of a Document kind MUST be created without the footer bar, as it is created without pane chrome; every other kind keeps both.
 - **standalone-toolbar-items**: Opening a standalone window MUST pass the
   toolbar items it is given (none by default) to the window it makes, which
@@ -343,6 +347,7 @@ of which this file renders itself.
 | git-client-projects-project-window-manager-015 | standalone-rows-one-row-per-canonical-path | Ask the File Browser rows helper for the row at a folder, then again through a symlink to that folder. | Both calls return the same row, and one row of that kind exists for the folder |
 | git-client-projects-project-window-manager-016 | standalone-rows-forgotten-rows-discarded-at-launch, standalone-rows-restore-list | With Document rows at paths a and b and only a remembered, discard forgotten rows. | The row at a remains and the row at b is gone, along with its saved window frame |
 | git-client-projects-project-window-manager-017 | standalone-toolbar-items | Open a `.gitWindow` row's standalone window with six targeted buttons | The window's toolbar lists the six identifiers first, ahead of the flexible space; each button targets the object its target names. |
+| git-client-projects-project-window-manager-018 | standalone-existing-window-activates-only-when-asked | Open a `.gitWindow` row's standalone window without activating, order it out, then open it again without activating | The same controller; the window is still not visible. |
 ## Edge Cases
 
 - **Null and empty input**: The language-services factory and the command
@@ -554,9 +559,9 @@ bundle identifier; category is this component's name.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectWindowManager.swift` | confirmed (1.2.0) |
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectWindowManager.swift` | confirmed (1.2.0) |
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/StandaloneWindowRows.swift` | confirmed (1.2.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectWindowManager.swift` | confirmed (1.3.0) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectWindowManager.swift` | confirmed (1.3.0) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/StandaloneWindowRows.swift` | confirmed (1.3.0) |
 
 ## Design Decisions
 

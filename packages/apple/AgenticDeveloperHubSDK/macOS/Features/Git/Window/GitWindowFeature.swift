@@ -13,7 +13,10 @@ import os
 /// its `GitWindowSession`, made by the first pane the layout asks for.
 ///
 /// The open windows are remembered in `openRoots` and reopened at launch without
-/// taking the foreground; a root that is no longer a repository is dropped. Every
+/// taking the foreground; a root that is no longer a repository is dropped. The
+/// rows and the remembered roots are `StandaloneWindowRows`' bookkeeping, shared
+/// with the File Browser and Document windows: closing a window deletes its row
+/// and saved frame, and launch deletes every row whose root is not remembered. Every
 /// window shares one syntax highlighter, built on the first window from the user's
 /// grammars, then an extension's, then the bundled ones; without the bundled
 /// resources the windows are uncoloured.
@@ -33,7 +36,6 @@ public final class GitWindowFeature: AppFeature {
     private let extensionGrammars: () -> (any GrammarSource)?
     private let fileTypeOverride: @Sendable (URL) -> String?
     private let client: GitClient
-    private let database: ProjectDatabase
     private let windows: ProjectWindowManager
     /// The terminal panes under the commit pane; nil leaves the right column the commit alone.
     private let terminals: TerminalPaneFamily?
@@ -56,18 +58,8 @@ public final class GitWindowFeature: AppFeature {
     /// Built by the first window; `nil` inside means it could not be built (logged once).
     private var sharedColoring: GitSyntaxColoring??
 
-    private lazy var windowSet = KeyedWindowSet<ComposableTabsWindowController>(
-        setting: openRoots,
-        open: { [unowned self] key, activates, onClose in
-            self.makeWindow(key: key, activates: activates, onClose: onClose)
-        },
-        bringForward: { [unowned self] controller in
-            controller.showWindow(nil)
-            controller.window?.makeKeyAndOrderFront(nil)
-            self.windows.activateApp()
-        }
-    )
-    private let openRoots: UserSetting<[String]>
+    /// The `.gitWindow` rows and the remembered roots.
+    private let rows: StandaloneWindowRows
     /// The open the last Open Git Window for Path started; nil until one is.
     private(set) var openTask: Task<Void, Never>?
     /// Tells the user that the folder they chose in New Git Window… is in no
@@ -109,10 +101,9 @@ public final class GitWindowFeature: AppFeature {
         self.extensionGrammars = extensionGrammars
         self.fileTypeOverride = fileTypeOverride
         self.client = client
-        self.database = database
         self.windows = windows
         self.terminals = terminals
-        self.openRoots = openRoots
+        self.rows = StandaloneWindowRows(kind: .gitWindow, database: database, openPaths: openRoots)
         self.notInRepository = notInRepository
         super.init()
         registry.register(AppCommand(
@@ -203,17 +194,27 @@ public final class GitWindowFeature: AppFeature {
             Self.logger.error("Not in a git repository: \(GitClientError.logDescription(of: error), privacy: .public)")
             return nil
         }
-        let key = Self.canonical(topLevel)
-        if let existing = windowSet.controller(for: key), !activates {
-            return existing
-        }
-        return windowSet.open(key: key, activates: activates)
+        return openWindow(at: StandaloneWindowRows.canonical(topLevel), activates: activates)
     }
 
     /// Reopens the windows that were open when the app last quit, without taking the
-    /// foreground. A root that is no longer a repository is dropped.
+    /// foreground. A root that is no longer a repository is dropped, and every
+    /// `.gitWindow` row whose root is not about to reopen is deleted. Without a
+    /// layout nothing can open, so nothing is restored and nothing is forgotten.
     public func restoreOpenWindows() {
-        windowSet.restore()
+        guard layout != nil else {
+            Self.logger.error("No Git window layout: the remembered windows stay remembered")
+            return
+        }
+        for path in rows.rememberedPaths where !Self.isRepositoryRoot(path) {
+            Self.logger.error("Not a repository: \(path, privacy: .public)")
+            rows.forget(path)
+        }
+        rows.discardForgottenRows()
+        for path in rows.rememberedPaths
+        where openWindow(at: URL(fileURLWithPath: path, isDirectory: true), activates: false) == nil {
+            rows.forget(path)
+        }
     }
 
     /// The one non-empty string `openForPath` takes; nil for anything else, which the
@@ -223,55 +224,73 @@ public final class GitWindowFeature: AppFeature {
         return path
     }
 
-    /// One spelling per repository: `/tmp/x` and `/private/tmp/x` are one window.
-    static func canonical(_ url: URL) -> String {
-        url.standardizedFileURL.resolvingSymlinksInPath().path
-    }
-
     // MARK: - Windows
 
-    private func makeWindow(
-        key: String, activates: Bool, onClose: @escaping () -> Void
-    ) -> ComposableTabsWindowController? {
+    /// Whether `path` is a directory holding `.git`: a repository's top level.
+    private static func isRepositoryRoot(_ path: String) -> Bool {
         var isDirectory: ObjCBool = false
-        guard FileManager.default.fileExists(atPath: key, isDirectory: &isDirectory), isDirectory.boolValue,
-              FileManager.default.fileExists(atPath: (key as NSString).appendingPathComponent(".git")) else {
-            Self.logger.error("Not a repository: \(key, privacy: .public)")
+        return FileManager.default.fileExists(atPath: path, isDirectory: &isDirectory) && isDirectory.boolValue
+            && FileManager.default.fileExists(atPath: (path as NSString).appendingPathComponent(".git"))
+    }
+
+    /// Opens the window on the canonical top level `root`, or finds the one already
+    /// open on it (brought forward only when `activates`), and remembers `root`.
+    private func openWindow(at root: URL, activates: Bool) -> ComposableTabsWindowController? {
+        guard Self.isRepositoryRoot(root.path) else {
+            Self.logger.error("Not a repository: \(root.path, privacy: .public)")
             return nil
         }
         guard let layout else { return nil }
         let repo: GitRepo
         do {
-            repo = try row(for: URL(fileURLWithPath: key, isDirectory: true))
+            repo = try rows.row(for: root)
         } catch {
-            Self.logger.error("Could not record the Git window row for \(key, privacy: .public): \(error)")
+            Self.logger.error("Could not record the Git window row for \(root.path, privacy: .public): \(error)")
             return nil
         }
+        let wasOpen = windows.windowController(for: repo.id) != nil
         let toolbar = GitWindowToolbar()
         guard let controller = windows.openStandaloneWindow(
             repo, layout: layout, startsLanguageServices: false, activates: activates,
             toolbarItems: toolbar.items,
-            onClose: { [weak self] repo in
-                self?.sessions.removeValue(forKey: repo.id)?.stop()
-                self?.toolbars.removeValue(forKey: repo.id)
-                onClose()
-            }) else { return nil }
-        // A window already open keeps the toolbar its buttons were built against.
-        let liveToolbar = toolbars[repo.id] ?? toolbar
-        toolbars[repo.id] = liveToolbar
+            onClose: { [weak self] closed in self?.windowClosed(closed) }) else { return nil }
+        rows.remember(repo.path)
+        // A window already open keeps the toolbar and session wiring it was built with.
+        guard !wasOpen else { return controller }
+        toolbars[repo.id] = toolbar
         if let session = sessions[repo.id] {
-            liveToolbar.session = session
+            toolbar.session = session
             session.onRefsChange = { [weak controller] in controller?.refreshTitleBranch() }
             session.presenter = GitAlertPresenter(window: { [weak controller] in controller?.window })
             session.onOpenDirectory = { [weak self] directory in
                 guard let self else { return }
                 Task { await self.open(path: directory) }
             }
+            session.onRemoveDirectory = { [weak self] directory in self?.closeWindow(at: directory) }
             Task { await session.start() }
         } else {
-            Self.logger.error("The Git window on \(key, privacy: .public) made no session")
+            Self.logger.error("The Git window on \(root.path, privacy: .public) made no session")
         }
         return controller
+    }
+
+    /// Closes the window open on `root`, a removed worktree's canonical folder; nothing
+    /// when none is. The close is the user's, so the root is forgotten and the row discarded.
+    func closeWindow(at root: URL) {
+        guard let repo = try? rows.existingRow(for: root),
+              let controller = windows.windowController(for: repo.id) else { return }
+        controller.window?.close()
+    }
+
+    /// The user closed `repo`'s window: its session stops, its root is forgotten,
+    /// and its row and frame are deleted a turn later, once its panes have written
+    /// what they write on the way out.
+    private func windowClosed(_ repo: GitRepo) {
+        sessions.removeValue(forKey: repo.id)?.stop()
+        toolbars.removeValue(forKey: repo.id)
+        rows.forget(repo.path)
+        let rows = rows
+        DispatchQueue.main.async { rows.discard(repo) }
     }
 
     /// The session of the window `context` names, made the first time one of its
@@ -284,17 +303,6 @@ public final class GitWindowFeature: AppFeature {
         let session = GitWindowSession(model: model, client: client, coloring: coloring())
         sessions[context.project.id] = session
         return session
-    }
-
-    /// The `.gitWindow` row for `url`, inserted the first time.
-    private func row(for url: URL) throws -> GitRepo {
-        if let existing = try database.repo(path: url.path, kind: .gitWindow) {
-            return existing
-        }
-        let name = url.lastPathComponent.isEmpty ? url.path : url.lastPathComponent
-        let repo = GitRepo(path: url.path, name: name, kind: .gitWindow)
-        try database.insert(repo)
-        return repo
     }
 
     // MARK: - Highlighting

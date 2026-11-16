@@ -226,6 +226,25 @@ struct GitWindowSessionTests {
         #expect(model.commits.map(\.subject) == ["two.txt 200"])
     }
 
+    @Test("a search over the working copy on a detached HEAD shows the history with no sidebar row selected")
+    func detachedHeadSearchLeavesNoRowSelected() async throws {
+        let repository = try await GitTestRepository.make(prefix: "git-window-detached")
+        defer { repository.tearDown() }
+        try await commitFile(repository, "one.txt", "one\n", at: 100)
+        try await repository.run(["checkout", "--quiet", "--detach"])
+        let (_, session) = await makeWindow(repository)
+        defer { session.stop() }
+        #expect(session.selection == .workingCopy)
+        #expect(session.sidebar.selectedID != nil)
+
+        session.search("one")
+        await session.searchTask?.value
+
+        #expect(session.centre.content === session.history)
+        #expect(session.selection == .history)
+        #expect(session.sidebar.selectedID == nil, "the Working Copy row no longer claims the centre")
+    }
+
     @Test("the history pane is titled after what it shows, and says so when that changes")
     func historyPaneTitleFollowsItsContent() async throws {
         let repository = try await GitTestRepository.make(prefix: "git-window-split")
