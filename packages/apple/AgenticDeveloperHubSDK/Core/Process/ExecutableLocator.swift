@@ -55,7 +55,7 @@ public struct ExecutableLocator: Sendable {
     }
 
     /// True for an executable regular file; a directory with its x bit set is not one.
-    static func isExecutableFile(_ path: String) -> Bool {
+    public static func isExecutableFile(_ path: String) -> Bool {
         var isDirectory: ObjCBool = false
         return FileManager.default.fileExists(atPath: path, isDirectory: &isDirectory)
             && !isDirectory.boolValue && FileManager.default.isExecutableFile(atPath: path)
