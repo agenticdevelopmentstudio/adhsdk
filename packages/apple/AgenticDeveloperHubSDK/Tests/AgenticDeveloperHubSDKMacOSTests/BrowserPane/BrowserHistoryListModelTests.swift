@@ -160,8 +160,8 @@ final class BrowserHistoryListModelTests: XCTestCase {
     func test_panelSelectionSurvivesAReloadByVisitID() async throws {
         let store = try makeStore()
         try record(store, "https://example.com/a", "A", at: 1_000)
-        let b = try record(store, "https://example.com/b", "B", at: 2_000)
-        let c = try record(store, "https://example.com/c", "C", at: 3_000)
+        let visitB = try record(store, "https://example.com/b", "B", at: 2_000)
+        let visitC = try record(store, "https://example.com/c", "C", at: 3_000)
         let model = BrowserHistoryListModel(store: store)
         let panel = BrowserHistoryPanelViewController(model: model, open: { _ in })
         _ = panel.view
@@ -169,7 +169,7 @@ final class BrowserHistoryListModelTests: XCTestCase {
         XCTAssertEqual(model.visits.map(\.title), ["C", "B", "A"])
 
         panel.selectRows(IndexSet([1]))
-        XCTAssertEqual(panel.selectedVisitIDs, [b])
+        XCTAssertEqual(panel.selectedVisitIDs, [visitB])
 
         let panelChanged = model.onChange
         let reread = expectation(description: "the list reread")
@@ -183,7 +183,7 @@ final class BrowserHistoryListModelTests: XCTestCase {
         await fulfillment(of: [reread], timeout: 5)
 
         XCTAssertEqual(model.visits.map(\.title), ["N", "C", "B", "A"])
-        XCTAssertEqual(panel.selectedVisitIDs, [b])
-        XCTAssertNotEqual(panel.selectedVisitIDs, [c])
+        XCTAssertEqual(panel.selectedVisitIDs, [visitB])
+        XCTAssertNotEqual(panel.selectedVisitIDs, [visitC])
     }
 }
