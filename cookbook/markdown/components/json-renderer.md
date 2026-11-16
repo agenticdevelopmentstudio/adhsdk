@@ -2,11 +2,11 @@
 id: b32270be-49b8-4227-9e30-1d8e781ab3b5
 title: "JSON Renderer"
 type: ingredient
-version: 1.0.2
+version: 1.0.3
 status: review
 language: en
 created: 2026-11-14
-modified: 2026-11-14
+modified: 2026-11-16
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -89,7 +89,7 @@ A client React component that shows a stored JSON document, or a JSON Lines file
 - **semantic-markup**: Content is shown as a code block (`pre` containing `code`) on both paths, and the invalid note is a paragraph, so assistive technology reads the structure natively.
 - **loading-announcement**: Below the limit, the "Rendering…" state is announced politely (`aria-live="polite"`, `aria-busy="true"`) and a pipeline failure is announced as an alert (`role="alert"`); both come from `MarkdownRenderer`.
 - **no-own-controls**: The component adds no interactive control, so it defines no label, target-size or focus requirement of its own.
-- **keyboard-scroll-highlighted**: Below the limit, the code block is the `pre` that the shiki highlighter emits, which carries `tabindex="0"` by default; the sanitisation schema in the Markdown pipeline allows `tabIndex` on `pre`, so a keyboard reader can focus the block and scroll a long unwrapped line sideways.
+- **keyboard-scroll-highlighted**: Below the limit, the code block is the `pre` that the shiki highlighter emits, which carries `tabindex="0"` by default; the sanitisation schema in the Markdown pipeline allows the raw `tabindex` property shiki emits on `pre`, so a keyboard reader can focus the block and scroll a long unwrapped line sideways.
 - **keyboard-scroll**: NEEDS REVIEW: Not implemented in source. Above the limit the plain `pre.shiki` is written by this component with no `tabindex`, so a long unwrapped line scrolls sideways but the block cannot take keyboard focus, and neither path gives the block an accessible name. Evidence that would settle it: a keyboard test of the oversized path in a browser, and a decision on whether the plain `pre` should be focusable.
 - **contrast**: NEEDS REVIEW: Not implemented in source. The colours come from shiki's dual themes and the `--mdv-text-muted` variable; the source cannot say whether the note and token colours reach 4.5:1 in every reading theme. Evidence that would settle it: a contrast measurement of each reading palette.
 
@@ -237,5 +237,6 @@ Parsing, fencing and class-list logic live in small pure helpers (`prettyJson`, 
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.3 | 2026-11-16 | Mike Fullerton | The keyboard-scroll requirement names the raw tabindex property the sanitize schema keeps on shiki's pre |
 | 1.0.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (jsonRenderer.test.tsx, 14 of 14 vectors); unit-test-coverage now passed. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Match recipe to source: valid JSON renders pre.shiki, language-less invalid text a bare pre |
