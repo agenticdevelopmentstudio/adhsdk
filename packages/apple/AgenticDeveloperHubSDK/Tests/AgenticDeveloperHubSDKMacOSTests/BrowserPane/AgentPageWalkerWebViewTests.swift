@@ -489,6 +489,22 @@ final class AgentPageWalkerWebViewTests: XCTestCase {
         XCTAssertEqual(unplaced.map { "\($0.ref) \($0.kind)" }, [])
     }
 
+    /// Thousands of rows in one container: the structural path counts each
+    /// parent's children once, not once per row, so the walk stays inside
+    /// the default budget and every path still names its own row (review f8).
+    func test_wideContainerFitsTheBudget() async throws {
+        let rows = (0..<3000).map { "<li><a href=\"/r\($0)\">Link \($0)</a></li>" }
+        await host.load(html: "<!doctype html><html><body><ul id=\"rows\">\(rows.joined())</ul></body></html>")
+        let reading = await source(try emptyStore()).read(options: BrowserSnapshotOptions())
+        XCTAssertNil(reading.page.unavailableReason)
+        let links = nodes(reading.page.root).filter { $0.kind == .link }
+        XCTAssertEqual(links.count, 3000)
+        let last = try XCTUnwrap(links.last)
+        let named = try await host.webView.evaluateJavaScript(
+            "Array.from(document.querySelectorAll(\(String(reflecting: last.selector)))).map(e => e.textContent)")
+        XCTAssertEqual(named as? [String], ["Link 2999"], last.selector)
+    }
+
 }
 
 /// A page driver that reports `reportedURL` as its address while driving

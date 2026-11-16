@@ -29,9 +29,9 @@
   // structural path instead, so one hard element cannot spend the whole walk.
   const FINDER_TIMEOUT_MS = 25;
   // Finder's share of the whole walk's budget. Once finder has spent it,
-  // every later node records the structural path, which costs one sibling
-  // scan per ancestor; a large page then still finishes where today's
-  // snapshot does. Selectors never decide what is excluded (the agent list
+  // every later node records the structural path, which costs one step past
+  // its parent's (structuralPaths); a large page then still finishes where
+  // today's snapshot does. Selectors never decide what is excluded (the agent list
   // is evaluated before the walk), so the cheaper path strips nothing less.
   const FINDER_SHARE = 1 / 3;
   const TIMED_OUT = { timedOut: true };
@@ -86,25 +86,53 @@
   // the builder joins the pieces before collapsing and concealing once.
   const squash = (s) => (s || '').replace(/\s+/g, ' ');
 
-  // The structural selector for `el`: `html > body > div:nth-of-type(2) > …`.
-  // It is stored as a hide-from-agent entry, so it must keep naming the same
-  // element when the Kitchen's own document-start <style> elements (Hide
-  // Images, the hidden-items sheet) come and go under <html>: `body` is the
-  // only body and takes no index, and every other step counts only siblings
-  // of its own kind (`:nth-of-type`), so an inserted <style> shifts nothing.
-  function structuralPath(el) {
-    const steps = [];
-    for (let at = el; at && at.nodeType === Node.ELEMENT_NODE; at = at.parentElement) {
-      if (at === document.documentElement) { steps.unshift('html'); break; }
-      const name = CSS.escape(at.localName);
-      if (at === document.body) { steps.unshift(name); continue; }
-      let index = 1;
-      for (let sibling = at.previousElementSibling; sibling; sibling = sibling.previousElementSibling) {
-        if (sibling.localName === at.localName && sibling.namespaceURI === at.namespaceURI) { index += 1; }
+  // A structural-selector function for one walk: `pathOf(el)` is
+  // `html > body > div:nth-of-type(2) > …`. It is stored as a hide-from-agent
+  // entry, so it must keep naming the same element when the Kitchen's own
+  // document-start <style> elements (Hide Images, the hidden-items sheet)
+  // come and go under <html>: `body` is the only body and takes no index,
+  // and every other step counts only siblings of its own kind
+  // (`:nth-of-type`), so an inserted <style> shifts nothing.
+  //
+  // Each parent's children are counted once, and each element's path is
+  // kept for its descendants to extend, so a walk spends linear time on
+  // paths however wide a container is: a list of thousands of rows would
+  // otherwise rescan its siblings for every row and outlive the budget.
+  function structuralPaths() {
+    const paths = new Map();
+    const indexes = new Map();
+    function indexIn(el) {
+      if (!indexes.has(el)) {
+        const counts = new Map();
+        for (const sibling of el.parentElement.children) {
+          const key = sibling.namespaceURI + ' ' + sibling.localName;
+          const n = (counts.get(key) || 0) + 1;
+          counts.set(key, n);
+          indexes.set(sibling, n);
+        }
       }
-      steps.unshift(name + ':nth-of-type(' + index + ')');
+      return indexes.get(el);
     }
-    return steps.join(' > ');
+    function step(el) {
+      if (el === document.documentElement) { return 'html'; }
+      const name = CSS.escape(el.localName);
+      if (el === document.body || !el.parentElement) { return name; }
+      return name + ':nth-of-type(' + indexIn(el) + ')';
+    }
+    return function pathOf(el) {
+      const pending = [];
+      let path = '';
+      for (let at = el; at && at.nodeType === Node.ELEMENT_NODE; at = at.parentElement) {
+        if (paths.has(at)) { path = paths.get(at); break; }
+        pending.push(at);
+        if (at === document.documentElement) { break; }
+      }
+      for (let i = pending.length - 1; i >= 0; i -= 1) {
+        path = path ? path + ' > ' + step(pending[i]) : step(pending[i]);
+        paths.set(pending[i], path);
+      }
+      return path;
+    };
   }
 
   function walk(args) {
@@ -124,6 +152,7 @@
     const deadline = Date.now() + timeoutMs;
     const tick = () => { if (Date.now() >= deadline) { throw TIMED_OUT; } };
     let finderLeftMs = timeoutMs * FINDER_SHARE;
+    const structuralPath = structuralPaths();
 
     // Every agent-list selector. One the document cannot evaluate would
     // exclude nothing, so the whole walk is refused rather than failing open.
@@ -526,6 +555,6 @@
     }
   };
   // The structural selector alone, for tests that pin its stability.
-  globalThis.__adkAgentStructuralPath = function (el) { return structuralPath(el); };
+  globalThis.__adkAgentStructuralPath = function (el) { return structuralPaths()(el); };
   globalThis.__adkAgentWalkVersion = VERSION;
 })();
