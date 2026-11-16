@@ -79,11 +79,18 @@ final class BrowserExtensionManagerCacheTests: XCTestCase {
     func test_aHolderFreedWithoutLettingGoStopsCounting() throws {
         let cache = makeCache()
         let window = Holder()
-        var sheet: Holder? = Holder()
-        let shared = try manager(cache, .global, sheet!)
+        weak var freed: Holder?
+        // Handing the holder to the weak table bridges it through Objective-C,
+        // which can leave it autoreleased; the pool stands in for the run loop
+        // turn that frees it in the app.
+        let shared = try autoreleasepool {
+            let sheet = Holder()
+            freed = sheet
+            return try manager(cache, .global, sheet)
+        }
         _ = try manager(cache, .global, window)
 
-        sheet = nil
+        XCTAssertNil(freed, "the sheet is gone")
         cache.release(holder: window)
 
         XCTAssertTrue(shared.closed, "a freed holder does not keep the page open")
