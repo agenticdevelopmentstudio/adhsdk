@@ -11,3 +11,4 @@
 - A sign-in that arrives while a sign-out is still purging waits for the purge, then opens the mirror; otherwise the purge would delete the rows the new identity had just pulled.
 - `HubMailLocation.app(_:)` only names the file; a folder that does not exist yet is created when the database first opens, on sign-in or on a sign-out purge.
 - The background sync pulls new mail while the mail browser is open: the browser polls `listAccounts` and reloads when `lastSyncAt` moves, so the hub bridge reports the time of each completed pull rather than nil, which would never move.
+- A message archived here, moved back to the inbox in Gmail on the web, then archived here again before the next pull: the mirror still shows it archived, so the move writes it anyway rather than trusting the mirror, and Gmail archives it.

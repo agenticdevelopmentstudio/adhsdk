@@ -216,12 +216,14 @@ public final class HubMailBridge: Sendable {
             throw Failure("cannot move to \(destination): it is also a label to move from")
         }
         let originals = try ids.map { try message($0, owner: owner) }
-        let changing = originals.filter {
-            !$0.labelIds.contains(destinationId) || $0.labelIds.contains(where: fromIds.contains)
+        // Every message is written, even one the mirror shows already moved:
+        // the mirror lags Gmail (a message moved back on the web reads as
+        // archived until the next pull), and the hub's change is idempotent.
+        if !originals.isEmpty {
+            try await write(originals, owner: owner, add: [destinationId], remove: fromIds)
         }
-        if !changing.isEmpty {
-            try await write(changing, owner: owner, add: [destinationId], remove: fromIds)
-        }
+        // Measured against the mirror just before the write, the closest
+        // copy of Gmail the bridge has.
         let names = Self.names(labels)
         return try originals.map { old in
             let added = old.labelIds.contains(destinationId) ? [] : [destinationId]
