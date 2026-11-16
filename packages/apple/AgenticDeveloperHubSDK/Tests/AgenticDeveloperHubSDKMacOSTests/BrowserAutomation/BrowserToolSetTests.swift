@@ -49,6 +49,10 @@ final class BrowserToolSetTests: XCTestCase {
     private var directory: FakeBrowserDirectory!
     private var tools: BrowserToolSet!
     private var pages: [String: OffscreenWebView] = [:]
+    /// The agent lists the tools read through: an empty store of the test's
+    /// own, since the shared one is nil in tests and a nil store fails closed.
+    private var hiddenItems: BrowserHiddenItemsStore!
+    private var hiddenItemsDirectory: URL!
 
     override func setUp() async throws {
         store = UserSettings(with: InMemorySettingsStorageProvider(), secureSettingsProvider: InMemorySecureSettingsStorageProvider())
@@ -59,7 +63,18 @@ final class BrowserToolSetTests: XCTestCase {
         for (id, page) in pages.sorted(by: { $0.key < $1.key }) {
             directory.panes.append(BrowserPaneHandle(id: id, project: "proj", tab: "Tab \(id)", automation: BrowserAutomation(webView: page.webView, console: BrowserConsoleLog())))
         }
-        tools = BrowserToolSet(directory: directory, settings: store)
+        hiddenItemsDirectory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("BrowserToolSetTests-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: hiddenItemsDirectory, withIntermediateDirectories: true)
+        hiddenItems = try BrowserHiddenItemsStore.open(
+            at: hiddenItemsDirectory.appendingPathComponent(BrowserHiddenItemsStore.fileName))
+        let agentLists = hiddenItems
+        tools = BrowserToolSet(directory: directory, settings: store, hiddenItems: { agentLists })
+    }
+
+    override func tearDown() async throws {
+        if let hiddenItemsDirectory { try? FileManager.default.removeItem(at: hiddenItemsDirectory) }
+        hiddenItems = nil
     }
 
     private func call(_ name: String, _ args: [String: Any] = [:], caller: String? = nil) async -> (content: String, isError: Bool) {

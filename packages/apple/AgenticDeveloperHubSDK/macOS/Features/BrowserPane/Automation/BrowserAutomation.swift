@@ -22,9 +22,29 @@ public struct BrowserActionDelta: Sendable {
     public var pending = false
     public var changed = false
     public var focused: String?
+    /// The ref of the landmark, form or dialog holding the focus, when the
+    /// page changed and one holds it: what the agent's view of the focused
+    /// element is read from (`agentView(conceal:focused:)`).
+    public var focusedRef: String?
     public var dialog: BrowserDialog?
     /// The sentence the pane showed for a navigation it refused.
     public var refusal: String?
+
+    /// This delta as the agent may see it (recipe
+    /// `titles-dialogs-focus-through-string-path`): the title and the dialog's
+    /// message through `conceal` (`AgentPageBuilder.conceal`), and the focused
+    /// element's description replaced by `focused`, the agent page's own
+    /// rendering of `focusedRef`, or none when that ref is not on the page.
+    public func agentView(conceal: (String) -> String, focused agentFocused: String?) -> BrowserActionDelta {
+        var view = self
+        view.title = title.map(conceal)
+        if var dialog {
+            dialog.message = conceal(dialog.message)
+            view.dialog = dialog
+        }
+        view.focused = agentFocused
+        return view
+    }
 
     public func rendered() -> String {
         var lines: [String] = []
@@ -308,6 +328,16 @@ public final class BrowserAutomation: NSObject {
     }
 
     private var lastSnapshotLines: [String]?
+
+    /// `browser_snapshot`'s text for an agent page's rendered tree: with
+    /// `delta`, only what changed since the last snapshot (`delta(from:to:)`),
+    /// and recorded as the last either way, as `snapshot(_:)` records its own.
+    public func agentSnapshotText(_ tree: String, delta: Bool) -> String {
+        let lines = tree.split(separator: "\n").map(String.init)
+        defer { lastSnapshotLines = lines }
+        if delta, let previous = lastSnapshotLines { return Self.delta(from: previous, to: tree) }
+        return tree
+    }
 
     /// What changed between two snapshots, in page order. Lines are matched on
     /// their text with the ref stripped, through a longest-common-subsequence
@@ -631,7 +661,10 @@ public final class BrowserAutomation: NSObject {
         let mutationsAfter = (try? await call("mutations") as? Int) ?? mutationsBefore
         delta.changed = delta.navigated || mutationsAfter != mutationsBefore
         if delta.changed && !delta.navigated && !delta.pending,
-           let ref = try? await call("focusedLandmark") as? String,
+           let ref = try? await call("focusedLandmark") as? String {
+            delta.focusedRef = ref
+        }
+        if let ref = delta.focusedRef,
            let raw = try? await call("landmarkSnapshot", ["ref": ref, "depth": 4]),
            JSONSerialization.isValidJSONObject(raw as Any),
            let data = try? JSONSerialization.data(withJSONObject: raw as Any),
@@ -643,7 +676,14 @@ public final class BrowserAutomation: NSObject {
 
     // MARK: Waiting
 
-    public func wait(for condition: BrowserWaitCondition, timeout: TimeInterval?) async throws -> BrowserWaitResult {
+    /// `pageText`, when given, is the text a text condition is looked for in:
+    /// the agent page's (`browser_wait_for`, recipe `wait-for-uses-agent-text`),
+    /// read once per pass, nil while that page is unavailable, which never
+    /// satisfies. Without it the page's own `innerText` is searched.
+    public func wait(
+        for condition: BrowserWaitCondition, timeout: TimeInterval?,
+        pageText: (@MainActor () async -> String?)? = nil
+    ) async throws -> BrowserWaitResult {
         let limit = min(max(timeout ?? Self.defaultTimeout, 0.05), Self.maximumTimeout)
         let deadline = Date().addingTimeInterval(limit)
         var idleSince: Date?
@@ -654,6 +694,12 @@ public final class BrowserAutomation: NSObject {
             try ensureDrivable()
             let satisfied: Bool
             switch condition {
+            case .text(let t) where pageText != nil:
+                let text: String? = await pageText?()
+                satisfied = text.map { Self.text($0, contains: t) } ?? false
+            case .anyText(let texts) where pageText != nil:
+                let text: String? = await pageText?()
+                satisfied = text.map { text in texts.contains { Self.text(text, contains: $0) } } ?? false
             case .text(let t): satisfied = (try? await call("hasText", ["needle": t]) as? Bool) ?? false
             case .anyText(let texts):
                 var found = false
@@ -677,6 +723,16 @@ public final class BrowserAutomation: NSObject {
             try await Task.sleep(nanoseconds: 100_000_000)
         }
         throw BrowserAutomationError.timeout(condition.description)
+    }
+
+    /// Whether `needle` appears in `text` as written, or with whitespace runs
+    /// collapsed on both sides: the agent's text puts one block per line
+    /// where the page's `innerText` may break or space them otherwise.
+    static func text(_ text: String, contains needle: String) -> Bool {
+        if text.contains(needle) { return true }
+        let collapse = { (string: String) in string.split(whereSeparator: \.isWhitespace).joined(separator: " ") }
+        let wanted = collapse(needle)
+        return !wanted.isEmpty && collapse(text).contains(wanted)
     }
 
     // MARK: Geometry, screenshots, native events

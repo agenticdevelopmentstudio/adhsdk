@@ -60,10 +60,23 @@ public enum BrowserAgentPrivacy: Sendable, Equatable {
     /// The tools that cannot be concealed: a screenshot is pixels, a click by
     /// coordinate is driven off one, and `browser_evaluate` can read the
     /// page's own data and return it in any shape. A private pane refuses
-    /// them outright rather than leak through them.
+    /// them outright rather than leak through them. They see the raw page
+    /// past the agent's view, so a site with agent-list entries (items hidden
+    /// from the agent) refuses them too, with `agentListRefusal`
+    /// (`BrowserToolSet.rawPageRefusal(pane:)`, recipe
+    /// `raw-page-tools-refused-when-filtered`).
     public static let refusedToolNames: Set<String> = [
         "browser_screenshot", "browser_click_at", "browser_evaluate"
     ]
+
+    /// The refusal of a `refusedToolNames` tool on a site with items hidden
+    /// from the agent, whether or not Agent Privacy is on.
+    static let agentListRefusal =
+        "This site has items hidden from the agent, so tools that see the raw page are refused here."
+
+    /// `browser_console` under Agent Privacy: console output is the page's
+    /// own words in any shape, so it is not shared rather than concealed.
+    static let consoleRefusal = "Agent Privacy is on for this browser pane, so console output is not shared."
 
     static let unavailableRefusal =
         "Agent Privacy is on for this browser pane, but the privacy words could not be read, "

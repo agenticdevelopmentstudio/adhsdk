@@ -26,11 +26,32 @@ public final class BrowserToolSet: ChatToolSource, @unchecked Sendable {
 
     private let directory: any BrowserPaneDirectory
     private let settings: SettingsStore
+    /// The agent lists (`BrowserHiddenItemsStore.shared` in the app).
+    private let hiddenItems: @MainActor () -> BrowserHiddenItemsStore?
+    /// The one way a tool reads a pane's page (recipe `single-gatekeeper`):
+    /// an `AgentPageSource` over the pane's page with the privacy the call
+    /// runs under, a spy in tests.
+    private let agentPages: @MainActor (BrowserPaneHandle, BrowserAgentPrivacy) -> any AgentPageReader
 
     @MainActor
-    public init(directory: any BrowserPaneDirectory, settings: SettingsStore = UserSettings.shared) {
+    public convenience init(directory: any BrowserPaneDirectory, settings: SettingsStore = UserSettings.shared) {
+        self.init(directory: directory, settings: settings, hiddenItems: { BrowserHiddenItemsStore.shared })
+    }
+
+    @MainActor
+    init(
+        directory: any BrowserPaneDirectory, settings: SettingsStore,
+        hiddenItems: @escaping @MainActor () -> BrowserHiddenItemsStore?,
+        agentPages: (@MainActor (BrowserPaneHandle, BrowserAgentPrivacy) -> any AgentPageReader)? = nil
+    ) {
         self.directory = directory
         self.settings = settings
+        self.hiddenItems = hiddenItems
+        self.agentPages = agentPages ?? { pane, privacy in
+            let hideImages = settings.get(UserSettings.browserPrivacyHideImages)
+            return AgentPageSource(driver: pane.automation.driver, hiddenItems: hiddenItems(),
+                                   privacy: { privacy }, hideImages: { hideImages })
+        }
     }
 
     // MARK: ChatToolSource
@@ -273,6 +294,112 @@ public final class BrowserToolSet: ChatToolSource, @unchecked Sendable {
         if pane.agentPrivacy.isOn, BrowserAgentPrivacy.refusedToolNames.contains(name) {
             throw ToolError(sentence: BrowserAgentPrivacy.refusal(for: name))
         }
+        // Console output is the page's words in any shape (recipe
+        // `console-refused-under-privacy`).
+        if pane.agentPrivacy.isOn, name == "browser_console" {
+            throw ToolError(sentence: BrowserAgentPrivacy.consoleRefusal)
+        }
+    }
+
+    /// Why `tool`, one of `BrowserAgentPrivacy.refusedToolNames` (a
+    /// screenshot, a click at a point, an evaluate: tools that see the raw
+    /// page past the agent's view), is refused on `pane`, or nil when it is
+    /// not (recipe `raw-page-tools-refused-when-filtered`): Agent Privacy is
+    /// on, or the site has enabled agent-list entries. An agent list that
+    /// cannot be read refuses too, as the agent page then fails closed.
+    @MainActor
+    func rawPageRefusal(pane: BrowserPaneHandle, tool: String) async -> String? {
+        let now = directory.browserPanes().first { $0.id == pane.id } ?? pane
+        if now.agentPrivacy.isOn { return now.agentPrivacy.closedRefusal() ?? BrowserAgentPrivacy.refusal(for: tool) }
+        guard let store = hiddenItems() else {
+            return AgentPage.unavailablePrefix + AgentPageSourceError.agentListUnavailable.description
+        }
+        let url = now.automation.driver.url
+        do {
+            let selectors = try await store.perform { try $0.enabledSelectors(list: .agent, for: url) }
+            return selectors.isEmpty ? nil : BrowserAgentPrivacy.agentListRefusal
+        } catch {
+            return AgentPage.unavailablePrefix + error.localizedDescription
+        }
+    }
+
+    /// One call's way to the agent's page: every read of the page goes
+    /// through `reader`, every string the page wrote through `builder`.
+    @MainActor
+    struct AgentView {
+        let reader: any AgentPageReader
+        let builder: AgentPageBuilder
+
+        /// A walk whose local-file failure is thrown as the sentence the
+        /// tools say it with; every other failure is the unavailable page.
+        func read(_ options: BrowserSnapshotOptions, keepingRefs: Bool) async throws -> AgentPageReading {
+            let reading = await reader.read(options: options, keepingRefs: keepingRefs)
+            try Task.checkCancellation()
+            if case .localFile? = reading.failure { throw BrowserAutomationError.localFile }
+            return reading
+        }
+    }
+
+    @MainActor
+    private func agentView(_ pane: BrowserPaneHandle, _ privacy: BrowserAgentPrivacy) -> AgentView {
+        AgentView(reader: agentPages(pane, privacy),
+                  builder: AgentPageBuilder(privacy: privacy,
+                                            hideImages: settings.get(UserSettings.browserPrivacyHideImages)))
+    }
+
+    /// An action's reply as the agent may see it: its title and dialog
+    /// message through the string path, and the focused element as the
+    /// agent page shows it — omitted when its ref is not on that page
+    /// (recipe `titles-dialogs-focus-through-string-path`).
+    @MainActor
+    private func agentReply(_ delta: BrowserActionDelta, _ agent: AgentView) async throws -> String {
+        var focused: String?
+        if let ref = delta.focusedRef {
+            var options = BrowserSnapshotOptions()
+            options.scope = ref
+            options.depth = 4
+            let page = try await agent.read(options, keepingRefs: true).page
+            if page.unavailableReason == nil, page.node(ref: ref) != nil {
+                focused = page.snapshotTree(AgentPageSource.renderingOptions(options))
+            }
+        }
+        return delta.agentView(conceal: agent.builder.conceal, focused: focused).rendered()
+    }
+
+    /// The elements of `page` whose name or own text contains `text`, case
+    /// and whitespace aside, in page order: the agent page's refs, as
+    /// `browser_snapshot` prints them (recipe `find-uses-agent-page`).
+    static func find(_ text: String, in page: AgentPage) -> [BrowserFindMatch] {
+        guard let root = page.root else { return [] }
+        let needle = AgentPageText.collapse(text).lowercased()
+        guard !needle.isEmpty else { return [] }
+        let tree = AgentSnapshotMapper(interactiveOnly: false, title: page.title).root(root, depth: nil)
+        var matches: [BrowserFindMatch] = []
+        collect(tree, needle, into: &matches)
+        return matches
+    }
+
+    private static func collect(_ node: BrowserSnapshotNode, _ needle: String, into matches: inout [BrowserFindMatch]) {
+        if let ref = node.ref {
+            // Its own name and its own text lines only: a container must not
+            // match on its descendants' text, as the legacy find did not.
+            let own = [node.name, node.text].compactMap { $0 }
+                + node.children.filter { $0.role == "text" }.compactMap(\.text)
+            if own.joined(separator: " ").lowercased().contains(needle) {
+                matches.append(BrowserFindMatch(ref: ref, role: node.role, name: node.name ?? ""))
+            }
+        }
+        for child in node.children { collect(child, needle, into: &matches) }
+    }
+
+    /// The whole agent page's text, every block, for `browser_wait_for`
+    /// (recipe `wait-for-uses-agent-text`); nil while the page is unavailable.
+    static func wholeText(_ page: AgentPage) -> String? {
+        guard page.unavailableReason == nil else { return nil }
+        guard let root = page.root else { return "" }
+        var renderer = AgentTextRenderer()
+        renderer.visit(root)
+        return renderer.finish()
     }
 
     /// Runs `body` with `args` revealed when the pane's Agent Privacy is on,
@@ -358,10 +485,12 @@ public final class BrowserToolSet: ChatToolSource, @unchecked Sendable {
                 // A new pane starts with Agent Privacy off, but the check is
                 // the same as every other call's, so it can never be skipped.
                 let privacy = try self.requireSwitches(for: name, paneID: pane.id)
+                let agent = self.agentView(pane, privacy)
                 return try await self.concealed(name, args, privacy, paneID: pane.id) { _ in
                     do {
                         let delta = try await pane.automation.open(url)
-                        return "opened pane \(pane.id)\n" + delta.rendered()
+                        let reply = try await self.agentReply(delta, agent)
+                        return "opened pane \(pane.id)\n" + reply
                     } catch BrowserAutomationError.localFile {
                         // A pane that ends on a local file is not left behind
                         // for the model to retry into, one more each time.
@@ -378,15 +507,27 @@ public final class BrowserToolSet: ChatToolSource, @unchecked Sendable {
         // pane's project is put on screen only once access has passed, so a
         // refused call changes nothing the user can see.
         try requireAccess(for: name, on: pane)
+        let raw = BrowserAgentPrivacy.refusedToolNames.contains(name)
+        if raw, let refusal = await rawPageRefusal(pane: pane, tool: name) { throw ToolError(sentence: refusal) }
         directory.revealBrowserPane(id: pane.id)
         let automation = pane.automation
         return try await automation.drive {
             let privacy = try self.requireSwitches(for: name, paneID: pane.id)
+            // Checked again once dequeued: the site or its agent list may
+            // have changed while the call waited.
+            if raw, let refusal = await self.rawPageRefusal(pane: pane, tool: name) {
+                throw ToolError(sentence: refusal)
+            }
+            let agent = self.agentView(pane, privacy)
             return try await self.concealed(name, args, privacy, paneID: pane.id) { args in
-                if let reply = try await self.dispatchNavigation(name, args, automation) { return reply }
-                if let reply = try await self.dispatchReading(name, args, automation,
+                if let delta = try await self.dispatchNavigation(name, args, automation) {
+                    return try await self.agentReply(delta, agent)
+                }
+                if let reply = try await self.dispatchReading(name, args, automation, agent,
                                                               mayScroll: pane.access != .readOnly) { return reply }
-                if let reply = try await self.dispatchActions(name, args, automation) { return reply }
+                if let delta = try await self.dispatchActions(name, args, automation) {
+                    return try await self.agentReply(delta, agent)
+                }
                 throw ToolError(sentence: "unknown tool \(name)")
             }
         }
@@ -445,11 +586,11 @@ public final class BrowserToolSet: ChatToolSource, @unchecked Sendable {
     @MainActor
     private func dispatchNavigation(
         _ name: String, _ args: Arguments, _ automation: BrowserAutomation
-    ) async throws -> String? {
+    ) async throws -> BrowserActionDelta? {
         switch name {
-        case "browser_navigate": return try await automation.navigate(to: try args.url("url")).rendered()
-        case "browser_back": return try await automation.goBack().rendered()
-        case "browser_forward": return try await automation.goForward().rendered()
+        case "browser_navigate": return try await automation.navigate(to: try args.url("url"))
+        case "browser_back": return try await automation.goBack()
+        case "browser_forward": return try await automation.goForward()
         default: return nil
         }
     }
@@ -458,7 +599,7 @@ public final class BrowserToolSet: ChatToolSource, @unchecked Sendable {
     /// `mayScroll` is false for a Read only pane: reading must not move the
     /// page, so an element screenshot captures the element where it is.
     private func dispatchReading(
-        _ name: String, _ args: Arguments, _ automation: BrowserAutomation, mayScroll: Bool
+        _ name: String, _ args: Arguments, _ automation: BrowserAutomation, _ agent: AgentView, mayScroll: Bool
     ) async throws -> String? {
         switch name {
         case "browser_snapshot":
@@ -468,21 +609,36 @@ public final class BrowserToolSet: ChatToolSource, @unchecked Sendable {
             options.scope = args.optionalString("scope")
             options.includeURLs = args.bool("include_urls")
             options.delta = args.bool("delta")
-            let snap = try await automation.snapshot(options)
-            return "url: \(snap.url)\ntitle: \(snap.title)\ngeneration: \(snap.generation)\n\n\(snap.text)"
+            let reading = try await agent.read(options, keepingRefs: false)
+            let page = reading.page
+            if let reason = page.unavailableReason { return reason }
+            let tree = page.snapshotTree(AgentPageSource.renderingOptions(options))
+            let text = automation.agentSnapshotText(tree, delta: options.delta)
+            let url = page.url?.absoluteString ?? automation.currentURL
+            return "url: \(url)\ntitle: \(page.title)\ngeneration: \(reading.generation ?? 0)\n\n\(text)"
         case "browser_text":
-            return try await automation.text(scope: args.optionalString("scope"))
+            var options = BrowserSnapshotOptions()
+            options.scope = args.optionalString("scope")
+            return try await agent.read(options, keepingRefs: true).page.text()
         case "browser_find":
+            let candidates = try args.candidates("text")
+            let page = try await agent.read(BrowserSnapshotOptions(), keepingRefs: true).page
+            if let reason = page.unavailableReason { return reason }
             var matches: [BrowserFindMatch] = []
-            for text in try args.candidates("text") where matches.isEmpty {
-                matches = try await automation.find(text)
+            for text in candidates where matches.isEmpty {
+                matches = Self.find(text, in: page)
             }
             if matches.isEmpty { return "no element matches" }
             return matches.map { "\($0.ref) \($0.role) \"\($0.name)\"" }.joined(separator: "\n")
         case "browser_wait_for":
             let condition = try waitCondition(args)
-            let result = try await automation.wait(for: condition, timeout: args.optionalDouble("timeout"))
-            return "satisfied\nurl: \(result.url)\ntitle: \(result.title)"
+            let result = try await automation.wait(for: condition, timeout: args.optionalDouble("timeout")) {
+                guard let page = try? await agent.read(BrowserSnapshotOptions(), keepingRefs: true).page else {
+                    return nil
+                }
+                return Self.wholeText(page)
+            }
+            return "satisfied\nurl: \(result.url)\ntitle: \(agent.builder.conceal(result.title))"
         case "browser_screenshot":
             let target = try args.optionalRefAndGeneration()
             let png = try await automation.screenshot(ref: target.ref, generation: target.generation,
@@ -503,22 +659,22 @@ public final class BrowserToolSet: ChatToolSource, @unchecked Sendable {
     @MainActor
     private func dispatchActions(
         _ name: String, _ args: Arguments, _ automation: BrowserAutomation
-    ) async throws -> String? {
+    ) async throws -> BrowserActionDelta? {
         switch name {
         case "browser_click":
             return try await automation.click(
                 ref: try args.string("ref"), generation: try args.int("generation"), native: args.bool("native")
-            ).rendered()
+            )
         case "browser_type":
             return try await automation.type(
                 ref: try args.string("ref"), generation: try args.int("generation"),
                 text: try args.string("text"), submit: args.bool("submit")
-            ).rendered()
+            )
         case "browser_fill":
             return try await automation.fill(
                 ref: try args.string("ref"), generation: try args.int("generation"),
                 value: try args.text("value")
-            ).rendered()
+            )
         case "browser_select":
             let ref = try args.string("ref"), generation = try args.int("generation")
             let values = try args.candidates("value")
@@ -527,31 +683,31 @@ public final class BrowserToolSet: ChatToolSource, @unchecked Sendable {
                 // the attempt may already have fired input and change, and a
                 // cancelled call must not act on the page again.
                 do {
-                    return try await automation.select(ref: ref, generation: generation, value: value).rendered()
+                    return try await automation.select(ref: ref, generation: generation, value: value)
                 } catch let error as CancellationError {
                     throw error
                 } catch {
                     try Task.checkCancellation()
                 }
             }
-            return try await automation.select(ref: ref, generation: generation, value: values.last ?? "").rendered()
+            return try await automation.select(ref: ref, generation: generation, value: values.last ?? "")
         case "browser_press_key":
-            return try await automation.pressKey(try args.string("key")).rendered()
+            return try await automation.pressKey(try args.string("key"))
         case "browser_hover":
             return try await automation.hover(
                 ref: try args.string("ref"), generation: try args.int("generation")
-            ).rendered()
+            )
         case "browser_scroll":
             let target = try args.optionalRefAndGeneration()
             return try await automation.scroll(
                 ref: target.ref, generation: target.generation,
                 direction: args.optionalString("direction"), amount: args.optionalInt("amount")
-            ).rendered()
+            )
         case "browser_click_at":
             guard let xPoint = args.optionalDouble("x"), let yPoint = args.optionalDouble("y") else {
                 throw ToolError(sentence: "browser_click_at needs x and y")
             }
-            return try await automation.clickAt(x: xPoint, y: yPoint).rendered()
+            return try await automation.clickAt(x: xPoint, y: yPoint)
         default:
             return nil
         }
@@ -584,8 +740,13 @@ public final class BrowserToolSet: ChatToolSource, @unchecked Sendable {
         let rows: [[String: Any]] = panes.map { pane in
             let privacy = pane.agentPrivacy
             let drivable = BrowserAutomation.isDrivable(pane.url)
+            // The title is the page's words: through the agent page's string
+            // path (recipe `titles-dialogs-focus-through-string-path`).
+            let title = privacy.closedRefusal() == nil
+                ? AgentPageBuilder(privacy: privacy, hideImages: false).conceal(pane.title)
+                : privacy.concealing(pane.title)
             return [
-                "id": pane.id, "title": drivable ? privacy.concealing(pane.title) : Self.localFileName,
+                "id": pane.id, "title": drivable ? title : Self.localFileName,
                 "url": drivable ? privacy.concealing(pane.url) : Self.localFileName,
                 "project": privacy.concealing(pane.project),
                 "tab": privacy.concealing(pane.tab), "engine": pane.engine.rawValue, "is_default": pane.id == defaultID,
@@ -656,10 +817,10 @@ public final class BrowserToolSet: ChatToolSource, @unchecked Sendable {
             "load": ToolJSONSchema.boolean("Wait for the page to finish loading"), "idle": ToolJSONSchema.boolean("Wait for the DOM to stop changing"),
             "timeout": ToolJSONSchema.number("Seconds, default 10, at most 60")
         ]),
-        tool("browser_screenshot", "A PNG of the viewport, or of one element by ref. Its pixels are the coordinates browser_click_at takes.", refGen),
-        tool("browser_click_at", "A real mouse click at a point of the last browser_screenshot, in that image's pixels. Take a screenshot first; browser_click by ref is the usual way.", ["pane_id": paneID, "x": ToolJSONSchema.number("Pixels from the left edge of the last screenshot"), "y": ToolJSONSchema.number("Pixels from the top edge of the last screenshot")], required: ["x", "y"]),
-        tool("browser_console", "The page's last console messages and errors.", ["pane_id": paneID, "level": ToolJSONSchema.string("log, info, warn, error or debug")]),
-        tool("browser_evaluate", "Evaluate a JavaScript expression in the page and return its JSON. Off unless enabled in Settings.", ["pane_id": paneID, "expression": ToolJSONSchema.string("The expression")], required: ["expression"]),
+        tool("browser_screenshot", "A PNG of the viewport, or of one element by ref. Its pixels are the coordinates browser_click_at takes. Refused while Agent Privacy is on or when the site has items hidden from the agent.", refGen),
+        tool("browser_click_at", "A real mouse click at a point of the last browser_screenshot, in that image's pixels. Take a screenshot first; browser_click by ref is the usual way. Refused while Agent Privacy is on or when the site has items hidden from the agent.", ["pane_id": paneID, "x": ToolJSONSchema.number("Pixels from the left edge of the last screenshot"), "y": ToolJSONSchema.number("Pixels from the top edge of the last screenshot")], required: ["x", "y"]),
+        tool("browser_console", "The page's last console messages and errors. Refused while Agent Privacy is on.", ["pane_id": paneID, "level": ToolJSONSchema.string("log, info, warn, error or debug")]),
+        tool("browser_evaluate", "Evaluate a JavaScript expression in the page and return its JSON. Off unless enabled in Settings. Refused while Agent Privacy is on or when the site has items hidden from the agent.", ["pane_id": paneID, "expression": ToolJSONSchema.string("The expression")], required: ["expression"]),
         tool("browser_history", "Recent visits the user allows the agent to see: all history, this tab's back/forward list, or none (refused).", [
             "pane_id": paneID,
             "query": ToolJSONSchema.string("Keep only visits whose title or address contains this, case-insensitive; optional"),

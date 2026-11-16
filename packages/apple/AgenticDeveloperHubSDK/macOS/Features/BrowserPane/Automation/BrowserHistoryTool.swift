@@ -72,10 +72,13 @@ struct BrowserHistoryTool {
     /// One visit's line: its time when known, its title, its address. Each
     /// field is concealed on its own before the line is assembled
     /// (`conceal-before-join`), so a privacy word cannot straddle a
-    /// separator and slip past the match.
+    /// separator and slip past the match. Both go through the agent page's
+    /// string path (`AgentPageBuilder.conceal`, recipe
+    /// `titles-dialogs-focus-through-string-path`), as every page string does.
     private static func line(_ visit: BrowserVisitLine, _ privacy: BrowserAgentPrivacy) -> String {
-        let title = privacy.concealing(visit.title)
-        let url = privacy.concealing(visit.url)
+        let conceal = AgentPageBuilder(privacy: privacy, hideImages: false).conceal
+        let title = conceal(visit.title)
+        let url = conceal(visit.url)
         var fields: [String] = []
         if let when = visit.when { fields.append(when.formatted(.iso8601)) }
         fields.append(title.isEmpty ? "(untitled)" : title)
