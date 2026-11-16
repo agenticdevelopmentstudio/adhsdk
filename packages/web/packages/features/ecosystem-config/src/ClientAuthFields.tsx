@@ -55,7 +55,7 @@ function SettingRow({
  * switch per OAuth provider. The ecosystem's Settings pane draws these; the policy is the
  * ecosystem's alone. Controlled; `idPrefix` keeps two sets on one page from sharing element ids.
  *
- * The customer-id editor keeps its own rows (see UrlRowsEditor). `generation` is part of its key,
+ * The allowed-email editor keeps its own rows (see UrlRowsEditor). `generation` is part of its key,
  * so a Cancel or a save that re-seeds the draft also resets the rows.
  */
 export function ClientAuthPolicyFields({
