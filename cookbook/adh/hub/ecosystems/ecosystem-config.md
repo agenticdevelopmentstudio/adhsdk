@@ -716,9 +716,9 @@ kind.
 | Platform | Location | Conformance |
 |----------|----------|-------------|
 | apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/EcosystemConfig/` | confirmed (1.3.0) |
-| web | `packages/web/packages/data/src/ecosystem-config/` | confirmed (1.3.0) |
-| web | `packages/web/packages/features/ecosystem-config/src/` | confirmed (1.3.0) |
-| web | `packages/web/packages/data/src/ecosystem-config/sync-tables.ts` | confirmed (1.3.0) |
+| web | `packages/web/packages/data/src/ecosystem-config/` | confirmed (2.0.0) |
+| web | `packages/web/packages/features/ecosystem-config/src/` | confirmed (2.0.0) |
+| web | `packages/web/packages/data/src/ecosystem-config/sync-tables.ts` | confirmed (2.0.0) |
 | apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/EcosystemConfig/AuthSettingsTopic.swift` | confirmed (1.3.0) |
 | apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/EcosystemConfig/EcosystemConfigModels.swift` | confirmed (1.3.0) |
 | apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/EcosystemConfig/FeatureFlagsTopic.swift` | confirmed (1.3.0) |
@@ -726,11 +726,11 @@ kind.
 | apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/EcosystemConfig/SigninAppsTopic.swift` | confirmed (1.3.0) |
 | apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/EcosystemConfig/StorageTokensRail.swift` | confirmed (1.3.0) |
 | apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/EcosystemConfig/StorageTokensTopic.swift` | confirmed (1.3.0) |
-| web | `packages/web/packages/data/src/ecosystem-config/feature-flags.ts` | confirmed (1.3.0) |
-| web | `packages/web/packages/data/src/ecosystem-config/server-bags.ts` | confirmed (1.3.0) |
-| web | `packages/web/packages/data/src/ecosystem-config/client-auth.ts` | confirmed (1.3.0) |
-| web | `packages/web/packages/data/src/ecosystem-config/storage-tokens.ts` | confirmed (1.3.0) |
-| web | `packages/web/packages/data/src/ecosystem-config/wire.ts` | confirmed (1.3.0) |
+| web | `packages/web/packages/data/src/ecosystem-config/feature-flags.ts` | confirmed (2.0.0) |
+| web | `packages/web/packages/data/src/ecosystem-config/server-bags.ts` | confirmed (2.0.0) |
+| web | `packages/web/packages/data/src/ecosystem-config/client-auth.ts` | confirmed (2.0.0) |
+| web | `packages/web/packages/data/src/ecosystem-config/storage-tokens.ts` | confirmed (2.0.0) |
+| web | `packages/web/packages/data/src/ecosystem-config/wire.ts` | confirmed (2.0.0) |
 | apple | `packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKHubTests/EcosystemConfigTopicsTests.swift` | confirmed (1.3.0) |
 | apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/Ecosystems/EcosystemTopic.swift` | confirmed (1.3.0) |
 | apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/Ecosystems/EcosystemsModels.swift` | confirmed (1.3.0) |
@@ -740,14 +740,14 @@ kind.
 | apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/Support/JSONValue.swift` | confirmed (1.3.0) |
 | apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/Applications/ApplicationsTopic.swift` | confirmed (1.3.0) |
 | apple | `packages/apple/AgenticDeveloperHubSDK/project.yml` | confirmed (1.3.0) |
-| web | `packages/web/packages/features/ecosystem-config/src/dialog-state/bag-dialog-state.ts` | confirmed (1.3.0) |
-| web | `packages/web/packages/features/ecosystem-config/src/dialog-state/flag-dialog-state.ts` | confirmed (1.3.0) |
-| web | `packages/web/packages/features/ecosystem-config/src/ApplicationClientAuthSection.tsx` | confirmed (1.3.0) |
-| web | `packages/web/packages/features/ecosystem-config/src/SyncTablesPane.tsx` | confirmed (1.3.0) |
-| web | `packages/web/packages/features/ecosystem-config/src/sync-tables-hooks.ts` | confirmed (1.3.0) |
-| web | `packages/web/packages/features/ecosystem-config/src/ClientAuthFields.tsx` | confirmed (1.3.0) |
-| web | `packages/web/packages/features/ecosystem-config/src/client-auth-model.ts` | confirmed (1.3.0) |
-| web | `packages/web/packages/features/ecosystem-config/src/ClientAuthSettingsPane.tsx` | confirmed (1.3.0) |
+| web | `packages/web/packages/features/ecosystem-config/src/dialog-state/bag-dialog-state.ts` | confirmed (2.0.0) |
+| web | `packages/web/packages/features/ecosystem-config/src/dialog-state/flag-dialog-state.ts` | confirmed (2.0.0) |
+| web | `packages/web/packages/features/ecosystem-config/src/ApplicationClientAuthSection.tsx` | confirmed (2.0.0) |
+| web | `packages/web/packages/features/ecosystem-config/src/SyncTablesPane.tsx` | confirmed (2.0.0) |
+| web | `packages/web/packages/features/ecosystem-config/src/sync-tables-hooks.ts` | confirmed (2.0.0) |
+| web | `packages/web/packages/features/ecosystem-config/src/ClientAuthFields.tsx` | confirmed (2.0.0) |
+| web | `packages/web/packages/features/ecosystem-config/src/client-auth-model.ts` | confirmed (2.0.0) |
+| web | `packages/web/packages/features/ecosystem-config/src/ClientAuthSettingsPane.tsx` | confirmed (2.0.0) |
 
 ## Design Decisions
 

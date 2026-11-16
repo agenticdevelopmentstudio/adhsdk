@@ -878,7 +878,7 @@ component.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/data/src/ecosystems/` | confirmed (1.4.0) |
+| web | `packages/web/packages/data/src/ecosystems/` | confirmed (2.0.0) |
 | apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/Ecosystems/` | confirmed (1.4.0) |
 | apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/Ecosystems/EcosystemsDataSource.swift` | confirmed (1.4.0) |
 | apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/Ecosystems/EcosystemsModule.swift` | confirmed (1.4.0) |
@@ -887,15 +887,15 @@ component.
 | apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/Support/RailPath.swift` | confirmed (1.4.0) |
 | apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/Support/FormDetails.swift` | confirmed (1.4.0) |
 | apple | `packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKHubTests/EcosystemsModuleTests.swift` | confirmed (1.4.0) |
-| web | `packages/web/packages/data/src/ecosystems/ecosystems.ts` | confirmed (1.4.0) |
-| web | `packages/web/packages/data/src/ecosystems/identifiers.ts` | confirmed (1.4.0) |
-| web | `packages/web/packages/data/src/ecosystems/use-workspace-default-ecosystem.ts` | confirmed (1.4.0) |
-| web | `packages/web/packages/data/src/ecosystems/ecosystem-invitations.ts` | confirmed (1.4.0) |
-| web | `packages/web/packages/data/src/ecosystems/ecosystem-features.ts` | confirmed (1.4.0) |
-| web | `packages/web/packages/data/src/ecosystems/wire.ts` | confirmed (1.4.0) |
-| web | `packages/web/packages/data/src/ecosystems/__tests__/ecosystems.test.ts` | confirmed (1.4.0) |
-| web | `packages/web/packages/data/src/ecosystems/__tests__/use-workspace-default-ecosystem.test.tsx` | confirmed (1.4.0) |
-| web | `packages/web/packages/data/src/ecosystems/__tests__/ecosystem-features.test.tsx` | confirmed (1.4.0) |
+| web | `packages/web/packages/data/src/ecosystems/ecosystems.ts` | confirmed (2.0.0) |
+| web | `packages/web/packages/data/src/ecosystems/identifiers.ts` | confirmed (2.0.0) |
+| web | `packages/web/packages/data/src/ecosystems/use-workspace-default-ecosystem.ts` | confirmed (2.0.0) |
+| web | `packages/web/packages/data/src/ecosystems/ecosystem-invitations.ts` | confirmed (2.0.0) |
+| web | `packages/web/packages/data/src/ecosystems/ecosystem-features.ts` | confirmed (2.0.0) |
+| web | `packages/web/packages/data/src/ecosystems/wire.ts` | confirmed (2.0.0) |
+| web | `packages/web/packages/data/src/ecosystems/__tests__/ecosystems.test.ts` | confirmed (2.0.0) |
+| web | `packages/web/packages/data/src/ecosystems/__tests__/use-workspace-default-ecosystem.test.tsx` | confirmed (2.0.0) |
+| web | `packages/web/packages/data/src/ecosystems/__tests__/ecosystem-features.test.tsx` | confirmed (2.0.0) |
 
 ## Design Decisions
 
