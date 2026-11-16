@@ -5224,6 +5224,56 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/ecosystems/{id}/sync_tables": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List an ecosystem's sync enrollment, default and effective
+         * @description For whoever manages the ecosystem: its owner, an admin of the organization that owns it, or a platform admin.
+         *
+         *     Replaces GET /ecosystem/sync-tables/{id}.
+         */
+        get: operations["getV1EcosystemsByIdSyncTables"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ecosystems/{id}/sync_tables/{resource}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Override whether one resource syncs for an ecosystem
+         * @description For whoever manages the ecosystem: its owner, an admin of the organization that owns it, or a platform admin. A resource that is not in the catalog is a 400 — overrides cannot invent resources.
+         *
+         *     Replaces PUT /ecosystem/sync-tables/{id}/{resource}.
+         */
+        post: operations["postV1EcosystemsByIdSyncTablesByResource"];
+        /**
+         * Drop the override and fall back to the catalog default
+         * @description For whoever manages the ecosystem: its owner, an admin of the organization that owns it, or a platform admin. Idempotent, and deliberately unvalidated: clearing an override that was never set — or one naming a resource the catalog has since dropped — succeeds rather than 400ing, so a stale override can always be cleaned up.
+         *
+         *     Replaces DELETE /ecosystem/sync-tables/{id}/{resource}.
+         */
+        delete: operations["deleteV1EcosystemsByIdSyncTablesByResource"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/entity_history": {
         parameters: {
             query?: never;
@@ -11943,7 +11993,9 @@ export interface paths {
         };
         /**
          * List an ecosystem's sync enrollment, default and effective
-         * @description Replaces GET /admin/sync/tables/{id}.
+         * @description Platform admins only.
+         *
+         *     Replaces GET /admin/sync/tables/{id}.
          */
         get: operations["getV1SyncTablesById"];
         put?: never;
@@ -11965,14 +12017,14 @@ export interface paths {
         put?: never;
         /**
          * Override whether one resource syncs for an ecosystem
-         * @description A resource that is not in the catalog is a 400 — overrides cannot invent resources.
+         * @description Platform admins only. A resource that is not in the catalog is a 400 — overrides cannot invent resources.
          *
          *     Replaces PUT /admin/sync/tables/{id}/{resource}.
          */
         post: operations["postV1SyncTablesByIdResourcesByResource"];
         /**
          * Drop the override and fall back to the catalog default
-         * @description Idempotent, and deliberately unvalidated: clearing an override that was never set — or one naming a resource the catalog has since dropped — succeeds rather than 400ing, so a stale override can always be cleaned up.
+         * @description Platform admins only. Idempotent, and deliberately unvalidated: clearing an override that was never set — or one naming a resource the catalog has since dropped — succeeds rather than 400ing, so a stale override can always be cleaned up.
          *
          *     Replaces DELETE /admin/sync/tables/{id}/{resource}.
          */
@@ -43810,6 +43862,189 @@ export interface operations {
             path: {
                 id: string;
                 client_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deleted */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Deleted"];
+                };
+            };
+            /** @description Error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+        };
+    };
+    getV1EcosystemsByIdSyncTables: {
+        parameters: {
+            query?: {
+                /** @description Page size, 1–100 (default 10). */
+                limit?: number;
+                /** @description Cursor: an object id; returns the page after it. */
+                starting_after?: string;
+                /** @description Cursor: an object id; returns the page before it. */
+                ending_before?: string;
+                /** @description Related objects to return in full instead of as an id. Up to four levels, e.g. `ecosystem_id`; on a list, `data.<field>`. */
+                "expand[]"?: string[];
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Every catalog resource with its effective state */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        object: "list";
+                        data: ({
+                            /** @constant */
+                            object?: "sync_table";
+                        } & components["schemas"]["SyncEnrollmentRow"])[];
+                        has_more: boolean;
+                        url: string;
+                    };
+                };
+            };
+            /** @description Error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+        };
+    };
+    postV1EcosystemsByIdSyncTablesByResource: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                resource: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SyncEnrollmentUpdate"];
+            };
+        };
+        responses: {
+            /** @description The catalog after the write */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        object?: "sync_table";
+                    } & components["schemas"]["SyncEnrollmentList"];
+                };
+            };
+            /** @description Error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+        };
+    };
+    deleteV1EcosystemsByIdSyncTablesByResource: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                resource: string;
             };
             cookie?: never;
         };
