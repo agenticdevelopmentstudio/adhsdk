@@ -21163,9 +21163,9 @@
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:d989b2e441e25ef68a2688cb4d0781f64a4c3f3ccbaac2d738cba003996b97e6",
+            "hash": "sha256:0328feac0e9fc1e1730265e26b1334b85d1fd0aebf2501303f9b9b5d9932617c",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.1.0"
           },
           "location": "packages/web/packages/adh-ui/src/components/time-series-chart.tsx",
           "platform": "web"

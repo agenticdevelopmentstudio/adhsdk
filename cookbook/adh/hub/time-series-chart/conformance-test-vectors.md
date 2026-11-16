@@ -8,6 +8,7 @@
 | T5 | refuses-fifth-series | five series with keys a, b, c, d, e (test: refuses more series than it has colours) | Rendering throws a range error |
 | T6 | gap-for-null-value | a point with `null` for `direct` between two numeric points | The `direct` line breaks at that x; no value of zero is plotted there |
 | T7 | tooltip-null-placeholder | hover the x position whose `direct` value is `null` | The tooltip shows an em dash for Direct and the formatted number for Fixed |
+| T7b | tooltip-null-placeholder | one series; hover the x position whose `direct` value is `null` | The tooltip shows one row: Direct with an em dash |
 | T8 | height-parameter | no height given | The plot renders 240 pixels high |
 | T9 | series-colour-by-position | four series | Strokes are blue, orange, violet, pink in series order |
 | T10 | refuses-fifth-series | five series | The error message names a limit of 4 and a count of 5 |

@@ -2,11 +2,11 @@
 id: f571e2ee-ce27-4405-9e79-f69f601f9e1f
 title: "Time Series Chart"
 type: ingredient
-version: 1.0.1
+version: 1.1.0
 status: review
 language: en
 created: 2026-10-04
-modified: 2026-11-14
+modified: 2026-11-16
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -76,7 +76,8 @@ its container; only the height is a parameter.
   value shown on the y axis and in the tooltip through the caller's format
   function, which defaults to rendering the number as-is.
 - **tooltip-null-placeholder**: The tooltip MUST render a value that is not a
-  number as an em dash, and MUST NOT pass it to the format function.
+  number as an em dash, and MUST NOT pass it to the format function. It MUST
+  still show, one row per series, at an x where every series is `null`.
 - **height-parameter**: The component MUST render the plot at the given height
   in pixels, defaulting to 240, and MUST size the plot's width to its container.
 - **no-point-dots**: Lines MUST be drawn without a dot on every point; only the
@@ -137,6 +138,7 @@ The chart's visual treatment is set entirely by the component and theme tokens.
 | T5 | refuses-fifth-series | five series with keys a, b, c, d, e (test: refuses more series than it has colours) | Rendering throws a range error |
 | T6 | gap-for-null-value | a point with `null` for `direct` between two numeric points | The `direct` line breaks at that x; no value of zero is plotted there |
 | T7 | tooltip-null-placeholder | hover the x position whose `direct` value is `null` | The tooltip shows an em dash for Direct and the formatted number for Fixed |
+| T7b | tooltip-null-placeholder | one series; hover the x position whose `direct` value is `null` | The tooltip shows one row: Direct with an em dash |
 | T8 | height-parameter | no height given | The plot renders 240 pixels high |
 | T9 | series-colour-by-position | four series | Strokes are blue, orange, violet, pink in series order |
 | T10 | refuses-fifth-series | five series | The error message names a limit of 4 and a count of 5 |
@@ -259,7 +261,7 @@ Not applicable: the component contains no logging calls.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/adh-ui/src/components/time-series-chart.tsx` | confirmed (1.0.1) |
+| web | `packages/web/packages/adh-ui/src/components/time-series-chart.tsx` | confirmed (1.1.0) |
 
 ## Design Decisions
 
@@ -325,5 +327,5 @@ T1 through T10 with passing tests.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
-| 1.0.1 | 2026-11-14 | Mike Fullerton | Conformance tests added (timeSeriesChart.test.tsx, 10 of 10 vectors); the tooltip now reads every series from the hovered point, so a null value shows an em dash (T7); unit-test-coverage now passed. |
+| 1.1.0 | 2026-11-16 | Mike Fullerton | The tooltip shows where every series is null (T7b) |
 | 1.0.0 | 2026-10-04 | Mike Fullerton | Initial spec extracted from `time-series-chart.tsx`; accessibility and compliance statuses reflect the chart library's default keyboard layer. |

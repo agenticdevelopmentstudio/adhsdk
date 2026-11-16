@@ -4,11 +4,11 @@
     "id": "f571e2ee-ce27-4405-9e79-f69f601f9e1f",
     "title": "Time Series Chart",
     "type": "ingredient",
-    "version": "1.0.1",
+    "version": "1.1.0",
     "status": "review",
     "language": "en",
     "created": "2026-10-04",
-    "modified": "2026-11-14",
+    "modified": "2026-11-16",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -29,7 +29,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "e70f37290bb89e79",
+  "synced": "938184b09ca4161e",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
