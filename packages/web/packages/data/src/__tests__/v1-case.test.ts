@@ -2,7 +2,7 @@
 // boundary. The pure mappers run for real; the three request-layer functions are wrapped in
 // spies that default to the real implementation (so paging runs against the stubbed `fetch`)
 // and are overridden per test where a vector needs to hand back a canned result or error.
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, expectTypeOf, it, vi } from "vitest";
 import { fetchMock, installFetch, respondOnce, urlAt } from "./v1-fetch";
 
 vi.mock("../http", async (importOriginal) => {
@@ -16,7 +16,7 @@ vi.mock("../http", async (importOriginal) => {
 });
 
 import * as http from "../http";
-import { fromV1, toV1Body, v1Json, v1List, v1Page, v1Write } from "../v1-case";
+import { fromV1, toV1Body, v1Json, v1List, v1Page, v1Write, type FromV1 } from "../v1-case";
 
 const real = await vi.importActual<typeof import("../http")>("../http");
 
@@ -166,5 +166,33 @@ describe("v1-case wrappers", () => {
     respondOnce({ object: "list", data: [{ name: "no id" }], has_more: true, url: "" });
     await expect(v1List("/v1/things")).rejects.toBeInstanceOf(Error);
     expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("FromV1 (the type of fromV1's result)", () => {
+  it("camelizes keys, drops `object`, stamps created/updated, and leaves opaque maps alone", () => {
+    type Wire = {
+      object?: string;
+      id: string;
+      list_id: string;
+      from_name: string | null;
+      created: number;
+      updated: number;
+      config: { snake_key: number };
+      rows: { contact_id: string }[];
+    };
+    expectTypeOf<FromV1<Wire>>().toEqualTypeOf<{
+      id: string;
+      listId: string;
+      fromName: string | null;
+      createdAt: string;
+      updatedAt: string;
+      config: { snake_key: number };
+      rows: { contactId: string }[];
+    }>();
+  });
+
+  it("renames `created` to `createdAt` only when it is a unix-seconds number", () => {
+    expectTypeOf<FromV1<{ created: string }>>().toEqualTypeOf<{ created: string }>();
   });
 });

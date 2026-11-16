@@ -38,6 +38,33 @@ function mapKeys(v: unknown, rename: (k: string) => string, wire: boolean): unkn
   return out;
 }
 
+type Opaque = "config" | "detail" | "body" | "value" | "counts";
+type CamelKey<S extends string> = S extends `${infer H}_${infer C}${infer R}`
+  ? `${H}${Uppercase<C>}${CamelKey<R>}`
+  : S;
+type IsStamp<K, V> = K extends "created" | "updated" ? ([V] extends [number] ? true : false) : false;
+type V1Key<K, V> = K extends "object"
+  ? never
+  : IsStamp<K, V> extends true
+    ? `${K & string}At`
+    : K extends string
+      ? CamelKey<K>
+      : K;
+type V1Value<K, V> = IsStamp<K, V> extends true ? string : K extends Opaque ? V : FromV1<V>;
+
+/**
+ * The TYPE of {@link fromV1}'s result: a /v1 schema type (e.g. a generated
+ * `SuccessBody<'/v1/…','get'>['data'][number]`) as the camelCase row it maps to. Mirrors the
+ * runtime rule exactly — keys camelized, the `object` tag dropped, a numeric `created` /
+ * `updated` turned into an ISO `createdAt` / `updatedAt`, opaque maps left as they are — so a
+ * client derives its row types from the generated spec instead of re-typing them by hand.
+ */
+export type FromV1<T> = T extends readonly (infer U)[]
+  ? FromV1<U>[]
+  : T extends object
+    ? { [K in keyof T as V1Key<K, T[K]>]: V1Value<K, T[K]> }
+    : T;
+
 /** A /v1 object (or array of them) as the camelCase row the client's types describe. */
 export function fromV1<T>(wire: unknown): T {
   return mapKeys(wire, camel, false) as T;
