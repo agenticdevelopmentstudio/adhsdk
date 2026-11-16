@@ -6,8 +6,10 @@ import AgenticDeveloperHubSDKHubMail
 import AgenticDeveloperHubSDKHubAuth
 @testable import AgenticDeveloperHubSDKHubMailBridge
 
-/// Vectors hub-mail-bridge-023 to 029: sign-in opens the mirror behind one
-/// stable client, sign-out purges it, and the routed client follows a switch.
+/// Vectors hub-mail-bridge-023 to 029, 038 and 039: sign-in opens the mirror
+/// behind one stable client, sign-out purges it (even one a previous launch
+/// left on disk), a sign-in waits for that purge, and the routed client
+/// follows a switch.
 @MainActor
 final class HubMailServiceTests: XCTestCase {
 
@@ -29,27 +31,29 @@ final class HubMailServiceTests: XCTestCase {
     // MARK: - Helpers
 
     private func oneMessagePull() -> ScriptedSyncTransport {
+        ScriptedSyncTransport(pulls: [messagePull()])
+    }
+
+    private func messagePull() -> ScriptedSyncTransport.Outcome<SyncPullResponse> {
         let manifest = [
             SyncResource(resource: HubMailResource.labels, schemaVersion: 1),
             SyncResource(resource: HubMailResource.messages, schemaVersion: 1)
         ]
-        return ScriptedSyncTransport(pulls: [
-            .success(SyncPullResponse(
-                manifest: manifest,
-                changes: [
-                    SyncChange(resource: HubMailResource.messages, id: "m1", op: .upsert, syncVersion: "3", data: [
-                        "connection_id": .string("c1"),
-                        "provider": .string("gmail"),
-                        "external_id": .string("g-m1"),
-                        "subject": .string("Hello"),
-                        "label_ids": .array([.string("INBOX")]),
-                        "internal_date": .string("2026-11-12T10:00:00Z")
-                    ])
-                ],
-                cursor: "c1",
-                hasMore: false
-            ))
-        ])
+        return .success(SyncPullResponse(
+            manifest: manifest,
+            changes: [
+                SyncChange(resource: HubMailResource.messages, id: "m1", op: .upsert, syncVersion: "3", data: [
+                    "connection_id": .string("c1"),
+                    "provider": .string("gmail"),
+                    "external_id": .string("g-m1"),
+                    "subject": .string("Hello"),
+                    "label_ids": .array([.string("INBOX")]),
+                    "internal_date": .string("2026-11-12T10:00:00Z")
+                ])
+            ],
+            cursor: "c1",
+            hasMore: false
+        ))
     }
 
     private func service(
@@ -176,6 +180,40 @@ final class HubMailServiceTests: XCTestCase {
         let fromHub = try await routed.accounts()
         XCTAssertEqual(fromHub.map(\.id), ["c1"])
         await hub.signedOut()
+    }
+
+    // 038
+    func testASignedOutRestorePurgesTheMirrorAPreviousLaunchLeft() async throws {
+        // A previous launch signed in and quit without signing out.
+        let previous = service()
+        await previous.signedIn()
+        XCTAssertEqual(try HubMailStore(database: database).connections(), ["c1"])
+
+        // This launch's restore ends signed out, with no mirror open.
+        let next = service(transport: ScriptedSyncTransport())
+        await next.follow(.signedOut)
+
+        XCTAssertEqual(next.status, .signedOut)
+        XCTAssertEqual(try HubMailStore(database: database).connections(), [])
+    }
+
+    // 039
+    func testASignInDuringSignOutWaitsForThePurge() async throws {
+        let service = service(transport: ScriptedSyncTransport(pulls: [messagePull(), messagePull()]))
+        await service.signedIn()
+
+        // The sign-out starts and suspends inside its purge...
+        let out = Task { await service.signedOut() }
+        await Task.yield()
+        XCTAssertEqual(service.status, .signedOut)
+        // ...and the sign-in that arrives meanwhile waits for it, so the
+        // purge never runs over the rows the new sign-in pulls.
+        await service.signedIn()
+        await out.value
+
+        XCTAssertEqual(service.status, .connected)
+        XCTAssertEqual(try await service.client.accounts().map(\.id), ["c1"])
+        await service.signedOut()
     }
 }
 

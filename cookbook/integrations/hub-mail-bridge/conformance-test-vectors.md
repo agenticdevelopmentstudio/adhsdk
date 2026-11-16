@@ -35,7 +35,9 @@
 | hub-mail-bridge-032 | location-device-id | `""` stored under `custom`, then `deviceId(defaults:key: "custom")` | a new non-empty id, now stored under `custom` |
 | hub-mail-bridge-033 | one-entry-point | Derived: a request whose handling throws inside the bridge (the writer throws), and a request for an unknown message | `respond(to:)` returns `.failure` for the first and `.notFound` for the second; neither throws |
 | hub-mail-bridge-034 | message-lookup | Derived: `getMessage` by hub row id, then by provider id, then by `"zzz"` | the same message twice; then `.notFound("unknown message: zzz")` |
-| hub-mail-bridge-035 | live-shares-session | Derived: `HubMailService.live` over a fake session store | the returned `HubAccount` and the service follow one `SessionController`; the database file does not exist until the first sign-in, then its folder is created and it stays open |
+| hub-mail-bridge-035 | live-shares-session | Derived: `HubMailService.live` over a fake session store | the returned `HubAccount` and the service follow one `SessionController`; the database file does not exist until the first sign-in or sign-out, then its folder is created and it stays open |
 | hub-mail-bridge-036 | live-at-location | Derived: `live(at: location)` and `live(databaseURL:deviceId:)` with the location's two values | both build the same session; `syncInterval` is 300 when not passed |
+| hub-mail-bridge-038 | service-purge-left-over | One service signs in and pulls `c1`, then is dropped without signing out; a second service over the same database follows `.signedOut` | status `.signedOut`; the store has no connections |
+| hub-mail-bridge-039 | service-sign-in-waits | While connected, `signedOut()` and `signedIn()` run concurrently, each with one message to pull | status `.connected`; accounts `c1` |
 | hub-mail-bridge-037 | location-value | Derived: two `HubMailLocation` values with the same `databaseURL` and `deviceId`, then one with a different `deviceId` | the first two compare equal; the third does not |
 
