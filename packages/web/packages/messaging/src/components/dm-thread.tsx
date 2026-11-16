@@ -12,7 +12,6 @@ import {
   useEffect,
   useLayoutEffect,
   useRef,
-  useState,
   type FormEvent,
   type KeyboardEvent,
 } from 'react'
@@ -25,6 +24,7 @@ import { Textarea } from '@adh-sdk/ui/components/textarea'
 import { TooltipProvider } from '@adh-sdk/ui/components/tooltip'
 import { ErrorText } from '@adh-sdk/ui/components/error-text'
 
+import { useDmComposer } from '../hooks/use-dm-composer'
 import { useDmThread, type DmMessage } from '../hooks/use-dms'
 import { PresenceDot } from './presence-dot'
 import { cx, initialsOf } from './util'
@@ -88,9 +88,8 @@ export function DmThread({
   className?: string
 }) {
   const { messages, loading, error, send, markRead, isOwn } = useDmThread(chatId)
-  const [draft, setDraft] = useState('')
-  const [sending, setSending] = useState(false)
-  const [sendError, setSendError] = useState<string | null>(null)
+  // Per conversation: switching chats starts an empty composer, and a late send is ignored.
+  const { draft, setDraft, sending, sendError, submit } = useDmComposer(chatId, send)
 
   const scrollRef = useRef<HTMLDivElement | null>(null)
   const lastSeq = messages.at(-1)?.seq ?? 0
@@ -111,36 +110,6 @@ export function DmThread({
     window.addEventListener('focus', onFocus)
     return () => window.removeEventListener('focus', onFocus)
   }, [chatId, lastSeq, messages.length, markRead])
-
-  // A new thread clears any stale draft error/sending state.
-  useEffect(() => {
-    setSendError(null)
-    setSending(false)
-  }, [chatId])
-
-  const submit = useCallback(async () => {
-    const text = draft.trim()
-    if (!text || sending) return
-    setSending(true)
-    setSendError(null)
-    try {
-      await send(text)
-      setDraft('')
-    } catch (err) {
-      // The backend answers 403 when a block/dial now denies contact.
-      const forbidden =
-        err && typeof err === 'object' && 'status' in err && (err as { status?: number }).status === 403
-      setSendError(
-        forbidden
-          ? "You can't message this person."
-          : err instanceof Error
-            ? err.message
-            : 'Failed to send message.',
-      )
-    } finally {
-      setSending(false)
-    }
-  }, [draft, sending, send])
 
   const onKeyDown = useCallback(
     (e: KeyboardEvent<HTMLTextAreaElement>) => {
