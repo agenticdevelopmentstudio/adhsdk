@@ -460,18 +460,18 @@ struct AgentHTMLRenderer {
     /// text does. A run of breaks is one `<br>`, as the text keeps no empty line.
     static func escapeLines(_ text: String, ref: String) -> String {
         guard text.contains(where: \.isNewline) else { return escape(text) }
-        let br = "<br data-adk-ref=\"" + escape(ref) + "\">"
+        let lineBreak = "<br data-adk-ref=\"" + escape(ref) + "\">"
         var out = "", breakPending = false
         for character in text {
             if character.isNewline {
                 breakPending = true
                 continue
             }
-            if breakPending { out += br }
+            if breakPending { out += lineBreak }
             breakPending = false
             out += escape(String(character))
         }
-        if breakPending { out += br }
+        if breakPending { out += lineBreak }
         return out
     }
 
