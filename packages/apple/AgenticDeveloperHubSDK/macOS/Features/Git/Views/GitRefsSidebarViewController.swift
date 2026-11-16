@@ -34,11 +34,15 @@ public enum GitRefIntent: Equatable {
     func sidebar(_ sidebar: GitRefsSidebarViewController, didRequest intent: GitRefIntent)
     /// The Workspace section's Reflog row.
     func sidebarDidSelectReflog(_ sidebar: GitRefsSidebarViewController)
+    /// A Pull Requests row selected (`.show`), or a pull request menu's item chosen.
+    func sidebar(_ sidebar: GitRefsSidebarViewController, didRequestPullRequest intent: GitPullRequestIntent)
 }
 
 public extension GitRefsSidebarDelegate {
     /// A delegate with no reflog browser ignores the Reflog row.
     func sidebarDidSelectReflog(_ sidebar: GitRefsSidebarViewController) {}
+    /// A delegate with no pull requests ignores their rows and menus.
+    func sidebar(_ sidebar: GitRefsSidebarViewController, didRequestPullRequest intent: GitPullRequestIntent) {}
 }
 
 /// A git window's sidebar: the working copy, branches with ahead/behind badges,
@@ -83,13 +87,14 @@ public final class GitRefsSidebarViewController: NSViewController {
         case stash(GitStash)
         case submodule(GitSubmodule, URL)
         case worktree(GitWorktree)
+        case pullRequest(GitPullRequest)
 
         /// The directory a submodule or worktree row opens; nil for every other row.
         var directory: URL? {
             switch self {
             case .submodule(_, let url): url
             case .worktree(let worktree): worktree.directory
-            case .workingCopy, .reflog, .ref, .stash: nil
+            case .workingCopy, .reflog, .ref, .stash, .pullRequest: nil
             }
         }
     }
@@ -216,6 +221,14 @@ public final class GitRefsSidebarViewController: NSViewController {
             ), .worktree(worktree))
         })
 
+        // Present while `gh` answers, even with no row: the header's menu creates one.
+        if let pullRequests = source.pullRequests {
+            let head = refs.first { $0.kind == .localBranch && $0.isHead }
+            let rows = pullRequestRows(pullRequests, head: head)
+            sections.append(TopicListSection(title: Self.pullRequestsTitle, items: rows.map(\.item)))
+            for row in rows { targets[row.item.id] = .pullRequest(row.pullRequest) }
+        }
+
         self.targets = targets
         self.remotesBySectionTitle = remotesBySectionTitle
         self.sections = sections
@@ -252,6 +265,17 @@ public final class GitRefsSidebarViewController: NSViewController {
         return true
     }
 
+    /// Selects the row of pull request `number` and tells the delegate, as a click
+    /// does; false when no row shows it.
+    @discardableResult
+    func select(pullRequestNumber number: Int) -> Bool {
+        let id = Self.pullRequestRowID(number)
+        guard case .pullRequest = targets[id] else { return false }
+        list.selectItem(withId: id)
+        select(itemID: id)
+        return true
+    }
+
     /// A remote branch's name less its `<remote>/` prefix, or the whole name
     /// when that would leave nothing (a ref directly under `refs/remotes/<x>`).
     private static func remoteBranchTitle(_ ref: GitRef, remote: String) -> String {
@@ -284,6 +308,7 @@ public final class GitRefsSidebarViewController: NSViewController {
         case .reflog: delegate.sidebarDidSelectReflog(self)
         case .ref(let ref): delegate.sidebar(self, didSelect: ref)
         case .stash(let stash): delegate.sidebar(self, didSelectStash: stash)
+        case .pullRequest(let pullRequest): delegate.sidebar(self, didRequestPullRequest: .show(pullRequest))
         case .submodule, .worktree: break
         }
     }
@@ -319,6 +344,8 @@ public final class GitRefsSidebarViewController: NSViewController {
             ])
         case .worktree(let worktree):
             return worktreeMenu(worktree)
+        case .pullRequest(let pullRequest):
+            return pullRequestMenu(pullRequest)
         case .workingCopy, .reflog, nil:
             return nil
         }
@@ -330,6 +357,9 @@ public final class GitRefsSidebarViewController: NSViewController {
         switch title {
         case "Worktrees": return makeMenu([("New Worktree…", "newWorktree", .newWorktree(branch: nil))])
         case "Submodules": return makeMenu([("Update All", "updateAllSubmodules", .updateAllSubmodules)])
+        case Self.pullRequestsTitle:
+            let head = source.refs.first { $0.kind == .localBranch && $0.isHead }
+            return pullRequestsHeaderMenu(head: head, pullRequests: source.pullRequests ?? [])
         default:
             guard let remote = remotesBySectionTitle[title] else { return nil }
             return makeMenu([("Fetch", "fetch", .fetch(remote: remote))])

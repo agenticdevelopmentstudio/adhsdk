@@ -27,6 +27,8 @@ extension GitWindowSession {
         case reflog(GitReflogIntent)
         /// The toolbar's and the Git menu's Undo: a mixed reset to HEAD@{1}.
         case undo
+        /// Check out or create a pull request (GitWindowSession+PullRequests.swift).
+        case pullRequest(GitPullRequestIntent)
     }
 
     // MARK: - Toolbar verbs
@@ -69,7 +71,9 @@ extension GitWindowSession {
         case .diff(let intent): await run(intent)
         case .operation(let step): await runOperation(step)
         case .merge(let intent): await run(intent)
-        case .fetch: await execute(.fetch(remote: nil))
+        case .fetch:
+            await execute(.fetch(remote: nil))
+            model.pullRequestList?.load(force: true)
         case .pull: await execute(.pull)
         case .lfsFetch: await execute(.lfsFetch)
         case .lfsPull: await execute(.lfsPull)
@@ -80,6 +84,7 @@ extension GitWindowSession {
             if !model.stashes.isEmpty { await execute(.stashPop(index: 0)) }
         case .reflog(let intent): await run(intent)
         case .undo: await undoLastAction()
+        case .pullRequest(let intent): await runPullRequest(intent)
         }
     }
 
@@ -571,7 +576,7 @@ extension GitWindowSession {
     /// and a refusal is shown as git words it. Any other branch with an upstream goes to its
     /// `@{push}`, by refspec, tracking untouched; when git names no destination, nothing is
     /// pushed. Only a branch with no upstream is pushed under its own name, setting it.
-    private func push(_ branch: GitRef) async {
+    func push(_ branch: GitRef) async {
         if branch.upstream != nil {
             if branch.fullName == model.headBranch?.fullName {
                 await execute(.push)
@@ -725,14 +730,14 @@ extension GitWindowSession {
         presenter?.showFailure(title: title, message: GitClientError.userMessage(of: error))
     }
 
-    private func showFailure(title: String, message: String) {
+    func showFailure(title: String, message: String) {
         guard !Task.isCancelled else { return }
         Self.logger.error("\(title, privacy: .public)")
         presenter?.showFailure(title: title, message: message)
     }
 
     /// Runs `body` with the overview's spinner on and `onBusyChange` told, then off again.
-    private func whileGitRuns<T>(_ body: () async throws -> T) async rethrows -> T {
+    func whileGitRuns<T>(_ body: () async throws -> T) async rethrows -> T {
         overviewPane.setBusy(true)
         onBusyChange?(true)
         defer {

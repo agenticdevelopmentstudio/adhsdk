@@ -61,6 +61,17 @@ public final class GitRepositoryModel: GitRefsDataSource, GitHistoryDataSource, 
 
     private var observers: [WeakObserver] = []
 
+    /// Commit signatures, checked lazily for the rows the history draws and cached by sha
+    /// for the model's life (GitRepositoryModel+Signatures.swift). Each batch that lands
+    /// posts `.history`; one that fails is logged.
+    private(set) lazy var signatureLoader = GitShaBatchLoader<GitSignature>(
+        provider: { [client = self.client, root = self.root] shas in
+            try await client.signatures(for: shas, in: root)
+        },
+        onLoad: { [weak self] in self?.notify([.history]) },
+        onFailure: { [weak self] error in self?.logFailure("signatures", error) }
+    )
+
     public init(root: URL, client: GitClient = .shared, watcher: GitRepositoryWatching) {
         self.root = root
         self.client = client

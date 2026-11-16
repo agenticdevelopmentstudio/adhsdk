@@ -31,3 +31,7 @@ The root view carries `git.blame`, its viewer `git.blame.lines` (with `.text` an
 
 The root view carries `git.fileHistory`, the split `git.fileHistory.split`, the list's scroll view `git.fileHistory.scroll`, its table `git.fileHistory.table`, each row view `git.fileHistory.row`, each cell `git.fileHistory.commit` with `git.fileHistory.subject` and `git.fileHistory.details`, the error label `git.fileHistory.error`, and the diff's own `git.diff`.
 
+### Pull requests
+
+Rows carry `git.sidebar.pullRequests.<number>` and their menu items `git.sidebar.pullRequests.menu.<checkout|open|copyURL|create>`. The detail's root view carries `git.pullRequest`, its fields `git.pullRequest.<title|number|state|author|branches|review|checks|updated>` in the grid `git.pullRequest.fields`, and its buttons `git.pullRequest.open` and `git.pullRequest.checkout` in `git.pullRequest.buttons`. The form's window carries `git.pullRequest.form`, its controls `git.pullRequest.form.<title|body|bodyScroll|base|draft>` in `git.pullRequest.form.fields`.
+

@@ -29,6 +29,8 @@ final class GitWindowSession {
         case history
         /// The reflog browser.
         case reflog
+        /// A pull request, by number, in the centre pane (GitWindowSession+PullRequests.swift).
+        case pullRequest(Int)
     }
 
     let model: GitRepositoryModel
@@ -47,6 +49,8 @@ final class GitWindowSession {
     let reflog = GitReflogViewController()
     /// The reflog read in flight or last finished; tests await it.
     private(set) var reflogLoadTask: Task<Void, Never>?
+    /// The pull request selected in the sidebar, in the centre pane.
+    let pullRequestView = GitPullRequestViewController()
     /// The in-progress operation banner, above the overview pane's content.
     let banner = GitOperationBannerViewController()
 
@@ -161,6 +165,7 @@ final class GitWindowSession {
             self?.modelDidChange(changes)
         }
         configureAgentSessions()
+        configureSignatures()
     }
 
     /// One divider layout per repository, so two Git windows never share theirs.
@@ -185,6 +190,7 @@ final class GitWindowSession {
         actionTask?.cancel()
         mergeOpenTask?.cancel()
         commandLog.stop()
+        model.pullRequestList?.stop()
         model.stop()
     }
 
@@ -196,7 +202,7 @@ final class GitWindowSession {
     /// detached HEAD there is no branch row: the history is shown with no row
     /// selected, so the sidebar never claims the working copy is on screen.
     func search(_ text: String) {
-        if selection == .workingCopy || selection == .reflog,
+        if selection == .workingCopy || selection == .reflog || selection.isPullRequest,
            !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
            !selectCheckedOutBranch() {
             selection = .history
@@ -237,7 +243,10 @@ final class GitWindowSession {
             sidebar.reload()
             onRefsChange?()
         }
-        if changes.contains(.history) { history.reload() }
+        if changes.contains(.history) {
+            history.reload()
+            detail.reloadSignature()
+        }
         if workingCopyChanged { workingCopy.reload() } else if changes.contains(.refs) { workingCopy.reloadLFS() }
         if workingCopyChanged || changes.contains(.refs) { workingCopy.canAmend = model.hasCommits }
         if !changes.isDisjoint(with: [.refs, .history]) { reapplyRefSelection() }
@@ -433,6 +442,21 @@ extension GitWindowSession: GitRefsSidebarDelegate {
         centre.show(reflog)
         clearDiff()
         reloadReflog()
+    }
+
+    func sidebar(_ sidebar: GitRefsSidebarViewController, didRequestPullRequest intent: GitPullRequestIntent) {
+        guard case .show(let pullRequest) = intent else {
+            requestPullRequest(intent)
+            return
+        }
+        selection = .pullRequest(pullRequest.number)
+        loadGeneration += 1
+        appliedRefTarget = nil
+        detailHost.clearError()
+        detail.show(commit: nil)
+        pullRequestView.show(pullRequest)
+        centre.show(pullRequestView)
+        clearDiff()
     }
 
     func sidebar(_ sidebar: GitRefsSidebarViewController, didSelectStash stash: GitStash) {
@@ -758,6 +782,7 @@ final class GitWindowHistoryPaneViewController: GitWindowContainerViewController
         switch content {
         case is GitWorkingCopyViewController: paneTitle = "Working Copy"
         case is GitReflogViewController: paneTitle = "Reflog"
+        case is GitPullRequestViewController: paneTitle = "Pull Request"
         default: paneTitle = "History"
         }
     }

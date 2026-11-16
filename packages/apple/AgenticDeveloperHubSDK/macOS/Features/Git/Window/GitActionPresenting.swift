@@ -68,6 +68,11 @@ public protocol GitActionPresenting: AnyObject {
     func showFailure(title: String, message: String)
     /// The plan as the user edited it in the rebase editor; nil when cancelled.
     func editRebase(_ plan: GitRebasePlan) async -> GitRebasePlan?
+    /// The new pull request's form for branch `head`, filled with `defaultTitle` and
+    /// `defaultBody`, its base picked from `bases`; nil when cancelled
+    /// (GitAlertPresenter+PullRequest.swift).
+    func createPullRequest(head: String, defaultTitle: String, defaultBody: String,
+                           bases: [String]) async -> GitPullRequestDraft?
 }
 
 /// `GitActionPresenting` as `NSAlert` sheets and the rebase editor's window sheet on
@@ -237,7 +242,7 @@ public final class GitAlertPresenter: GitActionPresenting {
     /// Runs `alert` as a sheet on the window and returns how it ended; nil when there
     /// is no window to attach it to. The window closing first ends the sheet and
     /// answers `.cancel`.
-    private func present(_ alert: NSAlert, purpose: String) async -> NSApplication.ModalResponse? {
+    func present(_ alert: NSAlert, purpose: String) async -> NSApplication.ModalResponse? {
         let endSheet = endSheet
         let beginSheet = beginSheet
         return await present(

@@ -71,6 +71,9 @@ public final class GitWindowFeature: AppFeature {
     /// Where the agent sessions shown beside commits and branches come from; nil leaves
     /// them absent. Read-only.
     private let sessionsProvider: (any GitSessionsProviding)?
+    /// The user's own `gh`, shared by every window's Pull Requests section; nil leaves
+    /// the section absent.
+    private let gitHub: GitHubCLI?
     /// Opens an agent session by id, for every window; nil leaves the sessions shown
     /// but unclickable.
     public var onOpenAgentSession: ((String) -> Void)? {
@@ -93,6 +96,7 @@ public final class GitWindowFeature: AppFeature {
     ///     shows `NotInRepositoryAlert`.
     ///   - sessions: the agent sessions shown beside commits and branches; nil (no
     ///     daemon) leaves them absent.
+    ///   - gitHub: the `gh` the Pull Requests section reads through; nil leaves it absent.
     public init(
         commandRegistry registry: CommandRegistry,
         database: ProjectDatabase,
@@ -105,9 +109,11 @@ public final class GitWindowFeature: AppFeature {
         terminals: TerminalPaneFamily? = nil,
         openRoots: UserSetting<[String]> = UserSettings.openGitWindowRoots,
         notInRepository: (@MainActor (URL) -> Void)? = nil,
-        sessions: (any GitSessionsProviding)? = nil
+        sessions: (any GitSessionsProviding)? = nil,
+        gitHub: GitHubCLI? = nil
     ) {
         self.sessionsProvider = sessions
+        self.gitHub = gitHub
         self.resources = resources
         self.userGrammarsDirectory = userGrammarsDirectory
         self.extensionGrammars = extensionGrammars
@@ -317,6 +323,9 @@ public final class GitWindowFeature: AppFeature {
             root: root, client: client, watcher: GitDeferredRepositoryWatcher(root: root, client: client))
         let session = GitWindowSession(model: model, client: client, coloring: coloring(), sessions: sessionsProvider)
         session.onOpenAgentSession = onOpenAgentSession
+        if let gitHub {
+            session.configurePullRequests(GitPullRequestsModel(model: model, gitHub: gitHub, client: client))
+        }
         sessions[context.project.id] = session
         return session
     }

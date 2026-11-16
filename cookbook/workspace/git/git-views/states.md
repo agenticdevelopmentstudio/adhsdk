@@ -50,3 +50,9 @@
 - **No commits**: no rows; the diff is cleared.
 - **History failed**: no rows, the diff cleared, the error's description shown until the next `show`.
 
+### Pull requests
+
+- **gh unavailable**: no section, and no explanation.
+- **No open pull requests**: the section with no rows; its header menu can still create one.
+- **Nothing selected in the detail**: no fields; both buttons disabled.
+

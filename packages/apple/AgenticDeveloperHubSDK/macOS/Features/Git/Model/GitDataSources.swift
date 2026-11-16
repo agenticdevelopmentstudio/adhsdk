@@ -11,6 +11,9 @@ import AgenticDeveloperHubSDKCore
     var worktrees: [GitWorktree] { get }
     /// The operation in progress; while there is one, nothing offers to merge or rebase.
     var operationState: GitOperationState { get }
+    /// The open pull requests (GitDataSources+PullRequests.swift): nil when `gh` is
+    /// unavailable, which leaves the Pull Requests section absent; empty when none is open.
+    var pullRequests: [GitPullRequest]? { get }
 }
 
 /// The commit list, its graph rows, and the query that selects it.
@@ -25,6 +28,12 @@ import AgenticDeveloperHubSDKCore
     func setQuery(_ query: GitLogQuery) async
     func loadMore() async
     func refs(at commitID: String) -> [GitRef]
+    /// A commit's signature, cached; nil when it has not been checked yet. Defaults to nil
+    /// (GitDataSources+Signatures.swift).
+    func signature(for sha: String) -> GitSignature?
+    /// Asks for the signatures of the rows on screen: coalesced and debounced, and the
+    /// owner hears `.history` when results land. Defaults to doing nothing.
+    func requestSignatures(for shas: [String])
 }
 
 /// The working copy split into its staged and unstaged columns.
