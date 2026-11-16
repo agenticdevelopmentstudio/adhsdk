@@ -1,7 +1,7 @@
 import Foundation
 import AgenticDeveloperHubSDKCore
 
-/// The twenty `browser_*` tools. A `ChatToolSource`, so the same object
+/// The twenty-one `browser_*` tools. A `ChatToolSource`, so the same object
 /// serves the in-app chats and the MCP server.
 public final class BrowserToolSet: ChatToolSource, @unchecked Sendable {
 
@@ -9,7 +9,7 @@ public final class BrowserToolSet: ChatToolSource, @unchecked Sendable {
         "browser_list", "browser_open", "browser_navigate", "browser_back", "browser_forward",
         "browser_snapshot", "browser_text", "browser_find", "browser_click", "browser_type", "browser_fill",
         "browser_select", "browser_press_key", "browser_hover", "browser_scroll", "browser_wait_for",
-        "browser_screenshot", "browser_click_at", "browser_console", "browser_evaluate"
+        "browser_screenshot", "browser_click_at", "browser_console", "browser_evaluate", "browser_history"
     ]
 
     /// The tools that only look at a pane. Agent access `readOnly` lets
@@ -17,7 +17,7 @@ public final class BrowserToolSet: ChatToolSource, @unchecked Sendable {
     /// one pane, so access never refuses it.
     public static let readToolNames: Set<String> = [
         "browser_snapshot", "browser_find", "browser_text", "browser_console",
-        "browser_screenshot", "browser_list", "browser_wait_for"
+        "browser_screenshot", "browser_list", "browser_wait_for", "browser_history"
     ]
 
     static let readOnlyRefusal =
@@ -165,6 +165,10 @@ public final class BrowserToolSet: ChatToolSource, @unchecked Sendable {
             switch tool {
             case "browser_type": ["text", "url"]
             case "browser_fill": ["value", "url"]
+            // The store and the back/forward list hold the real words, and
+            // the reply is concealed again, so a query a model writes with a
+            // stand-in finds what the stand-in hides.
+            case "browser_history": ["query"]
             default: ["url"]
             }
         }
@@ -368,6 +372,7 @@ public final class BrowserToolSet: ChatToolSource, @unchecked Sendable {
             }
         }
         let pane = try resolvePane(args, caller: caller)
+        if name == "browser_history" { return try await history(args, pane) }
         // Refused at once when the pane already refuses, rather than after
         // waiting behind other callers; checked again once dequeued. The
         // pane's project is put on screen only once access has passed, so a
@@ -384,6 +389,43 @@ public final class BrowserToolSet: ChatToolSource, @unchecked Sendable {
                 if let reply = try await self.dispatchActions(name, args, automation) { return reply }
                 throw ToolError(sentence: "unknown tool \(name)")
             }
+        }
+    }
+
+    /// `browser_history`: the visits the pane's Agent can see history allows.
+    /// The pane's access is checked as for every tool, closed privacy
+    /// included, before the setting is looked at. It does not wait at the
+    /// pane's drive gate or put the pane's project on screen: it reads
+    /// neither the page nor anything the page can change, only the tab's
+    /// back/forward list and the store, so there is no page to drive and
+    /// nothing for the user to watch.
+    @MainActor
+    private func history(_ args: Arguments, _ pane: BrowserPaneHandle) async throws -> String {
+        let name = "browser_history"
+        try requireAccess(for: name, on: pane)
+        if let value = args.values["query"], !(value is NSNull), !(value is String) {
+            throw ToolError(sentence: "\(name) needs query as a string")
+        }
+        let limit: Int
+        if let value = args.values["limit"], !(value is NSNull) {
+            guard let number = args.optionalInt("limit") else {
+                throw ToolError(sentence: "\(name) needs limit as an integer")
+            }
+            limit = number
+        } else {
+            limit = BrowserHistoryTool.defaultLimit
+        }
+        let privacy = try requireSwitches(for: name, paneID: pane.id)
+        // The handle is looked up again so the setting is the one in force
+        // now (`effective-access-per-pane`); `requireSwitches` has just
+        // found it.
+        let now = directory.browserPanes().first { $0.id == pane.id } ?? pane
+        // Read here, on the main actor, and only when the setting allows it.
+        let backForward = now.historyAccess == .currentTab ? now.backForward : []
+        return try await concealed(name, args, privacy, paneID: pane.id) { args in
+            try await BrowserHistoryTool.run(
+                access: now.historyAccess, query: args.optionalString("query"), limit: limit,
+                store: now.historyStore, backForward: backForward, privacy: privacy)
         }
     }
 
@@ -583,7 +625,7 @@ public final class BrowserToolSet: ChatToolSource, @unchecked Sendable {
     }
 
     static let definitions: [ToolDefinition] = [
-        tool("browser_list", "List the open Browser panes: id, title, url, project, tab, engine (safari or chrome), access (full, or read only: snapshot, find, text, console, screenshot and wait only), and which one is the default for this caller.", [:]),
+        tool("browser_list", "List the open Browser panes: id, title, url, project, tab, engine (safari or chrome), access (full, or read only: snapshot, find, text, console, screenshot, wait and history only), and which one is the default for this caller.", [:]),
         tool("browser_open", "Open a new Browser pane beside the caller and load a URL (http or https), or the home page (else a blank page) when no URL is given. Every other tool drives a Safari pane and a Chrome pane the same way.", [
             "url": ToolJSONSchema.string("The page to load; optional"),
             "engine": ToolJSONSchema.string("safari (WebKit) or chrome (Chromium); optional, safari by default")
@@ -617,7 +659,12 @@ public final class BrowserToolSet: ChatToolSource, @unchecked Sendable {
         tool("browser_screenshot", "A PNG of the viewport, or of one element by ref. Its pixels are the coordinates browser_click_at takes.", refGen),
         tool("browser_click_at", "A real mouse click at a point of the last browser_screenshot, in that image's pixels. Take a screenshot first; browser_click by ref is the usual way.", ["pane_id": paneID, "x": ToolJSONSchema.number("Pixels from the left edge of the last screenshot"), "y": ToolJSONSchema.number("Pixels from the top edge of the last screenshot")], required: ["x", "y"]),
         tool("browser_console", "The page's last console messages and errors.", ["pane_id": paneID, "level": ToolJSONSchema.string("log, info, warn, error or debug")]),
-        tool("browser_evaluate", "Evaluate a JavaScript expression in the page and return its JSON. Off unless enabled in Settings.", ["pane_id": paneID, "expression": ToolJSONSchema.string("The expression")], required: ["expression"])
+        tool("browser_evaluate", "Evaluate a JavaScript expression in the page and return its JSON. Off unless enabled in Settings.", ["pane_id": paneID, "expression": ToolJSONSchema.string("The expression")], required: ["expression"]),
+        tool("browser_history", "Recent visits the user allows the agent to see: all history, this tab's back/forward list, or none (refused).", [
+            "pane_id": paneID,
+            "query": ToolJSONSchema.string("Keep only visits whose title or address contains this, case-insensitive; optional"),
+            "limit": ToolJSONSchema.integer("At most this many visits, newest first; default 50, at most 200")
+        ])
     ]
     // swiftlint:enable line_length
 }

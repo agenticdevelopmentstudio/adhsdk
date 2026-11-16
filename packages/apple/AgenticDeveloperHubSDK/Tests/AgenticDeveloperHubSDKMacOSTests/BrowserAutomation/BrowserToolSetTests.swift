@@ -67,9 +67,9 @@ final class BrowserToolSetTests: XCTestCase {
         return await tools.callTool(name: name, argumentsJSON: data, caller: caller)
     }
 
-    func testAdvertisesTwentyToolsWithObjectSchemas() async {
+    func testAdvertisesTwentyOneToolsWithObjectSchemas() async {
         let defs = await tools.toolDefinitions()
-        XCTAssertEqual(defs.count, 20)
+        XCTAssertEqual(defs.count, 21)
         XCTAssertEqual(Set(defs.map(\.name)), Set(BrowserToolSet.toolNames))
         for def in defs {
             let schema = try! JSONSerialization.jsonObject(with: def.parametersJSONSchema) as! [String: Any]

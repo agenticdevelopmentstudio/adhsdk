@@ -22,21 +22,36 @@ public struct BrowserPaneHandle {
     /// The pane's Agent Privacy, with the words as they stood when the handle
     /// was made — fresh for each call once it is dequeued, like `access`.
     public let agentPrivacy: BrowserAgentPrivacy
+    /// The pane's effective Agent can see history setting — its own
+    /// override, else the global value — as it stood when the handle was
+    /// made, fresh for each call like `access`.
+    public let historyAccess: BrowserAgentHistoryAccess
+    /// The history store `browser_history` reads under All history; nil when
+    /// the host has none.
+    public let historyStore: BrowserHistoryStore?
 
     public init(
         id: String, project: String, tab: String, automation: BrowserAutomation,
         engine: BrowserEngineKind = .safari,
         access: BrowserAgentAccess = .full, isPausedForAgent: Bool = false,
-        agentPrivacy: BrowserAgentPrivacy = .off
+        agentPrivacy: BrowserAgentPrivacy = .off,
+        historyAccess: BrowserAgentHistoryAccess = .none,
+        historyStore: BrowserHistoryStore? = nil
     ) {
         self.id = id; self.project = project; self.tab = tab; self.automation = automation
         self.engine = engine
         self.access = access; self.isPausedForAgent = isPausedForAgent
         self.agentPrivacy = agentPrivacy
+        self.historyAccess = historyAccess
+        self.historyStore = historyStore
     }
 
     public var title: String { automation.currentTitle }
     public var url: String { automation.currentURL }
+    /// The back/forward list of the tab the agent drives, read live from
+    /// the automation's page: current page, then back nearest first, then
+    /// forward nearest first.
+    public var backForward: [BrowserVisitLine] { automation.driver.backForwardVisits }
 }
 
 /// How the tool set finds Browser panes. The app supplies the real one over

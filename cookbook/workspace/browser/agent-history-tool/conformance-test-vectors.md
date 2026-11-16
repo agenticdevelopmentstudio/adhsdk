@@ -4,7 +4,7 @@
 | agent-history-tool-001 | access-three-choices, access-default-none, access-setting-key | Read the setting's cases and default with no stored value | Cases "All history", "Current tab only", "None" in that order; key `browser.agent.history_access`; default None |
 | agent-history-tool-002 | access-pane-overridable | Write Current tab only into a pane's layered store | The key is not global-only; the pane store reports an override; the global value is still None |
 | agent-history-tool-003 | access-row-placement | Build the Privacy and Security topic | Its History group holds a pop-up row titled "Agent can see history" with the three choices |
-| agent-history-tool-004 | tool-listed, tool-arguments | List the browser tool set's tools | `browser_history` is listed with the required description and optional `pane`, `query`, `limit` |
+| agent-history-tool-004 | tool-listed, tool-arguments | List the browser tool set's tools | `browser_history` is listed with the required description and optional `pane_id`, `query`, `limit` |
 | agent-history-tool-005 | none-refuses-with-reason | Access None; the store has 5 visits | The call fails with the exact settings sentence; the store and back/forward list are not read |
 | agent-history-tool-006 | current-tab-back-forward-only | Access Current tab only; the store has 5 visits; the driven tab's back/forward list has 2 entries | The reply has exactly 2 visit lines, both from the back/forward list |
 | agent-history-tool-007 | current-tab-newest-first | Access Current tab only; back/forward entries A (oldest), B, C; `query` "b" | The reply lists only B; with no query it lists C, B, A |

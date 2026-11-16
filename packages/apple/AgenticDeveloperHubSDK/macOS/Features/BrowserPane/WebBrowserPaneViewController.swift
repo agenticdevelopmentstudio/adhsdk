@@ -174,6 +174,14 @@ open class WebBrowserPaneViewController: NSViewController {
     /// The pane's effective Agent access, read from its own layered settings
     /// so a per-pane override counts.
     public var agentAccess: BrowserAgentAccess { settings.get(UserSettings.browserPrivacyAgentAccess) }
+    /// The pane's effective Agent can see history, read from its own layered
+    /// settings so a per-pane override counts.
+    public var agentHistoryAccess: BrowserAgentHistoryAccess {
+        settings.get(UserSettings.browserAgentHistoryAccess)
+    }
+    /// The history store this pane records into, which `browser_history`
+    /// reads under All history.
+    public var historyStore: BrowserHistoryStore? { history }
     /// Whether the agent is held off this pane: its events are paused and its
     /// Agent while paused setting says the agent pauses too.
     public var isPausedForAgent: Bool {

@@ -2,7 +2,7 @@
 id: 4ef7f4f9-1fa0-4267-ad82-0f35ba92a7d1
 title: "Agent History Tool"
 type: ingredient
-version: 0.1.0
+version: 0.1.1
 status: draft
 language: en
 created: 2026-11-15
@@ -84,7 +84,7 @@ features design, section 1.4, and its phase 1 plan, Tasks 7 and 10).
   `browser_history` with the description "Recent visits the user allows the
   agent to see: all history, this tab's back/forward list, or none
   (refused)."
-- **tool-arguments**: The tool MUST accept the optional arguments `pane`
+- **tool-arguments**: The tool MUST accept the optional arguments `pane_id`
   (choosing the pane as the other browser tools do), `query` (a string) and
   `limit` (an integer), and MUST refuse a `query` that is not a string or a
   `limit` that is not an integer with the tool set's usual argument error.
@@ -177,7 +177,7 @@ features design, section 1.4, and its phase 1 plan, Tasks 7 and 10).
 | agent-history-tool-001 | access-three-choices, access-default-none, access-setting-key | Read the setting's cases and default with no stored value | Cases "All history", "Current tab only", "None" in that order; key `browser.agent.history_access`; default None |
 | agent-history-tool-002 | access-pane-overridable | Write Current tab only into a pane's layered store | The key is not global-only; the pane store reports an override; the global value is still None |
 | agent-history-tool-003 | access-row-placement | Build the Privacy and Security topic | Its History group holds a pop-up row titled "Agent can see history" with the three choices |
-| agent-history-tool-004 | tool-listed, tool-arguments | List the browser tool set's tools | `browser_history` is listed with the required description and optional `pane`, `query`, `limit` |
+| agent-history-tool-004 | tool-listed, tool-arguments | List the browser tool set's tools | `browser_history` is listed with the required description and optional `pane_id`, `query`, `limit` |
 | agent-history-tool-005 | none-refuses-with-reason | Access None; the store has 5 visits | The call fails with the exact settings sentence; the store and back/forward list are not read |
 | agent-history-tool-006 | current-tab-back-forward-only | Access Current tab only; the store has 5 visits; the driven tab's back/forward list has 2 entries | The reply has exactly 2 visit lines, both from the back/forward list |
 | agent-history-tool-007 | current-tab-newest-first | Access Current tab only; back/forward entries A (oldest), B, C; `query` "b" | The reply lists only B; with no query it lists C, B, A |
@@ -299,6 +299,10 @@ reach the agent as tool errors.
 |----------|----------|-------------|
 | macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Automation/BrowserHistoryTool.swift` | planned |
 | macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/BrowserSettings.swift` | unverified |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Automation/BrowserToolSet.swift` | unverified |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Automation/BrowserPaneDirectory.swift` | unverified |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/BrowserEngine.swift` | unverified |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/WebKitBrowserEngine.swift` | unverified |
 
 ## Design Decisions
 
@@ -345,4 +349,5 @@ checks are run when the code lands and the recipe is confirmed against it.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 0.1.1 | 2026-11-15 | Mike Fullerton | The tool's pane argument is pane_id, as every other browser tool's is |
 | 0.1.0 | 2026-11-15 | Mike Fullerton | Initial creation (design-first, from the more privacy features design) |

@@ -20,7 +20,7 @@
   `browser_history` with the description "Recent visits the user allows the
   agent to see: all history, this tab's back/forward list, or none
   (refused)."
-- **tool-arguments**: The tool MUST accept the optional arguments `pane`
+- **tool-arguments**: The tool MUST accept the optional arguments `pane_id`
   (choosing the pane as the other browser tools do), `query` (a string) and
   `limit` (an integer), and MUST refuse a `query` that is not a string or a
   `limit` that is not an integer with the tool set's usual argument error.

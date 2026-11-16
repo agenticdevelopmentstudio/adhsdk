@@ -60,11 +60,24 @@ public protocol BrowserPageDriver: AnyObject {
 
     /// A real mouse click at a viewport point, in CSS pixels.
     func nativeClick(atViewportX viewportX: Double, viewportY: Double) async throws
+
+    /// This page's back/forward list as `browser_history` lists it under
+    /// Current tab only: the current page, then the back list nearest
+    /// first, then the forward list nearest first. Read on the main actor.
+    var backForwardVisits: [BrowserVisitLine] { get }
 }
 
 extension BrowserPageDriver {
     /// An engine that refuses nothing never sends.
     public var navigationRefusals: AnyPublisher<String, Never> { Empty().eraseToAnyPublisher() }
+
+    /// An engine that cannot read its own back/forward list offers the one
+    /// entry it does know, the page it is showing, rather than a list it
+    /// would have to invent.
+    public var backForwardVisits: [BrowserVisitLine] {
+        guard let url else { return [] }
+        return [BrowserVisitLine(title: title ?? "", url: url.absoluteString, when: nil)]
+    }
 }
 
 /// What an engine tells the pane that hosts it. The pane owns everything an

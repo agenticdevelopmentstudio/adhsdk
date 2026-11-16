@@ -33,6 +33,22 @@ public class WebKitPageDriver: NSObject, BrowserPageDriver {
         webView.publisher(for: \.isLoading, options: [.new]).eraseToAnyPublisher()
     }
 
+    /// WebKit keeps no visit time on a list item, so `when` is nil. The
+    /// current item's title is the web view's, which follows a title the
+    /// page sets after loading; `backList` runs farthest first, so it is
+    /// reversed.
+    public var backForwardVisits: [BrowserVisitLine] {
+        let list = webView.backForwardList
+        func line(_ item: WKBackForwardListItem, title: String? = nil) -> BrowserVisitLine {
+            BrowserVisitLine(title: title ?? item.title ?? "", url: item.url.absoluteString, when: nil)
+        }
+        var lines: [BrowserVisitLine] = []
+        if let current = list.currentItem { lines.append(line(current, title: webView.title)) }
+        lines += list.backList.reversed().map { line($0) }
+        lines += list.forwardList.map { line($0) }
+        return lines
+    }
+
     public var viewportSize: CGSize {
         let zoom = webView.pageZoom
         return CGSize(width: webView.bounds.width / zoom, height: webView.bounds.height / zoom)
