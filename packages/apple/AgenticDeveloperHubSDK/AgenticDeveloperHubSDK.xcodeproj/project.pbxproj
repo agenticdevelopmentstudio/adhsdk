@@ -320,6 +320,7 @@
 		083D3448D5CA66DE936143AD /* AgenticDeveloperHubSDKUI-macOS.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32A2D6DCF1DCC4BC4671793A /* AgenticDeveloperHubSDKUI-macOS.framework */; };
 		08434A61F2E568D73C0173C8 /* KeychainHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1479C8F5A4B8F5D19178D90 /* KeychainHelper.swift */; };
 		0846086B0D1CF7B45518B1B0 /* ProviderModelManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5C7FA5A8EED3AF2F8E30501 /* ProviderModelManager.swift */; };
+		08577F722A45B9E76FB167A6 /* SafariExtensionsTopicTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F91873C8F91469630A4749ED /* SafariExtensionsTopicTests.swift */; };
 		085817DF3FF23F109B738C7F /* ExtensionWebviewViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E784A4D2CEBD53DFA10FB7E /* ExtensionWebviewViewController.swift */; };
 		08734892A6272EF2ADA59C7B /* MarkdownText.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71CEDB3091BE1D70C3D114EB /* MarkdownText.swift */; };
 		08753A5130B4D3F9CA92D00C /* AutomationSettingsPanelViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA85DDAEA29E116C277E2EED /* AutomationSettingsPanelViewController.swift */; };
@@ -587,6 +588,7 @@
 		16F864C5CB6F1B88E4E1FCC5 /* SubprocessChannel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DE0C68765924BA0FD64A167 /* SubprocessChannel.swift */; };
 		16FE08AA337F3BEB257FDBF3 /* OpenAPIRuntime in Frameworks */ = {isa = PBXBuildFile; productRef = CC6D43F0034D95C4492B6145 /* OpenAPIRuntime */; };
 		170C2222853F6B87A0FC095D /* InvitationsAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E4194C3D27997463CFF4A57 /* InvitationsAdapter.swift */; };
+		172096B399AF5B9971EDC1E0 /* ExtensionURLPromptController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BDFB98D644684F0F89B0A7B2 /* ExtensionURLPromptController.swift */; };
 		1724F212122C5C4473A11A15 /* ProjectReconciler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0119D7499D8D5259ECE8C186 /* ProjectReconciler.swift */; };
 		17312D5565E0DA76296581B7 /* AgenticDeveloperHubSDKSync.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 7EA0DB6D4238ACD85E05AD70 /* AgenticDeveloperHubSDKSync.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		174F4C3CF3B186CC3E38710D /* PartnerProcess.swift in Sources */ = {isa = PBXBuildFile; fileRef = D934766A89D26337D00A6C82 /* PartnerProcess.swift */; };
@@ -10103,6 +10105,7 @@
 		BDBA27736BD3FA681FE45F15 /* PermissionPrompt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionPrompt.swift; sourceTree = "<group>"; };
 		BDC816F5089584227A6F5C3A /* ChatViewRebuildTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatViewRebuildTests.swift; sourceTree = "<group>"; };
 		BDEB34208DB0B1BF43ADFDFB /* PartnerPermissionsSettingsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PartnerPermissionsSettingsViewController.swift; sourceTree = "<group>"; };
+		BDFB98D644684F0F89B0A7B2 /* ExtensionURLPromptController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExtensionURLPromptController.swift; sourceTree = "<group>"; };
 		BE0CD5E6DE43B90AC6FCDC83 /* ProjectBillablesSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectBillablesSection.swift; sourceTree = "<group>"; };
 		BE2E916039D2EE3FC916C510 /* IntegrationRecordsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntegrationRecordsTests.swift; sourceTree = "<group>"; };
 		BE35F287F6945BA4462C6F23 /* AppModalWindowSessionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModalWindowSessionTests.swift; sourceTree = "<group>"; };
@@ -10807,6 +10810,7 @@
 		F912C8390A0203A94C32E146 /* Slug.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Slug.swift; sourceTree = "<group>"; };
 		F9149200D8232099C168A136 /* HubError+Wrap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "HubError+Wrap.swift"; sourceTree = "<group>"; };
 		F916B4469D48DE38A8B6CD6A /* SubprocessChannelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubprocessChannelTests.swift; sourceTree = "<group>"; };
+		F91873C8F91469630A4749ED /* SafariExtensionsTopicTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SafariExtensionsTopicTests.swift; sourceTree = "<group>"; };
 		F92A41A4A4453F013115E30A /* WorkTrackingModelsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkTrackingModelsTests.swift; sourceTree = "<group>"; };
 		F94EB4ACF99524D9B1866F3A /* DisplayMonitorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisplayMonitorTests.swift; sourceTree = "<group>"; };
 		F9AC130C45D28B8874050DE5 /* WindowManagerRecentsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowManagerRecentsTests.swift; sourceTree = "<group>"; };
@@ -14109,6 +14113,7 @@
 				6F47E4346C0F5250A7EE4127 /* BrowserPrivacySettingsDialog.swift */,
 				F34DED85DC60DC8CEF03726F /* BrowserSettingsPanelViewController.swift */,
 				DC90C76912E834A49F962CE0 /* BrowserSiteDataWindowController.swift */,
+				BDFB98D644684F0F89B0A7B2 /* ExtensionURLPromptController.swift */,
 				5D64BF22C82E17CAB9B9DC0A /* OverrideMarker.swift */,
 				4B3788FDB18D448EC02E6C2D /* ProjectBrowserJarsSettingsPanel.swift */,
 				B9DA6D0B7D03FDBA63818FE7 /* SafariExtensionDetailsView.swift */,
@@ -15216,6 +15221,7 @@
 				88FE8E9256C366E285ADFC9D /* ProjectBrowserJarsTests.swift */,
 				0F9C741D89C88460584D9224 /* SafariAppExtensionTests.swift */,
 				59949E88C2DC797F1C0914F4 /* SafariExtensionSettingsTests.swift */,
+				F91873C8F91469630A4749ED /* SafariExtensionsTopicTests.swift */,
 				28FF0E18A5B491AA0B5DDF4F /* StubBrowserEngine.swift */,
 				A8F41FA12AA15D183926F656 /* WebStoreExtensionTests.swift */,
 			);
@@ -23054,6 +23060,7 @@
 				4F44D34ED8042DE13B3D2E5E /* ReviewWorktreeTests.swift in Sources */,
 				6657E6CB3EA433A89E23CC54 /* SafariAppExtensionTests.swift in Sources */,
 				F8FE20D63E4A78B4B80098C3 /* SafariExtensionSettingsTests.swift in Sources */,
+				08577F722A45B9E76FB167A6 /* SafariExtensionsTopicTests.swift in Sources */,
 				89B0A8373CA3D8881BF8BE9F /* ScreenManagerObservationTests.swift in Sources */,
 				3709B9E8AA7F52ECA1F10D33 /* ScreenManagerTests.swift in Sources */,
 				7FBC5A88AD29C451947EF82D /* ScreenMatcherTests.swift in Sources */,
@@ -25019,6 +25026,7 @@
 				D6FD8C722F09B65EB541B97D /* ExtensionTreeDataSource.swift in Sources */,
 				A63F7A72714E9CFA1D957774 /* ExtensionTreeRowTable.swift in Sources */,
 				2BC57D34757F55DB23D425B9 /* ExtensionTreeViewController.swift in Sources */,
+				172096B399AF5B9971EDC1E0 /* ExtensionURLPromptController.swift in Sources */,
 				DCD93AF609E559F30A6BDF1C /* ExtensionWebviewPanePlacer.swift in Sources */,
 				461D76A516079F0583064411 /* ExtensionWebviewPresenting.swift in Sources */,
 				085817DF3FF23F109B738C7F /* ExtensionWebviewViewController.swift in Sources */,

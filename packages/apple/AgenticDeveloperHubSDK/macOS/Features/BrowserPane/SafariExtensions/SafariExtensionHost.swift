@@ -373,6 +373,71 @@ public final class SafariExtensionHost: NSObject {
         return installed
     }
 
+    /// Installs an extension the person already has on disk: a `.crx`
+    /// package, a `.zip` of an unpacked extension, or a folder holding
+    /// `manifest.json`. It goes through the same stage → confirm → commit
+    /// path as a store install, so declining leaves the library as it was.
+    /// Anything else throws `Failure.unsupportedDownload` before the library
+    /// is touched. Returns false when the person declined.
+    public func installDownloaded(at url: URL, presentingOn window: NSWindow? = nil) async throws -> Bool {
+        guard libraryError == nil else { throw Failure.library(libraryError ?? "") }
+        var isDirectory: ObjCBool = false
+        guard FileManager.default.fileExists(atPath: url.path, isDirectory: &isDirectory) else {
+            throw Failure.unsupportedDownload(url)
+        }
+        let staged: URL
+        let provisional = WebStoreExtension.localID(forPath: url.standardizedFileURL.path)
+        if isDirectory.boolValue {
+            guard FileManager.default.fileExists(atPath: url.appendingPathComponent("manifest.json").path) else {
+                throw Failure.unsupportedDownload(url)
+            }
+            staged = try library.stage(copyOf: url, as: provisional)
+        } else if ["crx", "zip"].contains(url.pathExtension.lowercased()) {
+            staged = try library.stage(Data(contentsOf: url), as: provisional)
+        } else {
+            throw Failure.unsupportedDownload(url)
+        }
+        return try await installLocal(staged: staged, provisionalID: provisional, presentingOn: window)
+    }
+
+    /// Installs the `.crx` at the http(s) address `url`: downloads it, then
+    /// installs it as `installDownloaded` would.
+    public func install(fromAddress url: URL, presentingOn window: NSWindow?) async throws -> Bool {
+        guard libraryError == nil else { throw Failure.library(libraryError ?? "") }
+        guard ["http", "https"].contains(url.scheme?.lowercased() ?? "") else { throw Failure.unsupportedDownload(url) }
+        let (data, response) = try await URLSession.shared.data(from: url)
+        if let http = response as? HTTPURLResponse, !(200..<300).contains(http.statusCode) {
+            throw WebStoreExtension.Failure.download("HTTP \(http.statusCode)")
+        }
+        let provisional = WebStoreExtension.localID(forPath: url.absoluteString)
+        let staged = try library.stage(data, as: provisional)
+        return try await installLocal(staged: staged, provisionalID: provisional, presentingOn: window)
+    }
+
+    /// Finishes a local install: the id is the one Chrome derives from the
+    /// manifest's `key` when it has one (so the same extension keeps one id
+    /// wherever it came from), else the provisional one made from where it
+    /// came from.
+    private func installLocal(staged: URL, provisionalID: String, presentingOn window: NSWindow?) async throws -> Bool {
+        var id = provisionalID
+        var stagedURL = staged
+        if let keyed = WebStoreExtension.id(ofManifestAt: staged.appendingPathComponent("manifest.json")),
+           keyed != provisionalID {
+            let destination = library.stagingDirectory(of: keyed)
+            do {
+                try? FileManager.default.removeItem(at: destination)
+                try FileManager.default.moveItem(at: staged, to: destination)
+            } catch {
+                library.discardStaged(provisionalID)
+                throw error
+            }
+            id = keyed
+            stagedURL = destination
+        }
+        return try await installStaged(
+            stagedURL, id: id, presentingOn: window, newRecord: SafariExtensionRecord(id: id, isFromWebStore: false))
+    }
+
     /// The Safari extensions installed on this Mac that are not in the
     /// library yet: what Add… offers.
     public func availableAppExtensions() async -> [SafariAppExtension] {
@@ -385,9 +450,16 @@ public final class SafariExtensionHost: NSObject {
         case notInstalled(String)
         /// A copied Safari extension's app is gone: the name is the app's.
         case appRemoved(String)
+        /// Downloaded… was handed something that is not a `.crx`, a `.zip`
+        /// or a folder with `manifest.json`.
+        case unsupportedDownload(URL)
 
         public var errorDescription: String? {
             switch self {
+            case .unsupportedDownload(let url):
+                "“\(url.lastPathComponent)” is not an extension. Choose a .crx or .zip file, "
+                    + "or a folder with a manifest.json."
+
             case .library(let detail): detail
             case .notInstalled(let id): "No extension \(id) is installed."
             case .appRemoved(let app):
@@ -420,9 +492,17 @@ public final class SafariExtensionHost: NSObject {
             let newOrigins = preview.allRequestedMatchPatterns.map(\.string)
                 .filter { !answeredOrigins.contains($0) }.sorted()
             if existing == nil || !newPermissions.isEmpty || !newOrigins.isEmpty {
-                guard let window, await confirm(
-                    preview, isUpdate: existing != nil, permissions: newPermissions, origins: newOrigins, on: window
-                ) else {
+                let agreed: Bool
+                if let confirmInstall {
+                    agreed = await confirmInstall(preview, existing != nil, newPermissions, newOrigins, window)
+                } else if let window {
+                    agreed = await confirm(
+                        preview, isUpdate: existing != nil, permissions: newPermissions, origins: newOrigins,
+                        on: window)
+                } else {
+                    agreed = false
+                }
+                guard agreed else {
                     library.discardStaged(id)
                     return false
                 }
@@ -457,6 +537,11 @@ public final class SafariExtensionHost: NSObject {
         changed()
         return true
     }
+
+    /// Asks whether to install (extension, is an update, new permissions,
+    /// new sites, window). Nil asks with the install sheet, and says no when
+    /// there is no window to show it on; tests set it to answer themselves.
+    var confirmInstall: (@MainActor (WKWebExtension, Bool, [String], [String], NSWindow?) async -> Bool)?
 
     /// The install sheet: what the extension is and what it may do.
     private func confirm(

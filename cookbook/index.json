@@ -3312,16 +3312,44 @@
       "implementations": [
         {
           "conformance": {
-            "state": "planned"
+            "state": "unverified"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Settings/SafariExtensionsTopicPanel.swift",
+          "platform": "macos"
+        },
+        {
+          "conformance": {
+            "state": "unverified"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Settings/SafariExtensionDetailsView.swift",
+          "platform": "macos"
+        },
+        {
+          "conformance": {
+            "state": "unverified"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Settings/ExtensionURLPromptController.swift",
           "platform": "macos"
         },
         {
           "conformance": {
-            "state": "planned"
+            "state": "unverified"
           },
-          "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Settings/SafariExtensionsTopicPanel.swift",
+          "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/SafariExtensions/SafariExtensionHost.swift",
+          "platform": "macos"
+        },
+        {
+          "conformance": {
+            "state": "unverified"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/SafariExtensions/WebStoreExtension.swift",
+          "platform": "macos"
+        },
+        {
+          "conformance": {
+            "state": "unverified"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/BrowserPane/SafariExtensionsTopicTests.swift",
           "platform": "macos"
         }
       ],

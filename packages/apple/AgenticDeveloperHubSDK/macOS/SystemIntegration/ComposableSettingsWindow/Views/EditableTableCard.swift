@@ -309,6 +309,14 @@ extension ComposableSettings {
             return rows[row].id
         }
 
+        /// Whether the column headers go away while there are no rows — the
+        /// default, since headers over nothing say nothing. A card whose header
+        /// row also carries controls (an add button, say) turns this off, so
+        /// those controls stay reachable when the list is empty.
+        public var hidesHeaderWhenEmpty = true {
+            didSet { tableView.headerView?.isHidden = hidesHeaderWhenEmpty && rows.isEmpty }
+        }
+
         /// The table itself, for layout, tests and accessibility. It takes
         /// the card's own fill, so rows, the space under them and the card
         /// around them read as one surface.
@@ -437,7 +445,7 @@ extension ComposableSettings {
                 tableView.deselectAll(nil)
             }
             emptyLabel.isHidden = !hasEmptyMessage || !rows.isEmpty
-            tableView.headerView?.isHidden = rows.isEmpty
+            tableView.headerView?.isHidden = hidesHeaderWhenEmpty && rows.isEmpty
             updateFooterVisibility()
             fitHeightToRows()
             updateButtons()
@@ -875,7 +883,9 @@ extension ComposableSettings.EditableTableCard: NSTableViewDelegate {
             } else {
                 button.state = .off
             }
-            button.setAccessibilityLabel(column.title)
+            // A toggle column with no header title (a bare "on" checkbox)
+            // still needs a name: its header tooltip says what it switches.
+            button.setAccessibilityLabel(column.title.isEmpty ? (column.headerToolTip ?? "") : column.title)
             return button
 
         case .popUp:

@@ -199,7 +199,7 @@ public final class BrowserSettingsPanelViewController: ComposableSettings.Settin
     // MARK: Engine topics, by scope
 
     /// True in the Settings window and in a Safari pane's sheet: where
-    /// WebKit's own groups (Protection, Site Data) and the Safari Extensions
+    /// WebKit's own groups (Protection, Site Data) and the Extensions
     /// topic belong. A Chrome pane's sheet leaves them out, since they would
     /// change nothing the pane does. Chrome's topic shows when the host links
     /// Chromium, or in a Chrome pane's sheet.
@@ -208,7 +208,7 @@ public final class BrowserSettingsPanelViewController: ComposableSettings.Settin
         return pane.engineKind == .safari
     }
 
-    /// The Safari Extensions topic shows wherever the Safari topic does,
+    /// The Extensions topic shows wherever the Safari topic does,
     /// once the app has said where extensions live, on macOS 15.4 and later.
     var safariExtensionsAvailable: Bool {
         showsSafariTopic && SafariExtensionSupport.isAvailable && safariExtensionsProfile != nil
@@ -219,7 +219,7 @@ public final class BrowserSettingsPanelViewController: ComposableSettings.Settin
         return SafariExtensionsTopicPanel.keywords
     }
 
-    /// The profile the Safari Extensions topic lists: the global jar's in the
+    /// The profile the Extensions topic lists: the global jar's in the
     /// Settings window, the pane's jar in its sheet; nil for a jar kept in
     /// memory, which runs no extensions.
     var safariExtensionsProfile: BrowserExtensionProfile? {

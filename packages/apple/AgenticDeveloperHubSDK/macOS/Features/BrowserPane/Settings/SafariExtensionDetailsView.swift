@@ -10,7 +10,8 @@ import AgenticDeveloperHubSDKCore
 /// lays it out: on or off; what it is, its version, size and source; what it
 /// may access; which sites it runs on; whether it is pinned, runs in private
 /// browsing and reads `file://` pages; and its options, store page and
-/// removal. Shown in place of the list by `SafariExtensionsTopicPanel`.
+/// removal. Shown in a popover anchored to the row's gear by
+/// `SafariExtensionsTopicPanel`.
 ///
 /// Built once per extension and updated in place when the host changes, so a
 /// switch flipped here does not scroll the page back to the top; it is
@@ -23,8 +24,6 @@ final class SafariExtensionDetailsView: NSView {
     private let host: SafariExtensionHost
     private let prefix: String
 
-    /// Back to the list.
-    var onBack: (() -> Void)?
     /// Opens a page: its options, its store listing.
     var onOpen: ((URL) -> Void)?
     /// Asks to remove it (the panel confirms).
@@ -155,14 +154,7 @@ final class SafariExtensionDetailsView: NSView {
         let inset = ComposableSettings.SettingsLayout.default[.panelInset]
         stack.edgeInsets = NSEdgeInsets(top: inset, left: inset, bottom: inset, right: inset)
 
-        let back = NSButton(
-            image: NSImage(systemSymbolName: "chevron.left", accessibilityDescription: "Back") ?? NSImage(),
-            target: self, action: #selector(backClicked))
-        back.bezelStyle = .accessoryBarAction
-        back.isBordered = false
-        back.toolTip = "All extensions"
-        back.setAccessibilityIdentifier("\(prefix).back")
-        let header = NSStackView(views: [back, iconView, nameLabel])
+        let header = NSStackView(views: [iconView, nameLabel])
         header.orientation = .horizontal
         header.spacing = 10
         stack.addArrangedSubview(header)
@@ -301,8 +293,6 @@ final class SafariExtensionDetailsView: NSView {
         do { try change() } catch { onError?(error) }
         reload()
     }
-
-    @objc private func backClicked() { onBack?() }
 
     @objc private func toggleEnabled() {
         attempt { try host.setEnabled(extensionID, enabledSwitch.state == .on) }

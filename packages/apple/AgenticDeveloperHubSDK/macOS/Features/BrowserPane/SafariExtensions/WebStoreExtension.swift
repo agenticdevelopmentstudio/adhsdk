@@ -3,6 +3,7 @@
 //  AgenticDeveloperHubSDK
 //
 
+import CryptoKit
 import Foundation
 
 /// The Chrome Web Store, as far as a Safari pane needs it: which extension a
@@ -139,6 +140,39 @@ public enum WebStoreExtension {
         let payload = data.subdata(in: data.startIndex + start ..< data.endIndex)
         guard payload.starts(with: [0x50, 0x4B]) else { throw Failure.notAPackage }
         return payload
+    }
+
+    /// The id Chrome gives an extension whose manifest carries `key` (a
+    /// base64 public key): the SHA-256 of the key's bytes, its first 16
+    /// bytes written as hex with 0–f spelled a–p. Nil when `key` is not
+    /// base64.
+    public static func id(ofKey key: String) -> String? {
+        guard let bytes = Data(base64Encoded: key, options: .ignoreUnknownCharacters), !bytes.isEmpty else {
+            return nil
+        }
+        return letters(of: Data(SHA256.hash(data: bytes)))
+    }
+
+    /// The id of the unpacked extension whose manifest is at `manifest`,
+    /// when it carries a `key`; nil otherwise.
+    public static func id(ofManifestAt manifest: URL) -> String? {
+        guard let data = try? Data(contentsOf: manifest),
+              let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let key = object["key"] as? String else { return nil }
+        return id(ofKey: key)
+    }
+
+    /// The id for an extension with no key, made the way Chrome makes one
+    /// for an unpacked folder: from where it came from (a path or address),
+    /// so adding the same item again updates it.
+    public static func localID(forPath path: String) -> String {
+        letters(of: Data(SHA256.hash(data: Data(path.utf8))))
+    }
+
+    /// The first 16 bytes of `digest` as 32 letters from a to p.
+    private static func letters(of digest: Data) -> String {
+        let alphabet = Array("abcdefghijklmnop")
+        return String(digest.prefix(16).flatMap { [alphabet[Int($0 >> 4)], alphabet[Int($0 & 0x0F)]] })
     }
 
     private static func isStoreHost(_ host: String?) -> Bool {

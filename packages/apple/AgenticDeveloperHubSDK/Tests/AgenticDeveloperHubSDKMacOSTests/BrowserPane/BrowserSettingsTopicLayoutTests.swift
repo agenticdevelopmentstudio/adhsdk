@@ -92,6 +92,8 @@ final class BrowserSettingsTopicLayoutTests: XCTestCase {
     func test_noSafariTopic() {
         let panel = makePanel(settings: makeSettings())
         XCTAssertFalse(topicTitles(of: panel).contains("Safari"))
+        // extensions-topic-001: the extensions topic was renamed.
+        XCTAssertFalse(topicTitles(of: panel).contains("Safari Extensions"))
     }
 
     /// The titles of the cards a topic shows, top to bottom. A card inside a
