@@ -5,7 +5,7 @@ import Foundation
 /// snapshot runtime whose ref table the walker shares.
 public enum AgentPageWalkerRuntime {
     /// Must equal `VERSION` in `AgentPageWalker.js`.
-    public static let version = 3
+    public static let version = 4
 
     public static var source: String {
         get throws {

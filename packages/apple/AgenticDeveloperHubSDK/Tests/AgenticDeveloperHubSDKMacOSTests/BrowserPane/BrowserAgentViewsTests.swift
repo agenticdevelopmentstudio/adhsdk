@@ -151,82 +151,69 @@ final class BrowserAgentViewsTests: XCTestCase {
         XCTAssertEqual(Policy.policy(allowedLoads: 1, url: site, navigationType: .formSubmitted), .cancel)
     }
 
-    /// A frame WebKit would report, main or not.
-    private final class FakeFrame: WKFrameInfo {
-        let main: Bool
-        init(main: Bool) {
-            self.main = main
-            super.init()
-        }
-        override var isMainFrame: Bool { main }
-    }
-
-    /// A navigation action as WebKit would ask about it.
-    private final class FakeAction: WKNavigationAction {
-        let url: URL?
-        let frame: WKFrameInfo?
-        let kind: WKNavigationType
-        init(url: URL?, frame: WKFrameInfo?, kind: WKNavigationType = .other) {
-            self.url = url
-            self.frame = frame
-            self.kind = kind
-            super.init()
-        }
-        override var request: URLRequest {
-            url.map { URLRequest(url: $0) } ?? URLRequest(url: URL(fileURLWithPath: "/"))
-        }
-        override var targetFrame: WKFrameInfo? { frame }
-        override var navigationType: WKNavigationType { kind }
-    }
-
-    /// The delegate itself, not only the policy matrix: one `show` lets
-    /// exactly one main-frame `about:blank` load through, and a subframe or
-    /// frameless load never.
+    /// The delegate's own accounting, not only the policy matrix: one `show`
+    /// lets exactly one main-frame `about:blank` load through, and a subframe
+    /// or frameless load never. Asked through `decidePolicy`, with the values
+    /// the delegate reads off the action, because WebKit's frame and action
+    /// classes cannot be faked (a subclass crashes WebKit when it is freed).
     func test_previewDelegateAllowsOnlyItsOwnLoad() async {
         let preview = BrowserAgentPreviewViewController()
         // Detached so WebKit's own question about the load cannot spend the
-        // credit before the fake actions below ask.
+        // credit before the questions below ask.
         preview.webView.navigationDelegate = nil
         preview.show(samplePage())
         let installed = await waitUntil { preview.shownHTML != nil }
         XCTAssertTrue(installed, "the page never loaded")
         let blank = URL(string: "about:blank")
-        let webView = preview.webView
-        let inner = FakeAction(url: blank, frame: FakeFrame(main: false))
-        let subframe = await preview.webView(webView, decidePolicyFor: inner)
-        XCTAssertEqual(subframe, .cancel, "a subframe's load is never the controller's own")
-        let frameless = await preview.webView(webView, decidePolicyFor: FakeAction(url: blank, frame: nil))
-        XCTAssertEqual(frameless, .cancel, "a load with no target frame is cancelled")
-        let main = FakeFrame(main: true)
-        let first = await preview.webView(webView, decidePolicyFor: FakeAction(url: blank, frame: main))
+        let subframe = preview.decidePolicy(targetsMainFrame: false, url: blank, navigationType: .other)
+        XCTAssertEqual(subframe, .cancel, "a subframe's or a frameless load is never the controller's own")
+        let link = preview.decidePolicy(targetsMainFrame: true, url: blank, navigationType: .linkActivated)
+        XCTAssertEqual(link, .cancel, "a link the page follows is not the controller's load")
+        let first = preview.decidePolicy(targetsMainFrame: true, url: blank, navigationType: .other)
         XCTAssertEqual(first, .allow, "the controller's own load goes through")
-        let second = await preview.webView(webView, decidePolicyFor: FakeAction(url: blank, frame: main))
+        let second = preview.decidePolicy(targetsMainFrame: true, url: blank, navigationType: .other)
         XCTAssertEqual(second, .cancel, "one load, one credit")
     }
 
     /// Two `show` calls in quick succession: WebKit may ask about the
     /// superseded load before the newest one, so both questions must be
     /// answered `.allow`, or the newest page is cancelled and an older
-    /// document stays on screen.
+    /// document stays on screen; a third question is cancelled.
     func test_previewTwoQuickShowsLetTheNewestPageLoad() async {
         let preview = BrowserAgentPreviewViewController()
         preview.webView.navigationDelegate = nil
         let installed = await waitUntil { preview.ruleList != nil }
         XCTAssertTrue(installed, "the block-everything list was never installed")
-        let first = samplePage()
         let newest = AgentPage.unavailable("the walk failed.", url: nil)
-        preview.show(first)
+        preview.show(samplePage())
         preview.show(newest)
         XCTAssertEqual(preview.shownHTML, newest.html())
         let blank = URL(string: "about:blank")
-        let webView = preview.webView
-        let main = FakeFrame(main: true)
-        let superseded = await preview.webView(webView, decidePolicyFor: FakeAction(url: blank, frame: main))
+        let superseded = preview.decidePolicy(targetsMainFrame: true, url: blank, navigationType: .other)
         XCTAssertEqual(superseded, .allow, "the superseded load's question is answered")
-        let latest = await preview.webView(webView, decidePolicyFor: FakeAction(url: blank, frame: main))
+        let latest = preview.decidePolicy(targetsMainFrame: true, url: blank, navigationType: .other)
         XCTAssertEqual(latest, .allow, "the newest page loads")
-        let extra = await preview.webView(webView, decidePolicyFor: FakeAction(url: blank, frame: main))
+        let extra = preview.decidePolicy(targetsMainFrame: true, url: blank, navigationType: .other)
         XCTAssertEqual(extra, .cancel, "two loads, two credits")
+    }
+
+    /// The same two quick shows with WebKit asking the real delegate: the
+    /// document that ends up in the web view is the newest page.
+    func test_previewTwoQuickShowsEndOnTheNewestPage() async throws {
+        let preview = BrowserAgentPreviewViewController()
+        let installed = await waitUntil { preview.ruleList != nil }
+        XCTAssertTrue(installed, "the block-everything list was never installed")
+        preview.show(samplePage())
+        preview.show(AgentPage.unavailable("the walk failed.", url: nil))
+        var text = ""
+        let deadline = Date().addingTimeInterval(5)
+        while !text.contains("the walk failed."), Date() < deadline {
+            try await Task.sleep(nanoseconds: 50_000_000)
+            let script = "document.body ? document.body.innerText : ''"
+            text = (try? await preview.webView.evaluateJavaScript(script)) as? String ?? ""
+        }
+        XCTAssertTrue(text.contains("the walk failed."), "the newest page never showed: \(text)")
+        XCTAssertFalse(text.contains("Body text"), "an older document stayed on screen: \(text)")
     }
 
     // MARK: Source

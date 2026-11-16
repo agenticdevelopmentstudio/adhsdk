@@ -54,7 +54,7 @@ final class SafariExtensionsTopicTests: XCTestCase {
     func test_columnsOrder() throws {
         let panel = makePanel(makeHost())
         let table = try XCTUnwrap(panel.table)
-        XCTAssertEqual(panel.title, "Extensions")
+        XCTAssertEqual(panel.descriptor.title, "Extensions")
         XCTAssertEqual(table.tableView.tableColumns.map(\.identifier.rawValue),
                        ["on", "icon", "name", "version", "description", "gear"])
         XCTAssertEqual(table.tableView.tableColumns.first?.title, "")

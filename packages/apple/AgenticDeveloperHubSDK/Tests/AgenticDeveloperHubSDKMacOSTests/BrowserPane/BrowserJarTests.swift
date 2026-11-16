@@ -80,6 +80,9 @@ final class BrowserJarTests: XCTestCase {
         .leaf(id: id, contentType: .browser)
     }
 
+    /// The last migration `ProjectDatabase` runs; raise it with each new one.
+    private let latestSchemaVersion = 6
+
     /// A moment past the reconciler's grace period for new jars.
     private var later: Date { Date().addingTimeInterval(BrowserJarReconciler.newJarGracePeriod + 1) }
 
@@ -87,26 +90,28 @@ final class BrowserJarTests: XCTestCase {
 
     func testMigrationCreatesBrowserJarsIdempotently() throws {
         let first = try makeDatabase()
-        XCTAssertEqual(try first.schemaVersion(), 5)
+        XCTAssertEqual(try first.schemaVersion(), latestSchemaVersion)
         let record = BrowserJarRecord(kind: .worktree, repoID: UUID(), worktreePath: "/tmp/wt", paneNodeID: nil)
         try first.insertBrowserJar(record)
 
         let second = try makeDatabase()
-        XCTAssertEqual(try second.schemaVersion(), 5)
+        XCTAssertEqual(try second.schemaVersion(), latestSchemaVersion)
         XCTAssertEqual(try second.allBrowserJars(), [record])
     }
 
     /// Killed after the table was made and before version 5 was recorded: the
     /// next open re-runs the migration, which must find its own work and go on.
+    /// Every later version row goes too, since a build that crashed in 5 had
+    /// recorded none of them.
     func testMigrationRecoversFromACrashBeforeRecordingItsVersion() throws {
         let first = try makeDatabase()
         let record = BrowserJarRecord(kind: .pane, repoID: UUID(), worktreePath: "/tmp/wt", paneNodeID: UUID())
         try first.insertBrowserJar(record)
-        try first.execute("DELETE FROM schema_migrations WHERE version = 5")
+        try first.execute("DELETE FROM schema_migrations WHERE version >= 5")
         XCTAssertEqual(try first.schemaVersion(), 4)
 
         let reopened = try makeDatabase()
-        XCTAssertEqual(try reopened.schemaVersion(), 5)
+        XCTAssertEqual(try reopened.schemaVersion(), latestSchemaVersion)
         XCTAssertEqual(try reopened.allBrowserJars(), [record])
     }
 
@@ -119,12 +124,12 @@ final class BrowserJarTests: XCTestCase {
         let node = UUID()
         let tab = TabRecord(title: "main", root: browserLeaf(node))
         try database.saveTabs([tab], activeTabID: tab.id, enabledEdges: [.top], repoID: repo.id)
-        // Back to a file from before jars: no table, no version 5.
+        // Back to a file from before jars: no table, no version 5 or later.
         try database.execute("DROP TABLE browser_jars")
-        try database.execute("DELETE FROM schema_migrations WHERE version = 5")
+        try database.execute("DELETE FROM schema_migrations WHERE version >= 5")
 
         let upgraded = try makeDatabase()
-        XCTAssertEqual(try upgraded.schemaVersion(), 5)
+        XCTAssertEqual(try upgraded.schemaVersion(), latestSchemaVersion)
         let live = pane(node, repo: repo)
         let overrides = PaneStateSettingsStorageProvider(store: DatabaseStateStore(
             database: upgraded, repoID: repo.id, nodeID: node, prefix: ComposableTabsViewRegistry.browserStatePrefix

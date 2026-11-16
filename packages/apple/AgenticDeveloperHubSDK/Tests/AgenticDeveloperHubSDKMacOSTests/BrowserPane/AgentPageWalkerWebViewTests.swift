@@ -3,6 +3,7 @@ import Combine
 import WebKit
 import XCTest
 @testable import AgenticDeveloperHubSDKMacOS
+import AgenticDeveloperHubSDKCore
 
 /// `AgentPageWalker.js` through `AgentPageSource`, in a real offscreen web
 /// view (recipe workspace/browser/agent-page-builder, vectors 010 and
@@ -275,7 +276,12 @@ final class AgentPageWalkerWebViewTests: XCTestCase {
         await host.load(html: "<!doctype html><html><body>\(rows.joined())</body></html>")
         let reading = await source(try emptyStore()).read(options: BrowserSnapshotOptions())
         XCTAssertNil(reading.page.unavailableReason)
-        XCTAssertTrue(nodes(reading.page.root).allSatisfy { $0.kind == .text || !$0.selector.isEmpty })
+        // Text pieces and the document root have no element of their own to
+        // record; every other node must, so a pick on it maps back to the page.
+        let unplaced = nodes(reading.page.root).filter {
+            $0.kind != .text && $0.kind != .document && $0.selector.isEmpty
+        }
+        XCTAssertEqual(unplaced.map { "\($0.ref) \($0.kind)" }, [])
     }
 
 }

@@ -19,7 +19,7 @@
 // stays what it was for the same page.
 (function () {
   'use strict';
-  const VERSION = 3;
+  const VERSION = 4;
   if (globalThis.__adkAgentWalkVersion === VERSION && typeof globalThis.__adkAgentWalk === 'function') { return; }
 
   const DEFAULT_TIMEOUT_MS = 1500;
@@ -319,13 +319,23 @@
     let nextText = 1;
     function textNode(text) { return { ref: 't' + (nextText++), kind: 'text', text: text }; }
 
+    // A generic node (a paragraph or label that is not interactive) prints in
+    // the snapshot as text with no reference, as the legacy walk printed it,
+    // so it takes a walk-local reference like a text piece and never spends
+    // one of the page's element numbers: the references the tree does print
+    // stay numbered as the legacy walk numbered them.
+    let nextGeneric = 1;
+    function refFor(el, kind) {
+      return GENERIC_KINDS.has(kind) ? 'g' + (nextGeneric++) : kitchen.assignRef(el);
+    }
+
     function permits(kind, name) {
       const names = allowedAttributes[kind];
       return Array.isArray(names) && names.includes(name);
     }
 
     function elementNode(el, info) {
-      const node = { ref: kitchen.assignRef(el), kind: info.kind, selector: selectorOf(el) };
+      const node = { ref: refFor(el, info.kind), kind: info.kind, selector: selectorOf(el) };
       const attrs = {};
       const put = (name, value) => {
         if (value === null || value === undefined) { return; }

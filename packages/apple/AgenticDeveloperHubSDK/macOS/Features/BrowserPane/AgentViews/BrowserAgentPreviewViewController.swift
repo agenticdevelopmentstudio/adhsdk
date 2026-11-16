@@ -119,10 +119,19 @@ final class BrowserAgentPreviewViewController: NSViewController, WKNavigationDel
 
     func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction)
         async -> WKNavigationActionPolicy {
-        // A subframe's load is never the controller's own.
-        guard navigationAction.targetFrame?.isMainFrame ?? false else { return .cancel }
-        let decision = Self.policy(allowedLoads: allowedLoads, url: navigationAction.request.url,
-                                   navigationType: navigationAction.navigationType)
+        decidePolicy(targetsMainFrame: navigationAction.targetFrame?.isMainFrame ?? false,
+                     url: navigationAction.request.url, navigationType: navigationAction.navigationType)
+    }
+
+    /// The delegate's answer from the action's plain values, spending one
+    /// credit on each load it allows. A subframe's load, or one with no
+    /// target frame (`targetsMainFrame` false), is never the controller's
+    /// own. Internal so tests can ask without making WebKit objects: WebKit
+    /// does not support subclassing its frame and action classes.
+    func decidePolicy(targetsMainFrame: Bool, url: URL?, navigationType: WKNavigationType)
+        -> WKNavigationActionPolicy {
+        guard targetsMainFrame else { return .cancel }
+        let decision = Self.policy(allowedLoads: allowedLoads, url: url, navigationType: navigationType)
         if decision == .allow { allowedLoads -= 1 }
         return decision
     }

@@ -11,11 +11,10 @@
   - text: Welcome to Acme.
   - img "Logo" [ref=e9]
   - table [ref=e10]:
-    - rowgroup [ref=e11]:
-      - row [ref=e12]:
-        - columnheader "Name" [ref=e13]
-        - cell "Ada" [ref=e14]
-  - button "Menu" [ref=e15]
+    - row [ref=e11]:
+      - cell "Name" [ref=e12]
+      - cell "Ada" [ref=e13]
+  - button "Menu" [ref=e14]
   - text: bad role
-  - contentinfo [ref=e16]:
+  - contentinfo [ref=e15]:
     - text: © Acme

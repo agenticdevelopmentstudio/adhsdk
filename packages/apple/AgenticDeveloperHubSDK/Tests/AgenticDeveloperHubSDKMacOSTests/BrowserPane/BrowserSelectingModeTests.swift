@@ -112,9 +112,13 @@ final class BrowserSelectingModeTests: XCTestCase {
         XCTAssertEqual(installed as? String, "undefined")
     }
 
-    func test_pickPausesAndShowsDialog() throws {
+    /// A pick only ever comes from a started picker, so each pick test waits
+    /// for the start first; before it, `pause()` has no picker to pause.
+    func test_pickPausesAndShowsDialog() async throws {
         let mode = makeMode()
         mode.begin()
+        await mode.startTask?.value
+        XCTAssertEqual(mode.picker?.isRunning, true)
         mode.handlePick(candidate)
         XCTAssertEqual(mode.state, .dialog(candidate))
         XCTAssertEqual(mode.picker?.isPaused, true)
@@ -137,7 +141,9 @@ final class BrowserSelectingModeTests: XCTestCase {
     func test_okSavesWithDefaultSitePattern() async throws {
         let mode = makeMode()
         mode.begin()
+        await mode.startTask?.value
         mode.handlePick(candidate)
+        XCTAssertEqual(mode.picker?.isPaused, true)
         let dialog = try XCTUnwrap(dialogs.first)
         dialog.confirm(nil)
         await mode.lastSave?.value
@@ -152,10 +158,12 @@ final class BrowserSelectingModeTests: XCTestCase {
         XCTAssertNil(mode.previewSelectors)
     }
 
-    func test_cancelSavesNothingAndResumes() throws {
+    func test_cancelSavesNothingAndResumes() async throws {
         let mode = makeMode()
         mode.begin()
+        await mode.startTask?.value
         mode.handlePick(candidate)
+        XCTAssertEqual(mode.picker?.isPaused, true)
         let dialog = try XCTUnwrap(dialogs.first)
         dialog.previewCheckbox.state = .on
         dialog.previewToggled(nil)
