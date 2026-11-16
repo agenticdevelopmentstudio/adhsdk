@@ -99,19 +99,52 @@ public actor GitHubCLI {
         return try decode([GitPullRequest].self, from: output)
     }
 
-    /// The newest pull request, in any state, whose head is `branch`, or nil when there
-    /// is none: `gh pr list --head <branch> --state all --limit 1 --json …`. Not
-    /// `gh pr view <branch>`, which reads its argument as a number or URL first, so a
-    /// branch named `4521` would answer pull request #4521.
+    /// How many pull requests with the branch's name `pullRequest(forBranch:)` looks through.
+    static let branchCandidateLimit = 20
+
+    /// The branch lookup's fields: every pull request field, and where its head lives.
+    static let branchLookupFields = pullRequestFields + ["isCrossRepository", "headRepositoryOwner"]
+
+    /// The pull request whose head is this repository's `branch`, or nil when there is
+    /// none: `gh pr list --head <branch> --state all --limit 20 --json …`, then the
+    /// open one if there is one, else the most recently updated.
+    ///
+    /// Not `gh pr view <branch>`, which reads its argument as a number or URL first, so
+    /// a branch named `4521` would answer pull request #4521. `--head` matches the head
+    /// branch's name in any repository, so pull requests from forks
+    /// (`isCrossRepository`) are dropped: a stranger's fork `main` or `patch-1` is not
+    /// this branch. That also drops the user's own pull request opened from their fork.
     public func pullRequest(forBranch branch: String, in directory: URL,
                             caller: GitCaller = GitCaller()) async throws -> GitPullRequest? {
         guard !branch.isEmpty, !branch.hasPrefix("-") else {
             throw GitHubCLIError.failed("not a branch name: \(branch)")
         }
-        let arguments = ["pr", "list", "--head", branch, "--state", "all", "--limit", "1",
-                         "--json", Self.pullRequestFields.joined(separator: ",")]
+        let arguments = ["pr", "list", "--head", branch, "--state", "all",
+                         "--limit", String(Self.branchCandidateLimit),
+                         "--json", Self.branchLookupFields.joined(separator: ",")]
         let output = try await run(arguments, in: directory, budget: Self.readBudget, caller: caller)
-        return try decode([GitPullRequest].self, from: output).first
+        let candidates = try decode([BranchCandidate].self, from: output)
+        return Self.preferred(candidates.filter { !$0.isCrossRepository }.map(\.pullRequest))
+    }
+
+    /// The open pull request among `requests`, else the one updated most recently.
+    static func preferred(_ requests: [GitPullRequest]) -> GitPullRequest? {
+        let open = requests.filter { $0.state.uppercased() == "OPEN" }
+        return (open.isEmpty ? requests : open).max { $0.updatedAt < $1.updatedAt }
+    }
+
+    /// A `pr list` row with where its head lives, beside the pull request itself.
+    struct BranchCandidate: Decodable {
+        let pullRequest: GitPullRequest
+        let isCrossRepository: Bool
+
+        enum CodingKeys: String, CodingKey { case isCrossRepository }
+
+        init(from decoder: any Decoder) throws {
+            pullRequest = try GitPullRequest(from: decoder)
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            isCrossRepository = try container.decodeIfPresent(Bool.self, forKey: .isCrossRepository) ?? false
+        }
     }
 
     /// `gh pr checkout <number>`: fetches the pull request's head and switches to it.

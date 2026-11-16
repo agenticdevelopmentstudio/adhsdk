@@ -56,6 +56,30 @@ struct GitHubCLITests {
 
     static let fields = "number,title,state,isDraft,author,headRefName,baseRefName,url,updatedAt,"
         + "statusCheckRollup,reviewDecision"
+    static let branchFields = fields + ",isCrossRepository,headRepositoryOwner"
+
+    /// One `pr list --head main --state all --limit 20` row, in gh's shape.
+    static func branchRow(number: Int, state: String, updatedAt: String, crossRepository: Bool,
+                          owner: String) -> String {
+        """
+        {"author": {"login": "\(owner)"}, "baseRefName": "main", "headRefName": "main",
+         "headRepositoryOwner": {"id": "MDQ6VXNlcjM=", "login": "\(owner)"},
+         "isCrossRepository": \(crossRepository), "isDraft": false, "number": \(number),
+         "reviewDecision": "", "state": "\(state)", "statusCheckRollup": [], "title": "PR \(number)",
+         "updatedAt": "\(updatedAt)", "url": "https://github.com/o/r/pull/\(number)"}
+        """
+    }
+
+    /// Three pull requests whose head is called `main`: a stranger's newest one from
+    /// their fork, then this repository's own, one merged and one older but open.
+    static let sameNameFromAFork = "[" + [
+        branchRow(number: 90, state: "OPEN", updatedAt: "2026-11-15T12:00:00Z", crossRepository: true,
+                  owner: "stranger"),
+        branchRow(number: 80, state: "MERGED", updatedAt: "2026-11-14T12:00:00Z", crossRepository: false,
+                  owner: "o"),
+        branchRow(number: 70, state: "OPEN", updatedAt: "2026-11-01T12:00:00Z", crossRepository: false,
+                  owner: "o")
+    ].joined(separator: ",") + "]"
 
     /// `gh pr list --json <fields>` for two pull requests: one with a mixed check
     /// rollup and an approval, one draft with no checks and no review decision.
@@ -168,7 +192,7 @@ struct GitHubCLITests {
         _ = try await subject.pullRequest(forBranch: "feature/login", in: Self.directory)
         let call = try #require(await recorder.calls.first)
         #expect(call.arguments == [
-            "pr", "list", "--head", "feature/login", "--state", "all", "--limit", "1", "--json", Self.fields
+            "pr", "list", "--head", "feature/login", "--state", "all", "--limit", "20", "--json", Self.branchFields
         ])
         #expect(call.budget == .seconds(10))
     }
@@ -182,7 +206,7 @@ struct GitHubCLITests {
         #expect(request == nil)
         let call = try #require(await recorder.calls.first)
         #expect(call.arguments == [
-            "pr", "list", "--head", "4521", "--state", "all", "--limit", "1", "--json", Self.fields
+            "pr", "list", "--head", "4521", "--state", "all", "--limit", "20", "--json", Self.branchFields
         ])
     }
 
@@ -241,6 +265,33 @@ struct GitHubCLITests {
         #expect(second.author == "hubot")
         #expect(second.checks == nil)
         #expect(second.reviewDecision == nil)
+    }
+
+    /// `--head` matches the name in any repository: the fork's pull request is skipped,
+    /// and of this repository's two the open one wins over the newer merged one.
+    @Test func forkPullRequestWithTheSameBranchNameIsSkipped() async throws {
+        let subject = Self.client(.output(Self.sameNameFromAFork), recorder: Recorder())
+        let request = try #require(try await subject.pullRequest(forBranch: "main", in: Self.directory))
+        #expect(request.number == 70)
+    }
+
+    @Test func onlyForkPullRequestsIsNil() async throws {
+        let fork = Self.branchRow(number: 90, state: "OPEN", updatedAt: "2026-11-15T12:00:00Z",
+                                  crossRepository: true, owner: "stranger")
+        let subject = Self.client(.output("[\(fork)]"), recorder: Recorder())
+        #expect(try await subject.pullRequest(forBranch: "main", in: Self.directory) == nil)
+    }
+
+    @Test func withNoOpenPullRequestTheNewestWins() {
+        let rows = [GitPullRequest].self
+        let data = Data(("[" + [
+            Self.branchRow(number: 5, state: "CLOSED", updatedAt: "2026-11-01T00:00:00Z",
+                           crossRepository: false, owner: "o"),
+            Self.branchRow(number: 6, state: "MERGED", updatedAt: "2026-11-10T00:00:00Z",
+                           crossRepository: false, owner: "o")
+        ].joined(separator: ",") + "]").utf8)
+        let requests = (try? JSONDecoder().decode(rows, from: data)) ?? []
+        #expect(GitHubCLI.preferred(requests)?.number == 6)
     }
 
     @Test func pullRequestForBranchDecodesOne() async throws {
