@@ -53,6 +53,9 @@ public struct AgentNode: Sendable, Hashable {
 /// `Agent view unavailable: `, which every rendering returns in place of
 /// content (`unavailable-page-renders-reason`).
 public struct AgentPage: Sendable, Equatable {
+    /// The page's address as the agent sees it: concealed under Agent
+    /// Privacy. Shown, never stored: nothing saved (a hidden-items entry's
+    /// site above all) may be derived from it; take the engine's URL.
     public let url: URL?
     public let title: String
     public let root: AgentNode?

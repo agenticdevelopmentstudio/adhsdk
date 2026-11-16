@@ -20,9 +20,11 @@
   `loadHTMLString` replaces the document on every rebuild, the preview's
   `onPageLoad` (its `didFinish`) installs it again. The popover toggle: a
   transient `NSPopover` closes on the mouse-down, before the button's
-  action runs, so the popover notes in `popoverWillClose` that a press on
-  its anchor closed it, and `closesOnAnchorClick(_:)` treats the click
-  that press began as the toggle.
+  action runs, so `popoverWillClose` records the event number of the
+  mouse-down on its anchor that closed it (`noteClosing(by:)`), and
+  `closesOnAnchorClick(_:)` treats only the mouse-up carrying that same
+  event number as the toggle; any other click clears the record and opens
+  the popover.
 - **Compose**: An Android `WebView` cannot run one script with page
   JavaScript off; render the preview natively from the agent page instead
   and pick nodes by their ref directly.

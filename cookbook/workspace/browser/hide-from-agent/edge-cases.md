@@ -4,7 +4,10 @@
   gatekeeper failed closed) has no refs, so every pick in its preview is
   refused; the user can pick in the Website view instead.
 - **Boundary values**: A ref whose recorded selector is empty cannot be
-  saved and is refused like a missing ref. The "All items like it" scope in
+  saved and is refused like a missing ref. A click on blank space in the
+  preview lands on the document root, whose ref the preview puts on
+  `<body>`; that pick is refused too, since saving it would hide the whole
+  page from the agent. The "All items like it" scope in
   the preview uses the looser selector the gatekeeper recorded for the ref
   if it recorded one, and is disabled otherwise. The gatekeeper records no
   looser selector today, so in the preview it is always disabled.
@@ -17,6 +20,9 @@
 - **Error states**: If the picker world cannot run in the preview (see the
   Design Decisions finding), selecting in the preview reports it with a
   beep and a logged reason, and selecting in the Website view still works.
+  A picker that fails to start in either view beeps and ends selecting.
+  Selecting distracting items for the user's own list starts only in the
+  Website view; under an agent view it beeps and starts nothing.
 - **Offline or disconnected state**: Not applicable — the preview loads
   nothing from the network by design, and the store is local.
 - **Missing file or unreachable server**: Not applicable — the store's

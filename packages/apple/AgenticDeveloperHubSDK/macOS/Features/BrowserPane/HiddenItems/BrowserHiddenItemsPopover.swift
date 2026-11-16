@@ -44,12 +44,11 @@ final class BrowserHiddenItemsPopover: NSViewController, NSTableViewDataSource, 
     private var changeObserver: NSObjectProtocol?
     private var loadGeneration = 0
     /// The button the popover opened from, for the toggle.
-    private weak var anchor: NSView?
-    /// When a press on `anchor` closed the popover, so the click it begins
-    /// closes it rather than opening it again.
-    private var anchorPressClosedAt: TimeInterval?
-    /// How long after that press its click still counts as the toggle.
-    static let toggleInterval: TimeInterval = 2
+    weak var anchor: NSView?
+    /// The event number of the press on `anchor` that closed the popover:
+    /// the click it begins (its mouse-up carries the same number) closes it
+    /// rather than opening it again, and no later click does.
+    private(set) var closingPressNumber: Int?
     private static let logger = Logger(subsystem: "AgenticDeveloperHubSDK", category: "BrowserPane")
 
     init(list: BrowserHiddenItemList, store: BrowserHiddenItemsStore, url: URL?,
@@ -81,7 +80,7 @@ final class BrowserHiddenItemsPopover: NSViewController, NSTableViewDataSource, 
     func show(relativeTo button: NSView) {
         _ = view
         anchor = button
-        anchorPressClosedAt = nil
+        closingPressNumber = nil
         reload()
         popover.show(relativeTo: button.bounds, of: button, preferredEdge: .maxY)
     }
@@ -92,24 +91,36 @@ final class BrowserHiddenItemsPopover: NSViewController, NSTableViewDataSource, 
     /// toggle that closes the popover, so the caller does not open it again.
     /// True while the popover shows (it is closed now), and when the click's
     /// own press is what just closed it: a transient popover closes on the
-    /// mouse-down, before the button's action runs on the mouse-up.
+    /// mouse-down, before the button's action runs on the mouse-up. The
+    /// press is matched by event number, so a press released off the button
+    /// (no action) leaves nothing that swallows a later click.
     func closesOnAnchorClick(_ event: NSEvent?) -> Bool {
         if popover.isShown {
             popover.performClose(nil)
             return true
         }
-        guard let closedAt = anchorPressClosedAt else { return false }
-        anchorPressClosedAt = nil
-        guard let event else { return false }
-        return event.timestamp - closedAt <= Self.toggleInterval
+        guard let pressNumber = closingPressNumber else { return false }
+        closingPressNumber = nil
+        guard let event, Self.isMouseEvent(event) else { return false }
+        return event.eventNumber == pressNumber
     }
 
     func popoverWillClose(_ notification: Notification) {
-        anchorPressClosedAt = nil
-        guard let event = NSApp.currentEvent, event.type == .leftMouseDown,
+        noteClosing(by: NSApp.currentEvent)
+    }
+
+    /// Records whether `event`, the event closing the popover, is a press on
+    /// `anchor`.
+    func noteClosing(by event: NSEvent?) {
+        closingPressNumber = nil
+        guard let event, event.type == .leftMouseDown,
               let anchor, let window = anchor.window, event.window === window,
               anchor.bounds.contains(anchor.convert(event.locationInWindow, from: nil)) else { return }
-        anchorPressClosedAt = event.timestamp
+        closingPressNumber = event.eventNumber
+    }
+
+    private static func isMouseEvent(_ event: NSEvent) -> Bool {
+        event.type == .leftMouseUp || event.type == .leftMouseDown
     }
 
     // MARK: - View

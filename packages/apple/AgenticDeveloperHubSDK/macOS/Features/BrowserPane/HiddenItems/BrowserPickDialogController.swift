@@ -30,6 +30,7 @@ final class BrowserPickDialogController: NSObject, NSWindowDelegate {
     static let thisItemTitle = "This item"
     static let allLikeItTitle = "All items like it"
     static let tooMuchToolTip = "Matches too much of the page"
+    static let noLooserToolTip = "No looser selector is available"
     static let previewTitle = "Show page with selected element removed"
 
     let candidate: BrowserPickCandidate
@@ -86,7 +87,8 @@ final class BrowserPickDialogController: NSObject, NSWindowDelegate {
         scopeControl.selectedSegment = 0
         if !candidate.allLikeItAllowed {
             scopeControl.setEnabled(false, forSegment: 1)
-            scopeControl.setToolTip(Self.tooMuchToolTip, forSegment: 1)
+            scopeControl.setToolTip(
+                candidate.allLikeIt == nil ? Self.noLooserToolTip : Self.tooMuchToolTip, forSegment: 1)
         }
         scopeControl.setAccessibilityIdentifier("browser.pick.scope")
 

@@ -201,7 +201,10 @@ selecting returns to idle.
   gatekeeper failed closed) has no refs, so every pick in its preview is
   refused; the user can pick in the Website view instead.
 - **Boundary values**: A ref whose recorded selector is empty cannot be
-  saved and is refused like a missing ref. The "All items like it" scope in
+  saved and is refused like a missing ref. A click on blank space in the
+  preview lands on the document root, whose ref the preview puts on
+  `<body>`; that pick is refused too, since saving it would hide the whole
+  page from the agent. The "All items like it" scope in
   the preview uses the looser selector the gatekeeper recorded for the ref
   if it recorded one, and is disabled otherwise. The gatekeeper records no
   looser selector today, so in the preview it is always disabled.
@@ -214,6 +217,9 @@ selecting returns to idle.
 - **Error states**: If the picker world cannot run in the preview (see the
   Design Decisions finding), selecting in the preview reports it with a
   beep and a logged reason, and selecting in the Website view still works.
+  A picker that fails to start in either view beeps and ends selecting.
+  Selecting distracting items for the user's own list starts only in the
+  Website view; under an agent view it beeps and starts nothing.
 - **Offline or disconnected state**: Not applicable — the preview loads
   nothing from the network by design, and the store is local.
 - **Missing file or unreachable server**: Not applicable — the store's
@@ -298,9 +304,11 @@ content and labels are not logged.
   `loadHTMLString` replaces the document on every rebuild, the preview's
   `onPageLoad` (its `didFinish`) installs it again. The popover toggle: a
   transient `NSPopover` closes on the mouse-down, before the button's
-  action runs, so the popover notes in `popoverWillClose` that a press on
-  its anchor closed it, and `closesOnAnchorClick(_:)` treats the click
-  that press began as the toggle.
+  action runs, so `popoverWillClose` records the event number of the
+  mouse-down on its anchor that closed it (`noteClosing(by:)`), and
+  `closesOnAnchorClick(_:)` treats only the mouse-up carrying that same
+  event number as the toggle; any other click clears the record and opens
+  the popover.
 - **Compose**: An Android `WebView` cannot run one script with page
   JavaScript off; render the preview natively from the agent page instead
   and pick nodes by their ref directly.
@@ -314,9 +322,9 @@ content and labels are not logged.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/HiddenItems/BrowserHideFromAgentButton.swift` | planned |
 | macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/BrowserAddressBarControls.swift` | unverified |
 | macos | `packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/BrowserPane/BrowserHideFromAgentTests.swift` | unverified |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/HiddenItems/BrowserHideFromAgentButton.swift` | unverified |
 
 ## Design Decisions
 
@@ -358,7 +366,7 @@ the picker world, never page scripts.
 | Check | Status | Category |
 |-------|--------|----------|
 
-Notes: no compliance checks have been run; the code does not exist yet.
+Notes: no compliance checks have been run.
 
 ## Change History
 

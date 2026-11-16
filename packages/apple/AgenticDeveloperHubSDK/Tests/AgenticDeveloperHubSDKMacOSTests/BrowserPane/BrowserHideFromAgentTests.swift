@@ -57,7 +57,7 @@ final class BrowserHideFromAgentTests: XCTestCase {
     /// The Agent preview as the mode sees it, without a sealed web view's
     /// rule-list compile: the page it shows and its load hook.
     @MainActor
-    private final class FakePreview:BrowserAgentPickSurface {
+    private final class FakePreview: BrowserAgentPickSurface {
         let pickWebView = WKWebView(frame: .zero)
         var shownPage: AgentPage?
         var onPageLoad: (() -> Void)?
@@ -71,8 +71,8 @@ final class BrowserHideFromAgentTests: XCTestCase {
     }
 
     /// An agent page with the promo paragraph at ref `e2`, its selector the
-    /// live page's `#promo`.
-    private func agentPage() throws -> AgentPage {
+    /// live page's `#promo`, walked from `url` under `privacy`.
+    private func agentPage(url: URL? = nil, privacy: BrowserAgentPrivacy = .off) throws -> AgentPage {
         func node(_ ref: String, _ kind: String, selector: String, text: String? = nil,
                   children: [[String: Any]] = []) -> [String: Any] {
             var out: [String: Any] = ["ref": ref, "kind": kind, "selector": selector]
@@ -89,8 +89,8 @@ final class BrowserHideFromAgentTests: XCTestCase {
             ])
         ])
         let data = try JSONSerialization.data(
-            withJSONObject: ["url": page.absoluteString, "title": "News", "root": root])
-        let built = AgentPageBuilder(privacy: .off, hideImages: false).build(payload: data, error: nil)
+            withJSONObject: ["url": (url ?? page).absoluteString, "title": "News", "root": root])
+        let built = AgentPageBuilder(privacy: privacy, hideImages: false).build(payload: data, error: nil)
         XCTAssertNil(built.unavailableReason)
         return built
     }
@@ -190,6 +190,7 @@ final class BrowserHideFromAgentTests: XCTestCase {
         let dialog = try XCTUnwrap(dialogs.first)
         XCTAssertEqual(dialog.questionLabel.stringValue, "Hide this from the agent?")
         XCTAssertFalse(dialog.scopeControl.isEnabled(forSegment: 1), "no looser selector is recorded")
+        XCTAssertEqual(dialog.scopeControl.toolTip(forSegment: 1), BrowserPickDialogController.noLooserToolTip)
         dialog.confirm(nil)
         await mode.lastSave?.value
         let saved = try store.items(list: .agent, for: page)
@@ -205,6 +206,8 @@ final class BrowserHideFromAgentTests: XCTestCase {
         XCTAssertNil(BrowserSelectingMode.mapPreviewPick(candidate(ref: nil), in: shown))
         XCTAssertNil(BrowserSelectingMode.mapPreviewPick(candidate(ref: "e99"), in: shown))
         XCTAssertNil(BrowserSelectingMode.mapPreviewPick(candidate(ref: "e2"), in: nil))
+        // The blank space between nodes carries the document's ref: hiding it would hide the page.
+        XCTAssertNil(BrowserSelectingMode.mapPreviewPick(candidate(ref: "e0"), in: shown))
 
         let preview = FakePreview()
         preview.shownPage = shown
@@ -250,13 +253,67 @@ final class BrowserHideFromAgentTests: XCTestCase {
 
         XCTAssertEqual(try store.items(list: .agent, for: page).count, 1)
         XCTAssertEqual(try store.items(list: .user, for: page), [])
+        // The user list's selectors are what the live page's style sheet is
+        // built from, so an empty list is no `__adk_hidden_items` rule.
         XCTAssertEqual(try store.enabledSelectors(list: .user, for: page), [])
-        // The live page keeps the element: no user-list style sheet, and it still shows.
-        let script = """
-            [document.getElementById("\(BrowserHiddenItemsStyle.styleElementID)") === null,
-             getComputedStyle(document.getElementById("promo")).display !== "none"]
-            """
-        let result = try await engine.webView.evaluateJavaScript(script)
-        XCTAssertEqual(result as? [Bool], [true, true])
+    }
+
+    func test_previewPickSavesTheLiveSiteUnderPrivacy() async throws {
+        // A privacy word in the host: the agent page's address is concealed,
+        // the entry's site must still be the live page's.
+        let live = try XCTUnwrap(URL(string: "https://acme.example/news"))
+        engine.webView.loadSimulatedRequest(URLRequest(url: live), responseHTML: Self.html)
+        for _ in 0..<250 where engine.url != live || engine.webView.isLoading {
+            try await Task.sleep(for: .milliseconds(20))
+        }
+        XCTAssertEqual(engine.url, live)
+        let privacy = BrowserAgentPrivacy.enabled(
+            TextSubstitutionFilter(pairs: [.init(alias: "zed", real: "acme")]))
+        let shown = try agentPage(url: live, privacy: privacy)
+        XCTAssertNotEqual(shown.url?.host, "acme.example", "the agent page's address is concealed")
+
+        let preview = FakePreview()
+        preview.shownPage = shown
+        let mode = makeMode(preview: preview)
+        mode.begin()
+        mode.handlePick(candidate(ref: "e2"))
+        try XCTUnwrap(dialogs.first).confirm(nil)
+        await mode.lastSave?.value
+        mode.end(.stop)
+
+        let saved = try store.items(list: .agent, for: live)
+        XCTAssertEqual(saved.map(\.site), ["acme.example/*"])
+        XCTAssertEqual(saved.map(\.selector), ["#promo"])
+    }
+
+    func test_popoverToggleMatchesTheClosingPress() throws {
+        let window = NSWindow(
+            contentRect: NSRect(x: -20000, y: -20000, width: 200, height: 100),
+            styleMask: .borderless, backing: .buffered, defer: false)
+        window.isReleasedWhenClosed = false
+        let anchor = NSButton(frame: NSRect(x: 10, y: 10, width: 40, height: 20))
+        window.contentView?.addSubview(anchor)
+        let popover = BrowserHiddenItemsPopover(list: .agent, store: store, url: page) {}
+        popover.anchor = anchor
+        func mouse(_ type: NSEvent.EventType, at point: NSPoint, number: Int) throws -> NSEvent {
+            try XCTUnwrap(NSEvent.mouseEvent(
+                with: type, location: point, modifierFlags: [], timestamp: 0,
+                windowNumber: window.windowNumber, context: nil, eventNumber: number, clickCount: 1, pressure: 1))
+        }
+        let inside = NSPoint(x: 20, y: 20)
+        // The press on the anchor that closed it: its own mouse-up is the toggle.
+        popover.noteClosing(by: try mouse(.leftMouseDown, at: inside, number: 7))
+        XCTAssertEqual(popover.closingPressNumber, 7)
+        XCTAssertTrue(popover.closesOnAnchorClick(try mouse(.leftMouseUp, at: inside, number: 7)))
+        XCTAssertNil(popover.closingPressNumber)
+        // Released off the button (no action), then a real click: it opens the popover.
+        popover.noteClosing(by: try mouse(.leftMouseDown, at: inside, number: 8))
+        XCTAssertFalse(popover.closesOnAnchorClick(try mouse(.leftMouseUp, at: inside, number: 9)))
+        // A press elsewhere closes it without arming the toggle.
+        popover.noteClosing(by: try mouse(.leftMouseDown, at: NSPoint(x: 150, y: 80), number: 10))
+        XCTAssertNil(popover.closingPressNumber)
+        XCTAssertFalse(popover.closesOnAnchorClick(try mouse(.leftMouseUp, at: inside, number: 10)))
+        // Nothing recorded: a click is an ordinary click.
+        XCTAssertFalse(popover.closesOnAnchorClick(nil))
     }
 }

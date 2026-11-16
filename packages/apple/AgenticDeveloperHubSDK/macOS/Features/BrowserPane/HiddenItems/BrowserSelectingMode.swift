@@ -157,7 +157,12 @@ final class BrowserSelectingMode {
             do {
                 try await picker.start()
             } catch {
-                if self.picker === picker { self.end(.failure) }
+                // The picker could not run (in the preview, a world WebKit
+                // would not run with page JavaScript off): say so.
+                if self.picker === picker {
+                    NSSound.beep()
+                    self.end(.failure)
+                }
                 return
             }
             // Ended while the start was in flight: take the stray picker down.
@@ -206,7 +211,6 @@ final class BrowserSelectingMode {
     func handlePick(_ candidate: BrowserPickCandidate) {
         guard state == .selecting, candidate.thisItem != nil else { return }
         var accepted = candidate
-        var url = engine?.url
         if view == .agentPreview {
             let page = preview?.shownPage
             guard let mapped = Self.mapPreviewPick(candidate, in: page) else {
@@ -217,11 +221,14 @@ final class BrowserSelectingMode {
             }
             accepted = mapped
             pickRef = candidate.ref
-            url = page?.url ?? url
+            // The site comes from the live page, never from `AgentPage.url`:
+            // that is the concealed address, and an entry saved under a
+            // stand-in host would never apply. A commit ends selecting, so
+            // the engine's URL is the page the preview was built from.
         }
         picker?.pause()
         state = .dialog(accepted)
-        pickURL = url
+        pickURL = engine?.url
         let controller = BrowserPickDialogController(
             candidate: accepted, list: list,
             preview: { [weak self] selectors in self?.setPreview(selectors) },
@@ -235,9 +242,12 @@ final class BrowserSelectingMode {
     /// computed against the preview's markup), All items like it is not
     /// offered (no looser selector is recorded), and the label is the
     /// node's. `nil` — refused — for no ref, a ref the page has no node for,
-    /// or a node with no selector.
+    /// a node with no selector, and the document itself: the blank space
+    /// between nodes carries the root's ref, and hiding it would hide the
+    /// whole page from the agent.
     static func mapPreviewPick(_ candidate: BrowserPickCandidate, in page: AgentPage?) -> BrowserPickCandidate? {
-        guard let ref = candidate.ref, let node = page?.node(ref: ref), !node.selector.isEmpty else { return nil }
+        guard let ref = candidate.ref, let page, let node = page.node(ref: ref), !node.selector.isEmpty,
+              !(node.kind == .document && node.ref == page.root?.ref) else { return nil }
         return BrowserPickCandidate(
             kind: .pick, thisItem: node.selector, allLikeIt: nil, allLikeItCount: 0,
             pageElementCount: candidate.pageElementCount, label: label(of: node), ref: ref)
