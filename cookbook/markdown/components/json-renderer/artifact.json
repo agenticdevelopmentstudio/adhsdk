@@ -4,11 +4,11 @@
     "id": "b32270be-49b8-4227-9e30-1d8e781ab3b5",
     "title": "JSON Renderer",
     "type": "ingredient",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
-    "modified": "2026-11-14",
+    "modified": "2026-11-16",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -32,7 +32,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "0de617f95c9751e6",
+  "synced": "2ea2a3bb7eeb9424",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

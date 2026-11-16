@@ -73,6 +73,11 @@ describe('processMarkdown', () => {
     expect(result.html).toMatch(/<pre[^>]*tabindex="0"/)
   })
 
+  it('keeps the class shiki puts on each line span', async () => {
+    const result = await processMarkdown('```ts\nconst x = 1\nconst y = 2\n```')
+    expect(result.html.match(/<span class="line"/g)?.length).toBe(2)
+  })
+
   // c6: XSS inert — raw HTML in markdown is dropped by remark-rehype
   // (allowDangerousHtml defaults to false) and any survivor would be stripped
   // by rehype-sanitize's allowlist.
