@@ -23,4 +23,4 @@
 | agent-history-tool-020 | no-local-files | Access All history; the newest visit is `file:///Users/me/notes.html`, then two `https` visits; `limit` 2 | Two lines, both `https`; no `file:` address or its title appears |
 | agent-history-tool-021 | no-local-files | Access Current tab only; the back/forward list holds a `file:` entry and an `https` entry | Only the `https` entry is listed |
 | agent-history-tool-022 | closed-privacy-refuses, conceal-with-every-word | Agent privacy on; the page's words readable; the every-site words unreadable | The call fails with the closed-privacy refusal; no visit returned |
-
+| agent-history-tool-023 | query-matches-concealed-text | Agent privacy on with "Acme" shown as "Globex"; a visit titled "Acme statement"; `query` "acme", then "globex" | "acme" replies that no visits were found; "globex" lists the visit as "Globex statement" |

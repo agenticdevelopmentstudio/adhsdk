@@ -10,7 +10,9 @@
   visit `BrowserAutomation.isDrivable` refuses (a `file:` address; the store
   reads with `recent(limit:excludingLocalFiles: true)` and
   `search(_:limit:excludingLocalFiles: true)`, whose SQL adds
-  `url NOT LIKE 'file:%'` before the limit), concealing each field
+  `url NOT LIKE 'file:%'` before the limit; under Agent Privacy a query
+  skips that SQL search and walks `recent(limit:before:excludingLocalFiles: true)`
+  a `matchPageSize` page at a time, matching the concealed fields), concealing each field
   through the agent page's string path,
   `AgentPageBuilder(privacy:hideImages: false).conceal`, which applies
   `BrowserAgentPrivacy.concealing(_:)` (whose filter already adds the

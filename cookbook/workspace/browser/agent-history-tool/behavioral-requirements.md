@@ -53,6 +53,11 @@
   concealment MUST use every enabled privacy word whatever site it is
   scoped to, never only the words that apply to the page in front, combined
   with the privacy the call runs under.
+- **query-matches-concealed-text**: When agent privacy is on, `query` MUST
+  be matched against each visit's concealed title and address — what the
+  agent would be shown — never the real text, under either access, with
+  `limit` applied after that match and the newest first; otherwise whether a
+  query returns visits would confirm a guess at a concealed word.
 - **no-local-files**: The tool MUST NOT list a visit whose address is a
   local file (`file:`), its title or its address, under either access; under
   All history such visits MUST be left out before `limit` is applied, so the

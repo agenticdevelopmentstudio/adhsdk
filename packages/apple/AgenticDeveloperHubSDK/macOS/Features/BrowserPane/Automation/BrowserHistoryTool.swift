@@ -44,23 +44,78 @@ struct BrowserHistoryTool {
         if let refusal = privacy.closedRefusal() { throw BrowserToolSet.ToolError(sentence: refusal) }
         let limit = clamped(limit)
         let query = query.flatMap { $0.isEmpty ? nil : $0 }
+        let conceal = AgentPageBuilder(privacy: privacy, hideImages: false).conceal
         let visits: [BrowserVisitLine]
         switch access {
         case .none:
             throw BrowserToolSet.ToolError(sentence: noneRefusal)
         case .currentTab:
-            visits = Array(backForward.filter { isShareable($0) && matches($0, query) }.prefix(limit))
+            visits = Array(backForward.lazy.filter(isShareable).map { concealed($0, conceal) }
+                .filter { matches($0, query) }.prefix(limit))
         case .all:
             guard let store else { throw BrowserToolSet.ToolError(sentence: noStoreRefusal) }
-            let rows = try await store.perform { store in
-                if let query { return try store.search(query, limit: limit, excludingLocalFiles: true) }
-                return try store.recent(limit: limit, excludingLocalFiles: true)
+            if let query, privacy.isOn {
+                visits = try await concealedMatches(query, limit: limit, store: store, conceal: conceal)
+            } else {
+                let rows = try await store.perform { store in
+                    if let query { return try store.search(query, limit: limit, excludingLocalFiles: true) }
+                    return try store.recent(limit: limit, excludingLocalFiles: true)
+                }
+                visits = rows.map(visitLine).filter(isShareable).map { concealed($0, conceal) }
             }
-            visits = rows.map { BrowserVisitLine(title: $0.title, url: $0.url.absoluteString, when: $0.visitedAt) }
-                .filter(isShareable)
         }
         if visits.isEmpty { return emptyReply }
-        return visits.map { line($0, privacy) }.joined(separator: "\n")
+        return visits.map(line).joined(separator: "\n")
+    }
+
+    /// How many store rows `concealedMatches` reads at a time.
+    static let matchPageSize = 500
+
+    /// The newest `limit` visits whose concealed title or address holds
+    /// `query`, read from the store a page at a time, newest first. Under
+    /// Agent Privacy the query is matched against what the agent sees, never
+    /// the real text: the store's SQL search would match a concealed word, so
+    /// "visits" versus "no visits found" would confirm a guess at it
+    /// (`query-matches-concealed-text`), and it would miss a stand-in the
+    /// agent was shown.
+    private static func concealedMatches(
+        _ query: String, limit: Int, store: BrowserHistoryStore,
+        conceal: (String) -> String
+    ) async throws -> [BrowserVisitLine] {
+        var found: [BrowserVisitLine] = []
+        var cursor: BrowserVisit?
+        while found.count < limit {
+            let after = cursor
+            let page = try await store.perform { store in
+                try store.recent(limit: matchPageSize, before: after, excludingLocalFiles: true)
+            }
+            for row in page {
+                let visit = visitLine(row)
+                guard isShareable(visit) else { continue }
+                let shown = concealed(visit, conceal)
+                if matches(shown, query) { found.append(shown) }
+                if found.count == limit { break }
+            }
+            guard page.count == matchPageSize, let last = page.last else { break }
+            cursor = last
+        }
+        return found
+    }
+
+    private static func visitLine(_ row: BrowserVisit) -> BrowserVisitLine {
+        BrowserVisitLine(title: row.title, url: row.url.absoluteString, when: row.visitedAt)
+    }
+
+    /// `visit` as the agent sees it. Each field is concealed on its own
+    /// before the line is assembled (`conceal-before-join`), so a privacy
+    /// word cannot straddle a separator and slip past the match. Both go
+    /// through the agent page's string path (`AgentPageBuilder.conceal`,
+    /// recipe `titles-dialogs-focus-through-string-path`), as every page
+    /// string does.
+    private static func concealed(
+        _ visit: BrowserVisitLine, _ conceal: (String) -> String
+    ) -> BrowserVisitLine {
+        BrowserVisitLine(title: conceal(visit.title), url: conceal(visit.url), when: visit.when)
     }
 
     /// Whether a visit may be listed at all: a local file never is, its
@@ -71,7 +126,7 @@ struct BrowserHistoryTool {
         BrowserAutomation.isDrivable(visit.url)
     }
 
-    /// Whether a back/forward entry holds `query` in its title or address,
+    /// Whether a concealed visit holds `query` in its title or address,
     /// ignoring case, as the store's search does.
     private static func matches(_ visit: BrowserVisitLine, _ query: String?) -> Bool {
         guard let query else { return true }
@@ -79,20 +134,12 @@ struct BrowserHistoryTool {
             || visit.url.localizedCaseInsensitiveContains(query)
     }
 
-    /// One visit's line: its time when known, its title, its address. Each
-    /// field is concealed on its own before the line is assembled
-    /// (`conceal-before-join`), so a privacy word cannot straddle a
-    /// separator and slip past the match. Both go through the agent page's
-    /// string path (`AgentPageBuilder.conceal`, recipe
-    /// `titles-dialogs-focus-through-string-path`), as every page string does.
-    private static func line(_ visit: BrowserVisitLine, _ privacy: BrowserAgentPrivacy) -> String {
-        let conceal = AgentPageBuilder(privacy: privacy, hideImages: false).conceal
-        let title = conceal(visit.title)
-        let url = conceal(visit.url)
+    /// One concealed visit's line: its time when known, its title, its address.
+    private static func line(_ visit: BrowserVisitLine) -> String {
         var fields: [String] = []
         if let when = visit.when { fields.append(when.formatted(.iso8601)) }
-        fields.append(title.isEmpty ? "(untitled)" : title)
-        fields.append(url)
+        fields.append(visit.title.isEmpty ? "(untitled)" : visit.title)
+        fields.append(visit.url)
         return fields.joined(separator: "  ")
     }
 }

@@ -143,13 +143,27 @@ public final class BrowserHistoryStore: @unchecked Sendable {
     /// The latest visits, newest first. `excludingLocalFiles` leaves out
     /// `file:` visits before the limit is applied, so a list for the agent
     /// still holds `limit` visits it may see (`BrowserAutomation.isDrivable`).
-    public func recent(limit: Int = 200, excludingLocalFiles: Bool = false) throws -> [BrowserVisit] {
-        let filter = excludingLocalFiles ? "WHERE \(Self.notLocalFile)" : ""
+    /// `before`, when given, starts the page after that visit in the same
+    /// order (keyset paging), so a caller can walk the whole history a page
+    /// at a time without a visit recorded meanwhile shifting the pages.
+    public func recent(
+        limit: Int = 200, before: BrowserVisit? = nil, excludingLocalFiles: Bool = false
+    ) throws -> [BrowserVisit] {
+        var conditions: [String] = []
+        var arguments: StatementArguments = []
+        if let before {
+            conditions.append("(visited_at < ? OR (visited_at = ? AND id < ?))")
+            let time = before.visitedAt.timeIntervalSince1970
+            arguments += [time, time, before.id]
+        }
+        if excludingLocalFiles { conditions.append(Self.notLocalFile) }
+        let filter = conditions.isEmpty ? "" : "WHERE " + conditions.joined(separator: " AND ")
+        arguments += [limit]
         return try database.read { connection in
             try Row.fetchAll(connection, sql: """
                 SELECT id, url, title, visited_at FROM visit \(filter)
                 ORDER BY visited_at DESC, id DESC LIMIT ?
-            """, arguments: [limit]).compactMap(Self.visit(from:))
+            """, arguments: arguments).compactMap(Self.visit(from:))
         }
     }
 

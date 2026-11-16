@@ -149,6 +149,41 @@ final class BrowserHistoryToolTests: XCTestCase {
         XCTAssertFalse(all.contains("Acme"), all)
     }
 
+    // A query is matched against what the agent sees, never the concealed
+    // text, so a reply cannot confirm a guess at a privacy word (review f5).
+    func test_queryMatchesConcealedTextOnly() async throws {
+        let privacy = BrowserAgentPrivacy.enabled(TextSubstitutionFilter(pairs: [.init(alias: "Globex", real: "Acme")]))
+        let backForward = [BrowserVisitLine(title: "Acme statement", url: "https://bank.example/Acme", when: nil),
+                           BrowserVisitLine(title: "News", url: "https://news.example/", when: nil)]
+        let tabGuess = try await run(.currentTab, query: "acme", backForward: backForward, privacy: privacy)
+        XCTAssertEqual(tabGuess, BrowserHistoryTool.emptyReply)
+        let tabAlias = lines(try await run(.currentTab, query: "globex", backForward: backForward, privacy: privacy))
+        XCTAssertEqual(tabAlias.count, 1, "\(tabAlias)")
+        XCTAssertTrue(tabAlias[0].contains("Globex statement"))
+
+        // More visits than one store page, the concealed ones oldest, so the
+        // match has to walk past the first page and still keep its order.
+        let store = try makeStore(visits: 0)
+        for index in 0..<3 {
+            try store.record(URL(string: "https://bank.example/Acme/\(index)")!, title: "Acme \(index)",
+                             at: Date(timeIntervalSince1970: 100 + Double(index)))
+        }
+        for index in 0..<(BrowserHistoryTool.matchPageSize + 10) {
+            try store.record(URL(string: "https://example.com/\(index)")!, title: "Page \(index)",
+                             at: Date(timeIntervalSince1970: 1_000 + Double(index)))
+        }
+        let guess = try await run(.all, query: "acme", store: store, privacy: privacy)
+        XCTAssertEqual(guess, BrowserHistoryTool.emptyReply)
+        let alias = lines(try await run(.all, query: "Globex", limit: 2, store: store, privacy: privacy))
+        XCTAssertEqual(alias.count, 2, "\(alias)")
+        XCTAssertTrue(alias[0].contains("https://bank.example/Globex/2"), "newest first: \(alias)")
+        XCTAssertTrue(alias[1].contains("https://bank.example/Globex/1"), "\(alias)")
+        XCTAssertFalse(alias.contains { $0.localizedCaseInsensitiveContains("acme") }, "\(alias)")
+        let unconcealed = lines(try await run(.all, query: "page 1", limit: 3, store: store, privacy: privacy))
+        XCTAssertEqual(unconcealed.count, 3, "\(unconcealed)")
+        XCTAssertTrue(unconcealed[0].contains("Page 199 "), "newest match first: \(unconcealed)")
+    }
+
     /// A handle made without a history privacy while Agent Privacy is on
     /// refuses history rather than concealing with the page's words alone.
     @MainActor
