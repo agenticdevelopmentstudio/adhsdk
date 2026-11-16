@@ -2,7 +2,7 @@
 id: 213f008f-6e11-4d6d-ba91-dbcd7e9330cc
 title: "Extensions Settings Topic"
 type: ingredient
-version: 0.1.1
+version: 0.2.0
 status: draft
 language: en
 created: 2026-11-15
@@ -105,6 +105,13 @@ than replacing the list.
   item into the library's staging area and then go through the normal stage, permission
   confirmation and commit path; declining the confirmation MUST install
   nothing.
+- **downloaded-refuses-links**: The extension host MUST refuse a downloaded
+  item whose staged copy holds a symbolic link, with an error naming the item
+  and the link, before the permission confirmation, and MUST leave nothing
+  staged.
+- **downloaded-off-main**: The extension host MUST read, copy and unpack a
+  downloaded item off the main thread, so a large item never stalls the
+  settings window.
 - **url-prompt**: The URL… item MUST open a modal prompt with one text field and OK and
   Cancel buttons; Cancel MUST install nothing.
 - **url-prompt-validation**: The prompt's OK button MUST be enabled only while
@@ -204,7 +211,7 @@ than replacing the list.
 | extensions-topic-025 | details-actions-reachable | Open an extension's details | Options, store page and Remove Extension… are offered |
 | extensions-topic-026 | list-follows-host | With details open, remove the extension from the popover and confirm | The row disappears and the popover closes |
 | extensions-topic-027 | no-inline-help-labels | Load the topic with no extensions installed | An empty table with no text; the help content explains installing |
-
+| extensions-topic-028 | downloaded-refuses-links | Install a folder with a manifest and a symbolic link to a file outside it | A symbolic-link error naming the link; no confirmation; nothing staged or installed |
 ## Edge Cases
 
 - **Null and empty input**: No extensions: an empty table. An empty or
@@ -321,6 +328,7 @@ Not applicable: the design asks for no log line of the topic's own.
 | macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/SafariExtensions/SafariExtensionHost.swift` | unverified |
 | macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/SafariExtensions/WebStoreExtension.swift` | unverified |
 | macos | `packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/BrowserPane/SafariExtensionsTopicTests.swift` | unverified |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/SafariExtensions/SafariExtensionLibrary.swift` | unverified |
 
 ## Design Decisions
 
@@ -361,5 +369,6 @@ Notes: no compliance checks have been run; the code does not exist yet.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 0.2.0 | 2026-11-15 | Mike Fullerton | downloaded-refuses-links and downloaded-off-main: a downloaded folder with a symbolic link is refused, and staging runs off the main thread |
 | 0.1.1 | 2026-11-15 | Mike Fullerton | Platform notes follow the implementation: header buttons as header-view subviews, installDownloaded(at:presentingOn:), install(fromAddress:), key- or path-derived ids |
 | 0.1.0 | 2026-11-15 | Mike Fullerton | Initial creation (design-first, from the more privacy features design) |

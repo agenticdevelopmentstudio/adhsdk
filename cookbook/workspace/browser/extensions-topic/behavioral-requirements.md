@@ -43,6 +43,13 @@
   item into the library's staging area and then go through the normal stage, permission
   confirmation and commit path; declining the confirmation MUST install
   nothing.
+- **downloaded-refuses-links**: The extension host MUST refuse a downloaded
+  item whose staged copy holds a symbolic link, with an error naming the item
+  and the link, before the permission confirmation, and MUST leave nothing
+  staged.
+- **downloaded-off-main**: The extension host MUST read, copy and unpack a
+  downloaded item off the main thread, so a large item never stalls the
+  settings window.
 - **url-prompt**: The URL… item MUST open a modal prompt with one text field and OK and
   Cancel buttons; Cancel MUST install nothing.
 - **url-prompt-validation**: The prompt's OK button MUST be enabled only while

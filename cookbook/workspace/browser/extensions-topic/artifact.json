@@ -4,7 +4,7 @@
     "id": "213f008f-6e11-4d6d-ba91-dbcd7e9330cc",
     "title": "Extensions Settings Topic",
     "type": "ingredient",
-    "version": "0.1.1",
+    "version": "0.2.0",
     "status": "draft",
     "language": "en",
     "created": "2026-11-15",
@@ -41,7 +41,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "c49b867f85379563",
+  "synced": "4a52e6fa36757840",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
