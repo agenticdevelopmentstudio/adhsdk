@@ -50,6 +50,25 @@ final class BrowserElementPickerTests: XCTestCase {
         XCTAssertEqual(picks.count, 1, "the picker keeps taking picks after a refused one")
     }
 
+    /// Blank space beside a layout hits `<body>`: This item for the page's
+    /// root is refused like a missing one, for either list.
+    func test_pickOfPageRootIsRefused() {
+        for list in [BrowserHiddenItemList.user, .agent] {
+            var picks: [BrowserPickCandidate] = []
+            let picker = BrowserElementPicker(webView: WKWebView(frame: .zero), list: list,
+                                              onPick: { picks.append($0) }, onCancel: {})
+            for root in ["body", "html", "HTML > BODY", "html body", ":root", " body "] {
+                picker.handle(body: body(thisItem: root))
+            }
+            XCTAssertTrue(picks.isEmpty, "\(list): no root pick reaches onPick")
+            picker.handle(body: body(thisItem: "body > div.ad"))
+            XCTAssertEqual(picks.map(\.thisItem), ["body > div.ad"], "an element inside body is fine")
+        }
+        XCTAssertTrue(BrowserPickCandidate.isPageRoot("html>body"))
+        XCTAssertFalse(BrowserPickCandidate.isPageRoot("body.home"))
+        XCTAssertFalse(BrowserPickCandidate.isPageRoot("#main"))
+    }
+
     func test_cancelCallsOnCancel() {
         var cancels = 0
         let picker = BrowserElementPicker(webView: WKWebView(frame: .zero), list: .agent,

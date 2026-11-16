@@ -171,6 +171,19 @@ final class BrowserHideFromAgentTests: XCTestCase {
         mode.end(.stop)
     }
 
+    /// A Website-view pick for the page's root opens no dialog for the agent
+    /// list either: saving it would hide the whole page from the agent.
+    func test_pickOfPageRootOpensNoDialog() {
+        let mode = makeMode()
+        mode.begin()
+        mode.handlePick(BrowserPickCandidate(
+            kind: .pick, thisItem: "body", allLikeIt: nil, allLikeItCount: 0,
+            pageElementCount: 6, label: "body", ref: nil))
+        XCTAssertTrue(dialogs.isEmpty)
+        XCTAssertEqual(mode.state, .selecting)
+        mode.end(.stop)
+    }
+
     func test_previewPickMapsRefToSelector() async throws {
         let shown = try agentPage()
         let mapped = try XCTUnwrap(BrowserSelectingMode.mapPreviewPick(candidate(ref: "e2"), in: shown))

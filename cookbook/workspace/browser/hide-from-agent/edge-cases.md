@@ -7,7 +7,9 @@
   saved and is refused like a missing ref. A click on blank space in the
   preview lands on the document root, whose ref the preview puts on
   `<body>`; that pick is refused too, since saving it would hide the whole
-  page from the agent. The "All items like it" scope in
+  page from the agent. In the Website view a pick of the page's root, or
+  a recorded selector that names only `html`/`body`, is refused the same
+  way (element picker's `this-item-not-root`). The "All items like it" scope in
   the preview uses the looser selector the gatekeeper recorded for the ref
   if it recorded one, and is disabled otherwise. The gatekeeper records no
   looser selector today, so in the preview it is always disabled.

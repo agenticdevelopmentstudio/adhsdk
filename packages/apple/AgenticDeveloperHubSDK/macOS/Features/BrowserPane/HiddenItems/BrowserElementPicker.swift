@@ -68,6 +68,27 @@ public struct BrowserPickCandidate: Decodable, Sendable, Equatable {
 
     /// The tags whose elements hold the whole page.
     static let neverLikeIt: Set<String> = ["html", "head", "body", "main"]
+
+    /// Whether This item can be offered: there is one, and it is not the
+    /// page's root. The script already refuses the root element whatever
+    /// selector finder gave it; this refuses a root named in text, such as
+    /// a selector an agent page recorded for `<body>`.
+    public var thisItemAccepted: Bool {
+        guard let thisItem else { return false }
+        return !Self.isPageRoot(thisItem)
+    }
+
+    /// `html`, `head`, `body` or `:root`, alone or as a child chain of them
+    /// (`html > body`), in any case and spacing: hiding one hides the page.
+    static func isPageRoot(_ selector: String) -> Bool {
+        let parts = selector.lowercased()
+            .replacingOccurrences(of: ">", with: " ")
+            .split(whereSeparator: \.isWhitespace)
+        guard !parts.isEmpty else { return true }
+        return parts.allSatisfy { pageRoots.contains(String($0)) }
+    }
+
+    static let pageRoots: Set<String> = ["html", "head", "body", ":root"]
 }
 
 /// The selecting-mode script on one web view: outlines the element under the
@@ -187,7 +208,8 @@ public final class BrowserElementPicker: NSObject, WKScriptMessageHandler {
     }
 
     /// Decodes one message body and routes it. A pick with no This item
-    /// selector is refused with a beep and selecting continues.
+    /// selector, or one for the page's root, is refused with a beep and
+    /// selecting continues.
     func handle(body: Any) {
         guard let candidate = Self.decode(body) else { return }
         switch candidate.kind {
@@ -195,7 +217,7 @@ public final class BrowserElementPicker: NSObject, WKScriptMessageHandler {
             onCancel()
         case .pick:
             guard !isPaused else { return }
-            guard candidate.thisItem != nil else {
+            guard candidate.thisItemAccepted else {
                 let host = webView?.url?.host ?? "no address"
                 Self.logger.info("element pick refused on \(host, privacy: .public)")
                 NSSound.beep()

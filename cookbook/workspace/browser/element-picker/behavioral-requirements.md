@@ -52,6 +52,13 @@
   does.
 - **this-item-unique**: The This item selector MUST match exactly one
   element in the page at pick time, the picked one.
+- **this-item-not-root**: A pick of the page's root, its `html`, `head` or
+  `body` element, MUST carry no This item selector, and a This item
+  selector that names only them (`body`, `html > body`, `:root`) MUST be
+  refused, for both the distracting-items and the hide-from-agent lists:
+  a click on blank space beside a layout hits `<body>`, and saving it
+  would hide the whole page. The pick is refused as
+  `pick-without-selector-refused` says.
 - **all-like-it-stable-classes**: The All items like it selector MUST be
   built from the element's tag and class names only, MUST NOT use ids, and
   MUST NOT use any class name that looks generated: one containing three

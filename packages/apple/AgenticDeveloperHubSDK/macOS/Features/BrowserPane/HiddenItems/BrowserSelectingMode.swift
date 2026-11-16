@@ -220,7 +220,7 @@ final class BrowserSelectingMode {
     /// An accepted pick: pause the picker and open the dialog for it. In the
     /// Agent preview the pick is first mapped to its node's recorded selector.
     func handlePick(_ candidate: BrowserPickCandidate) {
-        guard state == .selecting, candidate.thisItem != nil else { return }
+        guard state == .selecting, candidate.thisItemAccepted else { return }
         var accepted = candidate
         if view == .agentPreview {
             let page = preview?.shownPage
@@ -253,11 +253,13 @@ final class BrowserSelectingMode {
     /// computed against the preview's markup), All items like it is not
     /// offered (no looser selector is recorded), and the label is the
     /// node's. `nil` — refused — for no ref, a ref the page has no node for,
-    /// a node with no selector, and the document itself: the blank space
+    /// a node with no selector or one for the page's root (`body`), and
+    /// the document itself: the blank space
     /// between nodes carries the root's ref, and hiding it would hide the
     /// whole page from the agent.
     static func mapPreviewPick(_ candidate: BrowserPickCandidate, in page: AgentPage?) -> BrowserPickCandidate? {
         guard let ref = candidate.ref, let page, let node = page.node(ref: ref), !node.selector.isEmpty,
+              !BrowserPickCandidate.isPageRoot(node.selector),
               !(node.kind == .document && node.ref == page.root?.ref) else { return nil }
         return BrowserPickCandidate(
             kind: .pick, thisItem: node.selector, allLikeIt: nil, allLikeItCount: 0,

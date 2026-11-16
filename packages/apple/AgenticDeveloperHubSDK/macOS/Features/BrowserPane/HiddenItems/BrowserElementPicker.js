@@ -104,8 +104,13 @@
   }
 
   // "This item": finder's shortest unique selector, accepted only when it
-  // matches exactly the picked element.
+  // matches exactly the picked element and that element is not the page's
+  // root: blank space beside a layout hits `<body>`, and saving it would
+  // hide the whole page.
   function thisItemSelector(el) {
+    if (el === document.documentElement || el === document.head || el === document.body) {
+      return null;
+    }
     try {
       const sel = globalThis.__adkFinder(el, { timeoutMs: FINDER_TIMEOUT_MS });
       const hits = document.querySelectorAll(sel);

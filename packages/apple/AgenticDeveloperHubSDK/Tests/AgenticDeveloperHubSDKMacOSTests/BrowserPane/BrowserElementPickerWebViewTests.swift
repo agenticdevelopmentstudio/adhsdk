@@ -140,6 +140,20 @@ final class BrowserElementPickerWebViewTests: XCTestCase {
         XCTAssertEqual(long.label, "div \"\(text)\"", "cut at 60 characters")
     }
 
+    /// A click on blank space lands on `<body>`; the page's root never gets
+    /// a This item selector, so that pick is refused and only the next
+    /// click's pick arrives.
+    func test_pageRootHasNoThisItem() async throws {
+        _ = try await page(
+            "document.body.dispatchEvent(new MouseEvent('click', "
+                + "{ bubbles: true, cancelable: true, view: window })); "
+                + "document.documentElement.dispatchEvent(new MouseEvent('click', "
+                + "{ bubbles: true, cancelable: true, view: window })); return true;")
+        let next = try await pick("only")
+        XCTAssertEqual(picks.count, 1, "neither root pick reached onPick")
+        XCTAssertNotNil(next.thisItem)
+    }
+
     func test_pageCannotSeePickerWorld() async throws {
         let seen = try await page("return [typeof window.__adkFinder, typeof window.__adkPicker].join(',');")
         XCTAssertEqual(seen as? String, "undefined,undefined")
