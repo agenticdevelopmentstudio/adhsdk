@@ -16,7 +16,8 @@ import OSLog
 /// this list. The list is a parameter, so the agent list reuses it; the
 /// switch is the user list's alone.
 @MainActor
-final class BrowserHiddenItemsPopover: NSViewController, NSTableViewDataSource, NSTableViewDelegate {
+final class BrowserHiddenItemsPopover: NSViewController, NSTableViewDataSource, NSTableViewDelegate,
+    NSPopoverDelegate {
 
     static let siteSwitchTitle = "Hide distracting items"
     static let removeToolTip = "Remove Selected Item"
@@ -42,6 +43,13 @@ final class BrowserHiddenItemsPopover: NSViewController, NSTableViewDataSource, 
     private(set) var items: [BrowserHiddenItem] = []
     private var changeObserver: NSObjectProtocol?
     private var loadGeneration = 0
+    /// The button the popover opened from, for the toggle.
+    private weak var anchor: NSView?
+    /// When a press on `anchor` closed the popover, so the click it begins
+    /// closes it rather than opening it again.
+    private var anchorPressClosedAt: TimeInterval?
+    /// How long after that press its click still counts as the toggle.
+    static let toggleInterval: TimeInterval = 2
     private static let logger = Logger(subsystem: "AgenticDeveloperHubSDK", category: "BrowserPane")
 
     init(list: BrowserHiddenItemList, store: BrowserHiddenItemsStore, url: URL?,
@@ -54,6 +62,7 @@ final class BrowserHiddenItemsPopover: NSViewController, NSTableViewDataSource, 
         super.init(nibName: nil, bundle: nil)
         popover.behavior = .transient
         popover.contentViewController = self
+        popover.delegate = self
         changeObserver = NotificationCenter.default.addObserver(
             forName: BrowserHiddenItemsStore.didChangeNotification, object: store, queue: .main
         ) { [weak self] _ in
@@ -71,8 +80,36 @@ final class BrowserHiddenItemsPopover: NSViewController, NSTableViewDataSource, 
     /// Opens the popover under `button`.
     func show(relativeTo button: NSView) {
         _ = view
+        anchor = button
+        anchorPressClosedAt = nil
         reload()
         popover.show(relativeTo: button.bounds, of: button, preferredEdge: .maxY)
+    }
+
+    // MARK: - Toggle
+
+    /// A click on the button the popover opened from: whether it is the
+    /// toggle that closes the popover, so the caller does not open it again.
+    /// True while the popover shows (it is closed now), and when the click's
+    /// own press is what just closed it: a transient popover closes on the
+    /// mouse-down, before the button's action runs on the mouse-up.
+    func closesOnAnchorClick(_ event: NSEvent?) -> Bool {
+        if popover.isShown {
+            popover.performClose(nil)
+            return true
+        }
+        guard let closedAt = anchorPressClosedAt else { return false }
+        anchorPressClosedAt = nil
+        guard let event else { return false }
+        return event.timestamp - closedAt <= Self.toggleInterval
+    }
+
+    func popoverWillClose(_ notification: Notification) {
+        anchorPressClosedAt = nil
+        guard let event = NSApp.currentEvent, event.type == .leftMouseDown,
+              let anchor, let window = anchor.window, event.window === window,
+              anchor.bounds.contains(anchor.convert(event.locationInWindow, from: nil)) else { return }
+        anchorPressClosedAt = event.timestamp
     }
 
     // MARK: - View

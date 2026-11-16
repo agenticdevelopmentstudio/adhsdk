@@ -36,10 +36,18 @@ final class BrowserAgentPreviewViewController: NSViewController, WKNavigationDel
     /// The HTML last handed to the web view.
     private(set) var shownHTML: String?
 
+    /// The agent page last handed to the web view: what a pick's
+    /// `data-adk-ref` resolves against (recipe `workspace/browser/hide-from-agent`).
+    private(set) var shownPage: AgentPage?
+
+    /// Called each time a document finishes loading, so the agent list's
+    /// picker can install itself again in the new document.
+    var onPageLoad: (() -> Void)?
+
     /// Loads this controller started and the web view has not yet asked
     /// about; each lets exactly one `about:blank` navigation through.
     private var allowedLoads = 0
-    private var waitingHTML: String?
+    private var waitingPage: AgentPage?
 
     init(ruleList makeRuleList: @escaping @MainActor () async throws -> WKContentRuleList = defaultRuleList) {
         let configuration = WKWebViewConfiguration()
@@ -58,9 +66,9 @@ final class BrowserAgentPreviewViewController: NSViewController, WKNavigationDel
             guard let self, let list else { return }
             self.webView.configuration.userContentController.add(list)
             self.ruleList = list
-            if let html = self.waitingHTML {
-                self.waitingHTML = nil
-                self.load(html)
+            if let page = self.waitingPage {
+                self.waitingPage = nil
+                self.load(page)
             }
         }
     }
@@ -72,16 +80,17 @@ final class BrowserAgentPreviewViewController: NSViewController, WKNavigationDel
 
     /// Shows `page`, once the rule list is installed.
     func show(_ page: AgentPage) {
-        let html = page.html()
         guard ruleList != nil else {
-            waitingHTML = html
+            waitingPage = page
             return
         }
-        load(html)
+        load(page)
     }
 
-    private func load(_ html: String) {
+    private func load(_ page: AgentPage) {
+        let html = page.html()
         shownHTML = html
+        shownPage = page
         allowedLoads += 1
         webView.loadHTMLString(html, baseURL: nil)
     }
@@ -104,4 +113,13 @@ final class BrowserAgentPreviewViewController: NSViewController, WKNavigationDel
         if decision == .allow { allowedLoads -= 1 }
         return decision
     }
+
+    func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+        onPageLoad?()
+    }
+}
+
+/// The Agent preview as the agent list's picker sees it.
+extension BrowserAgentPreviewViewController: BrowserAgentPickSurface {
+    var pickWebView: WKWebView { webView }
 }

@@ -96,6 +96,10 @@ disabled is checked in the verification run and recorded below.
   popover for the agent list, anchored to the button, listing the site's
   agent-list entries with their enabled checkboxes and the − remove
   button, and with no site switch checkbox.
+- **popover-toggle**: A click on the toolbar button while its "Hidden from
+  the Agent…" popover is open MUST close the popover and show neither the
+  menu nor the popover again; the element picker's address-bar button
+  behaves the same for its own popover.
 - **popover-select-wording**: The agent popover's select button MUST read
   "Select items to hide from the agent" and start the same selecting mode
   as the menu item.
@@ -199,7 +203,11 @@ selecting returns to idle.
 - **Boundary values**: A ref whose recorded selector is empty cannot be
   saved and is refused like a missing ref. The "All items like it" scope in
   the preview uses the looser selector the gatekeeper recorded for the ref
-  if it recorded one, and is disabled otherwise.
+  if it recorded one, and is disabled otherwise. The gatekeeper records no
+  looser selector today, so in the preview it is always disabled.
+- **Agent source view**: The source view is text, with no elements to
+  pick; "Select Items to Hide from the Agent" there beeps and starts
+  nothing.
 - **Concurrent access**: The preview may be rebuilt (navigation, setting
   change) between the click and OK; the selector saved is the one recorded
   in the agent page that was showing at click time.
@@ -271,17 +279,28 @@ content and labels are not logged.
 
 - **SwiftUI**: Not applicable — AppKit, like the privacy toolbar it sits
   in.
-- **AppKit / UIKit**: Planned as `BrowserHideFromAgentButton` in
-  `macOS/Features/BrowserPane/HiddenItems/BrowserHideFromAgentButton.swift`,
-  added to the privacy strip by `WebBrowserPaneViewController`; its menu
-  starts the pane's one `BrowserSelectingMode` with `list: .agent` and a
-  preview target, or shows `BrowserHiddenItemsPopover(list: .agent, …)`.
-  In the Agent preview, `BrowserAgentPreviewViewController` hosts the
-  picker; the pick's `ref` is resolved with `AgentPage.node(ref:) ->
-  AgentNode?` and the entry takes `AgentNode.selector`. Because the
-  preview keeps `WKWebpagePreferences.allowsContentJavaScript = false`,
-  the picker is installed as a `WKUserScript(…, in: pickerWorld)` and
-  through `evaluateJavaScript(_:in:in:)` in that world.
+- **AppKit / UIKit**: `BrowserHideFromAgentButton` in
+  `macOS/Features/BrowserPane/HiddenItems/BrowserHideFromAgentButton.swift`
+  is the address box's `BrowserHideItemsButton` with the agent's symbol,
+  tooltip and identifier; `WebBrowserPaneViewController` puts it in the
+  privacy strip's row before the Agent view control. Its menu starts the
+  pane's one `BrowserSelectingMode` with `list: .agent` (and, in the Agent
+  preview, `preview:` the `BrowserAgentPreviewViewController`, through the
+  `BrowserAgentPickSurface` protocol), or shows
+  `BrowserHiddenItemsPopover(list: .agent, …)`. A preview pick's `ref` is
+  resolved against the preview's `shownPage` with `AgentPage.node(ref:)`
+  and the entry takes `AgentNode.selector`
+  (`BrowserSelectingMode.mapPreviewPick`). The dialog's preview hides
+  `[data-adk-ref="…"]` with the element picker's preview style, evaluated
+  in the picker world. The preview keeps
+  `WKWebpagePreferences.allowsContentJavaScript = false`; the picker is
+  installed with `evaluateJavaScript(_:in:in:)` in its world, and because
+  `loadHTMLString` replaces the document on every rebuild, the preview's
+  `onPageLoad` (its `didFinish`) installs it again. The popover toggle: a
+  transient `NSPopover` closes on the mouse-down, before the button's
+  action runs, so the popover notes in `popoverWillClose` that a press on
+  its anchor closed it, and `closesOnAnchorClick(_:)` treats the click
+  that press began as the toggle.
 - **Compose**: An Android `WebView` cannot run one script with page
   JavaScript off; render the preview natively from the agent page instead
   and pick nodes by their ref directly.
@@ -296,6 +315,8 @@ content and labels are not logged.
 | Platform | Location | Conformance |
 |----------|----------|-------------|
 | macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/HiddenItems/BrowserHideFromAgentButton.swift` | planned |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/BrowserAddressBarControls.swift` | unverified |
+| macos | `packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/BrowserPane/BrowserHideFromAgentTests.swift` | unverified |
 
 ## Design Decisions
 
@@ -323,9 +344,13 @@ one-click leak; entries are disabled one at a time, deliberately.
 stays off.
 **Rationale**: The preview must show only what the gatekeeper put in, so
 page scripts stay off; the picker lives in its own world and needs none of
-them. Finding (to be recorded from the verification run): whether WebKit
-runs isolated-world scripts with `allowsContentJavaScript = false`. If it
-does not, the preview enables only the picker world, never page scripts.
+them. WebKit documents `allowsContentJavaScript` as turning off the
+page's own scripts only, leaving scripts the app evaluates in a content
+world running, so the implementation installs the picker with
+`evaluateJavaScript(_:in:in:)` and leaves the preference off. Finding (to
+be recorded from the verification run): whether the picker does run in the
+preview with page JavaScript off. If it does not, the preview enables only
+the picker world, never page scripts.
 **Approved**: pending
 
 ## Compliance

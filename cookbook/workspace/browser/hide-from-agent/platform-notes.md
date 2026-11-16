@@ -1,17 +1,28 @@
 
 - **SwiftUI**: Not applicable — AppKit, like the privacy toolbar it sits
   in.
-- **AppKit / UIKit**: Planned as `BrowserHideFromAgentButton` in
-  `macOS/Features/BrowserPane/HiddenItems/BrowserHideFromAgentButton.swift`,
-  added to the privacy strip by `WebBrowserPaneViewController`; its menu
-  starts the pane's one `BrowserSelectingMode` with `list: .agent` and a
-  preview target, or shows `BrowserHiddenItemsPopover(list: .agent, …)`.
-  In the Agent preview, `BrowserAgentPreviewViewController` hosts the
-  picker; the pick's `ref` is resolved with `AgentPage.node(ref:) ->
-  AgentNode?` and the entry takes `AgentNode.selector`. Because the
-  preview keeps `WKWebpagePreferences.allowsContentJavaScript = false`,
-  the picker is installed as a `WKUserScript(…, in: pickerWorld)` and
-  through `evaluateJavaScript(_:in:in:)` in that world.
+- **AppKit / UIKit**: `BrowserHideFromAgentButton` in
+  `macOS/Features/BrowserPane/HiddenItems/BrowserHideFromAgentButton.swift`
+  is the address box's `BrowserHideItemsButton` with the agent's symbol,
+  tooltip and identifier; `WebBrowserPaneViewController` puts it in the
+  privacy strip's row before the Agent view control. Its menu starts the
+  pane's one `BrowserSelectingMode` with `list: .agent` (and, in the Agent
+  preview, `preview:` the `BrowserAgentPreviewViewController`, through the
+  `BrowserAgentPickSurface` protocol), or shows
+  `BrowserHiddenItemsPopover(list: .agent, …)`. A preview pick's `ref` is
+  resolved against the preview's `shownPage` with `AgentPage.node(ref:)`
+  and the entry takes `AgentNode.selector`
+  (`BrowserSelectingMode.mapPreviewPick`). The dialog's preview hides
+  `[data-adk-ref="…"]` with the element picker's preview style, evaluated
+  in the picker world. The preview keeps
+  `WKWebpagePreferences.allowsContentJavaScript = false`; the picker is
+  installed with `evaluateJavaScript(_:in:in:)` in its world, and because
+  `loadHTMLString` replaces the document on every rebuild, the preview's
+  `onPageLoad` (its `didFinish`) installs it again. The popover toggle: a
+  transient `NSPopover` closes on the mouse-down, before the button's
+  action runs, so the popover notes in `popoverWillClose` that a press on
+  its anchor closed it, and `closesOnAnchorClick(_:)` treats the click
+  that press began as the toggle.
 - **Compose**: An Android `WebView` cannot run one script with page
   JavaScript off; render the preview natively from the agent page instead
   and pick nodes by their ref directly.

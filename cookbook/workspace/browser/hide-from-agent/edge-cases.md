@@ -6,7 +6,11 @@
 - **Boundary values**: A ref whose recorded selector is empty cannot be
   saved and is refused like a missing ref. The "All items like it" scope in
   the preview uses the looser selector the gatekeeper recorded for the ref
-  if it recorded one, and is disabled otherwise.
+  if it recorded one, and is disabled otherwise. The gatekeeper records no
+  looser selector today, so in the preview it is always disabled.
+- **Agent source view**: The source view is text, with no elements to
+  pick; "Select Items to Hide from the Agent" there beeps and starts
+  nothing.
 - **Concurrent access**: The preview may be rebuilt (navigation, setting
   change) between the click and OK; the selector saved is the one recorded
   in the agent page that was showing at click time.

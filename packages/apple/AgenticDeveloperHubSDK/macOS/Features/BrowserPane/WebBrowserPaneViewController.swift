@@ -337,6 +337,10 @@ open class WebBrowserPaneViewController: NSViewController {
     /// made for a WebKit engine the first time selecting starts on it.
     private(set) var selectingMode: BrowserSelectingMode?
     private var hiddenItemsPopover: BrowserHiddenItemsPopover?
+    /// "Hide elements from agent" in the privacy toolbar (recipe
+    /// `workspace/browser/hide-from-agent`), and the agent list's popover.
+    let hideFromAgentButton = BrowserHideFromAgentButton()
+    private var agentItemsPopover: BrowserHiddenItemsPopover?
     /// The installed buttons between the address box and the menu button:
     /// the pane's own privacy button first (while the strip is hidden),
     /// then whatever `addToolbarAccessory` adds (a Safari pane's extensions).
@@ -968,6 +972,8 @@ open class WebBrowserPaneViewController: NSViewController {
 
         addressBox.hideItemsButton.target = self
         addressBox.hideItemsButton.action = #selector(hideItemsButtonClicked(_:))
+        hideFromAgentButton.target = self
+        hideFromAgentButton.action = #selector(hideFromAgentButtonClicked(_:))
         configureInstalledBar()
         let bar = NSStackView(views: [
             backButton, forwardButton, reloadButton, addressBox, refusalNotice, drivenBadge,
@@ -992,7 +998,7 @@ open class WebBrowserPaneViewController: NSViewController {
         // after the privacy button instead of one of them stretching.
         let spacer = NSView()
         spacer.setContentHuggingPriority(.init(1), for: .horizontal)
-        let strip = NSStackView(views: [privacyStrip, spacer, agentViewControl])
+        let strip = NSStackView(views: [privacyStrip, spacer, hideFromAgentButton, agentViewControl])
         strip.spacing = 10
         strip.edgeInsets = NSEdgeInsets(top: 0, left: 8, bottom: 0, right: 12)
         strip.alignment = .centerY
@@ -1119,18 +1125,19 @@ open class WebBrowserPaneViewController: NSViewController {
         BrowserPrivacySettingsDialog.present(for: self, from: privacyButton)
     }
 
-    /// The address box's "Hide distracting items": stops selecting while it
-    /// runs, and otherwise opens the hidden-items popover for the front page.
+    /// The address box's "Hide distracting items": stops user-list selecting
+    /// while it runs, closes the popover when it is open (the toggle), and
+    /// otherwise opens the hidden-items popover for the front page.
     @objc func hideItemsButtonClicked(_ sender: Any?) {
-        if let mode = selectingMode, mode.isActive {
+        if let mode = selectingMode, mode.isActive, mode.list == .user {
             mode.end(.stop)
             return
         }
-        guard let store = BrowserHiddenItemsStore.shared else {
-            Self.logger.error("hidden items: no store is open")
-            NSSound.beep()
+        if hiddenItemsPopover?.closesOnAnchorClick(NSApp.currentEvent) == true {
+            hiddenItemsPopover = nil
             return
         }
+        guard let store = openHiddenItemsStore() else { return }
         let popover = BrowserHiddenItemsPopover(list: .user, store: store, url: engine.url) { [weak self] in
             self?.beginSelectingItems(store: store)
         }
@@ -1138,19 +1145,81 @@ open class WebBrowserPaneViewController: NSViewController {
         popover.show(relativeTo: addressBox.hideItemsButton)
     }
 
-    /// Starts selecting on the front page. Only a WebKit page can be picked
-    /// from; any other engine beeps.
-    func beginSelectingItems(store: BrowserHiddenItemsStore) {
+    /// The privacy toolbar's "Hide elements from agent": stops agent-list
+    /// selecting while it runs, closes its popover when it is open (the
+    /// toggle), and otherwise shows its menu.
+    @objc func hideFromAgentButtonClicked(_ sender: Any?) {
+        if let mode = selectingMode, mode.isActive, mode.list == .agent {
+            mode.end(.stop)
+            return
+        }
+        if agentItemsPopover?.closesOnAnchorClick(NSApp.currentEvent) == true {
+            agentItemsPopover = nil
+            return
+        }
+        let menu = BrowserHideFromAgentButton.makeMenu(
+            target: self, select: #selector(selectItemsToHideFromAgent(_:)),
+            list: #selector(showHiddenFromAgent(_:)))
+        hideFromAgentButton.popUp(menu)
+    }
+
+    /// "Select Items to Hide from the Agent": agent-list selecting on the
+    /// view showing, the live page or the Agent preview.
+    @objc func selectItemsToHideFromAgent(_ sender: Any?) {
+        guard let store = openHiddenItemsStore() else { return }
+        beginSelectingItems(store: store, list: .agent)
+    }
+
+    /// "Hidden from the Agent…": the agent list's popover for the front page.
+    @objc func showHiddenFromAgent(_ sender: Any?) {
+        guard let store = openHiddenItemsStore() else { return }
+        let popover = BrowserHiddenItemsPopover(list: .agent, store: store, url: engine.url) { [weak self] in
+            self?.beginSelectingItems(store: store, list: .agent)
+        }
+        agentItemsPopover = popover
+        popover.show(relativeTo: hideFromAgentButton)
+    }
+
+    private func openHiddenItemsStore() -> BrowserHiddenItemsStore? {
+        guard let store = BrowserHiddenItemsStore.shared else {
+            Self.logger.error("hidden items: no store is open")
+            NSSound.beep()
+            return nil
+        }
+        return store
+    }
+
+    /// Starts selecting for `list` on the front page. Only a WebKit page can
+    /// be picked from; any other engine beeps. The user list picks on the
+    /// live page; the agent list picks on the Agent preview while it shows
+    /// and on the live page otherwise. Agent source has nothing to pick, so
+    /// it beeps. One selecting mode per pane: a mode for another engine,
+    /// list or view ends before the new one begins.
+    func beginSelectingItems(store: BrowserHiddenItemsStore, list: BrowserHiddenItemList = .user) {
         guard let webKit = engine as? WebKitBrowserEngine else {
             NSSound.beep()
             return
         }
-        if selectingMode?.engine !== webKit {
-            selectingMode?.end(.close)
-            selectingMode = BrowserSelectingMode(
-                engine: webKit, store: store, list: .user,
-                button: addressBox.hideItemsButton, settings: settings)
+        var preview: BrowserAgentPreviewViewController?
+        if list == .agent {
+            switch agentViewMode {
+            case .website: break
+            case .agentPreview: preview = activeAgentViews?.preview
+            case .agentSource:
+                NSSound.beep()
+                return
+            }
         }
+        let view: BrowserSelectingMode.View = preview == nil ? .website : .agentPreview
+        let button: BrowserHideItemsButton = list == .agent ? hideFromAgentButton : addressBox.hideItemsButton
+        if let mode = selectingMode, mode.engine === webKit, mode.list == list, mode.view == view,
+           mode.preview === preview {
+            mode.begin()
+            return
+        }
+        selectingMode?.end(.close)
+        selectingMode = BrowserSelectingMode(
+            engine: webKit, store: store, list: list, button: button, preview: preview, settings: settings)
         selectingMode?.begin()
     }
 
@@ -2267,6 +2336,8 @@ extension WebBrowserPaneViewController: PaneContentTeardown {
         selectingMode = nil
         hiddenItemsPopover?.popover.close()
         hiddenItemsPopover = nil
+        agentItemsPopover?.popover.close()
+        agentItemsPopover = nil
         firstResponderObservation = nil
         cancellables.removeAll()
         windowObservers.forEach { NotificationCenter.default.removeObserver($0) }
@@ -2359,6 +2430,8 @@ extension WebBrowserPaneViewController {
         let focusWasInOverlay = views.contentView.map { overlay in
             (responder as? NSView)?.isDescendant(of: overlay) ?? false
         } ?? false
+        // Selecting is tied to the view it began on (`navigation-ends-selecting`).
+        if mode != views.mode { endSelectingItems(.viewSwitch, on: tab.engine) }
         views.setMode(mode)
         tab.content.showOverlay(views.contentView)
         syncAgentViewControl()

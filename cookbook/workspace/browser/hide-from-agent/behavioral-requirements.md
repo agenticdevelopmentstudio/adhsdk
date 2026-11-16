@@ -16,6 +16,10 @@
   popover for the agent list, anchored to the button, listing the site's
   agent-list entries with their enabled checkboxes and the − remove
   button, and with no site switch checkbox.
+- **popover-toggle**: A click on the toolbar button while its "Hidden from
+  the Agent…" popover is open MUST close the popover and show neither the
+  menu nor the popover again; the element picker's address-bar button
+  behaves the same for its own popover.
 - **popover-select-wording**: The agent popover's select button MUST read
   "Select items to hide from the agent" and start the same selecting mode
   as the menu item.

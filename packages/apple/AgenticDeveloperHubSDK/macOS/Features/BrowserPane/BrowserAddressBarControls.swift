@@ -66,8 +66,10 @@ final class BrowserAddressBox: NSView {
 /// symbol, `eye.slash`, that turns into an accent-tinted `stop.circle`
 /// ("Stop selecting") while the pane is in selecting mode. It keeps the
 /// symbol it shows, which an `NSImage` made from a symbol does not say.
+/// The privacy toolbar's "Hide elements from agent" is the same button with
+/// its own idle symbol, tooltip and identifier (`BrowserHideFromAgentButton`).
 @MainActor
-final class BrowserHideItemsButton: NSButton {
+class BrowserHideItemsButton: NSButton {
 
     static let idleSymbol = "eye.slash"
     static let idleToolTip = "Hide distracting items"
@@ -76,15 +78,22 @@ final class BrowserHideItemsButton: NSButton {
 
     /// The SF Symbol showing now.
     private(set) var symbolName = BrowserHideItemsButton.idleSymbol
+    /// What the button shows while not selecting.
+    let idleSymbolName: String
+    let idleToolTipText: String
 
-    init() {
+    init(idleSymbol: String = BrowserHideItemsButton.idleSymbol,
+         idleToolTip: String = BrowserHideItemsButton.idleToolTip,
+         identifier: String = "browser.hide-items") {
+        idleSymbolName = idleSymbol
+        idleToolTipText = idleToolTip
         super.init(frame: .zero)
         translatesAutoresizingMaskIntoConstraints = false
         isBordered = false
         bezelStyle = .regularSquare
         imagePosition = .imageOnly
         symbolConfiguration = NSImage.SymbolConfiguration(pointSize: 13, weight: .regular)
-        setAccessibilityIdentifier("browser.hide-items")
+        setAccessibilityIdentifier(identifier)
         setContentHuggingPriority(.required, for: .horizontal)
         setContentCompressionResistancePriority(.required, for: .horizontal)
         showSelecting(false)
@@ -96,8 +105,8 @@ final class BrowserHideItemsButton: NSButton {
     /// The stop icon while `selecting`, the normal one otherwise; the
     /// tooltip and the accessibility label follow.
     func showSelecting(_ selecting: Bool) {
-        let symbol = selecting ? Self.selectingSymbol : Self.idleSymbol
-        let tip = selecting ? Self.selectingToolTip : Self.idleToolTip
+        let symbol = selecting ? Self.selectingSymbol : idleSymbolName
+        let tip = selecting ? Self.selectingToolTip : idleToolTipText
         symbolName = symbol
         image = NSImage(systemSymbolName: symbol, accessibilityDescription: tip)
         toolTip = tip

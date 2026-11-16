@@ -23,8 +23,12 @@ one-click leak; entries are disabled one at a time, deliberately.
 stays off.
 **Rationale**: The preview must show only what the gatekeeper put in, so
 page scripts stay off; the picker lives in its own world and needs none of
-them. Finding (to be recorded from the verification run): whether WebKit
-runs isolated-world scripts with `allowsContentJavaScript = false`. If it
-does not, the preview enables only the picker world, never page scripts.
+them. WebKit documents `allowsContentJavaScript` as turning off the
+page's own scripts only, leaving scripts the app evaluates in a content
+world running, so the implementation installs the picker with
+`evaluateJavaScript(_:in:in:)` and leaves the preference off. Finding (to
+be recorded from the verification run): whether the picker does run in the
+preview with page JavaScript off. If it does not, the preview enables only
+the picker world, never page scripts.
 **Approved**: pending
 
