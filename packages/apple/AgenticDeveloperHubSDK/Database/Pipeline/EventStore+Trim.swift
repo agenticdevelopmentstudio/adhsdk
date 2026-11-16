@@ -531,10 +531,19 @@ extension EventStore {
     }
 
     private func vacuumPages(pagesPerStep: Int, until end: ContinuousClock.Instant) throws -> Int? {
-        let mode = try pool.read { conn in try Int.fetchOne(conn, sql: "PRAGMA auto_vacuum") ?? 0 }
-        guard mode == 2 else { return nil }
         var carry = carriedVacuumStep
         defer { carriedVacuumStep = carry }
+        return try Self.incrementalVacuumPages(on: pool, pagesPerStep: pagesPerStep, carry: &carry, until: end)
+    }
+
+    /// The incremental vacuum of any file `pool` opens, shared by this store and
+    /// `ProviderSpool`: steps of ``vacuumSteps(pagesPerStep:carry:until:_:)`` under
+    /// a raised page cache, then a TRUNCATE checkpoint (``checkpointing(_:checkpoint:)``).
+    /// Nil without touching the file when its `auto_vacuum` is not 2 (INCREMENTAL).
+    static func incrementalVacuumPages(on pool: BoundedDatabase, pagesPerStep: Int, carry: inout Int?,
+                                       until end: ContinuousClock.Instant) throws -> Int? {
+        let mode = try pool.read { conn in try Int.fetchOne(conn, sql: "PRAGMA auto_vacuum") ?? 0 }
+        guard mode == 2 else { return nil }
         let cacheBefore = try pool.writeWithoutTransaction(deadline: nil) { conn in
             let size = try Int.fetchOne(conn, sql: "PRAGMA cache_size") ?? -2000
             try conn.execute(sql: "PRAGMA cache_size = \(-Self.vacuumCacheKiB)")

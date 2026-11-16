@@ -109,6 +109,21 @@ public protocol PipelineSink: Sendable {
 ///
 /// The drainer registers with the store as a live writer for its lifetime, so
 /// a replay cannot start a bulk load under it.
+/// When the drainer last compacted its spool, and what happened.
+public struct SpoolCompactionReport: Sendable, Equatable {
+    public let finishedAt: Date
+    /// What it did; nil when it failed.
+    public let compaction: SpoolCompaction?
+    /// Why it failed; nil when it did not.
+    public let error: String?
+
+    public init(finishedAt: Date, compaction: SpoolCompaction?, error: String?) {
+        self.finishedAt = finishedAt
+        self.compaction = compaction
+        self.error = error
+    }
+}
+
 public final class PipelineDrainer: @unchecked Sendable {
     private struct StepFailure: Error, CustomStringConvertible {
         let description: String
@@ -147,6 +162,8 @@ public final class PipelineDrainer: @unchecked Sendable {
     private let passLock = NSLock()
     /// The thread running a pass right now (guarded by `lock`).
     private var passOwner: Thread?
+    /// Guarded by `lock`; see ``lastSpoolCompaction``.
+    private var lastCompaction: SpoolCompactionReport?
 
     /// Throws `PipelineError.providerMismatch` unless the spool, the archive and the
     /// normalizer name the same provider, and `EventStoreError.bulkLoadInProgress`
@@ -512,7 +529,35 @@ public final class PipelineDrainer: @unchecked Sendable {
     private static func passIfRunning(_ drainer: PipelineDrainer?) -> Bool? {
         guard let drainer, !drainer.shouldStop() else { return nil }
         let failed = drainer.drainUntilEmpty().failed
+        if !failed, !drainer.shouldStop() { drainer.compactSpool() }
         return drainer.shouldStop() ? nil : failed
+    }
+
+    /// How long one ``compactSpool()`` may spend on incremental vacuum steps
+    /// before the worker goes back to draining; what is left is freed next time.
+    static let compactionBudget: TimeInterval = 60
+
+    /// The spool's ``ProviderSpool/compactIfDue(deadline:minFreeBytes:maxRebuildBytes:)``,
+    /// run by the worker after each drain that did not fail, so the space a drained
+    /// backlog left in the file goes back to the disk on its own. A no-op (three
+    /// pragma reads) while the file holds little free space. The result, or the
+    /// error, is kept in ``lastSpoolCompaction``; a failure never stops draining.
+    func compactSpool() {
+        let report: SpoolCompactionReport
+        do {
+            guard let done = try spool.compactIfDue(
+                deadline: Date().addingTimeInterval(Self.compactionBudget)) else { return }
+            report = SpoolCompactionReport(finishedAt: Date(), compaction: done, error: nil)
+        } catch {
+            report = SpoolCompactionReport(finishedAt: Date(), compaction: nil, error: String(describing: error))
+        }
+        lock.lock(); lastCompaction = report; lock.unlock()
+    }
+
+    /// The last ``compactSpool()`` that did something or failed; nil until one has.
+    public var lastSpoolCompaction: SpoolCompactionReport? {
+        lock.lock(); defer { lock.unlock() }
+        return lastCompaction
     }
 
     private static func isStopping(_ drainer: PipelineDrainer?) -> Bool {

@@ -165,4 +165,95 @@ final class ProviderSpoolTests: XCTestCase {
             XCTAssertEqual(error as? ProviderSpoolError, .providerMismatch(expected: "other", got: "mock"))
         }
     }
+
+    // MARK: - Compaction
+
+    /// The file's page accounting, read on a connection of its own.
+    private func stats() throws -> StoreFileStats {
+        var config = Configuration()
+        config.readonly = true
+        return try DatabaseQueue(path: path, configuration: config).read { conn in
+            try StoreFileStats.read(path: path, conn)
+        }
+    }
+
+    /// A file made before the spool set auto-vacuum: mode 0, fixed once a table exists.
+    private func makeLegacyFile() throws {
+        let queue = try DatabaseQueue(path: path)
+        try queue.write { try $0.execute(sql: "CREATE TABLE legacy_marker (x INTEGER)") }
+    }
+
+    /// Spools and completes `count` 64 KiB records, leaving their pages on the freelist.
+    private func drainBacklog(_ spool: ProviderSpool, count: Int = 64) throws {
+        let payload = Data(repeating: 0x5A, count: 64 * 1024)
+        try spool.append((0..<count).map { rec("k\($0)", payload) })
+        try spool.complete(ids: try spool.pendingBatch(limit: count + 1).map(\.id))
+        XCTAssertEqual(try spool.pendingCount(), 0)
+    }
+
+    func testNewSpoolUsesIncrementalAutoVacuum() throws {
+        _ = try makeSpool()
+        XCTAssertEqual(try stats().autoVacuum, 2)
+    }
+
+    func testCompactRebuildsALegacyFileToIncrementalAndShrinksIt() throws {
+        try makeLegacyFile()
+        let spool = try makeSpool()
+        try drainBacklog(spool)
+        let before = try stats()
+        XCTAssertEqual(before.autoVacuum, 0)
+        XCTAssertGreaterThan(before.freelistCount, 0)
+
+        let result = try spool.compactIfDue(deadline: Date().addingTimeInterval(30),
+                                            minFreeBytes: 1, maxRebuildBytes: 1 << 30)
+        guard case .rebuilt(let freed)? = result else {
+            return XCTFail("expected a rebuild, got \(String(describing: result))")
+        }
+        XCTAssertEqual(freed, Int64(before.freelistCount) * Int64(before.pageSize))
+
+        let after = try stats()
+        XCTAssertEqual(after.autoVacuum, 2)
+        XCTAssertEqual(after.freelistCount, 0)
+        XCTAssertLessThan(after.bytes, before.bytes / 4)
+        // Still a working spool afterwards.
+        try spool.append([rec("after")])
+        XCTAssertEqual(try spool.pendingBatch(limit: 10).map(\.record.dedupKey), ["after"])
+    }
+
+    func testCompactWaitsWhileTooMuchLiveDataToRebuild() throws {
+        try makeLegacyFile()
+        let spool = try makeSpool()
+        try drainBacklog(spool)
+        try spool.append([rec("pending", Data(repeating: 1, count: 8 * 1024))])
+        XCTAssertNil(try spool.compactIfDue(deadline: Date().addingTimeInterval(30),
+                                            minFreeBytes: 1, maxRebuildBytes: 1024))
+        XCTAssertEqual(try stats().autoVacuum, 0)
+        XCTAssertEqual(try spool.pendingCount(), 1)
+    }
+
+    func testCompactDoesNothingBelowTheFreeSpaceFloor() throws {
+        let spool = try makeSpool()
+        try drainBacklog(spool)
+        let before = try stats().freelistCount
+        // 64 × 64 KiB is far under the default 256 MiB floor.
+        XCTAssertNil(try spool.compactIfDue(deadline: Date().addingTimeInterval(30)))
+        XCTAssertEqual(try stats().freelistCount, before)
+    }
+
+    func testCompactReclaimsFreePagesOfAnIncrementalFile() throws {
+        let spool = try makeSpool()
+        try drainBacklog(spool)
+        let before = try stats()
+        XCTAssertEqual(before.autoVacuum, 2)
+        XCTAssertGreaterThan(before.freelistCount, 0)
+
+        let result = try spool.compactIfDue(deadline: Date().addingTimeInterval(30), minFreeBytes: 1)
+        guard case .incremental(let freed)? = result else {
+            return XCTFail("expected incremental, got \(String(describing: result))")
+        }
+        XCTAssertEqual(freed, Int64(before.freelistCount) * Int64(before.pageSize))
+        let after = try stats()
+        XCTAssertEqual(after.freelistCount, 0)
+        XCTAssertLessThan(after.bytes, before.bytes / 4)
+    }
 }

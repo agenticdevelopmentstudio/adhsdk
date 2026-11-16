@@ -6,6 +6,14 @@ public enum ProviderSpoolError: Error, Equatable {
     case providerMismatch(expected: String, got: String)
 }
 
+/// What one `ProviderSpool.compactIfDue` did.
+public enum SpoolCompaction: Sendable, Equatable {
+    /// A file without incremental auto-vacuum was rebuilt with it.
+    case rebuilt(freedBytes: Int64)
+    /// Free pages were returned in incremental steps.
+    case incremental(freedBytes: Int64)
+}
+
 public struct SpooledRecord: Sendable, Equatable {
     public let id: Int64
     public let record: RawRecord
@@ -45,14 +53,28 @@ public final class ProviderSpool: @unchecked Sendable {
     public static let maxAttempts = 5
 
     public let provider: String
+    public let path: String
     private let pool: BoundedDatabase
+    /// The vacuum step size the last ``compactIfDue(deadline:)`` ended on (see
+    /// `EventStore.vacuumSteps`); guarded by `carryLock`.
+    private var vacuumStepCarry: Int?
+    private let carryLock = NSLock()
 
     public init(path: String, provider: String) throws {
         self.provider = provider
+        self.path = path
         self.pool = try BoundedDatabase(
             path: path, readers: 2,
             readDeadline: .seconds(30), writeDeadline: .seconds(60),
-            prepare: { conn in try conn.execute(sql: "PRAGMA synchronous=FULL") }
+            prepare: { conn in
+                // A new file gets incremental auto-vacuum before page 1 exists; on
+                // an existing file this is a no-op until `compactIfDue` rebuilds it.
+                // Only the writer may set it (the readers are read-only).
+                if !conn.configuration.readonly {
+                    try conn.execute(sql: "PRAGMA auto_vacuum = INCREMENTAL")
+                }
+                try conn.execute(sql: "PRAGMA synchronous=FULL")
+            }
         )
         try pool.write { conn in
             try conn.execute(sql: """
@@ -253,6 +275,70 @@ public final class ProviderSpool: @unchecked Sendable {
             try Data.fetchOne(conn, sql: "SELECT value FROM source_state WHERE key = ?", arguments: [key])
         }
     }
+
+    // MARK: - Compaction
+
+    /// Free pages this file must hold before ``compactIfDue(deadline:)`` acts. The
+    /// spool normally holds next to nothing, so space left behind by a drained
+    /// backlog is worth returning; under this a file that grows and drains a
+    /// little on every pass is left alone instead of shrinking and regrowing.
+    public static let compactionMinFreeBytes: Int64 = 256 * 1024 * 1024
+
+    /// The most live data (pages in use, in bytes) a one-time rebuild of a file
+    /// without incremental auto-vacuum will copy. `VACUUM` copies every live page
+    /// and holds the writer until it is done, so a spool still holding a backlog
+    /// waits for the drain to empty it.
+    public static let compactionMaxRebuildBytes: Int64 = 64 * 1024 * 1024
+
+    /// Returns the space a drained backlog left in the file to the disk, when it
+    /// holds at least `minFreeBytes` of free pages:
+    ///
+    /// - A file created before the spool set `auto_vacuum = INCREMENTAL` is rebuilt
+    ///   once with it (`VACUUM`), but only while at most `maxRebuildBytes` of it is
+    ///   live; until then this does nothing and the next call tries again.
+    /// - A file that has it is vacuumed incrementally in committed steps until
+    ///   `deadline` (`EventStore.incrementalVacuumPages`), so appends wait at most
+    ///   one step; whatever is left is freed by the next call.
+    ///
+    /// Either way the WAL is checkpointed with TRUNCATE so the file shrinks. Nil
+    /// when nothing was due.
+    @discardableResult
+    public func compactIfDue(deadline: Date,
+                             minFreeBytes: Int64 = compactionMinFreeBytes,
+                             maxRebuildBytes: Int64 = compactionMaxRebuildBytes) throws -> SpoolCompaction? {
+        let stats = try pool.read { conn in try StoreFileStats.read(path: path, conn) }
+        let pageSize = Int64(stats.pageSize)
+        let freeBytes = Int64(stats.freelistCount) * pageSize
+        guard freeBytes >= minFreeBytes else { return nil }
+        if stats.autoVacuum != 2 {
+            let liveBytes = Int64(stats.pageCount - stats.freelistCount) * pageSize
+            guard liveBytes <= maxRebuildBytes else { return nil }
+            try pool.writeWithoutTransaction(deadline: Self.rebuildDeadline) { conn in
+                try conn.execute(sql: "PRAGMA auto_vacuum = INCREMENTAL")
+                try conn.execute(sql: "VACUUM")
+                _ = try Row.fetchOne(conn, sql: "PRAGMA wal_checkpoint(TRUNCATE)")
+            }
+            return .rebuilt(freedBytes: freeBytes)
+        }
+        carryLock.lock()
+        var carry = vacuumStepCarry
+        carryLock.unlock()
+        defer {
+            carryLock.lock()
+            vacuumStepCarry = carry
+            carryLock.unlock()
+        }
+        let end = ContinuousClock.now + .seconds(deadline.timeIntervalSinceNow)
+        let pages = try EventStore.incrementalVacuumPages(
+            on: pool, pagesPerStep: Self.vacuumPagesPerStep, carry: &carry, until: end) ?? 0
+        return .incremental(freedBytes: Int64(pages) * pageSize)
+    }
+
+    /// A rebuild copies at most ``compactionMaxRebuildBytes``; seconds on any disk.
+    static let rebuildDeadline: Duration = .seconds(120)
+    /// Pages per incremental step: 32 MiB at 4 KiB pages, the step size growing
+    /// and shrinking from there by how long each one takes.
+    static let vacuumPagesPerStep = 8192
 
     // MARK: - Helpers
 
