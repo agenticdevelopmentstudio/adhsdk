@@ -448,7 +448,9 @@ struct AgentHTMLRenderer {
             labelled(node) {
                 let raw = node.attributes["type"]?.lowercased() ?? "text"
                 var extra: [(String, String)] = [("type", Self.inputTypes.contains(raw) ? raw : "text")]
-                for name in ["name", "placeholder"] { if let v = node.attributes[name] { extra.append((name, v)) } }
+                for name in ["name", "placeholder"] {
+                    if let found = node.attributes[name] { extra.append((name, found)) }
+                }
                 if let value = node.value { extra.append(("value", value)) }
                 extra.append(("disabled", ""))
                 $0.open("input", node, extra: extra)
@@ -456,7 +458,9 @@ struct AgentHTMLRenderer {
         case .textArea:
             labelled(node) {
                 var extra: [(String, String)] = []
-                for name in ["name", "placeholder"] { if let v = node.attributes[name] { extra.append((name, v)) } }
+                for name in ["name", "placeholder"] {
+                    if let found = node.attributes[name] { extra.append((name, found)) }
+                }
                 extra.append(("disabled", ""))
                 $0.open("textarea", node, extra: extra)
                 $0.output += "</textarea>"
@@ -464,7 +468,7 @@ struct AgentHTMLRenderer {
         case .checkbox, .radio:
             labelled(node) {
                 var extra: [(String, String)] = [("type", node.kind == .checkbox ? "checkbox" : "radio")]
-                if let v = node.attributes["name"] { extra.append(("name", v)) }
+                if let found = node.attributes["name"] { extra.append(("name", found)) }
                 if node.states.contains("checked") { extra.append(("checked", "")) }
                 extra.append(("disabled", ""))
                 $0.open("input", node, extra: extra)
@@ -472,7 +476,7 @@ struct AgentHTMLRenderer {
         case .select:
             labelled(node) {
                 var extra: [(String, String)] = []
-                if let v = node.attributes["name"] { extra.append(("name", v)) }
+                if let found = node.attributes["name"] { extra.append(("name", found)) }
                 extra.append(("disabled", ""))
                 $0.open("select", node, extra: extra)
                 for child in node.children where child.kind == .option { $0.element(child) }
@@ -502,7 +506,7 @@ struct AgentHTMLRenderer {
     /// `<tag data-adk-ref="…" aria-label="…" title="…" …>`, every value escaped.
     private mutating func open(_ tag: String, _ node: AgentNode, extra: [(String, String)]) {
         var attrs: [(String, String)] = [("data-adk-ref", node.ref)]
-        for name in ["aria-label", "title"] { if let v = node.attributes[name] { attrs.append((name, v)) } }
+        for name in ["aria-label", "title"] { if let found = node.attributes[name] { attrs.append((name, found)) } }
         attrs.append(contentsOf: extra)
         output += "<" + tag
         for (name, value) in attrs { output += " \(name)=\"" + Self.escape(value) + "\"" }

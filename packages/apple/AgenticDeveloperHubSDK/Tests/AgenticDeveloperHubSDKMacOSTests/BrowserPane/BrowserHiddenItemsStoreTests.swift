@@ -92,11 +92,11 @@ final class BrowserHiddenItemsStoreTests: XCTestCase {
     // hidden-items-store-007
     func test_setEnabledChangesOnlyTheFlag() throws {
         let store = try makeStore()
-        let a = try store.add(entry(.user, selector: ".a"))
-        let id = try XCTUnwrap(a.id)
+        let first = try store.add(entry(.user, selector: ".a"))
+        let id = try XCTUnwrap(first.id)
         try store.setEnabled(id, false)
         XCTAssertEqual(try store.enabledSelectors(list: .user, for: examplePage), [])
-        var disabled = a
+        var disabled = first
         disabled.enabled = false
         XCTAssertEqual(try store.items(list: .user, for: examplePage), [disabled])
         try store.setEnabled(id, true)
@@ -106,9 +106,9 @@ final class BrowserHiddenItemsStoreTests: XCTestCase {
     // hidden-items-store-008
     func test_removeDeletesTheEntry() throws {
         let store = try makeStore()
-        let a = try store.add(entry(.user, selector: ".a"))
+        let first = try store.add(entry(.user, selector: ".a"))
         try store.add(entry(.user, selector: ".b", enabled: false))
-        try store.remove(try XCTUnwrap(a.id))
+        try store.remove(try XCTUnwrap(first.id))
         XCTAssertEqual(try store.items(list: .user, for: examplePage).map(\.selector), [".b"])
     }
 
@@ -152,10 +152,10 @@ final class BrowserHiddenItemsStoreTests: XCTestCase {
         }
         defer { NotificationCenter.default.removeObserver(observer) }
 
-        let a = try store.add(entry(.user, selector: ".a"))
+        let first = try store.add(entry(.user, selector: ".a"))
         XCTAssertEqual(record.count, 1)
         XCTAssertEqual(record.lastSelectors, [".a"], "posted after the add is readable")
-        let id = try XCTUnwrap(a.id)
+        let id = try XCTUnwrap(first.id)
         try store.setEnabled(id, false)
         XCTAssertEqual(record.count, 2)
         XCTAssertEqual(record.lastSelectors, [], "posted after the disable is readable")
@@ -168,14 +168,14 @@ final class BrowserHiddenItemsStoreTests: XCTestCase {
     // hidden-items-store-013
     func test_reopenKeepsEntries() throws {
         var store: BrowserHiddenItemsStore? = try makeStore()
-        let a = try XCTUnwrap(store).add(entry(.user, selector: ".a"))
-        let b = try XCTUnwrap(store).add(entry(.agent, selector: "#b", enabled: false))
+        let first = try XCTUnwrap(store).add(entry(.user, selector: ".a"))
+        let second = try XCTUnwrap(store).add(entry(.agent, selector: "#b", enabled: false))
         try XCTUnwrap(store).setSiteSwitch(list: .user, site: "example.com/*", on: false)
         store = nil
 
         let reopened = try makeStore()
-        XCTAssertEqual(try reopened.items(list: .user, for: examplePage), [a])
-        XCTAssertEqual(try reopened.items(list: .agent, for: examplePage), [b])
+        XCTAssertEqual(try reopened.items(list: .user, for: examplePage), [first])
+        XCTAssertEqual(try reopened.items(list: .agent, for: examplePage), [second])
         XCTAssertFalse(try reopened.isSiteSwitchOn(list: .user, site: "example.com/*"))
     }
 

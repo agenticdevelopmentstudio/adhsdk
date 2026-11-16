@@ -20,7 +20,8 @@ final class BrowserElementPickerTests: XCTestCase {
     }
 
     func test_candidateDecodes() throws {
-        let json = #"{"kind":"pick","thisItem":"#a","allLikeIt":"div.card","allLikeItCount":3,"pageElementCount":100,"label":"div \"Hi\"","ref":null}"#
+        let json = ##"{"kind":"pick","thisItem":"#a","allLikeIt":"div.card","allLikeItCount":3,"##
+            + ##""pageElementCount":100,"label":"div \"Hi\"","ref":null}"##
         let decoded = try JSONDecoder().decode(BrowserPickCandidate.self, from: Data(json.utf8))
         XCTAssertEqual(decoded, BrowserPickCandidate(kind: .pick, thisItem: "#a", allLikeIt: "div.card",
                                                      allLikeItCount: 3, pageElementCount: 100,

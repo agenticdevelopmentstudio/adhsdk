@@ -126,7 +126,8 @@ public final class BrowserMenuCommands {
     /// "Hide Privacy Toolbar" while the pane's effective value is on, "Show
     /// Privacy Toolbar" while it is off or there is no pane.
     static func privacyToolbarTitle(for pane: WebBrowserPaneViewController?) -> String {
-        pane?.settings.get(UserSettings.browserPrivacyShowToolbar) == true ? "Hide Privacy Toolbar" : "Show Privacy Toolbar"
+        pane?.settings.get(UserSettings.browserPrivacyShowToolbar) == true
+            ? "Hide Privacy Toolbar" : "Show Privacy Toolbar"
     }
 
     /// Flips the pane's own value — a write to its layered store, the same one

@@ -27,7 +27,12 @@ final class AgentPageBuilderTests: XCTestCase {
 
     private func payload(_ root: [String: Any], url: String = "https://site.example/",
                          title: String = "Page") -> Data {
-        try! JSONSerialization.data(withJSONObject: ["url": url, "title": title, "root": root])
+        do {
+            return try JSONSerialization.data(withJSONObject: ["url": url, "title": title, "root": root])
+        } catch {
+            XCTFail("payload did not serialize: \(error)")
+            return Data()
+        }
     }
 
     private func build(_ root: [String: Any], privacy: BrowserAgentPrivacy = .off, hideImages: Bool = false,
@@ -195,7 +200,9 @@ final class AgentPageBuilderTests: XCTestCase {
         XCTAssertFalse(html.lowercased().contains("<style"), html)
         // Every element in the body carries its node's ref.
         let body = html.components(separatedBy: "<body").last ?? ""
-        let regex = try! NSRegularExpression(pattern: "<([a-z][a-z0-9]*)(\\s[^>]*)?>")
+        guard let regex = try? NSRegularExpression(pattern: "<([a-z][a-z0-9]*)(\\s[^>]*)?>") else {
+            return XCTFail("tag pattern did not compile")
+        }
         let range = NSRange(body.startIndex..., in: body)
         let matches = regex.matches(in: body, range: range)
         XCTAssertFalse(matches.isEmpty)

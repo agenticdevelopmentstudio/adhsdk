@@ -115,8 +115,8 @@ final class BrowserElementPickerWebViewTests: XCTestCase {
         XCTAssertEqual(target.label, "div \"Sponsored stories\"")
         let img = try await pick("img")
         XCTAssertEqual(img.label, "img \"Logo\"")
-        let hr = try await pick("hr")
-        XCTAssertEqual(hr.label, "hr")
+        let rule = try await pick("hr")
+        XCTAssertEqual(rule.label, "hr")
         XCTAssertGreaterThan(target.pageElementCount, 10)
         let long = try await pick("long")
         let text = String(Self.longText.trimmingCharacters(in: .whitespaces).prefix(60))
@@ -143,14 +143,16 @@ final class BrowserElementPickerWebViewTests: XCTestCase {
         let expectation = expectation(description: "cancel")
         pickExpectation = expectation
         _ = try await page(
-            "document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true })); return true;")
+            "document.body.dispatchEvent(new KeyboardEvent('keydown', "
+                + "{ key: 'Escape', bubbles: true, cancelable: true })); return true;")
         await fulfillment(of: [expectation], timeout: 5)
         XCTAssertEqual(cancels, 1)
     }
 
     func test_stopRemovesPicker() async throws {
         _ = try await page(
-            "document.querySelector('[data-test=\"target\"]').dispatchEvent(new MouseEvent('mousemove', { bubbles: true })); return true;")
+            "document.querySelector('[data-test=\"target\"]')"
+                + ".dispatchEvent(new MouseEvent('mousemove', { bubbles: true })); return true;")
         let before = try await page("return document.documentElement.lastElementChild.tagName;")
         XCTAssertEqual(before as? String, "DIV", "the outline follows the pointer")
         picker.stop()

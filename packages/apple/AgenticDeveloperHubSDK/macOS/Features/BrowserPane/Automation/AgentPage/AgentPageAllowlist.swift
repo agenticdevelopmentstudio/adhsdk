@@ -102,6 +102,9 @@ public struct AgentPageAllowlist: Sendable, Encodable {
     public func jsonString() throws -> String {
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.sortedKeys]
-        return String(decoding: try encoder.encode(self), as: UTF8.self)
+        guard let json = String(bytes: try encoder.encode(self), encoding: .utf8) else {
+            throw CocoaError(.coderInvalidValue)
+        }
+        return json
     }
 }

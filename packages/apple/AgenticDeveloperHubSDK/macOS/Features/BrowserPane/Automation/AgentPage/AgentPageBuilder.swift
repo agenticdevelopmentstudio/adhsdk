@@ -117,7 +117,8 @@ public struct AgentPageBuilder: Sendable {
         // are matched rather than concealed.
         attributes[AgentPageAllowlist.roleAttribute] = nil
         if kind == .landmark,
-           let role = rawAttributes[AgentPageAllowlist.roleAttribute]?.trimmingCharacters(in: .whitespaces).lowercased(),
+           let role = rawAttributes[AgentPageAllowlist.roleAttribute]?
+               .trimmingCharacters(in: .whitespaces).lowercased(),
            allowlist.landmarkRoles.contains(role) {
             attributes[AgentPageAllowlist.roleAttribute] = role
         }

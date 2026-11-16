@@ -201,9 +201,9 @@ public final class BrowserHiddenItemsStore: @unchecked Sendable {
         return stored
     }
 
-    public func setEnabled(_ id: Int64, _ on: Bool) throws {
+    public func setEnabled(_ id: Int64, _ isOn: Bool) throws {
         try database.write { connection in
-            try connection.execute(sql: "UPDATE hidden_item SET enabled = ? WHERE id = ?", arguments: [on, id])
+            try connection.execute(sql: "UPDATE hidden_item SET enabled = ? WHERE id = ?", arguments: [isOn, id])
         }
         postChange()
     }
@@ -215,12 +215,12 @@ public final class BrowserHiddenItemsStore: @unchecked Sendable {
         postChange()
     }
 
-    public func setSiteSwitch(list: BrowserHiddenItemList, site: String, on: Bool) throws {
+    public func setSiteSwitch(list: BrowserHiddenItemList, site: String, on isOn: Bool) throws {
         try database.write { connection in
             try connection.execute(sql: """
                 INSERT INTO site_switch (list, site, "on") VALUES (?, ?, ?)
                 ON CONFLICT (list, site) DO UPDATE SET "on" = excluded."on"
-            """, arguments: [list.rawValue, site, on])
+            """, arguments: [list.rawValue, site, isOn])
         }
         postChange()
     }
