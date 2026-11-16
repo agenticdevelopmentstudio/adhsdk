@@ -2,11 +2,11 @@
 id: a6442464-e17d-451e-b47a-3be23a2dc753
 title: "Hub Mail"
 type: ingredient
-version: 1.1.1
+version: 1.1.2
 status: review
 language: en
 created: 2026-11-13
-modified: 2026-11-14
+modified: 2026-11-16
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -50,6 +50,7 @@ Four main types make it up, with supporting types beside them (`HubMailQuery`, t
 
 - **claims-two-resources**: The projection MUST claim exactly `integration.integration_email_messages` and `integration.integration_email_labels`.
 - **typed-columns**: The projection MUST store each backend column under its own name in a typed column, keep JSON array and object columns (`to_addresses`, `cc_addresses`, `label_ids`, `attachments`, `color`) as JSON text, and keep `sync_version` and `deleted_at` for the store.
+- **numbers-never-trap**: The projection MUST store a JSON number in an integer column only when an `Int64` holds it (a fraction truncates toward zero), and store nil for one it cannot hold (magnitude 2^63 or more, NaN, an infinity); a number in a text column MUST be written as its integer digits when it is integral and in range, else as the `Double`'s text. No pulled value may trap inside the sync's batch transaction, where a crash leaves the cursor unadvanced and repeats on every launch.
 - **upsert-revives**: An upsert MUST replace the row's columns, take the change's sync version and clear `deleted_at`, so a deleted row that comes back is live again.
 - **soft-delete**: A delete MUST keep the row as a tombstone with `deleted_at` set, and take the delete's sync version when it has one. The tombstone keeps its content columns; they persist on disk until the next pull replaces the row or sign-out purges it.
 - **live-rows-only**: Every read MUST skip rows with `deleted_at` set or `is_deleted` true; the backend's worker sets `is_deleted` on mail Gmail removed.
@@ -125,7 +126,7 @@ Not applicable: no visual or interactive element.
 | hub-mail-026 | messages-newest-first | A message whose stored `label_ids` is not valid JSON, under a label filter | The message matches no label filter and the query does not fail |
 | hub-mail-027 | local-label-write | `applyLabels` adding `INBOX` to a message already labelled `INBOX` | The message carries `INBOX` once |
 | hub-mail-028 | soft-delete | Delete a message, then read the table directly | The row remains with `deleted_at` set and its content columns intact |
-
+| hub-mail-029 | numbers-never-trap | Upsert a label with `messages_total` 1e19, `messages_unread` 3.7 and `parent_name` 1e19 | `messagesTotal` nil, `messagesUnread` 3, `parentName` `1e+19` |
 ## Edge Cases
 
 - A message with no `internal_date` sorts after every dated message, and pages by id among its peers.
@@ -133,7 +134,7 @@ Not applicable: no visual or interactive element.
 - A change for a column the projection does not know is ignored, so a new backend column does not break an old client.
 - A `label_ids` value that is not valid JSON reads as no labels in every label filter, rather than failing the query.
 - `applyLabels` skips a row id the mirror does not have, and a label both added and already present is not duplicated.
-
+- A pulled row carries a number no `Int64` holds (1e19): the integer column stores nil and the text column the number's text, so the batch commits and the cursor advances instead of crashing at the same change on every launch.
 ## Configuration
 
 | Option | Type | Default | Description |
@@ -221,6 +222,7 @@ Vectors hub-mail-001 to hub-mail-017, hub-mail-023 and hub-mail-024 have a named
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.2 | 2026-11-16 | Mike Fullerton | Numbers no Int64 holds are stored without trapping (review f12) |
 | 1.1.1 | 2026-11-14 | Mike Fullerton | Defined send results and deduped, the system-label rule and query-filters, tombstone retention, sign-out scope, 11 new test vectors and a partial unit-test-coverage check. |
 | 1.1.0 | 2026-11-13 | Mike Fullerton | Label writes through the modify_labels action, HubMailQuery filters, lookup by either id, and the local label write |
 | 1.0.0 | 2026-11-13 | Mike Fullerton | Initial creation |
