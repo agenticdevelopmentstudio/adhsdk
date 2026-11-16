@@ -5,6 +5,7 @@
 
 import AgenticDeveloperHubSDKCore
 import AppKit
+import os
 
 /// File ▸ New Web Browser Window and New Private Web Browser Window: a
 /// window with one browser in it (`WebBrowserWindowController`). The host
@@ -20,6 +21,9 @@ import AppKit
 /// Back, Forward, Show History and Show / Hide Privacy Toolbar, for the key
 /// window's browser pane, installing Back and Forward in the key command
 /// registry under "Web Browser" so the person can rebind them.
+///
+/// It opens the hidden-items store (`BrowserHiddenItemsStore.shared`) once,
+/// at launch, for every pane to share.
 @MainActor
 public final class WebBrowserWindowsFeature: AppFeature {
 
@@ -40,6 +44,7 @@ public final class WebBrowserWindowsFeature: AppFeature {
             keyPane: { WebBrowserPaneViewController.keyPane() },
             showHistory: { BrowserHistoryWindowController.show() })
         super.init()
+        Self.openHiddenItemsStore()
         keyCommands.install(BrowserMenuCommands.keySection)
         registry.register(AppCommand(
             id: CommandID.newWindow,
@@ -78,5 +83,20 @@ public final class WebBrowserWindowsFeature: AppFeature {
                 isHidden: { !WebBrowserWindowController.canOpen }
             )
         ] + browserMenu.contributions()
+    }
+
+    private static let logger = Logger(subsystem: "AgenticDeveloperHubSDK", category: "BrowserHiddenItems")
+
+    /// Opens `BrowserHiddenItems.db` in the app home (following
+    /// `APP_TEST_HOME`) unless a host or test already set one. A file that
+    /// cannot be opened leaves `shared` nil, which every consumer takes as
+    /// "no store": a degraded mode, not a launch failure.
+    private static func openHiddenItemsStore() {
+        guard BrowserHiddenItemsStore.shared == nil else { return }
+        do {
+            BrowserHiddenItemsStore.shared = try BrowserHiddenItemsStore.open(at: BrowserHiddenItemsStore.defaultURL)
+        } catch {
+            logger.error("hidden-items store unavailable: \(error.localizedDescription, privacy: .public)")
+        }
     }
 }

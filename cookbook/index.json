@@ -4595,14 +4595,14 @@
       "implementations": [
         {
           "conformance": {
-            "state": "planned"
+            "state": "unverified"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/HiddenItems/BrowserHiddenItem.swift",
           "platform": "macos"
         },
         {
           "conformance": {
-            "state": "planned"
+            "state": "unverified"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/HiddenItems/BrowserHiddenItemsStore.swift",
           "platform": "macos"
