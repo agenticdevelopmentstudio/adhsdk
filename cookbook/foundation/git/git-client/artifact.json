@@ -4,11 +4,11 @@
     "id": "779ac6ea-9ef5-4fb0-8ed9-dc6b9d617344",
     "title": "Git Client",
     "type": "ingredient",
-    "version": "2.0.0",
+    "version": "2.1.0",
     "status": "review",
     "language": "en",
     "created": "2026-09-24",
-    "modified": "2026-11-15",
+    "modified": "2026-11-16",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -80,7 +80,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "fd11918e1b7f0298",
+  "synced": "d168ffbc531d254a",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

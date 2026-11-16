@@ -13,6 +13,9 @@ import AgenticDeveloperHubSDKCore
 /// shell or a chat sits beside the first. It keeps at least one terminal: the
 /// commit pane above it is fixed, so a closed last terminal could never come
 /// back. Minimizing it is how it gets out of the way.
+///
+/// The terminal region also offers the Command Log, one at most, which the
+/// toolbar's Command Log toggle opens beside the terminal and closes again.
 public enum GitWindowPanes {
 
     /// The overview: the refs sidebar. A storage format — never rename.
@@ -21,6 +24,11 @@ public enum GitWindowPanes {
     public static let history = ComposableTabsViewID("git.history")
     /// The commit detail over its diff, blame or file history.
     public static let commit = ComposableTabsViewID("git.commit")
+    /// The command log, in the terminal region. A storage format — never rename.
+    public static let commandLog = ComposableTabsViewID("git.commandLog")
+
+    /// The three fixed panes; everything else is the terminal region.
+    static let fixedPanes: Set<ComposableTabsViewID> = [overview, history, commit]
 
     static let symbolName = "point.3.connected.trianglepath.dotted"
 
@@ -47,7 +55,8 @@ public enum GitWindowPanes {
         ])
     }
 
-    /// The family's allowances with the terminal required once — see the type comment.
+    /// The family's allowances with the terminal required once, and the Command Log
+    /// at most once — see the type comment.
     @MainActor
     static func terminalAllowances(_ terminals: TerminalPaneFamily) -> [ComposableTabsViewAllowance] {
         terminals.allowances.map { allowance in
@@ -55,7 +64,7 @@ public enum GitWindowPanes {
             var required = allowance
             required.min = 1
             return required
-        }
+        } + [ComposableTabsViewAllowance(commandLog)]
     }
 
     /// Registers the three Git panes, each vending its pane of the session
@@ -78,6 +87,9 @@ public enum GitWindowPanes {
         registry.register(commit, descriptor: ComposableTabsViewDescriptor(
             displayName: "Commit", symbolName: symbolName, minimumThickness: 240,
             preferredThicknessFraction: terminals == nil ? nil : 0.65)) { session($0).commitPane }
+        registry.register(commandLog, descriptor: ComposableTabsViewDescriptor(
+            displayName: "Command Log", symbolName: "list.bullet.rectangle", minimumThickness: 200,
+            preferredThicknessFraction: nil)) { session($0).commandLog }
         terminals?.register(in: registry)
     }
 

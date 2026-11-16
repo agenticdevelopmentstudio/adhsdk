@@ -30,8 +30,9 @@ private final class RecordingPresenter: GitActionPresenting {
     func editRebase(_ plan: GitRebasePlan) async -> GitRebasePlan? { nil }
 }
 
-/// The Git window's toolbar (recipe `workspace/git/git-window`, "Toolbar"): six
-/// buttons in order, each aimed at the toolbar and forwarding to its session's verb.
+/// The Git window's toolbar (recipe `workspace/git/git-window`, "Toolbar"): six verb
+/// buttons then the Command Log toggle, in order, each aimed at the toolbar and
+/// forwarding to its session.
 @Suite("GitWindowToolbar", .serialized)
 @MainActor
 struct GitWindowToolbarTests {
@@ -65,7 +66,7 @@ struct GitWindowToolbarTests {
         return (identifier.rawValue, target.object, action)
     }
 
-    @Test("the six items, in order, with their labels and symbols")
+    @Test("the seven items, in order, with their labels and symbols")
     func itemsInOrder() {
         let toolbar = GitWindowToolbar()
         let described: [String] = toolbar.items.compactMap { item in
@@ -78,7 +79,8 @@ struct GitWindowToolbarTests {
             "git.toolbar.push Push arrow.up.to.line",
             "git.toolbar.branch Branch arrow.triangle.branch",
             "git.toolbar.stash Stash tray.and.arrow.down",
-            "git.toolbar.pop Pop tray.and.arrow.up"
+            "git.toolbar.pop Pop tray.and.arrow.up",
+            "git.toolbar.commandLog Command Log list.bullet.rectangle"
         ])
     }
 
@@ -86,7 +88,7 @@ struct GitWindowToolbarTests {
     func itemsTargetTheToolbar() {
         let toolbar = GitWindowToolbar()
         let wirings = toolbar.items.compactMap(wiring)
-        #expect(wirings.count == 6)
+        #expect(wirings.count == 7)
         for (identifier, target, action) in wirings {
             #expect(target === toolbar, "\(identifier)")
             #expect(toolbar.responds(to: action), "\(identifier)")
@@ -102,7 +104,9 @@ struct GitWindowToolbarTests {
         let toolbar = GitWindowToolbar()
         toolbar.session = session
 
-        for (identifier, _, action) in toolbar.items.compactMap(wiring) {
+        let verbs = toolbar.items.compactMap(wiring).filter { $0.0 != "git.toolbar.commandLog" }
+        #expect(verbs.count == 6)
+        for (identifier, _, action) in verbs {
             session.actionTask = nil
             toolbar.perform(action, with: nil)
             #expect(session.isActing, "\(identifier)")

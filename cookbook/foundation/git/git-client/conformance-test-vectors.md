@@ -111,3 +111,6 @@
 | git-client-108 | submodule-update | Submodules `lib` and `other lib`, cloned without them; update `other lib` initializing | `other lib` current with `lib.txt` present; `lib` uninitialized. |
 | git-client-109 | environment-optional-locks-off | A script standing in for git that prints `$GIT_OPTIONAL_LOCKS` | `0`. |
 | git-client-110 | diff-conflicted | A rename/rename: `a.txt` renamed to `b.txt` here and to `c.txt` on `side`, `side` merged; diff `.conflicted(b.txt)` (AU, working file equal to HEAD); also a UD and an AA conflict | `b.txt` all added, `oldRevision` nil; the UD diff's `oldRevision` `:1`; the AA one's `HEAD`. |
+| git-client-111 | command-log-ring | Record 520 calls `status <i>` into a ring of 500 | 500 entries, the first `status 20`; a `gh` call `pr list` reads `gh pr list`, 250 ms. |
+| git-client-112 | command-log-fields | Record status 0, nil and 128 with standard error `boom`; then 128 with `é`×3000 | Only the 128 entry keeps `boom`; the long one keeps 2048 bytes. |
+| git-client-113 | redaction-scope-and-positional-rule | `push` `["https://user:tok@github.com/o/r.git", "main"]` | `["push", "https://***@github.com/o/r.git", "main"]`. |

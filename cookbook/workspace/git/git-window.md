@@ -2,7 +2,7 @@
 id: 6a830cf8-0b95-4ffd-b175-f5cf481490c4
 title: "Git Window"
 type: ingredient
-version: 1.10.4
+version: 2.0.0
 status: review
 language: en
 created: 2026-11-14
@@ -59,7 +59,7 @@ The branch card's [branch management](cookbook:92f11498-2cb2-4b04-92b9-560d9f2de
 ### Window
 
 - **window-identity**: The window MUST be the project window over the key's `.gitWindow` row (inserted the first time, named after the top level's folder), so its id is the project window's `projectWindow.<row id>`; its title MUST be `Git: <name> → <branch>`, or `Git: <name>` before the branch is known or with none (a detached HEAD), read again after every refs change.
-- **layout**: The content MUST be the `GitWindowPanes` layout: overview | (history | right), each Git pane fixed and one of its kind, where right is the commit pane alone, or, with terminals, the commit pane over a terminal region that offers the host's terminal family and always keeps one terminal. Inside the commit pane the commit detail sits over the bottom pane (diff, blame or file history) in a horizontal-divider split, `git.window.right`, autosaved once per repository (its autosave name carries the top level's path).
+- **layout**: The content MUST be the `GitWindowPanes` layout: overview | (history | right), each Git pane fixed and one of its kind, where right is the commit pane alone, or, with terminals, the commit pane over a terminal region that offers the host's terminal family and the Command Log (`git.commandLog`, "Command Log", `list.bullet.rectangle`, at most one, the session's `GitCommandLogViewController` over the repository's top level and its worktrees) and always keeps one terminal. Inside the commit pane the commit detail sits over the bottom pane (diff, blame or file history) in a horizontal-divider split, `git.window.right`, autosaved once per repository (its autosave name carries the top level's path).
 - **centre-follows-sidebar**: The centre MUST show the working copy while the sidebar's Working Copy row is selected (including when the sidebar falls back to it after its selection vanished), and the history otherwise.
 - **ref-scrolls-history**: Selecting a branch or tag MUST show the history and select the ref's target commit there; when the commit is not loaded, nothing is selected and the selection is applied after a later history change loads it.
 - **stash-shows-commit**: Selecting a stash MUST show the history and load the stash's commit (`git log` of the stash id, one commit) into the commit detail; a failed load is logged and shown as a plain error label.
@@ -77,8 +77,9 @@ The branch card's [branch management](cookbook:92f11498-2cb2-4b04-92b9-560d9f2de
 
 ### Toolbar
 
-- **toolbar-verbs**: The window's toolbar MUST carry, after the project window's title item and ahead of the search field and help, six icon buttons in order: `git.toolbar.fetch` "Fetch" `arrow.down.circle`, `git.toolbar.pull` "Pull" `arrow.down.to.line`, `git.toolbar.push` "Push" `arrow.up.to.line`, `git.toolbar.branch` "Branch" `arrow.triangle.branch`, `git.toolbar.stash` "Stash" `tray.and.arrow.down`, `git.toolbar.pop` "Pop" `tray.and.arrow.up`, each the identifier as its accessibility identifier and the label as its tooltip.
+- **toolbar-verbs**: The window's toolbar MUST carry, after the project window's title item and ahead of the search field and help, seven icon buttons in order: `git.toolbar.fetch` "Fetch" `arrow.down.circle`, `git.toolbar.pull` "Pull" `arrow.down.to.line`, `git.toolbar.push` "Push" `arrow.up.to.line`, `git.toolbar.branch` "Branch" `arrow.triangle.branch`, `git.toolbar.stash` "Stash" `tray.and.arrow.down`, `git.toolbar.pop` "Pop" `tray.and.arrow.up`, `git.toolbar.commandLog` "Command Log" `list.bullet.rectangle`, each the identifier as its accessibility identifier and the label as its tooltip.
 - **toolbar-forwards**: Each button MUST be aimed at the window's `GitWindowToolbar`, which forwards it to its session's verb (`fetch`, `pull`, `push`, `newBranch`, `stash`, `popStash`), so it goes through the one funnel; with no session a button does nothing. Push is the HEAD push of **push-remote**.
+- **toolbar-command-log**: The Command Log button MUST call the session's `toggleCommandLog()`, which runs no git: with the Command Log in the terminal region it closes that pane; otherwise it splits the region's last pane to its right with the Command Log. With no terminal region it does nothing.
 - **toolbar-lifetime**: The feature MUST make the toolbar before the window, keep it beside the window's session by the row's id (the buttons hold it weakly, it holds the session weakly), point it at the session once the layout has made it, and drop it when the window closes; the session's presenter is a `GitAlertPresenter` over the window, set at the same moment.
 
 ### Asking the user
@@ -218,6 +219,7 @@ The window keeps the project window's identifiers. Its panes carry `git.window.o
 | git-window-079 | merge-view | UU `f.txt` and UD `gone.txt` from merging `main` into `side`; select `gone.txt`, then `f.txt` | `gone.txt`'s diff shows `base` and `kept on side` (its unstaged diff is empty); `f.txt` opens the merge view. |
 | git-window-080 | merge-view | an AA conflict, `side` against `main`, diffed as `.conflicted` | a context line `side` and an added line `main`, against HEAD. |
 | git-window-081 | merge-view | the conflicts of 079; select `f.txt` and at once `gone.txt`; then, with `isActing` true, select `f.txt` | the diff shows `gone.txt` and the merge view was never shown; then the merge view shows `f.txt`. |
+| git-window-082 | toolbar-command-log | a layout with a terminal region; toggle; toggle | the region holds the terminal and the Command Log (the session's controller); then the terminal alone. |
 ## Edge Cases
 
 - **Symlinked spelling**: `/tmp/r` and `/private/tmp/r` resolve to one key and one window.
@@ -285,9 +287,9 @@ Under the `Loggable` categories of `GitWindowFeature`, `GitWindowSession` and `G
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Window/` | confirmed (1.10.4) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Window/GitWindowSession.swift` | confirmed (1.10.4) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Window/GitWindowSession+Actions.swift` | confirmed (1.10.4) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Window/` | confirmed (2.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Window/GitWindowSession.swift` | confirmed (2.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Window/GitWindowSession+Actions.swift` | confirmed (2.0.0) |
 
 ## Design Decisions
 
@@ -354,6 +356,7 @@ Under the `Loggable` categories of `GitWindowFeature`, `GitWindowSession` and `G
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 2.0.0 | 2026-11-16 | Mike Fullerton | The Command Log in the terminal region, and the toolbar's seventh button toggling it. |
 | 1.10.4 | 2026-11-16 | Mike Fullerton | Opening the merge view on selection is ungated and only the latest selection lands (vector 081) |
 | 1.10.3 | 2026-11-16 | Mike Fullerton | The merge view's fallback is the .conflicted diff (vectors 079-080) |
 | 1.10.2 | 2026-11-16 | Mike Fullerton | Git window keeps its rows with StandaloneWindowRows: closed windows and forgotten rows are deleted, quiet lookups stay put, removed worktrees close their window, detached-HEAD search |

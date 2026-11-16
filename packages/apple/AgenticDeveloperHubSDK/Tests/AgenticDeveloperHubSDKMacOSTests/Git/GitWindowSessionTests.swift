@@ -307,11 +307,48 @@ struct GitWindowSessionTests {
         #expect(!layout.spec.canRemove(terminal.id, from: tree))
         let offered = layout.spec.allowedInsertions(at: terminal.id, in: tree, registry: layout.registry)
             .map(\.viewID)
-        #expect(Set(offered) == Set([.terminal, .terminalChat]))
+        #expect(Set(offered) == Set([.terminal, .terminalChat, GitWindowPanes.commandLog]))
         for leaf in leaves.dropLast() {
             #expect(layout.spec.isFixed(leaf.id, in: tree))
             #expect(layout.spec.allowedInsertions(at: leaf.id, in: tree, registry: layout.registry).isEmpty)
         }
+        let commandLog = try #require(
+            GitWindowPanes.terminalAllowances(terminals).first { $0.viewID == GitWindowPanes.commandLog })
+        #expect(commandLog.min == 0)
+        #expect(commandLog.max == 1)
+        #expect(layout.registry.descriptor(for: GitWindowPanes.commandLog).displayName == "Command Log")
+    }
+
+    @Test("the Command Log toggle opens the log beside the terminal, and closes it again")
+    func toggleCommandLog() throws {
+        let session = makeIdleSession()
+        let registry = ComposableTabsViewRegistry()
+        GitWindowPanes.register(in: registry, terminals: nil) { _ in session }
+        // Stand-ins: a real terminal would start a shell.
+        for viewID in [ComposableTabsViewID.terminal, .terminalChat] {
+            registry.register(viewID, descriptor: .init(displayName: "Stand-in")) { _ in NSViewController() }
+        }
+        let terminals = TerminalPaneFamily(preferredAxis: .vertical)
+        let layout = try ComposableTabsLayout(registry: registry, spec: GitWindowPanes.spec(terminals: terminals))
+        let project = ProjectWindowTestSupport.makeProject(label: "GitCommandLogToggle")
+        let root = ComposableTabsViewController.make(
+            from: layout.spec.blueprint(), project: project, workingDirectory: project.directoryURL, isRoot: true)
+        root.layoutOverride = layout
+        root.view.frame = NSRect(x: 0, y: 0, width: 1200, height: 800)
+        root.view.layoutSubtreeIfNeeded()
+        let fixed = [GitWindowPanes.overview, GitWindowPanes.history, GitWindowPanes.commit]
+        func shown() -> [ComposableTabsViewID] { session.commitPane.tabPanes().map(\.viewID) }
+        #expect(shown() == fixed + [.terminal])
+
+        session.toggleCommandLog()
+        #expect(shown() == fixed + [.terminal, GitWindowPanes.commandLog])
+        let pane = try #require(session.commitPane.tabPanes().last)
+        pane.loadViewIfNeeded()
+        #expect(pane.contentViewController === session.commandLog)
+
+        session.toggleCommandLog()
+        #expect(shown() == fixed + [.terminal])
+        session.stop()
     }
 
     private func makeIdleSession() -> GitWindowSession {

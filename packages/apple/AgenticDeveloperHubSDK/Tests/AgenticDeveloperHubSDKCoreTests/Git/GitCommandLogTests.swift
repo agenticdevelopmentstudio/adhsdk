@@ -99,3 +99,104 @@ struct GitCommandLogTests {
         #expect(GitCommandLog.redactedArguments(verb: "config", arguments: []).isEmpty)
     }
 }
+
+/// The command log's ring, its stream, the URL user-info rule and the standard-error
+/// rule. Each test keeps its own `GitCommandLogBook`, so the git calls every other
+/// suite makes into the shared one cannot land in the middle of an assertion.
+@Suite("GitCommandLog ring")
+struct GitCommandLogRingTests {
+    private static let caller = GitCaller(file: "Tests.swift", function: "test()")
+
+    private static func record(
+        in book: GitCommandLogBook, verb: String = "status", arguments: [String] = [],
+        exitStatus: Int32? = 0, standardError: String? = nil
+    ) {
+        GitCommandLog.record(
+            in: book, tool: "git", verb: verb, arguments: arguments,
+            directory: URL(fileURLWithPath: "/tmp/repo"), caller: caller,
+            duration: 0.012, exitStatus: exitStatus, standardError: standardError)
+    }
+
+    @Test("the shared ring holds 500")
+    func sharedCapacity() {
+        #expect(GitCommandLog.capacity == 500)
+        #expect(GitCommandLog.book.capacity == 500)
+    }
+
+    @Test("the ring keeps the last capacity entries, oldest first")
+    func ringKeepsTheLast() {
+        let book = GitCommandLogBook(capacity: 500)
+        for index in 0..<520 {
+            Self.record(in: book, arguments: ["\(index)"])
+        }
+        let entries = book.entries()
+        #expect(entries.count == 500)
+        #expect(entries.first?.arguments == ["status", "20"])
+        #expect(entries.last?.arguments == ["status", "519"])
+        #expect(entries.map(\.id) == entries.map(\.id).sorted())
+    }
+
+    @Test("an entry carries the tool, verb first, directory, caller, duration and status")
+    func entryFields() throws {
+        let book = GitCommandLogBook(capacity: 4)
+        GitCommandLog.record(
+            in: book, tool: "gh", verb: "pr", arguments: ["list"], directory: URL(fileURLWithPath: "/tmp/repo"),
+            caller: Self.caller, duration: 0.25, exitStatus: 0, standardError: nil)
+        let entry = try #require(book.entries().first)
+        #expect(entry.tool == "gh")
+        #expect(entry.arguments == ["pr", "list"])
+        #expect(entry.commandLine == "gh pr list")
+        #expect(entry.directory == "/tmp/repo")
+        #expect(entry.caller == "Tests.swift:test()")
+        #expect(entry.duration == .milliseconds(250))
+        #expect(entry.exitStatus == 0)
+    }
+
+    @Test("updates yields each new entry in order")
+    func updatesYieldEachEntry() async {
+        let book = GitCommandLogBook(capacity: 10)
+        Self.record(in: book, arguments: ["before"])
+        let stream = book.updates()
+        Self.record(in: book, arguments: ["one"])
+        Self.record(in: book, arguments: ["two"])
+        var seen: [[String]] = []
+        for await entry in stream {
+            seen.append(entry.arguments)
+            if seen.count == 2 { break }
+        }
+        #expect(seen == [["status", "one"], ["status", "two"]])
+    }
+
+    @Test("a push URL's user info is redacted, its host kept")
+    func pushURLUserInfoRedacted() throws {
+        let book = GitCommandLogBook(capacity: 4)
+        Self.record(in: book, verb: "push", arguments: ["https://someone:ghp_s3cr3t@github.com/o/r.git", "main"])
+        let entry = try #require(book.entries().first)
+        #expect(entry.arguments == ["push", "https://***@github.com/o/r.git", "main"])
+        #expect(!entry.commandLine.contains("s3cr3t"))
+        #expect(GitCommandLog.redactedArguments(verb: "remote", arguments: ["add", "o", "ssh://u@h/r"])
+                == ["add", "o", "ssh://***@h/r"])
+        #expect(GitCommandLog.redactedArguments(verb: "fetch", arguments: ["https://github.com/o/r"])
+                == ["https://github.com/o/r"])
+    }
+
+    @Test("standard error is kept only when the exit status is not 0")
+    func standardErrorOnlyOnFailure() {
+        let book = GitCommandLogBook(capacity: 4)
+        Self.record(in: book, exitStatus: 0, standardError: "warning: ignored")
+        Self.record(in: book, exitStatus: nil, standardError: "timed out")
+        Self.record(in: book, exitStatus: 128, standardError: "fatal: https://u:tok@host/r not found")
+        let entries = book.entries()
+        #expect(entries[0].standardError == nil)
+        #expect(entries[1].standardError == nil)
+        #expect(entries[2].standardError == "fatal: https://***@host/r not found")
+    }
+
+    @Test("kept standard error is cut to the first 2 KB on a character boundary")
+    func standardErrorTruncated() throws {
+        let book = GitCommandLogBook(capacity: 4)
+        Self.record(in: book, exitStatus: 1, standardError: String(repeating: "é", count: 3000))
+        let kept = try #require(book.entries().first?.standardError)
+        #expect(kept.utf8.count == 2048)
+    }
+}

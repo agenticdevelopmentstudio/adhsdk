@@ -1124,7 +1124,9 @@ public actor GitClient {
         }
         GitCommandLog.record(
             verb: verb, arguments: arguments, directory: directory, caller: caller,
-            duration: result.duration, exitStatus: result.exitStatus
+            duration: result.duration, exitStatus: result.exitStatus,
+            // Kept by the log only for a status other than 0, in memory, never in OSLog.
+            standardError: result.standardError
         )
         guard acceptedExitCodes.contains(result.exitStatus) else {
             throw GitClientError.commandFailed(

@@ -2,7 +2,7 @@
 id: bdd3a72d-8810-439b-bad7-ec16233cb2a3
 title: "Git Views"
 type: ingredient
-version: 1.12.3
+version: 1.13.0
 status: review
 language: en
 created: 2026-11-13
@@ -155,6 +155,14 @@ The **diff** (`GitDiffViewController`) shows one file's change for a `GitDiffTar
 - **file-history-list**: `GitFileHistoryViewController.show(path:)` MUST ask the content source for `fileHistory(path:)` and list its entries' commits in order, each row the subject and `<shortID> · <author initials> · <relative date>`, then select the first (newest) and show its change to the file in its `diffViewController` as `show(target: .commit(<id>, paths: <entry paths>), file: <entry path>)`: an entry's path is the file's path at that commit, and its paths are that path, or the old and new paths of a rename or copy, so a commit from before a rename shows its change too. Selecting another row shows that commit the same way; clearing the selection clears the diff.
 - **file-history-errors-latest-wins**: A history that throws MUST be logged and shown as the error's description (`git.fileHistory.error`) over an empty list, with the diff cleared; the latest `show(path:)` wins as in diff-latest-wins.
 - **file-history-reload**: `reload()` MUST list the shown path's commits again, keeping the commit that is selected when the history lands (read after the latest-wins check, not when the reload was asked for) selected when it is still listed, else the newest. The list holds at most the client's file-history limit (500); a history that reaches it is logged, and no text in the view says so.
+
+### Command log
+
+- **command-log-columns**: `GitCommandLogViewController(book:roots:)` MUST show the book's entries oldest first in a themed table of five columns, identifiers `git.commandLog.<time|command|directory|duration|status>`, titled Time, Command, Directory, Duration and Status: the entry's time, its command line, its directory's last component, its duration as `<n> ms`, and its exit status (or `–` when unfinished) beside a symbol — `checkmark.circle` success, `clock.badge.exclamationmark` warning when unfinished, `xmark.octagon` danger otherwise.
+- **command-log-filter**: It MUST show only entries whose directory is one of the roots the closure returns (the repository's top level and its worktrees), or inside one, comparing standardized and symlink-resolved paths; an entry with no directory is not shown.
+- **command-log-follow**: It MUST subscribe to the book's updates when its view loads, before reading what is already there, so nothing lands between the two unseen; each new matching entry is appended (dropping the oldest past the ring's capacity), and the table scrolls to it only when it was already scrolled to the bottom. `stop()` ends the subscription.
+- **command-log-copy**: Its context menu MUST hold `Copy Command` (`git.commandLog.menu.copy`), which puts the clicked row's command line on the pasteboard.
+- **command-log-tooltip**: A failed row's tooltip MUST be its kept standard error; a row without one has none.
 - **error-label**: Every view's error label MUST be the shared `ThemedLabel` and change state only through `show(error:)`, which shows the error's description, or empties and hides the label for nil.
 - **settings-keys**: A view's persisted setting MUST be a `UserSettings` key in lower snake case, prefixed with the feature (`git_diff_layout`). Keys already stored keep their spelling; renaming one orphans what users saved.
 
@@ -376,6 +384,10 @@ The root view carries `git.fileHistory`, the split `git.fileHistory.split`, the 
 | git-views-091 | diff-word-emphasis | the pair `one two` / `three four` under `Budget(cells: 1)`; 200 pairs of 200-word lines under the default budget | no emphasis runs; the rows are those with word highlighting off. |
 | git-views-092 | diff-show | two hunks unstaged, rows 2–3 selected; reload reading the same diff; then reload reading a one-line diff | the rows and selection unchanged; then new rows and no selection. |
 | git-views-093 | diff-coloring-revisions | `.conflicted(a)` without a diff; with a file diff whose `oldRevision` is `:1`, `HEAD`, nil | `:1`/working; `:1`/working; `HEAD`/working; none/working. |
+| git-views-094 | command-log-filter | entries in the root, a subdirectory, `<root>-other`, a worktree, `/elsewhere` and none | the root's, the subdirectory's and the worktree's, five columns. |
+| git-views-095 | command-log-follow | 40 entries shown at the bottom; one more; scroll to the top; one more | the last row visible; then still the first row visible. |
+| git-views-096 | command-log-copy | `push https://***@github.com/o/r.git main`; Copy Command on row 0 | the pasteboard holds `git push https://***@github.com/o/r.git main`. |
+| git-views-097 | command-log-tooltip | a passed `status`; a failed `push` (1, `rejected`) | no tooltip; `rejected`, `xmark.octagon`, `1`, `12 ms`. |
 ## Edge Cases
 
 - **Null / empty input**: An unborn repository lists only the working copy (and its worktree).
@@ -487,18 +499,19 @@ The commit detail, the diff, the blame and the file history each log a failed lo
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/` | confirmed (1.12.3) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Git/GitHistorySearch.swift` | confirmed (1.12.3) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Git/GitFileListItem.swift` | confirmed (1.12.3) |
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitDiffLineModels.swift` | confirmed (1.12.3) |
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitSyntaxColoring.swift` | confirmed (1.12.3) |
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitDiffViewController.swift` | confirmed (1.12.3) |
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitBlameViewController.swift` | confirmed (1.12.3) |
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitFileHistoryViewController.swift` | confirmed (1.12.3) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/SourcesUI/macOS/Theme/ThemedViews.swift` | confirmed (1.12.3) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Git/GitFileStatus.swift` | confirmed (1.12.3) |
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitOperationBannerViewController.swift` | confirmed (1.12.3) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitWorkingCopyViewController.swift` | confirmed (1.12.3) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/` | confirmed (1.13.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Git/GitHistorySearch.swift` | confirmed (1.13.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Git/GitFileListItem.swift` | confirmed (1.13.0) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitDiffLineModels.swift` | confirmed (1.13.0) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitSyntaxColoring.swift` | confirmed (1.13.0) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitDiffViewController.swift` | confirmed (1.13.0) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitBlameViewController.swift` | confirmed (1.13.0) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitFileHistoryViewController.swift` | confirmed (1.13.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/SourcesUI/macOS/Theme/ThemedViews.swift` | confirmed (1.13.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Git/GitFileStatus.swift` | confirmed (1.13.0) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitOperationBannerViewController.swift` | confirmed (1.13.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitWorkingCopyViewController.swift` | confirmed (1.13.0) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitCommandLogViewController.swift` | confirmed (1.13.0) |
 
 ## Design Decisions
 
@@ -612,3 +625,4 @@ The commit detail, the diff, the blame and the file history each log a failed lo
 | 1.12.1 | 2026-11-16 | Mike Fullerton | Final review: word-emphasis budget, selection kept across reloads, non-ancestor rebase rows; reword field newlines, row heights, Move Up/Down; selectRows; merge view cap |
 | 1.12.2 | 2026-11-16 | Mike Fullerton | Selecting a conflict with markers opens the merge view; one without shows its .conflicted diff (vector 086) |
 | 1.12.3 | 2026-11-16 | Mike Fullerton | A conflicted diff's old side is coloured from the revision the diff used (vector 093) |
+| 1.13.0 | 2026-11-16 | Mike Fullerton | Command log view: columns, root filter, follow-bottom, Copy Command, failure tooltip. |

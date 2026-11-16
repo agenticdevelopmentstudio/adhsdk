@@ -157,6 +157,25 @@ struct GitClientTests {
         }
     }
 
+    @Test("a failed call reaches the command log with its standard error; a success without it")
+    func commandLogKeepsStandardErrorOfAFailure() async throws {
+        let fixture = try await Fixture.make()
+        defer { fixture.tearDown() }
+        let client = GitClient(configuration: .default)
+        _ = try? await client.run("rev-parse", ["--verify", "refs/heads/no-such-branch"], in: fixture.root)
+        _ = try await client.run("rev-parse", ["HEAD"], in: fixture.root)
+        // The shared ring takes every suite's calls; this fixture's directory is its own.
+        let mine = GitCommandLog.entries().filter { entry in
+            entry.directory == fixture.root.path && entry.arguments.first == "rev-parse"
+        }
+        let failed = try #require(mine.first { $0.arguments.contains("refs/heads/no-such-branch") })
+        #expect(failed.exitStatus != 0)
+        #expect(failed.standardError?.isEmpty == false)
+        let succeeded = try #require(mine.first { $0.arguments == ["rev-parse", "HEAD"] })
+        #expect(succeeded.exitStatus == 0)
+        #expect(succeeded.standardError == nil)
+    }
+
     @Test("currentBranch names the checked-out branch")
     func currentBranch() async throws {
         let fixture = try await Fixture.make()

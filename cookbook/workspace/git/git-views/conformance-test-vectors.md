@@ -94,3 +94,7 @@
 | git-views-091 | diff-word-emphasis | the pair `one two` / `three four` under `Budget(cells: 1)`; 200 pairs of 200-word lines under the default budget | no emphasis runs; the rows are those with word highlighting off. |
 | git-views-092 | diff-show | two hunks unstaged, rows 2–3 selected; reload reading the same diff; then reload reading a one-line diff | the rows and selection unchanged; then new rows and no selection. |
 | git-views-093 | diff-coloring-revisions | `.conflicted(a)` without a diff; with a file diff whose `oldRevision` is `:1`, `HEAD`, nil | `:1`/working; `:1`/working; `HEAD`/working; none/working. |
+| git-views-094 | command-log-filter | entries in the root, a subdirectory, `<root>-other`, a worktree, `/elsewhere` and none | the root's, the subdirectory's and the worktree's, five columns. |
+| git-views-095 | command-log-follow | 40 entries shown at the bottom; one more; scroll to the top; one more | the last row visible; then still the first row visible. |
+| git-views-096 | command-log-copy | `push https://***@github.com/o/r.git main`; Copy Command on row 0 | the pasteboard holds `git push https://***@github.com/o/r.git main`. |
+| git-views-097 | command-log-tooltip | a passed `status`; a failed `push` (1, `rejected`) | no tooltip; `rejected`, `xmark.octagon`, `1`, `12 ms`. |

@@ -29,7 +29,9 @@ doc comment, leaving no orphaned process behind. `fault-tolerance`
 malformed record exactly one dropped entry rather than trapping the process
 — demonstrated directly by `recordWithNoPathIsSkipped` and
 `pathOfSeparatorsOnlyIsSkipped`. `secure-log-output` **passed**:
-`GitCommandLog` never logs standard output or standard error, and
+`GitCommandLog` never logs standard output or standard error to OSLog
+(its in-memory ring keeps a failed call's standard error, cut and
+URL-redacted), and
 `redactedArguments` keeps a `config` value out of the `.public` log line
 entirely. `input-sanitization` **partial**: `GitConfigEntry.isWellFormedKey`
 classifies a key shape for *redaction* purposes, but neither

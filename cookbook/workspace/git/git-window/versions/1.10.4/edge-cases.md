@@ -1,0 +1,19 @@
+
+- **Symlinked spelling**: `/tmp/r` and `/private/tmp/r` resolve to one key and one window.
+- **Linked worktree**: its own top level, so its own window; the watcher watches its git directory and the common directory.
+- **Submodule row**: opens the submodule's own window, keyed by its own top level.
+- **Removing a dirty worktree**: git refuses; the second confirmation names the loss, and declining it leaves the worktree with no failure shown.
+- **New worktree on a branch checked out elsewhere**: git refuses and the failure shows under `Add worktree failed`; the sidebar offers `Check Out in New Worktree…` only on branches checked out nowhere.
+- **A relative or `~` folder for a new worktree**: `~` is expanded and a relative path is taken against the parent of the root, since git requires an absolute path.
+- **Remembered root gone**: dropped at restore.
+- **Remembered root no longer a repository**: dropped at restore, since it no longer resolves.
+- **Detached HEAD**: the title names no branch (`Git: <name>`).
+- **Two repositories open side by side**: each keeps its own commit-pane divider position.
+- **A chosen folder in no repository**: the not-in-a-repository alert, nothing opened or remembered.
+- **A stash moved underneath**: the sidebar's stash actions follow the stash by sha; a vanished one fails with `That stash no longer exists.`.
+- **A repository path containing a newline**: the watcher reads each directory with its own `rev-parse`, so the path is not split.
+- **Refresh with nothing changed**: a commit picked by hand in the history stays selected.
+- **Fast typing in search**: the history view serialises queries; the window only forwards text.
+- **Quick selection changes**: generations drop stale stash and subtitle loads; the views drop their own.
+- **Removing a worktree whose window is open**: the removing window tells the feature, which closes the worktree's window as the user would, so its root is forgotten and its row deleted; a worktree removed outside the app leaves its window open, and at the next launch its root is no longer a repository and is dropped.
+- **Offline / disconnected state**: Not applicable: no network.

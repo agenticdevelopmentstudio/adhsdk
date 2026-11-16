@@ -2,11 +2,11 @@
 id: 779ac6ea-9ef5-4fb0-8ed9-dc6b9d617344
 title: "Git Client"
 type: ingredient
-version: 2.0.0
+version: 2.1.0
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-11-15
+modified: 2026-11-16
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -653,7 +653,26 @@ picker) is a consumer of this contract, not part of it.
   redacted arguments, the working directory, the calling file and
   function, the duration in milliseconds, and the exit status (or the
   literal string `"unfinished"` when no exit status is available), and
-  MUST NOT log the process's standard output or standard error.
+  MUST NOT log the process's standard output or standard error to OSLog.
+  The in-memory ring (command-log-ring) keeps a call's standard error only
+  when its exit status is present and non-zero, cut to its first 2048
+  UTF-8 bytes on a character boundary and passed through the URL user-info
+  rule; standard output is never kept anywhere.
+- **command-log-ring**: Besides OSLog, every recorded call MUST be appended
+  to one shared in-memory ring, `GitCommandLog.book`, holding the newest
+  500 entries, oldest first. An entry carries an increasing id, its date,
+  the tool (`git` by default; `record(tool:)` names another, such as `gh`),
+  the verb followed by the redacted arguments, the working directory's path
+  (empty when there is none), the caller as `<file>:<function>`, the
+  duration rounded to milliseconds, the exit status (nil when unfinished)
+  and the kept standard error. Its command line is the tool and the
+  arguments joined by spaces. `record`'s `tool:` and `standardError:`
+  parameters default to `git` and nil, so every existing caller is
+  unchanged. Nothing in the ring is persisted.
+- **command-log-updates**: `GitCommandLogBook.updates()` MUST yield every
+  entry appended after the call, in order, to each subscriber, buffering at
+  most the ring's capacity of the newest; a subscriber whose stream ends is
+  removed. Subscribers are told outside the ring's lock.
 - **redaction-scope-and-positional-rule**: The command log's argument
   redaction MUST return arguments unchanged for every verb except config,
   commit, tag and stash. For commit, tag and stash it MUST replace the
@@ -664,7 +683,11 @@ picker) is a consumer of this contract, not part of it.
   `<redacted:<length>>`, the length in characters — regardless of whether that argument is
   shaped like a well-formed key; the config-entry key validator (below) is
   used only to decide whether to *keep* the argument found at that
-  position, never to relocate the position itself.
+  position, never to relocate the position itself. After the positional
+  rule, for every verb, any URL's user information (the part of its
+  authority before the last `@`, the authority ending at `/`, whitespace or
+  a quote) MUST be replaced with `***`, so
+  `https://user:token@host/r.git` is logged as `https://***@host/r.git`.
 - **config-entry-key-validator**: The config-entry key validator MUST
   return true only for a non-empty string that contains at least one `.`,
   does not begin with `-`, and contains no whitespace character.
@@ -1015,6 +1038,9 @@ component.
 | git-client-108 | submodule-update | Submodules `lib` and `other lib`, cloned without them; update `other lib` initializing | `other lib` current with `lib.txt` present; `lib` uninitialized. |
 | git-client-109 | environment-optional-locks-off | A script standing in for git that prints `$GIT_OPTIONAL_LOCKS` | `0`. |
 | git-client-110 | diff-conflicted | A rename/rename: `a.txt` renamed to `b.txt` here and to `c.txt` on `side`, `side` merged; diff `.conflicted(b.txt)` (AU, working file equal to HEAD); also a UD and an AA conflict | `b.txt` all added, `oldRevision` nil; the UD diff's `oldRevision` `:1`; the AA one's `HEAD`. |
+| git-client-111 | command-log-ring | Record 520 calls `status <i>` into a ring of 500 | 500 entries, the first `status 20`; a `gh` call `pr list` reads `gh pr list`, 250 ms. |
+| git-client-112 | command-log-fields | Record status 0, nil and 128 with standard error `boom`; then 128 with `é`×3000 | Only the 128 entry keeps `boom`; the long one keeps 2048 bytes. |
+| git-client-113 | redaction-scope-and-positional-rule | `push` `["https://user:tok@github.com/o/r.git", "main"]` | `["push", "https://***@github.com/o/r.git", "main"]`. |
 ## Edge Cases
 
 - **Null/empty input**: Parsing an empty status output MUST return an
@@ -1048,8 +1074,9 @@ component.
   spawned, and the attempt MUST still be recorded (git-client-037). A
   command that runs to completion and exits non-zero MUST throw a
   command-failed outcome carrying the real exit status and standard-error
-  text, with that standard-error text never reaching the command log
-  (git-client-038, git-client-046). The unset-global-config verb on a key
+  text, with that standard-error text never reaching OSLog and kept, cut
+  and URL-redacted, only in the in-memory ring (git-client-038,
+  git-client-046, git-client-112). The unset-global-config verb on a key
   that was never set MUST surface git's exit status 5 as an ordinary
   command-failed outcome, with no dedicated outcome for it.
 - **Timeout (this component's offline-equivalent state)**: This component
@@ -1132,9 +1159,10 @@ metadata for debugging and audit, not product-analytics events.
   argument redaction redacts every config argument at and after the first
   non-flag position, and the message after `-m` for commit, tag and stash,
   so a caller-supplied value or message never reaches log output in clear
-  text; standard-error text —
-  which may itself echo a repository path — MUST NEVER reach the log at
-  all.
+  text, and replaces any URL's user information with `***`; standard-error
+  text — which may itself echo a repository path — MUST NEVER reach OSLog.
+  The in-memory command-log ring keeps it for a failed call only, cut to
+  2048 bytes and URL-redacted, and never persists it.
 - **Nothing leaves the device through this component**: every verb spawns
   a local git subprocess; nothing in this component performs network I/O
   itself, though the git binary it spawns may contact a remote if a future
@@ -1150,15 +1178,18 @@ configuration assigns.
 | Every invocation attempt, regardless of outcome | info | `` `git <verb> <redacted-arguments> cwd=<path> from=<file>:<function> <ms>ms status=<exitStatus-or-"unfinished">` `` |
 
 The command log MUST NOT log the process's standard output or standard
-error — only that a call happened and where it came from, so git usage can
-be counted, attributed, and audited without the log becoming a copy of the
-repository. Arguments are logged at public visibility after passing through
+error to OSLog — only that a call happened and where it came from, so git
+usage can be counted, attributed, and audited without the log becoming a
+copy of the repository. The in-memory ring (`GitCommandLog.book`, see
+command-log-ring) keeps a failed call's standard error, truncated to 2048
+bytes and URL-redacted, for the Git window's Command Log; it is never
+persisted and never written to OSLog. Arguments are logged at public visibility after passing through
 the redaction rule (see Behavioral Requirements and Privacy above), never
 collapsed as a whole, because that would hide the entire interpolation for
 every verb rather than redacting the one argument position that needs it.
-The redaction rule covers config values and the commit, tag and stash
-messages. Paths, branch, tag and remote names are logged as they are; no
-write takes a remote URL.
+The redaction rule covers config values, the commit, tag and stash
+messages, and any URL's user information (a token in a push URL logs as
+`***`). Paths, branch, tag and remote names are logged as they are.
 
 ## Platform Notes
 
@@ -1240,12 +1271,12 @@ write takes a remote URL.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Git/` | confirmed (2.0.0) |
-| macos | `packages/apple/AgenticDeveloperHubSDK/Core/Git/GitFileHistoryEntry.swift` | confirmed (2.0.0) |
-| macos | `packages/apple/AgenticDeveloperHubSDK/Core/Git/GitAction.swift` | confirmed (2.0.0) |
-| macos | `packages/apple/AgenticDeveloperHubSDK/Core/Git/GitPatchBuilder.swift` | confirmed (2.0.0) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Git/GitOperationState.swift` | confirmed (2.0.0) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Git/GitRebasePlan.swift` | confirmed (2.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Git/` | confirmed (2.1.0) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/Core/Git/GitFileHistoryEntry.swift` | confirmed (2.1.0) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/Core/Git/GitAction.swift` | confirmed (2.1.0) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/Core/Git/GitPatchBuilder.swift` | confirmed (2.1.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Git/GitOperationState.swift` | confirmed (2.1.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Git/GitRebasePlan.swift` | confirmed (2.1.0) |
 
 ## Design Decisions
 
@@ -1365,7 +1396,9 @@ doc comment, leaving no orphaned process behind. `fault-tolerance`
 malformed record exactly one dropped entry rather than trapping the process
 — demonstrated directly by `recordWithNoPathIsSkipped` and
 `pathOfSeparatorsOnlyIsSkipped`. `secure-log-output` **passed**:
-`GitCommandLog` never logs standard output or standard error, and
+`GitCommandLog` never logs standard output or standard error to OSLog
+(its in-memory ring keeps a failed call's standard error, cut and
+URL-redacted), and
 `redactedArguments` keeps a `config` value out of the `.public` log line
 entirely. `input-sanitization` **partial**: `GitConfigEntry.isWellFormedKey`
 classifies a key shape for *redaction* purposes, but neither
@@ -1392,3 +1425,4 @@ one.
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to foundation/git/. |
 | 1.2.0 | 2026-11-14 | Mike Fullerton | History model: commit, ref, stash and submodule value types with their format strings and parsers, and the log request; output decoding falls back to Latin-1 per segment; diff, word-diff and blame models with their parsers and C-quoted path unquoting; read verbs (top level, log, refs, stashes, submodules, diff targets and options, blame, file contents) and accepted exit codes in the execution step. Final review: changed files without the patch, literal author and message search, precomposed paths, capped file contents, a named file-history limit. |
 | 2.0.0 | 2026-11-14 | Mike Fullerton | Write verbs: the action list and its exact command lines, one perform verb through the execution step with its own budgets (60 s, 600 s for remote verbs and commit) and core.editor=true, the remotes verb and the last commit message. An empty or dash-led ref, remote or commit is refused before anything runs, with a fifth error outcome, invalid-argument (the closed error taxonomy grows, hence major). Push to upstream (remote, branch, upstream branch) without `--set-upstream`; every child runs with `LC_MESSAGES=C`; the push-destination verb (`<branch>@{push}`). Patches from diff lines: a selection of one file's lines, forward and reversed line rules, recomputed hunk headers, the no-newline marker and a one-path file header; apply to the index or the work tree with the patch on standard input, never logged, an empty patch refused. Operations: the operation state (merge, rebase, cherry-pick, revert) read from the files at `rev-parse --git-path`, interactive only when `interactive` exists without `drop_redundant_commits`; merge with its fast-forward rule, rebase, and the continue, abort and skip steps, merge-skip refused before anything runs, every write under `GIT_EDITOR=true`. Conflicts: the seven conflict kinds kept per path, resolve by side and remove paths. Interactive rebase: the plan verb (first-parent, oldest first, merges and empty ranges refused), its validation, the todo with reword as pick plus an amending exec, run from an `adk-rebase` helper folder through `GIT_SEQUENCE_EDITOR` and removed once no operation is left. Worktrees and submodules: add and remove worktree (absolute paths only), locked worktrees, update submodules. Fix round 1: a reword amends only when its pick moved HEAD (reword-amends-only-its-pick, vector 099); every perform that runs removes an idle helper folder. The commit-messages verb: every commit's full message after onto in one `log` call (rebase-plan-messages, vectors 100-101). Residual review: `GIT_OPTIONAL_LOCKS=0` in the child's environment, the conflicted diff target (`--base`, HEAD when there is no base), and a symbolic link as the path's last component may not lead outside (vectors 105, 109). Residual round 2: an added-by-us conflict with nothing against HEAD shows the working file as added, and each conflicted file diff names its old side in `oldRevision` (vector 110). |
+| 2.1.0 | 2026-11-16 | Mike Fullerton | Command log: the in-memory ring (500 entries, updates, tool), standard error kept only on failure and never in OSLog, URL user-info redaction. |

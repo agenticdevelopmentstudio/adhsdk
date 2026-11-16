@@ -38,6 +38,9 @@ final class GitWindowSession {
     let blame: GitBlameViewController
     let fileHistory: GitFileHistoryViewController
     let merge: GitMergeViewController
+    /// Every git and gh call made in this repository or its worktrees; the terminal
+    /// region's Command Log pane vends it (`GitWindowPanes.commandLog`).
+    let commandLog: GitCommandLogViewController
     /// The in-progress operation banner, above the overview pane's content.
     let banner = GitOperationBannerViewController()
 
@@ -101,6 +104,10 @@ final class GitWindowSession {
         blame = GitBlameViewController(source: model, coloring: coloring)
         fileHistory = GitFileHistoryViewController(source: model, coloring: coloring)
         merge = GitMergeViewController(coloring: coloring)
+        commandLog = GitCommandLogViewController { [weak model] in
+            guard let model else { return [] }
+            return [model.root] + model.worktrees.map(\.directory)
+        }
         detailHost = GitWindowDetailHostViewController(detail: detail)
         right = GitWindowRightSplitViewController(
             top: detailHost, bottom: bottom, autosaveName: Self.autosaveName("git.window.right", root: model.root))
@@ -153,6 +160,7 @@ final class GitWindowSession {
         searchTask?.cancel()
         actionTask?.cancel()
         mergeOpenTask?.cancel()
+        commandLog.stop()
         model.stop()
     }
 
@@ -309,6 +317,23 @@ final class GitWindowSession {
                 self.diff.clear()
             }
         }
+    }
+
+    // MARK: - Command log
+
+    /// Shows the Command Log beside the terminal below the commit pane, or closes it
+    /// when it is shown — the toolbar's toggle. It is a pane of the terminal region,
+    /// the same one its Split menu offers, so the two ways in are one mechanism. With
+    /// no terminal region (a layout built without terminals), it does nothing.
+    func toggleCommandLog() {
+        let panes = commitPane.tabPanes()
+        if let shown = panes.first(where: { $0.viewID == GitWindowPanes.commandLog }) {
+            shown.host?.paneDidRequestClose(shown)
+            return
+        }
+        guard let anchor = panes.last(where: { !GitWindowPanes.fixedPanes.contains($0.viewID) }),
+              let split = anchor.host as? ComposableTabsViewController else { return }
+        split.split(anchor, adding: GitWindowPanes.commandLog, direction: .right)
     }
 
     // MARK: - Bottom pane

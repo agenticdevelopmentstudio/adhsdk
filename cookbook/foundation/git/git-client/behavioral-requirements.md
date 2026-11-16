@@ -559,7 +559,26 @@
   redacted arguments, the working directory, the calling file and
   function, the duration in milliseconds, and the exit status (or the
   literal string `"unfinished"` when no exit status is available), and
-  MUST NOT log the process's standard output or standard error.
+  MUST NOT log the process's standard output or standard error to OSLog.
+  The in-memory ring (command-log-ring) keeps a call's standard error only
+  when its exit status is present and non-zero, cut to its first 2048
+  UTF-8 bytes on a character boundary and passed through the URL user-info
+  rule; standard output is never kept anywhere.
+- **command-log-ring**: Besides OSLog, every recorded call MUST be appended
+  to one shared in-memory ring, `GitCommandLog.book`, holding the newest
+  500 entries, oldest first. An entry carries an increasing id, its date,
+  the tool (`git` by default; `record(tool:)` names another, such as `gh`),
+  the verb followed by the redacted arguments, the working directory's path
+  (empty when there is none), the caller as `<file>:<function>`, the
+  duration rounded to milliseconds, the exit status (nil when unfinished)
+  and the kept standard error. Its command line is the tool and the
+  arguments joined by spaces. `record`'s `tool:` and `standardError:`
+  parameters default to `git` and nil, so every existing caller is
+  unchanged. Nothing in the ring is persisted.
+- **command-log-updates**: `GitCommandLogBook.updates()` MUST yield every
+  entry appended after the call, in order, to each subscriber, buffering at
+  most the ring's capacity of the newest; a subscriber whose stream ends is
+  removed. Subscribers are told outside the ring's lock.
 - **redaction-scope-and-positional-rule**: The command log's argument
   redaction MUST return arguments unchanged for every verb except config,
   commit, tag and stash. For commit, tag and stash it MUST replace the
@@ -570,7 +589,11 @@
   `<redacted:<length>>`, the length in characters — regardless of whether that argument is
   shaped like a well-formed key; the config-entry key validator (below) is
   used only to decide whether to *keep* the argument found at that
-  position, never to relocate the position itself.
+  position, never to relocate the position itself. After the positional
+  rule, for every verb, any URL's user information (the part of its
+  authority before the last `@`, the authority ending at `/`, whitespace or
+  a quote) MUST be replaced with `***`, so
+  `https://user:token@host/r.git` is logged as `https://***@host/r.git`.
 - **config-entry-key-validator**: The config-entry key validator MUST
   return true only for a non-empty string that contains at least one `.`,
   does not begin with `-`, and contains no whitespace character.

@@ -23,3 +23,4 @@
 | 1.12.1 | 2026-11-16 | Mike Fullerton | Final review: word-emphasis budget, selection kept across reloads, non-ancestor rebase rows; reword field newlines, row heights, Move Up/Down; selectRows; merge view cap |
 | 1.12.2 | 2026-11-16 | Mike Fullerton | Selecting a conflict with markers opens the merge view; one without shows its .conflicted diff (vector 086) |
 | 1.12.3 | 2026-11-16 | Mike Fullerton | A conflicted diff's old side is coloured from the revision the diff used (vector 093) |
+| 1.13.0 | 2026-11-16 | Mike Fullerton | Command log view: columns, root filter, follow-bottom, Copy Command, failure tooltip. |

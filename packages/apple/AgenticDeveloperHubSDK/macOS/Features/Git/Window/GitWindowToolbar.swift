@@ -2,8 +2,8 @@ import AppKit
 import AgenticDeveloperHubSDKUI
 
 /// The Git window's toolbar verbs (recipe `workspace/git/git-window`, "Toolbar"):
-/// Fetch, Pull, Push, Branch, Stash and Pop, each a `.targetedButton` aimed at this
-/// object, which forwards it to its session's verb.
+/// Fetch, Pull, Push, Branch, Stash and Pop, then the Command Log toggle, each a
+/// `.targetedButton` aimed at this object, which forwards it to its session.
 ///
 /// The window is the project window's controller, which owns its toolbar delegate and
 /// knows nothing of git, so these items are handed to it as extras and answered here.
@@ -16,7 +16,7 @@ final class GitWindowToolbar: NSObject {
     /// every button does nothing.
     weak var session: GitWindowSession?
 
-    /// The six buttons, in order, every one aimed at this object.
+    /// The seven buttons, in order, every one aimed at this object.
     var items: [WindowToolbarItem] {
         let target = WindowToolbarTarget(self)
         return Self.specs.map { spec in
@@ -45,7 +45,9 @@ final class GitWindowToolbar: NSObject {
         Spec(identifier: "git.toolbar.stash", label: "Stash", symbol: "tray.and.arrow.down",
              action: #selector(GitWindowToolbar.stash(_:))),
         Spec(identifier: "git.toolbar.pop", label: "Pop", symbol: "tray.and.arrow.up",
-             action: #selector(GitWindowToolbar.popStash(_:)))
+             action: #selector(GitWindowToolbar.popStash(_:))),
+        Spec(identifier: "git.toolbar.commandLog", label: "Command Log", symbol: "list.bullet.rectangle",
+             action: #selector(GitWindowToolbar.toggleCommandLog(_:)))
     ]
 
     @objc func fetch(_ sender: Any?) { session?.fetch() }
@@ -54,4 +56,5 @@ final class GitWindowToolbar: NSObject {
     @objc func newBranch(_ sender: Any?) { session?.newBranch() }
     @objc func stash(_ sender: Any?) { session?.stash() }
     @objc func popStash(_ sender: Any?) { session?.popStash() }
+    @objc func toggleCommandLog(_ sender: Any?) { session?.toggleCommandLog() }
 }
