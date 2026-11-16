@@ -2,11 +2,11 @@
 id: 7f1b8bef-e78e-4cac-be55-c948fe9062e5
 title: "Project Window Manager"
 type: ingredient
-version: 1.2.0
+version: 1.3.0
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-11-14
+modified: 2026-11-16
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -342,7 +342,7 @@ of which this file renders itself.
 | git-client-projects-project-window-manager-014 | front-workspace-window-skips-document-windows, is-document-window-by-controller | Open a project window, then open a Document window and make it key. | The front-window lookup returns the Document window's controller; the front-workspace lookup returns the project window's; asking whether each is a Document window answers true and false respectively |
 | git-client-projects-project-window-manager-015 | standalone-rows-one-row-per-canonical-path | Ask the File Browser rows helper for the row at a folder, then again through a symlink to that folder. | Both calls return the same row, and one row of that kind exists for the folder |
 | git-client-projects-project-window-manager-016 | standalone-rows-forgotten-rows-discarded-at-launch, standalone-rows-restore-list | With Document rows at paths a and b and only a remembered, discard forgotten rows. | The row at a remains and the row at b is gone, along with its saved window frame |
-| git-client-projects-project-window-manager-014 | standalone-toolbar-items | Open a `.gitWindow` row's standalone window with six targeted buttons | The window's toolbar lists the six identifiers first, ahead of the flexible space; each button targets the object its target names. |
+| git-client-projects-project-window-manager-017 | standalone-toolbar-items | Open a `.gitWindow` row's standalone window with six targeted buttons | The window's toolbar lists the six identifiers first, ahead of the flexible space; each button targets the object its target names. |
 ## Edge Cases
 
 - **Null and empty input**: The language-services factory and the command
@@ -678,8 +678,8 @@ anywhere in this file.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.3.0 | 2026-11-16 | Mike Fullerton | Standalone windows take toolbar items and pass them to the window they make (vector 017) |
 | 1.2.0 | 2026-11-14 | Mike Fullerton | Document window kinds: titles, kinds and standalone windows; the front-window chain matches the visible-window and window-group lookup; the front-workspace lookup skips Document windows (is-document-window-by-controller); the standalone window rows shared by File Browser and Document windows (vectors 014-016). |
-| 1.2.0 | 2026-11-14 | Mike Fullerton | Standalone windows take toolbar items and pass them to the window they make |
 | 1.1.1 | 2026-10-04 | Mike Fullerton | Spec-local UI-thread confinement ids folded into the shared confines-to-ui-thread requirement, with a test vector; scope detail is in Platform Notes. |
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to workspace/projects/. |
 | 1.0.1 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |
