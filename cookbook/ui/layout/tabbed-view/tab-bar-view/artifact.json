@@ -4,11 +4,11 @@
     "id": "5c0cc9f5-bc89-4e06-8d24-3db6424ff075",
     "title": "Tab Bar View",
     "type": "ingredient",
-    "version": "1.3.1",
+    "version": "1.4.0",
     "status": "review",
     "language": "en",
     "created": "2026-09-23",
-    "modified": "2026-10-04",
+    "modified": "2026-11-15",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -29,7 +29,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "d05b772b4b4161a4",
+  "synced": "a99f0e6feb23c449",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

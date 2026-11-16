@@ -25,6 +25,8 @@
 - **close-button-configuration**: The close control MUST display a close
   ("x" in a circle) icon only, with no border or bezel, in a fixed `14×14pt`
   frame.
+- **close-button-has-tooltip**: The close control MUST have the tooltip
+  "Close Tab", naming the action rather than the icon.
 - **close-action-forwards-to-onclose**: Component MUST invoke the close
   callback, and nothing else, when the close control's action fires.
 - **header-close-button-placement**: The header MUST place the close control

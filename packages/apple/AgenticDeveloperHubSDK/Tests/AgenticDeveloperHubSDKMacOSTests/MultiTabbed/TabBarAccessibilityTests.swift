@@ -143,6 +143,8 @@ final class TabBarAccessibilityTests: XCTestCase {
         XCTAssertEqual(
             children.map { $0.accessibilityIdentifier() },
             ["tab-bar.close.\(id.uuidString)"])
+        // tab-bar-view-044: the tooltip names the action.
+        XCTAssertEqual((children.first as? NSButton)?.toolTip, "Close Tab")
     }
 
     /// A hosted tab's bar content is a view controller the host supplied, with

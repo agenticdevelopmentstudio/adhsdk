@@ -8,3 +8,4 @@
 | 1.2.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to ui/layout/tabbed-view/. |
 | 1.3.0 | 2026-10-04 | Mike Fullerton | Restated onReorder behavior as current (bar never fires reorder) with a pending decision; added Compliance rows for separation-of-concerns and unit-test-coverage |
 | 1.3.1 | 2026-10-04 | Mike Fullerton | UI-thread confinement restated as the shared confines-to-ui-thread requirement, with a test vector; the @MainActor mechanism is in Platform Notes. |
+| 1.4.0 | 2026-11-15 | Mike Fullerton | The close button has the tooltip Close Tab |

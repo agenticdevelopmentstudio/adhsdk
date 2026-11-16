@@ -2,11 +2,11 @@
 id: d906afe1-a621-42f1-87c5-c71ec9d43c1e
 title: "Tab Pane View"
 type: ingredient
-version: 1.2.2
+version: 1.3.0
 status: review
 language: en
 created: 2026-09-23
-modified: 2026-10-04
+modified: 2026-11-15
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -75,6 +75,8 @@ column of cards reads as a deck turned to the selected tab.
 - **close-button-configuration**: The close control MUST display a close
   ("x" in a circle) icon only, with no border or bezel, in a fixed `14×14pt`
   frame.
+- **close-button-has-tooltip**: The close control MUST have the tooltip
+  "Close Tab", naming the action rather than the icon.
 - **close-action-forwards-to-onclose**: Component MUST invoke the close
   callback, and nothing else, when the close control's action fires.
 - **header-close-button-placement**: The header MUST place the close control
@@ -326,6 +328,7 @@ column of cards reads as a deck turned to the selected tab.
 | tab-pane-049 | context-menu-provider-is-optional | Leave the context-menu provider unset; request a context menu | Returns the platform's default context menu |
 | tab-pane-050 | status-symbols-replace-existing | On a freshly constructed card with no prior status symbols, replace the status symbols with none | No status icons remain |
 | tab-pane-051 | confines-to-ui-thread | Use the component from a thread other than the UI thread | The use is rejected, at build time or by a runtime check; the component's state is unchanged |
+| tab-pane-052 | close-button-has-tooltip | Construct the card | The close control's tooltip reads "Close Tab" |
 
 ## Edge Cases
 
@@ -628,3 +631,4 @@ Separation-of-concerns is passed: `TabPaneView` only draws the card (background,
 | 1.2.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to ui/layout/tabbed-view/. |
 | 1.2.1 | 2026-10-04 | Mike Fullerton | Added Compliance rows for separation-of-concerns and unit-test-coverage |
 | 1.2.2 | 2026-10-04 | Mike Fullerton | UI-thread confinement restated as the shared confines-to-ui-thread requirement, with a test vector; the @MainActor mechanism is in Platform Notes. |
+| 1.3.0 | 2026-11-15 | Mike Fullerton | The close button has the tooltip Close Tab |
