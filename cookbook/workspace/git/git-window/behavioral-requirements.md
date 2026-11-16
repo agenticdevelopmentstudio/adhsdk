@@ -38,6 +38,13 @@
 - **sessions-commit-branch**: The branch a commit is matched on MUST be the first local branch whose tip it is, else the selected sidebar ref when that is a local branch, else unknown; its date is the committer date.
 - **sessions-open**: The feature's `onOpenAgentSession` MUST reach every open window's commit detail and refs sidebar, and every window built later; nil leaves the sessions shown but unclickable.
 
+### Reviews
+
+- **reviews-provider-optional**: The feature MUST take an optional `GitReviewsProviding` (`reviews:`, default nil) and hand it to the repository model of every window it builds; with nil no window shows a review, neither a history badge nor the commit detail's section, and nothing listens for changes. The window MUST never write to the provider; in the Kitchen it is `PartnerGitReviews` over the Coding Partner's store, built only when that store opened.
+- **reviews-lookup**: A window with a provider MUST give its commit detail a `reviewLookup` that answers from the model's cache and, on a miss, asks for that commit in add mode, and MUST re-read the detail's review on every `.history` change, so a review that lands shows without reselecting.
+- **reviews-changes**: A window with a provider MUST listen to the provider's `changes()` from start until `stop()`, and on each tick invalidate the model's reviews, ask again for the history's visible rows and ask again for the commit the detail shows; what is shown stays until its new value lands.
+- **reviews-open**: The feature's `onOpenReview` MUST reach every open window's commit detail and every window built later, and only while the window has a provider; nil leaves the section shown without its `Open in Coding Partner` button. In the Kitchen it shows the Coding Partner window (`coding-partner`) and selects the review's session when the review has one.
+
 ### Toolbar
 
 - **toolbar-verbs**: The window's toolbar MUST carry, after the project window's title item and ahead of the search field and help, eight icon buttons in order: `git.toolbar.fetch` "Fetch" `arrow.down.circle`, `git.toolbar.pull` "Pull" `arrow.down.to.line`, `git.toolbar.push` "Push" `arrow.up.to.line`, `git.toolbar.branch` "Branch" `arrow.triangle.branch`, `git.toolbar.stash` "Stash" `tray.and.arrow.down`, `git.toolbar.pop` "Pop" `tray.and.arrow.up`, `git.toolbar.undo` "Undo" `arrow.uturn.backward`, `git.toolbar.commandLog` "Command Log" `list.bullet.rectangle` — that last one only when the window has a terminal region; built without terminals it carries the first seven — each the identifier as its accessibility identifier and the label as its tooltip.

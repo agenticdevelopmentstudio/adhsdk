@@ -74,7 +74,8 @@ public struct GitHistorySignatureBadge: Equatable, Sendable {
     public var text: String { signature.summary }
 }
 
-/// The subject column: the signing badge, a badge per ref at the commit, then the subject.
+/// The subject column: the signing badge, the review badge, a badge per ref at the commit,
+/// then the subject.
 @MainActor
 final class GitHistorySubjectCellView: NSView {
     static let identifier = NSUserInterfaceItemIdentifier("git.history.subject")
@@ -83,6 +84,9 @@ final class GitHistorySubjectCellView: NSView {
     /// The signing badge; hidden for a commit without one.
     let signatureView = ThemedSymbolImageView(symbolName: nil, role: .secondaryText)
     private(set) var signatureBadge: GitHistorySignatureBadge?
+    /// The Coding Partner review badge; hidden for a commit without one.
+    let reviewView = ThemedSymbolImageView(symbolName: nil, role: .secondaryText)
+    private(set) var reviewBadge: GitHistoryReviewBadge?
     private(set) var badges: [GitHistoryRefBadge] = []
     private(set) var badgeViews: [Badge] = []
     private let stack = NSStackView()
@@ -97,11 +101,16 @@ final class GitHistorySubjectCellView: NSView {
         signatureView.setAccessibilityElement(true)
         signatureView.setAccessibilityRole(.image)
         signatureView.isHidden = true
+        reviewView.accessibilityID("git.history.review")
+        reviewView.setAccessibilityElement(true)
+        reviewView.setAccessibilityRole(.image)
+        reviewView.isHidden = true
         stack.orientation = .horizontal
         stack.alignment = .centerY
         stack.spacing = 4
         stack.translatesAutoresizingMaskIntoConstraints = false
         stack.addArrangedSubview(signatureView)
+        stack.addArrangedSubview(reviewView)
         stack.addArrangedSubview(subjectLabel)
         addSubview(stack)
         NSLayoutConstraint.activate([
@@ -115,9 +124,11 @@ final class GitHistorySubjectCellView: NSView {
     @available(*, unavailable)
     required init?(coder: NSCoder) { fatalError("init(coder:) is not supported") }
 
-    func configure(subject: String, badges: [GitHistoryRefBadge], signature: GitHistorySignatureBadge? = nil) {
+    func configure(subject: String, badges: [GitHistoryRefBadge], signature: GitHistorySignatureBadge? = nil,
+                   review: GitHistoryReviewBadge? = nil) {
         subjectLabel.stringValue = subject
         configureSignature(signature)
+        configureReview(review)
         guard badges != self.badges else { return }
         self.badges = badges
         for view in badgeViews { view.removeFromSuperview() }
@@ -125,8 +136,8 @@ final class GitHistorySubjectCellView: NSView {
         badgeViews = badges.enumerated().map { index, badge in
             let view = Badge(text: badge.title, color: palette.nsColor(badge.role), style: badge.style)
             view.accessibilityID(badge.accessibilityIdentifier)
-            // After the signing badge, which is always the first arranged view.
-            stack.insertArrangedSubview(view, at: index + 1)
+            // After the signing and review badges, always the first two arranged views.
+            stack.insertArrangedSubview(view, at: index + 2)
             return view
         }
     }
@@ -139,6 +150,16 @@ final class GitHistorySubjectCellView: NSView {
         signatureView.role = badge?.role ?? .secondaryText
         signatureView.toolTip = badge?.text
         signatureView.setAccessibilityLabel(badge?.text)
+    }
+
+    private func configureReview(_ badge: GitHistoryReviewBadge?) {
+        guard badge != reviewBadge else { return }
+        reviewBadge = badge
+        reviewView.isHidden = badge == nil
+        reviewView.symbolName = badge?.symbolName
+        reviewView.role = badge?.role ?? .secondaryText
+        reviewView.toolTip = badge?.text
+        reviewView.setAccessibilityLabel(badge?.text)
     }
 
     private func paintBadges(_ palette: SemanticPalette) {

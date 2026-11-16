@@ -230,6 +230,15 @@ public final class GitHistoryViewController: NSViewController {
         source.requestSignatures(for: shas)
     }
 
+    /// Asks the data source for the visible rows' Coding Partner reviews (recipe
+    /// `workspace/git/git-views`, "Reviews") at the same moments as the signatures, and when
+    /// the review store reports a change. Debounced and coalesced the same way.
+    public func requestVisibleReviews() {
+        let shas = visibleCommitIDs
+        guard !shas.isEmpty else { return }
+        source.requestReviews(for: shas)
+    }
+
     // MARK: - Selection
 
     /// Selects the loaded commit with exactly `commitID`, scrolls to it and tells the

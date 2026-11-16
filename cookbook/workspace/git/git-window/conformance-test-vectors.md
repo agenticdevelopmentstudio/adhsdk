@@ -96,3 +96,5 @@
 | git-window-093 | toolbar-undo | three commits and an amend, then `reset HEAD`; Undo | the two newest entries at the tip; target the pre-amend commit; HEAD moves there. |
 | git-window-094 | toolbar-undo | three commits and an amend; a commit made behind the model's back; Undo | no confirmation, no failure; HEAD the new commit; the model refreshed, its tip the new commit and its target the amend. |
 | git-window-095 | undo-command | the feature's contributions | `Undo Last Git Action` in slot `.git` at order 10. |
+| git-window-096 | reviews-provider-optional | a session built without `reviews:`; `onOpenReview` set | no review loader, no `reviewLookup`, no listening task; the detail's `onOpenReview` stays nil. |
+| git-window-097 | reviews-lookup, reviews-changes, reviews-open | a provider answering HEAD `queued`; the detail shows HEAD; the answer becomes `done` and the provider ticks; then the button pressed | the detail shows `Queued`, then `Done` without reselecting, the provider asked at least twice; one `onOpenReview` with the review's id. |

@@ -74,3 +74,15 @@
 **Decision**: The window's own worktree has `Open` but no `Remove…`, and the main worktree has no menu.
 **Rationale**: Git refuses to remove the main worktree, and removing the folder a window is showing would leave that window on nothing; the sidebar compares the row's directory with the data source's `root`, which it already holds.
 **Approved**: pending
+
+**Decision**: Reviews reach the views through `GitReviewsProviding`, declared in Core beside `GitCommitReview`, and the Partner store's adapter (`PartnerGitReviews`) lives with the Partner feature.
+**Rationale**: The Git views must not know the Partner store or its schema, and the Partner feature must not know the views; a Foundation-only protocol in the lowest tier lets either change, and lets a test supply reviews without a store.
+**Approved**: pending
+
+**Decision**: Reviews use the signing badges' `GitShaBatchLoader`, with `invalidate()` added, rather than a loader of their own.
+**Rationale**: The request shape is the same (visible rows, debounced, coalesced, single commits in add mode); what differs is that a review changes after it is read, which `invalidate()` covers without dropping what is shown, so a queued badge does not blink out while its done value loads.
+**Approved**: pending
+
+**Decision**: A skipped review has no history badge but does have a detail section.
+**Rationale**: A row of skipped merge commits would be noise in the list; the detail is where someone asks why a commit has no review, and the skip reason answers it.
+**Approved**: pending

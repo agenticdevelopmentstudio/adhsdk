@@ -69,10 +69,24 @@ public final class GitCommitDetailViewController: NSViewController {
         didSet { reloadSignature() }
     }
 
+    /// The "Review" section, below "Agent Sessions" (ruling R2), filled by
+    /// GitCommitDetailViewController+Review.swift; hidden for a commit without a review.
+    let reviewView = GitCommitReviewView()
+    /// A commit's Coding Partner review; nil (no provider, no review, or not read yet)
+    /// hides the section. Asked for each commit shown, and again by `reloadReview()`.
+    public var reviewLookup: ((GitCommit) -> GitCommitReview?)? {
+        didSet { reloadReview() }
+    }
+    /// Opens a review by id in the Coding Partner window; nil hides the section's button.
+    public var onOpenReview: ((String) -> Void)? {
+        get { reviewView.onOpen }
+        set { reviewView.onOpen = newValue }
+    }
+
     private let source: GitContentSource
     private let pasteboard: NSPasteboard
     private let parentsCaption = ThemedLabel(string: "Parents", role: .secondaryText, textRole: .caption)
-    private var wrappingLabels: [ThemedLabel] { [subjectLabel, bodyLabel, errorLabel] }
+    private var wrappingLabels: [ThemedLabel] { [subjectLabel, bodyLabel, errorLabel, reviewView.summaryLabel] }
     /// Holds the header at zero height while nothing is shown.
     private var collapsedHeader: NSLayoutConstraint?
 
@@ -258,6 +272,7 @@ public final class GitCommitDetailViewController: NSViewController {
         }
         // A section below the message and its metadata (ruling R2: Agent Sessions, then Review).
         headerStack.addArrangedSubview(agentSessionsView)
+        headerStack.addArrangedSubview(reviewView)
     }
 
     private func fillHeader(_ commit: GitCommit?) {
@@ -273,6 +288,7 @@ public final class GitCommitDetailViewController: NSViewController {
         setParents(commit?.parents ?? [])
         reloadSignature()
         reloadAgentSessions()
+        reloadReview()
     }
 
     private func setParents(_ parents: [String]) {

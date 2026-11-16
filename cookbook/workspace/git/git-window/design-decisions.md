@@ -50,3 +50,7 @@
 **Decision**: An empty `Folder` for a new worktree becomes `<parent of root>/<root's name>-<branch>`, beside the repository.
 **Rationale**: It is where a worktree is usually put by hand, it never lands inside the working tree (where it would show as untracked), and a `/` in the branch made `-` keeps it one folder.
 **Approved**: pending
+
+**Decision**: The window's reviews provider is owned by its repository model (`GitRepositoryModel(reviews:)`), and the session reads it from there.
+**Rationale**: The model owns the review loader and answers `review(for:)` for the history, so one owner keeps the provider and its cache together; the session only wires the detail and the change stream.
+**Approved**: pending

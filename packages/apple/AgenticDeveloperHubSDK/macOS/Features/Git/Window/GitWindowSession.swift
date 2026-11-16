@@ -109,6 +109,13 @@ final class GitWindowSession {
     var onOpenAgentSession: ((String) -> Void)? {
         didSet { applyOpenAgentSession() }
     }
+    /// Listens for review changes from `model.reviewsProvider`; nil without one
+    /// (GitWindowSession+Reviews.swift). Cancelled by `stop()`.
+    var reviewChangesTask: Task<Void, Never>?
+    /// Opens a Coding Partner review by id; nil hides the detail's "Open in Coding Partner".
+    var onOpenReview: ((String) -> Void)? {
+        didSet { applyOpenReview() }
+    }
 
     init(model: GitRepositoryModel, client: GitClient, coloring: GitSyntaxColoring?,
          sessions: (any GitSessionsProviding)? = nil) {
@@ -166,6 +173,7 @@ final class GitWindowSession {
         }
         configureAgentSessions()
         configureSignatures()
+        configureReviews()
     }
 
     /// One divider layout per repository, so two Git windows never share theirs.
@@ -189,6 +197,7 @@ final class GitWindowSession {
         searchTask?.cancel()
         actionTask?.cancel()
         mergeOpenTask?.cancel()
+        reviewChangesTask?.cancel()
         commandLog.stop()
         model.pullRequestList?.stop()
         model.stop()
@@ -246,6 +255,7 @@ final class GitWindowSession {
         if changes.contains(.history) {
             history.reload()
             detail.reloadSignature()
+            detail.reloadReview()
         }
         if workingCopyChanged { workingCopy.reload() } else if changes.contains(.refs) { workingCopy.reloadLFS() }
         if workingCopyChanged || changes.contains(.refs) { workingCopy.canAmend = model.hasCommits }

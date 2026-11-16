@@ -79,6 +79,14 @@ public final class GitWindowFeature: AppFeature {
     public var onOpenAgentSession: ((String) -> Void)? {
         didSet { for session in sessions.values { session.onOpenAgentSession = onOpenAgentSession } }
     }
+    /// Where the Coding Partner reviews shown beside commits come from; nil leaves them
+    /// absent. Read-only: the window never writes a review.
+    private let reviewsProvider: (any GitReviewsProviding)?
+    /// Opens a Coding Partner review by id, for every window; nil hides the detail's
+    /// "Open in Coding Partner".
+    public var onOpenReview: ((String) -> Void)? {
+        didSet { for session in sessions.values { session.onOpenReview = onOpenReview } }
+    }
 
     /// - Parameters:
     ///   - resources: the bundled TextMate resources; nil leaves every window uncoloured.
@@ -96,6 +104,8 @@ public final class GitWindowFeature: AppFeature {
     ///     shows `NotInRepositoryAlert`.
     ///   - sessions: the agent sessions shown beside commits and branches; nil (no
     ///     daemon) leaves them absent.
+    ///   - reviews: the Coding Partner reviews shown beside commits; nil (no Partner
+    ///     store) leaves them absent. Read-only.
     ///   - gitHub: the `gh` the Pull Requests section reads through; nil leaves it absent.
     public init(
         commandRegistry registry: CommandRegistry,
@@ -110,9 +120,11 @@ public final class GitWindowFeature: AppFeature {
         openRoots: UserSetting<[String]> = UserSettings.openGitWindowRoots,
         notInRepository: (@MainActor (URL) -> Void)? = nil,
         sessions: (any GitSessionsProviding)? = nil,
+        reviews: (any GitReviewsProviding)? = nil,
         gitHub: GitHubCLI? = nil
     ) {
         self.sessionsProvider = sessions
+        self.reviewsProvider = reviews
         self.gitHub = gitHub
         self.resources = resources
         self.userGrammarsDirectory = userGrammarsDirectory
@@ -320,9 +332,11 @@ public final class GitWindowFeature: AppFeature {
         if let existing = sessions[context.project.id] { return existing }
         let root = context.project.directoryURL
         let model = GitRepositoryModel(
-            root: root, client: client, watcher: GitDeferredRepositoryWatcher(root: root, client: client))
+            root: root, client: client, watcher: GitDeferredRepositoryWatcher(root: root, client: client),
+            reviews: reviewsProvider)
         let session = GitWindowSession(model: model, client: client, coloring: coloring(), sessions: sessionsProvider)
         session.onOpenAgentSession = onOpenAgentSession
+        session.onOpenReview = onOpenReview
         if let gitHub {
             session.configurePullRequests(GitPullRequestsModel(model: model, gitHub: gitHub, client: client))
         }
