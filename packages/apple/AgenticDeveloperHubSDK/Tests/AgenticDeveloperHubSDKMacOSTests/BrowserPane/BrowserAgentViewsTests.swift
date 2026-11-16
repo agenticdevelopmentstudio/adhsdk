@@ -194,10 +194,13 @@ final class BrowserAgentViewsTests: XCTestCase {
     func test_refreshIsCoalesced() async {
         var reads = 0
         let page = samplePage()
-        let views = BrowserAgentViews(interval: 0.05, ruleList: { try await BrowserContentRules.blockEverything() }) {
-            reads += 1
-            return page
-        }
+        let views = BrowserAgentViews(
+            interval: 0.05,
+            ruleList: { try await BrowserContentRules.blockEverything() },
+            read: {
+                reads += 1
+                return page
+            })
         views.setMode(.agentSource)
         let first = await waitUntil { views.shownPage != nil }
         XCTAssertTrue(first)
