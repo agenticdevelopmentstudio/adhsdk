@@ -315,6 +315,11 @@ extension UserSettings {
     /// what `BrowserHiddenImages` lists and no more, and a model's screenshot
     /// shows whatever it misses.
     public static let browserPrivacyHideImages = UserSetting<Bool>("browser.privacy.hide_images", default: false)
+    /// Whether the hidden-items picker's one-time notice ("Items that load
+    /// again (such as ads) can reappear.") has been shown. Global only.
+    public static let browserHiddenItemsNoticeShown = UserSetting<Bool>(
+        "browser.hidden_items.notice_shown", default: false
+    )
 
     // Developer
     public static let browserWebInspectorEnabled = UserSetting<Bool>("browser.web_inspector_enabled", default: false)
@@ -411,7 +416,8 @@ public enum BrowserSettings {
         UserSettings.browserPrivateBrowsing.name,
         UserSettings.browserChromeRemoteDebuggingPort.name,
         UserSettings.browserChromeHardwareAcceleration.name,
-        UserSettings.browserChromeExtensionUpdateInterval.name
+        UserSettings.browserChromeExtensionUpdateInterval.name,
+        UserSettings.browserHiddenItemsNoticeShown.name
     ]
 
     /// Whether Agent Privacy is on for a pane reading `settings` — its own

@@ -12473,23 +12473,30 @@
         },
         {
           "conformance": {
-            "state": "planned"
+            "state": "unverified"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/HiddenItems/BrowserSelectingMode.swift",
           "platform": "macos"
         },
         {
           "conformance": {
-            "state": "planned"
+            "state": "unverified"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/HiddenItems/BrowserPickDialogController.swift",
           "platform": "macos"
         },
         {
           "conformance": {
-            "state": "planned"
+            "state": "unverified"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/HiddenItems/BrowserHiddenItemsPopover.swift",
+          "platform": "macos"
+        },
+        {
+          "conformance": {
+            "state": "unverified"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/BrowserPane/BrowserSelectingModeTests.swift",
           "platform": "macos"
         }
       ],

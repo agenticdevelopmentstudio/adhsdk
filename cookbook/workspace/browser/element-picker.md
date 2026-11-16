@@ -364,7 +364,7 @@ labels are not logged.
 
 - **SwiftUI**: Not applicable as a home; the popover and dialog are AppKit,
   matching the address bar they belong to.
-- **AppKit / UIKit**: Planned as follows, all under
+- **AppKit / UIKit**: Built as follows, all under
   `macOS/Features/BrowserPane/HiddenItems/`:
   - `BrowserElementPicker` (`@MainActor final class`, `NSObject`,
     `WKScriptMessageHandler`) with `contentWorldName = "adk-element-picker"`,
@@ -380,18 +380,33 @@ labels are not logged.
     allLikeItCount <= pageElementCount / 2`).
   - `BrowserSelectingMode` (`@MainActor final class`) with
     `State { idle, selecting, dialog(BrowserPickCandidate) }`,
-    `init(engine:store:list:button:)`, `begin()`, `end()`; a local key
-    monitor catches Esc while selecting. `WebBrowserPaneViewController`
-    owns one and ends it on navigation commit, tab switch and close.
+    `init(engine:store:list:button:settings:presentDialog:presentNotice:)`
+    (`button` is the address box's `BrowserHideItemsButton`, which keeps
+    the symbol it shows; the presenters default to the real dialog and
+    notice and are injected by tests), `begin()`, `end(_ reason:)` (the
+    reason is what the log names); a local key monitor catches Esc while
+    selecting, in the pane's window only. `WebBrowserPaneViewController`
+    owns one, made for a WebKit engine on first use (any other engine
+    beeps), and ends it on navigation commit, tab switch, tab close, engine
+    replacement or rebuild, and pane discard.
   - `BrowserPickDialogController`: an `NSWindow` run with
     `NSApp.runModal(for:)`. The preview is applied with
     `WebKitBrowserEngine.setPreviewHiddenSelectors(_:)` before the modal
     loop and from the checkbox action inside it; WebKit keeps running in
-    the modal panel run-loop mode.
+    the modal panel run-loop mode. OK and Cancel end the loop with
+    `stopModal`; selecting mode ending under the dialog (navigation, say)
+    arrives in a WebKit callback, where only `abortModal` works, and saves
+    nothing. The dialog runs on the main loop's next turn, out of the
+    script-message callback the pick arrived in.
   - `BrowserHiddenItemsPopover(list:store:url:onSelect:)`, an `NSPopover`
     with `.transient` behavior; the trailing button is added to
     `BrowserAddressBox` in `BrowserAddressBarControls.swift`.
-  - The notice is an informational `NSAlert`.
+  - `BrowserHiddenItemsPopover` is the `NSViewController` that owns its
+    `NSPopover`; it reads and writes the store through `perform` and
+    reloads on `didChangeNotification`.
+  - The notice is an informational `NSAlert`, run as a sheet on the pane's
+    window; `browser.hidden_items.notice_shown` is written to the global
+    layer before it shows.
 - **Compose**: An Android `WebView` has no named content worlds; inject the
   picker with `evaluateJavascript` under a random global name and post
   through `WebMessageListener`, accepting that the page shares the world.

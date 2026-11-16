@@ -333,6 +333,10 @@ open class WebBrowserPaneViewController: NSViewController {
     let addressField = NSTextField()
     /// The bordered, rounded box the address field sits in.
     private(set) lazy var addressBox = BrowserAddressBox(field: addressField)
+    /// The front page's selecting mode (recipe `workspace/browser/element-picker`),
+    /// made for a WebKit engine the first time selecting starts on it.
+    private(set) var selectingMode: BrowserSelectingMode?
+    private var hiddenItemsPopover: BrowserHiddenItemsPopover?
     /// The installed buttons between the address box and the menu button:
     /// the pane's own privacy button first (while the strip is hidden),
     /// then whatever `addToolbarAccessory` adds (a Safari pane's extensions).
@@ -794,6 +798,8 @@ open class WebBrowserPaneViewController: NSViewController {
     /// rare and deliberate, and carrying a download across two stores would
     /// hand one jar's session to another.
     public func rebuildEngine() {
+        endSelectingItems(.close)
+        selectingMode = nil
         let label = paneTitle
         // Removing the page drops a first responder it held to the window;
         // the new one takes it back, as does a paused pane's, whose page is
@@ -953,6 +959,8 @@ open class WebBrowserPaneViewController: NSViewController {
         addressField.setContentHuggingPriority(.defaultLow, for: .horizontal)
         addressField.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
 
+        addressBox.hideItemsButton.target = self
+        addressBox.hideItemsButton.action = #selector(hideItemsButtonClicked(_:))
         configureInstalledBar()
         let bar = NSStackView(views: [
             backButton, forwardButton, reloadButton, addressBox, refusalNotice, drivenBadge,
@@ -1098,6 +1106,49 @@ open class WebBrowserPaneViewController: NSViewController {
 
     @objc func showPrivacyDialog() {
         BrowserPrivacySettingsDialog.present(for: self, from: privacyButton)
+    }
+
+    /// The address box's "Hide distracting items": stops selecting while it
+    /// runs, and otherwise opens the hidden-items popover for the front page.
+    @objc func hideItemsButtonClicked(_ sender: Any?) {
+        if let mode = selectingMode, mode.isActive {
+            mode.end(.stop)
+            return
+        }
+        guard let store = BrowserHiddenItemsStore.shared else {
+            Self.logger.error("hidden items: no store is open")
+            NSSound.beep()
+            return
+        }
+        let popover = BrowserHiddenItemsPopover(list: .user, store: store, url: engine.url) { [weak self] in
+            self?.beginSelectingItems(store: store)
+        }
+        hiddenItemsPopover = popover
+        popover.show(relativeTo: addressBox.hideItemsButton)
+    }
+
+    /// Starts selecting on the front page. Only a WebKit page can be picked
+    /// from; any other engine beeps.
+    func beginSelectingItems(store: BrowserHiddenItemsStore) {
+        guard let webKit = engine as? WebKitBrowserEngine else {
+            NSSound.beep()
+            return
+        }
+        if selectingMode?.engine !== webKit {
+            selectingMode?.end(.close)
+            selectingMode = BrowserSelectingMode(
+                engine: webKit, store: store, list: .user,
+                button: addressBox.hideItemsButton, settings: settings)
+        }
+        selectingMode?.begin()
+    }
+
+    /// Ends selecting for `reason`; with `ended`, only when that is the
+    /// engine selecting runs on.
+    private func endSelectingItems(_ reason: BrowserSelectingMode.EndReason, on ended: BrowserEngine? = nil) {
+        guard let mode = selectingMode else { return }
+        if let ended, mode.engine !== ended { return }
+        mode.end(reason)
     }
 
     /// Pops the pane's menu (Pause Events, Settings…, Show Browser Log) under
@@ -1482,6 +1533,7 @@ open class WebBrowserPaneViewController: NSViewController {
         // two cases cover it.
         let responderWasInPage = pageHolds(viewIfLoaded?.window?.firstResponder)
         let previous = activeTab === tab ? nil : activeTab.engine
+        if let previous { endSelectingItems(.tabSwitch, on: previous) }
         activeTab = tab
         engine = tab.engine
         tabObserver?.pane(self, didActivateTab: tab.engine, previous: previous)
@@ -1635,6 +1687,7 @@ open class WebBrowserPaneViewController: NSViewController {
     /// engine is finished and is replaced rather than reused.
     private func closeTab(_ tab: BrowserTab, pageClosedItself: Bool = false) {
         guard tabs.contains(where: { $0 === tab }) else { return }
+        endSelectingItems(.close, on: tab.engine)
         guard tabs.count > 1 else {
             if pageClosedItself { replaceEngine(of: tab) }
             // A blank tab of the pane's own now, which no page may close.
@@ -1672,6 +1725,7 @@ open class WebBrowserPaneViewController: NSViewController {
     /// A fresh engine in `tab`, made and wired as every other is.
     private func replaceEngine(of tab: BrowserTab) {
         let old = tab.engine
+        endSelectingItems(.close, on: old)
         tab.engine.delegate = nil
         tab.engine.teardown()
         tab.engine.view.removeFromSuperview()
@@ -1789,6 +1843,7 @@ extension WebBrowserPaneViewController: BrowserEngineDelegate {
 
     public func browserEngineDidCommitNavigation(_ engine: BrowserEngine) {
         recordNavigation("commit", of: engine)
+        endSelectingItems(.navigation, on: engine)
         // The committed address can match other words' sites. The engine
         // prepared them before the document started, so this reloads only
         // when that answer was missed (a redirect it was not asked about).
@@ -2192,6 +2247,10 @@ extension WebBrowserPaneViewController: PaneContentTeardown {
     /// released, so the reconciler may collect it once the layout no longer
     /// holds the pane. The pane's settings window closes with it.
     public func paneContentWillBeDiscarded() {
+        endSelectingItems(.close)
+        selectingMode = nil
+        hiddenItemsPopover?.popover.close()
+        hiddenItemsPopover = nil
         firstResponderObservation = nil
         cancellables.removeAll()
         windowObservers.forEach { NotificationCenter.default.removeObserver($0) }
