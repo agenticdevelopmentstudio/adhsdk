@@ -32,34 +32,40 @@ export function createHubMailClient(options: HubMailClientOptions): HubMailClien
   let cursor = ''
   let pulled = false
   let inFlight: Promise<void> | null = null
+  // Bumped by reset(): a pull started under an older generation belongs to a session that has
+  // ended (a sign-out), so whatever it fetches afterwards is dropped rather than applied.
+  let generation = 0
 
-  async function pullPages(): Promise<void> {
+  async function pullPages(gen: number): Promise<void> {
     for (;;) {
       const query = cursor ? `cursor=${encodeURIComponent(cursor)}&limit=${pageSize}` : `limit=${pageSize}`
       const page = (await fetchJson(`/v1/sync/pull?${query}`)) as HubSyncPullPage
+      if (gen !== generation) return
       for (const change of page.changes) snapshot.apply(change)
       cursor = page.cursor
       if (!page.has_more) return
     }
   }
 
-  async function pull(): Promise<void> {
+  async function pull(gen: number): Promise<void> {
     try {
-      await pullPages()
+      await pullPages(gen)
     } catch (err) {
+      if (gen !== generation) return
       if (statusOf(err) !== 410) throw err
       snapshot.clear()
       cursor = ''
-      await pullPages()
+      await pullPages(gen)
     }
-    pulled = true
+    if (gen === generation) pulled = true
   }
 
   function sharedPull(): Promise<void> {
     if (!inFlight) {
-      inFlight = pull().finally(() => {
-        inFlight = null
+      const current: Promise<void> = pull(generation).finally(() => {
+        if (inFlight === current) inFlight = null
       })
+      inFlight = current
     }
     return inFlight
   }
@@ -105,6 +111,8 @@ export function createHubMailClient(options: HubMailClientOptions): HubMailClien
     },
 
     reset(): void {
+      generation += 1
+      inFlight = null
       snapshot.clear()
       cursor = ''
       pulled = false

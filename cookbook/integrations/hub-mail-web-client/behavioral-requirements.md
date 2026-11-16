@@ -14,5 +14,5 @@
 - **message-summary-fields**: Each listed message MUST carry `id`, `account` (the connection id), `threadId`, `from`, `to`, `cc`, `subject`, `snippet`, `date` (the `internal_date`) and `labelIds`, with missing text fields as null and missing lists as empty.
 - **message-detail**: `message(account, id)` MUST return the listed fields plus `bodyText` and `bodyHtml`, or null when the snapshot has no live row for that connection and id.
 - **errors-propagate**: A failure from `fetchJson` other than 410 MUST reject the read with that error. Pages already applied stay in the snapshot, and the cursor stays at the last applied page, so the next read continues from there.
-- **reset**: `reset()` MUST drop the snapshot and cursor, so the next read pulls from empty (a host calls it on sign-out).
+- **reset**: `reset()` MUST drop the snapshot and cursor, so the next read pulls from empty (a host calls it on sign-out). A pull still in flight when `reset()` runs MUST NOT apply its pages, move the cursor or mark the client pulled, and the next read MUST start a new pull rather than join it.
 

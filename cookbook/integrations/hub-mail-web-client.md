@@ -2,11 +2,11 @@
 id: 6b0f3c52-8e47-4d1a-9a35-2f7c1d9e4a60
 title: "Hub Mail Web Client"
 type: ingredient
-version: 1.1.2
+version: 1.2.0
 status: review
 language: en
 created: 2026-11-14
-modified: 2026-11-14
+modified: 2026-11-16
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -76,7 +76,7 @@ interface HubMailClient {
 - **message-summary-fields**: Each listed message MUST carry `id`, `account` (the connection id), `threadId`, `from`, `to`, `cc`, `subject`, `snippet`, `date` (the `internal_date`) and `labelIds`, with missing text fields as null and missing lists as empty.
 - **message-detail**: `message(account, id)` MUST return the listed fields plus `bodyText` and `bodyHtml`, or null when the snapshot has no live row for that connection and id.
 - **errors-propagate**: A failure from `fetchJson` other than 410 MUST reject the read with that error. Pages already applied stay in the snapshot, and the cursor stays at the last applied page, so the next read continues from there.
-- **reset**: `reset()` MUST drop the snapshot and cursor, so the next read pulls from empty (a host calls it on sign-out).
+- **reset**: `reset()` MUST drop the snapshot and cursor, so the next read pulls from empty (a host calls it on sign-out). A pull still in flight when `reset()` runs MUST NOT apply its pages, move the cursor or mark the client pulled, and the next read MUST start a new pull rather than join it.
 
 ## Appearance
 
@@ -119,6 +119,7 @@ Not applicable: a headless data client with no UI.
 | hmw-020 | two messages with equal `internal_date` and ids "a" and "b" | "b" lists before "a" |
 | hmw-021 | `accounts()` called twice | two connection-list requests |
 | hmw-022 | `refresh()` called while a pull is in flight | one pull request; both calls resolve when it does |
+| hmw-023 | `reset()` while a pull is in flight, its page then resolves, then `messages()` | the late page is not applied; a second pull request with no `cursor` is sent |
 ## Edge Cases
 
 - A connection with no messages yet lists with no messages, not an error.
@@ -186,7 +187,7 @@ None. Errors reach the caller as rejected promises.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/hub-mail/src/` | confirmed (1.1.2) |
+| web | `packages/web/packages/hub-mail/src/` | confirmed (1.2.0) |
 
 ## Design Decisions
 
@@ -227,6 +228,7 @@ The wire client, the snapshot and the types are separate modules, and the fetch 
 ## Change History
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.2.0 | 2026-11-16 | Mike Fullerton | reset() abandons a pull in flight (hmw-023) |
 | 1.1.2 | 2026-11-14 | Mike Fullerton | Made failure and second-410 behavior match source, added interface and wire-mapping, caching and join-in-flight rules, split the /v1 decision, genericized app names, and added test vectors hmw-015 to hmw-022. |
 | 1.1.1 | 2026-11-14 | Mike Fullerton | Decision triples, compliance checks and WinUI 3 guidance |
 | 1.1.0 | 2026-11-14 | Mike Fullerton | Reads the hub's /v1 routes: sync pull and paged connections, snake_case wire types |

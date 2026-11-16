@@ -182,4 +182,29 @@ describe('createHubMailClient', () => {
     await client.messages('conn')
     expect(calls.map(cursorOf)).toEqual([null, null])
   })
+
+  it('hmw-023: a pull in flight at reset applies nothing, and the next read pulls afresh', async () => {
+    const calls: string[] = []
+    let release: (p: HubSyncPullPage) => void = () => {}
+    let first = true
+    const fetchJson = (path: string): Promise<unknown> => {
+      calls.push(path)
+      if (first) {
+        first = false
+        return new Promise((resolve) => {
+          release = resolve
+        })
+      }
+      return Promise.resolve(page([message('fresh')], 'c2'))
+    }
+    const client = createHubMailClient({ fetchJson })
+    const stale = client.messages('conn')
+    client.reset()
+    release(page([message('stale')], 'c-stale'))
+    await stale
+    expect((await client.messages('conn')).map((m) => m.id)).toEqual(['fresh'])
+    expect(calls.map(cursorOf)).toEqual([null, null])
+    await client.refresh()
+    expect(calls.map(cursorOf)).toEqual([null, null, 'c2'])
+  })
 })
