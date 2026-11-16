@@ -17,7 +17,7 @@ const mocks = vi.hoisted(() => ({
 vi.mock('@adh-sdk/auth/client', () => {
   class AuthHttpError extends Error {
     status: number
-    constructor(message: string, status: number) {
+    constructor(status: number, message: string) {
       super(message)
       this.status = status
     }
@@ -337,7 +337,7 @@ describe('useDmThread', () => {
 
 describe('startDm', () => {
   it('hub-domain-hooks-029 a 403 resolves to { forbidden: true }', async () => {
-    mocks.authedJson.mockRejectedValue(new AuthHttpError('blocked', 403))
+    mocks.authedJson.mockRejectedValue(new AuthHttpError(403, 'blocked'))
     await expect(startDm('u1')).resolves.toEqual({ forbidden: true })
     expect(mocks.authedJson).toHaveBeenCalledWith('/api/v1/chats', {
       method: 'POST',
@@ -346,7 +346,7 @@ describe('startDm', () => {
   })
 
   it('hub-domain-hooks-030 any other failure rejects with its status', async () => {
-    mocks.authedJson.mockRejectedValue(new AuthHttpError('server', 500))
+    mocks.authedJson.mockRejectedValue(new AuthHttpError(500, 'server'))
     const err = await startDm('u1').catch((e) => e)
     expect(err).toBeInstanceOf(AuthHttpError)
     expect(err.status).toBe(500)
