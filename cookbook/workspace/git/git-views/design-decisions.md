@@ -71,3 +71,6 @@
 **Rationale**: The blame's lines are the file at that revision; a second read is a second process for the same bytes.
 **Approved**: pending
 
+**Decision**: The window's own worktree has `Open` but no `Remove…`, and the main worktree has no menu.
+**Rationale**: Git refuses to remove the main worktree, and removing the folder a window is showing would leave that window on nothing; the sidebar compares the row's directory with the data source's `root`, which it already holds.
+**Approved**: pending

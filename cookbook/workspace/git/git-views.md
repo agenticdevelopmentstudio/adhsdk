@@ -2,7 +2,7 @@
 id: bdd3a72d-8810-439b-bad7-ec16233cb2a3
 title: "Git Views"
 type: ingredient
-version: 1.11.0
+version: 1.12.0
 status: review
 language: en
 created: 2026-11-13
@@ -61,8 +61,10 @@ The **diff** (`GitDiffViewController`) shows one file's change for a `GitDiffTar
 - **sidebar-head-bold**: The checked-out branch's row MUST be emphasized (bold); no other row is.
 - **sidebar-selection**: Selecting a row MUST call the delegate once: the working copy → `sidebarDidSelectWorkingCopy`; a branch, remote branch or tag → `didSelect ref`; a stash → `didSelectStash`; a submodule → `open directory` with the repository root joined with the submodule's path; a worktree → `open directory` with the worktree's directory. A submodule or worktree row is an action, not a place: after it opens, the previous selection, when there is one, is restored, so the same row can be chosen again. Clearing the selection calls nothing.
 - **sidebar-reload**: `reload()` MUST rebuild every section from the data source's current values, keeping the selected row selected when its id is still present (by the topic list's restore-by-id) without calling the delegate. When the selected row is gone, the sidebar MUST select `Working Copy` and call `sidebarDidSelectWorkingCopy` once, so the owner never keeps showing a ref or stash that no longer exists.
-- **sidebar-intents-only**: The sidebar MUST NOT run git. Every action chosen from a context menu, and a double-clicked branch, is one call of the delegate's `sidebar(_:didRequest:)` with a `GitRefIntent` (`checkout(GitRef)`, `createBranch(from:)`, `rename`, `delete`, `push`, `pull`, `fetch(remote:)`, `deleteTag`, `pushTag`, `applyStash`, `popStash`, `dropStash`, `merge(GitRef)`, `rebaseOnto(GitRef)`); confirming a delete or a drop is the owner's. `delete` names a local or a remote branch alike; the ref's kind decides which git verb runs.
-- **sidebar-menus**: A local branch row's menu MUST hold `Checkout` (`.checkout`), `New Branch…` (`.createBranch(from:)`), `Rename…` (`.rename`), `Delete…` (`.delete`), a separator and `Push` (`.push`); on the checked-out branch `Checkout` and `Delete…` are absent and `Pull` (`.pull`) follows `Push`. A remote branch row's menu MUST hold `Checkout`, `New Branch…`, `Delete…`, a separator and `Fetch <remote>` (`.fetch(remote:)`). A `Remotes · <remote>` section header's menu MUST hold `Fetch` for that remote; no other header has a menu. A tag row's menu MUST hold `Push` (`.pushTag`) and `Delete…` (`.deleteTag`); a stash row's `Apply`, `Pop` and `Drop…` (`.applyStash`, `.popStash`, `.dropStash`). The working copy, submodule and worktree rows have no menu. Each item carries the clicked row's ref or stash, never the selection's; the menus are built through the topic list's `itemMenuProvider` and `headerMenuProvider`.
+- **sidebar-intents-only**: The sidebar MUST NOT run git. Every action chosen from a context menu, and a double-clicked branch, is one call of the delegate's `sidebar(_:didRequest:)` with a `GitRefIntent` (`checkout(GitRef)`, `createBranch(from:)`, `rename`, `delete`, `push`, `pull`, `fetch(remote:)`, `deleteTag`, `pushTag`, `applyStash`, `popStash`, `dropStash`, `merge(GitRef)`, `rebaseOnto(GitRef)`, `newWorktree(branch:)`, `removeWorktree(GitWorktree)`, `updateSubmodule(GitSubmodule)`, `updateAllSubmodules`, `openDirectory(URL)`); confirming a delete, a removal or a drop is the owner's. `delete` names a local or a remote branch alike; the ref's kind decides which git verb runs.
+- **sidebar-menus**: A local branch row's menu MUST hold `Checkout` (`.checkout`), `Check Out in New Worktree…` (`.newWorktree(branch:)`, only while **sidebar-worktree-menus** allows it), `New Branch…` (`.createBranch(from:)`), `Rename…` (`.rename`), `Delete…` (`.delete`), a separator and `Push` (`.push`); on the checked-out branch `Checkout` and `Delete…` are absent and `Pull` (`.pull`) follows `Push`. A remote branch row's menu MUST hold `Checkout`, `New Branch…`, `Delete…`, a separator and `Fetch <remote>` (`.fetch(remote:)`). A `Remotes · <remote>` section header's menu MUST hold `Fetch` for that remote; the `Worktrees` and `Submodules` headers have the menus of **sidebar-worktree-menus** and **sidebar-submodule-menus**; no other header has a menu. A tag row's menu MUST hold `Push` (`.pushTag`) and `Delete…` (`.deleteTag`); a stash row's `Apply`, `Pop` and `Drop…` (`.applyStash`, `.popStash`, `.dropStash`). The working copy row and the main worktree's row have no menu. Each item carries the clicked row's ref or stash, never the selection's; the menus are built through the topic list's `itemMenuProvider` and `headerMenuProvider`.
+- **sidebar-worktree-menus**: The `Worktrees` header's menu MUST hold `New Worktree…` (`.newWorktree(branch: nil)`, `git.sidebar.menu.newWorktree`). A worktree row other than the main worktree's MUST have a menu of `Open` (`.openDirectory(<its directory>)`, `git.sidebar.menu.open`) and, unless the worktree's directory is the data source's `root` (the window's own worktree), `Remove…` (`.removeWorktree(<the worktree>)`, `git.sidebar.menu.removeWorktree`). A local branch row MUST carry `Check Out in New Worktree…` (`.newWorktree(branch: <the ref>)`, `git.sidebar.menu.newWorktree`) right after its `Checkout` slot exactly while the branch is checked out nowhere: it is not HEAD and no worktree's `branch` names it.
+- **sidebar-submodule-menus**: The `Submodules` header's menu MUST hold `Update All` (`.updateAllSubmodules`, `git.sidebar.menu.updateAllSubmodules`). A submodule row's menu MUST hold `Open` (`.openDirectory(<root>/<path>)`, `git.sidebar.menu.open`) and `Update` (`.updateSubmodule(<the submodule>)`, `git.sidebar.menu.updateSubmodule`).
 - **sidebar-merge-items**: While the data source's `operationState` is `.none` and a local branch is checked out, the menu of every local branch, remote branch and tag row other than the checked-out branch MUST end its own items with a separator, `Merge into <head>` (`.merge(ref)`, `git.sidebar.menu.merge`) and `Rebase <head> onto <name>` (`.rebaseOnto(ref)`, `git.sidebar.menu.rebase`), placed before a local branch's `Push` and a remote branch's `Fetch`, after a tag's `Delete…`. During an operation, on a detached HEAD and on the checked-out branch they are absent.
 - **sidebar-drag-drop**: A local branch, remote branch or tag row MUST drag its ref's full name through the topic list's `dragPayloadProvider`; no other row drags. A drop MUST be valid only onto the checked-out branch's row and only for a ref whose `dropMenu(forRefNamed:)` is not nil, and an accepted drop MUST pop that menu up through `menuPresenter`, after the drop returns. `dropMenu(forRefNamed:)` MUST be nil for an unknown name, HEAD itself, and whenever the merge items are absent; otherwise it holds `Merge into <head>` (`git.drop.menu.merge`), `Rebase <head> onto <name>` (`git.drop.menu.rebase`), a separator and `Cancel` (`git.drop.menu.cancel`, which sends nothing). Its items send the same intents as the context menu; choosing one is the confirmation.
 - **sidebar-double-click**: Double-clicking a local or remote branch row MUST send `.checkout(ref)` through the topic list's `onDoubleClick`; the checked-out branch, and every other row, sends nothing.
@@ -247,7 +249,7 @@ A vertical-divider `ThemedSplitView`: the commit list (a headerless single-colum
 
 ### Refs sidebar
 
-The sidebar's root view carries the identifier `git.sidebar`. Rows are the topic list's, so each row's label carries `topic-list.item.<slug of title>` and answers an accessibility press by selecting the row; a badge carries `topic-list.item.<slug>.badge`. Because the identifier comes from the title, a branch name shared by `Branches` and a `Remotes · <remote>` section (`main`) yields the same identifier in each; address one with `dev.py ax --nth`. Context menu items carry `git.sidebar.menu.<name>`: `checkout`, `newBranch`, `rename`, `delete`, `push`, `pull`, `fetch`, `apply`, `pop` and `drop`, and a tag's `tag.push` and `tag.delete`.
+The sidebar's root view carries the identifier `git.sidebar`. Rows are the topic list's, so each row's label carries `topic-list.item.<slug of title>` and answers an accessibility press by selecting the row; a badge carries `topic-list.item.<slug>.badge`. Because the identifier comes from the title, a branch name shared by `Branches` and a `Remotes · <remote>` section (`main`) yields the same identifier in each; address one with `dev.py ax --nth`. Context menu items carry `git.sidebar.menu.<name>`: `checkout`, `newBranch`, `rename`, `delete`, `push`, `pull`, `fetch`, `apply`, `pop` and `drop`, a tag's `tag.push` and `tag.delete`, and for worktrees and submodules `newWorktree`, `open`, `removeWorktree`, `updateSubmodule` and `updateAllSubmodules`.
 
 ### History list
 
@@ -344,10 +346,10 @@ The root view carries `git.fileHistory`, the split `git.fileHistory.split`, the 
 | git-views-061 | wc-amend | `canAmend` true, tick Amend; set `canAmend` false; then `commitDidSucceed()` | `.amendChanged(true)` once; the checkbox disabled and unticked; the message empty. |
 | git-views-062 | history-menu, history-intents-only | Three commits, the first selected; open row 2's menu, choose each item and each reset mode | Titles `Checkout`, `New Branch…`, `New Tag…`, separator, `Cherry-pick`, `Revert`, `Interactive Rebase from Here…`, separator, `Reset Current Branch to Here` (submenu `Soft`, `Mixed`, `Hard…`), separator, `Copy SHA`; `.checkout`, `.createBranch`, `.createTag`, `.cherryPick`, `.revert`, `.interactiveRebase`, `.reset(.soft)`, `.reset(.mixed)`, `.reset(.hard)`, each for the third commit; the first stays selected. |
 | git-views-063 | history-menu | Choose `Copy SHA` on row 1 | The pasteboard holds the second commit's full sha; no intent. A row outside the list has no menu. |
-| git-views-064 | sidebar-menus, sidebar-intents-only | The git-views-001 source; `dev`'s menu, each item | `Checkout`, `New Branch…`, `Rename…`, `Delete…`, separator, `Push`; `.checkout(dev)`, `.createBranch(from: dev)`, `.rename(dev)`, `.delete(dev)`, `.push(dev)`; no selection call. |
+| git-views-064 | sidebar-menus, sidebar-intents-only | The git-views-001 source; `dev`'s menu, each item | `Checkout`, `Check Out in New Worktree…`, `New Branch…`, `Rename…`, `Delete…`, separator, `Push`; `.checkout(dev)`, `.newWorktree(branch: dev)`, `.createBranch(from: dev)`, `.rename(dev)`, `.delete(dev)`, `.push(dev)`; no selection call. |
 | git-views-065 | sidebar-menus | `main` (head)'s menu, each item | `New Branch…`, `Rename…`, separator, `Push`, `Pull`; `.createBranch(from: main)`, `.rename(main)`, `.push(main)`, `.pull`. |
 | git-views-066 | sidebar-menus | `origin/dev`'s menu; the `Remotes · upstream` header's; every other header's | `Checkout`, `New Branch…`, `Delete…`, separator, `Fetch origin` → `.checkout`, `.createBranch(from:)`, `.delete`, `.fetch(remote: "origin")`; `Fetch` → `.fetch(remote: "upstream")`; none. |
-| git-views-067 | sidebar-menus | `v1`'s menu; `stash@{1}`'s; the working copy's, a submodule's and each worktree's | `Push`, `Delete…` → `.pushTag`, `.deleteTag`; `Apply`, `Pop`, `Drop…` → `.applyStash`, `.popStash`, `.dropStash` of stash 1; no menu. |
+| git-views-067 | sidebar-menus | `v1`'s menu; `stash@{1}`'s; the working copy's and the main worktree's | `Push`, `Delete…` → `.pushTag`, `.deleteTag`; `Apply`, `Pop`, `Drop…` → `.applyStash`, `.popStash`, `.dropStash` of stash 1; no menu. |
 | git-views-068 | sidebar-double-click | Double-click `dev`, `origin/main`, then the working copy, `main` (head), `v1`, a stash, a submodule and a worktree | `.checkout(dev)`, `.checkout(origin/main)`, nothing else. |
 | git-views-069 | diff-line-refs | `twoHunks` inline | refs `(0,nil) (0,0) (0,1) (0,2) (0,3) (1,nil) (1,0) (1,1) (1,2)`; binary `[nil]`. |
 | git-views-070 | diff-line-refs | `twoHunks` side by side | left `(0,nil) (0,0) (0,1) (0,3) (1,nil) (1,0) nil (1,2)`; right `(0,nil) (0,0) (0,2) (0,3) (1,nil) (1,0) (1,1) (1,2)`. |
@@ -368,6 +370,9 @@ The root view carries `git.fileHistory`, the split `git.fileHistory.split`, the 
 | git-views-085 | wc-conflict-menu | double-click `both.txt`, then `gone.txt` | `.openMerge("both.txt")` only |
 | git-views-086 | wc-conflicts-list | select `b`, then `both.txt`, then a staged row | `.unstaged([b])`, `.unstaged([both.txt])`; each selection clears the other lists |
 | git-views-087 | history-menu | three commits, `headCommit` the first; the menus of rows 0, 1 and 2; then `operationState` merging | `Interactive Rebase from Here…` absent on row 0, present on rows 1 and 2; then absent on both |
+| git-views-088 | sidebar-worktree-menus | the full source (worktrees `/repo` main, `/w/feature`); the `Worktrees` header's menu, `feature`'s menu; then with `/w/feature` as the source's root | `New Worktree…` → `.newWorktree(branch: nil)`; `Open`, `Remove…` → `.openDirectory(/w/feature)`, `.removeWorktree(feature)`; then `Open` alone |
+| git-views-089 | sidebar-worktree-menus | `dev` checked out in `/w/feature`; `dev`'s menu; `main` (head)'s menu | neither holds `Check Out in New Worktree…` |
+| git-views-090 | sidebar-submodule-menus | submodule `lib/sub dir` (uninitialized); the `Submodules` header's menu, the row's menu | `Update All` → `.updateAllSubmodules`; `Open`, `Update` → `.openDirectory(<root>/lib/sub dir)`, `.updateSubmodule(lib/sub dir)` |
 ## Edge Cases
 
 - **Null / empty input**: An unborn repository lists only the working copy (and its worktree).
@@ -479,18 +484,18 @@ The commit detail, the diff, the blame and the file history each log a failed lo
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/` | confirmed (1.11.0) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Git/GitHistorySearch.swift` | confirmed (1.11.0) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Git/GitFileListItem.swift` | confirmed (1.11.0) |
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitDiffLineModels.swift` | confirmed (1.11.0) |
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitSyntaxColoring.swift` | confirmed (1.11.0) |
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitDiffViewController.swift` | confirmed (1.11.0) |
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitBlameViewController.swift` | confirmed (1.11.0) |
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitFileHistoryViewController.swift` | confirmed (1.11.0) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/SourcesUI/macOS/Theme/ThemedViews.swift` | confirmed (1.11.0) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Git/GitFileStatus.swift` | confirmed (1.11.0) |
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitOperationBannerViewController.swift` | confirmed (1.11.0) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitWorkingCopyViewController.swift` | confirmed (1.11.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/` | confirmed (1.12.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Git/GitHistorySearch.swift` | confirmed (1.12.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Git/GitFileListItem.swift` | confirmed (1.12.0) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitDiffLineModels.swift` | confirmed (1.12.0) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitSyntaxColoring.swift` | confirmed (1.12.0) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitDiffViewController.swift` | confirmed (1.12.0) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitBlameViewController.swift` | confirmed (1.12.0) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitFileHistoryViewController.swift` | confirmed (1.12.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/SourcesUI/macOS/Theme/ThemedViews.swift` | confirmed (1.12.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Git/GitFileStatus.swift` | confirmed (1.12.0) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitOperationBannerViewController.swift` | confirmed (1.12.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitWorkingCopyViewController.swift` | confirmed (1.12.0) |
 
 ## Design Decisions
 
@@ -566,6 +571,9 @@ The commit detail, the diff, the blame and the file history each log a failed lo
 **Rationale**: The blame's lines are the file at that revision; a second read is a second process for the same bytes.
 **Approved**: pending
 
+**Decision**: The window's own worktree has `Open` but no `Remove…`, and the main worktree has no menu.
+**Rationale**: Git refuses to remove the main worktree, and removing the folder a window is showing would leave that window on nothing; the sidebar compares the row's directory with the data source's `root`, which it already holds.
+**Approved**: pending
 ## Compliance
 
 | Check | Status | Category |
@@ -597,3 +605,4 @@ The commit detail, the diff, the blame and the file history each log a failed lo
 | 1.10.0 | 2026-11-15 | Mike Fullerton | Working copy conflicts: a Conflicts list above Staged while there are conflicts, its paths left out of Unstaged; Open in Merge View (markers only), Resolve Using Ours…, Resolve Using Theirs… and Mark Resolved, and double-click to open; vectors 082-086 |
 | 1.10.1 | 2026-11-15 | Mike Fullerton | the working copy's conflicts pane, list and menu identifiers in accessibility, appearance and configuration |
 | 1.11.0 | 2026-11-16 | Mike Fullerton | History menu: Interactive Rebase from Here…, left out on HEAD's row and during an operation; the data source gives the HEAD commit and the operation state; vector 087 |
+| 1.12.0 | 2026-11-16 | Mike Fullerton | Worktree and submodule menus: New Worktree… on the Worktrees header, Open and Remove… on a linked worktree (Open alone on the window's own), Check Out in New Worktree… on a branch checked out nowhere, Update All on the Submodules header, Open and Update on a submodule; new intents newWorktree, removeWorktree, updateSubmodule, updateAllSubmodules, openDirectory. |

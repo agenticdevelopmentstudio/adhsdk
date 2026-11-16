@@ -38,3 +38,11 @@
 **Decision**: Questions go through a `GitActionPresenting` protocol, with `NSAlert` sheets as its one AppKit implementation.
 **Rationale**: The session's rules (what to ask before a hard reset, what to show after a failure) can be tested with a fake that answers instantly; a sheet keeps the question on the repository it concerns and never runs a modal loop that would stall the other windows.
 **Approved**: pending
+
+**Decision**: `Open` on a worktree or submodule row goes straight to `onOpenDirectory`, outside the one-action funnel.
+**Rationale**: It runs no git and changes nothing in this repository, so making it wait for, or be dropped by, an action in progress would only get in the way.
+**Approved**: pending
+
+**Decision**: An empty `Folder` for a new worktree becomes `<parent of root>/<root's name>-<branch>`, beside the repository.
+**Rationale**: It is where a worktree is usually put by hand, it never lands inside the working tree (where it would show as untracked), and a `/` in the branch made `-` keeps it one folder.
+**Approved**: pending

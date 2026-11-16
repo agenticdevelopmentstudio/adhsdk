@@ -312,7 +312,72 @@ extension GitWindowSession {
         // The menu or the drop menu the user chose from is the confirmation.
         case .merge(let ref): await execute(.merge(ref: ref.fullName, fastForward: .allowed))
         case .rebaseOnto(let ref): await execute(.rebase(onto: ref.fullName))
+        case .newWorktree(let branch): await newWorktree(branch: branch)
+        case .removeWorktree(let worktree): await remove(worktree)
+        case .updateSubmodule(let submodule):
+            await execute(.updateSubmodules(paths: [submodule.path], initialize: submodule.state == .uninitialized))
+        case .updateAllSubmodules: await execute(.updateSubmodules(paths: [], initialize: true))
+        // The sidebar delegate opens it without the funnel; this is the same, should it arrive here.
+        case .openDirectory(let directory): onOpenDirectory?(directory)
         }
+    }
+
+    // MARK: - Worktrees
+
+    /// Asks for a branch and a folder, adds a worktree there and opens it in its own
+    /// window. A branch that names a local branch is checked out; any other is created
+    /// from HEAD. An empty folder is `<parent of root>/<root's name>-<branch>`.
+    private func newWorktree(branch: GitRef?) async {
+        let request = GitTextRequest(
+            title: "New Worktree", message: "",
+            fields: [GitTextField(label: "Branch", initial: branch?.name ?? "", isOptional: false),
+                     GitTextField(label: "Folder", initial: "", isOptional: true)],
+            actionTitle: "Create Worktree")
+        guard let values = await askForName(request, failureTitle: "Add worktree failed") else { return }
+        let name = values[0]
+        let folder = Self.worktreeFolder(values.count > 1 ? values[1] : "", branch: name, root: model.root)
+        let exists = model.refs.contains { $0.kind == .localBranch && $0.name == name }
+        guard await execute(.addWorktree(path: folder.path, branch: name, createBranch: !exists, startPoint: nil))
+        else { return }
+        onOpenDirectory?(folder)
+    }
+
+    /// Where a new worktree for `branch` goes: `typed` with `~` expanded, taken against
+    /// the parent of `root` when relative; when blank, `<parent>/<root's name>-<branch>`
+    /// with every `/` in the branch made `-`.
+    static func worktreeFolder(_ typed: String, branch: String, root: URL) -> URL {
+        let parent = root.deletingLastPathComponent()
+        let text = typed.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !text.isEmpty else {
+            let name = "\(root.lastPathComponent)-\(branch.replacingOccurrences(of: "/", with: "-"))"
+            return parent.appendingPathComponent(name, isDirectory: true)
+        }
+        let expanded = (text as NSString).expandingTildeInPath
+        guard !expanded.hasPrefix("/") else { return URL(fileURLWithPath: expanded, isDirectory: true) }
+        return parent.appendingPathComponent(expanded, isDirectory: true).standardizedFileURL
+    }
+
+    /// Confirms, removes the worktree, and when git refuses a dirty one, confirms again
+    /// and forces it.
+    private func remove(_ worktree: GitWorktree) async {
+        guard let presenter else { return }
+        let path = worktree.directory.path
+        let confirmation = GitConfirmation(
+            title: "Remove worktree \(worktree.directory.lastPathComponent)?",
+            message: "Its folder, \(path), is deleted.", actionTitle: "Remove", isDestructive: true)
+        guard await presenter.confirm(confirmation) else { return }
+        let action = GitAction.removeWorktree(path: path, force: false)
+        guard let error = await attempt(action) else { return }
+        guard Self.isDirtyWorktree(error) else {
+            showFailure(title: action.failureTitle, error: error)
+            return
+        }
+        let again = GitConfirmation(
+            title: "Remove worktree with uncommitted changes?",
+            message: "Its uncommitted changes and untracked files are lost.", actionTitle: "Remove",
+            isDestructive: true)
+        guard await presenter.confirm(again) else { return }
+        await execute(.removeWorktree(path: path, force: true))
     }
 
     // MARK: - Operation in progress
@@ -608,6 +673,12 @@ extension GitWindowSession {
     static func isNotFullyMerged(_ error: Error) -> Bool {
         guard case let .commandFailed(_, _, standardError)? = error as? GitClientError else { return false }
         return standardError.contains("not fully merged")
+    }
+
+    /// Whether git refused to remove a worktree because it has changes or untracked files.
+    static func isDirtyWorktree(_ error: Error) -> Bool {
+        guard case let .commandFailed(_, _, standardError)? = error as? GitClientError else { return false }
+        return standardError.contains("contains modified or untracked files")
     }
 
     private static func isBlank(_ text: String) -> Bool {

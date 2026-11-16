@@ -2,7 +2,7 @@
 id: 6a830cf8-0b95-4ffd-b175-f5cf481490c4
 title: "Git Window"
 type: ingredient
-version: 1.9.0
+version: 1.10.0
 status: review
 language: en
 created: 2026-11-14
@@ -63,7 +63,7 @@ The branch card's [branch management](cookbook:92f11498-2cb2-4b04-92b9-560d9f2de
 - **centre-follows-sidebar**: The centre MUST show the working copy while the sidebar's Working Copy row is selected (including when the sidebar falls back to it after its selection vanished), and the history otherwise.
 - **ref-scrolls-history**: Selecting a branch or tag MUST show the history and select the ref's target commit there; when the commit is not loaded, nothing is selected and the selection is applied after a later history change loads it.
 - **stash-shows-commit**: Selecting a stash MUST show the history and load the stash's commit (`git log` of the stash id, one commit) into the commit detail; a failed load is logged and shown as a plain error label.
-- **directory-opens-window**: Choosing a submodule or worktree row MUST open (or bring forward) that directory's own git window through the feature.
+- **directory-opens-window**: Choosing a submodule or worktree row, or its menu's `Open` (`.openDirectory`), MUST open (or bring forward) that directory's own git window through the feature (`onOpenDirectory`). `Open` runs no git, so it bypasses the funnel and works while an action runs.
 - **history-selection-shows-detail**: A commit selected in the history MUST be shown in the commit detail, and the bottom pane MUST return to the diff and clear.
 - **file-shows-diff**: A file chosen in the commit detail MUST show the diff `.commit(<id>, paths:)` for that file (its old path too, for a rename); a file cleared MUST clear the diff.
 - **working-copy-target**: While the working copy is the centre, a working-copy selection MUST show its target's diff and nil MUST clear it.
@@ -111,6 +111,8 @@ The branch card's [branch management](cookbook:92f11498-2cb2-4b04-92b9-560d9f2de
 - **merge-rebase**: The sidebar's `.merge(ref)` MUST run `.merge(ref: <full name>, fastForward: .allowed)` and `.rebaseOnto(ref)` `.rebase(onto: <full name>)`, at once: the menu or the drop menu the user chose from is the confirmation. A conflict fails under `Merge failed` or `Rebase failed` and leaves the operation in progress, which the refresh shows in the banner and the working copy.
 - **operation-steps**: A banner step MUST run `.operation(<kind>, <step>)` for the kind the model's `operationState` names, and nothing while it is `.none`. Abort MUST first confirm `Abort the <verb>?` / `The working tree and the branch go back to how they were before it started.` with the destructive action `Abort`, and needs the presenter; Continue and Skip run at once. A failed step is shown under its own title (`Continue rebase failed`, ...) and leaves the operation, and so the banner, in place.
 - **interactive-rebase**: The history's `.interactiveRebase` on a commit MUST build the plan with the model's `rebasePlan(onto: <sha>)`, then fill every entry's message from one `commitMessages(after: <onto>)` call, both while git runs; either failing MUST show `Interactive rebase failed` and present nothing. It MUST then ask the presenter's `editRebase` (and needs the presenter), run nothing when it answers nil, and otherwise run `.interactiveRebase(<edited plan>)` at once, failing under `Rebase failed`. A stop (a conflict, an `edit`) leaves the rebase in progress, which the banner shows.
+- **worktrees**: `.newWorktree(branch:)` MUST ask `New Worktree` with two fields, `Branch` (required, prefilled with the branch's name, or empty from the header) and `Folder` (optional, empty), action `Create Worktree`; a branch beginning with `-` is refused as in **names-validated**. An empty folder MUST become `<parent of root>/<root's name>-<branch with every "/" replaced by "-">`; a typed folder has `~` expanded, and a relative one is taken against the parent of root. A branch that names an existing local branch MUST run `.addWorktree(path:branch:createBranch: false, startPoint: nil)`, any other `createBranch: true` from HEAD (`startPoint: nil`); on success the new worktree MUST open in its own window through `onOpenDirectory`. `.removeWorktree(worktree)` MUST confirm `Remove worktree <name>?` / `Its folder, <path>, is deleted.` with the destructive action `Remove`, then run `.removeWorktree(path:force: false)`; when git refuses because the tree is dirty (standard error contains `contains modified or untracked files`) it MUST confirm again `Remove worktree with uncommitted changes?` / `Its uncommitted changes and untracked files are lost.` (destructive `Remove`) before `.removeWorktree(force: true)`; declining shows nothing. Failures show under `Add worktree failed` and `Remove worktree failed`.
+- **submodules**: `.updateSubmodule(submodule)` MUST run `.updateSubmodules(paths: [<its path>], initialize: <its state is .uninitialized>)` and `.updateAllSubmodules` `.updateSubmodules(paths: [], initialize: true)`, both at once; failures show under `Update submodules failed`.
 - **banner-follows-model**: The banner's state MUST be the model's `operationState` at session start, on every change that touches `.operation` or the working copy, and on `reloadAll`, so an operation begun outside the window shows once the model reads it.
 - **ref-drop-on-history**: A ref dropped on the history list MUST pop up the sidebar's `dropMenu(forRefNamed:)` over the history table through the sidebar's `menuPresenter`; a ref with no drop menu is refused by the history's `refDropValidator` and pops up nothing.
 - **commit-actions**: Cherry-pick and Revert MUST pass `mainline: 1` for a commit with more than one parent. A soft or mixed reset MUST run at once; a hard one MUST confirm `Reset <branch> to <shortID>?` / `Uncommitted changes are lost.` (destructive) first, naming `HEAD` when detached, where a reset is allowed.
@@ -202,11 +204,18 @@ The window keeps the project window's identifiers. Its panes carry `git.window.o
 | git-window-065 | interactive-rebase | the same; the editor cancelled | one plan shown; no failure; HEAD unchanged |
 | git-window-066 | interactive-rebase | `base`, then `main.txt` and a `--no-ff` merge of `side`; Interactive Rebase from Here on `HEAD~2` | no editor; one failure `Interactive rebase failed: …` |
 | git-window-067 | rebase-editor-sheet | `editRebase` with fake sheets: Start after moving the second entry up; Cancel; the window closing | the sheet `Interactive Rebase` (`git.rebase.sheet`) begun; the edited plan answered and the sheet ended once; nil; nil, the sheet ended once and the editor's finish handler gone |
+| git-window-068 | worktrees, directory-opens-window | a repository `r` with one commit; New Worktree from the header answered `topic/x` and an empty folder | `New Worktree` with `Branch` empty and `Folder` empty; branch `topic/x` created; a worktree at `<parent of r>/r-topic-x`; `onOpenDirectory` called once with it; no failure |
+| git-window-069 | worktrees | branch `side`; Check Out in New Worktree on `side`, the fields answered `side` and an absolute folder | `Branch` prefilled `side`; the worktree at that folder on `side`, no new branch |
+| git-window-070 | worktrees | a linked worktree with an untracked file; Remove…, confirmed twice; then the same with the second declined | two confirmations, the second `Remove worktree with uncommitted changes?`, both destructive; the worktree gone; declined, it stays and no failure |
+| git-window-071 | submodules | a clone whose submodule `lib` is uninitialized; Update on its row | `.updateSubmodules([lib], initialize: true)`; `lib` current, `lib/lib.txt` checked out |
 ## Edge Cases
 
 - **Symlinked spelling**: `/tmp/r` and `/private/tmp/r` resolve to one key and one window.
 - **Linked worktree**: its own top level, so its own window; the watcher watches its git directory and the common directory.
 - **Submodule row**: opens the submodule's own window, keyed by its own top level.
+- **Removing a dirty worktree**: git refuses; the second confirmation names the loss, and declining it leaves the worktree with no failure shown.
+- **New worktree on a branch checked out elsewhere**: git refuses and the failure shows under `Add worktree failed`; the sidebar offers `Check Out in New Worktree…` only on branches checked out nowhere.
+- **A relative or `~` folder for a new worktree**: `~` is expanded and a relative path is taken against the parent of the root, since git requires an absolute path.
 - **Remembered root gone**: dropped at restore.
 - **Remembered root no longer a repository**: dropped at restore, since it no longer resolves.
 - **Detached HEAD**: the title names no branch (`Git: <name>`).
@@ -265,9 +274,9 @@ Under the `Loggable` categories of `GitWindowFeature`, `GitWindowSession` and `G
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Window/` | confirmed (1.9.0) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Window/GitWindowSession.swift` | confirmed (1.9.0) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Window/GitWindowSession+Actions.swift` | confirmed (1.9.0) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Window/` | confirmed (1.10.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Window/GitWindowSession.swift` | confirmed (1.10.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Window/GitWindowSession+Actions.swift` | confirmed (1.10.0) |
 
 ## Design Decisions
 
@@ -310,6 +319,14 @@ Under the `Loggable` categories of `GitWindowFeature`, `GitWindowSession` and `G
 **Decision**: Questions go through a `GitActionPresenting` protocol, with `NSAlert` sheets as its one AppKit implementation.
 **Rationale**: The session's rules (what to ask before a hard reset, what to show after a failure) can be tested with a fake that answers instantly; a sheet keeps the question on the repository it concerns and never runs a modal loop that would stall the other windows.
 **Approved**: pending
+
+**Decision**: `Open` on a worktree or submodule row goes straight to `onOpenDirectory`, outside the one-action funnel.
+**Rationale**: It runs no git and changes nothing in this repository, so making it wait for, or be dropped by, an action in progress would only get in the way.
+**Approved**: pending
+
+**Decision**: An empty `Folder` for a new worktree becomes `<parent of root>/<root's name>-<branch>`, beside the repository.
+**Rationale**: It is where a worktree is usually put by hand, it never lands inside the working tree (where it would show as untracked), and a `/` in the branch made `-` keeps it one folder.
+**Approved**: pending
 ## Compliance
 
 | Check | Status | Category |
@@ -322,6 +339,7 @@ Under the `Loggable` categories of `GitWindowFeature`, `GitWindowSession` and `G
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.10.0 | 2026-11-16 | Mike Fullerton | Worktrees and submodules from the sidebar: New Worktree asks Branch and Folder (empty: beside the root), checks out an existing branch or creates one, and opens the new worktree; Remove confirms and asks again before forcing a dirty one; Update and Update All run updateSubmodules, initialising as needed; Open bypasses the funnel. |
 | 1.9.0 | 2026-11-16 | Mike Fullerton | Interactive Rebase from Here: the plan built with every message filled from one call, the rebase editor shown as a sheet through the presenter's editRebase, the edited plan run, cancel runs nothing; vectors 064-067 |
 | 1.8.1 | 2026-11-15 | Mike Fullerton | Stage All stages only the Unstaged list and leaves conflicts unmerged (git-window-062, 063) |
 | 1.8.0 | 2026-11-15 | Mike Fullerton | Conflicts: Resolve Using Ours… and Theirs… confirmed, then resolved and staged or removed; Mark Resolved stages; Discard All skips conflicts; the merge view opened from the working copy, saved through the model and staged; vectors 056-061 |

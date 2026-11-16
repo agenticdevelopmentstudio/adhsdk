@@ -2,6 +2,9 @@
 - **Symlinked spelling**: `/tmp/r` and `/private/tmp/r` resolve to one key and one window.
 - **Linked worktree**: its own top level, so its own window; the watcher watches its git directory and the common directory.
 - **Submodule row**: opens the submodule's own window, keyed by its own top level.
+- **Removing a dirty worktree**: git refuses; the second confirmation names the loss, and declining it leaves the worktree with no failure shown.
+- **New worktree on a branch checked out elsewhere**: git refuses and the failure shows under `Add worktree failed`; the sidebar offers `Check Out in New Worktree…` only on branches checked out nowhere.
+- **A relative or `~` folder for a new worktree**: `~` is expanded and a relative path is taken against the parent of the root, since git requires an absolute path.
 - **Remembered root gone**: dropped at restore.
 - **Remembered root no longer a repository**: dropped at restore, since it no longer resolves.
 - **Detached HEAD**: the title names no branch (`Git: <name>`).

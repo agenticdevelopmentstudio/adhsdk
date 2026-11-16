@@ -57,8 +57,9 @@ struct GitRefsSidebarViewControllerTests {
                upstream: nil, ahead: 0, behind: 0, isHead: false)
     }
 
-    private static func worktree(_ path: String, main: Bool = false, bare: Bool = false) -> GitWorktree {
-        GitWorktree(directory: URL(fileURLWithPath: path, isDirectory: true), head: nil, branch: nil,
+    private static func worktree(_ path: String, main: Bool = false, bare: Bool = false,
+                                 branch: String? = nil) -> GitWorktree {
+        GitWorktree(directory: URL(fileURLWithPath: path, isDirectory: true), head: nil, branch: branch,
                     isMain: main, isBare: bare, isDetached: false)
     }
 
@@ -304,18 +305,19 @@ struct GitRefsSidebarViewControllerTests {
         sidebar.delegate = delegate
         let menu = rowMenu(sidebar, section: 1, row: 1)
         #expect(menuTitles(menu) == [
-            "Checkout", "New Branch…", "Rename…", "Delete…", "-",
+            "Checkout", "Check Out in New Worktree…", "New Branch…", "Rename…", "Delete…", "-",
             "Merge into main", "Rebase main onto dev", "-", "Push"
         ])
         #expect(menuIDs(menu) == [
-            "git.sidebar.menu.checkout", "git.sidebar.menu.newBranch", "git.sidebar.menu.rename",
-            "git.sidebar.menu.delete", "git.sidebar.menu.merge", "git.sidebar.menu.rebase", "git.sidebar.menu.push"
+            "git.sidebar.menu.checkout", "git.sidebar.menu.newWorktree", "git.sidebar.menu.newBranch",
+            "git.sidebar.menu.rename", "git.sidebar.menu.delete", "git.sidebar.menu.merge", "git.sidebar.menu.rebase",
+            "git.sidebar.menu.push"
         ])
         try fireAll(menu)
         let dev = Self.branch("dev")
         #expect(delegate.intents == [
-            .checkout(dev), .createBranch(from: dev), .rename(dev), .delete(dev), .merge(dev), .rebaseOnto(dev),
-            .push(dev)
+            .checkout(dev), .newWorktree(branch: dev), .createBranch(from: dev), .rename(dev), .delete(dev),
+            .merge(dev), .rebaseOnto(dev), .push(dev)
         ])
         #expect(delegate.events.isEmpty)
     }
@@ -365,7 +367,7 @@ struct GitRefsSidebarViewControllerTests {
         #expect(menuIDs(menu) == ["git.sidebar.menu.fetch"])
         try fireAll(menu)
         #expect(delegate.intents == [.fetch(remote: "upstream")])
-        for title in ["Workspace", "Branches", "Tags", "Stashes", "Submodules", "Worktrees"] {
+        for title in ["Workspace", "Branches", "Tags", "Stashes"] {
             #expect(sidebar.list.headerMenuProvider?(title) == nil)
         }
     }
@@ -394,13 +396,73 @@ struct GitRefsSidebarViewControllerTests {
         ])
     }
 
-    @Test("the working copy, submodule and worktree rows have no menu")
+    @Test("the working copy and the main worktree rows have no menu")
     func rowsWithoutMenus() {
         let sidebar = GitRefsSidebarViewController(source: Self.fullSource())
         #expect(rowMenu(sidebar, section: 0, row: 0) == nil)
-        #expect(rowMenu(sidebar, section: 6, row: 0) == nil)
         #expect(rowMenu(sidebar, section: 7, row: 0) == nil)
-        #expect(rowMenu(sidebar, section: 7, row: 1) == nil)
+    }
+
+    // MARK: - Worktrees and submodules
+
+    @Test("the Worktrees header asks for a new worktree; a linked worktree's row opens or removes it")
+    func worktreeMenus() throws {
+        let sidebar = GitRefsSidebarViewController(source: Self.fullSource())
+        let delegate = RecordingDelegate()
+        sidebar.delegate = delegate
+        let header = sidebar.list.headerMenuProvider?("Worktrees")
+        #expect(menuTitles(header) == ["New Worktree…"])
+        #expect(menuIDs(header) == ["git.sidebar.menu.newWorktree"])
+        let row = rowMenu(sidebar, section: 7, row: 1)
+        #expect(menuTitles(row) == ["Open", "Remove…"])
+        #expect(menuIDs(row) == ["git.sidebar.menu.open", "git.sidebar.menu.removeWorktree"])
+        try fireAll(header)
+        try fireAll(row)
+        let feature = Self.worktree("/w/feature")
+        #expect(delegate.intents == [.newWorktree(branch: nil), .openDirectory(feature.directory),
+                                     .removeWorktree(feature)])
+        #expect(delegate.events.isEmpty)
+    }
+
+    @Test("the window's own worktree can be opened from its row but not removed")
+    func ownWorktreeNotRemovable() {
+        let source = Self.fullSource()
+        source.root = URL(fileURLWithPath: "/w/feature", isDirectory: true)
+        let sidebar = GitRefsSidebarViewController(source: source)
+        #expect(menuTitles(rowMenu(sidebar, section: 7, row: 1)) == ["Open"])
+    }
+
+    @Test("Check Out in New Worktree… only on a branch checked out nowhere")
+    func newWorktreeOnlyForFreeBranches() {
+        let source = Self.fullSource()
+        source.worktrees = [Self.worktree("/repo", main: true, branch: "main"),
+                            Self.worktree("/w/feature", branch: "dev")]
+        let sidebar = GitRefsSidebarViewController(source: source)
+        #expect(!menuIDs(rowMenu(sidebar, section: 1, row: 1)).contains("git.sidebar.menu.newWorktree"))
+        #expect(!menuIDs(rowMenu(sidebar, section: 1, row: 0)).contains("git.sidebar.menu.newWorktree"))
+    }
+
+    @Test("the Submodules header updates them all; a submodule's row opens or updates it")
+    func submoduleMenus() throws {
+        let source = Self.fullSource()
+        let submodule = GitSubmodule(path: "lib/sub dir", id: "abc", state: .uninitialized)
+        source.submodules = [submodule]
+        let sidebar = GitRefsSidebarViewController(source: source)
+        let delegate = RecordingDelegate()
+        sidebar.delegate = delegate
+        let header = sidebar.list.headerMenuProvider?("Submodules")
+        #expect(menuTitles(header) == ["Update All"])
+        #expect(menuIDs(header) == ["git.sidebar.menu.updateAllSubmodules"])
+        let row = rowMenu(sidebar, section: 6, row: 0)
+        #expect(menuTitles(row) == ["Open", "Update"])
+        #expect(menuIDs(row) == ["git.sidebar.menu.open", "git.sidebar.menu.updateSubmodule"])
+        try fireAll(header)
+        try fireAll(row)
+        #expect(delegate.intents == [
+            .updateAllSubmodules, .openDirectory(URL(fileURLWithPath: "/repo/lib/sub dir", isDirectory: true)),
+            .updateSubmodule(submodule)
+        ])
+        #expect(delegate.events.isEmpty)
     }
 
     @Test("double-clicking a local or remote branch checks it out; other rows ask for nothing")

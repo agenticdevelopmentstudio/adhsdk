@@ -357,6 +357,11 @@ extension GitWindowSession: GitRefsSidebarDelegate {
     }
 
     func sidebar(_ sidebar: GitRefsSidebarViewController, didRequest intent: GitRefIntent) {
+        // Opening a window runs no git, so it skips the funnel and works while an action runs.
+        if case .openDirectory(let directory) = intent {
+            onOpenDirectory?(directory)
+            return
+        }
         perform(.ref(intent))
     }
 }

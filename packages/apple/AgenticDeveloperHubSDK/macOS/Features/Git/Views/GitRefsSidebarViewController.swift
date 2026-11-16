@@ -1,8 +1,8 @@
 import AppKit
 import AgenticDeveloperHubSDKCore
 
-/// What the user asked the sidebar to do to a ref, a remote or a stash. The view runs
-/// none of it; its delegate does.
+/// What the user asked the sidebar to do to a ref, a remote, a stash, a worktree or a
+/// submodule. The view runs none of it; its delegate does.
 public enum GitRefIntent: Equatable {
     /// A local branch, or a remote branch to check out as a local one that tracks it.
     case checkout(GitRef), createBranch(from: GitRef), rename(GitRef)
@@ -13,6 +13,14 @@ public enum GitRefIntent: Equatable {
     case applyStash(GitStash), popStash(GitStash), dropStash(GitStash)
     /// Merge the ref into the checked-out branch; rebase the checked-out branch onto the ref.
     case merge(GitRef), rebaseOnto(GitRef)
+    /// A new worktree, on `branch` when it is a local branch, otherwise on a new branch the
+    /// user names (nil: from the `Worktrees` header).
+    case newWorktree(branch: GitRef?)
+    case removeWorktree(GitWorktree)
+    /// One submodule, or every submodule, initialising those not yet checked out.
+    case updateSubmodule(GitSubmodule), updateAllSubmodules
+    /// A worktree's or a submodule's directory, opened in its own window; runs no git.
+    case openDirectory(URL)
 }
 
 /// What the refs sidebar tells its owner the user chose.
@@ -31,9 +39,10 @@ public enum GitRefIntent: Equatable {
 /// `TopicListViewController` it hosts as a child.
 ///
 /// It reads a `GitRefsDataSource` and reports selections to its delegate; its
-/// owner calls `reload()` when the refs change. A branch, tag or stash row and a
-/// remote's section header have context menus whose items, like a double-clicked
-/// branch, reach the delegate as `GitRefIntent`s; the sidebar runs no git.
+/// owner calls `reload()` when the refs change. A branch, tag, stash, submodule or
+/// linked worktree row, a remote's section header and the `Worktrees` and `Submodules`
+/// headers have context menus whose items, like a double-clicked branch, reach the
+/// delegate as `GitRefIntent`s; the sidebar runs no git.
 ///
 /// Branch, remote branch and tag rows drag as their ref's full name; dropping one on
 /// the checked-out branch's row pops up a menu to merge it in or rebase onto it.
@@ -64,7 +73,17 @@ public final class GitRefsSidebarViewController: NSViewController {
         case workingCopy
         case ref(GitRef)
         case stash(GitStash)
-        case directory(URL)
+        case submodule(GitSubmodule, URL)
+        case worktree(GitWorktree)
+
+        /// The directory a submodule or worktree row opens; nil for every other row.
+        var directory: URL? {
+            switch self {
+            case .submodule(_, let url): url
+            case .worktree(let worktree): worktree.directory
+            case .workingCopy, .ref, .stash: nil
+            }
+        }
     }
 
     private static let workingCopyID = "workspace.working-copy"
@@ -171,14 +190,14 @@ public final class GitRefsSidebarViewController: NSViewController {
         let root = source.root
         add("Submodules", source.submodules.map { submodule in
             (TopicListItem(id: "submodule:\(submodule.path)", title: submodule.path, icon: Self.symbol("shippingbox")),
-             .directory(root.appendingPathComponent(submodule.path, isDirectory: true)))
+             .submodule(submodule, root.appendingPathComponent(submodule.path, isDirectory: true)))
         })
 
         add("Worktrees", source.worktrees.filter { !$0.isBare }.map { worktree in
             (TopicListItem(
                 id: "worktree:\(worktree.directory.path)", title: worktree.directory.lastPathComponent,
                 icon: Self.symbol("folder")
-            ), .directory(worktree.directory))
+            ), .worktree(worktree))
         })
 
         self.targets = targets
@@ -228,19 +247,20 @@ public final class GitRefsSidebarViewController: NSViewController {
 
     private func select(itemID: String) {
         guard let target = targets[itemID] else { return }
-        if case .directory = target {
+        if let directory = target.directory {
             // An action: the previous selection comes back, so clicking the
             // same row again opens the window again.
             if let selectedID { list.selectItem(withId: selectedID) }
-        } else {
-            selectedID = itemID
+            delegate?.sidebar(self, open: directory)
+            return
         }
+        selectedID = itemID
         guard let delegate else { return }
         switch target {
         case .workingCopy: delegate.sidebarDidSelectWorkingCopy(self)
         case .ref(let ref): delegate.sidebar(self, didSelect: ref)
         case .stash(let stash): delegate.sidebar(self, didSelectStash: stash)
-        case .directory(let url): delegate.sidebar(self, open: url)
+        case .submodule, .worktree: break
         }
     }
 
@@ -248,8 +268,9 @@ public final class GitRefsSidebarViewController: NSViewController {
 
     // MARK: - Context menus and double-click
 
-    /// The context menu for the row `id` names: a branch, remote branch, tag or stash
-    /// row's actions; nil for the working copy, a submodule, a worktree or an unknown id.
+    /// The context menu for the row `id` names: a branch, remote branch, tag, stash,
+    /// submodule or linked worktree row's actions; nil for the working copy, the main
+    /// worktree or an unknown id.
     func contextMenu(forItemID id: String) -> NSMenu? {
         switch targets[id] {
         case .ref(let ref):
@@ -268,15 +289,44 @@ public final class GitRefsSidebarViewController: NSViewController {
                 ("Apply", "apply", .applyStash(stash)), ("Pop", "pop", .popStash(stash)),
                 ("Drop…", "drop", .dropStash(stash))
             ])
-        case .workingCopy, .directory, nil:
+        case .submodule(let submodule, let url):
+            return makeMenu([
+                ("Open", "open", .openDirectory(url)), ("Update", "updateSubmodule", .updateSubmodule(submodule))
+            ])
+        case .worktree(let worktree):
+            return worktreeMenu(worktree)
+        case .workingCopy, nil:
             return nil
         }
     }
 
-    /// `Fetch` for a remote's section header; nil for every other section.
+    /// `Fetch` for a remote's section header, `New Worktree…` for `Worktrees` and
+    /// `Update All` for `Submodules`; nil for every other section.
     func contextMenu(forSectionTitle title: String) -> NSMenu? {
-        guard let remote = remotesBySectionTitle[title] else { return nil }
-        return makeMenu([("Fetch", "fetch", .fetch(remote: remote))])
+        switch title {
+        case "Worktrees": return makeMenu([("New Worktree…", "newWorktree", .newWorktree(branch: nil))])
+        case "Submodules": return makeMenu([("Update All", "updateAllSubmodules", .updateAllSubmodules)])
+        default:
+            guard let remote = remotesBySectionTitle[title] else { return nil }
+            return makeMenu([("Fetch", "fetch", .fetch(remote: remote))])
+        }
+    }
+
+    /// `Open` and `Remove…` for a linked worktree; only `Open` for the window's own one,
+    /// which cannot remove the folder it is showing; nil for the main worktree.
+    private func worktreeMenu(_ worktree: GitWorktree) -> NSMenu? {
+        guard !worktree.isMain else { return nil }
+        var entries: [MenuEntry?] = [("Open", "open", .openDirectory(worktree.directory))]
+        if worktree.directory.standardizedFileURL.path != source.root.standardizedFileURL.path {
+            entries.append(("Remove…", "removeWorktree", .removeWorktree(worktree)))
+        }
+        return makeMenu(entries)
+    }
+
+    /// Whether the local branch `ref` is checked out nowhere: not HEAD, and no worktree's
+    /// branch names it.
+    private func isCheckedOutNowhere(_ ref: GitRef) -> Bool {
+        !ref.isHead && !source.worktrees.contains { $0.branch == ref.name }
     }
 
     /// A double-clicked local or remote branch is checked out; the checked-out branch,
@@ -291,6 +341,9 @@ public final class GitRefsSidebarViewController: NSViewController {
     private func localBranchMenu(_ ref: GitRef) -> NSMenu {
         var entries: [MenuEntry?] = []
         if !ref.isHead { entries.append(("Checkout", "checkout", .checkout(ref))) }
+        if isCheckedOutNowhere(ref) {
+            entries.append(("Check Out in New Worktree…", "newWorktree", .newWorktree(branch: ref)))
+        }
         entries.append(("New Branch…", "newBranch", .createBranch(from: ref)))
         entries.append(("Rename…", "rename", .rename(ref)))
         if !ref.isHead { entries.append(("Delete…", "delete", .delete(ref))) }

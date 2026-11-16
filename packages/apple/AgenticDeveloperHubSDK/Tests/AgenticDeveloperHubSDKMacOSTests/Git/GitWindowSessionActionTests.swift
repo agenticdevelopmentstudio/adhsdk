@@ -56,6 +56,11 @@ private final class StubPresenter: GitActionPresenting {
 struct GitWindowSessionActionTests {
     private static let epoch = 1_767_268_800
     private let client = GitClient(configuration: .default)
+    /// Allows the local-path clone a submodule update makes (see `GitClientConflictTests`).
+    private let localFileClient = GitClient(configuration: GitClientConfiguration(extraEnvironment: [
+        "GIT_CONFIG_GLOBAL": "/dev/null", "GIT_CONFIG_NOSYSTEM": "1",
+        "GIT_CONFIG_PARAMETERS": "'protocol.file.allow=always'"
+    ]))
 
     // MARK: Fixtures
 
@@ -67,8 +72,9 @@ struct GitWindowSessionActionTests {
     }
 
     private func makeSession(
-        _ repository: GitTestRepository, presenter: StubPresenter?
+        _ repository: GitTestRepository, presenter: StubPresenter?, client: GitClient? = nil
     ) async -> (GitRepositoryModel, GitWindowSession) {
+        let client = client ?? self.client
         let model = GitRepositoryModel(root: repository.root, client: client, watcher: IdleWatcher())
         await model.start()
         let session = GitWindowSession(model: model, client: client, coloring: nil)
@@ -1546,5 +1552,158 @@ struct GitWindowSessionActionTests {
         #expect(presenter.rebasePlans.isEmpty)
         #expect(presenter.failures.count == 1)
         #expect(presenter.failures.first?.hasPrefix("Interactive rebase failed: ") == true)
+    }
+
+    // MARK: Worktrees and submodules
+
+    /// The worktrees' directories as git lists them, symlinks resolved.
+    private func worktreePaths(_ model: GitRepositoryModel) -> Set<String> {
+        Set(model.worktrees.map { $0.directory.resolvingSymlinksInPath().path })
+    }
+
+    @Test("New Worktree from the header with an empty folder lands beside the repository and opens")
+    func newWorktreeAtTheDerivedFolder() async throws {
+        let repository = try await GitTestRepository.make(prefix: "git-actions")
+        let derived = repository.root.deletingLastPathComponent()
+            .appendingPathComponent("\(repository.root.lastPathComponent)-topic-x", isDirectory: true)
+        defer {
+            repository.tearDown()
+            try? FileManager.default.removeItem(at: derived)
+        }
+        try await commitFile(repository, "a.txt", "a\n", at: 100)
+        let presenter = StubPresenter()
+        presenter.textAnswers = [["topic/x", ""]]
+        let (model, session) = await makeSession(repository, presenter: presenter)
+        var opened: [URL] = []
+        session.onOpenDirectory = { opened.append($0) }
+
+        await act(session, .ref(.newWorktree(branch: nil)))
+
+        #expect(presenter.failures.isEmpty)
+        let request = try #require(presenter.textRequests.first)
+        #expect(request.title == "New Worktree")
+        #expect(request.actionTitle == "Create Worktree")
+        #expect(request.fields == [GitTextField(label: "Branch", initial: "", isOptional: false),
+                                   GitTextField(label: "Folder", initial: "", isOptional: true)])
+        #expect(opened.map(\.path) == [derived.path])
+        #expect(await branchExists(repository, "topic/x"))
+        #expect(worktreePaths(model).contains(derived.resolvingSymlinksInPath().path))
+        #expect(model.worktrees.contains { $0.branch == "topic/x" })
+    }
+
+    @Test("Check Out in New Worktree on an existing branch prefills it and checks it out without a new branch")
+    func newWorktreeOnAnExistingBranch() async throws {
+        let repository = try await GitTestRepository.make(prefix: "git-actions")
+        let folder = FileManager.default.temporaryDirectory
+            .appendingPathComponent("git-actions-side-\(UUID().uuidString)", isDirectory: true)
+        defer {
+            repository.tearDown()
+            try? FileManager.default.removeItem(at: folder)
+        }
+        try await commitFile(repository, "a.txt", "a\n", at: 100)
+        try await repository.run(["branch", "side"])
+        let presenter = StubPresenter()
+        presenter.textAnswers = [["side", folder.path]]
+        let (model, session) = await makeSession(repository, presenter: presenter)
+        var opened: [URL] = []
+        session.onOpenDirectory = { opened.append($0) }
+
+        await act(session, .ref(.newWorktree(branch: try ref(model, "refs/heads/side"))))
+
+        #expect(presenter.failures.isEmpty)
+        #expect(presenter.textRequests.first?.fields.first?.initial == "side")
+        #expect(opened.map(\.path) == [folder.path])
+        let tree = try #require(model.worktrees.first { !$0.isMain })
+        #expect(tree.branch == "side")
+        #expect(tree.directory.resolvingSymlinksInPath().path == folder.resolvingSymlinksInPath().path)
+    }
+
+    @Test("removing a dirty worktree asks twice and forces; declining the second keeps it")
+    func removeDirtyWorktree() async throws {
+        let repository = try await GitTestRepository.make(prefix: "git-actions")
+        let folder = FileManager.default.temporaryDirectory
+            .appendingPathComponent("git-actions-dirty-\(UUID().uuidString)", isDirectory: true)
+        defer {
+            repository.tearDown()
+            try? FileManager.default.removeItem(at: folder)
+        }
+        try await commitFile(repository, "a.txt", "a\n", at: 100)
+        try await repository.run(["worktree", "add", "-q", "-b", "dirty", folder.path])
+        try "x\n".write(to: folder.appendingPathComponent("untracked.txt"), atomically: true, encoding: .utf8)
+        let presenter = StubPresenter()
+        presenter.confirmAnswers = [true, false]
+        let (model, session) = await makeSession(repository, presenter: presenter)
+        let tree = try #require(model.worktrees.first { !$0.isMain })
+
+        await act(session, .ref(.removeWorktree(tree)))
+        #expect(presenter.confirmations.count == 2)
+        #expect(presenter.failures.isEmpty)
+        #expect(model.worktrees.count == 2)
+
+        presenter.confirmAnswers = [true, true]
+        await act(session, .ref(.removeWorktree(tree)))
+
+        #expect(presenter.failures.isEmpty)
+        let titles = presenter.confirmations.map(\.title)
+        #expect(titles == ["Remove worktree \(tree.directory.lastPathComponent)?",
+                           "Remove worktree with uncommitted changes?",
+                           "Remove worktree \(tree.directory.lastPathComponent)?",
+                           "Remove worktree with uncommitted changes?"])
+        #expect(presenter.confirmations.allSatisfy { $0.isDestructive })
+        #expect(presenter.confirmations.first?.actionTitle == "Remove")
+        #expect(model.worktrees.count == 1)
+        #expect(!FileManager.default.fileExists(atPath: folder.path))
+    }
+
+    @Test("a clean worktree is removed after one confirmation")
+    func removeCleanWorktree() async throws {
+        let repository = try await GitTestRepository.make(prefix: "git-actions")
+        let folder = FileManager.default.temporaryDirectory
+            .appendingPathComponent("git-actions-clean-\(UUID().uuidString)", isDirectory: true)
+        defer {
+            repository.tearDown()
+            try? FileManager.default.removeItem(at: folder)
+        }
+        try await commitFile(repository, "a.txt", "a\n", at: 100)
+        try await repository.run(["worktree", "add", "-q", "-b", "clean", folder.path])
+        let presenter = StubPresenter()
+        presenter.confirmAnswers = [true]
+        let (model, session) = await makeSession(repository, presenter: presenter)
+        let tree = try #require(model.worktrees.first { !$0.isMain })
+
+        await act(session, .ref(.removeWorktree(tree)))
+
+        #expect(presenter.confirmations.count == 1)
+        #expect(presenter.failures.isEmpty)
+        #expect(model.worktrees.count == 1)
+    }
+
+    @Test("Update on an uninitialized submodule initializes and checks it out")
+    func updateUninitializedSubmodule() async throws {
+        let library = try await GitTestRepository.make(prefix: "git-actions-library")
+        let superproject = try await GitTestRepository.make(prefix: "git-actions-super")
+        var clone: GitTestRepository?
+        defer {
+            library.tearDown()
+            superproject.tearDown()
+            clone?.tearDown()
+        }
+        try await commitFile(library, "lib.txt", "lib\n", at: 100)
+        try await commitFile(superproject, "app.txt", "app\n", at: 100)
+        try await superproject.run(["-c", "protocol.file.allow=always", "submodule", "add", "-q",
+                                    library.root.path, "lib"])
+        try await superproject.run(["commit", "-q", "-m", "add lib"])
+        let cloned = try await GitTestRepository.clone(of: superproject, prefix: "git-actions-clone")
+        clone = cloned
+        let presenter = StubPresenter()
+        let (model, session) = await makeSession(cloned, presenter: presenter, client: localFileClient)
+        let submodule = try #require(model.submodules.first)
+        #expect(submodule.state == .uninitialized)
+
+        await act(session, .ref(.updateSubmodule(submodule)))
+
+        #expect(presenter.failures.isEmpty)
+        #expect(model.submodules.map(\.state) == [.current])
+        #expect(FileManager.default.fileExists(atPath: cloned.url("lib/lib.txt").path))
     }
 }

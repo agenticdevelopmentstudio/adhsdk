@@ -1,6 +1,7 @@
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.10.0 | 2026-11-16 | Mike Fullerton | Worktrees and submodules from the sidebar: New Worktree asks Branch and Folder (empty: beside the root), checks out an existing branch or creates one, and opens the new worktree; Remove confirms and asks again before forcing a dirty one; Update and Update All run updateSubmodules, initialising as needed; Open bypasses the funnel. |
 | 1.9.0 | 2026-11-16 | Mike Fullerton | Interactive Rebase from Here: the plan built with every message filled from one call, the rebase editor shown as a sheet through the presenter's editRebase, the edited plan run, cancel runs nothing; vectors 064-067 |
 | 1.8.1 | 2026-11-15 | Mike Fullerton | Stage All stages only the Unstaged list and leaves conflicts unmerged (git-window-062, 063) |
 | 1.8.0 | 2026-11-15 | Mike Fullerton | Conflicts: Resolve Using Ours… and Theirs… confirmed, then resolved and staged or removed; Mark Resolved stages; Discard All skips conflicts; the merge view opened from the working copy, saved through the model and staged; vectors 056-061 |
