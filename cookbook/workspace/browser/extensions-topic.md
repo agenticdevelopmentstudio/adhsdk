@@ -2,11 +2,11 @@
 id: 213f008f-6e11-4d6d-ba91-dbcd7e9330cc
 title: "Extensions Settings Topic"
 type: ingredient
-version: 0.2.0
+version: 0.2.1
 status: draft
 language: en
 created: 2026-11-15
-modified: 2026-11-15
+modified: 2026-11-16
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -104,16 +104,36 @@ than replacing the list.
 - **downloaded-install-path**: The extension host MUST copy a chosen downloaded
   item into the library's staging area and then go through the normal stage, permission
   confirmation and commit path; declining the confirmation MUST install
-  nothing.
-- **downloaded-refuses-links**: The extension host MUST refuse a downloaded
-  item whose staged copy holds a symbolic link, with an error naming the item
-  and the link, before the permission confirmation, and MUST leave nothing
-  staged.
+  nothing. When the topic has no window to put the confirmation sheet on,
+  the confirmation MUST be shown app-modally rather than declined, and an
+  install error MUST be shown in an app-modal alert rather than dropped.
+- **keyed-takeover-confirmed**: An install whose manifest `key` gives the id
+  of an extension already installed, wherever the installed one came from,
+  MUST be confirmed as a replacement naming the installed extension ("Replace
+  “installed” with “new”?", button Replace), listing every permission and
+  site the new files ask for, since a manifest key is public. Once accepted,
+  the extension MUST become a local one (not from the Web Store, not from an
+  app, its source not missing) granted only what was just agreed to, so the
+  store's update check leaves it alone.
+- **downloaded-refuses-links**: The extension host MUST refuse an item
+  whose staged copy holds a symbolic link, with an error naming the item and
+  the link, before the permission confirmation, and MUST leave nothing
+  staged; this holds for a downloaded item, a `.crx` address, a Web Store
+  install and an app extension alike. The check MUST fail closed: a staged
+  root that is not a directory or is itself a link, a tree that cannot be
+  read, or an item whose type cannot be read MUST count as a link.
 - **downloaded-off-main**: The extension host MUST read, copy and unpack a
-  downloaded item off the main thread, so a large item never stalls the
-  settings window.
-- **url-prompt**: The URL… item MUST open a modal prompt with one text field and OK and
-  Cancel buttons; Cancel MUST install nothing.
+  downloaded item, a `.crx` address's package, a Web Store package and an
+  app extension's files off the main thread, so a large item never stalls
+  the settings window.
+- **download-size-capped**: A download of an extension package (a `.crx`
+  address or the Web Store) MUST be refused, with a download error saying it
+  is too large, once it is larger than 128 MB, whether or not the server
+  announced its size, and MUST NOT be read further.
+- **url-prompt**: The URL… item MUST open a modal prompt titled "Add an
+  Extension from a URL" with one text field and OK and Cancel buttons, and
+  no instruction line (what it accepts is in the topic's help); Cancel MUST
+  install nothing.
 - **url-prompt-validation**: The prompt's OK button MUST be enabled only while
   the field's text is a Chrome Web Store extension ID, a Chrome Web Store
   extension link, or an `http` or `https` address ending in `.crx`.
@@ -212,6 +232,10 @@ than replacing the list.
 | extensions-topic-026 | list-follows-host | With details open, remove the extension from the popover and confirm | The row disappears and the popover closes |
 | extensions-topic-027 | no-inline-help-labels | Load the topic with no extensions installed | An empty table with no text; the help content explains installing |
 | extensions-topic-028 | downloaded-refuses-links | Install a folder with a manifest and a symbolic link to a file outside it | A symbolic-link error naming the link; no confirmation; nothing staged or installed |
+| extensions-topic-029 | keyed-takeover-confirmed | Web Store extension "A" installed; install a downloaded folder whose manifest `key` gives A's id, named "B" | Confirmation "Replace “A” with “B”?" with a Replace button; once accepted the extension is local (not from the Web Store) with only the permissions just agreed to |
+| extensions-topic-030 | download-size-capped | Install from a `.crx` address whose body is 129 MB, with and without a Content-Length header | A download error saying it is larger than 128 MB; nothing staged |
+| extensions-topic-031 | downloaded-refuses-links | `symbolicLink(in:)` on a staged root that is itself a symbolic link, and on a plain file | Both answer "." |
+| extensions-topic-032 | url-prompt | Choose URL… | The prompt's message is "Add an Extension from a URL" with no informative text |
 ## Edge Cases
 
 - **Null and empty input**: No extensions: an empty table. An empty or
@@ -223,7 +247,16 @@ than replacing the list.
 - **Concurrent access**: One change at a time: an install, removal or update
   check started while another runs is refused with a beep, as today.
 - **Error states**: A failed install, removal or update check is shown as an
-  alert sheet on the settings window; the list reloads afterwards.
+  alert sheet on the settings window, or an app-modal alert when the topic
+  has no window; the list reloads afterwards. An item holding a symbolic
+  link, or one whose tree cannot be read, is refused before the
+  confirmation (MUST, see `downloaded-refuses-links`).
+- **Boundary sizes**: A package over 128 MB is refused as it downloads,
+  announced or not (MUST, see `download-size-capped`).
+- **Same key as an installed extension**: Files whose manifest `key` names an
+  installed extension are confirmed as a replacement and, once accepted,
+  become a local extension with fresh grants (MUST, see
+  `keyed-takeover-confirmed`).
 - **Offline or disconnected state**: An install from the Web Store, a `.crx`
   address or an update check fails with the network error, shown as above;
   Downloaded… still works offline.
@@ -300,10 +333,32 @@ Not applicable: the design asks for no log line of the topic's own.
   `NSPopover` (`behavior = .transient`, `preferredEdge: .maxY`) hosting
   `SafariExtensionDetailsView`, anchored to `frameOfCell(atColumn:row:)` of
   the gear; the details view has no Back control. Downloaded… uses an
-  `NSOpenPanel` sheet and `SafariExtensionHost.installDownloaded(at:presentingOn:)
-  async throws -> Bool`; URL… uses `ExtensionURLPromptController`, validating
-  with `WebStoreExtension.id(from:)`, and a `.crx` address goes to
-  `SafariExtensionHost.install(fromAddress:presentingOn:)`. A downloaded
+  `NSOpenPanel` sheet and
+  `SafariExtensionHost.installDownloaded(at:presentingOn:appModalWithoutWindow:)
+  async throws -> Bool`, passing `appModalWithoutWindow` true when the topic
+  has no window, so the confirmation `NSAlert` runs with `runModal()`
+  instead of a sheet; the topic reports an error with
+  `NSAlert(error:).runModal()` when it has no window. URL… uses
+  `ExtensionURLPromptController` (message text only, no `informativeText`),
+  validating with `WebStoreExtension.id(from:)`, and a `.crx` address goes to
+  `SafariExtensionHost.install(fromAddress:presentingOn:)`, which reads it
+  with `SafariExtensionLibrary.download(from:limit:session:)`: a
+  `URLSession.bytes` stream refused past `maximumDownloadSize` (128 MB),
+  checked against `expectedContentLength` first and every byte after; the
+  store's `download(id:session:)` goes through it too. Every install path
+  (downloaded, address, store `install(crx:)`, app extension) stages in
+  `Task.detached(priority: .userInitiated)` and calls `refuseLinks`, which
+  throws `Failure.symbolicLink` when `SafariExtensionLibrary.symbolicLink(in:)`
+  finds one; that answers `"."` for a root that is not a directory (an
+  lstat) or cannot be enumerated, the item itself when its
+  `isSymbolicLinkKey` cannot be read, and the failing path when the
+  enumerator's error handler fires. The confirmation is asked by
+  `InstallKind` (`new`, `update`, `replacement(String)`); `installLocal`
+  sets `replacement` with the installed one's display name when a keyed id
+  is already installed, and `installStaged` then grants nothing from the
+  old record and, after commit, sets `isFromWebStore` false, `appSource`
+  nil, `sourceMissing` false and clears `grantedPermissions` and
+  `grantedOrigins`. A downloaded
   item's record id is `WebStoreExtension.id(ofKey:)` of its manifest `key`
   when present, else `WebStoreExtension.localID(forPath:)` of its path or
   address, both Chrome's SHA-256 a–p mapping. Chrome Web Store… calls
@@ -369,6 +424,7 @@ Notes: no compliance checks have been run; the code does not exist yet.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 0.2.1 | 2026-11-16 | Mike Fullerton | Every install stages off the main thread and refuses links (fail closed); 128 MB download cap; keyed takeover confirmed as a replacement; app-modal confirm and errors without a window; URL prompt has no instruction line. |
 | 0.2.0 | 2026-11-15 | Mike Fullerton | downloaded-refuses-links and downloaded-off-main: a downloaded folder with a symbolic link is refused, and staging runs off the main thread |
 | 0.1.1 | 2026-11-15 | Mike Fullerton | Platform notes follow the implementation: header buttons as header-view subviews, installDownloaded(at:presentingOn:), install(fromAddress:), key- or path-derived ids |
 | 0.1.0 | 2026-11-15 | Mike Fullerton | Initial creation (design-first, from the more privacy features design) |

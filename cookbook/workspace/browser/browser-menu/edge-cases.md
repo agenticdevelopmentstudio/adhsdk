@@ -1,6 +1,7 @@
 
 - **Null and empty input**: No key pane — every page item and the privacy
-  toolbar item disabled, Show History enabled, no crash (MUST, see
+  toolbar item disabled, Show History enabled when there is a history
+  store and disabled when there is none, no crash (MUST, see
   `disabled-without-target`, browser-menu-008). A cleared or disabled
   binding leaves the item with no key equivalent (MUST, see
   `cleared-binding-no-key`, browser-menu-017).
@@ -22,4 +23,7 @@
   synchronous call into the engine or the settings store.
 - **Several browser windows**: Only the key window's pane is ever acted on
   (MUST, see `target-is-key-window-pane`, browser-menu-007).
+- **Focus beside the pane**: In a project window with an editor or terminal
+  focused, Command-[ and Command-] do not navigate the last-focused browser
+  pane (MUST, see `back-forward-keys-need-focus`).
 

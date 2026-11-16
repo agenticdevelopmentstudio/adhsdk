@@ -33,4 +33,6 @@
 | cts-settings-vc-032 | closes-tab-loop-between-spacing-controls | Focus the frame-spacing control's last number field, press Tab | Focus moves to the divider-spacing control's first number field (and Tab from its last field returns focus to the frame-spacing control's first field) |
 | cts-settings-vc-033 | binds-divider-spacing-to-settings | Change the between-columns gutter setting externally after loading | The divider-spacing control's displayed value updates to match |
 | cts-settings-vc-034 | confines-to-ui-thread | Use the component from a thread other than the UI thread | The use is rejected, at build time or by a runtime check; the component's state is unchanged |
+| cts-settings-vc-035 | use-global-setting-button | Construct with a `useGlobalTabPositions` closure that sets the enabled edges to Left only; press Use Global Setting | The closure is called once and the Left toggle is on, the other three off |
+| cts-settings-vc-036 | use-global-setting-button | Construct without `useGlobalTabPositions` | No `project-settings.tabs.use-global` button |
 

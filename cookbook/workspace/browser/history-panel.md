@@ -2,11 +2,11 @@
 id: 497f5d5f-e95b-473e-8798-cbe62ebcc425
 title: "History Panel and Window"
 type: ingredient
-version: 0.1.1
+version: 0.1.2
 status: draft
 language: en
 created: 2026-11-15
-modified: 2026-11-15
+modified: 2026-11-16
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -88,6 +88,11 @@ browsing, so private browsing never appears here.
   empty.
 - **change-is-announced**: The list model MUST notify its observer each
   time the visits it lists change, after reloading, removing or clearing.
+- **reloads-on-store-change**: The list model MUST reload whenever its
+  history store announces a successful write (a pane recording a visit,
+  another list removing or clearing), so a visit recorded while the panel
+  is open appears; the store MUST announce every write that succeeded. The
+  panel MUST also reload each time it appears, so its times are current.
 - **store-work-off-ui-thread**: The list model MUST perform every store
   read and write off the UI thread and publish the resulting visits on the
   UI thread, so a slow store never blocks the interface.
@@ -109,9 +114,11 @@ browsing, so private browsing never appears here.
   confirmation before anything is removed; it MUST ask the list model to
   clear all only when the user confirms, and MUST remove nothing when the
   user cancels.
-- **panel-opens-visit**: The History panel MUST, on a double-click of a
-  row or Return with a row selected, pass that visit's address to the open
-  callback its host supplied, and MUST do nothing else to open it.
+- **panel-opens-visit**: The History panel MUST, on Return, pass the
+  address of every selected visit, in list order, to the open callback its
+  host supplied; on a double-click of a selected row it MUST do the same,
+  and on a double-click of a row outside the selection it MUST pass that
+  row's visit alone. It MUST do nothing else to open them.
 - **panel-every-button-has-tooltip**: The History panel MUST give every
   button it shows a tooltip.
 - **panel-no-inline-help**: The History panel MUST NOT show inline help or
@@ -132,7 +139,8 @@ browsing, so private browsing never appears here.
   windows do.
 - **window-opened-from-browser-menu**: The Browser menu's Show History
   command MUST show the History window, and MUST stay enabled whether or
-  not the key window has a browser pane.
+  not the key window has a browser pane, while the host has given the
+  window a history store; with none it MUST be disabled.
 - **window-opens-visit-in-browser**: The History window MUST open a visit
   the panel hands it in the focused browser pane of the frontmost other
   window (the window that was key before the History window) as a new tab
@@ -231,6 +239,9 @@ browsing, so private browsing never appears here.
 | history-panel-025 | recording-gated-on-setting | Record history on, pane not private; navigate | One visit is recorded |
 | history-panel-026 | recording-gated-on-setting | Record history off, pane not private; navigate | No visit is recorded |
 | history-panel-027 | private-browsing-never-records | Record history on, pane in private browsing; navigate | No visit is recorded; the panel lists nothing new |
+| history-panel-028 | reloads-on-store-change | List model on a store showing two visits; record a third visit through the store | The model reloads and lists three visits, newest first |
+| history-panel-029 | panel-opens-visit | Select rows 0 and 2 of three; press Return | The open callback receives row 0's address, then row 2's |
+| history-panel-030 | panel-opens-visit | Rows 0 and 1 selected; double-click row 2 | The open callback receives row 2's address only |
 
 ## Edge Cases
 
@@ -246,7 +257,9 @@ browsing, so private browsing never appears here.
   latest filter's answer is shown (MUST, see `latest-filter-wins`). Debug
   builds may run several app copies sharing one history file; the store's
   one-writer WAL pool serializes their writes, and each copy's list shows
-  the store as of its last reload.
+  the store as of its last reload. Within one copy, every write to the
+  store reloads the list (MUST, see `reloads-on-store-change`), so a visit
+  recorded while the panel is open appears without reopening it.
 - **Error states**: A store read or write that throws leaves the listed
   visits as they were; how the failure is reported is the builder's (see
   Design Decisions). No error leaves a visit shown as removed when it was
@@ -350,17 +363,26 @@ reporting is the builder's choice (see Design Decisions).
   `func clearAll() async` and `var onChange: (() -> Void)?`. It calls the
   store's `recent(limit:)` and `search(_:limit:)`, `remove(visit:)` and
   `removeAll()`, all inside `BrowserHistoryStore.perform(_:)`, which runs
-  them off the main actor (`store-work-off-ui-thread`). The panel is
+  them off the main actor (`store-work-off-ui-thread`). It observes
+  `BrowserHistoryStore.didChangeNotification` (object: its store, queue
+  main), which the store posts after every write that succeeded, on the
+  writing thread, and schedules a reload on it. The store's `recent` and
+  `search` also take `excludingLocalFiles` (SQL `url NOT LIKE 'file:%'`
+  before the limit), which only the agent's history tool passes. The panel is
   `public final class BrowserHistoryPanelViewController: NSViewController`
   with `init(model:open: @escaping (URL) -> Void)`; it styles its filter
   field and source list after `TopicListViewController` (the Settings
   sidebar, which hosts its search field in the list's header accessory),
-  shows rows in an `NSTableView`, and confirms Clear History… with an
+  shows rows in an `NSTableView` (reloading the model in
+  `viewWillAppear`; Return calls `openSelected()`, which opens every
+  selected visit, as a double-click on a selected row does), and confirms
+  Clear History… with an
   `NSAlert` sheet on the hosting window. Tooltips are `toolTip` on each
   `NSButton`. The window is
   `public final class BrowserHistoryWindowController: SingleWindowController`
   with `public static let windowID = "web-history"` and
-  `public static func show()`; its shelf follows
+  `public static func show()` and `public static var canShow` (a store is
+  set), which the Browser menu's Show History is enabled by; its shelf follows
   `ProjectShelfViewController` (a `ThemedBox` card with an `IconTabBar` of
   panel buttons across the top, one item "History"), and
   `SingleWindowController` saves and restores frame and visibility under
@@ -454,5 +476,6 @@ the implementation is written and confirmed against this recipe.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 0.1.2 | 2026-11-16 | Mike Fullerton | List reloads on every store write and on appearing; Return and double-click open every selected visit; local files excluded for the agent. |
 | 0.1.1 | 2026-11-15 | Mike Fullerton | A visit opens in the frontmost other window's focused browser pane |
 | 0.1.0 | 2026-11-15 | Mike Fullerton | Initial creation (design-first, from the more privacy features design) |

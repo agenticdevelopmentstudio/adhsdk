@@ -2,7 +2,7 @@
 id: cd862ce2-d93d-4094-be20-0abab33e2fa7
 title: "Agent Preview and Agent Source Views"
 type: ingredient
-version: 0.1.1
+version: 0.1.2
 status: draft
 language: en
 created: 2026-11-15
@@ -95,7 +95,8 @@ The mode is per tab and is not saved.
   main-frame load of `about:blank` through, so two loads started in quick
   succession are both answered and the newest page is shown; the
   allowance MUST be cleared when the latest own load finishes or fails,
-  so none outlives the newest load.
+  so none outlives the newest load, and an own load that starts no
+  navigation MUST give its allowance back at once.
 - **preview-paints-under-quiet-presentation**: In development builds the
   preview MUST keep painting while its window is reported occluded, so it
   can be photographed under quiet presentation.
@@ -103,7 +104,10 @@ The mode is per tab and is not saved.
   read-only text view whose text is exactly the gatekeeper's HTML.
 - **source-highlighted**: The source view MUST highlight tags, attribute
   names, attribute values and text in distinct theme colors, in a
-  monospaced font.
+  monospaced font. It MUST show the HTML at once in the text color and
+  apply the highlighting when the lex, run off the main thread, lands; a
+  lex for HTML no longer shown MUST be discarded, and the same HTML again
+  MUST change nothing.
 - **unavailable-shown-as-reason**: When the gatekeeper returns an
   unavailable page, both agent views MUST show its reason and no page
   content.
@@ -114,6 +118,11 @@ The mode is per tab and is not saved.
   another MUST produce a single rebuild.
 - **website-mode-restores-page**: Switching back to Website mode MUST show
   the live page again, in the state it was in, without reloading it.
+- **entering-from-website-blank**: Switching from Website to an agent mode
+  MUST show the blank page until the rebuild lands, never the last agent
+  page, since the page, its address or its agent list may have changed
+  while the Website was shown; switching between the two agent modes MUST
+  show the current agent page at once while the rebuild runs.
 
 ## Appearance
 
@@ -143,7 +152,7 @@ Icons: `globe` (Website), `eye` (Agent preview),
 | Website (default) | Website segment selected; the live page is shown. |
 | Agent preview | Agent preview segment selected; the sealed preview replaces the page. |
 | Agent source | Agent source segment selected; the highlighted source replaces the page. |
-| Rebuilding | The previous content stays shown until the new page is ready, then is replaced in one step. |
+| Rebuilding | Within the agent modes, the previous content stays shown until the new page is ready, then is replaced in one step; entered from Website, the view is blank until the page is ready. |
 | Unavailable | The agent view shows only the gatekeeper's "Agent view unavailable: …" paragraph (preview) or its source (source view). |
 | Toolbar hidden | With the privacy toolbar hidden the control is not shown; the tab keeps its mode. |
 | Disabled | Not applicable — every segment is always selectable. |
@@ -185,6 +194,9 @@ Icons: `globe` (Website), `eye` (Agent preview),
 | agent-views-015 | refresh-coalesced | Fire five triggers within 100 milliseconds | Exactly one rebuild runs |
 | agent-views-016 | website-mode-restores-page | Fill a text field on the page, switch to Agent preview, then back to Website | The live page shows again with the typed text, not reloaded |
 | agent-views-017 | preview-no-navigation | Show two pages in the preview back to back, before WebKit asks about the first load | Both loads are allowed and the preview shows the second page; after it finishes, a further `about:blank` navigation is cancelled |
+| agent-views-018 | entering-from-website-blank | In Agent preview, switch to Website, navigate to another page, then switch to Agent source | The source shows the blank page until the rebuild lands, then the new page; the earlier page is never shown |
+| agent-views-019 | entering-from-website-blank | In Agent preview showing a page, switch to Agent source | The source shows that page's HTML at once, before the rebuild lands |
+| agent-views-020 | source-highlighted | Show a large page in Agent source | The text appears at once in the text color; the highlight colors follow when the lex lands; showing the same HTML again changes nothing |
 
 ## Edge Cases
 
@@ -193,7 +205,9 @@ Icons: `globe` (Website), `eye` (Agent preview),
 - **Boundary values**: A very large page's source is shown whole in a
   scrolling text view; a page the walker cannot finish in time is shown as
   the unavailable reason (MUST, `unavailable-shown-as-reason`).
-- **Concurrent access**: All view work runs on the main thread. A rebuild
+- **Concurrent access**: View work runs on the main thread, except the
+  gatekeeper's decode, build and concealment and the source view's lex,
+  which run off it and land back on it. A rebuild
   that finishes after a newer one was started is discarded, so the view
   never shows an older page than the latest trigger asked for.
 - **Error states**: Every gatekeeper failure is shown as its reason, never
@@ -209,6 +223,10 @@ Icons: `globe` (Website), `eye` (Agent preview),
   bounds each rebuild.
 - **Navigation while an agent view is shown**: The view rebuilds when the
   navigation finishes; until then it keeps the previous page's content.
+- **Entering from Website**: The view shows the blank page until its
+  rebuild lands; an earlier agent page never passes for the current one
+  (MUST, `entering-from-website-blank`). Moving between Agent preview and
+  Agent source keeps the current page shown meanwhile.
 - **Rebuilds in quick succession**: A second preview load started before
   WebKit asked about the first is still let through, so the preview ends
   on the newest page rather than cancelling it (MUST,
@@ -292,7 +310,8 @@ MUST NOT carry page content.
   (each `loadHTMLString` adds one; the end of the latest own
   `WKNavigation`, in `didFinish`, `didFail` or
   `didFailProvisionalNavigation`, zeroes it, and the end of a superseded
-  one changes nothing). The delegate method only unpacks the action and
+  one changes nothing; a `loadHTMLString` that returns no navigation takes
+  its credit back). The delegate method only unpacks the action and
   calls the internal `decidePolicy(targetFrameIsMain:url:navigationType:)`
   with `targetFrame?.isMainFrame` (nil when the action has no target frame;
   the seam cancels anything but `true`), which tests call
@@ -302,14 +321,23 @@ MUST NOT carry page content.
   `keepPaintingUnderQuietPresentation()` for the Debug occlusion
   workaround. `BrowserAgentSourceViewController` is a non-editable
   `NSTextView` with a small HTML highlighter building
-  `NSAttributedString` attributes from the theme. Refresh listens for the
+  `NSAttributedString` attributes from the theme: `show(_:)` sets the
+  text with no runs, then lexes it with
+  `BrowserAgentSourceHighlighter.tokens(in:)` in a `Task.detached`
+  (`highlighting`, cancelled by the next `show`) and applies
+  `highlight(_:tokens:font:colors:)` only if the HTML is still the one
+  shown. `BrowserAgentViews.setMode(_:)` shows `AgentPage.blank` when
+  leaving Website and the last page when moving between agent modes,
+  then starts the rebuild. Refresh listens for the
   engine's navigation finish, `UserSettings` changes of the privacy keys,
   privacy-word changes and `BrowserHiddenItemsStore.didChangeNotification`,
   and calls `AgentPageSource.read(options:keepingRefs: true)` (a reading
   walk, so the agent's refs stay valid), built by the same
   `AgentPageSource.reading(_:hiddenItems:privacy:hideImages:)` the tools use
   (through `WebBrowserPaneViewController.agentPageSource(engine:)`, which
-  passes the pane's effective Hide Images, `agentHidesImages`).
+  passes the pane's effective Hide Images, `agentHidesImages`, and awaits
+  the hidden-items store with `BrowserHiddenItemsStore.sharedStore()`,
+  since a tab restored into an agent view reads during launch).
   The agent view is laid over the tab's page holder, which is hidden, not
   removed, so the live page keeps its state. Under UIKit,
   `UISegmentedControl` and a read-only `UITextView`; the web view is the
@@ -385,5 +413,6 @@ plan's tests are in `BrowserAgentViewsTests`.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 0.1.2 | 2026-11-16 | Mike Fullerton | Entering from Website blanks the view; source highlighted asynchronously; preview credit give-back; awaits the hidden-items store. |
 | 0.1.1 | 2026-11-16 | Mike Fullerton | Preview navigation allows one load per credit, zeroed when the latest own load ends; rebuilds in quick succession; reading(hideImages:) and agentPageSource(engine:). |
 | 0.1.0 | 2026-11-15 | Mike Fullerton | Initial creation (design-first, from the more privacy features design) |

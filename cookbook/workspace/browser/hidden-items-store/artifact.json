@@ -4,7 +4,7 @@
     "id": "31c4c156-8f47-4ad1-9b40-e4ab2d7f4fb7",
     "title": "Hidden Items Store",
     "type": "ingredient",
-    "version": "0.1.1",
+    "version": "0.1.2",
     "status": "draft",
     "language": "en",
     "created": "2026-11-15",
@@ -37,7 +37,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "8c96bd69a503dc8e",
+  "synced": "8bfce6d0fa55f355",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

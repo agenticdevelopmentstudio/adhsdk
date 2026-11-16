@@ -2,11 +2,11 @@
 id: a40e6f97-06c4-4675-9ed7-9619a7c3e707
 title: "Hidden Items Rendering"
 type: ingredient
-version: 0.1.0
+version: 0.1.1
 status: draft
 language: en
 created: 2026-11-15
-modified: 2026-11-15
+modified: 2026-11-16
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -146,6 +146,8 @@ as from view, which is the intent.
 | hidden-items-rendering-012 | preview-rule-set, preview-independent | Set the preview selectors to `["#x"]`, then to none | `#x` hidden in `__adk_hidden_items_preview`, then that element removed; the store and `__adk_hidden_items` unchanged throughout |
 | hidden-items-rendering-013 | single-owner-of-user-scripts | With `.ad` hidden, toggle another user script (the activation shield or Hide Images), which rebuilds the user-script list; load a new page | The hidden-items style is still installed at document start |
 | hidden-items-rendering-014 | user-hidden-hidden-from-agent | User entry `.ad` enabled; take an agent snapshot of the page | No content from `.ad` elements in the snapshot |
+| hidden-items-rendering-015 | reapplied-on-navigation | Start a navigation to `b.com` with `.b-ad` hidden there; change the store while the navigation's read runs | The navigation reads again and the new document starts with the `.b-ad` rule, not the previous site's |
+| hidden-items-rendering-016 | reapplied-on-navigation | `preparedHiddenItemSelectors` with three superseded reads, then a final unchecked read that fails | The final read is called with generation checking off, and the answer is `[]`, not nil (the previous site's rules are not kept) |
 
 ## Edge Cases
 
@@ -159,7 +161,11 @@ as from view, which is the intent.
 - **Concurrent access**: The store answers off the main thread; its answer
   is applied on the main thread. When a change and a navigation race, the
   last selectors computed for the pane's current address are the ones that
-  stand.
+  stand: a store-change refresh that supersedes the navigation's read
+  makes the navigation read again, and after three superseded reads a
+  last read that nothing can supersede decides; if that read fails the
+  new document starts with no user-list rules, so it never starts on the
+  old site's rules.
 - **Error states**: If the store cannot be read, the renderer leaves the
   page as the last applied rules drew it and logs the failure; a failure
   here never shows content to the agent, which goes through its own
@@ -242,7 +248,19 @@ address host; no selector text is logged.
   process before the commit reaches the delegate); a navigation that fails
   provisionally puts the committed address's rules back. Reads go through
   the store's `perform` off the main thread, and a generation counter
-  keeps only the last read asked for. When a page's Content Security
+  keeps only the last read asked for; a read answers `HiddenItemsRead`
+  (`selectors`, `superseded`, `failed`), and awaits the store with
+  `BrowserHiddenItemsStore.sharedStore()`, never blocking on it, since an
+  engine made at launch reads before the store's open is done. The
+  navigation read in the policy decision (`prepareHiddenItems`, through
+  `preparedHiddenItemSelectors`) reads again when a store-change refresh
+  supersedes it, since that refresh read the page being left, up to
+  `hiddenItemsPrepareAttempts` (3) times. When every one of those is
+  superseded and the engine is not torn down, one last read runs with
+  `checkingGeneration: false`, which claims no generation and cannot be
+  superseded; if it fails the document starts with no rules (`[]`), never
+  the previous site's. Teardown, or a read inside the loop that fails
+  outright, keeps the current rules. When a page's Content Security
   Policy refuses inline styles the element gets no sheet, so the rules go
   in an adopted constructed sheet instead (which `style-src` does not
   govern) and the element stays as the marker. Each rule goes in through its own
@@ -309,4 +327,5 @@ Notes: no compliance checks have been run; the code does not exist yet.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 0.1.1 | 2026-11-16 | Mike Fullerton | Navigation read retries when superseded, then a final unsuperseded read; failing that the document starts with no rules. |
 | 0.1.0 | 2026-11-15 | Mike Fullerton | Initial creation (design-first, from the more privacy features design) |

@@ -12,14 +12,17 @@
   kept only if the result is `http`/`https`.
 - **Concurrent access**: The builder is a value with no mutable state;
   concurrent builds from any thread MUST be independent. The walker runs
-  on the page's main thread through the browser engine; two walks of one
-  page each produce their own reference generation, as snapshots do today.
+  on the page's main thread through the browser engine; the decode, the
+  tree build and the concealment of its payload run off the host's main
+  thread, so a large page costs no frames. Two walks of one page each
+  produce their own reference generation, as snapshots do today.
 - **Error states**: Every error — walker error, timeout, undecodable
   payload, unreadable or conflicting privacy words — collapses to the one
   unavailable page with a reason beginning `Agent view unavailable: `
   (MUST, `fail-closed-on-walker-failure`, `fail-closed-on-vault`). An
-  invalid agent-list selector is not an error: it is a warning and the
-  walk continues (MUST, `invalid-exclude-selector-isolated`).
+  agent-list selector the page cannot evaluate is one of them: the walk is
+  refused and the page is unavailable (MUST,
+  `invalid-exclude-selector-fails-closed`).
 - **Offline or disconnected state**: Not applicable — the component reads
   only the already-loaded document and the local agent list; it makes no
   network request.
@@ -47,19 +50,20 @@
   records the cheaper structural path (`tag:nth-child(n) > …`) for every
   node after the share is spent, so a large page finishes where today's
   snapshot does. Selectors never decide exclusion: the agent list is
-  evaluated before the walk, and a selector it cannot evaluate excludes
-  nothing and is warned, as `invalid-exclude-selector-isolated` says.
+  evaluated before the walk, and a selector it cannot evaluate refuses the
+  walk, as `invalid-exclude-selector-fails-closed` says.
 - **Privacy words change mid-read**: The concealment in force when the
   build starts conceals the whole result; the tool reply is concealed
   with the start and end words together, per
   `reply-concealed-with-start-and-end-words`.
 - **Excluded ancestor of focus or scope**: See `scope-within-walk` and
   `titles-dialogs-focus-through-string-path` — content under an excluded
-  ancestor never reaches the agent by either path.
+  ancestor never reaches the agent by either path; a withheld scope gives
+  the whole page, the same answer as a scope that names nothing.
 - **Refs after the agent list grows**: Only a walk hands out references,
-  and it never gives one to an excluded element, so no action resolves a
-  reference the agent page did not show. A reading walk (text, find,
-  wait_for, the focused element) keeps the last snapshot's references, so
-  an element excluded after that snapshot, by an agent-list entry added
-  mid-session, keeps the reference that snapshot gave it until the next
-  snapshot restarts the references and advances the generation.
+  and it never gives one to an excluded element. Any change to the
+  hidden-items store makes every reference stale at once (a new generation,
+  the reference table cleared), and a reference to an element a later walk
+  withheld resolves as stale, whichever walk handed it out, so an element
+  excluded mid-session is never acted on through an older reference (MUST,
+  `withheld-refs-stale`).

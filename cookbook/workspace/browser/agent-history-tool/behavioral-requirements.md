@@ -49,6 +49,14 @@
   through the pane's agent privacy concealment individually, before any of
   them is joined into the reply; nothing the tool returns MUST skip that
   path.
+- **conceal-with-every-word**: Because history spans sites, the
+  concealment MUST use every enabled privacy word whatever site it is
+  scoped to, never only the words that apply to the page in front, combined
+  with the privacy the call runs under.
+- **no-local-files**: The tool MUST NOT list a visit whose address is a
+  local file (`file:`), its title or its address, under either access; under
+  All history such visits MUST be left out before `limit` is applied, so the
+  limit counts only listed visits.
 - **conceal-url-forms**: Concealment of addresses MUST cover a privacy word
   appearing in the address in plain form, percent-escaped (a space as
   `%20`, a non-ASCII letter as its UTF-8 escapes) and form-escaped (a space
@@ -56,8 +64,9 @@
 - **privacy-off-unchanged**: When agent privacy is off for the pane,
   titles and addresses MUST be returned unchanged.
 - **closed-privacy-refuses**: When the pane's agent privacy is on but its
-  privacy words cannot be read, or conflict, the tool MUST fail with the
-  pane's closed-privacy refusal and return no visit.
+  privacy words cannot be read, or conflict — the page's words or the
+  every-site words history conceals with, either side — the tool MUST fail
+  with the closed-privacy refusal and return no visit.
 - **same-access-checks**: The tool MUST pass the same access checks as every
   other browser tool before doing anything: a hidden or closed pane, a pane
   paused for the agent, and a closed agent privacy state each refuse as they

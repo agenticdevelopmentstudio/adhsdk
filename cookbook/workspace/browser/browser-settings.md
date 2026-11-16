@@ -2,7 +2,7 @@
 id: 5a246e6c-2125-4427-a8ab-2f43f2fecba5
 title: "Web Browser Settings Topics"
 type: ingredient
-version: 0.1.5
+version: 0.1.6
 status: draft
 language: en
 created: 2026-11-15
@@ -159,8 +159,10 @@ because each topic's search keywords move with its controls.
   another scope shows, which MUST name where that control lives (the
   Settings window's Tab Position topic names the pane's settings sheet); the
   History help MUST say that the visits are seen and cleared from Browser ▸
-  Show History, and "Agent can see history" MUST have a help topic of its
-  own.
+  Show History, and, when the app or pane has no history store, MUST say
+  that nothing is recorded whatever "Record history" says (the History group
+  MUST NOT say it under the checkbox); "Agent can see history" MUST have a
+  help topic of its own.
 
 ## Appearance
 
@@ -244,6 +246,7 @@ because each topic's search keywords move with its controls.
 | browser-settings-026 | no-inline-help-labels | Inspect the Behavior, Appearance and added Privacy and Security groups | No explanation or empty-state text in the view; the topics' help content explains them |
 | browser-settings-027 | toolbar-buttons-have-tooltips | Walk a browser pane's view tree, privacy toolbar off and on, with several tabs, and a Safari pane's extension toolbar | Every button found has a non-empty tooltip naming its action; an unlabeled extension falls back to its name, then "Run Extension" |
 | browser-settings-028 | help-covers-regrouped-topics | Read Behavior's help in a pane's sheet, and Privacy and Security's help in either scope | Behavior has no "Open Sites in Tabs" topic in a pane; the Settings window's Appearance has a Tab Position topic naming where the control lives; History's help names Browser ▸ Show History; "Agent Can See History" is a topic |
+| browser-settings-029 | help-covers-regrouped-topics | Open the Privacy and Security topic in an app with no history store; read the History group and the History help topic | No text under Record history; the History help says nothing is recorded whatever Record history says |
 
 ## Edge Cases
 
@@ -252,7 +255,8 @@ because each topic's search keywords move with its controls.
   An agent history access value stored by hand that is not one of the three
   choices reads as the default, None.
 - **Boundary values**: A pane with no history store records nothing whatever
-  "Record history" says, as today.
+  "Record history" says, as today; the History help topic says so, and the
+  checkbox carries no explanation (MUST, see `help-covers-regrouped-topics`).
 - **Concurrent access**: Two panes may override "Agent can see history"
   differently; each reads its own layered value. Refresh pressed twice in the
   Site Data window keeps one read in flight, so an older answer never lands
@@ -483,6 +487,7 @@ Notes: no compliance checks have been run against the code yet.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 0.1.6 | 2026-11-16 | Mike Fullerton | The no-history-store note moves from under Record history to the History help topic. |
 | 0.1.5 | 2026-11-16 | Mike Fullerton | Privacy toolbar row with the hide-from-agent button and agent view control; agentHidesImages; notice-shown key is global only. |
 | 0.1.4 | 2026-11-15 | Mike Fullerton | help-covers-regrouped-topics allows a where-to-find-it topic that names where the control lives |
 | 0.1.3 | 2026-11-15 | Mike Fullerton | Toolbar buttons have action tooltips; help follows the regrouped topics' groups and points history to Browser > Show History |

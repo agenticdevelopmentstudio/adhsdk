@@ -21,4 +21,6 @@
 | browser-menu-018 | no-duplicate-menu-key | Try to rebind `browser.forward` to Command-R (Reload's key) or to Back's current key | The rebind is refused as a conflict and no two menu items show one key |
 | browser-menu-019 | fixed-keys-not-conflicts | Keep the default Back and Forward bindings and read the registry's conflicts | No conflict is reported between Back/Forward and Reload/Stop |
 | browser-menu-020 | bridge-is-generic | A contribution in another slot names a key command id; another names none and a fixed key | The first follows the registry; the second keeps its fixed key |
+| browser-menu-021 | show-history-always-enabled | No history store set; validate Show History with and without a target | Disabled both times |
+| browser-menu-022 | back-forward-keys-need-focus | Project window whose last-focused browser pane can go back; first responder in an editor pane beside it; run the `browser.back` key command | The pane does not go back; with the first responder inside the pane it does |
 

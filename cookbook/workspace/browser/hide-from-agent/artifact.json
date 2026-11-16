@@ -4,7 +4,7 @@
     "id": "6cb13be9-e38c-496b-8326-5d1fdccfe778",
     "title": "Hide From Agent",
     "type": "ingredient",
-    "version": "0.1.1",
+    "version": "0.1.2",
     "status": "draft",
     "language": "en",
     "created": "2026-11-15",
@@ -41,7 +41,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "d1daafcc9394a701",
+  "synced": "23c4d9359a365f2a",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

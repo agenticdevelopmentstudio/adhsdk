@@ -4,7 +4,7 @@
     "id": "cd862ce2-d93d-4094-be20-0abab33e2fa7",
     "title": "Agent Preview and Agent Source Views",
     "type": "ingredient",
-    "version": "0.1.1",
+    "version": "0.1.2",
     "status": "draft",
     "language": "en",
     "created": "2026-11-15",
@@ -41,7 +41,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "170e0806c143fcd5",
+  "synced": "84cb82ffb5df7bab",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

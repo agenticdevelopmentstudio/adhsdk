@@ -2,11 +2,11 @@
 id: 92d66361-a16d-4c35-a0d3-4c1c8bbd5f52
 title: "Composable Tabs Settings View"
 type: ingredient
-version: 1.2.1
+version: 1.3.0
 status: review
 language: en
 created: 2026-09-23
-modified: 2026-10-04
+modified: 2026-11-16
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -48,7 +48,8 @@ staged state, no commit, and no cancel.
 
 - **constructs-topic-list-from-closures**: Component MUST construct its
   topic list during its own initialization, passing through the
-  `isEdgeEnabled` and `setEdgeEnabled` closures it was given.
+  `isEdgeEnabled` and `setEdgeEnabled` closures and the optional
+  `useGlobalTabPositions` closure it was given.
 - **tags-window-background-role**: Component MUST set its root view's
   background to the `.windowBackground` theme role.
 - **identifies-sheet-root**: Component MUST set the root view's accessibility
@@ -115,6 +116,15 @@ staged state, no commit, and no cancel.
   window's last enabled edge becomes visible on screen: the window's own
   refusal (reported back through `isEdgeEnabled`) overrides the toggle's
   own state.
+- **use-global-setting-button**: When given a `useGlobalTabPositions`
+  closure, the Tabs panel MUST show a rounded button titled "Use Global
+  Setting" in the Tab Bars group, after the four toggles, with the
+  accessibility identifier `project-settings.tabs.use-global` and a tooltip;
+  without one it MUST show no such button. Its action MUST call the closure
+  and then set every toggle's state from `isEdgeEnabled(edge)`. The Tabs
+  panel's help MUST have a "Use Global Setting" topic saying that until the
+  project's tab bars are changed its window follows the app-wide tab
+  position, and that the button drops the project's own choice.
 - **guards-invalid-checkbox-tag**: The Tabs panel MUST NOT act on a toggle
   action whose index does not map to one of the four edges; the handler
   MUST return without calling `setEdgeEnabled` in that case.
@@ -272,6 +282,8 @@ staged state, no commit, and no cancel.
 | cts-settings-vc-032 | closes-tab-loop-between-spacing-controls | Focus the frame-spacing control's last number field, press Tab | Focus moves to the divider-spacing control's first number field (and Tab from its last field returns focus to the frame-spacing control's first field) |
 | cts-settings-vc-033 | binds-divider-spacing-to-settings | Change the between-columns gutter setting externally after loading | The divider-spacing control's displayed value updates to match |
 | cts-settings-vc-034 | confines-to-ui-thread | Use the component from a thread other than the UI thread | The use is rejected, at build time or by a runtime check; the component's state is unchanged |
+| cts-settings-vc-035 | use-global-setting-button | Construct with a `useGlobalTabPositions` closure that sets the enabled edges to Left only; press Use Global Setting | The closure is called once and the Left toggle is on, the other three off |
+| cts-settings-vc-036 | use-global-setting-button | Construct without `useGlobalTabPositions` | No `project-settings.tabs.use-global` button |
 
 ## Edge Cases
 
@@ -594,3 +606,4 @@ literal (see **Localization**).
 | 1.1.2 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |
 | 1.2.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to ui/layout/composable-tabs/. |
 | 1.2.1 | 2026-10-04 | Mike Fullerton | Added unit-test-coverage (failed) compliance row. Added the confines-to-ui-thread requirement and vector. |
+| 1.3.0 | 2026-11-16 | Mike Fullerton | Tabs panel gains a Use Global Setting button and help topic. |

@@ -4,7 +4,8 @@
   An agent history access value stored by hand that is not one of the three
   choices reads as the default, None.
 - **Boundary values**: A pane with no history store records nothing whatever
-  "Record history" says, as today.
+  "Record history" says, as today; the History help topic says so, and the
+  checkbox carries no explanation (MUST, see `help-covers-regrouped-topics`).
 - **Concurrent access**: Two panes may override "Agent can see history"
   differently; each reads its own layered value. Refresh pressed twice in the
   Site Data window keeps one read in flight, so an older answer never lands

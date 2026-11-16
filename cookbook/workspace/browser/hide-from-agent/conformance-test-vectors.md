@@ -17,4 +17,6 @@
 | hide-from-agent-014 | stop-while-selecting, every-button-has-tooltip | Start agent selecting; read the toolbar button; press Esc | Symbol `stop.circle`, tooltip "Stop selecting"; after Esc, idle with tooltip "Hide elements from agent" |
 | hide-from-agent-015 | preview-dialog-preview | Agent preview; pick ref `r12`; check "Show page with selected element removed" | The `r12` node is hidden in the preview webview; the live page is unchanged |
 | hide-from-agent-016 | preview-pick-saves-under-live-site | Agent preview of `https://example.com/a` with URL concealing on; pick ref `r12`; OK | The new agent-list entry's site is `example.com`, not the concealed stand-in host |
+| hide-from-agent-017 | hostless-page-disabled | Open a `file:` page in a pane; read the toolbar button; then open `https://example.com/` | Disabled with tooltip "Hide elements from agent" on the `file:` page; enabled on the site |
+| hide-from-agent-018 | popover-closes-with-page | Open "Hidden from the Agent…"; navigate the pane | The popover closes |
 

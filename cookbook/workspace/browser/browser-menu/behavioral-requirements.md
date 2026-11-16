@@ -32,7 +32,9 @@
 - **stop-follows-loading**: Stop MUST be disabled when the target pane's
   engine reports it is not loading.
 - **show-history-always-enabled**: Show History MUST be enabled whether or
-  not there is a target pane, and choosing it MUST open the History window.
+  not there is a target pane, as long as the host has given the History
+  window a history store, and MUST be disabled while there is none;
+  choosing it MUST open the History window.
 - **privacy-toolbar-title-follows-pane**: The privacy toolbar item's title
   MUST read "Hide Privacy Toolbar" when the target pane's effective
   show-privacy-toolbar value is on, and "Show Privacy Toolbar" when it is
@@ -47,6 +49,13 @@
   to Command-[ and Command-], in a key command section titled "Web Browser"
   that holds those two descriptors only; the web browser windows feature
   MUST install that section in the shared key command registry.
+- **back-forward-keys-need-focus**: The Back and Forward key commands MUST
+  act only on a browser pane that has keyboard focus: the standalone
+  browser window's pane, or, in another window, the target pane only while
+  the window's first responder is inside it (a Chrome pane's attached page
+  window counts as inside it). With an editor or terminal focused beside
+  the pane they MUST do nothing to the pane, so the keys reach that view.
+  The menu items themselves keep acting on the target pane.
 - **menu-key-follows-binding**: A menu item that carries a key command id
   MUST display, as its key equivalent and modifiers, the registry's current
   shortcut for that id, and MUST update it whenever the registry announces

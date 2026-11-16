@@ -68,6 +68,9 @@
   `project_state` row and write it back unchanged, or write the empty
   string (no choice) when no row existed, so seeding or saving a layout
   never turns the app-wide default into a per-project choice.
+- **save-tabs-empty-edges-clear**: An empty enabled-edges list MUST write the
+  empty string, clearing any stored choice, so the project follows the
+  app-wide tab positions again.
 - **save-tabs-tab-position**: MUST persist each tab's
   `project_tabs.position` as its index in the given tab list, in that
   order.

@@ -4,7 +4,9 @@
 - **Boundary values**: A very large page's source is shown whole in a
   scrolling text view; a page the walker cannot finish in time is shown as
   the unavailable reason (MUST, `unavailable-shown-as-reason`).
-- **Concurrent access**: All view work runs on the main thread. A rebuild
+- **Concurrent access**: View work runs on the main thread, except the
+  gatekeeper's decode, build and concealment and the source view's lex,
+  which run off it and land back on it. A rebuild
   that finishes after a newer one was started is discarded, so the view
   never shows an older page than the latest trigger asked for.
 - **Error states**: Every gatekeeper failure is shown as its reason, never
@@ -20,6 +22,10 @@
   bounds each rebuild.
 - **Navigation while an agent view is shown**: The view rebuilds when the
   navigation finishes; until then it keeps the previous page's content.
+- **Entering from Website**: The view shows the blank page until its
+  rebuild lands; an earlier agent page never passes for the current one
+  (MUST, `entering-from-website-blank`). Moving between Agent preview and
+  Agent source keeps the current page shown meanwhile.
 - **Rebuilds in quick succession**: A second preview load started before
   WebKit asked about the first is still let through, so the preview ends
   on the newest page rather than cancelling it (MUST,

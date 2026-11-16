@@ -2,7 +2,7 @@
 - **AppKit / UIKit**: The menu slot is a new `MenuContribution.Slot.browser`
   ("Browser menu, after View"), and `MenuManager.buildMainMenu` builds the
   Browser submenu after View and before Projects. `BrowserMenuCommands`
-  (`@MainActor`, `init(keyPane:showHistory:)`, `contributions()`, static
+  (`@MainActor`, `init(keyPane:canShowHistory:showHistory:)`, `contributions()`, static
   `keySection`) produces the contributions; `WebBrowserWindowsFeature`
   installs `keySection` with `KeyCommandRegistry.shared.install(_:)` and
   appends `contributions()` to its `menuContributions`. The default
@@ -11,7 +11,14 @@
   its `view.window` is the key window, else `nil` — "the key window" being
   `KeyCommandRegistry.shared.commandWindow` resolved through `commandOwner`,
   so a Chrome pane's attached child window counts as its parent; the window
-  form is `keyPane(in:)`. The items' stable ids are
+  form is `keyPane(in:)`. `canShowHistory` defaults to
+  `BrowserHistoryWindowController.canShow` (a store is set) and is Show
+  History's `isEnabled`. The `keySection` descriptors' `perform` navigate
+  `WebBrowserPaneViewController.focusedKeyPane()` instead: `keyPane(in:)`
+  of the command window, kept only when that window is a
+  `WebBrowserWindowController`'s, when the command window is a child whose
+  `commandOwner` is another window, or when the first responder is a view
+  inside the pane's view. The items' stable ids are
   `BrowserMenuCommands.ItemID` (`browser.reload` … `browser.toggle-privacy-toolbar`),
   which `MenuManager` prefixes into `menu.browser.*` accessibility identifiers,
   and the separator falls before `BrowserMenuCommands.showSectionOrder` (100). Engine calls are

@@ -29,4 +29,5 @@
 | browser-settings-026 | no-inline-help-labels | Inspect the Behavior, Appearance and added Privacy and Security groups | No explanation or empty-state text in the view; the topics' help content explains them |
 | browser-settings-027 | toolbar-buttons-have-tooltips | Walk a browser pane's view tree, privacy toolbar off and on, with several tabs, and a Safari pane's extension toolbar | Every button found has a non-empty tooltip naming its action; an unlabeled extension falls back to its name, then "Run Extension" |
 | browser-settings-028 | help-covers-regrouped-topics | Read Behavior's help in a pane's sheet, and Privacy and Security's help in either scope | Behavior has no "Open Sites in Tabs" topic in a pane; the Settings window's Appearance has a Tab Position topic naming where the control lives; History's help names Browser ▸ Show History; "Agent Can See History" is a topic |
+| browser-settings-029 | help-covers-regrouped-topics | Open the Privacy and Security topic in an app with no history store; read the History group and the History help topic | No text under Record history; the History help says nothing is recorded whatever Record history says |
 

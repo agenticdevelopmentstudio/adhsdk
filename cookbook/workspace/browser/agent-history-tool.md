@@ -2,7 +2,7 @@
 id: 4ef7f4f9-1fa0-4267-ad82-0f35ba92a7d1
 title: "Agent History Tool"
 type: ingredient
-version: 0.1.2
+version: 0.1.3
 status: draft
 language: en
 created: 2026-11-15
@@ -113,6 +113,14 @@ features design, section 1.4, and its phase 1 plan, Tasks 7 and 10).
   through the pane's agent privacy concealment individually, before any of
   them is joined into the reply; nothing the tool returns MUST skip that
   path.
+- **conceal-with-every-word**: Because history spans sites, the
+  concealment MUST use every enabled privacy word whatever site it is
+  scoped to, never only the words that apply to the page in front, combined
+  with the privacy the call runs under.
+- **no-local-files**: The tool MUST NOT list a visit whose address is a
+  local file (`file:`), its title or its address, under either access; under
+  All history such visits MUST be left out before `limit` is applied, so the
+  limit counts only listed visits.
 - **conceal-url-forms**: Concealment of addresses MUST cover a privacy word
   appearing in the address in plain form, percent-escaped (a space as
   `%20`, a non-ASCII letter as its UTF-8 escapes) and form-escaped (a space
@@ -120,8 +128,9 @@ features design, section 1.4, and its phase 1 plan, Tasks 7 and 10).
 - **privacy-off-unchanged**: When agent privacy is off for the pane,
   titles and addresses MUST be returned unchanged.
 - **closed-privacy-refuses**: When the pane's agent privacy is on but its
-  privacy words cannot be read, or conflict, the tool MUST fail with the
-  pane's closed-privacy refusal and return no visit.
+  privacy words cannot be read, or conflict — the page's words or the
+  every-site words history conceals with, either side — the tool MUST fail
+  with the closed-privacy refusal and return no visit.
 - **same-access-checks**: The tool MUST pass the same access checks as every
   other browser tool before doing anything: a hidden or closed pane, a pane
   paused for the agent, and a closed agent privacy state each refuse as they
@@ -192,6 +201,10 @@ features design, section 1.4, and its phase 1 plan, Tasks 7 and 10).
 | agent-history-tool-016 | same-access-checks | Call on a pane paused for the agent; then on a closed pane id | The paused refusal; then "pane … was closed; call browser_list" |
 | agent-history-tool-017 | read-only-pane-allowed | Access All history on a read-only pane | The call succeeds; `browser_history` is in the read tool names; the store is unchanged |
 | agent-history-tool-018 | reply-lines | Access All history; the store is empty | A reply saying no visits were found, not a failure |
+| agent-history-tool-019 | conceal-with-every-word | Agent privacy on; the word "Acme" scoped to `acme.com`; the page in front on `example.com`; a visit to `https://acme.com/` titled "Acme" | The title and address come back with the stand-in, never "Acme" |
+| agent-history-tool-020 | no-local-files | Access All history; the newest visit is `file:///Users/me/notes.html`, then two `https` visits; `limit` 2 | Two lines, both `https`; no `file:` address or its title appears |
+| agent-history-tool-021 | no-local-files | Access Current tab only; the back/forward list holds a `file:` entry and an `https` entry | Only the `https` entry is listed |
+| agent-history-tool-022 | closed-privacy-refuses, conceal-with-every-word | Agent privacy on; the page's words readable; the every-site words unreadable | The call fails with the closed-privacy refusal; no visit returned |
 
 ## Edge Cases
 
@@ -216,6 +229,13 @@ features design, section 1.4, and its phase 1 plan, Tasks 7 and 10).
 - **Escaped privacy words**: A privacy word hidden in an address's
   percent-escaped or `+`-escaped form is still concealed (MUST, see
   `conceal-url-forms`, agent-history-tool-013).
+- **Local files**: A `file:` visit is never listed, in the back/forward
+  list or the store (MUST, see `no-local-files`); the store leaves them out
+  in its query so a limit of 50 still lists 50 visits the agent may see.
+- **Words scoped to another site**: A privacy word scoped to one site is
+  concealed on every line, including the lines of other sites and when the
+  page in front is on a site the word does not apply to (MUST, see
+  `conceal-with-every-word`).
 - **Private browsing**: A pane browsing privately records no visits, so All
   history never contains its pages; Current tab only still reads the tab's
   own back/forward list, which the person can already see.
@@ -275,12 +295,24 @@ reach the agent as tool errors.
   `BrowserSettings.allKeys` and not in `globalOnlyKeyNames`; the row lives in
   `SessionPrivacySettingsPanel`'s History group. `BrowserHistoryTool.run(access:query:limit:store:backForward:privacy:)`
   returns the reply string from a `BrowserHistoryStore?` and
-  `[BrowserVisitLine]` (`title`, `url`, `when: Date?`), concealing each field
+  `[BrowserVisitLine]` (`title`, `url`, `when: Date?`), leaving out every
+  visit `BrowserAutomation.isDrivable` refuses (a `file:` address; the store
+  reads with `recent(limit:excludingLocalFiles: true)` and
+  `search(_:limit:excludingLocalFiles: true)`, whose SQL adds
+  `url NOT LIKE 'file:%'` before the limit), concealing each field
   through the agent page's string path,
   `AgentPageBuilder(privacy:hideImages: false).conceal`, which applies
   `BrowserAgentPrivacy.concealing(_:)` (whose filter already adds the
   percent- and form-escaped forms, `includingURLForms`) and answers an empty
-  string under a closed privacy. `BrowserPaneHandle` exposes the pane's
+  string under a closed privacy. The privacy it is handed is
+  `BrowserPaneHandle.historyPrivacy` `combined(with:)` the call's privacy:
+  `historyPrivacy` is `WebBrowserPaneViewController.agentHistoryPrivacy()`,
+  which is `.checking(PrivacyWordsVault.everySiteFilter)` (every enabled
+  word, `[PrivacyWord].everySiteFilter`) while Agent Privacy is on, and a
+  handle made without one while `agentPrivacy` is on gets `.unavailable`, so
+  the call refuses rather than conceal with the page in front's words; the
+  run refuses any closed privacy itself too (`closedRefusal()`).
+  `BrowserPaneHandle` exposes the pane's
   effective access, its effective Hide Images (`hidesImages`, a required
   initializer argument with no default, which the page-reading tools build
   under and this tool does not read) and the driven tab's `WKBackForwardList`
@@ -354,6 +386,7 @@ checks are run when the code lands and the recipe is confirmed against it.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 0.1.3 | 2026-11-16 | Mike Fullerton | browser_history conceals with every enabled privacy word, never lists file: URLs, and is refused while the privacy side is closed. |
 | 0.1.2 | 2026-11-16 | Mike Fullerton | Concealing through AgentPageBuilder(privacy:hideImages: false).conceal; BrowserPaneHandle.hidesImages is required and unused here. |
 | 0.1.1 | 2026-11-15 | Mike Fullerton | The tool's pane argument is pane_id, as every other browser tool's is |
 | 0.1.0 | 2026-11-15 | Mike Fullerton | Initial creation (design-first, from the more privacy features design) |

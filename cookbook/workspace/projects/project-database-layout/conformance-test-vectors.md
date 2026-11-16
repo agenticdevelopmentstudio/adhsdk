@@ -14,4 +14,5 @@
 | git-client-projects-project-database-layout-009 | project-directories-whole-replace, project-directories-empty-means-none | Saving project directories ["/a", "/b"] then loading them | ["/a", "/b"] in the same order; a second save with an empty list then reload → an empty list |
 | git-client-projects-project-database-layout-010 | load-tabs-working-directory-is-directory-url | A working directory containing a space and a non-ASCII character, saved and reloaded | the exact same path string, constructed as a directory location |
 | git-client-projects-project-database-layout-011 | save-tabs-atomic-rollback | A fresh database opened at the current schema version and a hand-built schema-version-3 fixture opened the same way | both migrate/open successfully and the working directory round-trips on the migrated database |
+| git-client-projects-project-database-layout-012 | save-tabs-empty-edges-clear | Save tabs with enabled edges `[top, left]`, then save again with an empty list, then load. | The loaded enabled edges are absent (no stored choice) |
 

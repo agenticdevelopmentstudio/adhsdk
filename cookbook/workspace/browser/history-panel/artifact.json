@@ -4,11 +4,11 @@
     "id": "497f5d5f-e95b-473e-8798-cbe62ebcc425",
     "title": "History Panel and Window",
     "type": "ingredient",
-    "version": "0.1.1",
+    "version": "0.1.2",
     "status": "draft",
     "language": "en",
     "created": "2026-11-15",
-    "modified": "2026-11-15",
+    "modified": "2026-11-16",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -40,7 +40,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "a3b6881298fd25db",
+  "synced": "7153653a509e24fc",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

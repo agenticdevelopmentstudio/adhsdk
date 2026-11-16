@@ -18,4 +18,7 @@
 | agent-views-015 | refresh-coalesced | Fire five triggers within 100 milliseconds | Exactly one rebuild runs |
 | agent-views-016 | website-mode-restores-page | Fill a text field on the page, switch to Agent preview, then back to Website | The live page shows again with the typed text, not reloaded |
 | agent-views-017 | preview-no-navigation | Show two pages in the preview back to back, before WebKit asks about the first load | Both loads are allowed and the preview shows the second page; after it finishes, a further `about:blank` navigation is cancelled |
+| agent-views-018 | entering-from-website-blank | In Agent preview, switch to Website, navigate to another page, then switch to Agent source | The source shows the blank page until the rebuild lands, then the new page; the earlier page is never shown |
+| agent-views-019 | entering-from-website-blank | In Agent preview showing a page, switch to Agent source | The source shows that page's HTML at once, before the rebuild lands |
+| agent-views-020 | source-highlighted | Show a large page in Agent source | The text appears at once in the text color; the highlight colors follow when the lex lands; showing the same HTML again changes nothing |
 

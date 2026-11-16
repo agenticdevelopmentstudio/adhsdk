@@ -42,16 +42,36 @@
 - **downloaded-install-path**: The extension host MUST copy a chosen downloaded
   item into the library's staging area and then go through the normal stage, permission
   confirmation and commit path; declining the confirmation MUST install
-  nothing.
-- **downloaded-refuses-links**: The extension host MUST refuse a downloaded
-  item whose staged copy holds a symbolic link, with an error naming the item
-  and the link, before the permission confirmation, and MUST leave nothing
-  staged.
+  nothing. When the topic has no window to put the confirmation sheet on,
+  the confirmation MUST be shown app-modally rather than declined, and an
+  install error MUST be shown in an app-modal alert rather than dropped.
+- **keyed-takeover-confirmed**: An install whose manifest `key` gives the id
+  of an extension already installed, wherever the installed one came from,
+  MUST be confirmed as a replacement naming the installed extension ("Replace
+  “installed” with “new”?", button Replace), listing every permission and
+  site the new files ask for, since a manifest key is public. Once accepted,
+  the extension MUST become a local one (not from the Web Store, not from an
+  app, its source not missing) granted only what was just agreed to, so the
+  store's update check leaves it alone.
+- **downloaded-refuses-links**: The extension host MUST refuse an item
+  whose staged copy holds a symbolic link, with an error naming the item and
+  the link, before the permission confirmation, and MUST leave nothing
+  staged; this holds for a downloaded item, a `.crx` address, a Web Store
+  install and an app extension alike. The check MUST fail closed: a staged
+  root that is not a directory or is itself a link, a tree that cannot be
+  read, or an item whose type cannot be read MUST count as a link.
 - **downloaded-off-main**: The extension host MUST read, copy and unpack a
-  downloaded item off the main thread, so a large item never stalls the
-  settings window.
-- **url-prompt**: The URL… item MUST open a modal prompt with one text field and OK and
-  Cancel buttons; Cancel MUST install nothing.
+  downloaded item, a `.crx` address's package, a Web Store package and an
+  app extension's files off the main thread, so a large item never stalls
+  the settings window.
+- **download-size-capped**: A download of an extension package (a `.crx`
+  address or the Web Store) MUST be refused, with a download error saying it
+  is too large, once it is larger than 128 MB, whether or not the server
+  announced its size, and MUST NOT be read further.
+- **url-prompt**: The URL… item MUST open a modal prompt titled "Add an
+  Extension from a URL" with one text field and OK and Cancel buttons, and
+  no instruction line (what it accepts is in the topic's help); Cancel MUST
+  install nothing.
 - **url-prompt-validation**: The prompt's OK button MUST be enabled only while
   the field's text is a Chrome Web Store extension ID, a Chrome Web Store
   extension link, or an `http` or `https` address ending in `.crx`.

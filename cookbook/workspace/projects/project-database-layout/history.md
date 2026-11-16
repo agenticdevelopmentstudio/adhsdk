@@ -7,4 +7,4 @@
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to workspace/projects/. |
 | 1.2.0 | 2026-10-04 | Mike Fullerton | Resolved the corrupt-row NEEDS REVIEW marker against source (silent drop, no logging) as a pending decision; converted test vectors to a table and Design Decisions to Decision/Rationale/Approved triples. |
 | 1.2.1 | 2026-10-04 | Mike Fullerton | Requirements use the named-bullet form, `- **id**: ...`, instead of an em dash after the id. |
-| 1.3.0 | 2026-11-15 | Mike Fullerton | Tab edges are an explicit per-project Tab Bars choice: no stored edges means follow the app-wide tab positions live, an empty enabled_edges value means no choice, and the shared tab configuration carries only the pane arrangement. |
+| 2.0.0 | 2026-11-16 | Mike Fullerton | An empty enabled-edges list clears a stored choice. |

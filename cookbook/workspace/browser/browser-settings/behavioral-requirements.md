@@ -92,6 +92,8 @@
   another scope shows, which MUST name where that control lives (the
   Settings window's Tab Position topic names the pane's settings sheet); the
   History help MUST say that the visits are seen and cleared from Browser ▸
-  Show History, and "Agent can see history" MUST have a help topic of its
-  own.
+  Show History, and, when the app or pane has no history store, MUST say
+  that nothing is recorded whatever "Record history" says (the History group
+  MUST NOT say it under the checkbox); "Agent can see history" MUST have a
+  help topic of its own.
 

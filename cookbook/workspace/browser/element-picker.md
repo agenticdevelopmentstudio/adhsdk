@@ -2,7 +2,7 @@
 id: 8b187d98-795b-4a9d-9441-e7b8629fefe4
 title: "Element Picker"
 type: ingredient
-version: 0.1.1
+version: 0.1.2
 status: draft
 language: en
 created: 2026-11-15
@@ -100,14 +100,24 @@ that items which load again, such as ads, can reappear.
   distracting items" bound to the user list's site switch for the page's
   default site pattern; a button "Select distracting items to hide"; a
   divider; and a table of the user list's items for the page, each row a
-  checkbox showing and setting the entry's enabled state and the entry's
-  label; with a header **−** button (tooltip "Remove Selected Item") that
+  checkbox showing and setting the enabled state of the entry its row
+  holds when it is clicked (a reload since the row was made may have
+  reordered the list), and the entry's label; with a header **−** button (tooltip "Remove Selected Item") that
   removes the selected row and is disabled when no row is selected.
 - **popover-changes-apply-immediately**: Toggling the site checkbox or a
   row's checkbox, or removing a row, MUST write the change to the
   hidden-items store at once, so the page re-renders without a reload.
 - **popover-transient**: The popover MUST close when the user clicks
-  outside it.
+  outside it, and MUST close when the pane commits a navigation, the front
+  page changes, the tab switches or the pane is discarded, since the site
+  it lists and switches may no longer be the one showing.
+- **hostless-page-refused**: On a page with no host (`file:`, `about:`,
+  `data:`, or no address), whose default site pattern is `*`, the
+  address-bar button MUST be disabled, keeping its tooltip, except as the
+  stop control of a selecting mode already running; starting selecting
+  mode there MUST beep and start nothing, and a pick whose page has no
+  host MUST NOT be saved (logged, with a beep), so no entry is ever saved
+  for every site.
 - **select-enters-selecting-mode**: The popover's select button MUST close
   the popover and start selecting mode on that pane.
 - **stop-icon-while-selecting**: While selecting, the address-bar button
@@ -141,6 +151,11 @@ that items which load again, such as ads, can reappear.
   only, one with a `-` or `_` followed by five or more hexadecimal
   characters, or one with a `-` or `_` followed by five or more letters and
   digits that mix both (a CSS-in-JS hash such as `css-1x2y3z`).
+- **all-like-it-needs-a-class**: The All items like it selector MUST name
+  at least one class: an element with no stable class gets no looser
+  selector, since a bare tag such as `div` would hide most of a site. It
+  MUST NOT be built for the page's frame, an `html`, `head`, `body` or
+  `main` element.
 - **all-like-it-absent-when-same**: When the looser selector is the same as
   the This item selector (the same text, or it matches only the picked
   element), or cannot be computed, the pick MUST carry no All items like it
@@ -152,7 +167,8 @@ that items which load again, such as ads, can reappear.
 - **loose-selector-disabled**: The All items like it choice MUST be
   disabled when there is no looser selector, with the tooltip "No looser
   selector is available", and when it matches more than half of the
-  page's elements, with the tooltip "Matches too much of the page".
+  page's elements, has no class, or is for an `html`, `head`, `body` or
+  `main` element, with the tooltip "Matches too much of the page".
 - **label-format**: The label MUST be the element's lowercase tag name, a
   space, and the first 60 characters of its trimmed text in double quotes,
   where the text is the element's visible text, else its `alt`, else its
@@ -171,6 +187,7 @@ that items which load again, such as ads, can reappear.
 - **dialog-ok-saves**: OK MUST add one entry to the picker's list with the
   chosen scope's selector, that scope, the pick's label, enabled, and the
   site pattern derived from the page's address by the shared default rule.
+  A save the store refuses MUST be logged and beep.
 - **dialog-cancel-saves-nothing**: Cancel, or Esc in the dialog, MUST save
   nothing.
 - **resume-after-dialog**: After OK or Cancel, selecting mode MUST resume
@@ -270,18 +287,24 @@ switch or close).
 | element-picker-025 | outline-under-pointer | Selecting; move the pointer from one element to another | The outline covers the first element, then the second |
 | element-picker-026 | all-like-it-absent-when-same | Pick `<div class="only">`, the page's only element with that class and tag | `allLikeIt` is null |
 | element-picker-027 | dialog-movable-modal | Open the dialog; drag its title bar | The dialog is its own window (not a sheet) and moves; the browser window stays put |
+| element-picker-028 | hostless-page-refused | Open a `file:` page, then an `about:blank` page; read the address-bar button; call begin | The button is disabled with its tooltip kept; begin beeps and the state stays idle |
+| element-picker-029 | all-like-it-needs-a-class | Candidates with `allLikeIt` `div` (count 2 of 100), and `main.page` (count 1 of 100) | Both have All items like it disabled |
+| element-picker-030 | all-like-it-needs-a-class | Pick a `<div>` with no class, then the `<body>` | Neither pick carries an All items like it selector |
+| element-picker-031 | popover-transient | Open the popover; the page commits a navigation | The popover closes |
 
 ## Edge Cases
 
 - **Null and empty input**: A pick with no This item selector is refused
-  (MUST, see `pick-without-selector-refused`). A page with no address
-  saves entries with site `*`, as the shared default rule says. An empty
-  list shows the popover with an empty table.
+  (MUST, see `pick-without-selector-refused`). A page with no address or
+  no host would save entries with site `*`, hiding them on every page, so
+  the button is disabled there and no pick is saved (MUST, see
+  `hostless-page-refused`). An empty list shows the popover with an empty
+  table.
 - **Boundary values**: An All items like it selector matching exactly half
   of the page's elements is allowed; one more is not (MUST, see
-  `loose-selector-disabled`). A selector that matches `body` or `html`
-  counts every element and is therefore refused. A label is cut at 60
-  characters.
+  `loose-selector-disabled`). An `html`, `head`, `body` or `main` element
+  and an element with no stable class get no looser selector at all (MUST,
+  see `all-like-it-needs-a-class`). A label is cut at 60 characters.
 - **Concurrent access**: The page may change between the click and OK;
   the selectors saved are those computed at click time. Two panes may
   each run selecting mode; they share the store, and each pane's popover
@@ -290,7 +313,8 @@ switch or close).
   away, or WebKit refuses the evaluation), the app beeps and selecting
   mode ends at once: the button returns to its idle state and the end is
   logged with the reason `failure`. Finder
-  throwing for one element refuses that pick only.
+  throwing for one element refuses that pick only. A save the store
+  refuses is logged and beeps; selecting mode carries on.
 - **Offline or disconnected state**: Not applicable — the picker works on
   the page in memory and a local store.
 - **Missing file or unreachable server**: Not applicable — the store's
@@ -374,8 +398,11 @@ labels are not logged.
     bundled resources, as `BrowserSnapshot.js` is.
   - `BrowserPickCandidate` (`Decodable`, `Sendable`) with `kind`,
     `thisItem`, `allLikeIt`, `allLikeItCount`, `pageElementCount`, `label`,
-    `ref`, and `allLikeItAllowed` (`allLikeIt != nil &&
-    allLikeItCount <= pageElementCount / 2`).
+    `ref`, and `allLikeItAllowed` (`allLikeIt` names a class, its tag is
+    not in `neverLikeIt` — `html`, `head`, `body`, `main` — and
+    `allLikeItCount <= pageElementCount / 2`). `BrowserElementPicker.js`
+    returns no looser selector for an element with no stable class or a
+    tag in its own `NEVER_LIKE_IT`.
   - `BrowserSelectingMode` (`@MainActor final class`) with
     `State { idle, selecting, dialog(BrowserPickCandidate) }`,
     `init(engine:store:list:button:settings:presentDialog:presentNotice:)`
@@ -383,20 +410,31 @@ labels are not logged.
     the symbol it shows; the presenters default to the real dialog and
     notice and are injected by tests), `begin()`, `end(_ reason:)` (the
     reason is what the log names); a local key monitor catches Esc while
-    selecting, in the pane's window only. `WebBrowserPaneViewController`
+    selecting, in the pane's window only. `canSelect(on:)` is false when
+    `PrivacySitePattern.defaultPattern(for:)` is `everywhere`: `begin()`
+    beeps and the save beeps and logs. A save the store throws on logs and
+    beeps. The pane's `updateHideItemsAvailability()` disables both
+    hide-items buttons by it (keeping each enabled while its own selecting
+    runs) on every page change and tab switch, and
+    `closeHiddenItemsPopovers()` closes both popovers on navigation commit,
+    a front-page change, tab switch and pane discard. `WebBrowserPaneViewController`
     owns one, made for a WebKit engine on first use (any other engine
     beeps), and ends it on navigation commit, tab switch, tab close, engine
     replacement or rebuild, and pane discard.
-  - `BrowserPickDialogController`: an `NSWindow` run with
-    `NSApp.runModal(for:)`. The preview is applied with
+  - `BrowserPickDialogController`: an `NSWindow` run app-modal by
+    `present(over:)` through the shared `AppModalWindowSession`
+    (`AgenticDeveloperHubSDKCoreMacOS`), held as `modalSession`. The
+    preview is applied with
     `WebKitBrowserEngine.setPreviewHiddenSelectors(_:)` before the modal
     loop and from the checkbox action inside it; WebKit keeps running in
-    the modal panel run-loop mode. OK and Cancel end the loop with
-    `stopModal`; selecting mode ending under the dialog (navigation, say)
-    arrives in a WebKit callback, where only `abortModal` works, and saves
-    nothing. The dialog runs on the run loop's next pass
-    (`performOnNextRunLoopPass`, a `CFRunLoopPerformBlock`), out of the
-    script-message callback the pick arrived in; never from
+    the modal panel run-loop mode. OK, Cancel and `dismiss()` (selecting
+    mode ending under the dialog, which arrives in a WebKit callback and
+    saves nothing) all go through `endSession()`, which ends the session
+    (posting an event so `stopModal` takes effect from no event) and
+    orders the window out. The session enters `NSApp.runModal(for:)` on
+    the run loop's next pass (`performOnNextRunLoopPass`, a
+    `CFRunLoopPerformBlock`), out of the script-message callback the pick
+    arrived in, so `present(over:)` returns at once; never from
     `DispatchQueue.main.async`, whose block the modal loop would hold, and
     with it every MainActor task. Each picker start waits for the previous
     one; a mode ended before its start runs installs nothing, one ended
@@ -413,7 +451,9 @@ labels are not logged.
     `BrowserAddressBox` in `BrowserAddressBarControls.swift`.
   - `BrowserHiddenItemsPopover` is the `NSViewController` that owns its
     `NSPopover`; it reads and writes the store through `perform` and
-    reloads on `didChangeNotification`.
+    reloads on `didChangeNotification`. A row checkbox finds its row with
+    `tableView.row(for:)` when clicked (no `tag`), and a failed write
+    beeps.
   - The notice is an informational `NSAlert`, run as a sheet on the pane's
     window; `browser.hidden_items.notice_shown` is written to the global
     layer before it shows.
@@ -496,5 +536,6 @@ Notes: no compliance checks have been run against the code yet.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 0.1.2 | 2026-11-16 | Mike Fullerton | Hostless pages refused; All items like it needs a class and skips html/head/body/main; dialog through AppModalWindowSession; popovers close with the page; row lookup at click; failed saves beep. |
 | 0.1.1 | 2026-11-16 | Mike Fullerton | No-looser-selector tooltip, start failure beeps and ends selecting, popover toggle by event number. |
 | 0.1.0 | 2026-11-15 | Mike Fullerton | Initial creation (design-first, from the more privacy features design) |

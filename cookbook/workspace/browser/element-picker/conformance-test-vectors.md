@@ -28,4 +28,8 @@
 | element-picker-025 | outline-under-pointer | Selecting; move the pointer from one element to another | The outline covers the first element, then the second |
 | element-picker-026 | all-like-it-absent-when-same | Pick `<div class="only">`, the page's only element with that class and tag | `allLikeIt` is null |
 | element-picker-027 | dialog-movable-modal | Open the dialog; drag its title bar | The dialog is its own window (not a sheet) and moves; the browser window stays put |
+| element-picker-028 | hostless-page-refused | Open a `file:` page, then an `about:blank` page; read the address-bar button; call begin | The button is disabled with its tooltip kept; begin beeps and the state stays idle |
+| element-picker-029 | all-like-it-needs-a-class | Candidates with `allLikeIt` `div` (count 2 of 100), and `main.page` (count 1 of 100) | Both have All items like it disabled |
+| element-picker-030 | all-like-it-needs-a-class | Pick a `<div>` with no class, then the `<body>` | Neither pick carries an All items like it selector |
+| element-picker-031 | popover-transient | Open the popover; the page commits a navigation | The popover closes |
 

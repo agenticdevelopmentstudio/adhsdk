@@ -18,7 +18,19 @@
   process before the commit reaches the delegate); a navigation that fails
   provisionally puts the committed address's rules back. Reads go through
   the store's `perform` off the main thread, and a generation counter
-  keeps only the last read asked for. When a page's Content Security
+  keeps only the last read asked for; a read answers `HiddenItemsRead`
+  (`selectors`, `superseded`, `failed`), and awaits the store with
+  `BrowserHiddenItemsStore.sharedStore()`, never blocking on it, since an
+  engine made at launch reads before the store's open is done. The
+  navigation read in the policy decision (`prepareHiddenItems`, through
+  `preparedHiddenItemSelectors`) reads again when a store-change refresh
+  supersedes it, since that refresh read the page being left, up to
+  `hiddenItemsPrepareAttempts` (3) times. When every one of those is
+  superseded and the engine is not torn down, one last read runs with
+  `checkingGeneration: false`, which claims no generation and cannot be
+  superseded; if it fails the document starts with no rules (`[]`), never
+  the previous site's. Teardown, or a read inside the loop that fails
+  outright, keeps the current rules. When a page's Content Security
   Policy refuses inline styles the element gets no sheet, so the rules go
   in an adopted constructed sheet instead (which `style-src` does not
   govern) and the element stays as the marker. Each rule goes in through its own

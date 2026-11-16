@@ -2,7 +2,7 @@
 id: 8bd94d87-6096-4fb1-82a7-d5f712c2958f
 title: "Agent Page Builder (Agent Gatekeeper)"
 type: ingredient
-version: 0.1.2
+version: 0.1.3
 status: draft
 language: en
 created: 2026-11-15
@@ -112,15 +112,25 @@ only change what it filters.
 - **walker-skips-agent-list**: The walker MUST NOT visit a node, or any
   node beneath it, that matches any enabled agent-list selector for the
   page's site.
-- **invalid-exclude-selector-isolated**: An agent-list selector the
-  document cannot evaluate MUST exclude nothing on its own, MUST be
-  reported in the walk's warnings, and MUST NOT stop any other selector
-  from excluding what it matches.
+- **invalid-exclude-selector-fails-closed**: An agent-list selector the
+  document cannot evaluate would exclude nothing, so the walk MUST be
+  refused: the walker MUST answer `{"error":"agent-list"}` and the
+  component MUST return the unavailable page, showing nothing of the page.
 - **scope-within-walk**: A scope argument on the snapshot or text tools
+  MUST be a reference from the reference table, never a CSS selector, and
   MUST select a subtree within the gatekeeper's own walk, with agent-list
-  exclusion still applied inside it; a scope whose element, or any of its
-  ancestors, matches an enabled agent-list selector MUST yield an empty
-  root.
+  exclusion still applied inside it. A scope that names nothing, whose
+  element is gone, or whose element or any of its ancestors is withheld
+  (hidden, or matching an enabled agent-list selector) MUST give the whole
+  page, exactly as a reference that names nothing does, never an empty
+  root or an error, so the answer never tells the agent whether a withheld
+  element exists.
+- **withheld-refs-stale**: A reference to an element the last walk
+  excluded by the agent list, or to anything beneath it, MUST
+  resolve as stale for every action and as no scope, whichever walk handed
+  it out, and every reference MUST go stale on any change to the
+  hidden-items store, because a reference handed out before its element
+  joined the agent list must not stay usable until the next snapshot.
 - **unknown-kind-dropped-with-subtree**: The component MUST drop a node
   whose kind is not on the allowlist, or that it cannot classify, together
   with its whole subtree.
@@ -150,7 +160,9 @@ only change what it filters.
   the snapshot tree MUST still print each piece trimmed, as today.
 - **hide-images**: When the Hide Images setting is on, the component MUST
   drop every image node; when it is off, an image MUST enter the result
-  only as its alternative text, never as an image source. The value MUST
+  only as its alternative text, never as an image source. With Hide
+  Images on the walker MUST NOT visit an image (an `img` element or the
+  `img` role) at all, so an image takes no `eN` reference. The value MUST
   be the pane's effective Hide Images — its own override, else the global
   value — and the agent tools and the pane's Agent preview and Agent
   source MUST build under that same value.
@@ -287,8 +299,8 @@ landmarks, headings — to build its result.)
 | agent-page-builder-016 | walker-skips-hidden-nodes | Live page with four elements hidden by display none, visibility hidden, the `hidden` attribute and `aria-hidden="true"` | None of the four appears in the result |
 | agent-page-builder-017 | walker-skips-agent-list | Agent list for the site holds `.ad`; the page has a `.ad` element with a child paragraph | Neither the element nor its paragraph appears |
 | agent-page-builder-018 | user-hidden-items-hidden-from-agent | The user list hides `#promo`, the agent list is empty | `#promo` does not appear in the result |
-| agent-page-builder-019 | scope-within-walk | Agent list holds `#side`; snapshot scoped to a reference inside `#side` | The result has an empty root |
-| agent-page-builder-020 | invalid-exclude-selector-isolated | Agent list holds `::bad(` and `.ad` | `.ad` elements are still excluded; the walk's warnings name `::bad(`; the walk succeeds |
+| agent-page-builder-019 | scope-within-walk | Agent list holds `#side`; snapshot scoped to a reference inside `#side` | The result is the whole page, as for a reference that names nothing, with `#side` and its contents left out |
+| agent-page-builder-020 | invalid-exclude-selector-fails-closed | Agent list holds `::bad(` and `.ad` | The walker answers `{"error":"agent-list"}`; the result is the unavailable page and no page content |
 | agent-page-builder-021 | refs-drive-actions | Take a reference for a button from the result and click it | The click succeeds on that button |
 | agent-page-builder-022 | single-gatekeeper, one-value-three-renderings | A spy page source; call the snapshot, text and find tools once each | Each tool requests exactly one page from the source; none reads the page another way |
 | agent-page-builder-023 | raw-page-tools-refused-when-filtered | Privacy off; the site has one enabled agent-list entry; call screenshot, click-at, evaluate | Each is refused with the agent-list sentence |
@@ -316,6 +328,10 @@ landmarks, headings — to build its result.)
 | agent-page-builder-045 | reply-concealed-with-start-and-end-words | Privacy words {Acme→Zed} when `browser_wait_for` starts; the user adds {Beta→Yew} before it returns; the reply quotes "Acme" and "Beta" | The reply reads "Zed" and "Yew"; with the setting turned off before it returns instead, "Acme" is still concealed |
 | agent-page-builder-046 | printed-refs-have-no-gaps | The landmarks fixture (`landmarks.html`): a banner with links and navigation, a paragraph "Welcome to <strong>Acme</strong>.", an image, `<table><tr><th>Name</th><td>Ada</td></tr></table>` (the parser wraps the row in a `tbody`, a rowgroup), a button "Menu", and a footer | The paragraph prints as `text: Welcome to Acme.` with no reference and takes no `eN` number, so `img "Logo" [ref=e9]` follows `link "Weblog" [ref=e8]`; the table prints as today, `table [ref=e10]`, `rowgroup [ref=e11]`, `row [ref=e12]`, `columnheader "Name" [ref=e13]`, `cell "Ada" [ref=e14]`, then `button "Menu" [ref=e15]` and `contentinfo [ref=e16]`, with no gap in the `eN` numbers |
 | agent-page-builder-047 | snapshot-tool-contract-unchanged | A table with `<thead><tr><th>Head</th></tr></thead>` and `<tbody><tr><td role="rowheader">Side</td><td>Body</td></tr></tbody>`, then a `div` with `role="rowgroup"` holding a `role="row"` with a `span` `role="columnheader"` "Col" | The tree prints `table [ref=e1]`, `rowgroup [ref=e2]`, `row [ref=e3]`, `columnheader "Head" [ref=e4]`, `rowgroup [ref=e5]`, `row [ref=e6]`, `rowheader "Side" [ref=e7]`, `cell "Body" [ref=e8]`, `rowgroup [ref=e9]`, `row [ref=e10]`, `columnheader "Col" [ref=e11]`, as today's snapshot prints them |
+| agent-page-builder-048 | scope-within-walk | Snapshot with `scope` set to the CSS selector `#main`, then to `e999` (no such reference) | Both give the whole page, the same answer, and no error |
+| agent-page-builder-049 | withheld-refs-stale | Take a snapshot; add an agent-list entry matching a button it gave a reference; click that reference | The click is refused as stale |
+| agent-page-builder-050 | hide-images, printed-refs-have-no-gaps | Hide Images on; a link, an image, then a button | The link and the button take consecutive `eN` references; the image takes none |
+| agent-page-builder-051 | snapshot-tool-contract-unchanged | A `role="grid"` holding a `role="row"` with a `role="gridcell"` "A" | Prints `grid`, `row` and `gridcell "A"`, never `table` or `cell` |
 
 ## Edge Cases
 
@@ -332,14 +348,17 @@ landmarks, headings — to build its result.)
   kept only if the result is `http`/`https`.
 - **Concurrent access**: The builder is a value with no mutable state;
   concurrent builds from any thread MUST be independent. The walker runs
-  on the page's main thread through the browser engine; two walks of one
-  page each produce their own reference generation, as snapshots do today.
+  on the page's main thread through the browser engine; the decode, the
+  tree build and the concealment of its payload run off the host's main
+  thread, so a large page costs no frames. Two walks of one page each
+  produce their own reference generation, as snapshots do today.
 - **Error states**: Every error — walker error, timeout, undecodable
   payload, unreadable or conflicting privacy words — collapses to the one
   unavailable page with a reason beginning `Agent view unavailable: `
   (MUST, `fail-closed-on-walker-failure`, `fail-closed-on-vault`). An
-  invalid agent-list selector is not an error: it is a warning and the
-  walk continues (MUST, `invalid-exclude-selector-isolated`).
+  agent-list selector the page cannot evaluate is one of them: the walk is
+  refused and the page is unavailable (MUST,
+  `invalid-exclude-selector-fails-closed`).
 - **Offline or disconnected state**: Not applicable — the component reads
   only the already-loaded document and the local agent list; it makes no
   network request.
@@ -367,22 +386,23 @@ landmarks, headings — to build its result.)
   records the cheaper structural path (`tag:nth-child(n) > …`) for every
   node after the share is spent, so a large page finishes where today's
   snapshot does. Selectors never decide exclusion: the agent list is
-  evaluated before the walk, and a selector it cannot evaluate excludes
-  nothing and is warned, as `invalid-exclude-selector-isolated` says.
+  evaluated before the walk, and a selector it cannot evaluate refuses the
+  walk, as `invalid-exclude-selector-fails-closed` says.
 - **Privacy words change mid-read**: The concealment in force when the
   build starts conceals the whole result; the tool reply is concealed
   with the start and end words together, per
   `reply-concealed-with-start-and-end-words`.
 - **Excluded ancestor of focus or scope**: See `scope-within-walk` and
   `titles-dialogs-focus-through-string-path` — content under an excluded
-  ancestor never reaches the agent by either path.
+  ancestor never reaches the agent by either path; a withheld scope gives
+  the whole page, the same answer as a scope that names nothing.
 - **Refs after the agent list grows**: Only a walk hands out references,
-  and it never gives one to an excluded element, so no action resolves a
-  reference the agent page did not show. A reading walk (text, find,
-  wait_for, the focused element) keeps the last snapshot's references, so
-  an element excluded after that snapshot, by an agent-list entry added
-  mid-session, keeps the reference that snapshot gave it until the next
-  snapshot restarts the references and advances the generation.
+  and it never gives one to an excluded element. Any change to the
+  hidden-items store makes every reference stale at once (a new generation,
+  the reference table cleared), and a reference to an element a later walk
+  withheld resolves as stale, whichever walk handed it out, so an element
+  excluded mid-session is never acted on through an older reference (MUST,
+  `withheld-refs-stale`).
 ## Configuration
 
 | Option | Type | Default | Description |
@@ -390,8 +410,8 @@ landmarks, headings — to build its result.)
 | `allowlist` | node kinds plus per-kind attribute sets | the standard allowlist (Design Decisions) | What may enter the result; passed to the walker each walk. |
 | `privacy` | agent privacy state (off, enabled with words, unavailable, conflicting) | the pane's Agent Privacy | Drives concealment and the fail-closed vault rule. |
 | `hideImages` | boolean | the pane's effective Hide Images (its own override, else the global value) | Drops image nodes when on; the tools and the pane's agent views read the same value. |
-| `excludeSelectors` | list of selectors | the site's enabled agent-list entries; no store is the unavailable page | Subtrees the walker never visits. |
-| `scope` | reference or selector | none | Subtree of the walk to render. |
+| `excludeSelectors` | list of selectors | the site's enabled agent-list entries; no store is the unavailable page | Subtrees the walker never visits; one the page cannot evaluate refuses the walk (the unavailable page). |
+| `scope` | reference (never a CSS selector) | none | Subtree of the walk to render; a reference that names nothing or a withheld element gives the whole page. |
 | `interactiveOnly`, `depth`, `includeURLs`, `delta` | as today's snapshot options | as today | Unchanged snapshot options. |
 | `timeoutMs` | integer milliseconds | 1500 | Walker deadline. |
 
@@ -461,8 +481,18 @@ model can read would be a route around the gatekeeper.
   world), passing `AgentPageAllowlist.standard` JSON-encoded as an
   argument, the agent-list selectors from
   `BrowserHiddenItemsStore.enabledSelectors(list: .agent, for:)`, and the
-  timeout. Concealment is `BrowserAgentPrivacy.concealing(_:)`, except that
-  the string path returns `""` for `.unavailable`/`.conflicting`.
+  timeout, the scope ref and `hideImages`, then builds the page in a
+  `Task.detached(priority: .userInitiated)`, so the decode, the tree build
+  and the concealment run off the main actor. Concealment is
+  `BrowserAgentPrivacy.concealing(_:)`, except that
+  the string path returns `""` for `.unavailable`/`.conflicting`. The
+  privacy words come from `PrivacyWordsVault` (Core/Privacy), whose
+  `filter(for:)` holds the enabled words whose sites match a page and whose
+  `everySiteFilter` holds every enabled word whatever its sites
+  (`[PrivacyWord].everySiteFilter`), the one `browser_history` conceals
+  with. A walker answer of `{"error":"agent-list"}` (an agent-list
+  selector `querySelectorAll` throws on) builds the unavailable page with
+  `AgentPageBuilder.agentListReason`.
   `BrowserToolSet` reads every page through one seam, an `AgentPageReader`
   (`AgentPageSource` in the app, a spy in tests) built per call with the
   privacy that call runs under by `BrowserToolSet.agentPageSource(for:privacy:hiddenItems:)`,
@@ -474,7 +504,8 @@ model can read would be a route around the gatekeeper.
   `agentHidesImages`), so the views and the tools build under one value.
   It routes `browser_snapshot`,
   `browser_text`, `browser_find`, `browser_wait_for` text and every action
-  reply through it. `AgentPageWalker.js` (runtime version 5, `AgentPageWalkerRuntime.version`)
+  reply through it. `AgentPageWalker.js` (runtime version 6, `AgentPageWalkerRuntime.version`;
+  the snapshot runtime `BrowserSnapshot.js` is version 4, `BrowserSnapshotRuntime.version`)
   gives element nodes refs from the snapshot runtime's `assignRef`, except
   the `GENERIC_KINDS` (`paragraph`, `label`), which take walk-local `gN`
   refs as text pieces take `tN`, so printed `eN` refs have no gaps (fixture
@@ -485,7 +516,18 @@ model can read would be a route around the gatekeeper.
   `rowHeader`, and names both header kinds from content; `AgentPage`
   prints them as `rowgroup`, `columnheader` and `rowheader`, renders
   `rowGroup` as a text block, and emits `tbody`, `th scope="col"` and
-  `th scope="row"` in the HTML. Only the snapshot starts a new ref generation; text,
+  `th scope="row"` in the HTML. `AgentNodeKind` also holds `grid`,
+  `treeGrid` and `gridCell` (roles `grid`, `treegrid`, `gridcell`), printed
+  as written and emitted as `table` and `td`. With `hideImages` the walker
+  skips an `img` element or `role="img"` before it assigns a ref. The
+  snapshot runtime's `resolveScope` takes a ref only (no
+  `document.querySelector` fallback) and answers nil for a missing,
+  disconnected or withheld element; the walker then walks the whole page.
+  Each walk hands its excluded elements to the runtime's `setWithheld`, and
+  `resolve` and `resolveScope` refuse an element under any of them.
+  `BrowserAutomation` observes `BrowserHiddenItemsStore.didChangeNotification`
+  and calls `invalidateRefs()`, which runs the runtime's `invalidate()`
+  (generation advanced, ref table cleared). Only the snapshot starts a new ref generation; text,
   find, wait and the focused element read with `keepingRefs: true`
   (`beginWalk(true)` in the snapshot runtime), so the refs of the agent's
   last snapshot stay valid. `rawPageRefusal(pane:tool:)` is async, since
@@ -521,13 +563,16 @@ model can read would be a route around the gatekeeper.
 | macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Automation/BrowserAutomation.swift` | unverified |
 | macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Automation/BrowserSnapshot.js` | unverified |
 | macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Automation/BrowserSnapshot.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Privacy/PrivacyWordStore.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Privacy/PrivacyWordsVault.swift` | unverified |
 
 ## Design Decisions
 
 **Decision**: The standard allowlist's node kinds are document, landmark,
 heading, paragraph, text, list, list item, link, button, text field, text
 area, checkbox, radio, select, option, table, row group, row, cell,
-column header, row header, image and label.
+column header, row header, image, label, and the ARIA grid kinds grid,
+tree grid and grid cell.
 Attributes: `aria-label` and `title` on every kind; `href` on links; `alt`
 on images; `placeholder`, `name` and `type` on text fields and text areas;
 `name` on selects, checkboxes and radios; `level` on headings.
@@ -610,17 +655,18 @@ says the tool contract is unchanged, line for line
 **Approved**: pending
 
 **Decision**: Roles are renamed to the allowlist kind they fold into:
-`gridcell` prints as cell; `grid` and `treegrid` as table (the remaining
-table-family folds); `rowgroup`, `columnheader` (and `th`) and
-`rowheader` are not renamed and print as today; `listbox` as combobox (a select); `tab`, `menuitem`
+the table family is not renamed — `grid`, `treegrid` and `gridcell` have
+kinds of their own and print as written, and `rowgroup`, `columnheader`
+(and `th`) and `rowheader` print as today (in the HTML a grid or tree grid
+is a `table` and a grid cell a `td`); `listbox` as combobox (a select); `tab`, `menuitem`
 and `treeitem` as button; `switch` and `menuitemcheckbox` as checkbox and
 `menuitemradio` as radio; `searchbox`, `spinbutton` and `slider` as text
 fields typed search, number and range. The folded `switch`,
 `menuitemcheckbox` and `menuitemradio` keep the legacy name from content.
 **Rationale**: Forced by the allowlist's kinds. The tree's format (syntax,
 references, states, levels) is unchanged, and folding to clickable kinds
-keeps the references. Table rowgroup, columnheader and rowheader are kept
-exactly as
+keeps the references. The grid roles and table rowgroup, columnheader and
+rowheader are kept exactly as
 `browser_snapshot` prints them today, because the spec says the tool
 contract is unchanged, line for line (`snapshot-tool-contract-unchanged`).
 **Approved**: pending
@@ -651,6 +697,7 @@ plan's tests are `AgentPageBuilderTests` (builder, pure),
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 0.1.3 | 2026-11-16 | Mike Fullerton | Scope refs only; withheld scope and invalid agent-list selectors fail closed; grid kinds; walker v6, snapshot v4; work off the main actor; refs stale on withheld or hidden-item changes; claims the privacy word files. |
 | 0.1.2 | 2026-11-16 | Mike Fullerton | Walker version 5: tables keep today's rowgroup, columnheader and rowheader roles (allowlist kinds row group, column header, row header; vector 047) |
 | 0.1.1 | 2026-11-16 | Mike Fullerton | Pane's effective Hide Images shared by tools and agent views via BrowserToolSet.agentPageSource; replies concealed with the start and end privacy combined. |
 | 0.1.0 | 2026-11-15 | Mike Fullerton | Initial creation (design-first, from the more privacy features design) |

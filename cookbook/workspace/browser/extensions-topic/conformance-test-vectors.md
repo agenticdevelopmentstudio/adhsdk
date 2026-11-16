@@ -29,3 +29,7 @@
 | extensions-topic-026 | list-follows-host | With details open, remove the extension from the popover and confirm | The row disappears and the popover closes |
 | extensions-topic-027 | no-inline-help-labels | Load the topic with no extensions installed | An empty table with no text; the help content explains installing |
 | extensions-topic-028 | downloaded-refuses-links | Install a folder with a manifest and a symbolic link to a file outside it | A symbolic-link error naming the link; no confirmation; nothing staged or installed |
+| extensions-topic-029 | keyed-takeover-confirmed | Web Store extension "A" installed; install a downloaded folder whose manifest `key` gives A's id, named "B" | Confirmation "Replace “A” with “B”?" with a Replace button; once accepted the extension is local (not from the Web Store) with only the permissions just agreed to |
+| extensions-topic-030 | download-size-capped | Install from a `.crx` address whose body is 129 MB, with and without a Content-Length header | A download error saying it is larger than 128 MB; nothing staged |
+| extensions-topic-031 | downloaded-refuses-links | `symbolicLink(in:)` on a staged root that is itself a symbolic link, and on a plain file | Both answer "." |
+| extensions-topic-032 | url-prompt | Choose URL… | The prompt's message is "Add an Extension from a URL" with no informative text |

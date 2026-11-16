@@ -11,6 +11,10 @@
   the preview uses the looser selector the gatekeeper recorded for the ref
   if it recorded one, and is disabled otherwise. The gatekeeper records no
   looser selector today, so in the preview it is always disabled.
+- **Pages with no host**: On a `file:`, `about:` or `data:` page the
+  button is disabled with its tooltip kept, and nothing is saved, since an
+  entry's site would be `*` and hide the item from the agent everywhere
+  (MUST, see `hostless-page-disabled`).
 - **Agent source view**: The source view is text, with no elements to
   pick; "Select Items to Hide from the Agent" there beeps and starts
   nothing.

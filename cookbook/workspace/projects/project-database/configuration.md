@@ -8,6 +8,6 @@
 | `value` (set-setting parameter) | string, optional | none — required | Absent deletes the setting row; any string, including the empty string, upserts it. |
 
 The busy timeout (5,000 milliseconds) and the current schema version
-constant (`4`) are fixed constants in this file, not exposed as
+constant (`7`) are fixed constants in this file, not exposed as
 configuration a caller can override.
 

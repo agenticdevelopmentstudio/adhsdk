@@ -8,14 +8,24 @@
   distracting items" bound to the user list's site switch for the page's
   default site pattern; a button "Select distracting items to hide"; a
   divider; and a table of the user list's items for the page, each row a
-  checkbox showing and setting the entry's enabled state and the entry's
-  label; with a header **−** button (tooltip "Remove Selected Item") that
+  checkbox showing and setting the enabled state of the entry its row
+  holds when it is clicked (a reload since the row was made may have
+  reordered the list), and the entry's label; with a header **−** button (tooltip "Remove Selected Item") that
   removes the selected row and is disabled when no row is selected.
 - **popover-changes-apply-immediately**: Toggling the site checkbox or a
   row's checkbox, or removing a row, MUST write the change to the
   hidden-items store at once, so the page re-renders without a reload.
 - **popover-transient**: The popover MUST close when the user clicks
-  outside it.
+  outside it, and MUST close when the pane commits a navigation, the front
+  page changes, the tab switches or the pane is discarded, since the site
+  it lists and switches may no longer be the one showing.
+- **hostless-page-refused**: On a page with no host (`file:`, `about:`,
+  `data:`, or no address), whose default site pattern is `*`, the
+  address-bar button MUST be disabled, keeping its tooltip, except as the
+  stop control of a selecting mode already running; starting selecting
+  mode there MUST beep and start nothing, and a pick whose page has no
+  host MUST NOT be saved (logged, with a beep), so no entry is ever saved
+  for every site.
 - **select-enters-selecting-mode**: The popover's select button MUST close
   the popover and start selecting mode on that pane.
 - **stop-icon-while-selecting**: While selecting, the address-bar button
@@ -49,6 +59,11 @@
   only, one with a `-` or `_` followed by five or more hexadecimal
   characters, or one with a `-` or `_` followed by five or more letters and
   digits that mix both (a CSS-in-JS hash such as `css-1x2y3z`).
+- **all-like-it-needs-a-class**: The All items like it selector MUST name
+  at least one class: an element with no stable class gets no looser
+  selector, since a bare tag such as `div` would hide most of a site. It
+  MUST NOT be built for the page's frame, an `html`, `head`, `body` or
+  `main` element.
 - **all-like-it-absent-when-same**: When the looser selector is the same as
   the This item selector (the same text, or it matches only the picked
   element), or cannot be computed, the pick MUST carry no All items like it
@@ -60,7 +75,8 @@
 - **loose-selector-disabled**: The All items like it choice MUST be
   disabled when there is no looser selector, with the tooltip "No looser
   selector is available", and when it matches more than half of the
-  page's elements, with the tooltip "Matches too much of the page".
+  page's elements, has no class, or is for an `html`, `head`, `body` or
+  `main` element, with the tooltip "Matches too much of the page".
 - **label-format**: The label MUST be the element's lowercase tag name, a
   space, and the first 60 characters of its trimmed text in double quotes,
   where the text is the element's visible text, else its `alt`, else its
@@ -79,6 +95,7 @@
 - **dialog-ok-saves**: OK MUST add one entry to the picker's list with the
   chosen scope's selector, that scope, the pick's label, enabled, and the
   site pattern derived from the page's address by the shared default rule.
+  A save the store refuses MUST be logged and beep.
 - **dialog-cancel-saves-nothing**: Cancel, or Esc in the dialog, MUST save
   nothing.
 - **resume-after-dialog**: After OK or Cancel, selecting mode MUST resume

@@ -2,11 +2,11 @@
 id: ded9b397-958d-437d-8235-48ef85ae7386
 title: "Project Layout Persistence"
 type: ingredient
-version: 1.3.0
+version: 2.0.0
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-11-15
+modified: 2026-11-16
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -131,6 +131,9 @@ shared SQLite connection.
   `project_state` row and write it back unchanged, or write the empty
   string (no choice) when no row existed, so seeding or saving a layout
   never turns the app-wide default into a per-project choice.
+- **save-tabs-empty-edges-clear**: An empty enabled-edges list MUST write the
+  empty string, clearing any stored choice, so the project follows the
+  app-wide tab positions again.
 - **save-tabs-tab-position**: MUST persist each tab's
   `project_tabs.position` as its index in the given tab list, in that
   order.
@@ -272,6 +275,7 @@ Not applicable: this component has no UI surface to make accessible.
 | git-client-projects-project-database-layout-009 | project-directories-whole-replace, project-directories-empty-means-none | Saving project directories ["/a", "/b"] then loading them | ["/a", "/b"] in the same order; a second save with an empty list then reload → an empty list |
 | git-client-projects-project-database-layout-010 | load-tabs-working-directory-is-directory-url | A working directory containing a space and a non-ASCII character, saved and reloaded | the exact same path string, constructed as a directory location |
 | git-client-projects-project-database-layout-011 | save-tabs-atomic-rollback | A fresh database opened at the current schema version and a hand-built schema-version-3 fixture opened the same way | both migrate/open successfully and the working directory round-trips on the migrated database |
+| git-client-projects-project-database-layout-012 | save-tabs-empty-edges-clear | Save tabs with enabled edges `[top, left]`, then save again with an empty list, then load. | The loaded enabled edges are absent (no stored choice) |
 
 ## Edge Cases
 
@@ -501,4 +505,4 @@ Notes: both `partial` findings above trace to the same underlying property of th
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to workspace/projects/. |
 | 1.2.0 | 2026-10-04 | Mike Fullerton | Resolved the corrupt-row NEEDS REVIEW marker against source (silent drop, no logging) as a pending decision; converted test vectors to a table and Design Decisions to Decision/Rationale/Approved triples. |
 | 1.2.1 | 2026-10-04 | Mike Fullerton | Requirements use the named-bullet form, `- **id**: ...`, instead of an em dash after the id. |
-| 1.3.0 | 2026-11-15 | Mike Fullerton | Tab edges are an explicit per-project Tab Bars choice: no stored edges means follow the app-wide tab positions live, an empty enabled_edges value means no choice, and the shared tab configuration carries only the pane arrangement. |
+| 2.0.0 | 2026-11-16 | Mike Fullerton | An empty enabled-edges list clears a stored choice. |

@@ -1,7 +1,8 @@
 
 - **constructs-topic-list-from-closures**: Component MUST construct its
   topic list during its own initialization, passing through the
-  `isEdgeEnabled` and `setEdgeEnabled` closures it was given.
+  `isEdgeEnabled` and `setEdgeEnabled` closures and the optional
+  `useGlobalTabPositions` closure it was given.
 - **tags-window-background-role**: Component MUST set its root view's
   background to the `.windowBackground` theme role.
 - **identifies-sheet-root**: Component MUST set the root view's accessibility
@@ -68,6 +69,15 @@
   window's last enabled edge becomes visible on screen: the window's own
   refusal (reported back through `isEdgeEnabled`) overrides the toggle's
   own state.
+- **use-global-setting-button**: When given a `useGlobalTabPositions`
+  closure, the Tabs panel MUST show a rounded button titled "Use Global
+  Setting" in the Tab Bars group, after the four toggles, with the
+  accessibility identifier `project-settings.tabs.use-global` and a tooltip;
+  without one it MUST show no such button. Its action MUST call the closure
+  and then set every toggle's state from `isEdgeEnabled(edge)`. The Tabs
+  panel's help MUST have a "Use Global Setting" topic saying that until the
+  project's tab bars are changed its window follows the app-wide tab
+  position, and that the button drops the project's own choice.
 - **guards-invalid-checkbox-tag**: The Tabs panel MUST NOT act on a toggle
   action whose index does not map to one of the four edges; the handler
   MUST return without calling `setEdgeEnabled` in that case.

@@ -140,6 +140,12 @@
   its enabled-edge set and stops following the app-wide setting. Opening,
   following the global, topping up, and adopting another window's
   configuration MUST NOT make or persist a choice.
+- **use-global-tab-positions**: Using the global tab positions (project
+  settings' Use Global Setting) MUST drop the project's explicit edge
+  choice: it MUST persist the tabs with an empty edge list, which stores no
+  choice, and then follow the app-wide tab positions live, as a project
+  that never chose does. It MUST do nothing while the window is reloading
+  its tabs or closing.
 - **shared-configuration-arrangement-only**: The configuration the window
   reports for another project window to adopt, and the configuration it
   adopts, MUST carry only the pane arrangement (shape and sizes), never

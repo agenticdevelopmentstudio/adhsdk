@@ -2,11 +2,11 @@
 id: 8a4aca5f-977b-4f4c-86f6-16f4150132ac
 title: "Browser Menu"
 type: ingredient
-version: 0.1.1
+version: 0.1.2
 status: draft
 language: en
 created: 2026-11-15
-modified: 2026-11-15
+modified: 2026-11-16
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -91,7 +91,9 @@ features design, section 1.2, and its phase 1 plan, Task 3).
 - **stop-follows-loading**: Stop MUST be disabled when the target pane's
   engine reports it is not loading.
 - **show-history-always-enabled**: Show History MUST be enabled whether or
-  not there is a target pane, and choosing it MUST open the History window.
+  not there is a target pane, as long as the host has given the History
+  window a history store, and MUST be disabled while there is none;
+  choosing it MUST open the History window.
 - **privacy-toolbar-title-follows-pane**: The privacy toolbar item's title
   MUST read "Hide Privacy Toolbar" when the target pane's effective
   show-privacy-toolbar value is on, and "Show Privacy Toolbar" when it is
@@ -106,6 +108,13 @@ features design, section 1.2, and its phase 1 plan, Task 3).
   to Command-[ and Command-], in a key command section titled "Web Browser"
   that holds those two descriptors only; the web browser windows feature
   MUST install that section in the shared key command registry.
+- **back-forward-keys-need-focus**: The Back and Forward key commands MUST
+  act only on a browser pane that has keyboard focus: the standalone
+  browser window's pane, or, in another window, the target pane only while
+  the window's first responder is inside it (a Chrome pane's attached page
+  window counts as inside it). With an editor or terminal focused beside
+  the pane they MUST do nothing to the pane, so the keys reach that view.
+  The menu items themselves keep acting on the target pane.
 - **menu-key-follows-binding**: A menu item that carries a key command id
   MUST display, as its key equivalent and modifiers, the registry's current
   shortcut for that id, and MUST update it whenever the registry announces
@@ -144,7 +153,8 @@ features design, section 1.2, and its phase 1 plan, Task 3).
 |-------|------------------|
 | Target pane present, idle | Reload, Show History and the privacy toolbar item enabled; Stop disabled; Back and Forward enabled as the engine can go back and forward. |
 | Target pane loading | Stop enabled. |
-| No target pane | Reload, Stop, Back, Forward and the privacy toolbar item disabled; Show History enabled. |
+| No target pane | Reload, Stop, Back, Forward and the privacy toolbar item disabled; Show History enabled when there is a history store. |
+| No history store | Show History disabled, whatever the target pane. |
 | Privacy toolbar shown on target | Toggle item titled "Hide Privacy Toolbar". |
 | Privacy toolbar hidden on target | Toggle item titled "Show Privacy Toolbar". |
 | Back/Forward rebound | The item's displayed key equivalent changes to the new binding. |
@@ -192,11 +202,14 @@ features design, section 1.2, and its phase 1 plan, Task 3).
 | browser-menu-018 | no-duplicate-menu-key | Try to rebind `browser.forward` to Command-R (Reload's key) or to Back's current key | The rebind is refused as a conflict and no two menu items show one key |
 | browser-menu-019 | fixed-keys-not-conflicts | Keep the default Back and Forward bindings and read the registry's conflicts | No conflict is reported between Back/Forward and Reload/Stop |
 | browser-menu-020 | bridge-is-generic | A contribution in another slot names a key command id; another names none and a fixed key | The first follows the registry; the second keeps its fixed key |
+| browser-menu-021 | show-history-always-enabled | No history store set; validate Show History with and without a target | Disabled both times |
+| browser-menu-022 | back-forward-keys-need-focus | Project window whose last-focused browser pane can go back; first responder in an editor pane beside it; run the `browser.back` key command | The pane does not go back; with the first responder inside the pane it does |
 
 ## Edge Cases
 
 - **Null and empty input**: No key pane — every page item and the privacy
-  toolbar item disabled, Show History enabled, no crash (MUST, see
+  toolbar item disabled, Show History enabled when there is a history
+  store and disabled when there is none, no crash (MUST, see
   `disabled-without-target`, browser-menu-008). A cleared or disabled
   binding leaves the item with no key equivalent (MUST, see
   `cleared-binding-no-key`, browser-menu-017).
@@ -218,6 +231,9 @@ features design, section 1.2, and its phase 1 plan, Task 3).
   synchronous call into the engine or the settings store.
 - **Several browser windows**: Only the key window's pane is ever acted on
   (MUST, see `target-is-key-window-pane`, browser-menu-007).
+- **Focus beside the pane**: In a project window with an editor or terminal
+  focused, Command-[ and Command-] do not navigate the last-focused browser
+  pane (MUST, see `back-forward-keys-need-focus`).
 
 ## Configuration
 
@@ -268,7 +284,7 @@ Not applicable: the design asks for no log line of the menu's own.
 - **AppKit / UIKit**: The menu slot is a new `MenuContribution.Slot.browser`
   ("Browser menu, after View"), and `MenuManager.buildMainMenu` builds the
   Browser submenu after View and before Projects. `BrowserMenuCommands`
-  (`@MainActor`, `init(keyPane:showHistory:)`, `contributions()`, static
+  (`@MainActor`, `init(keyPane:canShowHistory:showHistory:)`, `contributions()`, static
   `keySection`) produces the contributions; `WebBrowserWindowsFeature`
   installs `keySection` with `KeyCommandRegistry.shared.install(_:)` and
   appends `contributions()` to its `menuContributions`. The default
@@ -277,7 +293,14 @@ Not applicable: the design asks for no log line of the menu's own.
   its `view.window` is the key window, else `nil` — "the key window" being
   `KeyCommandRegistry.shared.commandWindow` resolved through `commandOwner`,
   so a Chrome pane's attached child window counts as its parent; the window
-  form is `keyPane(in:)`. The items' stable ids are
+  form is `keyPane(in:)`. `canShowHistory` defaults to
+  `BrowserHistoryWindowController.canShow` (a store is set) and is Show
+  History's `isEnabled`. The `keySection` descriptors' `perform` navigate
+  `WebBrowserPaneViewController.focusedKeyPane()` instead: `keyPane(in:)`
+  of the command window, kept only when that window is a
+  `WebBrowserWindowController`'s, when the command window is a child whose
+  `commandOwner` is another window, or when the first responder is a view
+  inside the pane's view. The items' stable ids are
   `BrowserMenuCommands.ItemID` (`browser.reload` … `browser.toggle-privacy-toolbar`),
   which `MenuManager` prefixes into `menu.browser.*` accessibility identifiers,
   and the separator falls before `BrowserMenuCommands.showSectionOrder` (100). Engine calls are
@@ -362,5 +385,6 @@ checks are run when the code lands and the recipe is confirmed against it.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 0.1.2 | 2026-11-16 | Mike Fullerton | Show History enabled only with a history store; Back and Forward keys act only on a focused pane. |
 | 0.1.1 | 2026-11-15 | Mike Fullerton | macOS implementation: dynamicTitle, ItemID, showSectionOrder, keyPane(in:) and the command-window rule recorded in platform notes |
 | 0.1.0 | 2026-11-15 | Mike Fullerton | Initial creation (design-first, from the more privacy features design) |

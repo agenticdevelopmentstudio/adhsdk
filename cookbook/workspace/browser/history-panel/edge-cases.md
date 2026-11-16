@@ -11,7 +11,9 @@
   latest filter's answer is shown (MUST, see `latest-filter-wins`). Debug
   builds may run several app copies sharing one history file; the store's
   one-writer WAL pool serializes their writes, and each copy's list shows
-  the store as of its last reload.
+  the store as of its last reload. Within one copy, every write to the
+  store reloads the list (MUST, see `reloads-on-store-change`), so a visit
+  recorded while the panel is open appears without reopening it.
 - **Error states**: A store read or write that throws leaves the listed
   visits as they were; how the failure is reported is the builder's (see
   Design Decisions). No error leaves a visit shown as removed when it was

@@ -12609,6 +12609,20 @@
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Automation/BrowserSnapshot.swift",
           "platform": "macos"
+        },
+        {
+          "conformance": {
+            "state": "unverified"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/Core/Privacy/PrivacyWordStore.swift",
+          "platform": "apple"
+        },
+        {
+          "conformance": {
+            "state": "unverified"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/Core/Privacy/PrivacyWordsVault.swift",
+          "platform": "apple"
         }
       ],
       "kind": "ingredient",

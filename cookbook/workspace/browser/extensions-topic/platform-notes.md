@@ -16,10 +16,32 @@
   `NSPopover` (`behavior = .transient`, `preferredEdge: .maxY`) hosting
   `SafariExtensionDetailsView`, anchored to `frameOfCell(atColumn:row:)` of
   the gear; the details view has no Back control. Downloaded… uses an
-  `NSOpenPanel` sheet and `SafariExtensionHost.installDownloaded(at:presentingOn:)
-  async throws -> Bool`; URL… uses `ExtensionURLPromptController`, validating
-  with `WebStoreExtension.id(from:)`, and a `.crx` address goes to
-  `SafariExtensionHost.install(fromAddress:presentingOn:)`. A downloaded
+  `NSOpenPanel` sheet and
+  `SafariExtensionHost.installDownloaded(at:presentingOn:appModalWithoutWindow:)
+  async throws -> Bool`, passing `appModalWithoutWindow` true when the topic
+  has no window, so the confirmation `NSAlert` runs with `runModal()`
+  instead of a sheet; the topic reports an error with
+  `NSAlert(error:).runModal()` when it has no window. URL… uses
+  `ExtensionURLPromptController` (message text only, no `informativeText`),
+  validating with `WebStoreExtension.id(from:)`, and a `.crx` address goes to
+  `SafariExtensionHost.install(fromAddress:presentingOn:)`, which reads it
+  with `SafariExtensionLibrary.download(from:limit:session:)`: a
+  `URLSession.bytes` stream refused past `maximumDownloadSize` (128 MB),
+  checked against `expectedContentLength` first and every byte after; the
+  store's `download(id:session:)` goes through it too. Every install path
+  (downloaded, address, store `install(crx:)`, app extension) stages in
+  `Task.detached(priority: .userInitiated)` and calls `refuseLinks`, which
+  throws `Failure.symbolicLink` when `SafariExtensionLibrary.symbolicLink(in:)`
+  finds one; that answers `"."` for a root that is not a directory (an
+  lstat) or cannot be enumerated, the item itself when its
+  `isSymbolicLinkKey` cannot be read, and the failing path when the
+  enumerator's error handler fires. The confirmation is asked by
+  `InstallKind` (`new`, `update`, `replacement(String)`); `installLocal`
+  sets `replacement` with the installed one's display name when a keyed id
+  is already installed, and `installStaged` then grants nothing from the
+  old record and, after commit, sets `isFromWebStore` false, `appSource`
+  nil, `sourceMissing` false and clears `grantedPermissions` and
+  `grantedOrigins`. A downloaded
   item's record id is `WebStoreExtension.id(ofKey:)` of its manifest `key`
   when present, else `WebStoreExtension.localID(forPath:)` of its path or
   address, both Chrome's SHA-256 a–p mapping. Chrome Web Store… calls

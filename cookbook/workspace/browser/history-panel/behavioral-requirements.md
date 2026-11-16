@@ -23,6 +23,11 @@
   empty.
 - **change-is-announced**: The list model MUST notify its observer each
   time the visits it lists change, after reloading, removing or clearing.
+- **reloads-on-store-change**: The list model MUST reload whenever its
+  history store announces a successful write (a pane recording a visit,
+  another list removing or clearing), so a visit recorded while the panel
+  is open appears; the store MUST announce every write that succeeded. The
+  panel MUST also reload each time it appears, so its times are current.
 - **store-work-off-ui-thread**: The list model MUST perform every store
   read and write off the UI thread and publish the resulting visits on the
   UI thread, so a slow store never blocks the interface.
@@ -44,9 +49,11 @@
   confirmation before anything is removed; it MUST ask the list model to
   clear all only when the user confirms, and MUST remove nothing when the
   user cancels.
-- **panel-opens-visit**: The History panel MUST, on a double-click of a
-  row or Return with a row selected, pass that visit's address to the open
-  callback its host supplied, and MUST do nothing else to open it.
+- **panel-opens-visit**: The History panel MUST, on Return, pass the
+  address of every selected visit, in list order, to the open callback its
+  host supplied; on a double-click of a selected row it MUST do the same,
+  and on a double-click of a row outside the selection it MUST pass that
+  row's visit alone. It MUST do nothing else to open them.
 - **panel-every-button-has-tooltip**: The History panel MUST give every
   button it shows a tooltip.
 - **panel-no-inline-help**: The History panel MUST NOT show inline help or
@@ -67,7 +74,8 @@
   windows do.
 - **window-opened-from-browser-menu**: The Browser menu's Show History
   command MUST show the History window, and MUST stay enabled whether or
-  not the key window has a browser pane.
+  not the key window has a browser pane, while the host has given the
+  window a history store; with none it MUST be disabled.
 - **window-opens-visit-in-browser**: The History window MUST open a visit
   the panel hands it in the focused browser pane of the frontmost other
   window (the window that was key before the History window) as a new tab

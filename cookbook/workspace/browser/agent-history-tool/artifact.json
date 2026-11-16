@@ -4,7 +4,7 @@
     "id": "4ef7f4f9-1fa0-4267-ad82-0f35ba92a7d1",
     "title": "Agent History Tool",
     "type": "ingredient",
-    "version": "0.1.2",
+    "version": "0.1.3",
     "status": "draft",
     "language": "en",
     "created": "2026-11-15",
@@ -39,7 +39,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "ddbd25e04f652585",
+  "synced": "bf1c568afad9f114",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

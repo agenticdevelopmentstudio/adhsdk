@@ -25,7 +25,8 @@
   (each `loadHTMLString` adds one; the end of the latest own
   `WKNavigation`, in `didFinish`, `didFail` or
   `didFailProvisionalNavigation`, zeroes it, and the end of a superseded
-  one changes nothing). The delegate method only unpacks the action and
+  one changes nothing; a `loadHTMLString` that returns no navigation takes
+  its credit back). The delegate method only unpacks the action and
   calls the internal `decidePolicy(targetFrameIsMain:url:navigationType:)`
   with `targetFrame?.isMainFrame` (nil when the action has no target frame;
   the seam cancels anything but `true`), which tests call
@@ -35,14 +36,23 @@
   `keepPaintingUnderQuietPresentation()` for the Debug occlusion
   workaround. `BrowserAgentSourceViewController` is a non-editable
   `NSTextView` with a small HTML highlighter building
-  `NSAttributedString` attributes from the theme. Refresh listens for the
+  `NSAttributedString` attributes from the theme: `show(_:)` sets the
+  text with no runs, then lexes it with
+  `BrowserAgentSourceHighlighter.tokens(in:)` in a `Task.detached`
+  (`highlighting`, cancelled by the next `show`) and applies
+  `highlight(_:tokens:font:colors:)` only if the HTML is still the one
+  shown. `BrowserAgentViews.setMode(_:)` shows `AgentPage.blank` when
+  leaving Website and the last page when moving between agent modes,
+  then starts the rebuild. Refresh listens for the
   engine's navigation finish, `UserSettings` changes of the privacy keys,
   privacy-word changes and `BrowserHiddenItemsStore.didChangeNotification`,
   and calls `AgentPageSource.read(options:keepingRefs: true)` (a reading
   walk, so the agent's refs stay valid), built by the same
   `AgentPageSource.reading(_:hiddenItems:privacy:hideImages:)` the tools use
   (through `WebBrowserPaneViewController.agentPageSource(engine:)`, which
-  passes the pane's effective Hide Images, `agentHidesImages`).
+  passes the pane's effective Hide Images, `agentHidesImages`, and awaits
+  the hidden-items store with `BrowserHiddenItemsStore.sharedStore()`,
+  since a tab restored into an agent view reads during launch).
   The agent view is laid over the tab's page holder, which is hidden, not
   removed, so the live page keeps its state. Under UIKit,
   `UISegmentedControl` and a read-only `UITextView`; the web view is the

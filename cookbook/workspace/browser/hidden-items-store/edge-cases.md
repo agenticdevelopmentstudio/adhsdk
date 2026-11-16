@@ -20,6 +20,11 @@
   caller's concern (the agent gatekeeper fails closed). A file that cannot
   be opened at launch leaves the app with no store, a degraded mode rather
   than a launch failure.
+- **Read during the launch open**: The launch open runs off the main
+  thread; a read of the shared store before it finishes waits for it
+  (awaiting, never blocking the main thread, for a caller that can run
+  during launch) and gets the store, or no store if the open failed, never
+  a premature no store (MUST, see `opened-at-launch`).
 - **Offline or disconnected state**: Not applicable — the store is a local
   file and makes no network call.
 - **Missing file or unreachable server**: A missing file is created, with

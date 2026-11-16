@@ -8,7 +8,16 @@
 - **Concurrent access**: One change at a time: an install, removal or update
   check started while another runs is refused with a beep, as today.
 - **Error states**: A failed install, removal or update check is shown as an
-  alert sheet on the settings window; the list reloads afterwards.
+  alert sheet on the settings window, or an app-modal alert when the topic
+  has no window; the list reloads afterwards. An item holding a symbolic
+  link, or one whose tree cannot be read, is refused before the
+  confirmation (MUST, see `downloaded-refuses-links`).
+- **Boundary sizes**: A package over 128 MB is refused as it downloads,
+  announced or not (MUST, see `download-size-capped`).
+- **Same key as an installed extension**: Files whose manifest `key` names an
+  installed extension are confirmed as a replacement and, once accepted,
+  become a local extension with fresh grants (MUST, see
+  `keyed-takeover-confirmed`).
 - **Offline or disconnected state**: An install from the Web Store, a `.crx`
   address or an update check fails with the network error, shown as above;
   Downloaded… still works offline.

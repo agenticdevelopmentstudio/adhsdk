@@ -59,5 +59,12 @@
   MUST follow the test home override (`APP_TEST_HOME`) when one is set.
 - **opened-at-launch**: The browser feature MUST open the store once at
   launch and share that one store with every pane, in the same way the
-  browser history store is opened.
+  browser history store is opened. The open MUST run off the main thread,
+  and a read of the shared store made before the open finishes MUST wait
+  for it rather than answer that there is no store, so a consumer that
+  fails closed on no store (the agent gatekeeper) never runs ahead of the
+  open. A reader that can run during launch (an engine's first read, the
+  pane's toolbar actions, an agent view's page read) MUST await the open
+  rather than block the main thread on it; an open that fails MUST answer
+  no store.
 

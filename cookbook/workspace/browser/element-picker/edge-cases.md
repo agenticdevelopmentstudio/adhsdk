@@ -1,13 +1,15 @@
 
 - **Null and empty input**: A pick with no This item selector is refused
-  (MUST, see `pick-without-selector-refused`). A page with no address
-  saves entries with site `*`, as the shared default rule says. An empty
-  list shows the popover with an empty table.
+  (MUST, see `pick-without-selector-refused`). A page with no address or
+  no host would save entries with site `*`, hiding them on every page, so
+  the button is disabled there and no pick is saved (MUST, see
+  `hostless-page-refused`). An empty list shows the popover with an empty
+  table.
 - **Boundary values**: An All items like it selector matching exactly half
   of the page's elements is allowed; one more is not (MUST, see
-  `loose-selector-disabled`). A selector that matches `body` or `html`
-  counts every element and is therefore refused. A label is cut at 60
-  characters.
+  `loose-selector-disabled`). An `html`, `head`, `body` or `main` element
+  and an element with no stable class get no looser selector at all (MUST,
+  see `all-like-it-needs-a-class`). A label is cut at 60 characters.
 - **Concurrent access**: The page may change between the click and OK;
   the selectors saved are those computed at click time. Two panes may
   each run selecting mode; they share the store, and each pane's popover
@@ -16,7 +18,8 @@
   away, or WebKit refuses the evaluation), the app beeps and selecting
   mode ends at once: the button returns to its idle state and the end is
   logged with the reason `failure`. Finder
-  throwing for one element refuses that pick only.
+  throwing for one element refuses that pick only. A save the store
+  refuses is logged and beeps; selecting mode carries on.
 - **Offline or disconnected state**: Not applicable — the picker works on
   the page in memory and a local store.
 - **Missing file or unreachable server**: Not applicable — the store's

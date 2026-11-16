@@ -29,7 +29,8 @@
   main-frame load of `about:blank` through, so two loads started in quick
   succession are both answered and the newest page is shown; the
   allowance MUST be cleared when the latest own load finishes or fails,
-  so none outlives the newest load.
+  so none outlives the newest load, and an own load that starts no
+  navigation MUST give its allowance back at once.
 - **preview-paints-under-quiet-presentation**: In development builds the
   preview MUST keep painting while its window is reported occluded, so it
   can be photographed under quiet presentation.
@@ -37,7 +38,10 @@
   read-only text view whose text is exactly the gatekeeper's HTML.
 - **source-highlighted**: The source view MUST highlight tags, attribute
   names, attribute values and text in distinct theme colors, in a
-  monospaced font.
+  monospaced font. It MUST show the HTML at once in the text color and
+  apply the highlighting when the lex, run off the main thread, lands; a
+  lex for HTML no longer shown MUST be discarded, and the same HTML again
+  MUST change nothing.
 - **unavailable-shown-as-reason**: When the gatekeeper returns an
   unavailable page, both agent views MUST show its reason and no page
   content.
@@ -48,4 +52,9 @@
   another MUST produce a single rebuild.
 - **website-mode-restores-page**: Switching back to Website mode MUST show
   the live page again, in the state it was in, without reloading it.
+- **entering-from-website-blank**: Switching from Website to an agent mode
+  MUST show the blank page until the rebuild lands, never the last agent
+  page, since the page, its address or its agent list may have changed
+  while the Website was shown; switching between the two agent modes MUST
+  show the current agent page at once while the rebuild runs.
 

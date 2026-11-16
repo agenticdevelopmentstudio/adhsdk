@@ -2,7 +2,7 @@
 id: 6cb13be9-e38c-496b-8326-5d1fdccfe778
 title: "Hide From Agent"
 type: ingredient
-version: 0.1.1
+version: 0.1.2
 status: draft
 language: en
 created: 2026-11-15
@@ -146,6 +146,14 @@ disabled is checked in the verification run and recorded below.
 - **navigation-ends-selecting**: A committed navigation, a switch between
   Website and Agent preview, a tab switch, or closing the tab or pane MUST
   end agent selecting and close the dialog without saving.
+- **hostless-page-disabled**: On a page with no host (`file:`, `about:`,
+  `data:`, or no address) the toolbar button MUST be disabled, keeping its
+  tooltip, except as the stop control while agent selecting runs, and
+  starting agent selecting there MUST beep and start nothing, since an
+  entry there could only be saved for every site.
+- **popover-closes-with-page**: The "Hidden from the Agent…" popover MUST
+  close on a committed navigation, a front-page change, a tab switch and
+  pane discard, as the element picker's popover does.
 - **every-button-has-tooltip**: The toolbar button MUST carry a tooltip.
 
 ## Appearance
@@ -196,6 +204,8 @@ selecting returns to idle.
 | hide-from-agent-014 | stop-while-selecting, every-button-has-tooltip | Start agent selecting; read the toolbar button; press Esc | Symbol `stop.circle`, tooltip "Stop selecting"; after Esc, idle with tooltip "Hide elements from agent" |
 | hide-from-agent-015 | preview-dialog-preview | Agent preview; pick ref `r12`; check "Show page with selected element removed" | The `r12` node is hidden in the preview webview; the live page is unchanged |
 | hide-from-agent-016 | preview-pick-saves-under-live-site | Agent preview of `https://example.com/a` with URL concealing on; pick ref `r12`; OK | The new agent-list entry's site is `example.com`, not the concealed stand-in host |
+| hide-from-agent-017 | hostless-page-disabled | Open a `file:` page in a pane; read the toolbar button; then open `https://example.com/` | Disabled with tooltip "Hide elements from agent" on the `file:` page; enabled on the site |
+| hide-from-agent-018 | popover-closes-with-page | Open "Hidden from the Agent…"; navigate the pane | The popover closes |
 
 ## Edge Cases
 
@@ -211,6 +221,10 @@ selecting returns to idle.
   the preview uses the looser selector the gatekeeper recorded for the ref
   if it recorded one, and is disabled otherwise. The gatekeeper records no
   looser selector today, so in the preview it is always disabled.
+- **Pages with no host**: On a `file:`, `about:` or `data:` page the
+  button is disabled with its tooltip kept, and nothing is saved, since an
+  entry's site would be `*` and hide the item from the agent everywhere
+  (MUST, see `hostless-page-disabled`).
 - **Agent source view**: The source view is text, with no elements to
   pick; "Select Items to Hide from the Agent" there beeps and starts
   nothing.
@@ -378,5 +392,6 @@ Notes: no compliance checks have been run.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 0.1.2 | 2026-11-16 | Mike Fullerton | Button disabled on hostless pages with its tooltip kept; popover closes with the page. |
 | 0.1.1 | 2026-11-16 | Mike Fullerton | A preview pick saves under the live page's site, never the concealed AgentPage address. |
 | 0.1.0 | 2026-11-15 | Mike Fullerton | Initial creation (design-first, from the more privacy features design) |

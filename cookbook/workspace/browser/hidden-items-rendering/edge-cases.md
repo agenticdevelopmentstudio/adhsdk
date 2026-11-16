@@ -9,7 +9,11 @@
 - **Concurrent access**: The store answers off the main thread; its answer
   is applied on the main thread. When a change and a navigation race, the
   last selectors computed for the pane's current address are the ones that
-  stand.
+  stand: a store-change refresh that supersedes the navigation's read
+  makes the navigation read again, and after three superseded reads a
+  last read that nothing can supersede decides; if that read fails the
+  new document starts with no user-list rules, so it never starts on the
+  old site's rules.
 - **Error states**: If the store cannot be read, the renderer leaves the
   page as the last applied rules drew it and logs the failure; a failure
   here never shows content to the agent, which goes through its own

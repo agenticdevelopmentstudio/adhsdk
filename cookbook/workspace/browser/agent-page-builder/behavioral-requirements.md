@@ -33,15 +33,25 @@
 - **walker-skips-agent-list**: The walker MUST NOT visit a node, or any
   node beneath it, that matches any enabled agent-list selector for the
   page's site.
-- **invalid-exclude-selector-isolated**: An agent-list selector the
-  document cannot evaluate MUST exclude nothing on its own, MUST be
-  reported in the walk's warnings, and MUST NOT stop any other selector
-  from excluding what it matches.
+- **invalid-exclude-selector-fails-closed**: An agent-list selector the
+  document cannot evaluate would exclude nothing, so the walk MUST be
+  refused: the walker MUST answer `{"error":"agent-list"}` and the
+  component MUST return the unavailable page, showing nothing of the page.
 - **scope-within-walk**: A scope argument on the snapshot or text tools
+  MUST be a reference from the reference table, never a CSS selector, and
   MUST select a subtree within the gatekeeper's own walk, with agent-list
-  exclusion still applied inside it; a scope whose element, or any of its
-  ancestors, matches an enabled agent-list selector MUST yield an empty
-  root.
+  exclusion still applied inside it. A scope that names nothing, whose
+  element is gone, or whose element or any of its ancestors is withheld
+  (hidden, or matching an enabled agent-list selector) MUST give the whole
+  page, exactly as a reference that names nothing does, never an empty
+  root or an error, so the answer never tells the agent whether a withheld
+  element exists.
+- **withheld-refs-stale**: A reference to an element the last walk
+  excluded by the agent list, or to anything beneath it, MUST
+  resolve as stale for every action and as no scope, whichever walk handed
+  it out, and every reference MUST go stale on any change to the
+  hidden-items store, because a reference handed out before its element
+  joined the agent list must not stay usable until the next snapshot.
 - **unknown-kind-dropped-with-subtree**: The component MUST drop a node
   whose kind is not on the allowlist, or that it cannot classify, together
   with its whole subtree.
@@ -71,7 +81,9 @@
   the snapshot tree MUST still print each piece trimmed, as today.
 - **hide-images**: When the Hide Images setting is on, the component MUST
   drop every image node; when it is off, an image MUST enter the result
-  only as its alternative text, never as an image source. The value MUST
+  only as its alternative text, never as an image source. With Hide
+  Images on the walker MUST NOT visit an image (an `img` element or the
+  `img` role) at all, so an image takes no `eN` reference. The value MUST
   be the pane's effective Hide Images — its own override, else the global
   value — and the agent tools and the pane's Agent preview and Agent
   source MUST build under that same value.

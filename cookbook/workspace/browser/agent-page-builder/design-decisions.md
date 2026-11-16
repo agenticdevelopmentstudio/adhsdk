@@ -2,7 +2,8 @@
 **Decision**: The standard allowlist's node kinds are document, landmark,
 heading, paragraph, text, list, list item, link, button, text field, text
 area, checkbox, radio, select, option, table, row group, row, cell,
-column header, row header, image and label.
+column header, row header, image, label, and the ARIA grid kinds grid,
+tree grid and grid cell.
 Attributes: `aria-label` and `title` on every kind; `href` on links; `alt`
 on images; `placeholder`, `name` and `type` on text fields and text areas;
 `name` on selects, checkboxes and radios; `level` on headings.
@@ -85,17 +86,18 @@ says the tool contract is unchanged, line for line
 **Approved**: pending
 
 **Decision**: Roles are renamed to the allowlist kind they fold into:
-`gridcell` prints as cell; `grid` and `treegrid` as table (the remaining
-table-family folds); `rowgroup`, `columnheader` (and `th`) and
-`rowheader` are not renamed and print as today; `listbox` as combobox (a select); `tab`, `menuitem`
+the table family is not renamed — `grid`, `treegrid` and `gridcell` have
+kinds of their own and print as written, and `rowgroup`, `columnheader`
+(and `th`) and `rowheader` print as today (in the HTML a grid or tree grid
+is a `table` and a grid cell a `td`); `listbox` as combobox (a select); `tab`, `menuitem`
 and `treeitem` as button; `switch` and `menuitemcheckbox` as checkbox and
 `menuitemradio` as radio; `searchbox`, `spinbutton` and `slider` as text
 fields typed search, number and range. The folded `switch`,
 `menuitemcheckbox` and `menuitemradio` keep the legacy name from content.
 **Rationale**: Forced by the allowlist's kinds. The tree's format (syntax,
 references, states, levels) is unchanged, and folding to clickable kinds
-keeps the references. Table rowgroup, columnheader and rowheader are kept
-exactly as
+keeps the references. The grid roles and table rowgroup, columnheader and
+rowheader are kept exactly as
 `browser_snapshot` prints them today, because the spec says the tool
 contract is unchanged, line for line (`snapshot-tool-contract-unchanged`).
 **Approved**: pending

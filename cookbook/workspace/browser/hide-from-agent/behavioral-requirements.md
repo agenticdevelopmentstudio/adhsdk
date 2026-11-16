@@ -67,5 +67,13 @@
 - **navigation-ends-selecting**: A committed navigation, a switch between
   Website and Agent preview, a tab switch, or closing the tab or pane MUST
   end agent selecting and close the dialog without saving.
+- **hostless-page-disabled**: On a page with no host (`file:`, `about:`,
+  `data:`, or no address) the toolbar button MUST be disabled, keeping its
+  tooltip, except as the stop control while agent selecting runs, and
+  starting agent selecting there MUST beep and start nothing, since an
+  entry there could only be saved for every site.
+- **popover-closes-with-page**: The "Hidden from the Agent…" popover MUST
+  close on a committed navigation, a front-page change, a tab switch and
+  pane discard, as the element picker's popover does.
 - **every-button-has-tooltip**: The toolbar button MUST carry a tooltip.
 

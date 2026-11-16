@@ -2,7 +2,7 @@
 id: 31c4c156-8f47-4ad1-9b40-e4ab2d7f4fb7
 title: "Hidden Items Store"
 type: ingredient
-version: 0.1.1
+version: 0.1.2
 status: draft
 language: en
 created: 2026-11-15
@@ -120,7 +120,14 @@ run never touches the real lists.
   MUST follow the test home override (`APP_TEST_HOME`) when one is set.
 - **opened-at-launch**: The browser feature MUST open the store once at
   launch and share that one store with every pane, in the same way the
-  browser history store is opened.
+  browser history store is opened. The open MUST run off the main thread,
+  and a read of the shared store made before the open finishes MUST wait
+  for it rather than answer that there is no store, so a consumer that
+  fails closed on no store (the agent gatekeeper) never runs ahead of the
+  open. A reader that can run during launch (an engine's first read, the
+  pane's toolbar actions, an agent view's page read) MUST await the open
+  rather than block the main thread on it; an open that fails MUST answer
+  no store.
 
 ## Appearance
 
@@ -158,6 +165,9 @@ Not applicable — this is a persistence component, not a visual component.
 | hidden-items-store-014 | standalone-file, file-in-app-home | Read the store's default location with no test home override | `~/.agenticdeveloperkitchen/BrowserHiddenItems.db`, a file of its own, not the project database |
 | hidden-items-store-015 | file-in-app-home | Read the default location with `APP_TEST_HOME` set to a scratch directory | `BrowserHiddenItems.db` under the scratch home's app directory, never the real home |
 | hidden-items-store-016 | opened-at-launch | Launch the browser feature and open two browser panes | One store is opened at launch and both panes answer from it (an entry added through one is in force in the other) |
+| hidden-items-store-017 | opened-at-launch | Start `openShared` on a valid file and read `shared` at once on the main actor | The read waits and returns the opened store, never nil; `hasShared` is true before the open finishes |
+| hidden-items-store-018 | opened-at-launch | Start `openShared` on a path that cannot be opened; read `shared` | The read returns nil and `onFailure` is called with the error |
+| hidden-items-store-019 | opened-at-launch | Start `openShared` on a valid file and await `sharedStore()` at once; repeat on a path that cannot be opened | The first await returns the opened store; the second returns nil |
 
 ## Edge Cases
 
@@ -182,6 +192,11 @@ Not applicable — this is a persistence component, not a visual component.
   caller's concern (the agent gatekeeper fails closed). A file that cannot
   be opened at launch leaves the app with no store, a degraded mode rather
   than a launch failure.
+- **Read during the launch open**: The launch open runs off the main
+  thread; a read of the shared store before it finishes waits for it
+  (awaiting, never blocking the main thread, for a caller that can run
+  during launch) and gets the store, or no store if the open failed, never
+  a premature no store (MUST, see `opened-at-launch`).
 - **Offline or disconnected state**: Not applicable — the store is a local
   file and makes no network call.
 - **Missing file or unreachable server**: A missing file is created, with
@@ -259,9 +274,24 @@ the caller, which logs them where it handles them.
   `(list, site)`) in migration `v1`. Site matching and the default pattern
   are `PrivacySitePattern.matches(_:url:)` and
   `PrivacySitePattern.defaultPattern(for:)`. `WebBrowserWindowsFeature`
-  opens it at launch into `BrowserHiddenItemsStore.shared`, unless a host or
-  test already set one; a file that cannot be opened is logged and leaves
-  `shared` nil, which every consumer takes as no store. Main-actor callers go through an async `perform`
+  opens it at launch with `BrowserHiddenItemsStore.openShared(at:onFailure:)`,
+  unless a host or test already set one (`hasShared`, which answers without
+  waiting). `openShared` opens on a global `userInitiated` queue. Callers
+  that can run during launch await
+  `BrowserHiddenItemsStore.sharedStore() async`, which awaits the
+  `PendingOpen` in flight (`value()`, resumed in `finish`), answers nil
+  when the open failed, and awaits again when a setter or a newer open
+  replaced the pending one: `WebKitBrowserEngine`'s hidden-items read (its
+  first runs when the engine is made), the pane's
+  `openHiddenItemsStore() async` behind its three toolbar actions (each run
+  in a `Task`), and the pane's `agentPageSource(engine:) async`, since a
+  tab restored into an agent view reads during launch. The blocking
+  `shared` getter (a main-actor read waits on the `PendingOpen`'s
+  `NSCondition`) is for callers after launch only; the one left is
+  `BrowserToolSet`'s default `hiddenItems` closure. Setting `shared`
+  replaces an open in flight. A file that cannot be opened is logged through
+  `onFailure` and leaves `shared` nil, which every consumer takes as no
+  store. Main-actor callers go through an async `perform`
   wrapper, as with `BrowserHistoryStore`, so no file access runs on the
   main thread.
 - **Compose**: Room or SQLDelight over one database file, two tables of the
@@ -319,5 +349,6 @@ Notes: no compliance checks have been run against the code yet.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 0.1.2 | 2026-11-16 | Mike Fullerton | Opened off the main thread at launch; reads wait for the open; launch-time callers await sharedStore(). |
 | 0.1.1 | 2026-11-16 | Mike Fullerton | Implemented: opened at launch into BrowserHiddenItemsStore.shared; an unopenable file leaves no store. |
 | 0.1.0 | 2026-11-15 | Mike Fullerton | Initial creation (design-first, from the more privacy features design) |

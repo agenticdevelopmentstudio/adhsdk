@@ -20,6 +20,13 @@
 - **Escaped privacy words**: A privacy word hidden in an address's
   percent-escaped or `+`-escaped form is still concealed (MUST, see
   `conceal-url-forms`, agent-history-tool-013).
+- **Local files**: A `file:` visit is never listed, in the back/forward
+  list or the store (MUST, see `no-local-files`); the store leaves them out
+  in its query so a limit of 50 still lists 50 visits the agent may see.
+- **Words scoped to another site**: A privacy word scoped to one site is
+  concealed on every line, including the lines of other sites and when the
+  page in front is on a site the word does not apply to (MUST, see
+  `conceal-with-every-word`).
 - **Private browsing**: A pane browsing privately records no visits, so All
   history never contains its pages; Current tab only still reads the tab's
   own back/forward list, which the person can already see.

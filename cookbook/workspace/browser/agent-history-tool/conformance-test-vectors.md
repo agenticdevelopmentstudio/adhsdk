@@ -19,4 +19,8 @@
 | agent-history-tool-016 | same-access-checks | Call on a pane paused for the agent; then on a closed pane id | The paused refusal; then "pane … was closed; call browser_list" |
 | agent-history-tool-017 | read-only-pane-allowed | Access All history on a read-only pane | The call succeeds; `browser_history` is in the read tool names; the store is unchanged |
 | agent-history-tool-018 | reply-lines | Access All history; the store is empty | A reply saying no visits were found, not a failure |
+| agent-history-tool-019 | conceal-with-every-word | Agent privacy on; the word "Acme" scoped to `acme.com`; the page in front on `example.com`; a visit to `https://acme.com/` titled "Acme" | The title and address come back with the stand-in, never "Acme" |
+| agent-history-tool-020 | no-local-files | Access All history; the newest visit is `file:///Users/me/notes.html`, then two `https` visits; `limit` 2 | Two lines, both `https`; no `file:` address or its title appears |
+| agent-history-tool-021 | no-local-files | Access Current tab only; the back/forward list holds a `file:` entry and an `https` entry | Only the `https` entry is listed |
+| agent-history-tool-022 | closed-privacy-refuses, conceal-with-every-word | Agent privacy on; the page's words readable; the every-site words unreadable | The call fails with the closed-privacy refusal; no visit returned |
 

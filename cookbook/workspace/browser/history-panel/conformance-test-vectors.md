@@ -28,4 +28,7 @@
 | history-panel-025 | recording-gated-on-setting | Record history on, pane not private; navigate | One visit is recorded |
 | history-panel-026 | recording-gated-on-setting | Record history off, pane not private; navigate | No visit is recorded |
 | history-panel-027 | private-browsing-never-records | Record history on, pane in private browsing; navigate | No visit is recorded; the panel lists nothing new |
+| history-panel-028 | reloads-on-store-change | List model on a store showing two visits; record a third visit through the store | The model reloads and lists three visits, newest first |
+| history-panel-029 | panel-opens-visit | Select rows 0 and 2 of three; press Return | The open callback receives row 0's address, then row 2's |
+| history-panel-030 | panel-opens-visit | Rows 0 and 1 selected; double-click row 2 | The open callback receives row 2's address only |
 

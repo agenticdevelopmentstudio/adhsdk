@@ -4,7 +4,7 @@
     "id": "8b187d98-795b-4a9d-9441-e7b8629fefe4",
     "title": "Element Picker",
     "type": "ingredient",
-    "version": "0.1.1",
+    "version": "0.1.2",
     "status": "draft",
     "language": "en",
     "created": "2026-11-15",
@@ -44,7 +44,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "745d00e06b4fe07d",
+  "synced": "1375487449f51809",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

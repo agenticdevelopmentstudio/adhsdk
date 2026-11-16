@@ -1,6 +1,7 @@
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 0.1.6 | 2026-11-16 | Mike Fullerton | The no-history-store note moves from under Record history to the History help topic. |
 | 0.1.5 | 2026-11-16 | Mike Fullerton | Privacy toolbar row with the hide-from-agent button and agent view control; agentHidesImages; notice-shown key is global only. |
 | 0.1.4 | 2026-11-15 | Mike Fullerton | help-covers-regrouped-topics allows a where-to-find-it topic that names where the control lives |
 | 0.1.3 | 2026-11-15 | Mike Fullerton | Toolbar buttons have action tooltips; help follows the regrouped topics' groups and points history to Browser > Show History |

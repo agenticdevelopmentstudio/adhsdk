@@ -4,11 +4,11 @@
     "id": "8a4aca5f-977b-4f4c-86f6-16f4150132ac",
     "title": "Browser Menu",
     "type": "ingredient",
-    "version": "0.1.1",
+    "version": "0.1.2",
     "status": "draft",
     "language": "en",
     "created": "2026-11-15",
-    "modified": "2026-11-15",
+    "modified": "2026-11-16",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -38,7 +38,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "7179f815a05a83dd",
+  "synced": "0c989b5c71464067",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
