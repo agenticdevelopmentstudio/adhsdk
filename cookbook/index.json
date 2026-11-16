@@ -12539,6 +12539,13 @@
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Automation/AgentPage/AgentPageSource.swift",
           "platform": "macos"
+        },
+        {
+          "conformance": {
+            "state": "unverified"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/BrowserPane/AgentPageWalkerWebViewTests.swift",
+          "platform": "macos"
         }
       ],
       "kind": "ingredient",

@@ -109,7 +109,7 @@ public enum BrowserSnapshotRenderer {
 /// clicking what the page chose. Only `BrowserAutomation.evaluate` runs in the
 /// page world, because reading the page's own JavaScript is its purpose.
 public enum BrowserSnapshotRuntime {
-    public static let version = 1
+    public static let version = 2
 
     /// The automation world's name, for an engine that names worlds itself.
     public static let worldName = "adkitchen.automation"

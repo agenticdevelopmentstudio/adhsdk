@@ -1,0 +1,431 @@
+// AgentPageWalker.js — the page side of the agent's one gatekeeper (recipe
+// workspace/browser/agent-page-builder). It runs in the automation content
+// world (BrowserSnapshotRuntime.world), after BrowserSnapshot.js (whose ref
+// table and generation it shares, so every ref it emits is one click, type,
+// fill, select and hover resolve) and vendor/finder.js (`__adkFinder`, for the
+// selector each node records).
+//
+// `__adkAgentWalk({ allowlist, excludeSelectors, scopeRef, interactiveOnly,
+// maxDepth, timeoutMs })` returns a JSON string: the `AgentWalkerPayload`
+// (`{url, title, generation, warnings, root}`) AgentPageBuilder re-validates,
+// or `{"error": "timeout"}` when the walk outlives `timeoutMs` (default 1500).
+//
+// It never visits a node — nor anything beneath it — that is hidden (computed
+// display none, computed visibility hidden, the `hidden` attribute,
+// `aria-hidden="true"`, and the legacy snapshot's other hidden rules) or that
+// an agent-list selector matches. It emits only the allowlist's kinds, and on
+// each only the allowlist's attributes. The tree's shape follows the legacy
+// snapshot walk (BrowserSnapshot.js `build`), so the snapshot tool's output
+// stays what it was for the same page.
+(function () {
+  'use strict';
+  const VERSION = 1;
+  if (globalThis.__adkAgentWalkVersion === VERSION && typeof globalThis.__adkAgentWalk === 'function') { return; }
+
+  const DEFAULT_TIMEOUT_MS = 1500;
+  // One finder call's budget. A node finder cannot place in time records the
+  // structural path instead, so one hard element cannot spend the whole walk.
+  const FINDER_TIMEOUT_MS = 25;
+  const TIMED_OUT = { timedOut: true };
+
+  const LANDMARK_TAGS = { header: 'banner', nav: 'navigation', main: 'main', footer: 'contentinfo',
+    aside: 'complementary', form: 'form', section: 'region', article: 'article' };
+  const TAG_KINDS = { button: 'button', summary: 'button', select: 'select', textarea: 'textArea',
+    option: 'option', img: 'image', table: 'table', tr: 'row', th: 'cell', td: 'cell', ul: 'list',
+    ol: 'list', li: 'listItem', p: 'paragraph', label: 'label' };
+  const INPUT_KINDS = { button: 'button', submit: 'button', reset: 'button', image: 'button',
+    checkbox: 'checkbox', radio: 'radio' };
+  // Explicit ARIA roles, as the legacy snapshot accepted them.
+  const VALID_ROLES = new Set(['alert','alertdialog','application','article','banner','button','cell',
+    'checkbox','columnheader','combobox','complementary','contentinfo','dialog','document','feed','figure',
+    'form','grid','gridcell','group','heading','img','link','list','listbox','listitem','main','menu',
+    'menubar','menuitem','menuitemcheckbox','menuitemradio','navigation','option','progressbar','radio',
+    'radiogroup','region','row','rowgroup','rowheader','scrollbar','search','searchbox','separator','slider',
+    'spinbutton','status','switch','tab','table','tablist','tabpanel','textbox','timer','toolbar','tooltip',
+    'tree','treegrid','treeitem','presentation','none']);
+  const LANDMARK_ROLES = new Set(['main', 'navigation', 'banner', 'contentinfo', 'complementary', 'search',
+    'form', 'region', 'article']);
+  const ROLE_KINDS = { link: 'link', button: 'button', tab: 'button', menuitem: 'button', treeitem: 'button',
+    checkbox: 'checkbox', switch: 'checkbox', menuitemcheckbox: 'checkbox', radio: 'radio',
+    menuitemradio: 'radio', textbox: 'textField', searchbox: 'textField', spinbutton: 'textField',
+    slider: 'textField', combobox: 'select', listbox: 'select', option: 'option', heading: 'heading',
+    list: 'list', listitem: 'listItem', table: 'table', grid: 'table', treegrid: 'table', row: 'row',
+    cell: 'cell', gridcell: 'cell', columnheader: 'cell', rowheader: 'cell', img: 'image' };
+  // The `type` a role-only text field carries, so the snapshot prints the
+  // role the legacy walk printed (AgentSnapshotMapper reads `type`); a
+  // non-input slider or spinbutton also sends its `aria-valuenow` as value.
+  const ROLE_TYPES = { searchbox: 'search', spinbutton: 'number', slider: 'range' };
+  // Kinds the snapshot treats as generic: collapsed into one text line, or
+  // flattened into their parent.
+  const GENERIC_KINDS = new Set(['paragraph', 'label']);
+  const NAME_FROM_CONTENT = new Set(['button', 'link', 'heading', 'cell', 'option']);
+  const CONTROLS = new Set(['textField', 'textArea', 'select', 'checkbox', 'radio']);
+  const CONTROL_TAGS = new Set(['input', 'select', 'textarea', 'button']);
+  // Elements whose contents are never page content an agent reads.
+  const SKIPPED_TAGS = new Set(['script', 'style', 'noscript', 'template', 'head', 'iframe', 'frame',
+    'object', 'embed']);
+
+  const collapse = (s) => (s || '').replace(/\s+/g, ' ').trim();
+
+  function walk(args) {
+    const options = args || {};
+    const kitchen = window.__adkitchen;
+    if (!kitchen || typeof kitchen.beginWalk !== 'function') { return { error: 'runtime' }; }
+
+    let allowlist = options.allowlist || {};
+    if (typeof allowlist === 'string') { allowlist = JSON.parse(allowlist); }
+    const allowedKinds = new Set(allowlist.kinds || []);
+    const allowedAttributes = allowlist.attributes || {};
+    const landmarkRoles = new Set(allowlist.landmarkRoles || []);
+    const stateOrder = allowlist.states || [];
+
+    const timeoutMs = (typeof options.timeoutMs === 'number' && options.timeoutMs >= 0)
+      ? options.timeoutMs : DEFAULT_TIMEOUT_MS;
+    const deadline = Date.now() + timeoutMs;
+    const tick = () => { if (Date.now() >= deadline) { throw TIMED_OUT; } };
+
+    // Every agent-list selector, each on its own: one the document cannot
+    // evaluate excludes nothing and is reported, and stops no other.
+    const warnings = [];
+    const excluded = new Set();
+    let selectors = options.excludeSelectors || [];
+    if (typeof selectors === 'string') { selectors = JSON.parse(selectors); }
+    for (const selector of selectors) {
+      if (typeof selector !== 'string' || !selector.trim()) { continue; }
+      try {
+        document.querySelectorAll(selector).forEach((el) => excluded.add(el));
+      } catch (e) {
+        warnings.push('invalid agent-list selector: ' + selector);
+      }
+    }
+
+    const hiddenMemo = new Map(), classMemo = new Map(), descendantMemo = new Map();
+
+    function isHiddenUncached(el) {
+      if (excluded.has(el)) { return true; }
+      const tag = el.tagName.toLowerCase();
+      if (SKIPPED_TAGS.has(tag)) { return true; }
+      if (el.hidden || el.hasAttribute('hidden') || el.getAttribute('aria-hidden') === 'true') { return true; }
+      if (tag === 'input' && (el.getAttribute('type') || '').toLowerCase() === 'hidden') { return true; }
+      if (tag === 'img' && el.getAttribute('alt') === '') { return true; }
+      const style = window.getComputedStyle(el);
+      if (style.display === 'none' || style.visibility === 'hidden') { return true; }
+      if (tag !== 'option' && el.children.length === 0) {
+        const r = el.getBoundingClientRect();
+        if (r.width === 0 && r.height === 0 && !collapse(el.textContent)) { return true; }
+      }
+      return false;
+    }
+
+    // Hidden, excluded, or of a kind the allowlist does not permit: never
+    // visited, and nothing beneath it is either.
+    function isSkipped(el) {
+      if (!hiddenMemo.has(el)) {
+        let skipped = isHiddenUncached(el);
+        if (!skipped) {
+          const info = classify(el);
+          if (info && !allowedKinds.has(info.kind)) { skipped = true; }
+        }
+        hiddenMemo.set(el, skipped);
+      }
+      return hiddenMemo.get(el);
+    }
+
+    function isPasswordInput(el) {
+      return el.tagName.toLowerCase() === 'input' && (el.getAttribute('type') || '').toLowerCase() === 'password';
+    }
+
+    // `{kind, role?, type?}`, or null for an element the snapshot treats as
+    // generic (flattened or collapsed into text).
+    function classifyUncached(el) {
+      const tag = el.tagName.toLowerCase();
+      const explicit = collapse(el.getAttribute('role') || '').split(' ')[0];
+      if (explicit && VALID_ROLES.has(explicit)) {
+        if (explicit === 'none' || explicit === 'presentation') { return null; }
+        if (LANDMARK_ROLES.has(explicit)) { return { kind: 'landmark', role: explicit }; }
+        const kind = ROLE_KINDS[explicit];
+        if (!kind) { return null; }
+        if (kind === 'textField') {
+          return { kind: kind, type: ROLE_TYPES[explicit] || (isPasswordInput(el) ? 'password' : undefined) };
+        }
+        return { kind: kind };
+      }
+      if (tag === 'a') { return el.hasAttribute('href') ? { kind: 'link' } : null; }
+      if (tag === 'input') {
+        const type = (el.getAttribute('type') || 'text').toLowerCase();
+        if (type in INPUT_KINDS) { return { kind: INPUT_KINDS[type] }; }
+        return { kind: 'textField', type: type };
+      }
+      if (/^h[1-6]$/.test(tag)) { return { kind: 'heading' }; }
+      if (tag in LANDMARK_TAGS) { return { kind: 'landmark', role: LANDMARK_TAGS[tag] }; }
+      if (tag in TAG_KINDS) { return { kind: TAG_KINDS[tag] }; }
+      if (el.isContentEditable && el.getAttribute('contenteditable') !== null) { return { kind: 'textField' }; }
+      return null;
+    }
+
+    function classify(el) {
+      if (!classMemo.has(el)) { classMemo.set(el, classifyUncached(el)); }
+      return classMemo.get(el);
+    }
+
+    function isGeneric(info) { return info === null || GENERIC_KINDS.has(info.kind); }
+
+    function hasNonGenericDescendant(el) {
+      if (descendantMemo.has(el)) { return descendantMemo.get(el); }
+      let found = false;
+      for (const child of el.children) {
+        if (isSkipped(child)) { continue; }
+        if (!isGeneric(classify(child)) || hasNonGenericDescendant(child)) { found = true; break; }
+      }
+      descendantMemo.set(el, found);
+      return found;
+    }
+
+    // The text an element shows, skipping everything hidden or excluded
+    // beneath it (where `textContent` would include it), collapsed.
+    function visibleText(el, skipControls) {
+      const parts = [];
+      (function gather(node) {
+        for (const child of node.childNodes) {
+          if (child.nodeType === Node.TEXT_NODE) {
+            parts.push(child.textContent);
+          } else if (child.nodeType === Node.ELEMENT_NODE) {
+            tick();
+            if (isSkipped(child)) { continue; }
+            if (skipControls && CONTROL_TAGS.has(child.tagName.toLowerCase())) { continue; }
+            gather(child);
+          }
+        }
+      })(el);
+      return collapse(parts.join(''));
+    }
+
+    // The legacy name's first sources: `aria-labelledby`'s targets (only the
+    // ones an agent may see), then `aria-label`.
+    function ariaName(el) {
+      const ids = el.getAttribute('aria-labelledby');
+      if (ids) {
+        const text = ids.split(/\s+/).map((id) => (id ? document.getElementById(id) : null))
+          .filter((target) => target && !isSkipped(target) && !hasSkippedAncestor(target))
+          .map((target) => visibleText(target, false)).filter(Boolean).join(' ').trim();
+        if (text) { return text; }
+      }
+      return collapse(el.getAttribute('aria-label') || '');
+    }
+
+    function labelsText(el) {
+      if (!el.labels || !el.labels.length) { return ''; }
+      return Array.from(el.labels)
+        .filter((label) => !isSkipped(label) && !hasSkippedAncestor(label))
+        .map((label) => visibleText(label, true)).filter(Boolean).join(' ');
+    }
+
+    function hasSkippedAncestor(el) {
+      for (let at = el.parentElement; at && at !== document.documentElement; at = at.parentElement) {
+        if (isSkipped(at)) { return true; }
+      }
+      return false;
+    }
+
+    function statesOf(el) {
+      const states = new Set();
+      const aria = (n) => el.getAttribute(n);
+      if (el.checked === true || aria('aria-checked') === 'true') { states.add('checked'); }
+      if (el.disabled === true || aria('aria-disabled') === 'true') { states.add('disabled'); }
+      if (aria('aria-expanded') === 'true' || (el.tagName.toLowerCase() === 'details' && el.open)) { states.add('expanded'); }
+      if (el.selected === true || aria('aria-selected') === 'true') { states.add('selected'); }
+      if (aria('aria-pressed') === 'true') { states.add('pressed'); }
+      if (el.required === true || aria('aria-required') === 'true') { states.add('required'); }
+      return stateOrder.filter((s) => states.has(s)).join(' ');
+    }
+
+    // The legacy snapshot's value rule; never a password's.
+    function valueOf(el, explicitRole) {
+      const tag = el.tagName.toLowerCase();
+      if (tag === 'input') {
+        const type = (el.getAttribute('type') || 'text').toLowerCase();
+        if (['password', 'checkbox', 'radio', 'button', 'submit', 'reset', 'image', 'file'].includes(type)) { return null; }
+        return el.value ? el.value : null;
+      }
+      if (tag === 'select' || tag === 'textarea') { return el.value ? el.value : null; }
+      if (explicitRole === 'slider' || explicitRole === 'spinbutton') {
+        return el.getAttribute('aria-valuenow') || null;
+      }
+      return null;
+    }
+
+    function structuralPath(el) {
+      const steps = [];
+      for (let at = el; at && at.nodeType === Node.ELEMENT_NODE; at = at.parentElement) {
+        const tag = at.tagName.toLowerCase();
+        if (tag === 'html') { steps.unshift('html'); break; }
+        const parent = at.parentElement;
+        const index = parent ? Array.prototype.indexOf.call(parent.children, at) + 1 : 1;
+        steps.unshift(tag + ':nth-child(' + index + ')');
+      }
+      return steps.join(' > ');
+    }
+
+    function selectorOf(el) {
+      if (typeof globalThis.__adkFinder === 'function') {
+        try {
+          const budget = Math.max(1, Math.min(FINDER_TIMEOUT_MS, deadline - Date.now()));
+          return globalThis.__adkFinder(el, { timeoutMs: budget });
+        } catch (e) { /* the structural path below still names exactly this element */ }
+      }
+      return structuralPath(el);
+    }
+
+    let nextText = 1;
+    function textNode(text) { return { ref: 't' + (nextText++), kind: 'text', text: text }; }
+
+    function permits(kind, name) {
+      const names = allowedAttributes[kind];
+      return Array.isArray(names) && names.includes(name);
+    }
+
+    function elementNode(el, info) {
+      const node = { ref: kitchen.assignRef(el), kind: info.kind, selector: selectorOf(el) };
+      const attrs = {};
+      const put = (name, value) => {
+        if (value === null || value === undefined) { return; }
+        const text = String(value);
+        if (text && permits(info.kind, name)) { attrs[name] = text; }
+      };
+      // An element's own label text names a control; on anything else the
+      // legacy walk named it by that text too, so it rides as `aria-label`.
+      let name = ariaName(el);
+      if (CONTROLS.has(info.kind)) {
+        const labels = labelsText(el);
+        if (labels) { node.text = labels; }
+      } else if (!name) {
+        name = labelsText(el);
+      }
+      put('aria-label', name);
+      for (const attr of ['alt', 'title', 'placeholder', 'name']) {
+        const v = el.getAttribute(attr);
+        if (v && collapse(v)) { put(attr, collapse(v)); }
+      }
+      if (info.kind === 'textField' && info.type) { put('type', info.type); }
+      if (info.kind === 'link') { put('href', el.getAttribute('href')); }
+      if (info.kind === 'heading') {
+        const m = /^h([1-6])$/.exec(el.tagName.toLowerCase());
+        const aria = Number(el.getAttribute('aria-level'));
+        put('level', m ? m[1] : (Number.isInteger(aria) && aria >= 1 ? String(aria) : '2'));
+      }
+      if (info.kind === 'landmark' && landmarkRoles.has(info.role)) { attrs.role = info.role; }
+      const states = statesOf(el);
+      if (states) { attrs.states = states; }
+      if (Object.keys(attrs).length) { node.attrs = attrs; }
+      if (info.kind === 'textField' || info.kind === 'textArea' || info.kind === 'select') {
+        const explicit = collapse(el.getAttribute('role') || '').split(' ')[0];
+        const value = isPasswordInput(el) ? null : valueOf(el, explicit);
+        if (value !== null) { node.value = value; }
+      }
+      return node;
+    }
+
+    // Appends what `el` contributes to its parent: nothing, one node, one
+    // text node, or (a generic element) its children's contributions.
+    // `depthLeft` counts DOM levels as the legacy walk did; null is unlimited.
+    function build(el, depthLeft, out) {
+      tick();
+      if (isSkipped(el)) { return; }
+      const info = classify(el);
+
+      if (isGeneric(info)) {
+        if (!hasNonGenericDescendant(el)) {
+          const text = visibleText(el, false);
+          if (!text) { return; }
+          if (info) {
+            const node = elementNode(el, info);
+            node.text = text;
+            out.push(node);
+          } else {
+            out.push(textNode(text));
+          }
+          return;
+        }
+        if (info) {
+          const node = elementNode(el, info);
+          node.children = [];
+          childrenOf(el, depthLeft, node.children);
+          out.push(node);
+        } else {
+          childrenOf(el, depthLeft, out);
+        }
+        return;
+      }
+
+      const node = elementNode(el, info);
+      const named = node.attrs && (node.attrs['aria-label'] || node.attrs.alt || node.attrs.title
+        || node.attrs.placeholder);
+      if (NAME_FROM_CONTENT.has(info.kind) && !named) {
+        // Named by its contents, which the snapshot then does not show: the
+        // whole visible text rides as the node's own, whatever the depth.
+        const text = visibleText(el, false);
+        if (text) { node.text = text; }
+        out.push(node);
+        return;
+      }
+      if (depthLeft !== 0) {
+        node.children = [];
+        childrenOf(el, depthLeft, node.children);
+      }
+      out.push(node);
+    }
+
+    function childrenOf(el, depthLeft, out) {
+      const next = depthLeft === null ? null : depthLeft - 1;
+      if (next === -1) { return; }
+      for (const child of el.childNodes) {
+        if (child.nodeType === Node.TEXT_NODE) {
+          const text = collapse(child.textContent);
+          if (text) { out.push(textNode(text)); }
+        } else if (child.nodeType === Node.ELEMENT_NODE) {
+          build(child, next, out);
+        }
+      }
+    }
+
+    // A scope inside anything hidden or excluded reads as an empty page.
+    function scopeIsWithheld(el) {
+      for (let at = el; at && at !== document.documentElement; at = at.parentElement) {
+        if (at.nodeType === Node.ELEMENT_NODE && isHiddenUncached(at)) { return true; }
+      }
+      return false;
+    }
+
+    const scopeEl = options.scopeRef ? kitchen.resolveScope(options.scopeRef) : null;  // before refs reset
+    const generation = kitchen.beginWalk();
+    const depth = (typeof options.maxDepth === 'number' && options.maxDepth > 0) ? options.maxDepth : null;
+    const title = document.title || '';
+    const documentNode = (children) => ({ ref: 'doc', kind: 'document', children: children });
+
+    let root;
+    if (scopeEl) {
+      if (scopeIsWithheld(scopeEl)) {
+        root = documentNode([]);
+      } else {
+        const built = [];
+        build(scopeEl, depth, built);
+        root = (built.length === 1 && built[0].kind !== 'text') ? built[0] : documentNode(built);
+      }
+    } else {
+      const children = [];
+      if (document.body) { childrenOf(document.body, depth, children); }
+      root = documentNode(children);
+    }
+    return { url: location.href, title: title, generation: generation, warnings: warnings, root: root };
+  }
+
+  globalThis.__adkAgentWalk = function (args) {
+    try {
+      return JSON.stringify(walk(args));
+    } catch (e) {
+      if (e === TIMED_OUT) { return JSON.stringify({ error: 'timeout' }); }
+      return JSON.stringify({ error: 'script: ' + (e && e.message ? e.message : String(e)) });
+    }
+  };
+  globalThis.__adkAgentWalkVersion = VERSION;
+})();

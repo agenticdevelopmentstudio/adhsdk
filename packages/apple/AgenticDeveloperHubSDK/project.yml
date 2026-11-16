@@ -221,11 +221,14 @@ targets:
           - "UI/Settings"
           - "Scripting"
           - "Features/BrowserPane/Automation/BrowserSnapshot.js"
+          - "Features/BrowserPane/Automation/AgentPage/AgentPageWalker.js"
           - "Features/BrowserPane/BrowserActivationShield.js"
           - "Features/BrowserPane/BrowserPageWordFilter.js"
           - "Features/BrowserPane/HiddenItems/BrowserElementPicker.js"
           - "Features/BrowserPane/HiddenItems/vendor/finder.js"
       - path: macOS/Features/BrowserPane/Automation/BrowserSnapshot.js
+        buildPhase: resources
+      - path: macOS/Features/BrowserPane/Automation/AgentPage/AgentPageWalker.js
         buildPhase: resources
       - path: macOS/Features/BrowserPane/BrowserActivationShield.js
         buildPhase: resources

@@ -4,7 +4,7 @@
 // DOM is shared across worlds; `window` and element expandos are not.
 // Installed once per document (version-checked); every call returns plain JSON.
 (function () {
-  if (window.__adkitchen && window.__adkitchen.version === 1) { return; }
+  if (window.__adkitchen && window.__adkitchen.version === 2) { return; }
 
   const refs = new Map();            // ref -> WeakRef<Element>
   window.__adkitchenRefs = refs;
@@ -562,8 +562,21 @@
     return built.length ? built[0] : null;
   }
 
+  // The agent walker's hold on this table (AgentPage/AgentPageWalker.js): a
+  // walk is a snapshot, so it advances the generation and restarts the refs
+  // exactly as `snapshot` does, and registers every element ref it emits
+  // through `assignRef`, so click, type, fill, select and hover resolve the
+  // walker's refs as they resolve a snapshot's.
+  function beginWalk() {
+    generation += 1;
+    refs.clear();
+    hiddenMemo.clear(); roleMemo.clear(); descendantMemo.clear();
+    nextRef = 1;
+    return generation;
+  }
+
   window.__adkitchen = {
-    version: 1,
+    version: 2,
     snapshot: snapshot,
     find: find,
     text: text,
@@ -574,5 +587,6 @@
     click: click, type: type, fill: fill, select: select, hover: hover, pressKey: pressKey,
     scroll: scroll, rect: rect, isVisible: isVisible, hasText: hasText,
     landmarkSnapshot: landmarkSnapshot,
+    beginWalk: beginWalk, assignRef: assignRef, resolveScope: resolveScope,
   };
 })();
