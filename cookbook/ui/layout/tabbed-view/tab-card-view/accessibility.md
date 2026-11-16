@@ -7,7 +7,7 @@
   card as five separate, individually-focused text elements in sequence,
   with no indication that they describe one tab.
 - **Label requirements**: The close control's icon carries an accessibility
-  label of "Close" (see Localization). Each status icon carries the
+  label of "Close Tab" (see Localization). Each status icon carries the
   caller-supplied accessibility label for its symbol. The agent, session,
   directory, branch, and summary labels receive no explicit accessibility
   label in this component; the screen reader falls back to each label's own

@@ -489,10 +489,11 @@ final class BrowserPrivacySettingsPanel: BrowserTopicPanel {
 
     /// Accept cookies belongs to a jar, so in a pane's sheet the row names
     /// the one the pane is on — what the Cookies topic's title used to say.
-    private var cookiesExplanation: String {
-        let base = "Off, sites cannot keep you signed in."
-        guard let pane = binding.pane else { return base }
-        return base + " Applies to the jar: \(BrowserSettingsPanelViewController.jarLabel(for: pane))."
+    /// What the switch does is in the Cookies help (`no-inline-help-labels`),
+    /// so the Settings window's row has no note.
+    private var cookiesExplanation: String? {
+        guard let pane = binding.pane else { return nil }
+        return "Applies to the jar: \(BrowserSettingsPanelViewController.jarLabel(for: pane))."
     }
 
     private func makeCaptureGroup() -> ComposableSettings.GroupView {

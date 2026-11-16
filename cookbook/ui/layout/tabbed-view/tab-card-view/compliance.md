@@ -17,7 +17,7 @@ finding). Screen-reader-support is partial because accessibility identifiers
 and status-symbol labels are set explicitly, but the card sets no
 `accessibilityRole` and groups nothing for VoiceOver (see Accessibility).
 Reduced-motion is failed for the gap documented in Accessibility Options.
-String-externalization is failed because `closeButton`'s "Close" accessibility
+String-externalization is failed because `closeButton`'s "Close Tab" accessibility
 description is a hardcoded English literal (see Localization).
 
 Separation-of-concerns is passed: `TabPaneView` only draws the card (background, labels, status symbols, close control) and exposes its depth and callbacks, while content values come from `TabPaneDataSource` and user intent leaves through `TabPaneDelegate`, so the card holds no tab-ordering or data-fetching policy. Unit-test-coverage is partial: `TabPaneViewControllerTests.swift` and `TabCardStackTests.swift` drive the card through its controller (label content, measured size, close button placement, depth-dependent painting and animation), but there is no test file for `TabPaneView` itself and several edge-specific drawing details are untested.

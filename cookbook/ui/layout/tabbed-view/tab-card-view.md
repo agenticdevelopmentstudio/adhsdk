@@ -76,7 +76,9 @@ column of cards reads as a deck turned to the selected tab.
   ("x" in a circle) icon only, with no border or bezel, in a fixed `14×14pt`
   frame.
 - **close-button-has-tooltip**: The close control MUST have the tooltip
-  "Close Tab", naming the action rather than the icon.
+  "Close Tab", naming the action rather than the icon, and its icon's
+  accessibility description MUST be the same "Close Tab", matching the tab
+  bar's.
 - **close-action-forwards-to-onclose**: Component MUST invoke the close
   callback, and nothing else, when the close control's action fires.
 - **header-close-button-placement**: The header MUST place the close control
@@ -258,7 +260,7 @@ column of cards reads as a deck turned to the selected tab.
   card as five separate, individually-focused text elements in sequence,
   with no indication that they describe one tab.
 - **Label requirements**: The close control's icon carries an accessibility
-  label of "Close" (see Localization). Each status icon carries the
+  label of "Close Tab" (see Localization). Each status icon carries the
   caller-supplied accessibility label for its symbol. The agent, session,
   directory, branch, and summary labels receive no explicit accessibility
   label in this component; the screen reader falls back to each label's own
@@ -382,9 +384,9 @@ direct, in-process calls from its controller.
 
 | String Key | Default (en) | Context |
 |-----------|-------------|---------|
-| — | "Close" | The close control's icon's accessibility label |
+| — | "Close Tab" | The close control's icon's accessibility label |
 
-"Close" is a hardcoded English string literal passed directly as the
+"Close Tab" is a hardcoded English string literal passed directly as the
 accessibility label, not routed through any localization mechanism used in
 this component. (The status symbols' accessibility labels, and every label's
 displayed text, are caller-supplied data from the data source and
@@ -474,7 +476,7 @@ Not applicable: this component contains no logging call.
   `prefers-reduced-motion: reduce` media query per the Reduce Motion gap
   above. Use CSS `text-overflow: ellipsis` for tail truncation, `direction:
   rtl` on an inner span for head truncation (the directory-label case), and
-  a `<button aria-label="Close">` for the close control.
+  a `<button aria-label="Close Tab">` for the close control.
 - **AppKit/UIKit** (source platform): Implemented in
   `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/MultiTabbedViewController/TabPane/TabPaneView.swift`
   (`TabPaneView`, plus the file-private `InsetBox`, `CardSides`, and
@@ -529,7 +531,7 @@ Not applicable: this component contains no logging call.
   header's extra width — followed by a close `Button` in the fourth column,
   styled borderless (`Style="{StaticResource TransparentButtonStyle}"` or
   equivalent), sized `14x14`, using the Segoe Fluent Icons `&#xE711;`
-  ("Cancel") glyph, with `AutomationProperties.Name="Close"`. Represent the
+  ("Cancel") glyph, with `AutomationProperties.Name="Close Tab"`. Represent the
   status symbols as a horizontal `ItemsRepeater`/`StackPanel` of `14x14`
   `FontIcon`s, each with its own `AutomationProperties.Name` bound to the
   caller-supplied label. Bind `MinWidth`/`MinHeight` growth to the hosted
@@ -614,7 +616,7 @@ finding). Screen-reader-support is partial because accessibility identifiers
 and status-symbol labels are set explicitly, but the card sets no
 `accessibilityRole` and groups nothing for VoiceOver (see Accessibility).
 Reduced-motion is failed for the gap documented in Accessibility Options.
-String-externalization is failed because `closeButton`'s "Close" accessibility
+String-externalization is failed because `closeButton`'s "Close Tab" accessibility
 description is a hardcoded English literal (see Localization).
 
 Separation-of-concerns is passed: `TabPaneView` only draws the card (background, labels, status symbols, close control) and exposes its depth and callbacks, while content values come from `TabPaneDataSource` and user intent leaves through `TabPaneDelegate`, so the card holds no tab-ordering or data-fetching policy. Unit-test-coverage is partial: `TabPaneViewControllerTests.swift` and `TabCardStackTests.swift` drive the card through its controller (label content, measured size, close button placement, depth-dependent painting and animation), but there is no test file for `TabPaneView` itself and several edge-specific drawing details are untested.
@@ -631,4 +633,4 @@ Separation-of-concerns is passed: `TabPaneView` only draws the card (background,
 | 1.2.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to ui/layout/tabbed-view/. |
 | 1.2.1 | 2026-10-04 | Mike Fullerton | Added Compliance rows for separation-of-concerns and unit-test-coverage |
 | 1.2.2 | 2026-10-04 | Mike Fullerton | UI-thread confinement restated as the shared confines-to-ui-thread requirement, with a test vector; the @MainActor mechanism is in Platform Notes. |
-| 1.3.0 | 2026-11-15 | Mike Fullerton | The close button has the tooltip Close Tab |
+| 1.3.0 | 2026-11-15 | Mike Fullerton | The close button has the tooltip Close Tab, and its accessibility description is Close Tab to match |

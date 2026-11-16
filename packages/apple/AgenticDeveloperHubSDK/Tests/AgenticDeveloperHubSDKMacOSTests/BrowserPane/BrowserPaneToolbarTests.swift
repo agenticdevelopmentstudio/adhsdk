@@ -308,7 +308,7 @@ final class BrowserPaneToolbarTests: XCTestCase {
         XCTAssertEqual(pane.privacyButton.toolTip, "Show This Tab's Privacy Settings")
         XCTAssertEqual(pane.menuButton.toolTip, "Show Browser Menu")
         XCTAssertEqual(pane.reloadButton.accessibilityIdentifier(), "browser.reload")
-        XCTAssertEqual(pane.newTabButton.accessibilityIdentifier(), "browser.new tab")
+        XCTAssertEqual(pane.newTabButton.accessibilityIdentifier(), "browser.newtab")
         XCTAssertEqual(pane.privacyButton.accessibilityIdentifier(), "browser.privacy")
         XCTAssertEqual(pane.menuButton.accessibilityIdentifier(), "browser.menu")
     }

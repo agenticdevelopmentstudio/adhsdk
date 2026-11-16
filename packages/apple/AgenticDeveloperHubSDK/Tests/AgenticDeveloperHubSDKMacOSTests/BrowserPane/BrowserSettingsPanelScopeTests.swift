@@ -303,15 +303,13 @@ final class BrowserSettingsPanelScopeTests: XCTestCase {
     func testAcceptCookiesNamesThePaneJar() throws {
         let global = makeSettings()
         let globalRow = try row(UserSettings.browserAcceptsCookies, in: makePanel(settings: global))
-        XCTAssertEqual(globalRow.model.explanation, "Off, sites cannot keep you signed in.")
+        XCTAssertNil(globalRow.model.explanation)
 
         let layered = makeLayered(over: global)
         let pane = try makePane(settings: layered)
         let panePanel = makePanel(settings: global, scope: .pane(layered, pane))
         let paneRow = try row(UserSettings.browserAcceptsCookies, in: panePanel)
-        XCTAssertEqual(
-            paneRow.model.explanation, "Off, sites cannot keep you signed in. Applies to the jar: This Pane."
-        )
+        XCTAssertEqual(paneRow.model.explanation, "Applies to the jar: This Pane.")
     }
 
     // MARK: - The settings' open and close

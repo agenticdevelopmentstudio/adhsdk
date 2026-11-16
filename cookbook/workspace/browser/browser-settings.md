@@ -2,7 +2,7 @@
 id: 5a246e6c-2125-4427-a8ab-2f43f2fecba5
 title: "Web Browser Settings Topics"
 type: ingredient
-version: 0.1.3
+version: 0.1.4
 status: draft
 language: en
 created: 2026-11-15
@@ -154,7 +154,10 @@ because each topic's search keywords move with its controls.
   the extension's name, then to a generic action name.
 - **help-covers-regrouped-topics**: The Behavior, Appearance and Privacy and
   Security topics MUST each have help content with one topic per group they
-  show in that scope, and no topic for a group the scope does not show; the
+  show in that scope. A topic for a group the scope does not show MUST be
+  left out, unless it is a "where to find it" topic for a control only
+  another scope shows, which MUST name where that control lives (the
+  Settings window's Tab Position topic names the pane's settings sheet); the
   History help MUST say that the visits are seen and cleared from Browser ▸
   Show History, and "Agent can see history" MUST have a help topic of its
   own.
@@ -240,7 +243,7 @@ because each topic's search keywords move with its controls.
 | browser-settings-025 | buttons-have-tooltips | Inspect Manage Site Data… and the Site Data window's buttons | Each has a non-empty tooltip |
 | browser-settings-026 | no-inline-help-labels | Inspect the Behavior, Appearance and added Privacy and Security groups | No explanation or empty-state text in the view; the topics' help content explains them |
 | browser-settings-027 | toolbar-buttons-have-tooltips | Walk a browser pane's view tree, privacy toolbar off and on, with several tabs, and a Safari pane's extension toolbar | Every button found has a non-empty tooltip naming its action; an unlabeled extension falls back to its name, then "Run Extension" |
-| browser-settings-028 | help-covers-regrouped-topics | Read Behavior's help in a pane's sheet, and Privacy and Security's help in either scope | Behavior has no "Open Sites in Tabs" topic in a pane; History's help names Browser ▸ Show History; "Agent Can See History" is a topic |
+| browser-settings-028 | help-covers-regrouped-topics | Read Behavior's help in a pane's sheet, and Privacy and Security's help in either scope | Behavior has no "Open Sites in Tabs" topic in a pane; the Settings window's Appearance has a Tab Position topic naming where the control lives; History's help names Browser ▸ Show History; "Agent Can See History" is a topic |
 
 ## Edge Cases
 
@@ -469,6 +472,7 @@ Notes: no compliance checks have been run; the code does not exist yet.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 0.1.4 | 2026-11-15 | Mike Fullerton | help-covers-regrouped-topics allows a where-to-find-it topic that names where the control lives |
 | 0.1.3 | 2026-11-15 | Mike Fullerton | Toolbar buttons have action tooltips; help follows the regrouped topics' groups and points history to Browser > Show History |
 | 0.1.2 | 2026-11-15 | Mike Fullerton | Site data removal reports no failure; a Chrome pane's sheet leaves out Protection and Site Data; the Site Data window takes the Remove All detail |
 | 0.1.1 | 2026-11-15 | Mike Fullerton | A Chrome pane's sheet leaves General's Media and Web Inspector groups out. |

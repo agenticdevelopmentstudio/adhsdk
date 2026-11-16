@@ -257,7 +257,7 @@ final class TabPaneView: NSView {
         statusStack.orientation = .horizontal
         statusStack.spacing = 2
 
-        closeButton.image = NSImage(systemSymbolName: "xmark.circle.fill", accessibilityDescription: "Close")
+        closeButton.image = NSImage(systemSymbolName: "xmark.circle.fill", accessibilityDescription: "Close Tab")
         closeButton.toolTip = "Close Tab"
         closeButton.isBordered = false
         closeButton.bezelStyle = .inline

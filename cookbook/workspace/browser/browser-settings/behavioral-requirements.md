@@ -87,7 +87,10 @@
   the extension's name, then to a generic action name.
 - **help-covers-regrouped-topics**: The Behavior, Appearance and Privacy and
   Security topics MUST each have help content with one topic per group they
-  show in that scope, and no topic for a group the scope does not show; the
+  show in that scope. A topic for a group the scope does not show MUST be
+  left out, unless it is a "where to find it" topic for a control only
+  another scope shows, which MUST name where that control lives (the
+  Settings window's Tab Position topic names the pane's settings sheet); the
   History help MUST say that the visits are seen and cleared from Browser ▸
   Show History, and "Agent can see history" MUST have a help topic of its
   own.
