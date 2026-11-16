@@ -120,4 +120,22 @@ struct GitReflogViewControllerTests {
         #expect(reflog.selectedEntry == Self.entries[1])
         #expect(delegate.selections.count == 1)
     }
+
+    @Test("a new action shifts every selector, and the selected step stays selected")
+    func selectionFollowsShift() throws {
+        let (reflog, delegate) = makeReflog()
+        reflog.select(row: 1)
+        let shifted = Self.entries.enumerated().map { index, old in
+            GitReflogEntry(selector: "HEAD@{\(index + 1)}", sha: old.sha, previousSha: old.previousSha,
+                           action: old.action, message: old.message, date: old.date)
+        }
+        let newest = GitReflogEntry(
+            selector: "HEAD@{0}", sha: String(repeating: "d", count: 40), previousSha: nil,
+            action: "reset", message: "moving to HEAD~1", date: Date(timeIntervalSince1970: 1_767_268_900))
+        reflog.show([newest] + shifted)
+        let selected = try #require(reflog.selectedEntry)
+        #expect(selected.selector == "HEAD@{2}")
+        #expect(selected.sha == Self.entries[1].sha)
+        #expect(delegate.selections.count == 1)
+    }
 }

@@ -73,7 +73,8 @@ public final class GitReflogViewController: NSViewController {
             tableColumn.resizingMask = column == .message ? [.autoresizingMask, .userResizingMask] : .userResizingMask
             tableView.addTableColumn(tableColumn)
         }
-        tableView.columnAutoresizingStyle = .firstColumnOnlyAutoresizingStyle
+        // Only Message has `.autoresizingMask`, so it alone takes up extra width.
+        tableView.columnAutoresizingStyle = .uniformColumnAutoresizingStyle
         tableView.rowHeight = 20
         tableView.allowsMultipleSelection = false
         tableView.allowsEmptySelection = true
@@ -99,21 +100,27 @@ public final class GitReflogViewController: NSViewController {
         view = root
     }
 
-    /// Shows `entries`, keeping the selected entry selected when it is still listed.
+    /// Shows `entries`, keeping the selected entry selected when it is still listed. An
+    /// entry is matched on its commit, date, action and message, never its selector, which
+    /// shifts from `@{n}` to `@{n+1}` with every new action.
     public func show(_ entries: [GitReflogEntry]) {
         loadViewIfNeeded()
-        let selected = selectedEntry?.sha
-        let selectedSelector = selectedEntry?.selector
+        let selected = selectedEntry
         self.entries = entries
         isApplyingSelection = true
         defer { isApplyingSelection = false }
         tableView.reloadData()
-        if let selectedSelector, let selected,
-           let row = entries.firstIndex(where: { $0.selector == selectedSelector && $0.sha == selected }) {
+        if let selected, let row = entries.firstIndex(where: { Self.isSameStep($0, as: selected) }) {
             tableView.selectRowIndexes(IndexSet(integer: row), byExtendingSelection: false)
         } else {
             tableView.deselectAll(nil)
         }
+    }
+
+    /// Whether `entry` records the same step as `other`, wherever each sits in its list.
+    static func isSameStep(_ entry: GitReflogEntry, as other: GitReflogEntry) -> Bool {
+        entry.sha == other.sha && entry.date == other.date
+            && entry.action == other.action && entry.message == other.message
     }
 
     /// The selected row's entry; nil when nothing is selected.

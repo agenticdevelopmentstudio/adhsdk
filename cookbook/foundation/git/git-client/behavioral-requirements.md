@@ -880,6 +880,17 @@ input it cannot read rather than failing.
   action and an empty message.
 - **reflog-previous**: Each entry's previous sha MUST be the next (older)
   record's sha, and the oldest entry read has none.
+- **undo-state**: `undoState(limit:in:caller:)` (limit 20) MUST read the
+  checked-out branch with `symbolic-ref -q HEAD` (exit 1, a detached HEAD,
+  reads as the ref `HEAD`), its tip with `resolveCommit`, and that ref's
+  reflog, so a branch's Undo never reads HEAD's reflog. Its `target` MUST be
+  the first entry whose sha differs from the tip (skipping a step that left
+  the tip in place, such as `reset: moving to HEAD`), nil with no tip or no
+  such entry; `last` is the newest entry.
+- **undo-preflight**: `undoPreflight(in:caller:)` MUST return the undo state,
+  the operation in progress and whether any file is staged or unstaged
+  (untracked included); its `target` is nil while an operation is in
+  progress.
 
 ### Signatures
 

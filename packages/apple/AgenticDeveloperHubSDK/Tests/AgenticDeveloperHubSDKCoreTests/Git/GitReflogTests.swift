@@ -63,4 +63,21 @@ struct GitReflogTests {
         let broken = "HEAD@{0}\(Self.unit)abc\0" + Self.record("HEAD@{1}", "b", "commit: two", 2)
         #expect(GitReflogEntry.parse(reflog: broken).map(\.selector) == ["HEAD@{1}"])
     }
+
+    @Test("the undo target is the first entry whose commit differs from the tip")
+    func undoTargetSkipsSameSha() {
+        let raw = Self.record("main@{0}", "e", "reset: moving to HEAD", 3)
+            + Self.record("main@{1}", "e", "commit: three", 2)
+            + Self.record("main@{2}", "d", "commit: two", 1)
+        let entries = GitReflogEntry.parse(reflog: raw)
+        let tip = String(repeating: "e", count: 40)
+        let state = GitUndoState(ref: "refs/heads/main", tip: tip, entries: entries)
+        #expect(state.last?.selector == "main@{0}")
+        #expect(state.target?.selector == "main@{2}")
+        #expect(GitUndoState(ref: "refs/heads/main", tip: nil, entries: entries).target == nil)
+        #expect(GitUndoState(ref: "HEAD", tip: tip, entries: Array(entries.prefix(2))).target == nil)
+        #expect(GitUndoState.empty.target == nil)
+        let preflight = GitUndoPreflight(state: state, operation: .none, isDirty: false)
+        #expect(preflight.target?.selector == "main@{2}")
+    }
 }

@@ -22,9 +22,10 @@ public final class GitRepositoryModel: GitRefsDataSource, GitHistoryDataSource, 
     public private(set) var worktrees: [GitWorktree] = []
     /// The commit HEAD resolves to; nil on an unborn HEAD, an orphan branch included.
     public private(set) var headCommit: String?
-    /// HEAD's two newest reflog entries, loaded with the refs, for Undo
-    /// (`GitRepositoryModel+Reflog`); empty before the first load and on an unborn HEAD.
-    public private(set) var headReflog: [GitReflogEntry] = []
+    /// The checked-out branch's (or a detached HEAD's) tip and newest reflog entries,
+    /// loaded with the refs, for Undo (`GitRepositoryModel+Reflog`); `.empty` before the
+    /// first load.
+    public private(set) var undoState: GitUndoState = .empty
     /// Whether and how the repository uses Git LFS; nil until it first loads, with the
     /// refs, and kept at its last good value when a load fails.
     public private(set) var lfs: GitLFSState?
@@ -233,7 +234,7 @@ public final class GitRepositoryModel: GitRefsDataSource, GitHistoryDataSource, 
         async let worktrees = Self.load { try await client.worktrees(in: root) }
         async let head = Self.load { try await client.resolveCommit("HEAD", in: root) }
         async let lfs = Self.load { try await client.lfsState(in: root) }
-        async let reflog = Self.load { try await client.reflog(limit: 2, in: root) }
+        async let reflog = Self.load { try await client.undoState(in: root) }
         let loaded = await (refs: refs, stashes: stashes, submodules: submodules, worktrees: worktrees, head: head)
         let lfsLoaded = await lfs
         let reflogLoaded = await reflog
@@ -288,8 +289,8 @@ public final class GitRepositoryModel: GitRefsDataSource, GitHistoryDataSource, 
         }
         switch reflogLoaded {
         case .success(let value):
-            if value != headReflog {
-                headReflog = value
+            if value != undoState {
+                undoState = value
                 applied = true
             }
         case .failure(let error): logFailure("reflog", error)
@@ -387,6 +388,11 @@ public final class GitRepositoryModel: GitRefsDataSource, GitHistoryDataSource, 
     /// HEAD's reflog, newest first, at most `limit` entries, for the reflog browser.
     public func reflog(limit: Int) async throws -> [GitReflogEntry] {
         try await client.reflog(limit: limit, in: root)
+    }
+
+    /// Undo's state read fresh from git at the moment Undo is pressed, off the main thread.
+    public func undoPreflight() async throws -> GitUndoPreflight {
+        try await client.undoPreflight(in: root)
     }
 
     /// The checked-out local branch; nil on a detached HEAD or before the refs load.

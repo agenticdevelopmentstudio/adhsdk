@@ -33,6 +33,9 @@ public struct MenuContribution {
         /// windows (chat, partner, sessions, logs). Named for the menu's title.
         case ai
         // swiftlint:enable identifier_name
+        /// Git menu, after AI and before Window — the git window's commands
+        /// that act on the key repository (Undo Last Git Action).
+        case git
         // There is deliberately no Window slot. The Window menu holds the
         // window verbs (Minimize, Zoom, Bring All to Front) and AppKit's list
         // of the windows already open; a command that opens a window belongs

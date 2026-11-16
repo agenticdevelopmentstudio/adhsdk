@@ -22,9 +22,9 @@ extension GitWindowFeature {
             }
         ))
         return MenuContribution(
-            slot: .fileNew, title: "Undo Last Git Action",
+            slot: .git, title: "Undo Last Git Action",
             commandID: Self.undoCommandID, registry: registry,
-            order: 46
+            order: 10
         )
     }
 

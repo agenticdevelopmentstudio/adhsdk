@@ -1119,6 +1119,63 @@ struct GitWindowSessionActionTests {
         #expect(try await repository.sha("HEAD") == head)
     }
 
+    @Test("on a branch just created and checked out, Undo is disabled and never moves it onto the old tip")
+    func undoAfterCreatingBranch() async throws {
+        let (repository, _) = try await makeAmendedRepository()
+        defer { repository.tearDown() }
+        let tip = try await repository.sha("HEAD")
+        try await repository.run(["switch", "-q", "-c", "feature"])
+        let presenter = StubPresenter()
+        let (model, session) = await makeSession(repository, presenter: presenter)
+        #expect(model.undoState.ref == "refs/heads/feature")
+        #expect(model.undoTarget == nil)
+
+        await act(session, .undo)
+
+        #expect(presenter.confirmations.isEmpty)
+        #expect(try await repository.sha("refs/heads/feature") == tip)
+        #expect(try await repository.sha("refs/heads/main") == tip)
+        #expect(try await headName(repository) == "feature")
+    }
+
+    @Test("a reflog step that left the tip in place is skipped: the target is the first different commit")
+    func undoSkipsSameShaEntry() async throws {
+        let (repository, beforeAmend) = try await makeAmendedRepository()
+        defer { repository.tearDown() }
+        let tip = try await repository.sha("HEAD")
+        try await repository.run(["reset", "-q", "HEAD"])
+        let presenter = StubPresenter()
+        let (model, session) = await makeSession(repository, presenter: presenter)
+        #expect(model.lastReflogEntry?.sha == tip)
+        #expect(model.undoState.entries.dropFirst().first?.sha == tip)
+        #expect(model.undoTarget?.sha == beforeAmend)
+
+        await act(session, .undo)
+
+        #expect(presenter.failures.isEmpty)
+        #expect(try await repository.sha("HEAD") == beforeAmend)
+    }
+
+    @Test("a commit made behind the model's back makes Undo refresh instead of resetting")
+    func undoStaleModel() async throws {
+        let (repository, _) = try await makeAmendedRepository()
+        defer { repository.tearDown() }
+        let shownTip = try await repository.sha("HEAD")
+        let presenter = StubPresenter()
+        let (model, session) = await makeSession(repository, presenter: presenter)
+        #expect(model.undoState.tip == shownTip)
+        try await commitFile(repository, "d.txt", "d\n", at: 500)
+        let newTip = try await repository.sha("HEAD")
+
+        await act(session, .undo)
+
+        #expect(presenter.confirmations.isEmpty)
+        #expect(presenter.failures.isEmpty)
+        #expect(try await repository.sha("HEAD") == newTip)
+        #expect(model.undoState.tip == newTip)
+        #expect(model.undoTarget?.sha == shownTip)
+    }
+
     @Test("a reflog entry's hard reset confirms; its checkout detaches and its branch is created there")
     func reflogIntents() async throws {
         let (repository, beforeAmend) = try await makeAmendedRepository()

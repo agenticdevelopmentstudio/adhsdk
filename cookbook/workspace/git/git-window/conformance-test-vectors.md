@@ -87,8 +87,12 @@
 | git-window-084 | sessions-cache | a provider answering one session; roots `/repo`, `/wt`; refresh at 0 s, 59 s and 60 s | one read at 0 s over `/repo`, `/wt` since 90 days before, one change; none at 59 s; a second read at 60 s and no second change. |
 | git-window-085 | sessions-provider-optional | a feature built without `sessions:` | the commit detail has no `agentSessionMatches` and the sidebar no `agentSessionsOnBranch`. |
 | git-window-086 | toolbar-verbs, toolbar-undo | a toolbar with and without terminals | `git.toolbar.undo` "Undo" `arrow.uturn.backward` between Pop and Command Log; seven items without terminals, Undo last. |
-| git-window-087 | toolbar-undo | HEAD@{0} `commit (amend)` / `two`; none | tooltip `Undo commit (amend): two`; `Undo`. |
+| git-window-087 | toolbar-undo | HEAD@{0} `commit (amend)` / `two`; none; `reset` with no message | tooltip `Undo commit (amend): two`; `Undo`; `Undo reset`. |
 | git-window-088 | toolbar-undo | three commits, then the third amended; Undo on a clean tree | no confirmation; HEAD the pre-amend commit; nothing staged, the amend's file unstaged with the amended text. |
 | git-window-089 | toolbar-undo | the same repository with `a.txt` edited; Undo declined, then confirmed | `Undo "c.txt amended"?` / `HEAD moves back to <8 chars>; changes stay in the working copy.` (Undo, not destructive) twice; HEAD unmoved, then the pre-amend commit with `a.txt` and `c.txt` unstaged. |
 | git-window-090 | toolbar-undo | a rebase stopped on a conflict; Undo | `undoTarget` nil; no confirmation; HEAD unmoved. |
 | git-window-091 | reflog-row | the reflog entry for the pre-amend commit: Hard (declined), Create Branch Here… `from-reflog`, Check Out (detached) | `Reset main to <short sha>?` / `Uncommitted changes are lost.` and HEAD unmoved; `from-reflog` at the commit; HEAD detached there. |
+| git-window-092 | toolbar-undo | three commits and an amend, then `switch -c feature`; Undo | ref `refs/heads/feature`, `undoTarget` nil; no confirmation; `feature` and `main` both at the old tip, HEAD on `feature`. |
+| git-window-093 | toolbar-undo | three commits and an amend, then `reset HEAD`; Undo | the two newest entries at the tip; target the pre-amend commit; HEAD moves there. |
+| git-window-094 | toolbar-undo | three commits and an amend; a commit made behind the model's back; Undo | no confirmation, no failure; HEAD the new commit; the model refreshed, its tip the new commit and its target the amend. |
+| git-window-095 | undo-command | the feature's contributions | `Undo Last Git Action` in slot `.git` at order 10. |

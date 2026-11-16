@@ -336,12 +336,28 @@ extension GitWindowSession {
     /// Always a mixed reset to HEAD@{1}, which loses nothing the reflog cannot restore, so
     /// it runs at once on a clean tree and confirms only on a dirty one (ruling R5).
     /// Nothing happens without an `undoTarget`.
+    /// Undo re-reads the ref, its tip, its target and the tree from git before acting: when
+    /// any of them differs from what the window showed, it refreshes instead of resetting.
     private func undoLastAction() async {
-        guard let target = model.undoTarget, let last = model.lastReflogEntry else { return }
-        if !model.staged.isEmpty || !model.unstaged.isEmpty {
+        let shown = model.undoState
+        guard let shownTarget = model.undoTarget else { return }
+        let fresh: GitUndoPreflight
+        do {
+            fresh = try await model.undoPreflight()
+        } catch {
+            showFailure(title: "Undo failed", error: error)
+            return
+        }
+        guard let target = fresh.target, let last = fresh.state.last,
+              fresh.state.ref == shown.ref, fresh.state.tip == shown.tip,
+              target.sha == shownTarget.sha else {
+            await model.refresh([.refs, .workingCopy, .operation])
+            return
+        }
+        if fresh.isDirty {
             guard let presenter else { return }
             let confirmation = GitConfirmation(
-                title: "Undo \"\(last.message)\"?",
+                title: last.message.isEmpty ? "Undo \(last.action)?" : "Undo \"\(last.message)\"?",
                 message: "HEAD moves back to \(target.shortSha); changes stay in the working copy.",
                 actionTitle: "Undo", isDestructive: false)
             guard await presenter.confirm(confirmation) else { return }

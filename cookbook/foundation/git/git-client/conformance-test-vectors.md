@@ -120,3 +120,6 @@
 | git-client-117 | reflog-subject-split | The subjects `commit: fix: a: b` and `reset` | (`commit`, `fix: a: b`); (`reset`, empty). |
 | git-client-118 | reflog-read, reflog-previous | Three commits, then the third amended; read `HEAD` with limit 10, then 2 | Four entries, `commit (amend)` first, its previous sha the pre-amend commit; limit 2 gives the amend and the pre-amend commit. |
 | git-client-119 | reflog-unborn, reflog-read | A repository with no commits; then the ref `--all` | No entries; then invalid-argument. |
+| git-client-120 | undo-state | entries `main@{0}` and `main@{1}` at sha `e`×40, `main@{2}` at `d`×40, tip `e`×40; then no tip; then only the first two | target `main@{2}`; nil; nil. |
+| git-client-121 | undo-state, undo-preflight | two commits, then `switch -c feature`; then `switch --detach HEAD~1` | ref `refs/heads/feature`, one entry, no target; ref `HEAD`, target the second commit; no operation, clean. |
+| git-client-122 | undo-state | a repository with no commits | no tip, no entries, no target. |

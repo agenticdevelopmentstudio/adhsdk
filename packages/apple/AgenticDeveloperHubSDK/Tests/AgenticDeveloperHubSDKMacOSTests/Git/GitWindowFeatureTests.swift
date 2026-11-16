@@ -265,7 +265,7 @@ struct GitWindowFeatureTests {
         #expect(GitWindowFeature.path(from: ["/a", "/b"]) == nil)
     }
 
-    @Test("Undo Last Git Action is registered and contributed at order 46, disabled with no Git window key")
+    @Test("Undo Last Git Action is registered and contributed to the Git menu, disabled with no Git window key")
     func undoCommand() throws {
         let registry = CommandRegistry()
         let setting = makeSetting()
@@ -281,7 +281,8 @@ struct GitWindowFeatureTests {
         #expect(!command.isEnabled())
         #expect(command.run([]) == nil)
         let contribution = try #require(feature.menuContributions.first { $0.title == "Undo Last Git Action" })
-        #expect(contribution.order == 46)
+        #expect(contribution.slot == .git)
+        #expect(contribution.order == 10)
     }
 
     @Test("Open Git Window for Path with a missing or non-string argument opens no window")

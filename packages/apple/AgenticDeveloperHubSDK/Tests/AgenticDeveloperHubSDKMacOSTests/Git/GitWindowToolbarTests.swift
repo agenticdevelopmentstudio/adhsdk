@@ -138,6 +138,10 @@ struct GitWindowToolbarTests {
             action: "commit (amend)", message: "two", date: Date(timeIntervalSince1970: 0))
         #expect(GitWindowToolbar.undoToolTip(for: entry) == "Undo commit (amend): two")
         #expect(GitWindowToolbar.undoToolTip(for: nil) == "Undo")
+        let bare = GitReflogEntry(
+            selector: "HEAD@{0}", sha: String(repeating: "a", count: 40), previousSha: nil,
+            action: "reset", message: "", date: Date(timeIntervalSince1970: 0))
+        #expect(GitWindowToolbar.undoToolTip(for: bare) == "Undo reset")
     }
 
     @Test("without a session or a window, updating Undo is harmless")

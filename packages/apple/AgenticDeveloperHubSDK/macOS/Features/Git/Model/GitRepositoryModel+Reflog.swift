@@ -2,16 +2,18 @@ import AgenticDeveloperHubSDKCore
 
 extension GitRepositoryModel {
 
-    /// Where Undo moves HEAD back to (recipe `workspace/git/git-window`, "Undo"): HEAD@{1}'s
-    /// entry when HEAD@{0} exists and no merge, rebase, cherry-pick or revert is in
+    /// Where Undo moves the checked-out branch (or a detached HEAD) back to (recipe
+    /// `workspace/git/git-window`, "Undo"): the first entry of that ref's reflog whose
+    /// commit differs from its tip, while no merge, rebase, cherry-pick or revert is in
     /// progress; nil otherwise, which disables Undo rather than hiding it.
     public var undoTarget: GitReflogEntry? {
-        guard operationState == .none, headReflog.count >= 2 else { return nil }
-        return headReflog[1]
+        guard operationState == .none else { return nil }
+        return undoState.target
     }
 
-    /// HEAD@{0}: what Undo would undo, whose action and message make its tooltip.
+    /// The ref's newest reflog entry: what Undo would undo, whose action and message make
+    /// its tooltip.
     public var lastReflogEntry: GitReflogEntry? {
-        headReflog.first
+        undoState.last
     }
 }

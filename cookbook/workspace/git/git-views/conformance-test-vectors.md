@@ -111,3 +111,4 @@
 | git-views-108 | reflog-menu | row 1's menu; then rows -1 and 3 | `Reset HEAD to Here` (submenu `Soft`, `Mixed`, `Hard…`), `Check Out (detached)`, `Create Branch Here…` with their `git.reflog.menu.*` ids; no menu for either. |
 | git-views-109 | reflog-menu | choose `Hard…`, `Soft`, `Mixed`, `Check Out (detached)`, `Create Branch Here…` on row 1 | the delegate gets `.reset(e, .hard)`, `.reset(e, .soft)`, `.reset(e, .mixed)`, `.checkout(e)`, `.createBranch(e)`. |
 | git-views-110 | reflog-selection | select row 1, then show the same entries | one report of entry 1; it stays selected with no second report. |
+| git-views-111 | reflog-selection | select row 1, then show a new `reset` entry first with every selector shifted by one | entry 1's step stays selected, now `HEAD@{2}`; no second report. |

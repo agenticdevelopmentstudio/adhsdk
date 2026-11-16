@@ -56,4 +56,39 @@ struct GitClientReflogTests {
             _ = try await client.reflog(ref: "--all", limit: 10, in: repository.root)
         }
     }
+
+    @Test("undo state reads the checked-out branch's reflog, and HEAD's only when detached")
+    func undoStateRef() async throws {
+        let repository = try await GitTestRepository.make(prefix: "git-reflog-undo-state")
+        defer { repository.tearDown() }
+        try await commitFile(repository, "a.txt", "one\n", message: "one")
+        try await commitFile(repository, "a.txt", "two\n", message: "two")
+        let tip = try await repository.sha("HEAD")
+        try await repository.run(["switch", "-q", "-c", "feature"])
+
+        let branch = try await client.undoState(in: repository.root)
+        #expect(branch.ref == "refs/heads/feature")
+        #expect(branch.tip == tip)
+        #expect(branch.entries.count == 1)
+        #expect(branch.target == nil)
+
+        try await repository.run(["switch", "-q", "--detach", "HEAD~1"])
+        let detached = try await client.undoState(in: repository.root)
+        #expect(detached.ref == "HEAD")
+        #expect(detached.target?.sha == tip)
+
+        let preflight = try await client.undoPreflight(in: repository.root)
+        #expect(preflight.operation == .none)
+        #expect(!preflight.isDirty)
+    }
+
+    @Test("an unborn branch has no undo state to act on")
+    func undoStateUnborn() async throws {
+        let repository = try await GitTestRepository.make(prefix: "git-reflog-undo-unborn")
+        defer { repository.tearDown() }
+        let state = try await client.undoState(in: repository.root)
+        #expect(state.tip == nil)
+        #expect(state.entries.isEmpty)
+        #expect(state.target == nil)
+    }
 }
