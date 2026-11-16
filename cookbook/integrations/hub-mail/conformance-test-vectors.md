@@ -29,4 +29,4 @@
 | hub-mail-026 | messages-newest-first | A message whose stored `label_ids` is not valid JSON, under a label filter | The message matches no label filter and the query does not fail |
 | hub-mail-027 | local-label-write | `applyLabels` adding `INBOX` to a message already labelled `INBOX` | The message carries `INBOX` once |
 | hub-mail-028 | soft-delete | Delete a message, then read the table directly | The row remains with `deleted_at` set and its content columns intact |
-
+| hub-mail-029 | numbers-never-trap | Upsert a label with `messages_total` 1e19, `messages_unread` 3.7 and `parent_name` 1e19 | `messagesTotal` nil, `messagesUnread` 3, `parentName` `1e+19` |

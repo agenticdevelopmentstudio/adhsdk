@@ -4,11 +4,11 @@
     "id": "a6442464-e17d-451e-b47a-3be23a2dc753",
     "title": "Hub Mail",
     "type": "ingredient",
-    "version": "1.1.1",
+    "version": "1.1.2",
     "status": "review",
     "language": "en",
     "created": "2026-11-13",
-    "modified": "2026-11-14",
+    "modified": "2026-11-16",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -36,7 +36,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "bd02da23a8a9d79d",
+  "synced": "2676aaac82a449c4",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

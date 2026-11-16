@@ -1,6 +1,7 @@
 
 - **claims-two-resources**: The projection MUST claim exactly `integration.integration_email_messages` and `integration.integration_email_labels`.
 - **typed-columns**: The projection MUST store each backend column under its own name in a typed column, keep JSON array and object columns (`to_addresses`, `cc_addresses`, `label_ids`, `attachments`, `color`) as JSON text, and keep `sync_version` and `deleted_at` for the store.
+- **numbers-never-trap**: The projection MUST store a JSON number in an integer column only when an `Int64` holds it (a fraction truncates toward zero), and store nil for one it cannot hold (magnitude 2^63 or more, NaN, an infinity); a number in a text column MUST be written as its integer digits when it is integral and in range, else as the `Double`'s text. No pulled value may trap inside the sync's batch transaction, where a crash leaves the cursor unadvanced and repeats on every launch.
 - **upsert-revives**: An upsert MUST replace the row's columns, take the change's sync version and clear `deleted_at`, so a deleted row that comes back is live again.
 - **soft-delete**: A delete MUST keep the row as a tombstone with `deleted_at` set, and take the delete's sync version when it has one. The tombstone keeps its content columns; they persist on disk until the next pull replaces the row or sign-out purges it.
 - **live-rows-only**: Every read MUST skip rows with `deleted_at` set or `is_deleted` true; the backend's worker sets `is_deleted` on mail Gmail removed.

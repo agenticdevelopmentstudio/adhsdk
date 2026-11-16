@@ -196,6 +196,20 @@ public struct HubMailProjection: SyncMirrorProjection {
 
     // MARK: - Coding
 
+    /// A JSON number as an integer column's value. `JSONValue` decodes every
+    /// number as `Double`, and `Int64(_:)` traps on one it cannot hold (1e19,
+    /// NaN, an infinity), which inside the sync's batch transaction left the
+    /// cursor unadvanced, so the same batch crashed every launch. Such a value
+    /// is stored as nil, a count the mirror does not know; it is never stored
+    /// as REAL, which the store's `Int?` read would then trap on. A fraction
+    /// truncates toward zero.
+    static func integer(_ number: Double) -> Int64? {
+        // `-Double(Int64.min)` is exactly 2^63 and the bound is exclusive,
+        // because `Double(Int64.max)` rounds up to 2^63, which no Int64 holds.
+        guard number.isFinite, number >= Double(Int64.min), number < -Double(Int64.min) else { return nil }
+        return Int64(number)
+    }
+
     static func bind(_ value: JSONValue?, as kind: Kind) -> (any DatabaseValueConvertible)? {
         guard let value, !value.isNull else {
             return kind == .boolean ? false : nil
@@ -204,7 +218,7 @@ public struct HubMailProjection: SyncMirrorProjection {
         case .text:
             switch value {
             case .string(let text): return text
-            case .number(let number): return number.rounded() == number ? String(Int64(number)) : String(number)
+            case .number(let number): return Int64(exactly: number).map { String($0) } ?? String(number)
             case .bool(let flag): return flag ? "true" : "false"
             default: return encode(value)
             }
@@ -214,7 +228,7 @@ public struct HubMailProjection: SyncMirrorProjection {
             return encode(value)
         case .integer:
             switch value {
-            case .number(let number): return Int64(number)
+            case .number(let number): return integer(number)
             case .string(let text): return Int64(text)
             case .bool(let flag): return flag ? 1 : 0
             default: return nil

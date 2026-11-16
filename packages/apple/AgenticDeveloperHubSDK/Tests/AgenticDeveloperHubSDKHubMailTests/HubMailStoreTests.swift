@@ -182,6 +182,33 @@ final class HubMailStoreTests: XCTestCase {
         }
     }
 
+    // 029
+    func testANumberNoIntegerHoldsIsStoredWithoutTrapping() throws {
+        try database.write { conn in
+            try projection.upsert(
+                resource: HubMailResource.labels, id: "l1", syncVersion: 1,
+                data: [
+                    "connection_id": .string("c1"), "external_id": .string("Label_1"),
+                    "source_provider": .string("gmail"), "name": .string("Work"), "type": .string("user"),
+                    "messages_total": .number(1e19), "messages_unread": .number(3.7),
+                    "parent_name": .number(1e19)
+                ], in: conn
+            )
+        }
+        let label = try XCTUnwrap(try store.labels(connectionId: "c1").first)
+        XCTAssertNil(label.messagesTotal)
+        XCTAssertEqual(label.messagesUnread, 3)
+        XCTAssertEqual(label.parentName, "1e+19")
+    }
+
+    func testIntegerConversionBounds() {
+        XCTAssertEqual(HubMailProjection.integer(42), 42)
+        XCTAssertEqual(HubMailProjection.integer(Double(Int64.min)), Int64.min)
+        XCTAssertNil(HubMailProjection.integer(Double(Int64.max)))
+        XCTAssertNil(HubMailProjection.integer(.nan))
+        XCTAssertNil(HubMailProjection.integer(-.infinity))
+    }
+
     func testAnUnknownColumnIsIgnored() throws {
         try database.write { conn in
             try projection.upsert(
