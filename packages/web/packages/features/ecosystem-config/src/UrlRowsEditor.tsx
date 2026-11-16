@@ -9,8 +9,10 @@ import { Label } from "@adh-sdk/ui/components/label";
 import { Plus, Trash2 } from "lucide-react";
 
 /**
- * A column of URL text inputs a developer adds to and removes from — the shape shared by the
- * sign-in app's allowed return origins and its redirect URIs. The values live in the parent as a
+ * A column of text inputs a developer adds to and removes from — the shape shared by the
+ * sign-in app's allowed return origins and its redirect URIs (URLs), and by the ecosystem's
+ * sign-in allow-list (email addresses). It keeps whatever strings it is given and validates
+ * none of them; the caller's model decides what a row may hold. The values live in the parent as a
  * plain `string[]`, but a column of text inputs needs a STABLE key per row so removing a middle
  * row doesn't churn the focus/caret of the rows below (array-index keys would). So this editor
  * holds an id-annotated mirror as its own source of truth and projects back to `string[]` on
