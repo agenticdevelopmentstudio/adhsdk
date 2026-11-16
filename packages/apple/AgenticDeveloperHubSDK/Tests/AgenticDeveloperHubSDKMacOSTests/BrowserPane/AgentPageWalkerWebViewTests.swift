@@ -192,6 +192,47 @@ final class AgentPageWalkerWebViewTests: XCTestCase {
         }
     }
 
+    /// The structural selector is stored as a hide-from-agent entry, so the
+    /// Kitchen's own <style> elements, inserted under <html> ahead of <head>
+    /// (or into body), must not change which element it names (review f4).
+    func test_structuralPathSurvivesInjectedStyles() async throws {
+        await host.load(html: """
+            <!doctype html><html><head><title>Paths</title></head><body>
+            <div>One</div><style></style>
+            <div><p>A</p><section><p>X</p><p id="target">T</p></section></div>
+            <svg width="1" height="1"><defs><linearGradient id="grad"></linearGradient></defs></svg>
+            </body></html>
+            """)
+        try await AgentPageWalkerRuntime.install(on: driver)
+        let raw = try await driver.callAsyncFunction(body: """
+            const results = {};
+            for (const id of ['target', 'grad']) {
+              const el = document.getElementById(id);
+              const before = globalThis.__adkAgentStructuralPath(el);
+              const head = document.createElement('style');
+              document.documentElement.insertBefore(head, document.head);
+              const inBody = document.createElement('style');
+              document.body.insertBefore(inBody, document.body.firstChild);
+              const matches = document.querySelectorAll(before);
+              results[id] = { before: before, after: globalThis.__adkAgentStructuralPath(el),
+                count: matches.length, same: matches[0] === el };
+              head.remove();
+            }
+            return JSON.stringify(results);
+            """, arguments: [:], world: .automation)
+        let json = try XCTUnwrap(raw as? String)
+        let results = try XCTUnwrap(try JSONSerialization.jsonObject(with: Data(json.utf8)) as? [String: [String: Any]])
+        for id in ["target", "grad"] {
+            let result = try XCTUnwrap(results[id], json)
+            let before = try XCTUnwrap(result["before"] as? String, json)
+            XCTAssertTrue(before.hasPrefix("html > body > "), before)
+            XCTAssertFalse(before.contains("nth-child"), before)
+            XCTAssertEqual(result["after"] as? String, before, "\(id): the path moved")
+            XCTAssertEqual(result["count"] as? Int, 1, "\(id): \(before)")
+            XCTAssertEqual(result["same"] as? Bool, true, "\(id): \(before)")
+        }
+    }
+
     /// An agent-list selector the page cannot evaluate would hide nothing,
     /// so the page is withheld rather than shown unfiltered (A-M1).
     func test_invalidExcludeSelectorFailsClosed() async throws {

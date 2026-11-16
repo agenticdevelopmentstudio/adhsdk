@@ -47,9 +47,12 @@
   site's exclusions are never applied to another site's page.
 - **Very large pages**: The selector each node records costs a search per
   node. The walker gives that search a share of its budget (a third) and
-  records the cheaper structural path (`tag:nth-child(n) > …`) for every
-  node after the share is spent, so a large page finishes where today's
-  snapshot does. Selectors never decide exclusion: the agent list is
+  records the cheaper structural path (`html > body > tag:nth-of-type(n) >
+  …`) for every node after the share is spent, so a large page finishes
+  where today's snapshot does. That path is stored as an agent-list entry,
+  so it MUST keep naming its element when the host's own `<style>`
+  elements come and go: `body` takes no index and every other step counts
+  only siblings of its own kind. Selectors never decide exclusion: the agent list is
   evaluated before the walk, and a selector it cannot evaluate refuses the
   walk, as `invalid-exclude-selector-fails-closed` says.
 - **The page root on the agent list**: The walk starts beneath `body`, so

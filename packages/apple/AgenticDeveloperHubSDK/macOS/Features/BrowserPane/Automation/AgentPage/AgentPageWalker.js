@@ -86,6 +86,27 @@
   // the builder joins the pieces before collapsing and concealing once.
   const squash = (s) => (s || '').replace(/\s+/g, ' ');
 
+  // The structural selector for `el`: `html > body > div:nth-of-type(2) > …`.
+  // It is stored as a hide-from-agent entry, so it must keep naming the same
+  // element when the Kitchen's own document-start <style> elements (Hide
+  // Images, the hidden-items sheet) come and go under <html>: `body` is the
+  // only body and takes no index, and every other step counts only siblings
+  // of its own kind (`:nth-of-type`), so an inserted <style> shifts nothing.
+  function structuralPath(el) {
+    const steps = [];
+    for (let at = el; at && at.nodeType === Node.ELEMENT_NODE; at = at.parentElement) {
+      if (at === document.documentElement) { steps.unshift('html'); break; }
+      const name = CSS.escape(at.localName);
+      if (at === document.body) { steps.unshift(name); continue; }
+      let index = 1;
+      for (let sibling = at.previousElementSibling; sibling; sibling = sibling.previousElementSibling) {
+        if (sibling.localName === at.localName && sibling.namespaceURI === at.namespaceURI) { index += 1; }
+      }
+      steps.unshift(name + ':nth-of-type(' + index + ')');
+    }
+    return steps.join(' > ');
+  }
+
   function walk(args) {
     const options = args || {};
     const kitchen = window.__adkitchen;
@@ -297,18 +318,6 @@
       return null;
     }
 
-    function structuralPath(el) {
-      const steps = [];
-      for (let at = el; at && at.nodeType === Node.ELEMENT_NODE; at = at.parentElement) {
-        const tag = at.tagName.toLowerCase();
-        if (tag === 'html') { steps.unshift('html'); break; }
-        const parent = at.parentElement;
-        const index = parent ? Array.prototype.indexOf.call(parent.children, at) + 1 : 1;
-        steps.unshift(tag + ':nth-child(' + index + ')');
-      }
-      return steps.join(' > ');
-    }
-
     // Finder's selector while finder's share of the budget lasts, then the
     // structural path, which names exactly this element too.
     function selectorOf(el) {
@@ -516,5 +525,7 @@
       return JSON.stringify({ error: 'script: ' + (e && e.message ? e.message : String(e)) });
     }
   };
+  // The structural selector alone, for tests that pin its stability.
+  globalThis.__adkAgentStructuralPath = function (el) { return structuralPath(el); };
   globalThis.__adkAgentWalkVersion = VERSION;
 })();
