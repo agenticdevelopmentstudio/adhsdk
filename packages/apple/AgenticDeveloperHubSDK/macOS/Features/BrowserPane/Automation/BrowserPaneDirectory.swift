@@ -29,6 +29,11 @@ public struct BrowserPaneHandle {
     /// The history store `browser_history` reads under All history; nil when
     /// the host has none.
     public let historyStore: BrowserHistoryStore?
+    /// The pane's effective Hide Images — its own override, else the global
+    /// value (`WebBrowserPaneViewController.agentHidesImages`) — as it stood
+    /// when the handle was made. The one value the tools and the pane's
+    /// Agent preview and Agent source build under.
+    public let hidesImages: Bool
 
     public init(
         id: String, project: String, tab: String, automation: BrowserAutomation,
@@ -36,7 +41,8 @@ public struct BrowserPaneHandle {
         access: BrowserAgentAccess = .full, isPausedForAgent: Bool = false,
         agentPrivacy: BrowserAgentPrivacy = .off,
         historyAccess: BrowserAgentHistoryAccess = .none,
-        historyStore: BrowserHistoryStore? = nil
+        historyStore: BrowserHistoryStore? = nil,
+        hidesImages: Bool = false
     ) {
         self.id = id; self.project = project; self.tab = tab; self.automation = automation
         self.engine = engine
@@ -44,6 +50,7 @@ public struct BrowserPaneHandle {
         self.agentPrivacy = agentPrivacy
         self.historyAccess = historyAccess
         self.historyStore = historyStore
+        self.hidesImages = hidesImages
     }
 
     public var title: String { automation.currentTitle }

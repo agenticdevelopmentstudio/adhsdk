@@ -44,9 +44,14 @@ final class BrowserAgentPreviewViewController: NSViewController, WKNavigationDel
     /// picker can install itself again in the new document.
     var onPageLoad: (() -> Void)?
 
-    /// Loads this controller started and the web view has not yet asked
-    /// about; each lets exactly one `about:blank` navigation through.
+    /// Whether the controller's own latest load has yet to be asked about:
+    /// 1 lets exactly one `about:blank` navigation through, 0 lets none.
+    /// Set (never added to) by each load, so a load superseded before
+    /// WebKit asked about it leaves no credit behind, and cleared when the
+    /// load it was for finishes or fails.
     private var allowedLoads = 0
+    /// The load `allowedLoads` is for.
+    private var ownNavigation: WKNavigation?
     private var waitingPage: AgentPage?
 
     init(ruleList makeRuleList: @escaping @MainActor () async throws -> WKContentRuleList = defaultRuleList) {
@@ -91,8 +96,15 @@ final class BrowserAgentPreviewViewController: NSViewController, WKNavigationDel
         let html = page.html()
         shownHTML = html
         shownPage = page
-        allowedLoads += 1
-        webView.loadHTMLString(html, baseURL: nil)
+        allowedLoads = 1
+        ownNavigation = webView.loadHTMLString(html, baseURL: nil)
+    }
+
+    /// The controller's own load ended: no credit outlives it.
+    private func ownLoadEnded(_ navigation: WKNavigation?) {
+        guard let navigation, navigation === ownNavigation else { return }
+        ownNavigation = nil
+        allowedLoads = 0
     }
 
     /// Whether a navigation may proceed: only a load this controller
@@ -115,7 +127,17 @@ final class BrowserAgentPreviewViewController: NSViewController, WKNavigationDel
     }
 
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+        ownLoadEnded(navigation)
         onPageLoad?()
+    }
+
+    func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
+        ownLoadEnded(navigation)
+    }
+
+    func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!,
+                 withError error: Error) {
+        ownLoadEnded(navigation)
     }
 }
 

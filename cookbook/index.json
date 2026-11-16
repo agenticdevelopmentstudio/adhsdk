@@ -9234,13 +9234,6 @@
       "implementations": [
         {
           "conformance": {
-            "state": "planned"
-          },
-          "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/HiddenItems/BrowserHideFromAgentButton.swift",
-          "platform": "macos"
-        },
-        {
-          "conformance": {
             "state": "unverified"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/BrowserAddressBarControls.swift",
@@ -9251,6 +9244,13 @@
             "state": "unverified"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/BrowserPane/BrowserHideFromAgentTests.swift",
+          "platform": "macos"
+        },
+        {
+          "conformance": {
+            "state": "unverified"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/HiddenItems/BrowserHideFromAgentButton.swift",
           "platform": "macos"
         }
       ],
@@ -18252,27 +18252,6 @@
       "implementations": [
         {
           "conformance": {
-            "state": "planned"
-          },
-          "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/AgentViews/BrowserAgentViewMode.swift",
-          "platform": "macos"
-        },
-        {
-          "conformance": {
-            "state": "planned"
-          },
-          "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/AgentViews/BrowserAgentPreviewViewController.swift",
-          "platform": "macos"
-        },
-        {
-          "conformance": {
-            "state": "planned"
-          },
-          "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/AgentViews/BrowserAgentSourceViewController.swift",
-          "platform": "macos"
-        },
-        {
-          "conformance": {
             "state": "unverified"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/BrowserContentRules.swift",
@@ -18283,6 +18262,27 @@
             "state": "unverified"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/BrowserPane/BrowserAgentViewsTests.swift",
+          "platform": "macos"
+        },
+        {
+          "conformance": {
+            "state": "unverified"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/AgentViews/BrowserAgentViewMode.swift",
+          "platform": "macos"
+        },
+        {
+          "conformance": {
+            "state": "unverified"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/AgentViews/BrowserAgentPreviewViewController.swift",
+          "platform": "macos"
+        },
+        {
+          "conformance": {
+            "state": "unverified"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/AgentViews/BrowserAgentSourceViewController.swift",
           "platform": "macos"
         }
       ],

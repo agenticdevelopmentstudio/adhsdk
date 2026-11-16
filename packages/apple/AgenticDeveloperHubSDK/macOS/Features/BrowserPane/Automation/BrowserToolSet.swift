@@ -48,9 +48,18 @@ public final class BrowserToolSet: ChatToolSource, @unchecked Sendable {
         self.settings = settings
         self.hiddenItems = hiddenItems
         self.agentPages = agentPages ?? { pane, privacy in
-            AgentPageSource.reading(pane.automation.driver, hiddenItems: hiddenItems(), privacy: privacy,
-                                    settings: settings)
+            Self.agentPageSource(for: pane, privacy: privacy, hiddenItems: hiddenItems())
         }
+    }
+
+    /// The source a tool reads `pane` through: the pane's own effective Hide
+    /// Images (`BrowserPaneHandle.hidesImages`), never the tool set's store,
+    /// so the agent receives what the pane's Agent preview shows.
+    @MainActor
+    static func agentPageSource(for pane: BrowserPaneHandle, privacy: BrowserAgentPrivacy,
+                                hiddenItems: BrowserHiddenItemsStore?) -> AgentPageSource {
+        AgentPageSource.reading(pane.automation.driver, hiddenItems: hiddenItems, privacy: privacy,
+                                hideImages: pane.hidesImages)
     }
 
     // MARK: ChatToolSource
@@ -342,8 +351,7 @@ public final class BrowserToolSet: ChatToolSource, @unchecked Sendable {
     @MainActor
     private func agentView(_ pane: BrowserPaneHandle, _ privacy: BrowserAgentPrivacy) -> AgentView {
         AgentView(reader: agentPages(pane, privacy),
-                  builder: AgentPageBuilder(privacy: privacy,
-                                            hideImages: settings.get(UserSettings.browserPrivacyHideImages)))
+                  builder: AgentPageBuilder(privacy: privacy, hideImages: pane.hidesImages))
     }
 
     /// An action's reply as the agent may see it: its title and dialog

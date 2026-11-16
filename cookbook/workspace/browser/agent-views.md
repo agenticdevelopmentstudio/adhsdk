@@ -122,7 +122,8 @@ the code does not exist yet; this recipe is written before it.
   uses the theme's monospaced text font.
 - **Background**: The preview draws its own fixed builder stylesheet
   (Design Decisions) on the theme's window background; the source view
-  fills with the theme's text background.
+  fills with the background of the theme's source-editor colors (the
+  theme's window background), as the app's code editors do.
 - **Foreground/Text**: Source highlighting uses four theme roles: tags,
   attribute names, attribute values, and plain text.
 - **Border**: Not applicable — neither view draws a border of its own.
@@ -148,10 +149,11 @@ Icons: `globe` (Website), `eye` (Agent preview),
 ## Accessibility
 
 - **Role/trait**: The control is a native segmented control with
-  accessibility identifier `browser.agent-view`; each segment exposes its
-  tooltip text as its accessibility description, since segments carry
-  icons only.
-- **Label requirements**: Website, Agent preview, Agent source.
+  accessibility identifier `browser.agent-view`; segments carry icons
+  only, so each segment's image carries its label (below) as its
+  accessibility description, and its tooltip text as its help.
+- **Label requirements**: Website, Agent preview, Agent source — the
+  segment images' accessibility descriptions.
 - **Announce state changes**: The native control reports its selection
   change; the content swap posts no further announcement.
 - **Keyboard / assistive-technology navigation**: The control is in the
@@ -302,9 +304,11 @@ MUST NOT carry page content.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/AgentViews/BrowserAgentViewMode.swift` | planned |
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/AgentViews/BrowserAgentPreviewViewController.swift` | planned |
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/AgentViews/BrowserAgentSourceViewController.swift` | planned |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/BrowserContentRules.swift` | unverified |
+| macos | `packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/BrowserPane/BrowserAgentViewsTests.swift` | unverified |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/AgentViews/BrowserAgentViewMode.swift` | unverified |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/AgentViews/BrowserAgentPreviewViewController.swift` | unverified |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/AgentViews/BrowserAgentSourceViewController.swift` | unverified |
 
 ## Design Decisions
 

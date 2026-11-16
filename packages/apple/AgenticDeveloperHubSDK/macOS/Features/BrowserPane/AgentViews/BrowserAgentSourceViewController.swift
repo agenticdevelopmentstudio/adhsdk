@@ -42,7 +42,9 @@ final class BrowserAgentSourceViewController: NSViewController {
         textView.setAccessibilityIdentifier("browser.agent-source")
         scrollView.hasVerticalScroller = true
         scrollView.drawsBackground = true
-        paletteObserver = ThemePaletteObserver { [weak self] palette in
+        // Painted in the scope of the window the source sits in, so a window
+        // that runs its type larger shows the source larger too.
+        paletteObserver = ThemePaletteObserver(host: scrollView) { [weak self] palette in
             self?.apply(palette)
         }
     }
@@ -52,11 +54,22 @@ final class BrowserAgentSourceViewController: NSViewController {
 
     override func loadView() { view = scrollView }
 
+    /// The scope resolves through the window, which the view may have joined
+    /// since the last paint.
+    override func viewWillAppear() {
+        super.viewWillAppear()
+        apply(scopedPalette)
+    }
+
     /// Shows `page` as its HTML.
     func show(_ page: AgentPage) {
         html = page.html()
-        apply(ThemePaletteObserver.currentPalette)
+        apply(scopedPalette)
     }
+
+    /// The palette of the scope the source view sits in (the app's until it
+    /// is in a window).
+    private var scopedPalette: SemanticPalette { scrollView.resolvedThemeScope.palette }
 
     private func apply(_ palette: SemanticPalette) {
         let theme = palette.editorTheme

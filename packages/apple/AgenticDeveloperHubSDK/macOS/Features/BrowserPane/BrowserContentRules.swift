@@ -90,15 +90,29 @@ public enum BrowserContentRules {
     /// `preview-blocks-network`): every URL, every resource type, blocked.
     public static let blockEverythingJSON = #"[{"trigger":{"url-filter":".*"},"action":{"type":"block"}}]"#
 
-    /// The compiled block-everything list, once this process has one.
-    @MainActor private static var blockEverythingList: WKContentRuleList?
+    /// The one block-everything compile of this process, in flight or done.
+    /// Kept as the task rather than its result, so concurrent first callers
+    /// (every new tab's preview asks at init) share one compile.
+    @MainActor private static var blockEverythingTask: Task<WKContentRuleList, Error>?
 
     /// The block-everything list: compiled once per process, and kept in the
     /// default store after that under an identifier carrying a hash of its
-    /// rules, as the third-party lists are.
+    /// rules, as the third-party lists are. A failed compile is forgotten, so
+    /// a later caller tries again.
     @MainActor
     public static func blockEverything() async throws -> WKContentRuleList {
-        if let blockEverythingList { return blockEverythingList }
+        let task = blockEverythingTask ?? Task { @MainActor in try await compileBlockEverything() }
+        blockEverythingTask = task
+        do {
+            return try await task.value
+        } catch {
+            if blockEverythingTask == task { blockEverythingTask = nil }
+            throw error
+        }
+    }
+
+    @MainActor
+    private static func compileBlockEverything() async throws -> WKContentRuleList {
         guard let store = WKContentRuleListStore.default() else { throw StoreUnavailable() }
         let digest = SHA256.hash(data: Data(blockEverythingJSON.utf8))
         let hex = digest.map { String(format: "%02x", $0) }.joined()
@@ -111,7 +125,6 @@ public enum BrowserContentRules {
                 forIdentifier: identifier, encodedContentRuleList: blockEverythingJSON)
         }
         guard let list else { throw StoreUnavailable() }
-        blockEverythingList = list
         return list
     }
 }

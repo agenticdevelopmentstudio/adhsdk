@@ -96,6 +96,7 @@ final class BrowserAgentViewsTests: XCTestCase {
         let saved = BrowserHiddenItemsStore.shared
         BrowserHiddenItemsStore.shared = nil
         defer { BrowserHiddenItemsStore.shared = saved }
+        pane.view.layoutSubtreeIfNeeded()
         pane.setAgentViewMode(.agentPreview)
         XCTAssertEqual(pane.agentViewControl.selectedSegment, BrowserAgentViewMode.agentPreview.segment)
         XCTAssertTrue(pane.engine.view.isHiddenOrHasHiddenAncestor, "the page sits hidden under the preview")
@@ -150,6 +151,59 @@ final class BrowserAgentViewsTests: XCTestCase {
         XCTAssertEqual(Policy.policy(allowedLoads: 1, url: site, navigationType: .formSubmitted), .cancel)
     }
 
+    /// A frame WebKit would report, main or not.
+    private final class FakeFrame: WKFrameInfo {
+        let main: Bool
+        init(main: Bool) {
+            self.main = main
+            super.init()
+        }
+        override var isMainFrame: Bool { main }
+    }
+
+    /// A navigation action as WebKit would ask about it.
+    private final class FakeAction: WKNavigationAction {
+        let url: URL?
+        let frame: WKFrameInfo?
+        let kind: WKNavigationType
+        init(url: URL?, frame: WKFrameInfo?, kind: WKNavigationType = .other) {
+            self.url = url
+            self.frame = frame
+            self.kind = kind
+            super.init()
+        }
+        override var request: URLRequest {
+            url.map { URLRequest(url: $0) } ?? URLRequest(url: URL(fileURLWithPath: "/"))
+        }
+        override var targetFrame: WKFrameInfo? { frame }
+        override var navigationType: WKNavigationType { kind }
+    }
+
+    /// The delegate itself, not only the policy matrix: one `show` lets
+    /// exactly one main-frame `about:blank` load through, and a subframe or
+    /// frameless load never.
+    func test_previewDelegateAllowsOnlyItsOwnLoad() async {
+        let preview = BrowserAgentPreviewViewController()
+        // Detached so WebKit's own question about the load cannot spend the
+        // credit before the fake actions below ask.
+        preview.webView.navigationDelegate = nil
+        preview.show(samplePage())
+        let installed = await waitUntil { preview.shownHTML != nil }
+        XCTAssertTrue(installed, "the page never loaded")
+        let blank = URL(string: "about:blank")
+        let webView = preview.webView
+        let inner = FakeAction(url: blank, frame: FakeFrame(main: false))
+        let subframe = await preview.webView(webView, decidePolicyFor: inner)
+        XCTAssertEqual(subframe, .cancel, "a subframe's load is never the controller's own")
+        let frameless = await preview.webView(webView, decidePolicyFor: FakeAction(url: blank, frame: nil))
+        XCTAssertEqual(frameless, .cancel, "a load with no target frame is cancelled")
+        let main = FakeFrame(main: true)
+        let first = await preview.webView(webView, decidePolicyFor: FakeAction(url: blank, frame: main))
+        XCTAssertEqual(first, .allow, "the controller's own load goes through")
+        let second = await preview.webView(webView, decidePolicyFor: FakeAction(url: blank, frame: main))
+        XCTAssertEqual(second, .cancel, "one load, one credit")
+    }
+
     // MARK: Source
 
     func test_sourceShowsSameHTML() {
@@ -191,27 +245,66 @@ final class BrowserAgentViewsTests: XCTestCase {
 
     // MARK: Refresh
 
+    /// Counts reads without a captured `var`, which a Sendable closure may not mutate.
+    @MainActor private final class Counter { var reads = 0 }
+
     func test_refreshIsCoalesced() async {
-        var reads = 0
+        let counter = Counter()
         let page = samplePage()
         let views = BrowserAgentViews(
             interval: 0.05,
             ruleList: { try await BrowserContentRules.blockEverything() },
             read: {
-                reads += 1
+                counter.reads += 1
                 return page
             })
         views.setMode(.agentSource)
         let first = await waitUntil { views.shownPage != nil }
         XCTAssertTrue(first)
-        XCTAssertEqual(reads, 1, "entering an agent mode reads once, at once")
+        XCTAssertEqual(counter.reads, 1, "entering an agent mode reads once, at once")
         for _ in 0..<5 { views.setNeedsRefresh() }
         try? await Task.sleep(nanoseconds: 400_000_000)
-        XCTAssertEqual(reads, 2, "five triggers inside the interval are one read")
+        XCTAssertEqual(counter.reads, 2, "five triggers inside the interval are one read")
         views.setMode(.website)
         views.setNeedsRefresh()
         try? await Task.sleep(nanoseconds: 200_000_000)
-        XCTAssertEqual(reads, 2, "Website never reads")
+        XCTAssertEqual(counter.reads, 2, "Website never reads")
+    }
+
+    // MARK: Parity with the tools
+
+    /// A pane whose own settings layer over a global store, as a real pane's do.
+    private func makeLayeredPane() -> (WebBrowserPaneViewController, LayeredSettingsStore) {
+        let global = UserSettings(
+            with: InMemorySettingsStorageProvider(),
+            secureSettingsProvider: InMemorySecureSettingsStorageProvider())
+        let layered = LayeredSettingsStore(overrides: InMemorySettingsStorageProvider(), fallback: global)
+        let pane = WebBrowserPaneViewController(
+            makeEngine: { StubBrowserEngine(consoleLog: $0.consoleLog, providesOwnToolbar: false) },
+            engineKind: .safari, minimizedSymbol: "globe",
+            store: EphemeralPaneStateStore(), settings: layered, history: nil,
+            homeURL: WebBrowserPaneViewController.blankPage)
+        _ = pane.view
+        return (pane, layered)
+    }
+
+    /// The anti-goal "an agent preview that differs from what the agent
+    /// receives": with a pane override of Hide Images, the tools' reader
+    /// (through the handle, filled as the app's directory adapter fills it)
+    /// and the views' reader get the same value.
+    func test_toolsAndViewsGetSameHideImages() {
+        let (pane, layered) = makeLayeredPane()
+        for override in [true, false] {
+            layered.set(override, for: UserSettings.browserPrivacyHideImages)
+            XCTAssertEqual(pane.agentHidesImages, override, "the pane's override wins")
+            let handle = BrowserPaneHandle(
+                id: "pane", project: "project", tab: "tab", automation: pane.automation,
+                hidesImages: pane.agentHidesImages)
+            let tools = BrowserToolSet.agentPageSource(for: handle, privacy: .off, hiddenItems: nil)
+            let views = pane.agentPageSource(engine: pane.engine)
+            XCTAssertEqual(tools.hidesImages, override)
+            XCTAssertEqual(views.hidesImages, tools.hidesImages, "tools and views read one value")
+        }
     }
 
     func test_refreshOnAgentListChange() async {

@@ -179,6 +179,11 @@ open class WebBrowserPaneViewController: NSViewController {
     public var agentHistoryAccess: BrowserAgentHistoryAccess {
         settings.get(UserSettings.browserAgentHistoryAccess)
     }
+    /// The pane's effective Hide Images, read from its own layered settings
+    /// so a per-pane override counts: the one value the browser tools
+    /// (`BrowserPaneHandle.hidesImages`) and the Agent preview and Agent
+    /// source build the agent's page under.
+    public var agentHidesImages: Bool { settings.get(UserSettings.browserPrivacyHideImages) }
     /// The history store this pane records into, which `browser_history`
     /// reads under All history.
     public var historyStore: BrowserHistoryStore? { history }
@@ -1191,7 +1196,7 @@ open class WebBrowserPaneViewController: NSViewController {
 
     /// Starts selecting for `list` on the front page. Only a WebKit page can
     /// be picked from; any other engine beeps. The user list picks on the
-    /// live page; the agent list picks on the Agent preview while it shows
+    /// live page, so it beeps while an agent view covers it; the agent list picks on the Agent preview while it shows
     /// and on the live page otherwise. Agent source has nothing to pick, so
     /// it beeps. One selecting mode per pane: a mode for another engine,
     /// list or view ends before the new one begins.
@@ -1201,6 +1206,11 @@ open class WebBrowserPaneViewController: NSViewController {
             return
         }
         var preview: BrowserAgentPreviewViewController?
+        // The user list picks on the live page, which an agent view covers.
+        if list == .user, agentViewMode != .website {
+            NSSound.beep()
+            return
+        }
         if list == .agent {
             switch agentViewMode {
             case .website: break
@@ -2464,13 +2474,20 @@ extension WebBrowserPaneViewController {
         if let views = tab.agentViews { return views }
         let views = BrowserAgentViews { [weak self, weak tab] in
             guard let self, let tab else { return AgentPage.unavailable("the tab has closed", url: nil) }
-            let source = AgentPageSource.reading(
-                tab.engine, hiddenItems: BrowserHiddenItemsStore.shared,
-                privacy: self.agentPrivacy(at: Self.privacyWordsURL(tab.engine.url)), settings: self.settings)
+            let source = self.agentPageSource(engine: tab.engine)
             return await source.read(options: BrowserSnapshotOptions(), keepingRefs: true).page
         }
         tab.agentViews = views
         return views
+    }
+
+    /// The source the agent views read `engine`'s page through: the agent
+    /// list, the privacy of that page, and the pane's `agentHidesImages`,
+    /// the same value the tools receive on the pane's handle.
+    func agentPageSource(engine tabEngine: BrowserEngine) -> AgentPageSource {
+        AgentPageSource.reading(
+            tabEngine, hiddenItems: BrowserHiddenItemsStore.shared,
+            privacy: agentPrivacy(at: Self.privacyWordsURL(tabEngine.url)), hideImages: agentHidesImages)
     }
 }
 
