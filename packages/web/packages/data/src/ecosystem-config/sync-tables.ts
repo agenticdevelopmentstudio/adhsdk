@@ -41,6 +41,8 @@ export interface SyncTableEnrollment {
 
 /** The /v1 wire row (snake_case). */
 interface WireEnrollment {
+  /** The resource again: the object id the /v1 list pages by (`starting_after`). */
+  id: string;
   resource: string;
   scope: string;
   push_mode: string;
@@ -48,6 +50,12 @@ interface WireEnrollment {
   enabled: boolean;
   overridden: boolean;
 }
+
+/** The cursor a catalog row pages by: its `id`, which the backend sets to the resource. */
+export const enrollmentCursor = (row: unknown): string | undefined => {
+  const id = (row as Partial<WireEnrollment> | null)?.id;
+  return typeof id === "string" ? id : undefined;
+};
 
 const toEnrollment = (r: WireEnrollment): SyncTableEnrollment => ({
   resource: r.resource,
@@ -85,7 +93,11 @@ export interface SyncTablesClient {
 export function syncTablesApi(family: SyncTablesFamily): SyncTablesClient {
   const api: SyncTablesClient = {
     async get(ecosystemId) {
-      const rows = await listAllV1<WireEnrollment>(listPath(family, ecosystemId));
+      // The gateway pages only by an object `id`, and the backend sets each row's to its
+      // resource, so a catalog longer than one 100-row page is read in full.
+      const rows = await listAllV1<WireEnrollment>(listPath(family, ecosystemId), {}, {
+        cursorOf: enrollmentCursor,
+      });
       return rows.map(toEnrollment);
     },
 

@@ -6,9 +6,10 @@ import { describe, expect, it, vi, beforeEach } from "vitest";
 const { authedJson, listAllV1 } = vi.hoisted(() => ({ authedJson: vi.fn(), listAllV1: vi.fn() }));
 vi.mock("../../http", () => ({ authedJson, listAllV1 }));
 
-import { schemaOf, syncTablesApi } from "../sync-tables";
+import { enrollmentCursor, schemaOf, syncTablesApi } from "../sync-tables";
 
 interface Wire {
+  id: string;
   resource: string;
   scope: string;
   push_mode: string;
@@ -18,6 +19,7 @@ interface Wire {
 }
 
 const wire = (o: Partial<Wire> & { resource: string }): Wire => ({
+  id: o.resource,
   scope: "owner",
   push_mode: "generic",
   default_enabled: true,
@@ -54,19 +56,26 @@ describe("reading the catalog (ecosystem-config-026)", () => {
         overridden: false,
       },
     ]);
-    expect(listAllV1).toHaveBeenCalledWith("/api/v1/ecosystems/eco-1/sync_tables");
+    expect(listAllV1).toHaveBeenCalledWith("/api/v1/ecosystems/eco-1/sync_tables", {}, {
+      cursorOf: enrollmentCursor,
+    });
+  });
+
+  it("ecosystem-config-038: pages by the row's id, which is its resource", () => {
+    expect(enrollmentCursor(wire({ resource: "content.feed" }))).toBe("content.feed");
+    expect(enrollmentCursor({ resource: "content.feed" })).toBeUndefined();
   });
 
   it("the admin family reads the admin path", async () => {
     listAllV1.mockResolvedValueOnce([]);
     await syncTablesApi("admin").get("eco-1");
-    expect(listAllV1).toHaveBeenCalledWith("/api/v1/sync/tables/eco-1");
+    expect(listAllV1).toHaveBeenCalledWith("/api/v1/sync/tables/eco-1", {}, { cursorOf: enrollmentCursor });
   });
 
   it("encodes the ecosystem id", async () => {
     listAllV1.mockResolvedValueOnce([]);
     await syncTablesApi("ecosystem").get("a/b");
-    expect(listAllV1).toHaveBeenCalledWith("/api/v1/ecosystems/a%2Fb/sync_tables");
+    expect(listAllV1).toHaveBeenCalledWith("/api/v1/ecosystems/a%2Fb/sync_tables", {}, { cursorOf: enrollmentCursor });
   });
 });
 
@@ -116,7 +125,7 @@ describe("clearing an override (ecosystem-config-027)", () => {
     expect(authedJson).toHaveBeenCalledWith("/api/v1/ecosystems/eco-1/sync_tables/content.notes", {
       method: "DELETE",
     });
-    expect(listAllV1).toHaveBeenCalledWith("/api/v1/ecosystems/eco-1/sync_tables");
+    expect(listAllV1).toHaveBeenCalledWith("/api/v1/ecosystems/eco-1/sync_tables", {}, { cursorOf: enrollmentCursor });
     expect(tables).toHaveLength(1);
     expect(tables[0]!.overridden).toBe(false);
   });

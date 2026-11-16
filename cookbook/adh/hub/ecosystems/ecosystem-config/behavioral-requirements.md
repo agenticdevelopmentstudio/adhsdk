@@ -302,7 +302,9 @@ and pane. It is web-only for now.
   snake_case (`push_mode`, `default_enabled`) to `pushMode` and `defaultEnabled`,
   keeping `resource`, `scope`, `enabled` and `overridden` as they are.
 - **sync-tables-read-drains-list**: reading the catalog MUST drain the /v1 list
-  envelope, so every resource is returned however the server pages it.
+  envelope, so every resource is returned however the server pages it. It pages
+  by each row's `id`, which the backend sets to the row's resource, because the
+  /v1 gateway pages only by `id`.
 - **sync-tables-set-returns-catalog**: setting a resource MUST POST
   `{ enabled }` to its resource path and return the full refreshed catalog from the
   response's `tables`.
