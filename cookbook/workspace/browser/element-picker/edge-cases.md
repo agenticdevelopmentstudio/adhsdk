@@ -13,8 +13,9 @@
   each run selecting mode; they share the store, and each pane's popover
   shows the store's current list.
 - **Error states**: If the picker script fails to install (the page went
-  away, or WebKit refuses the evaluation), selecting mode does not start,
-  the button stays in its idle state, and the failure is logged. Finder
+  away, or WebKit refuses the evaluation), the app beeps and selecting
+  mode ends at once: the button returns to its idle state and the end is
+  logged with the reason `failure`. Finder
   throwing for one element refuses that pick only.
 - **Offline or disconnected state**: Not applicable — the picker works on
   the page in memory and a local store.

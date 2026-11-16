@@ -17,4 +17,5 @@
 | agent-views-014 | refresh-triggers | In Agent source, navigate to another page; separately change a privacy word; separately turn Hide Images on | Each change rebuilds the source to match the new gatekeeper output |
 | agent-views-015 | refresh-coalesced | Fire five triggers within 100 milliseconds | Exactly one rebuild runs |
 | agent-views-016 | website-mode-restores-page | Fill a text field on the page, switch to Agent preview, then back to Website | The live page shows again with the typed text, not reloaded |
+| agent-views-017 | preview-no-navigation | Show two pages in the preview back to back, before WebKit asks about the first load | Both loads are allowed and the preview shows the second page; after it finishes, a further `about:blank` navigation is cancelled |
 

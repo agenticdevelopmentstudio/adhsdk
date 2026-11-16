@@ -58,9 +58,9 @@
   or a frame) MUST be refused with a beep: no dialog opens and selecting
   mode continues.
 - **loose-selector-disabled**: The All items like it choice MUST be
-  disabled, with the tooltip "Matches too much of the page", when there is
-  no looser selector or when it matches more than half of the page's
-  elements.
+  disabled when there is no looser selector, with the tooltip "No looser
+  selector is available", and when it matches more than half of the
+  page's elements, with the tooltip "Matches too much of the page".
 - **label-format**: The label MUST be the element's lowercase tag name, a
   space, and the first 60 characters of its trimmed text in double quotes,
   where the text is the element's visible text, else its `alt`, else its

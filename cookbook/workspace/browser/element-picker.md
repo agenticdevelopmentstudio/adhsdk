@@ -2,11 +2,11 @@
 id: 8b187d98-795b-4a9d-9441-e7b8629fefe4
 title: "Element Picker"
 type: ingredient
-version: 0.1.0
+version: 0.1.1
 status: draft
 language: en
 created: 2026-11-15
-modified: 2026-11-15
+modified: 2026-11-16
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -20,9 +20,6 @@ tags:
   - hidden-items
   - element-picker
   - selectors
-  - content-world
-  - popover
-  - dialog
 depends-on: []
 related: []
 references:
@@ -86,7 +83,7 @@ class names, with random-looking classes and ids rejected, together with
 how many elements it matches; it is refused as a choice when it would match
 too much of the page.
 
-The picker serves both lists. This recipe describes it with the user list
+The picker serves both lists. This ingredient describes it with the user list
 ("Hide distracting items"); the agent list's entry point and wording are
 the hide-from-agent recipe's, and they reuse this component with the list
 set to agent. The first time the picker is used, a one-time notice says
@@ -153,9 +150,9 @@ that items which load again, such as ads, can reappear.
   or a frame) MUST be refused with a beep: no dialog opens and selecting
   mode continues.
 - **loose-selector-disabled**: The All items like it choice MUST be
-  disabled, with the tooltip "Matches too much of the page", when there is
-  no looser selector or when it matches more than half of the page's
-  elements.
+  disabled when there is no looser selector, with the tooltip "No looser
+  selector is available", and when it matches more than half of the
+  page's elements, with the tooltip "Matches too much of the page".
 - **label-format**: The label MUST be the element's lowercase tag name, a
   space, and the first 60 characters of its trimmed text in double quotes,
   where the text is the element's visible text, else its `alt`, else its
@@ -249,7 +246,7 @@ switch or close).
 | element-picker-001 | pick-posts-candidates | Decode `{"kind":"pick","thisItem":"#a","allLikeIt":"div.card","allLikeItCount":3,"pageElementCount":100,"label":"div \"Hi\"","ref":null}` | A candidate with every field set as given |
 | element-picker-002 | pick-without-selector-refused | Deliver a `pick` with `thisItem` null | No dialog; the pick callback is not called; a beep; state stays selecting |
 | element-picker-003 | loose-selector-disabled | Candidate with `allLikeItCount` 80 and `pageElementCount` 100 | All items like it disabled, tooltip "Matches too much of the page" |
-| element-picker-004 | loose-selector-disabled | Candidate with `allLikeIt` null | All items like it disabled |
+| element-picker-004 | loose-selector-disabled | Candidate with `allLikeIt` null | All items like it disabled, tooltip "No looser selector is available" |
 | element-picker-005 | all-like-it-stable-classes | In a webview, pick `<div class="css-1x2y3z ad-card">` among other divs | `allLikeIt` is `div.ad-card` |
 | element-picker-006 | all-like-it-stable-classes | Pick `<span id="promo" class="a8f3k2q9 x_9f8e7d">` | `allLikeIt` uses neither the id nor either class (null, or `span` alone if it differs from This item) |
 | element-picker-007 | this-item-unique | Pick any element in a fixture page | `document.querySelectorAll(thisItem).length` is 1 and is the picked element |
@@ -290,8 +287,9 @@ switch or close).
   each run selecting mode; they share the store, and each pane's popover
   shows the store's current list.
 - **Error states**: If the picker script fails to install (the page went
-  away, or WebKit refuses the evaluation), selecting mode does not start,
-  the button stays in its idle state, and the failure is logged. Finder
+  away, or WebKit refuses the evaluation), the app beeps and selecting
+  mode ends at once: the button returns to its idle state and the end is
+  logged with the reason `failure`. Finder
   throwing for one element refuses that pick only.
 - **Offline or disconnected state**: Not applicable — the picker works on
   the page in memory and a local store.
@@ -324,7 +322,7 @@ destination.
 User-facing strings: "Hide distracting items", "Select distracting items
 to hide", "Remove Selected Item", "Stop selecting", "This item", "All
 items like it", "Show page with selected element removed", "Remove this
-from view?", "Matches too much of the page", "Cancel", "OK", "Items that
+from view?", "Matches too much of the page", "No looser selector is available", "Cancel", "OK", "Items that
 load again (such as ads) can reappear.". All go through the app's
 localized-string mechanism. Labels are page text and are shown as they
 are.
@@ -405,7 +403,13 @@ labels are not logged.
     during it stops the picker afterwards, and `start()` re-checks
     `isRunning` after each evaluation.
   - `BrowserHiddenItemsPopover(list:store:url:onSelect:)`, an `NSPopover`
-    with `.transient` behavior; the trailing button is added to
+    with `.transient` behavior. A transient popover closes on the
+    mouse-down, before the button's action runs on the mouse-up, so
+    `popoverWillClose` records the event number of a press on its anchor
+    (`noteClosing(by:)`) and `closesOnAnchorClick(_:)` treats only a mouse
+    event carrying that number as the closing toggle (any other click
+    clears the record and opens the popover; a press released off the
+    button leaves nothing behind); the trailing button is added to
     `BrowserAddressBox` in `BrowserAddressBarControls.swift`.
   - `BrowserHiddenItemsPopover` is the `NSViewController` that owns its
     `NSPopover`; it reads and writes the store through `perform` and
@@ -486,10 +490,11 @@ saved entries are fully manageable from the keyboard in the popover.
 | Check | Status | Category |
 |-------|--------|----------|
 
-Notes: no compliance checks have been run; the code does not exist yet.
+Notes: no compliance checks have been run against the code yet.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 0.1.1 | 2026-11-16 | Mike Fullerton | No-looser-selector tooltip, start failure beeps and ends selecting, popover toggle by event number. |
 | 0.1.0 | 2026-11-15 | Mike Fullerton | Initial creation (design-first, from the more privacy features design) |

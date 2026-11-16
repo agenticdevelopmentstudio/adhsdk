@@ -266,6 +266,7 @@ address host; no selector text is logged.
 | Platform | Location | Conformance |
 |----------|----------|-------------|
 | macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/HiddenItems/BrowserHiddenItemsStyle.swift` | planned |
+| macos | `packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/BrowserPane/BrowserHiddenItemsStyleTests.swift` | unverified |
 
 ## Design Decisions
 

@@ -1,4 +1,6 @@
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 0.1.2 | 2026-11-16 | Mike Fullerton | Walker version 5: tables keep today's rowgroup, columnheader and rowheader roles (allowlist kinds row group, column header, row header; vector 047) |
+| 0.1.1 | 2026-11-16 | Mike Fullerton | Pane's effective Hide Images shared by tools and agent views via BrowserToolSet.agentPageSource; replies concealed with the start and end privacy combined. |
 | 0.1.0 | 2026-11-15 | Mike Fullerton | Initial creation (design-first, from the more privacy features design) |

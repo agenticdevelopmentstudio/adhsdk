@@ -42,7 +42,13 @@
     during it stops the picker afterwards, and `start()` re-checks
     `isRunning` after each evaluation.
   - `BrowserHiddenItemsPopover(list:store:url:onSelect:)`, an `NSPopover`
-    with `.transient` behavior; the trailing button is added to
+    with `.transient` behavior. A transient popover closes on the
+    mouse-down, before the button's action runs on the mouse-up, so
+    `popoverWillClose` records the event number of a press on its anchor
+    (`noteClosing(by:)`) and `closesOnAnchorClick(_:)` treats only a mouse
+    event carrying that number as the closing toggle (any other click
+    clears the record and opens the popover; a press released off the
+    button leaves nothing behind); the trailing button is added to
     `BrowserAddressBox` in `BrowserAddressBarControls.swift`.
   - `BrowserHiddenItemsPopover` is the `NSViewController` that owns its
     `NSPopover`; it reads and writes the store through `perform` and

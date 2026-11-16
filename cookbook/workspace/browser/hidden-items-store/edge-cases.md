@@ -17,7 +17,9 @@
 - **Error states**: A file that cannot be opened or a statement that fails
   or times out throws to the caller. The store never answers a failed read
   with a guessed list; what the caller does with the failure is the
-  caller's concern (the agent gatekeeper fails closed).
+  caller's concern (the agent gatekeeper fails closed). A file that cannot
+  be opened at launch leaves the app with no store, a degraded mode rather
+  than a launch failure.
 - **Offline or disconnected state**: Not applicable — the store is a local
   file and makes no network call.
 - **Missing file or unreachable server**: A missing file is created, with

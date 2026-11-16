@@ -4,7 +4,7 @@
 | element-picker-001 | pick-posts-candidates | Decode `{"kind":"pick","thisItem":"#a","allLikeIt":"div.card","allLikeItCount":3,"pageElementCount":100,"label":"div \"Hi\"","ref":null}` | A candidate with every field set as given |
 | element-picker-002 | pick-without-selector-refused | Deliver a `pick` with `thisItem` null | No dialog; the pick callback is not called; a beep; state stays selecting |
 | element-picker-003 | loose-selector-disabled | Candidate with `allLikeItCount` 80 and `pageElementCount` 100 | All items like it disabled, tooltip "Matches too much of the page" |
-| element-picker-004 | loose-selector-disabled | Candidate with `allLikeIt` null | All items like it disabled |
+| element-picker-004 | loose-selector-disabled | Candidate with `allLikeIt` null | All items like it disabled, tooltip "No looser selector is available" |
 | element-picker-005 | all-like-it-stable-classes | In a webview, pick `<div class="css-1x2y3z ad-card">` among other divs | `allLikeIt` is `div.ad-card` |
 | element-picker-006 | all-like-it-stable-classes | Pick `<span id="promo" class="a8f3k2q9 x_9f8e7d">` | `allLikeIt` uses neither the id nor either class (null, or `span` alone if it differs from This item) |
 | element-picker-007 | this-item-unique | Pick any element in a fixture page | `document.querySelectorAll(thisItem).length` is 1 and is the picked element |

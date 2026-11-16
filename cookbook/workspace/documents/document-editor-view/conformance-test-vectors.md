@@ -40,4 +40,4 @@
 | devc-035 | editor-open-request-routes-out | Install a callback on the open-request callback; invoke the hosted content's open-file callback with a URL | The open-request callback is called with that URL |
 | devc-038 | construction-title-change | Install a callback on the title-change callback; construct the component whose pane-state store has the file-URL key set to an existing file's path | The callback is called during construction |
 | devc-039 | confines-to-ui-thread | Use the component from a thread other than the UI thread | The use is rejected, at build time or by a runtime check; the component's state is unchanged |
-
+| devc-040 | markdown-tabs-follow-tab-position | Open a Markdown file in the single-pane layout with the tab position setting at top; change the setting to leading | The Markdown and Preview tabs move from the top edge to the leading edge, the selected tab unchanged |

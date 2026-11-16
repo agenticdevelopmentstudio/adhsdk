@@ -24,8 +24,12 @@
 - **preview-blocks-network**: The preview MUST block every network load,
   for every URL and resource type.
 - **preview-no-navigation**: The preview MUST cancel every navigation
-  other than the initial load of the gatekeeper's HTML, including link
-  clicks.
+  other than its own loads of the gatekeeper's HTML, including link
+  clicks and every subframe load. Each own load MUST let exactly one
+  main-frame load of `about:blank` through, so two loads started in quick
+  succession are both answered and the newest page is shown; the
+  allowance MUST be cleared when the latest own load finishes or fails,
+  so none outlives the newest load.
 - **preview-paints-under-quiet-presentation**: In development builds the
   preview MUST keep painting while its window is reported occluded, so it
   can be photographed under quiet presentation.

@@ -2,11 +2,11 @@
 id: 5a246e6c-2125-4427-a8ab-2f43f2fecba5
 title: "Web Browser Settings Topics"
 type: ingredient
-version: 0.1.4
+version: 0.1.5
 status: draft
 language: en
 created: 2026-11-15
-modified: 2026-11-15
+modified: 2026-11-16
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -47,7 +47,7 @@ approved-date: ""
 
 The web browser's settings are one container of topics, shown in the app's
 Settings window and, scoped to one pane, in that pane's settings sheet. This
-recipe fixes which topics exist, in what order, and which control lives in
+ingredient fixes which topics exist, in what order, and which control lives in
 each. The topics say what they hold: **General**, **Behavior**,
 **Appearance**, **Privacy and Security**, **Downloads**, **Extensions** and
 **Reset**, with the Chrome engine's topics between Extensions and Reset when
@@ -94,7 +94,7 @@ because each topic's search keywords move with its controls.
 - **privacy-security-existing-groups-first**: The Privacy and Security topic
   MUST keep its existing groups (General, Input, Focus and visibility, Coding
   Partner, Agent Privacy, Storage, Scripts) in their existing order, before any
-  group added by this recipe.
+  group added by this ingredient.
 - **privacy-security-added-groups**: The Privacy and Security topic MUST hold,
   after its existing groups, in this order, a Cookies group ("Accept cookies",
   "Private browsing"), a Camera and Microphone group ("When a page asks"), a
@@ -141,7 +141,7 @@ because each topic's search keywords move with its controls.
 - **downloads-and-reset-unchanged**: The Downloads and Reset topics MUST keep
   their existing contents.
 - **buttons-have-tooltips**: The browser settings container MUST give every
-  button this recipe adds or moves ("Manage Site Data…", the Site Data window's
+  button this ingredient adds or moves ("Manage Site Data…", the Site Data window's
   −, "Remove All…", "Refresh", "Done") a tooltip.
 - **no-inline-help-labels**: The topics MUST NOT add explanatory or empty-state
   text to their views for the moved or new controls; explanation of what a
@@ -165,7 +165,7 @@ because each topic's search keywords move with its controls.
 ## Appearance
 
 - **Corner radius**: Not applicable — the topics use the settings framework's
-  groups and rows; this recipe sets no geometry of its own.
+  groups and rows; this ingredient sets no geometry of its own.
 - **Padding**: Not applicable — the settings framework's panel inset and group
   spacing.
 - **Font**: Not applicable — the settings framework's row and group title
@@ -274,6 +274,7 @@ because each topic's search keywords move with its controls.
   alone, so a Chrome pane's sheet leaves both groups out of Privacy and
   Security, as General leaves out AirPlay and Web Inspector; the keys keep
   their rows in the Settings window (`every-browser-key-has-a-home`).
+
 ## Configuration
 
 The control table. Keys never change when a control moves
@@ -397,7 +398,17 @@ Not applicable: the design asks for no log line of the topics' own.
   `"browser.agent.history_access"`, listed in `BrowserSettings.allKeys` and not
   in `globalOnlyKeyNames`. Per-pane overrides go through
   `LayeredSettingsStore` and `BrowserSettingsBinding.add(...)`, which draws the
-  override marker. Tooltips are `NSButton.toolTip`.
+  override marker. Tooltips are `NSButton.toolTip` (a segmented control's
+  per segment, `setToolTip(_:forSegment:)`). The privacy toolbar's row in
+  `WebBrowserPaneViewController` also holds the Hide elements from agent
+  button and the Agent view control (recipes
+  `workspace/browser/hide-from-agent` and `workspace/browser/agent-views`),
+  which `toolbar-buttons-have-tooltips` covers too. The pane's effective
+  Hide Images is `agentHidesImages`, read from its own layered settings,
+  the one value the browser tools (`BrowserPaneHandle.hidesImages`) and
+  the agent views build under. `browser.hidden_items.notice_shown` (the
+  element picker's one-time notice) is in `globalOnlyKeyNames` and not in
+  `BrowserSettings.allKeys`, so it has no row.
 - **Compose**: Desktop settings as a list-detail layout; each topic a
   composable over a shared settings repository, keys unchanged; the Site Data
   window a `DialogWindow` with `resizable = true`.
@@ -466,12 +477,13 @@ silenced.
 | Check | Status | Category |
 |-------|--------|----------|
 
-Notes: no compliance checks have been run; the code does not exist yet.
+Notes: no compliance checks have been run against the code yet.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 0.1.5 | 2026-11-16 | Mike Fullerton | Privacy toolbar row with the hide-from-agent button and agent view control; agentHidesImages; notice-shown key is global only. |
 | 0.1.4 | 2026-11-15 | Mike Fullerton | help-covers-regrouped-topics allows a where-to-find-it topic that names where the control lives |
 | 0.1.3 | 2026-11-15 | Mike Fullerton | Toolbar buttons have action tooltips; help follows the regrouped topics' groups and points history to Browser > Show History |
 | 0.1.2 | 2026-11-15 | Mike Fullerton | Site data removal reports no failure; a Chrome pane's sheet leaves out Protection and Site Data; the Site Data window takes the Remove All detail |

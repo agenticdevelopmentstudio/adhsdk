@@ -27,7 +27,7 @@
 - **privacy-security-existing-groups-first**: The Privacy and Security topic
   MUST keep its existing groups (General, Input, Focus and visibility, Coding
   Partner, Agent Privacy, Storage, Scripts) in their existing order, before any
-  group added by this recipe.
+  group added by this ingredient.
 - **privacy-security-added-groups**: The Privacy and Security topic MUST hold,
   after its existing groups, in this order, a Cookies group ("Accept cookies",
   "Private browsing"), a Camera and Microphone group ("When a page asks"), a
@@ -74,7 +74,7 @@
 - **downloads-and-reset-unchanged**: The Downloads and Reset topics MUST keep
   their existing contents.
 - **buttons-have-tooltips**: The browser settings container MUST give every
-  button this recipe adds or moves ("Manage Site Data…", the Site Data window's
+  button this ingredient adds or moves ("Manage Site Data…", the Site Data window's
   −, "Remove All…", "Refresh", "Done") a tooltip.
 - **no-inline-help-labels**: The topics MUST NOT add explanatory or empty-state
   text to their views for the moved or new controls; explanation of what a

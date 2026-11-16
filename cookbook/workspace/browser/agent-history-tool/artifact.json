@@ -4,11 +4,11 @@
     "id": "4ef7f4f9-1fa0-4267-ad82-0f35ba92a7d1",
     "title": "Agent History Tool",
     "type": "ingredient",
-    "version": "0.1.1",
+    "version": "0.1.2",
     "status": "draft",
     "language": "en",
     "created": "2026-11-15",
-    "modified": "2026-11-15",
+    "modified": "2026-11-16",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -39,7 +39,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "1d37369eee56b9d1",
+  "synced": "ddbd25e04f652585",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

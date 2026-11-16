@@ -19,8 +19,20 @@
   `WKContentRuleList` from `BrowserContentRules.blockEverything()`
   (`[{"trigger":{"url-filter":".*"},"action":{"type":"block"}}]`,
   compiled once), `loadHTMLString(page.html(), baseURL: nil)`, a navigation
-  delegate whose `decidePolicyFor` cancels everything after the initial
-  load, and `keepPaintingUnderQuietPresentation()` for the Debug occlusion
+  delegate whose `decidePolicyFor` cancels every subframe navigation and
+  allows a main-frame `.other` navigation to `about:blank` (or no URL)
+  only while `allowedLoads` is above zero, spending one credit per allow
+  (each `loadHTMLString` adds one; the end of the latest own
+  `WKNavigation`, in `didFinish`, `didFail` or
+  `didFailProvisionalNavigation`, zeroes it, and the end of a superseded
+  one changes nothing). The delegate method only unpacks the action and
+  calls the internal `decidePolicy(targetFrameIsMain:url:navigationType:)`
+  with `targetFrame?.isMainFrame` (nil when the action has no target frame;
+  the seam cancels anything but `true`), which tests call
+  directly with plain values, since WebKit does not support subclassing
+  its frame and action classes; the pure rule is
+  `policy(allowedLoads:url:navigationType:)`. The preview also calls
+  `keepPaintingUnderQuietPresentation()` for the Debug occlusion
   workaround. `BrowserAgentSourceViewController` is a non-editable
   `NSTextView` with a small HTML highlighter building
   `NSAttributedString` attributes from the theme. Refresh listens for the
@@ -28,7 +40,9 @@
   privacy-word changes and `BrowserHiddenItemsStore.didChangeNotification`,
   and calls `AgentPageSource.read(options:keepingRefs: true)` (a reading
   walk, so the agent's refs stay valid), built by the same
-  `AgentPageSource.reading(_:hiddenItems:privacy:settings:)` the tools use.
+  `AgentPageSource.reading(_:hiddenItems:privacy:hideImages:)` the tools use
+  (through `WebBrowserPaneViewController.agentPageSource(engine:)`, which
+  passes the pane's effective Hide Images, `agentHidesImages`).
   The agent view is laid over the tab's page holder, which is hidden, not
   removed, so the live page keeps its state. Under UIKit,
   `UISegmentedControl` and a read-only `UITextView`; the web view is the

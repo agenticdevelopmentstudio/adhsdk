@@ -2,11 +2,11 @@
 id: 4ef7f4f9-1fa0-4267-ad82-0f35ba92a7d1
 title: "Agent History Tool"
 type: ingredient
-version: 0.1.1
+version: 0.1.2
 status: draft
 language: en
 created: 2026-11-15
-modified: 2026-11-15
+modified: 2026-11-16
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -276,9 +276,14 @@ reach the agent as tool errors.
   `SessionPrivacySettingsPanel`'s History group. `BrowserHistoryTool.run(access:query:limit:store:backForward:privacy:)`
   returns the reply string from a `BrowserHistoryStore?` and
   `[BrowserVisitLine]` (`title`, `url`, `when: Date?`), concealing each field
-  with `BrowserAgentPrivacy.concealing(_:)`, whose filter already adds the
-  percent- and form-escaped forms (`includingURLForms`). `BrowserPaneHandle`
-  exposes the pane's effective access and the driven tab's `WKBackForwardList`
+  through the agent page's string path,
+  `AgentPageBuilder(privacy:hideImages: false).conceal`, which applies
+  `BrowserAgentPrivacy.concealing(_:)` (whose filter already adds the
+  percent- and form-escaped forms, `includingURLForms`) and answers an empty
+  string under a closed privacy. `BrowserPaneHandle` exposes the pane's
+  effective access, its effective Hide Images (`hidesImages`, a required
+  initializer argument with no default, which the page-reading tools build
+  under and this tool does not read) and the driven tab's `WKBackForwardList`
   entries (current item first, then the back list newest first; forward
   entries are listed after them). `BrowserToolSet` adds the definition and
   dispatch, puts `browser_history` in `readToolNames`, and runs
@@ -349,5 +354,6 @@ checks are run when the code lands and the recipe is confirmed against it.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 0.1.2 | 2026-11-16 | Mike Fullerton | Concealing through AgentPageBuilder(privacy:hideImages: false).conceal; BrowserPaneHandle.hidesImages is required and unused here. |
 | 0.1.1 | 2026-11-15 | Mike Fullerton | The tool's pane argument is pane_id, as every other browser tool's is |
 | 0.1.0 | 2026-11-15 | Mike Fullerton | Initial creation (design-first, from the more privacy features design) |

@@ -26,7 +26,17 @@
   `"browser.agent.history_access"`, listed in `BrowserSettings.allKeys` and not
   in `globalOnlyKeyNames`. Per-pane overrides go through
   `LayeredSettingsStore` and `BrowserSettingsBinding.add(...)`, which draws the
-  override marker. Tooltips are `NSButton.toolTip`.
+  override marker. Tooltips are `NSButton.toolTip` (a segmented control's
+  per segment, `setToolTip(_:forSegment:)`). The privacy toolbar's row in
+  `WebBrowserPaneViewController` also holds the Hide elements from agent
+  button and the Agent view control (recipes
+  `workspace/browser/hide-from-agent` and `workspace/browser/agent-views`),
+  which `toolbar-buttons-have-tooltips` covers too. The pane's effective
+  Hide Images is `agentHidesImages`, read from its own layered settings,
+  the one value the browser tools (`BrowserPaneHandle.hidesImages`) and
+  the agent views build under. `browser.hidden_items.notice_shown` (the
+  element picker's one-time notice) is in `globalOnlyKeyNames` and not in
+  `BrowserSettings.allKeys`, so it has no row.
 - **Compose**: Desktop settings as a list-detail layout; each topic a
   composable over a shared settings repository, keys unchanged; the Site Data
   window a `DialogWindow` with `resizable = true`.

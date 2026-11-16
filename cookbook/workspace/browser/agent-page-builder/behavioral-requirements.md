@@ -3,7 +3,7 @@
   content for every agent page read — the snapshot, text and find tools,
   the references click, type, fill, select and hover resolve, and the text
   a wait condition is checked against — for the in-app chats and the
-  external tool server alike; no agent-facing tool MUST read page content
+  external tool server alike; agent-facing tools MUST NOT read page content
   by any other route except the raw-page tools in the situations
   `raw-page-tools-refused-when-filtered` allows.
 - **always-runs**: The component MUST run for every agent page read
@@ -71,7 +71,10 @@
   the snapshot tree MUST still print each piece trimmed, as today.
 - **hide-images**: When the Hide Images setting is on, the component MUST
   drop every image node; when it is off, an image MUST enter the result
-  only as its alternative text, never as an image source.
+  only as its alternative text, never as an image source. The value MUST
+  be the pane's effective Hide Images — its own override, else the global
+  value — and the agent tools and the pane's Agent preview and Agent
+  source MUST build under that same value.
 - **value-kept-only-for-form-controls**: The component MUST keep a node's
   value only for text fields, text areas, selects, checkboxes and radio
   buttons, and MUST never keep the value of a password field. The snapshot
@@ -98,7 +101,7 @@
   built before the failure was found.
 - **one-value-three-renderings**: The component MUST produce one
   immutable page value from which the snapshot tree, the text and the
-  HTML are all rendered; no rendering MUST read the page or the walker's
+  HTML are all rendered; renderings MUST NOT read the page or the walker's
   payload on its own.
 - **snapshot-tool-contract-unchanged**: The snapshot rendering MUST
   reproduce today's tree format, line for line, for the equivalent tree,
@@ -109,6 +112,12 @@
   link, heading, cell or option is named by, MUST be its subtree's text
   concatenated with no separator, as an element's `textContent` is
   (`a<b>b</b>` gives "ab").
+- **printed-refs-have-no-gaps**: Only a node the snapshot prints with a
+  reference MUST take one of the page's element numbers (`eN`). A
+  paragraph or label that is not interactive, which prints as text with no
+  reference, MUST take a walk-local reference (`g1`, `g2`, …) instead, and
+  a role that is dropped (flattened into its parent) MUST take none, so the
+  `eN` references a snapshot prints run without gaps.
 - **refs-drive-actions**: Every reference in the result MUST be one that
   click, type, fill, select and hover resolve to the same element.
 - **selector-recorded-per-node**: Each node MUST record a selector for its
@@ -129,6 +138,12 @@
 - **string-path**: The component's string path MUST return a string
   unchanged when agent privacy is off, concealed with the privacy words
   when it is on, and empty when the vault is unavailable or conflicting.
+- **reply-concealed-with-start-and-end-words**: A tool reply or error
+  MUST be concealed with the privacy in force when the call started and the
+  privacy in force when it returns, together: off on one side gives the
+  other, an unavailable or conflicting side wins, and two sets of words give
+  every pair of both, checked again for conflicts. A setting turned off
+  while the call ran MUST NOT unconceal the reply.
 - **raw-page-tools-refused-when-filtered**: The screenshot, click-at and
   evaluate tools, which see the page without the gatekeeper, MUST be
   refused when agent privacy is on or when the page's site has any enabled

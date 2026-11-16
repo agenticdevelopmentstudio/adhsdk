@@ -23,9 +23,27 @@
   the string path returns `""` for `.unavailable`/`.conflicting`.
   `BrowserToolSet` reads every page through one seam, an `AgentPageReader`
   (`AgentPageSource` in the app, a spy in tests) built per call with the
-  privacy that call runs under, and routes `browser_snapshot`,
+  privacy that call runs under by `BrowserToolSet.agentPageSource(for:privacy:hiddenItems:)`,
+  which calls `AgentPageSource.reading(_:hiddenItems:privacy:hideImages:)`
+  with the pane's own effective Hide Images (`BrowserPaneHandle.hidesImages`,
+  a required handle argument), never a value from the tool set's settings
+  store. The Agent preview and Agent source build through the same
+  factory (`WebBrowserPaneViewController.agentPageSource(engine:)`, with
+  `agentHidesImages`), so the views and the tools build under one value.
+  It routes `browser_snapshot`,
   `browser_text`, `browser_find`, `browser_wait_for` text and every action
-  reply through it. Only the snapshot starts a new ref generation; text,
+  reply through it. `AgentPageWalker.js` (runtime version 5, `AgentPageWalkerRuntime.version`)
+  gives element nodes refs from the snapshot runtime's `assignRef`, except
+  the `GENERIC_KINDS` (`paragraph`, `label`), which take walk-local `gN`
+  refs as text pieces take `tN`, so printed `eN` refs have no gaps (fixture
+  `BrowserAutomation/Fixtures/landmarks.txt`). `AgentNodeKind` holds
+  `rowGroup`, `columnHeader` and `rowHeader`; the walker maps
+  `thead`/`tbody`/`tfoot` and `role="rowgroup"` to `rowGroup`, `th` and
+  `role="columnheader"` to `columnHeader`, `role="rowheader"` to
+  `rowHeader`, and names both header kinds from content; `AgentPage`
+  prints them as `rowgroup`, `columnheader` and `rowheader`, renders
+  `rowGroup` as a text block, and emits `tbody`, `th scope="col"` and
+  `th scope="row"` in the HTML. Only the snapshot starts a new ref generation; text,
   find, wait and the focused element read with `keepingRefs: true`
   (`beginWalk(true)` in the snapshot runtime), so the refs of the agent's
   last snapshot stay valid. `rawPageRefusal(pane:tool:)` is async, since
@@ -36,7 +54,9 @@
   focused element's ref (`BrowserActionDelta.focusedRef`), and the tool set
   renders it from the agent page or omits it, concealing the title and
   dialog message with `AgentPageBuilder.conceal`
-  (`BrowserActionDelta.agentView`). The pane list and `browser_history` use
+  (`BrowserActionDelta.agentView`). Replies and errors are concealed with
+  `BrowserAgentPrivacy.combined(with:)` of the privacy the call started
+  under and the pane's privacy when it returns. The pane list and `browser_history` use
   the same string path. Same code under UIKit's `WKWebView`.
 - **WinUI 3**: Run the walker with WebView2's
   `CoreWebView2.ExecuteScriptAsync` from a script added with

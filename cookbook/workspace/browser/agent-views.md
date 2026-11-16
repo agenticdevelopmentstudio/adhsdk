@@ -2,11 +2,11 @@
 id: cd862ce2-d93d-4094-be20-0abab33e2fa7
 title: "Agent Preview and Agent Source Views"
 type: ingredient
-version: 0.1.0
+version: 0.1.1
 status: draft
 language: en
 created: 2026-11-15
-modified: 2026-11-15
+modified: 2026-11-16
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -20,7 +20,6 @@ tags:
   - privacy
   - preview
   - source-view
-  - privacy-toolbar
 depends-on: []
 related: []
 references:
@@ -62,8 +61,7 @@ setting changes, after the privacy words change, and after the site's
 "hide from agent" list changes, with bursts of changes coalesced into one
 rebuild.
 
-The mode is per tab and is not saved. The design is new (2026-11-15) and
-the code does not exist yet; this recipe is written before it.
+The mode is per tab and is not saved.
 
 ## Behavioral Requirements
 
@@ -92,8 +90,12 @@ the code does not exist yet; this recipe is written before it.
 - **preview-blocks-network**: The preview MUST block every network load,
   for every URL and resource type.
 - **preview-no-navigation**: The preview MUST cancel every navigation
-  other than the initial load of the gatekeeper's HTML, including link
-  clicks.
+  other than its own loads of the gatekeeper's HTML, including link
+  clicks and every subframe load. Each own load MUST let exactly one
+  main-frame load of `about:blank` through, so two loads started in quick
+  succession are both answered and the newest page is shown; the
+  allowance MUST be cleared when the latest own load finishes or fails,
+  so none outlives the newest load.
 - **preview-paints-under-quiet-presentation**: In development builds the
   preview MUST keep painting while its window is reported occluded, so it
   can be photographed under quiet presentation.
@@ -182,6 +184,7 @@ Icons: `globe` (Website), `eye` (Agent preview),
 | agent-views-014 | refresh-triggers | In Agent source, navigate to another page; separately change a privacy word; separately turn Hide Images on | Each change rebuilds the source to match the new gatekeeper output |
 | agent-views-015 | refresh-coalesced | Fire five triggers within 100 milliseconds | Exactly one rebuild runs |
 | agent-views-016 | website-mode-restores-page | Fill a text field on the page, switch to Agent preview, then back to Website | The live page shows again with the typed text, not reloaded |
+| agent-views-017 | preview-no-navigation | Show two pages in the preview back to back, before WebKit asks about the first load | Both loads are allowed and the preview shows the second page; after it finishes, a further `about:blank` navigation is cancelled |
 
 ## Edge Cases
 
@@ -206,6 +209,10 @@ Icons: `globe` (Website), `eye` (Agent preview),
   bounds each rebuild.
 - **Navigation while an agent view is shown**: The view rebuilds when the
   navigation finishes; until then it keeps the previous page's content.
+- **Rebuilds in quick succession**: A second preview load started before
+  WebKit asked about the first is still let through, so the preview ends
+  on the newest page rather than cancelling it (MUST,
+  `preview-no-navigation`).
 
 ## Configuration
 
@@ -279,8 +286,20 @@ MUST NOT carry page content.
   `WKContentRuleList` from `BrowserContentRules.blockEverything()`
   (`[{"trigger":{"url-filter":".*"},"action":{"type":"block"}}]`,
   compiled once), `loadHTMLString(page.html(), baseURL: nil)`, a navigation
-  delegate whose `decidePolicyFor` cancels everything after the initial
-  load, and `keepPaintingUnderQuietPresentation()` for the Debug occlusion
+  delegate whose `decidePolicyFor` cancels every subframe navigation and
+  allows a main-frame `.other` navigation to `about:blank` (or no URL)
+  only while `allowedLoads` is above zero, spending one credit per allow
+  (each `loadHTMLString` adds one; the end of the latest own
+  `WKNavigation`, in `didFinish`, `didFail` or
+  `didFailProvisionalNavigation`, zeroes it, and the end of a superseded
+  one changes nothing). The delegate method only unpacks the action and
+  calls the internal `decidePolicy(targetFrameIsMain:url:navigationType:)`
+  with `targetFrame?.isMainFrame` (nil when the action has no target frame;
+  the seam cancels anything but `true`), which tests call
+  directly with plain values, since WebKit does not support subclassing
+  its frame and action classes; the pure rule is
+  `policy(allowedLoads:url:navigationType:)`. The preview also calls
+  `keepPaintingUnderQuietPresentation()` for the Debug occlusion
   workaround. `BrowserAgentSourceViewController` is a non-editable
   `NSTextView` with a small HTML highlighter building
   `NSAttributedString` attributes from the theme. Refresh listens for the
@@ -288,7 +307,9 @@ MUST NOT carry page content.
   privacy-word changes and `BrowserHiddenItemsStore.didChangeNotification`,
   and calls `AgentPageSource.read(options:keepingRefs: true)` (a reading
   walk, so the agent's refs stay valid), built by the same
-  `AgentPageSource.reading(_:hiddenItems:privacy:settings:)` the tools use.
+  `AgentPageSource.reading(_:hiddenItems:privacy:hideImages:)` the tools use
+  (through `WebBrowserPaneViewController.agentPageSource(engine:)`, which
+  passes the pane's effective Hide Images, `agentHidesImages`).
   The agent view is laid over the tab's page holder, which is hidden, not
   removed, so the live page keeps its state. Under UIKit,
   `UISegmentedControl` and a read-only `UITextView`; the web view is the
@@ -346,6 +367,7 @@ the agent's ref table, never a snapshot walk.
 snapshot walk would renumber the refs the agent holds from its last
 snapshot.
 **Approved**: pending
+
 ## Compliance
 
 | Check | Status | Category |
@@ -363,4 +385,5 @@ plan's tests are in `BrowserAgentViewsTests`.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 0.1.1 | 2026-11-16 | Mike Fullerton | Preview navigation allows one load per credit, zeroed when the latest own load ends; rebuilds in quick succession; reading(hideImages:) and agentPageSource(engine:). |
 | 0.1.0 | 2026-11-15 | Mike Fullerton | Initial creation (design-first, from the more privacy features design) |

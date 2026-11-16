@@ -4,11 +4,11 @@
     "id": "31c4c156-8f47-4ad1-9b40-e4ab2d7f4fb7",
     "title": "Hidden Items Store",
     "type": "ingredient",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "status": "draft",
     "language": "en",
     "created": "2026-11-15",
-    "modified": "2026-11-15",
+    "modified": "2026-11-16",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -37,7 +37,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "48f8125750254c5d",
+  "synced": "8c96bd69a503dc8e",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

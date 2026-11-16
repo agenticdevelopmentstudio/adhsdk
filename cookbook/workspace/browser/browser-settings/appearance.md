@@ -1,6 +1,6 @@
 
 - **Corner radius**: Not applicable — the topics use the settings framework's
-  groups and rows; this recipe sets no geometry of its own.
+  groups and rows; this ingredient sets no geometry of its own.
 - **Padding**: Not applicable — the settings framework's panel inset and group
   spacing.
 - **Font**: Not applicable — the settings framework's row and group title

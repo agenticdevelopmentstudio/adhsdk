@@ -1,7 +1,7 @@
 
 The web browser's settings are one container of topics, shown in the app's
 Settings window and, scoped to one pane, in that pane's settings sheet. This
-recipe fixes which topics exist, in what order, and which control lives in
+ingredient fixes which topics exist, in what order, and which control lives in
 each. The topics say what they hold: **General**, **Behavior**,
 **Appearance**, **Privacy and Security**, **Downloads**, **Extensions** and
 **Reset**, with the Chrome engine's topics between Extensions and Reset when

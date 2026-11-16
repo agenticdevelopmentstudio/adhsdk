@@ -4,11 +4,11 @@
     "id": "cd862ce2-d93d-4094-be20-0abab33e2fa7",
     "title": "Agent Preview and Agent Source Views",
     "type": "ingredient",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "status": "draft",
     "language": "en",
     "created": "2026-11-15",
-    "modified": "2026-11-15",
+    "modified": "2026-11-16",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -22,8 +22,7 @@
       "agent",
       "privacy",
       "preview",
-      "source-view",
-      "privacy-toolbar"
+      "source-view"
     ],
     "depends-on": [],
     "related": [],
@@ -42,7 +41,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "06d7a9635a771e45",
+  "synced": "170e0806c143fcd5",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

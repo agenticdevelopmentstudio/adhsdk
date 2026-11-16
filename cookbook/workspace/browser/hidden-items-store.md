@@ -2,11 +2,11 @@
 id: 31c4c156-8f47-4ad1-9b40-e4ab2d7f4fb7
 title: "Hidden Items Store"
 type: ingredient
-version: 0.1.0
+version: 0.1.1
 status: draft
 language: en
 created: 2026-11-15
-modified: 2026-11-15
+modified: 2026-11-16
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -179,7 +179,9 @@ Not applicable — this is a persistence component, not a visual component.
 - **Error states**: A file that cannot be opened or a statement that fails
   or times out throws to the caller. The store never answers a failed read
   with a guessed list; what the caller does with the failure is the
-  caller's concern (the agent gatekeeper fails closed).
+  caller's concern (the agent gatekeeper fails closed). A file that cannot
+  be opened at launch leaves the app with no store, a degraded mode rather
+  than a launch failure.
 - **Offline or disconnected state**: Not applicable — the store is a local
   file and makes no network call.
 - **Missing file or unreachable server**: A missing file is created, with
@@ -244,7 +246,7 @@ the caller, which logs them where it handles them.
 - **SwiftUI**: Not applicable as a home; the store imports only Foundation,
   GRDB and the toolkit's database module, so a SwiftUI host would use it
   unchanged.
-- **AppKit / UIKit**: Planned as `BrowserHiddenItemsStore` in
+- **AppKit / UIKit**: `BrowserHiddenItemsStore` in
   `macOS/Features/BrowserPane/HiddenItems/BrowserHiddenItemsStore.swift`,
   with the value types `BrowserHiddenItem`, `BrowserHiddenItemList`
   (`user`, `agent`) and `BrowserHiddenItemScope` (`thisItem`, `allLikeIt`)
@@ -257,7 +259,9 @@ the caller, which logs them where it handles them.
   `(list, site)`) in migration `v1`. Site matching and the default pattern
   are `PrivacySitePattern.matches(_:url:)` and
   `PrivacySitePattern.defaultPattern(for:)`. `WebBrowserWindowsFeature`
-  opens it at launch. Main-actor callers go through an async `perform`
+  opens it at launch into `BrowserHiddenItemsStore.shared`, unless a host or
+  test already set one; a file that cannot be opened is logged and leaves
+  `shared` nil, which every consumer takes as no store. Main-actor callers go through an async `perform`
   wrapper, as with `BrowserHistoryStore`, so no file access runs on the
   main thread.
 - **Compose**: Room or SQLDelight over one database file, two tables of the
@@ -271,8 +275,9 @@ the caller, which logs them where it handles them.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/HiddenItems/BrowserHiddenItem.swift` | planned |
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/HiddenItems/BrowserHiddenItemsStore.swift` | planned |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/HiddenItems/BrowserHiddenItem.swift` | unverified |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/HiddenItems/BrowserHiddenItemsStore.swift` | unverified |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/WebBrowserWindowsFeature.swift` | unverified |
 
 ## Design Decisions
 
@@ -308,10 +313,11 @@ enforces it once more at the boundary.
 | Check | Status | Category |
 |-------|--------|----------|
 
-Notes: no compliance checks have been run; the code does not exist yet.
+Notes: no compliance checks have been run against the code yet.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 0.1.1 | 2026-11-16 | Mike Fullerton | Implemented: opened at launch into BrowserHiddenItemsStore.shared; an unopenable file leaves no store. |
 | 0.1.0 | 2026-11-15 | Mike Fullerton | Initial creation (design-first, from the more privacy features design) |

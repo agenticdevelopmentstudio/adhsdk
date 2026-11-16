@@ -19,6 +19,5 @@ setting changes, after the privacy words change, and after the site's
 "hide from agent" list changes, with bursts of changes coalesced into one
 rebuild.
 
-The mode is per tab and is not saved. The design is new (2026-11-15) and
-the code does not exist yet; this recipe is written before it.
+The mode is per tab and is not saved.
 

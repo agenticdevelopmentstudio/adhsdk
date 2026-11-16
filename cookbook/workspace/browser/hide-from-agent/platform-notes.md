@@ -12,7 +12,10 @@
   `BrowserHiddenItemsPopover(list: .agent, …)`. A preview pick's `ref` is
   resolved against the preview's `shownPage` with `AgentPage.node(ref:)`
   and the entry takes `AgentNode.selector`
-  (`BrowserSelectingMode.mapPreviewPick`). The dialog's preview hides
+  (`BrowserSelectingMode.mapPreviewPick`); the entry's site comes from
+  the engine's URL, not `AgentPage.url`, which is the concealed address
+  (a commit ends selecting, so the engine's URL is the page the preview was
+  built from). The dialog's preview hides
   `[data-adk-ref="…"]` with the element picker's preview style, evaluated
   in the picker world. The preview keeps
   `WKWebpagePreferences.allowsContentJavaScript = false`; the picker is

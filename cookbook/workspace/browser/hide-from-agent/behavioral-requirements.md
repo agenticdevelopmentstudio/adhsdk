@@ -38,6 +38,9 @@
   clicked element's `data-adk-ref` (or that of its nearest ancestor that has
   one) and save the selector recorded for that ref in the agent page the
   preview is showing, with that node's label.
+- **preview-pick-saves-under-live-site**: A pick in the Agent preview MUST
+  save its entry under the live page's site, never under the address the
+  agent page carries, which is concealed and may be a stand-in host.
 - **preview-pick-without-ref-refused**: A pick in the Agent preview on an
   element with no ref, or whose ref has no node in the shown agent page,
   MUST be refused with a beep; no dialog opens and selecting continues.

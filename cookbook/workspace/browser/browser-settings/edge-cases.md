@@ -26,3 +26,4 @@
   alone, so a Chrome pane's sheet leaves both groups out of Privacy and
   Security, as General leaves out AirPlay and Web Inspector; the keys keep
   their rows in the Settings window (`every-browser-key-has-a-home`).
+

@@ -4,11 +4,11 @@
     "id": "8b187d98-795b-4a9d-9441-e7b8629fefe4",
     "title": "Element Picker",
     "type": "ingredient",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "status": "draft",
     "language": "en",
     "created": "2026-11-15",
-    "modified": "2026-11-15",
+    "modified": "2026-11-16",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -22,10 +22,7 @@
       "privacy",
       "hidden-items",
       "element-picker",
-      "selectors",
-      "content-world",
-      "popover",
-      "dialog"
+      "selectors"
     ],
     "depends-on": [],
     "related": [],
@@ -47,7 +44,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "d33aa838d6b676d7",
+  "synced": "745d00e06b4fe07d",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

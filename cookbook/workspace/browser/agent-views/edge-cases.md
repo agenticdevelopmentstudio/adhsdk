@@ -20,4 +20,8 @@
   bounds each rebuild.
 - **Navigation while an agent view is shown**: The view rebuilds when the
   navigation finishes; until then it keeps the previous page's content.
+- **Rebuilds in quick succession**: A second preview load started before
+  WebKit asked about the first is still let through, so the preview ends
+  on the newest page rather than cancelling it (MUST,
+  `preview-no-navigation`).
 

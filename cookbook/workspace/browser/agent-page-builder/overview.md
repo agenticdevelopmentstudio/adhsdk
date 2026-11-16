@@ -29,6 +29,3 @@ vault yields an empty page carrying a reason. The component always runs —
 there is no branch on privacy settings choosing whether to use it; settings
 only change what it filters.
 
-The design is new (2026-11-15) and the code does not exist yet; this
-recipe is written before it.
-

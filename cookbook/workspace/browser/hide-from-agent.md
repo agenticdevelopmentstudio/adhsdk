@@ -2,11 +2,11 @@
 id: 6cb13be9-e38c-496b-8326-5d1fdccfe778
 title: "Hide From Agent"
 type: ingredient
-version: 0.1.0
+version: 0.1.1
 status: draft
 language: en
 created: 2026-11-15
-modified: 2026-11-15
+modified: 2026-11-16
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -20,7 +20,6 @@ tags:
   - hidden-items
   - agent
   - element-picker
-  - agent-preview
 depends-on: []
 related: []
 references:
@@ -118,6 +117,9 @@ disabled is checked in the verification run and recorded below.
   clicked element's `data-adk-ref` (or that of its nearest ancestor that has
   one) and save the selector recorded for that ref in the agent page the
   preview is showing, with that node's label.
+- **preview-pick-saves-under-live-site**: A pick in the Agent preview MUST
+  save its entry under the live page's site, never under the address the
+  agent page carries, which is concealed and may be a stand-in host.
 - **preview-pick-without-ref-refused**: A pick in the Agent preview on an
   element with no ref, or whose ref has no node in the shown agent page,
   MUST be refused with a beep; no dialog opens and selecting continues.
@@ -193,6 +195,7 @@ selecting returns to idle.
 | hide-from-agent-013 | raw-tools-refused-with-entries | After vector 002, call `browser_screenshot` on the page | Refused, naming the site's agent-list entries as the reason |
 | hide-from-agent-014 | stop-while-selecting, every-button-has-tooltip | Start agent selecting; read the toolbar button; press Esc | Symbol `stop.circle`, tooltip "Stop selecting"; after Esc, idle with tooltip "Hide elements from agent" |
 | hide-from-agent-015 | preview-dialog-preview | Agent preview; pick ref `r12`; check "Show page with selected element removed" | The `r12` node is hidden in the preview webview; the live page is unchanged |
+| hide-from-agent-016 | preview-pick-saves-under-live-site | Agent preview of `https://example.com/a` with URL concealing on; pick ref `r12`; OK | The new agent-list entry's site is `example.com`, not the concealed stand-in host |
 
 ## Edge Cases
 
@@ -296,7 +299,10 @@ content and labels are not logged.
   `BrowserHiddenItemsPopover(list: .agent, …)`. A preview pick's `ref` is
   resolved against the preview's `shownPage` with `AgentPage.node(ref:)`
   and the entry takes `AgentNode.selector`
-  (`BrowserSelectingMode.mapPreviewPick`). The dialog's preview hides
+  (`BrowserSelectingMode.mapPreviewPick`); the entry's site comes from
+  the engine's URL, not `AgentPage.url`, which is the concealed address
+  (a commit ends selecting, so the engine's URL is the page the preview was
+  built from). The dialog's preview hides
   `[data-adk-ref="…"]` with the element picker's preview style, evaluated
   in the picker world. The preview keeps
   `WKWebpagePreferences.allowsContentJavaScript = false`; the picker is
@@ -372,4 +378,5 @@ Notes: no compliance checks have been run.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 0.1.1 | 2026-11-16 | Mike Fullerton | A preview pick saves under the live page's site, never the concealed AgentPage address. |
 | 0.1.0 | 2026-11-15 | Mike Fullerton | Initial creation (design-first, from the more privacy features design) |

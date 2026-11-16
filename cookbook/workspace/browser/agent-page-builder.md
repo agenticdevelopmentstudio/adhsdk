@@ -2,11 +2,11 @@
 id: 8bd94d87-6096-4fb1-82a7-d5f712c2958f
 title: "Agent Page Builder (Agent Gatekeeper)"
 type: ingredient
-version: 0.1.0
+version: 0.1.2
 status: draft
 language: en
 created: 2026-11-15
-modified: 2026-11-15
+modified: 2026-11-16
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -20,8 +20,6 @@ tags:
   - privacy
   - gatekeeper
   - allowlist
-  - snapshot
-  - fail-closed
 depends-on: []
 related: []
 references:
@@ -78,16 +76,13 @@ vault yields an empty page carrying a reason. The component always runs —
 there is no branch on privacy settings choosing whether to use it; settings
 only change what it filters.
 
-The design is new (2026-11-15) and the code does not exist yet; this
-recipe is written before it.
-
 ## Behavioral Requirements
 
 - **single-gatekeeper**: The component MUST be the only source of page
   content for every agent page read — the snapshot, text and find tools,
   the references click, type, fill, select and hover resolve, and the text
   a wait condition is checked against — for the in-app chats and the
-  external tool server alike; no agent-facing tool MUST read page content
+  external tool server alike; agent-facing tools MUST NOT read page content
   by any other route except the raw-page tools in the situations
   `raw-page-tools-refused-when-filtered` allows.
 - **always-runs**: The component MUST run for every agent page read
@@ -155,7 +150,10 @@ recipe is written before it.
   the snapshot tree MUST still print each piece trimmed, as today.
 - **hide-images**: When the Hide Images setting is on, the component MUST
   drop every image node; when it is off, an image MUST enter the result
-  only as its alternative text, never as an image source.
+  only as its alternative text, never as an image source. The value MUST
+  be the pane's effective Hide Images — its own override, else the global
+  value — and the agent tools and the pane's Agent preview and Agent
+  source MUST build under that same value.
 - **value-kept-only-for-form-controls**: The component MUST keep a node's
   value only for text fields, text areas, selects, checkboxes and radio
   buttons, and MUST never keep the value of a password field. The snapshot
@@ -182,7 +180,7 @@ recipe is written before it.
   built before the failure was found.
 - **one-value-three-renderings**: The component MUST produce one
   immutable page value from which the snapshot tree, the text and the
-  HTML are all rendered; no rendering MUST read the page or the walker's
+  HTML are all rendered; renderings MUST NOT read the page or the walker's
   payload on its own.
 - **snapshot-tool-contract-unchanged**: The snapshot rendering MUST
   reproduce today's tree format, line for line, for the equivalent tree,
@@ -193,6 +191,12 @@ recipe is written before it.
   link, heading, cell or option is named by, MUST be its subtree's text
   concatenated with no separator, as an element's `textContent` is
   (`a<b>b</b>` gives "ab").
+- **printed-refs-have-no-gaps**: Only a node the snapshot prints with a
+  reference MUST take one of the page's element numbers (`eN`). A
+  paragraph or label that is not interactive, which prints as text with no
+  reference, MUST take a walk-local reference (`g1`, `g2`, …) instead, and
+  a role that is dropped (flattened into its parent) MUST take none, so the
+  `eN` references a snapshot prints run without gaps.
 - **refs-drive-actions**: Every reference in the result MUST be one that
   click, type, fill, select and hover resolve to the same element.
 - **selector-recorded-per-node**: Each node MUST record a selector for its
@@ -213,6 +217,12 @@ recipe is written before it.
 - **string-path**: The component's string path MUST return a string
   unchanged when agent privacy is off, concealed with the privacy words
   when it is on, and empty when the vault is unavailable or conflicting.
+- **reply-concealed-with-start-and-end-words**: A tool reply or error
+  MUST be concealed with the privacy in force when the call started and the
+  privacy in force when it returns, together: off on one side gives the
+  other, an unavailable or conflicting side wins, and two sets of words give
+  every pair of both, checked again for conflicts. A setting turned off
+  while the call ran MUST NOT unconceal the reply.
 - **raw-page-tools-refused-when-filtered**: The screenshot, click-at and
   evaluate tools, which see the page without the gatekeeper, MUST be
   refused when agent privacy is on or when the page's site has any enabled
@@ -299,9 +309,14 @@ landmarks, headings — to build its result.)
 | agent-page-builder-038 | snapshot-tool-contract-unchanged | A paragraph with text children "a" and "b"; a button with text "Sign" and a text child "in" | The snapshot prints `text: ab` and `button "Signin"` |
 | agent-page-builder-039 | value-kept-only-for-form-controls | A text field of type `range` named "Volume" with value "40" and one of type `number` labelled "Count" with value "3" | The snapshot prints `slider "Volume"` with `[value="40"]` and `spinbutton "Count"` with `[value="3"]` |
 | agent-page-builder-040 | value-kept-only-for-form-controls | A text area labelled "Blank" with a value of a newline and three spaces | The snapshot prints `textbox "Blank"` with `[value=""]` |
-| agent-page-builder-041 | concealed-before-insertion | Privacy words {Acme}; a paragraph with text pieces "Ac" and "me", a button "Ac" with a text child "me", a heading with pieces "Ac" and "me Co", an option with pieces "Ac" and "me" | "Acme" appears in no rendering; the snapshot prints `text: Zed`, `button "Zed"`, `heading "Zed Co"` and `option "Zed"`, and the HTML option reads "Zed" |
+| agent-page-builder-041 | concealed-before-insertion | Privacy words {Acme→Zed}; a paragraph with text pieces "Ac" and "me", a button "Ac" with a text child "me", a heading with pieces "Ac" and "me Co", an option with pieces "Ac" and "me" | "Acme" appears in no rendering; the snapshot prints `text: Zed`, `button "Zed"`, `heading "Zed Co"` and `option "Zed"`, and the HTML option reads "Zed" |
 | agent-page-builder-042 | text-pieces-keep-boundary-space | A list item with text pieces "Buy " and "now"; a button "Buy " with a text child "now "; a paragraph with pieces " Sign " and "up" | The text reads "Buy now", "Buy now", "Sign up" on three lines; the HTML has `>Buy now</li>` and `>Buy now</button>`; the tree prints `text: Buy`, `text: now`, `button "Buy now"` and `text: Sign up`; "Buynow" appears nowhere |
 | agent-page-builder-043 | text-pieces-keep-boundary-space, concealed-before-insertion | Live page: `<li>Buy <b>now</b></li>`, `<li><span>Pay</span> <span>later</span></li>`, `<li>Ac<b>me</b></li>`; then privacy words {Acme} | The text reads "Buy now", "Pay later", "Acme"; the tree prints no empty text line; with privacy on, "Acme" appears in neither the text nor the HTML |
+| agent-page-builder-044 | hide-images | Global Hide Images off; a pane overriding it on, then off; build the tools' source from the pane's handle and the agent views' source from the pane | Both sources build with the pane's override each time, never the global value, and with the same value as each other |
+| agent-page-builder-045 | reply-concealed-with-start-and-end-words | Privacy words {Acme→Zed} when `browser_wait_for` starts; the user adds {Beta→Yew} before it returns; the reply quotes "Acme" and "Beta" | The reply reads "Zed" and "Yew"; with the setting turned off before it returns instead, "Acme" is still concealed |
+| agent-page-builder-046 | printed-refs-have-no-gaps | The landmarks fixture (`landmarks.html`): a banner with links and navigation, a paragraph "Welcome to <strong>Acme</strong>.", an image, `<table><tr><th>Name</th><td>Ada</td></tr></table>` (the parser wraps the row in a `tbody`, a rowgroup), a button "Menu", and a footer | The paragraph prints as `text: Welcome to Acme.` with no reference and takes no `eN` number, so `img "Logo" [ref=e9]` follows `link "Weblog" [ref=e8]`; the table prints as today, `table [ref=e10]`, `rowgroup [ref=e11]`, `row [ref=e12]`, `columnheader "Name" [ref=e13]`, `cell "Ada" [ref=e14]`, then `button "Menu" [ref=e15]` and `contentinfo [ref=e16]`, with no gap in the `eN` numbers |
+| agent-page-builder-047 | snapshot-tool-contract-unchanged | A table with `<thead><tr><th>Head</th></tr></thead>` and `<tbody><tr><td role="rowheader">Side</td><td>Body</td></tr></tbody>`, then a `div` with `role="rowgroup"` holding a `role="row"` with a `span` `role="columnheader"` "Col" | The tree prints `table [ref=e1]`, `rowgroup [ref=e2]`, `row [ref=e3]`, `columnheader "Head" [ref=e4]`, `rowgroup [ref=e5]`, `row [ref=e6]`, `rowheader "Side" [ref=e7]`, `cell "Body" [ref=e8]`, `rowgroup [ref=e9]`, `row [ref=e10]`, `columnheader "Col" [ref=e11]`, as today's snapshot prints them |
+
 ## Edge Cases
 
 - **Null and empty input**: An empty document yields a page with a
@@ -356,11 +371,11 @@ landmarks, headings — to build its result.)
   nothing and is warned, as `invalid-exclude-selector-isolated` says.
 - **Privacy words change mid-read**: The concealment in force when the
   build starts conceals the whole result; the tool reply is concealed
-  again with the words of the moment it returns, as replies are today.
+  with the start and end words together, per
+  `reply-concealed-with-start-and-end-words`.
 - **Excluded ancestor of focus or scope**: See `scope-within-walk` and
   `titles-dialogs-focus-through-string-path` — content under an excluded
   ancestor never reaches the agent by either path.
-
 - **Refs after the agent list grows**: Only a walk hands out references,
   and it never gives one to an excluded element, so no action resolves a
   reference the agent page did not show. A reading walk (text, find,
@@ -374,7 +389,7 @@ landmarks, headings — to build its result.)
 |--------|------|---------|-------------|
 | `allowlist` | node kinds plus per-kind attribute sets | the standard allowlist (Design Decisions) | What may enter the result; passed to the walker each walk. |
 | `privacy` | agent privacy state (off, enabled with words, unavailable, conflicting) | the pane's Agent Privacy | Drives concealment and the fail-closed vault rule. |
-| `hideImages` | boolean | the Hide Images setting | Drops image nodes when on. |
+| `hideImages` | boolean | the pane's effective Hide Images (its own override, else the global value) | Drops image nodes when on; the tools and the pane's agent views read the same value. |
 | `excludeSelectors` | list of selectors | the site's enabled agent-list entries; no store is the unavailable page | Subtrees the walker never visits. |
 | `scope` | reference or selector | none | Subtree of the walk to render. |
 | `interactiveOnly`, `depth`, `includeURLs`, `delta` | as today's snapshot options | as today | Unchanged snapshot options. |
@@ -450,9 +465,27 @@ model can read would be a route around the gatekeeper.
   the string path returns `""` for `.unavailable`/`.conflicting`.
   `BrowserToolSet` reads every page through one seam, an `AgentPageReader`
   (`AgentPageSource` in the app, a spy in tests) built per call with the
-  privacy that call runs under, and routes `browser_snapshot`,
+  privacy that call runs under by `BrowserToolSet.agentPageSource(for:privacy:hiddenItems:)`,
+  which calls `AgentPageSource.reading(_:hiddenItems:privacy:hideImages:)`
+  with the pane's own effective Hide Images (`BrowserPaneHandle.hidesImages`,
+  a required handle argument), never a value from the tool set's settings
+  store. The Agent preview and Agent source build through the same
+  factory (`WebBrowserPaneViewController.agentPageSource(engine:)`, with
+  `agentHidesImages`), so the views and the tools build under one value.
+  It routes `browser_snapshot`,
   `browser_text`, `browser_find`, `browser_wait_for` text and every action
-  reply through it. Only the snapshot starts a new ref generation; text,
+  reply through it. `AgentPageWalker.js` (runtime version 5, `AgentPageWalkerRuntime.version`)
+  gives element nodes refs from the snapshot runtime's `assignRef`, except
+  the `GENERIC_KINDS` (`paragraph`, `label`), which take walk-local `gN`
+  refs as text pieces take `tN`, so printed `eN` refs have no gaps (fixture
+  `BrowserAutomation/Fixtures/landmarks.txt`). `AgentNodeKind` holds
+  `rowGroup`, `columnHeader` and `rowHeader`; the walker maps
+  `thead`/`tbody`/`tfoot` and `role="rowgroup"` to `rowGroup`, `th` and
+  `role="columnheader"` to `columnHeader`, `role="rowheader"` to
+  `rowHeader`, and names both header kinds from content; `AgentPage`
+  prints them as `rowgroup`, `columnheader` and `rowheader`, renders
+  `rowGroup` as a text block, and emits `tbody`, `th scope="col"` and
+  `th scope="row"` in the HTML. Only the snapshot starts a new ref generation; text,
   find, wait and the focused element read with `keepingRefs: true`
   (`beginWalk(true)` in the snapshot runtime), so the refs of the agent's
   last snapshot stay valid. `rawPageRefusal(pane:tool:)` is async, since
@@ -463,7 +496,9 @@ model can read would be a route around the gatekeeper.
   focused element's ref (`BrowserActionDelta.focusedRef`), and the tool set
   renders it from the agent page or omits it, concealing the title and
   dialog message with `AgentPageBuilder.conceal`
-  (`BrowserActionDelta.agentView`). The pane list and `browser_history` use
+  (`BrowserActionDelta.agentView`). Replies and errors are concealed with
+  `BrowserAgentPrivacy.combined(with:)` of the privacy the call started
+  under and the pane's privacy when it returns. The pane list and `browser_history` use
   the same string path. Same code under UIKit's `WKWebView`.
 - **WinUI 3**: Run the walker with WebView2's
   `CoreWebView2.ExecuteScriptAsync` from a script added with
@@ -482,12 +517,17 @@ model can read would be a route around the gatekeeper.
 | macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Automation/AgentPage/AgentPageSource.swift` | planned |
 | macos | `packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/BrowserPane/AgentPageWalkerWebViewTests.swift` | unverified |
 | macos | `packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/BrowserPane/AgentGatekeeperRoutingTests.swift` | unverified |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Automation/BrowserAgentPrivacy.swift` | unverified |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Automation/BrowserAutomation.swift` | unverified |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Automation/BrowserSnapshot.js` | unverified |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Automation/BrowserSnapshot.swift` | unverified |
 
 ## Design Decisions
 
 **Decision**: The standard allowlist's node kinds are document, landmark,
 heading, paragraph, text, list, list item, link, button, text field, text
-area, checkbox, radio, select, option, table, row, cell, image and label.
+area, checkbox, radio, select, option, table, row group, row, cell,
+column header, row header, image and label.
 Attributes: `aria-label` and `title` on every kind; `href` on links; `alt`
 on images; `placeholder`, `name` and `type` on text fields and text areas;
 `name` on selects, checkboxes and radios; `level` on headings.
@@ -552,25 +592,37 @@ common; with privacy on there is no coordinate-click fallback.
 **Approved**: pending
 
 **Decision**: Roles with no allowlist kind (dialog, alert, status, menu,
-menubar, toolbar, tablist, tabpanel, tree, rowgroup, progressbar, meter,
-group, figure, separator, tooltip, radiogroup, and the like) are flattened
-into their parent: their children are walked, the role itself is not
+menubar, toolbar, tablist, tabpanel, tree, progressbar, meter, group,
+figure, separator, tooltip, radiogroup, and the like) are flattened into
+their parent: their children are walked and the role itself is not
 emitted. Such an element that is interactive by the rule above keeps a
-reference as a button.
+reference as a button. Table row groups and headers are not flattened:
+`thead`, `tbody` and `tfoot` (written or implied by the parser) and an
+explicit `rowgroup` are a row group, printed and numbered as `rowgroup`;
+`th` and an explicit `columnheader` print as `columnheader`, and an
+explicit `rowheader` as `rowheader`, exactly as `browser_snapshot` prints
+them today.
 **Rationale**: The allowlist is fixed ("tighter is fine"), and
-over-stripping is the accepted failure.
+over-stripping is the accepted failure; table rowgroup, columnheader and
+rowheader are kept exactly as `browser_snapshot` prints them today, because the spec
+says the tool contract is unchanged, line for line
+(`snapshot-tool-contract-unchanged`).
 **Approved**: pending
 
 **Decision**: Roles are renamed to the allowlist kind they fold into:
-`th`, `columnheader`, `rowheader` and `gridcell` print as cell; `grid` and
-`treegrid` as table; `listbox` as combobox (a select); `tab`, `menuitem`
+`gridcell` prints as cell; `grid` and `treegrid` as table (the remaining
+table-family folds); `rowgroup`, `columnheader` (and `th`) and
+`rowheader` are not renamed and print as today; `listbox` as combobox (a select); `tab`, `menuitem`
 and `treeitem` as button; `switch` and `menuitemcheckbox` as checkbox and
 `menuitemradio` as radio; `searchbox`, `spinbutton` and `slider` as text
 fields typed search, number and range. The folded `switch`,
 `menuitemcheckbox` and `menuitemradio` keep the legacy name from content.
 **Rationale**: Forced by the allowlist's kinds. The tree's format (syntax,
 references, states, levels) is unchanged, and folding to clickable kinds
-keeps the references.
+keeps the references. Table rowgroup, columnheader and rowheader are kept
+exactly as
+`browser_snapshot` prints them today, because the spec says the tool
+contract is unchanged, line for line (`snapshot-tool-contract-unchanged`).
 **Approved**: pending
 
 **Decision**: Frames (`iframe`, `frame`) and embedded documents (`object`,
@@ -581,6 +633,7 @@ agent and the list cannot be trusted to cover; uncertain content is
 stripped. (A same-origin frame's document could be queried; it is not, by
 choice.)
 **Approved**: pending
+
 ## Compliance
 
 | Check | Status | Category |
@@ -598,4 +651,6 @@ plan's tests are `AgentPageBuilderTests` (builder, pure),
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 0.1.2 | 2026-11-16 | Mike Fullerton | Walker version 5: tables keep today's rowgroup, columnheader and rowheader roles (allowlist kinds row group, column header, row header; vector 047) |
+| 0.1.1 | 2026-11-16 | Mike Fullerton | Pane's effective Hide Images shared by tools and agent views via BrowserToolSet.agentPageSource; replies concealed with the start and end privacy combined. |
 | 0.1.0 | 2026-11-15 | Mike Fullerton | Initial creation (design-first, from the more privacy features design) |

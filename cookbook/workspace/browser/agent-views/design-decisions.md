@@ -33,3 +33,4 @@ the agent's ref table, never a snapshot walk.
 snapshot walk would renumber the refs the agent holds from its last
 snapshot.
 **Approved**: pending
+

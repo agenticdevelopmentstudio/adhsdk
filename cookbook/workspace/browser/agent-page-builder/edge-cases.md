@@ -51,11 +51,11 @@
   nothing and is warned, as `invalid-exclude-selector-isolated` says.
 - **Privacy words change mid-read**: The concealment in force when the
   build starts conceals the whole result; the tool reply is concealed
-  again with the words of the moment it returns, as replies are today.
+  with the start and end words together, per
+  `reply-concealed-with-start-and-end-words`.
 - **Excluded ancestor of focus or scope**: See `scope-within-walk` and
   `titles-dialogs-focus-through-string-path` — content under an excluded
   ancestor never reaches the agent by either path.
-
 - **Refs after the agent list grows**: Only a walk hands out references,
   and it never gives one to an excluded element, so no action resolves a
   reference the agent page did not show. A reading walk (text, find,

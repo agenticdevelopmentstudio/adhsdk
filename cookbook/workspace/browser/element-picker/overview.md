@@ -38,7 +38,7 @@ class names, with random-looking classes and ids rejected, together with
 how many elements it matches; it is refused as a choice when it would match
 too much of the page.
 
-The picker serves both lists. This recipe describes it with the user list
+The picker serves both lists. This ingredient describes it with the user list
 ("Hide distracting items"); the agent list's entry point and wording are
 the hide-from-agent recipe's, and they reuse this component with the list
 set to agent. The first time the picker is used, a one-time notice says
