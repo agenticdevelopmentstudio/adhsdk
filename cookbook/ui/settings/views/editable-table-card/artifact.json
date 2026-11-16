@@ -4,11 +4,11 @@
     "id": "9016cb03-9682-404f-b787-c271039f25b3",
     "title": "Editable Table Card",
     "type": "ingredient",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "status": "review",
     "language": "en",
     "created": "2026-10-04",
-    "modified": "2026-10-04",
+    "modified": "2026-11-15",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -32,7 +32,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "1cc0317ab9d90a01",
+  "synced": "6af9cc2075299a1e",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

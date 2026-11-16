@@ -2,11 +2,11 @@
 id: 9016cb03-9682-404f-b787-c271039f25b3
 title: "Editable Table Card"
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: 2026-10-04
-modified: 2026-10-04
+modified: 2026-11-15
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -39,7 +39,7 @@ The editable table card is a themed card holding a table. Columns are declared w
 - **columns-in-declared-order**: The table MUST show one column per declared column, in declared order, with the declared titles and widths.
 - **sort-reports-only**: Only sortable columns MUST carry sorting; clicking one MUST report the column id and direction and MUST NOT reorder rows, which stay in the order given.
 - **rows-in-given-order**: The table MUST show one row per given row, in order.
-- **empty-message**: An empty table MUST hide its header and show the empty message; a non-empty table MUST hide the message.
+- **empty-message**: An empty table MUST hide its header and show the empty message, unless its owner keeps the header (because it carries controls of its own); a non-empty table MUST hide the message.
 - **visible-row-count**: The table MUST size itself to show a configurable number of rows, six by default.
 - **toggle-cells-report**: A toggle cell MUST show its state as a switch and report the row id, the column id and the new state when changed.
 - **indicator-cells**: An indicator cell MUST show a filled mark for on and a hollow mark for off, with an accessibility label of its title followed by on or off.
@@ -83,7 +83,7 @@ The editable table card is a themed card holding a table. Columns are declared w
 | State | Appearance change |
 |-------|------------------|
 | Default | Header and rows. |
-| Empty | Header hidden, empty message shown. |
+| Empty | Header hidden (unless the owner keeps it), empty message shown. |
 | Selected | The row has the selection highlight; remove is enabled. |
 | Flagged | A warning wash over the row background. |
 | Editing | One cell shows a live text field; reloads are held. |
@@ -175,7 +175,7 @@ Not applicable: the component performs no logging of its own.
 - **SwiftUI**: A `Table` with `TableColumn`s and per-kind cell views; editing through `TextField` with `onSubmit`, and the held-reload rule through a pending-state buffer.
 - **Compose**: A `LazyColumn` or a data-grid library with cell editors; hold incoming data in a pending state while an editor has focus.
 - **React/Web**: A `<table>` or ARIA grid with `contenteditable` or input cells, keyed rows, and `aria-sort` on sortable headers; hold incoming data while an input is focused.
-- **AppKit / UIKit (source)**: `ComposableSettings.EditableTableCard` is an `@MainActor` `GroupView` subclass wrapping an `NSTableView`. Types: `EditableTableColumn` with `Kind` (`.text(editable:)`, `.toggle`, `.indicator`, `.day`, `.time`, `.duration(range:)`, `.money(range:allowsBlank:)`), `EditableTableCellValue`, `EditableTableEditValue`, `EditableTableRow` and `EditableTableRowView` (warning wash at alpha 0.18). Callbacks: `onAdd`, `onRemove`, `onSelectionChange`, `onEdit`, `onTypedEdit`, `onRejectedEdit`, `onToggle`, `onSort`. `setRows` is deferred through `EditDeferredValue` while a field editor is live; `EditableTableCellField.Binding` records the row and column a field was filled for. Typed parsing uses strict `yyyy-MM-dd`, `LocalTimeText`, `DurationFormatter` and `MoneyFormatter`. `addFooterButton` and `addFooterMenuButton` extend the `AddRemoveFooterView`.
+- **AppKit / UIKit (source)**: `ComposableSettings.EditableTableCard` is an `@MainActor` `GroupView` subclass wrapping an `NSTableView`. Types: `EditableTableColumn` with `Kind` (`.text(editable:)`, `.toggle`, `.indicator`, `.day`, `.time`, `.duration(range:)`, `.money(range:allowsBlank:)`), `EditableTableCellValue`, `EditableTableEditValue`, `EditableTableRow` and `EditableTableRowView` (warning wash at alpha 0.18). Callbacks: `onAdd`, `onRemove`, `onSelectionChange`, `onEdit`, `onTypedEdit`, `onRejectedEdit`, `onToggle`, `onSort`. `setRows` is deferred through `EditDeferredValue` while a field editor is live; `EditableTableCellField.Binding` records the row and column a field was filled for. Typed parsing uses strict `yyyy-MM-dd`, `LocalTimeText`, `DurationFormatter` and `MoneyFormatter`. `addFooterButton` and `addFooterMenuButton` extend the `AddRemoveFooterView`. `hidesHeaderWhenEmpty` (default true) set to false keeps the header on an empty table, for an owner that puts controls in it; a `.toggle` column with no title takes its cells' accessibility label from `headerToolTip`.
 - **WinUI 3**: A `DataGrid` (Community Toolkit) with `DataGridTemplateColumn`s, `BeginningEdit` and `CellEditEnded` handlers, and a pending-reload buffer while a cell is in edit mode.
 
 ## Reference Implementations
@@ -215,5 +215,6 @@ Separation-of-concerns is partial: the card keeps storage, sorting and add/remov
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.2 | 2026-11-15 | Mike Fullerton | hidesHeaderWhenEmpty lets an owner keep the header on an empty table; an untitled toggle column labels its cells from headerToolTip |
 | 1.0.1 | 2026-10-04 | Mike Fullerton | UI-thread confinement restated as the shared confines-to-ui-thread requirement, with a test vector; the @MainActor mechanism is in Platform Notes. |
 | 1.0.0 | 2026-10-04 | Mike Fullerton | Initial creation |

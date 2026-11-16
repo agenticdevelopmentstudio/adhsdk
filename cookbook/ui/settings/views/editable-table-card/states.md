@@ -2,7 +2,7 @@
 | State | Appearance change |
 |-------|------------------|
 | Default | Header and rows. |
-| Empty | Header hidden, empty message shown. |
+| Empty | Header hidden (unless the owner keeps it), empty message shown. |
 | Selected | The row has the selection highlight; remove is enabled. |
 | Flagged | A warning wash over the row background. |
 | Editing | One cell shows a live text field; reloads are held. |
