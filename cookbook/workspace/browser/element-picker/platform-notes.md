@@ -33,8 +33,14 @@
     the modal panel run-loop mode. OK and Cancel end the loop with
     `stopModal`; selecting mode ending under the dialog (navigation, say)
     arrives in a WebKit callback, where only `abortModal` works, and saves
-    nothing. The dialog runs on the main loop's next turn, out of the
-    script-message callback the pick arrived in.
+    nothing. The dialog runs on the run loop's next pass
+    (`performOnNextRunLoopPass`, a `CFRunLoopPerformBlock`), out of the
+    script-message callback the pick arrived in; never from
+    `DispatchQueue.main.async`, whose block the modal loop would hold, and
+    with it every MainActor task. Each picker start waits for the previous
+    one; a mode ended before its start runs installs nothing, one ended
+    during it stops the picker afterwards, and `start()` re-checks
+    `isRunning` after each evaluation.
   - `BrowserHiddenItemsPopover(list:store:url:onSelect:)`, an `NSPopover`
     with `.transient` behavior; the trailing button is added to
     `BrowserAddressBox` in `BrowserAddressBarControls.swift`.

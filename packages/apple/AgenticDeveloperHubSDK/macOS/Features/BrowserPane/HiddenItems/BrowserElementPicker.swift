@@ -125,7 +125,11 @@ public final class BrowserElementPicker: NSObject, WKScriptMessageHandler {
         do {
             // `;true` gives each evaluation a value WebKit can return.
             _ = try await webView.evaluateJavaScript(finder + "\n;true", in: nil, contentWorld: Self.world)
+            // `stop()` while an evaluation was in flight: install nothing
+            // more, and take down a picker script that landed after it.
+            guard isRunning else { return }
             _ = try await webView.evaluateJavaScript(picker + "\n;true", in: nil, contentWorld: Self.world)
+            if !isRunning { run("globalThis.__adkPicker && globalThis.__adkPicker.stop(); true") }
         } catch {
             Self.logger.error("The element picker failed to install: \(error.localizedDescription, privacy: .public)")
             stop()
@@ -180,6 +184,8 @@ public final class BrowserElementPicker: NSObject, WKScriptMessageHandler {
         case .pick:
             guard !isPaused else { return }
             guard candidate.thisItem != nil else {
+                let host = webView?.url?.host ?? "no address"
+                Self.logger.info("element pick refused on \(host, privacy: .public)")
                 NSSound.beep()
                 return
             }

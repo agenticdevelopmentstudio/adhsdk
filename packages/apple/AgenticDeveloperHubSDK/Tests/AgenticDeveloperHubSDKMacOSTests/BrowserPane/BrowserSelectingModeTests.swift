@@ -61,9 +61,9 @@ final class BrowserSelectingModeTests: XCTestCase {
         kind: .pick, thisItem: "#first", allLikeIt: "div.ad", allLikeItCount: 1,
         pageElementCount: 6, label: "div \"Sponsored\"", ref: nil)
 
-    private func escapeEvent() throws -> NSEvent {
+    private func escapeEvent(windowNumber: Int = 0) throws -> NSEvent {
         try XCTUnwrap(NSEvent.keyEvent(
-            with: .keyDown, location: .zero, modifierFlags: [], timestamp: 0, windowNumber: 0,
+            with: .keyDown, location: .zero, modifierFlags: [], timestamp: 0, windowNumber: windowNumber,
             context: nil, characters: "\u{1b}", charactersIgnoringModifiers: "\u{1b}",
             isARepeat: false, keyCode: 53))
     }
@@ -82,14 +82,34 @@ final class BrowserSelectingModeTests: XCTestCase {
     }
 
     func test_escapeEndsSelecting() throws {
+        // The page in a window of its own (never ordered in), so Esc from
+        // another window — here, none — is told apart from Esc in the pane's.
+        let window = NSWindow(
+            contentRect: NSRect(x: -20000, y: -20000, width: 400, height: 300),
+            styleMask: .borderless, backing: .buffered, defer: false)
+        window.isReleasedWhenClosed = false
+        window.contentView = engine.webView
+        defer { window.contentView = nil }
         let mode = makeMode()
         mode.begin()
-        XCTAssertTrue(mode.handleKeyDown(try escapeEvent()))
+        XCTAssertFalse(mode.handleKeyDown(try escapeEvent()))
+        XCTAssertEqual(mode.state, .selecting)
+        XCTAssertTrue(mode.handleKeyDown(try escapeEvent(windowNumber: window.windowNumber)))
         XCTAssertEqual(mode.state, .idle)
         XCTAssertNil(mode.picker)
         XCTAssertEqual(button.symbolName, BrowserHideItemsButton.idleSymbol)
         // Once idle, Esc goes on to whoever wants it.
-        XCTAssertFalse(mode.handleKeyDown(try escapeEvent()))
+        XCTAssertFalse(mode.handleKeyDown(try escapeEvent(windowNumber: window.windowNumber)))
+    }
+
+    func test_endBeforeStartLeavesNoPicker() async throws {
+        let mode = makeMode()
+        mode.begin()
+        mode.end(.stop)
+        await mode.startTask?.value
+        let installed = try await engine.webView.evaluateJavaScript(
+            "typeof globalThis.__adkPicker", in: nil, contentWorld: BrowserElementPicker.world)
+        XCTAssertEqual(installed as? String, "undefined")
     }
 
     func test_pickPausesAndShowsDialog() throws {

@@ -55,6 +55,8 @@ final class BrowserSelectingMode {
     private let presentDialog: DialogPresenter
     private let presentNotice: NoticePresenter
     private(set) var picker: BrowserElementPicker?
+    /// The last picker start, which the next one waits for; a test can too.
+    private(set) var startTask: Task<Void, Never>?
     private var dialog: BrowserPickDialogController?
     private var keyMonitor: Any?
     /// The page's address when the pick arrived; what the entry's site is
@@ -96,13 +98,21 @@ final class BrowserSelectingMode {
             onCancel: { [weak self] in self?.end(.escape) })
         self.picker = picker
         Self.logger.info("selecting mode started on \(Self.host(engine.url), privacy: .public)")
-        Task { [weak self] in
+        // After the previous start, so two pickers never install at once in
+        // the one content world they share.
+        let previous = startTask
+        startTask = Task { [weak self] in
+            await previous?.value
+            // Ended before the start could run: install nothing.
+            guard let self, self.picker === picker else { return }
             do {
                 try await picker.start()
             } catch {
-                guard let self, self.picker === picker else { return }
-                self.end(.failure)
+                if self.picker === picker { self.end(.failure) }
+                return
             }
+            // Ended while the start was in flight: take the stray picker down.
+            if self.picker !== picker { picker.stop() }
         }
     }
 
@@ -207,10 +217,11 @@ final class BrowserSelectingMode {
 
     // MARK: - Default presenters
 
+    /// On the run loop's next pass, not as a main-queue block: a modal loop
+    /// started from `DispatchQueue.main.async` would hold the main queue, and
+    /// with it every MainActor task in the app, until the dialog closed.
     private static func runModalDialog(_ dialog: BrowserPickDialogController, parent: NSWindow?) {
-        DispatchQueue.main.async {
-            MainActor.assumeIsolated { dialog.runModal(over: parent) }
-        }
+        performOnNextRunLoopPass { dialog.runModal(over: parent) }
     }
 
     /// An informational alert, as a sheet on the pane's window so nothing
