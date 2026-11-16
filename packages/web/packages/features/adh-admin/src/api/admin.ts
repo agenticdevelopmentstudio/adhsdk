@@ -161,6 +161,18 @@ export function toUserRows(
   }));
 }
 
+/**
+ * Every capability grant, unwrapped from the /v1 list envelope.
+ *
+ * `/api/v1/auth/capabilities` answers `{object:'list', data, has_more}` with 10 rows by default,
+ * so it is read through `listAllV1` (100 a page). The gateway pages only by an object `id`, and a
+ * grant has none, so a list longer than one page cannot be advanced: `listAllV1` then throws
+ * rather than showing a Roles column silently missing grants.
+ */
+export function fetchCapabilityGrants(): Promise<CapabilityGrant[]> {
+  return listAllV1<CapabilityGrant>("/api/v1/auth/capabilities");
+}
+
 /** Everything the users page needs from the network, before any of it is arranged. */
 export interface AdminUserSource {
   rows: BackendUser[];
@@ -184,7 +196,7 @@ export function useAdminUsersSource() {
     queryFn: async (): Promise<AdminUserSource> => {
       const [rows, caps] = await Promise.all([
         listAllV1<BackendUser>(`/api/v1/customers?ecosystem_id=${HUB_ECOSYSTEM_ID}`),
-        authedJson<CapabilityGrant[]>("/api/v1/auth/capabilities"),
+        fetchCapabilityGrants(),
       ]);
       const userIds = rows.map((u) => u.id);
       // Both lookups are keyed on the SAME id list and neither feeds the other, so they run
