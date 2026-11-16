@@ -143,6 +143,20 @@ describe('TimeSeriesChart', () => {
     expect(rows.join('|')).not.toContain('#null')
   })
 
+  it('T7b: a single series still shows the tooltip, with an em dash, where its value is null', async () => {
+    const { container } = render(
+      <TimeSeriesChart points={points} series={[{ key: 'direct', label: 'Direct' }]} format={(v) => `#${v}`} />,
+    )
+    await linePaths(container, 1)
+    const wrapper = container.querySelector('.recharts-wrapper') as HTMLElement
+    fireEvent.mouseMove(wrapper, { clientX: 300, clientY: 100 })
+    await waitFor(() => expect(container.querySelector('.recharts-tooltip-item-list')).not.toBeNull())
+    const rows = [...container.querySelectorAll('.recharts-tooltip-item')].map((r) => r.textContent)
+    expect(rows).toHaveLength(1)
+    expect(rows[0]).toContain('Direct')
+    expect(rows[0]).toContain('—')
+  })
+
   it('T8: renders the plot 240 pixels high by default', async () => {
     const { container } = render(
       <TimeSeriesChart points={points} series={[{ key: 'direct', label: 'Direct' }]} />,

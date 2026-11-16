@@ -144,6 +144,9 @@ export function TimeSeriesChart({
         />
         <Tooltip
           cursor={{ stroke: GRID_STROKE }}
+          // Recharts drops null entries by default, and hides the tooltip when none are left —
+          // at an x where every series has a gap. Keeping them lets SeriesTooltip draw its dashes.
+          filterNull={false}
           content={(props) => (
             <SeriesTooltip
               active={props.active}
