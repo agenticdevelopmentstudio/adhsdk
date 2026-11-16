@@ -156,6 +156,24 @@ describe('createHubMailClient', () => {
     expect((await client.messages('conn')).map((m) => m.id)).toEqual(['2'])
   })
 
+  it('a failed re-pull after an expired cursor pulls again on the next read', async () => {
+    let state: 'ok' | 'expired' | 'down' = 'ok'
+    const { fetchJson } = fakeFetch((path) => {
+      if (state === 'expired') {
+        if (cursorOf(path) === 'c1') return httpError(410)
+        state = 'down'
+      }
+      if (state === 'down') return httpError(503)
+      return page([message('1')], 'c1')
+    })
+    const client = createHubMailClient({ fetchJson })
+    expect((await client.messages('conn')).map((m) => m.id)).toEqual(['1'])
+    state = 'expired'
+    await expect(client.refresh()).rejects.toThrow(/503/)
+    state = 'ok'
+    expect((await client.messages('conn')).map((m) => m.id)).toEqual(['1'])
+  })
+
   it('hmw-012: an unknown message is null', async () => {
     const { fetchJson } = fakeFetch(() => page([message('1', { body_text: 'hi' })]))
     const client = createHubMailClient({ fetchJson })
