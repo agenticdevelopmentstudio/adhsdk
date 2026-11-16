@@ -5,7 +5,8 @@ from PR #47 (`fix(apple): shrink per-worktree build folders`), which changed
 `packages/apple/*/project.yml`, every `Package.resolved`,
 `AgenticDeveloperHubSDK/.swiftlint.yml`, `AgenticDeveloperHubSDK/Vendor/` and
 `.claude/CLAUDE.md`. Its vendored CodeEditLanguages and shared clone folder have
-since been replaced by the machine's shared package folder (below).
+since been replaced by the machine's shared package folder (below; design in
+[shared-external-packages.md](shared-external-packages.md)).
 
 ## The problem it solved
 
