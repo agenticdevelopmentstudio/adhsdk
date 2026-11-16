@@ -111,7 +111,8 @@ public struct AgentPageBuilder: Sendable {
     /// `textContent` way — the walker's text pieces keep their boundary
     /// spaces, so `Buy <b>now</b>` joins as "Buy now" and `Ac<b>me</b>` as
     /// "Acme". That text never leaves the builder unconcealed: it is
-    /// collapsed and trimmed once, then concealed once, into `contentText`.
+    /// collapsed line by line (the walker's breaks kept) and trimmed once,
+    /// then concealed once, into `contentText`.
     private func built(from raw: RawNode, base: URL?) -> (node: AgentNode, content: String)? {
         guard let kind = AgentNodeKind(rawValue: raw.kind), allowlist.kinds.contains(kind) else { return nil }
         if hideImages && kind == .image { return nil }
@@ -151,10 +152,22 @@ public struct AgentPageBuilder: Sendable {
         let built = (raw.children ?? []).compactMap { self.built(from: $0, base: base) }
         let ownText = raw.text ?? ""
         let content = kind == .image ? "" : ownText + built.map(\.content).joined()
-        let node = AgentNode(ref: raw.ref, kind: kind, text: conceal(ownText), attributes: attributes,
+        let node = AgentNode(ref: raw.ref, kind: kind, text: concealKeepingLines(ownText), attributes: attributes,
                              value: value, selector: raw.selector ?? "", children: built.map(\.node),
-                             contentText: conceal(AgentPageText.collapse(content)))
+                             contentText: concealKeepingLines(AgentPageText.lines(content)))
         return (node, content)
+    }
+
+    /// `text` concealed with its line breaks kept — unless a privacy word
+    /// runs across one of them, which the text read as one line would
+    /// conceal: then the text is concealed and returned as that one line, so
+    /// a break can never carry a privacy word past the filter.
+    func concealKeepingLines(_ text: String) -> String {
+        guard text.contains(where: \.isNewline) else { return conceal(text) }
+        let asOneLine = { (string: String) in String(string.map { $0.isNewline ? " " : $0 }) }
+        let lined = conceal(text)
+        let flat = conceal(asOneLine(text))
+        return asOneLine(lined) == flat ? lined : flat
     }
 
     /// A ref the walker assigned: short, letters, digits, `-` and `_` only.

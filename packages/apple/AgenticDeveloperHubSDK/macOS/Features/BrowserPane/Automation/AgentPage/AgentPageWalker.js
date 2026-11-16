@@ -85,6 +85,13 @@
   // next piece (`Buy <b>now</b>` is "Buy now"), so text nodes carry it and
   // the builder joins the pieces before collapsing and concealing once.
   const squash = (s) => (s || '').replace(/\s+/g, ' ');
+  // The line structure `innerText` keeps: a `<br>` and a block box's edges
+  // are a line break, and a preformatted text node keeps its own newlines;
+  // every other whitespace run is one space. A break is '\n' in the text
+  // the walker emits. AgentPageBuilder keeps it for the page's text (one
+  // line per break) and every other rendering collapses it to a space.
+  const BREAK = '\n';
+  const lineSquash = (s) => (s || '').replace(/[^\S\n]+/g, ' ').replace(/\s*\n\s*/g, BREAK);
 
   // A structural-selector function for one walk: `pathOf(el)` is
   // `html > body > div:nth-of-type(2) > …`. It is stored as a hide-from-agent
@@ -172,6 +179,7 @@
     const hideImages = options.hideImages === true;
 
     const hiddenMemo = new Map(), classMemo = new Map(), descendantMemo = new Map();
+    const displayMemo = new Map(), preMemo = new Map();
 
     function isHiddenUncached(el) {
       if (excluded.has(el)) { return true; }
@@ -184,12 +192,54 @@
       if (tag === 'input' && (el.getAttribute('type') || '').toLowerCase() === 'hidden') { return true; }
       if (tag === 'img' && el.getAttribute('alt') === '') { return true; }
       const style = window.getComputedStyle(el);
+      displayMemo.set(el, style.display);
       if (style.display === 'none' || style.visibility === 'hidden') { return true; }
       if (tag !== 'option' && el.children.length === 0) {
         const r = el.getBoundingClientRect();
         if (r.width === 0 && r.height === 0 && !collapse(el.textContent)) { return true; }
       }
       return false;
+    }
+
+    function displayOf(el) {
+      if (!displayMemo.has(el)) { displayMemo.set(el, window.getComputedStyle(el).display); }
+      return displayMemo.get(el);
+    }
+
+    // What an element's edges contribute to the text around it, as
+    // `innerText` reads them: a break for a block box, a space for a table
+    // cell, nothing for an inline box.
+    function blockEdge(el) {
+      const display = displayOf(el) || '';
+      if (display === 'contents' || display.startsWith('inline') || display.startsWith('ruby')) { return ''; }
+      return display === 'table-cell' ? ' ' : BREAK;
+    }
+
+    // A `<br>` that is shown: a line break, and nothing else. It is checked
+    // before the hidden rules, whose empty-box rule would drop every one.
+    function isLineBreak(el) { return el.tagName.toLowerCase() === 'br'; }
+    function lineBreakShown(el) { return !excluded.has(el) && displayOf(el) !== 'none'; }
+
+    function isPreformatted(el) {
+      if (!el) { return false; }
+      if (!preMemo.has(el)) {
+        const style = window.getComputedStyle(el);
+        const keep = style.whiteSpaceCollapse
+          ? ['preserve', 'preserve-breaks', 'break-spaces'].includes(style.whiteSpaceCollapse)
+          : /^(pre|pre-wrap|pre-line|break-spaces)$/.test(style.whiteSpace || '');
+        preMemo.set(el, keep);
+      }
+      return preMemo.get(el);
+    }
+
+    // A text node's text: its newlines kept when its element preserves them
+    // (`<pre>`, `white-space: pre*`), every whitespace run one space otherwise.
+    function textOf(node) {
+      const raw = node.textContent || '';
+      if (/[\r\n]/.test(raw) && isPreformatted(node.parentElement)) {
+        return lineSquash(raw.replace(/\r\n?/g, BREAK));
+      }
+      return squash(raw);
     }
 
     // Hidden, excluded, or of a kind the allowlist does not permit: never
@@ -279,16 +329,24 @@
       (function gather(node) {
         for (const child of node.childNodes) {
           if (child.nodeType === Node.TEXT_NODE) {
-            parts.push(child.textContent);
+            parts.push(textOf(child));
           } else if (child.nodeType === Node.ELEMENT_NODE) {
             tick();
+            if (isLineBreak(child)) {
+              if (lineBreakShown(child)) { parts.push(BREAK); }
+              continue;
+            }
             if (isSkipped(child)) { continue; }
             if (skipControls && CONTROL_TAGS.has(child.tagName.toLowerCase())) { continue; }
+            const edge = blockEdge(child);
+            parts.push(edge);
             gather(child);
+            parts.push(edge);
           }
         }
       })(el);
-      return keepEdges ? squash(parts.join('')) : collapse(parts.join(''));
+      const text = lineSquash(parts.join(''));
+      return keepEdges ? text : text.trim();
     }
 
     // The legacy name's first sources: `aria-labelledby`'s targets (only the
@@ -298,7 +356,7 @@
       if (ids) {
         const text = ids.split(/\s+/).map((id) => (id ? document.getElementById(id) : null))
           .filter((target) => target && !isSkipped(target) && !hasSkippedAncestor(target))
-          .map((target) => visibleText(target, false)).filter(Boolean).join(' ').trim();
+          .map((target) => collapse(visibleText(target, false))).filter(Boolean).join(' ').trim();
         if (text) { return text; }
       }
       return collapse(el.getAttribute('aria-label') || '');
@@ -308,7 +366,7 @@
       if (!el.labels || !el.labels.length) { return ''; }
       return Array.from(el.labels)
         .filter((label) => !isSkipped(label) && !hasSkippedAncestor(label))
-        .map((label) => visibleText(label, true)).filter(Boolean).join(' ');
+        .map((label) => collapse(visibleText(label, true))).filter(Boolean).join(' ');
     }
 
     function hasSkippedAncestor(el) {
@@ -443,10 +501,16 @@
     // `depthLeft` counts DOM levels as the legacy walk did; null is unlimited.
     function build(el, depthLeft, out) {
       tick();
+      if (isLineBreak(el)) {
+        if (lineBreakShown(el)) { out.push(textNode(BREAK)); }
+        return;
+      }
       if (isSkipped(el)) { return; }
       const info = classify(el);
 
       if (isGeneric(info)) {
+        // A flattened block (a `div`) still ends a line where it ends.
+        const edge = info ? '' : blockEdge(el);
         if (!hasNonGenericDescendant(el)) {
           const text = visibleText(el, false, !info);
           if (!collapse(text)) { return; }
@@ -455,7 +519,7 @@
             node.text = text;
             out.push(node);
           } else {
-            out.push(textNode(text));
+            out.push(textNode(edge + text + edge));
           }
           return;
         }
@@ -465,7 +529,9 @@
           childrenOf(el, depthLeft, node.children);
           out.push(node);
         } else {
+          if (edge === BREAK) { out.push(textNode(BREAK)); }
           childrenOf(el, depthLeft, out);
+          if (edge === BREAK) { out.push(textNode(BREAK)); }
         }
         return;
       }
@@ -501,7 +567,7 @@
         if (child.nodeType === Node.TEXT_NODE) {
           // Squashed, not trimmed. A whitespace-only node is kept as one
           // space between two contributions, never leading or doubled.
-          const text = squash(child.textContent);
+          const text = textOf(child);
           if (text === ' ') {
             if (out.length > start && !isSpace(out[out.length - 1])) { out.push(textNode(text)); }
           } else if (text) {

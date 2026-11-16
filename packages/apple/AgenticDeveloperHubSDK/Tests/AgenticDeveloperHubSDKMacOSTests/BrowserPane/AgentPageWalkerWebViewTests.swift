@@ -382,6 +382,27 @@ final class AgentPageWalkerWebViewTests: XCTestCase {
         XCTAssertFalse(concealed.html().contains("Acme"), concealed.html())
     }
 
+    func test_lineStructureSurvivesTheWalk() async throws {
+        // `browser_text` keeps the lines `innerText` reads: a `<br>`, a block
+        // boundary and a `<pre>`'s newlines each start a new line.
+        await host.load(html: """
+        <!doctype html><html><body>
+          <p>123 Main Street<br>Springfield</p>
+          <div><div>Price</div><div>$10</div></div>
+          <pre>let a = 1
+        let b = 2</pre>
+          <span>Buy</span> <b>now</b>
+        </body></html>
+        """)
+        let page = await source(try emptyStore()).agentPage(options: BrowserSnapshotOptions())
+        XCTAssertNil(page.unavailableReason)
+        XCTAssertEqual(page.text(), "123 Main Street\nSpringfield\nPrice\n$10\nlet a = 1\nlet b = 2\nBuy now")
+        let text = tree(page)
+        XCTAssertFalse(text.contains("StreetSpringfield"), text)
+        XCTAssertFalse(text.contains("Price$10"), text)
+        XCTAssertFalse(text.contains("- text: \n"), text)
+    }
+
     func test_timeoutIsUnavailable() async throws {
         let rows = (0..<3000).map { "<div><span>Row \($0)</span><a href=\"/r\($0)\">Link \($0)</a></div>" }
         await host.load(html: "<!doctype html><html><body>\(rows.joined())</body></html>")

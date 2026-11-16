@@ -68,8 +68,8 @@
   Text that a rendering joins from several pieces — a subtree's text read
   the `textContent` way for a generic line, a name taken from content or
   an option, and a run of text pieces in the text and HTML renderings —
-  MUST be joined from the unconcealed pieces, then collapsed and trimmed
-  once, then concealed once as a whole, never assembled from pieces
+  MUST be joined from the unconcealed pieces, then collapsed (line by line,
+  per text-keeps-line-structure) and trimmed once, then concealed once as a whole, never assembled from pieces
   concealed one by one, so a privacy word split across inline elements
   (`Ac<b>me</b>`) is still concealed.
 - **text-pieces-keep-boundary-space**: The walker MUST send each text
@@ -79,6 +79,19 @@
   joined text keeps the word boundary `innerText` reads: `Buy <b>now</b>`
   MUST read "Buy now" in the text, HTML and content-name renderings, while
   the snapshot tree MUST still print each piece trimmed, as today.
+- **text-keeps-line-structure**: The walker MUST send the line breaks
+  `innerText` reads as a newline in the text it emits: a shown `<br>`, the
+  edges of a block box it flattens or reads through (a `div`, any element
+  whose computed display is not inline, `contents` or ruby; a table cell's
+  edges are a space), and the newlines of a text node whose element
+  preserves them (`<pre>`, `white-space: pre*`). The text rendering MUST
+  start a new line at each, dropping empty lines; the HTML rendering MUST
+  write each run of them as one `<br>` carrying the node's `data-adk-ref`;
+  the snapshot tree and every name MUST read them as a space. Text holding
+  a break MUST be concealed with its breaks kept only when that equals,
+  breaks read as spaces, the text concealed as one line; otherwise it MUST
+  be the one-line concealment, so a break never carries a privacy word
+  (`Acme<br>Corp` for "Acme Corp") past the filter.
 - **hide-images**: When the Hide Images setting is on, the component MUST
   drop every image node; when it is off, an image MUST enter the result
   only as its alternative text, never as an image source. With Hide

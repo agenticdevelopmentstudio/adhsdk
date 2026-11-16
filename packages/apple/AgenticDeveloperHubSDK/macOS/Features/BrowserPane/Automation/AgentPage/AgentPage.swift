@@ -20,9 +20,11 @@ public struct AgentNode: Sendable, Hashable {
     public let children: [AgentNode]
     /// The subtree's text the way `textContent` reads it — the page's own
     /// pieces concatenated with their boundary spaces, images contributing
-    /// none — collapsed, then concealed once as a whole, so `Buy <b>now</b>`
-    /// reads "Buy now" and a privacy word split across inline elements
-    /// (`Ac<b>me</b>`) is concealed as the word it reads as.
+    /// none — collapsed line by line, keeping the walker's line breaks
+    /// (`<br>`, block edges, `<pre>` newlines), then concealed once as a
+    /// whole, so `Buy <b>now</b>` reads "Buy now" and a privacy word split
+    /// across inline elements (`Ac<b>me</b>`) is concealed as the word it
+    /// reads as. Every rendering but the page's text collapses the breaks.
     let contentText: String
 
     init(ref: String, kind: AgentNodeKind, text: String, attributes: [String: String], value: String?,
@@ -166,6 +168,14 @@ enum AgentPageText {
     /// Whitespace runs collapsed to one space, trimmed: the legacy runtime's `collapse`.
     static func collapse(_ text: String) -> String {
         text.split(whereSeparator: \.isWhitespace).joined(separator: " ")
+    }
+
+    /// Each line of `text` collapsed, empty lines dropped, the rest joined
+    /// by newlines: `text`'s line structure, and nothing else of its
+    /// whitespace. With its newlines read as spaces it is `collapse(text)`.
+    static func lines(_ text: String) -> String {
+        text.split(whereSeparator: \.isNewline).map { collapse(String($0)) }.filter { !$0.isEmpty }
+            .joined(separator: "\n")
     }
 
     /// The legacy runtime's `cut`: at most `limit` characters, then an ellipsis.
@@ -369,7 +379,8 @@ struct AgentSnapshotMapper {
 
 /// One line per block, as `innerText` reads: a run of text pieces as its
 /// joined, concealed text (the page's own boundary spaces kept), other
-/// inline text joined by spaces.
+/// inline text joined by spaces, and a new line at every break the walker
+/// kept (`<br>`, a flattened block's edges, a `<pre>`'s newlines).
 struct AgentTextRenderer {
     private var lines: [String] = []
     private var pieces: [String] = []
@@ -393,8 +404,8 @@ struct AgentTextRenderer {
     }
 
     private mutating func flush() {
-        let line = AgentPageText.collapse(pieces.joined(separator: " "))
-        if !line.isEmpty { lines.append(line) }
+        let text = AgentPageText.lines(pieces.joined(separator: " "))
+        if !text.isEmpty { lines.append(text) }
         pieces = []
     }
 
@@ -437,17 +448,37 @@ struct AgentHTMLRenderer {
     /// text, so adjacent pieces cannot read as a privacy word together.
     mutating func content(of node: AgentNode) {
         if AgentPageText.isTextRun(node) {
-            output += Self.escape(AgentPageText.allText(node))
+            output += Self.escapeLines(AgentPageText.allText(node), ref: node.ref)
             return
         }
-        if !node.text.isEmpty { output += Self.escape(node.text) }
+        if !node.text.isEmpty { output += Self.escapeLines(node.text, ref: node.ref) }
         for child in node.children { element(child) }
+    }
+
+    /// `text` escaped, each line break the page's text keeps written as a
+    /// `<br>` carrying `ref`, so the preview breaks lines where the agent's
+    /// text does. A run of breaks is one `<br>`, as the text keeps no empty line.
+    static func escapeLines(_ text: String, ref: String) -> String {
+        guard text.contains(where: \.isNewline) else { return escape(text) }
+        let br = "<br data-adk-ref=\"" + escape(ref) + "\">"
+        var out = "", breakPending = false
+        for character in text {
+            if character.isNewline {
+                breakPending = true
+                continue
+            }
+            if breakPending { out += br }
+            breakPending = false
+            out += escape(String(character))
+        }
+        if breakPending { out += br }
+        return out
     }
 
     mutating func element(_ node: AgentNode) {
         switch node.kind {
         case .text:
-            output += Self.escape(node.text)
+            output += Self.escapeLines(node.text, ref: node.ref)
         case .document:
             wrap("div", node)
         case .landmark:
@@ -482,7 +513,7 @@ struct AgentHTMLRenderer {
             var extra: [(String, String)] = []
             if node.states.contains("selected") { extra.append(("selected", "")) }
             open("option", node, extra: extra)
-            output += Self.escape(AgentPageText.allText(node)) + "</option>"
+            output += Self.escape(AgentPageText.collapse(AgentPageText.allText(node))) + "</option>"
         case .image:
             let alt = AgentPageText.collapse(node.attributes["alt"] ?? "")
             open("span", node, extra: [("class", "adk-image")])

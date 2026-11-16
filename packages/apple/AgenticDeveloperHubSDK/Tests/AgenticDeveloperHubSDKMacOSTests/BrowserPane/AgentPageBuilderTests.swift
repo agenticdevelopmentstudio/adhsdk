@@ -217,6 +217,48 @@ final class AgentPageBuilderTests: XCTestCase {
         for rendering in allRenderings(page) { XCTAssertFalse(rendering.contains("Buynow"), rendering) }
     }
 
+    func test_textKeepsTheWalkersLineBreaks() {
+        // The walker's breaks: `<p>123 Main Street<br>Springfield</p>`, two
+        // flattened `<div>`s, a `<pre>`. The page's text keeps each as a new
+        // line as `innerText` does; the tree reads them as spaces.
+        let page = build(document([
+            node("g1", "paragraph", text: "123 Main Street\nSpringfield"),
+            node("t1", "text", text: "\n\nPrice\n$10\n\n"),
+            node("e2", "heading", text: "Code", attrs: ["level": "2"]),
+            node("t2", "text", text: "\nlet a = 1\nlet b = 2\n"),
+            node("e3", "listItem", children: [
+                node("t3", "text", text: "Line "), node("t4", "text", text: "one"),
+                node("t5", "text", text: "\n"), node("t6", "text", text: "line two")
+            ])
+        ]), title: "T")
+        XCTAssertEqual(page.text(),
+                       "123 Main Street\nSpringfield\nPrice\n$10\nCode\nlet a = 1\nlet b = 2\nLine one\nline two")
+        let tree = page.snapshotTree(BrowserSnapshotOptions())
+        XCTAssertTrue(tree.contains("- text: 123 Main Street Springfield\n"), tree)
+        XCTAssertTrue(tree.contains("- text: Price $10\n"), tree)
+        XCTAssertFalse(tree.contains("- text: \n"), tree)
+        let html = page.html()
+        XCTAssertTrue(html.contains("<p data-adk-ref=\"g1\">123 Main Street<br data-adk-ref=\"g1\">Springfield</p>"),
+                      html)
+        XCTAssertTrue(html.contains("<li data-adk-ref=\"e3\">Line one<br data-adk-ref=\"e3\">line two</li>"), html)
+    }
+
+    func test_privacyWordAcrossALineBreakStillConcealed() {
+        // A break never carries a privacy word past the filter: text whose
+        // one-line reading holds the word is concealed as that one line.
+        let privacy = BrowserAgentPrivacy.enabled(
+            TextSubstitutionFilter(pairs: [.init(alias: "Zed", real: "Acme Corp")]))
+        let page = build(document([
+            node("g1", "paragraph", text: "Acme\nCorp rocks"),
+            node("g2", "paragraph", children: [node("t1", "text", text: "Acme"), node("t2", "text", text: "\nCorp")])
+        ]), privacy: privacy)
+        for rendering in allRenderings(page) {
+            XCTAssertFalse(rendering.contains("Acme"), rendering)
+            XCTAssertTrue(rendering.contains("Zed"), rendering)
+        }
+        XCTAssertEqual(page.text(), "Zed rocks\nZed")
+    }
+
     func test_sliderAndSpinbuttonValueKept() {
         // A `role=slider` or `role=spinbutton` element arrives from the walker
         // as a text field of type range or number, its value `aria-valuenow`.
@@ -293,7 +335,9 @@ final class AgentPageBuilderTests: XCTestCase {
         // preview shows it inside the field rather than an empty input.
         let page = build(document([
             node("e1", "textField", attrs: ["aria-label": "Message body"], children: [
-                node("e2", "paragraph", children: [node("t1", "text", text: "Dear "), node("t2", "text", text: "Acme")]),
+                node("e2", "paragraph", children: [
+                    node("t1", "text", text: "Dear "), node("t2", "text", text: "Acme")
+                ]),
                 node("e3", "link", text: "the offer", attrs: ["href": "https://site.example/offer"])
             ])
         ]), privacy: acme)
