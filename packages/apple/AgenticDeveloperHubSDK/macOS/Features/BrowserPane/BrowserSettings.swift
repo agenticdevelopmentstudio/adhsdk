@@ -39,6 +39,25 @@ public enum BrowserHistoryRetention: String, Codable, Sendable, CaseIterable {
     }
 }
 
+/// What the `browser_history` agent tool may return for a pane: every
+/// recorded visit, the driven tab's back/forward list alone, or nothing.
+/// Global, overridable per pane, and `none` by default so the person opts in
+/// (the Agent History Tool recipe: `access-three-choices`,
+/// `access-default-none`).
+public enum BrowserAgentHistoryAccess: String, Codable, CaseIterable, Sendable {
+    case all
+    case currentTab
+    case none
+
+    public var displayName: String {
+        switch self {
+        case .all: "All history"
+        case .currentTab: "Current tab only"
+        case .none: "None"
+        }
+    }
+}
+
 /// How often Chrome asks the Chrome Web Store whether an installed extension
 /// has a newer version.
 public enum BrowserExtensionUpdateInterval: String, Codable, Sendable, CaseIterable {
@@ -227,6 +246,11 @@ extension UserSettings {
     public static let browserHistoryRetention = UserSetting<BrowserHistoryRetention>(
         "browser.history_retention", default: .forever
     )
+    /// What an agent driving a pane may read of its history. Per pane over
+    /// global, never global-only (`access-pane-overridable`).
+    public static let browserAgentHistoryAccess = UserSetting<BrowserAgentHistoryAccess>(
+        "browser.agent.history_access", default: .none
+    )
 
     // Cookies and site data
     public static let browserAcceptsCookies = UserSetting<Bool>("browser.accepts_cookies", default: true)
@@ -352,7 +376,8 @@ public enum BrowserSettings {
         UserSettings.browserPrivacyAgentWhilePaused, UserSettings.browserPrivacyStorageJar,
         UserSettings.browserPrivacyThirdPartyContent, UserSettings.browserPrivacyConsoleCapture,
         UserSettings.browserAgentPrivacy, UserSettings.browserPrivacyShowToolbar,
-        UserSettings.browserPrivacyHideImages, UserSettings.browserTabsPositions
+        UserSettings.browserPrivacyHideImages, UserSettings.browserTabsPositions,
+        UserSettings.browserAgentHistoryAccess
     ]
 
     /// The remote-debugging ports the Chrome topic accepts; 0 is off.

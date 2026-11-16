@@ -298,6 +298,7 @@ reach the agent as tool errors.
 | Platform | Location | Conformance |
 |----------|----------|-------------|
 | macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Automation/BrowserHistoryTool.swift` | planned |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/BrowserSettings.swift` | unverified |
 
 ## Design Decisions
 

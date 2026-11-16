@@ -237,7 +237,20 @@ final class BrowserPrivacySettingsPanel: BrowserTopicPanel {
                     : "Keep visits for decides how long a visit is kept: anything older is "
                         + "forgotten the next time a browser pane opens. ")
                 + "The visits themselves are listed, searched and cleared in the History "
-                + "window, from the Browser menu."
+                + "window, from the Browser menu. Agent can see history decides what the "
+                + "agent may read when it asks for history: All history is every recorded "
+                + "visit, as the History window shows them; Current tab only is the back "
+                + "and forward list of the tab it is driving; None, the default, refuses. "
+                + (binding.isPaneScope
+                    ? "Set here, it applies to this browser alone."
+                    : "Set here, it applies to every web browser that does not set its own.")
+        ))
+        topics.append(.init(
+            title: "What Is Not Here",
+            body: "There is no Do Not Track switch, because WebKit sends no such "
+                + "header and the sites that honoured it have largely stopped. "
+                + "Passwords are not saved by the browser pane; the system keychain "
+                + "is not involved."
         ))
         return topics
     }
@@ -257,7 +270,10 @@ final class BrowserPrivacySettingsPanel: BrowserTopicPanel {
         // Site Data
         "Manage Site Data…", "site data", "local storage", "cache",
         // History
-        "Record history", "Keep visits for", "history", "visits"
+        "Record history", "Keep visits for", "Agent can see history", "history", "visits",
+        "recent", "clear history", "forget",
+        // What Is Not Here
+        "do not track", "passwords"
     ] + AgentPrivacySettingsGroup.keywords.filter { $0 != "agent" }
 
     override var searchKeywords: [String] { Self.keywords }
@@ -536,10 +552,9 @@ final class BrowserPrivacySettingsPanel: BrowserTopicPanel {
         siteDataWindow = nil
     }
 
-    /// Record history, and — in the Settings window only, since the visit
-    /// store is one for the whole app — Keep visits for
-    /// (`history-group-contents`). Rows are appended in order, so a row
-    /// added after these goes at the end.
+    /// Record history, then — in the Settings window only, since the visit
+    /// store is one for the whole app — Keep visits for, then Agent can see
+    /// history (`history-group-contents`).
     private func makeHistoryGroup() -> ComposableSettings.GroupView {
         let group = ComposableSettings.GroupView(withTitle: "History")
         let recordsAnywhere = binding.pane?.hasHistoryStore ?? hasHistoryStore
@@ -551,15 +566,23 @@ final class BrowserPrivacySettingsPanel: BrowserTopicPanel {
                 : "This app has no history store, so nothing is recorded whatever this says.",
             to: group
         )
-        guard !binding.isPaneScope else { return group }
-        let retention = binding.choice(
-            "Keep visits for", UserSettings.browserHistoryRetention,
-            choices: BrowserHistoryRetention.allCases.map { .init(label: $0.label, value: $0) },
-            explanation: "Older visits are forgotten when a browser pane opens."
+        if !binding.isPaneScope {
+            let retention = binding.choice(
+                "Keep visits for", UserSettings.browserHistoryRetention,
+                choices: BrowserHistoryRetention.allCases.map { .init(label: $0.label, value: $0) },
+                explanation: "Older visits are forgotten when a browser pane opens."
+            )
+            let retentionView = ComposableSettings.PopupMenuChoiceView(viewModel: retention)
+            _ = retentionView.popUpButton.accessibilityID("settings.browser.history.retention")
+            binding.add(retentionView, model: retention, key: UserSettings.browserHistoryRetention, to: group)
+        }
+        // Per pane over global, so it binds like every other pane row and
+        // gets the override marker and Use Global Setting
+        // (`agent-history-access-pane-override`).
+        addChoice(
+            "Agent can see history", UserSettings.browserAgentHistoryAccess,
+            label: \.displayName, id: "agent-history-access", to: group
         )
-        let retentionView = ComposableSettings.PopupMenuChoiceView(viewModel: retention)
-        _ = retentionView.popUpButton.accessibilityID("settings.browser.history.retention")
-        binding.add(retentionView, model: retention, key: UserSettings.browserHistoryRetention, to: group)
         return group
     }
 }

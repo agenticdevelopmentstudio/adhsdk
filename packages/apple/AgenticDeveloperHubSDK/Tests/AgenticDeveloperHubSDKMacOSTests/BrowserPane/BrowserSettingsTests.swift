@@ -21,7 +21,7 @@ final class BrowserSettingsTests: XCTestCase {
 
     func testEveryBrowserKeyIsNamedUnderTheBrowserPrefix() {
         let names = BrowserSettings.allKeyNames
-        XCTAssertEqual(names.count, 37)
+        XCTAssertEqual(names.count, 38)
         XCTAssertEqual(Set(names).count, names.count, "no two settings share a key")
         for name in names {
             XCTAssertTrue(name.hasPrefix("browser."), "\(name) is not a browser key")
@@ -221,6 +221,64 @@ final class BrowserSettingsTests: XCTestCase {
             WebBrowserPaneViewController.uniqueDestination(for: "", in: directory).lastPathComponent, "download",
             "a nameless download still gets a file"
         )
+    }
+
+    // MARK: - Agent history access
+
+    /// agent-history-tool-001 / browser-settings-018: three choices in order,
+    /// the key, and None with nothing stored.
+    func test_agentHistoryAccessDefaultsToNone() {
+        let key = UserSettings.browserAgentHistoryAccess
+        XCTAssertEqual(key.name, "browser.agent.history_access")
+        XCTAssertEqual(makeStore().get(key), BrowserAgentHistoryAccess.none)
+        XCTAssertEqual(
+            BrowserAgentHistoryAccess.allCases.map(\.displayName),
+            ["All history", "Current tab only", "None"]
+        )
+        XCTAssertTrue(BrowserSettings.allKeyNames.contains(key.name))
+    }
+
+    /// agent-history-tool-002: a pane's layer takes its own value and the
+    /// global one stays None.
+    func test_agentHistoryAccessIsPaneOverridable() {
+        let key = UserSettings.browserAgentHistoryAccess
+        XCTAssertFalse(BrowserSettings.globalOnlyKeyNames.contains(key.name))
+
+        let global = makeStore()
+        let layered = LayeredSettingsStore(
+            overrides: PaneStateSettingsStorageProvider(store: EphemeralPaneStateStore()),
+            fallback: global
+        )
+        XCTAssertFalse(layered.hasOverride(key))
+        layered.set(BrowserAgentHistoryAccess.currentTab, for: key)
+
+        XCTAssertTrue(layered.hasOverride(key))
+        XCTAssertEqual(layered.get(key), .currentTab)
+        XCTAssertEqual(global.get(key), BrowserAgentHistoryAccess.none)
+    }
+
+    /// agent-history-tool-003: Privacy and Security's History group holds a
+    /// pop-up row titled "Agent can see history" with the three choices.
+    func test_rowPresent() throws {
+        let panel = BrowserSettingsPanelViewController(
+            history: nil,
+            siteData: BrowserSiteData(dataStore: .nonPersistent()),
+            settings: makeStore()
+        )
+        _ = panel.view
+        panel.panels.forEach { _ = $0.view }
+        let privacy = try XCTUnwrap(panel.panels.first { $0.descriptor.title == "Privacy and Security" })
+
+        let rows = panel.binding.rows(named: UserSettings.browserAgentHistoryAccess.name)
+        XCTAssertEqual(rows.count, 1)
+        let row = try XCTUnwrap(rows.first)
+        XCTAssertEqual(row.group, "History")
+        XCTAssertTrue(row.view.isDescendant(of: privacy.view))
+        XCTAssertTrue(row.view is ComposableSettings.PopupMenuChoiceView<BrowserAgentHistoryAccess>)
+        let model = try XCTUnwrap(row.model as? ComposableSettings.ChoiceViewModel<BrowserAgentHistoryAccess>)
+        XCTAssertEqual(model.title, "Agent can see history")
+        XCTAssertEqual(model.choices.map(\.label), ["All history", "Current tab only", "None"])
+        XCTAssertEqual(model.choices.map(\.value), BrowserAgentHistoryAccess.allCases)
     }
 
     // MARK: - Tab position

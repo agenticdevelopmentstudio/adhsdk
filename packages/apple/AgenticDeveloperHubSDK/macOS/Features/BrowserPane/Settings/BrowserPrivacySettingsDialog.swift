@@ -5,7 +5,7 @@
 
 import AppKit
 
-/// One browser pane's Privacy topic alone, in a popover whose arrow points at
+/// One browser pane's Privacy and Security topic alone, in a popover whose arrow points at
 /// the privacy button: the same `BrowserPrivacySettingsPanel` the full
 /// settings show, bound in pane scope, so it reads the global values until
 /// the pane overrides one and writes only the pane's layer (`dry`).
@@ -26,7 +26,7 @@ final class BrowserPrivacySettingsDialog: NSObject, NSPopoverDelegate {
     private let session: BrowserPaneSettingsViewController
     private let popover = NSPopover()
 
-    /// Shows `pane`'s Privacy settings in a popover from `button`, or closes
+    /// Shows `pane`'s Privacy and Security settings in a popover from `button`, or closes
     /// the one already showing. Does nothing for a pane with no settings
     /// layer of its own.
     static func present(for pane: WebBrowserPaneViewController, from button: NSView) {
@@ -47,7 +47,7 @@ final class BrowserPrivacySettingsDialog: NSObject, NSPopoverDelegate {
         }
         let container = NSViewController()
         container.view = NSView(frame: NSRect(x: 0, y: 0, width: 520, height: 660))
-        let title = NSTextField(labelWithString: "Privacy")
+        let title = NSTextField(labelWithString: "Privacy and Security")
         title.font = .boldSystemFont(ofSize: NSFont.systemFontSize + 2)
         title.setAccessibilityIdentifier("browser.privacy-settings.title")
         title.translatesAutoresizingMaskIntoConstraints = false

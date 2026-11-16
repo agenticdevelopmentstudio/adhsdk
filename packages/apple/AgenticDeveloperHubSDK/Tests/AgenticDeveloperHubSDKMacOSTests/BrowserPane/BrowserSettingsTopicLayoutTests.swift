@@ -134,10 +134,11 @@ final class BrowserSettingsTopicLayoutTests: XCTestCase {
                 XCTAssertTrue(row.view.isDescendant(of: privacy.view), "\(key) is in Privacy and Security")
             }
         }
-        // History's rows in order, so Task 7's row can follow them.
+        // History's rows in order (history-group-contents).
         let historyRows = panel.binding.rows.filter { $0.group == "History" }.map(\.name)
         XCTAssertEqual(historyRows, [
-            UserSettings.browserRecordsHistory.name, UserSettings.browserHistoryRetention.name
+            UserSettings.browserRecordsHistory.name, UserSettings.browserHistoryRetention.name,
+            UserSettings.browserAgentHistoryAccess.name
         ])
 
         XCTAssertNotNil(panel.binding.buttons["settings.browser.site-data.manage"])
