@@ -287,6 +287,31 @@ final class AgentPageBuilderTests: XCTestCase {
 
     // MARK: HTML
 
+    func test_contentEditableFieldShowsItsContentInHTML() {
+        // A webmail compose box: `<div contenteditable role=textbox>` holding
+        // the draft. The agent's text and snapshot carry the draft, so the
+        // preview shows it inside the field rather than an empty input.
+        let page = build(document([
+            node("e1", "textField", attrs: ["aria-label": "Message body"], children: [
+                node("e2", "paragraph", children: [node("t1", "text", text: "Dear "), node("t2", "text", text: "Acme")]),
+                node("e3", "link", text: "the offer", attrs: ["href": "https://site.example/offer"])
+            ])
+        ]), privacy: acme)
+        let html = page.html()
+        XCTAssertTrue(html.contains("<div data-adk-ref=\"e1\" aria-label=\"Message body\" class=\"adk-textfield\""
+            + " role=\"textbox\" aria-disabled=\"true\">"), html)
+        XCTAssertTrue(html.contains("<p data-adk-ref=\"e2\">Dear Zed</p>"), html)
+        XCTAssertTrue(html.contains(">the offer</a></div>"), html)
+        XCTAssertFalse(html.contains("<input"), html)
+        XCTAssertFalse(html.contains("Acme"), html)
+        XCTAssertTrue(page.text().contains("Dear Zed"), page.text())
+
+        // A plain text field with no content is still a disabled input.
+        let plain = build(document([node("e1", "textField", text: "Name", attrs: ["type": "text"], value: "Bo")]))
+        XCTAssertTrue(plain.html().contains("<input data-adk-ref=\"e1\" type=\"text\" value=\"Bo\" disabled=\"\">"),
+                      plain.html())
+    }
+
     func test_htmlHasNoScriptOrStyle() {
         let page = build(document([
             node("e1", "paragraph", children: [node("e2", "text", text: "<script>x</script>")]),

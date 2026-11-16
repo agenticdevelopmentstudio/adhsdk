@@ -487,6 +487,14 @@ struct AgentHTMLRenderer {
             let alt = AgentPageText.collapse(node.attributes["alt"] ?? "")
             open("span", node, extra: [("class", "adk-image")])
             output += Self.escape(alt.isEmpty ? "[image]" : "[image: \(alt)]") + "</span>"
+        case .textField where !node.children.isEmpty:
+            // A `contenteditable` or `role=textbox` field holds content, not
+            // a value, and the agent reads that content (its text and its
+            // snapshot children), so the preview shows it inside the field.
+            var extra: [(String, String)] = [("class", "adk-textfield"), ("role", "textbox"),
+                                             ("aria-disabled", "true")]
+            if let found = node.attributes["placeholder"] { extra.append(("aria-placeholder", found)) }
+            wrap("div", node, extra: extra)
         case .textField:
             labelled(node) {
                 let raw = node.attributes["type"]?.lowercased() ?? "text"

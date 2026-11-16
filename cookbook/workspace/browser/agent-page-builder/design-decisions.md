@@ -35,7 +35,10 @@ those states already close the pane to tools.
 **Decision**: HTML mapping: landmark → `section` (or `nav`/`main`/`header`/
 `footer` by role), heading → `h1`–`h6` by level, paragraph → `p`, list →
 `ul`, list item → `li`, link → `a` with the sanitized `href`, button →
-`button`, text field → `input` (disabled), text area → `textarea`
+`button`, text field → `input` (disabled; a `contenteditable` or
+`role=textbox` field holding content → `<div class="adk-textfield"
+role="textbox" aria-disabled="true">` holding that content, the text the
+agent reads), text area → `textarea`
 (disabled, holding its value), checkbox/radio → `input` of that type (disabled), select →
 `select` (disabled), option → `option`, table/row/cell → `table`/`tr`/`td`,
 label → `label`, image → `<span class="adk-image">[image: alt]</span>`,
