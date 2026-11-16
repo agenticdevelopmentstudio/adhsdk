@@ -223,9 +223,9 @@ public final class GitRefsSidebarViewController: NSViewController {
 
         // Present while `gh` answers, even with no row: the header's menu creates one.
         if let pullRequests = source.pullRequests {
-            let head = refs.first { $0.kind == .localBranch && $0.isHead }
-            let rows = pullRequestRows(pullRequests, head: head)
-            sections.append(TopicListSection(title: Self.pullRequestsTitle, items: rows.map(\.item)))
+            let rows = pullRequestRows(pullRequests, headPullRequest: source.headPullRequest)
+            sections.append(TopicListSection(title: Self.pullRequestsTitle, items: rows.map(\.item),
+                                             accessibilityIdentifier: Self.pullRequestsID))
             for row in rows { targets[row.item.id] = .pullRequest(row.pullRequest) }
         }
 
@@ -359,7 +359,7 @@ public final class GitRefsSidebarViewController: NSViewController {
         case "Submodules": return makeMenu([("Update All", "updateAllSubmodules", .updateAllSubmodules)])
         case Self.pullRequestsTitle:
             let head = source.refs.first { $0.kind == .localBranch && $0.isHead }
-            return pullRequestsHeaderMenu(head: head, pullRequests: source.pullRequests ?? [])
+            return pullRequestsHeaderMenu(head: head, headPullRequest: source.headPullRequest)
         default:
             guard let remote = remotesBySectionTitle[title] else { return nil }
             return makeMenu([("Fetch", "fetch", .fetch(remote: remote))])

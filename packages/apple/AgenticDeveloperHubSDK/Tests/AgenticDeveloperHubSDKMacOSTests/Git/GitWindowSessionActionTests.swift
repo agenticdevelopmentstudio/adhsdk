@@ -46,6 +46,15 @@ private final class StubPresenter: GitActionPresenting {
         rebasePlans.append(plan)
         return editRebaseAnswer?(plan)
     }
+
+    /// Every branch the pull request form was shown for, in order; the form is cancelled.
+    var pullRequestHeads: [String] = []
+
+    func createPullRequest(head: String, defaultTitle: String, defaultBody: String,
+                           bases: [String]) async -> GitPullRequestDraft? {
+        pullRequestHeads.append(head)
+        return nil
+    }
 }
 
 /// The Git window's actions (recipe `workspace/git/git-window`, "Actions"), each run

@@ -28,6 +28,9 @@ private final class RecordingPresenter: GitActionPresenting {
     }
 
     func editRebase(_ plan: GitRebasePlan) async -> GitRebasePlan? { nil }
+
+    func createPullRequest(head: String, defaultTitle: String, defaultBody: String,
+                           bases: [String]) async -> GitPullRequestDraft? { nil }
 }
 
 /// The Git window's toolbar (recipe `workspace/git/git-window`, "Toolbar"): seven verb

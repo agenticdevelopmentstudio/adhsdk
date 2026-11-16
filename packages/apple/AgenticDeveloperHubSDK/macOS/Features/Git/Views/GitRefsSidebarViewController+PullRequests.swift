@@ -14,9 +14,10 @@ extension GitRefsSidebarViewController {
 
     static func pullRequestRowID(_ number: Int) -> String { "\(pullRequestsID).\(number)" }
 
-    /// The section's rows, in `gh`'s order (newest first), bold where `headRefName` is
-    /// the checked-out branch `head`.
-    func pullRequestRows(_ pullRequests: [GitPullRequest], head: GitRef?)
+    /// The section's rows, in `gh`'s order (newest first), bold where the row is
+    /// `headPullRequest`, the checked-out branch's own open pull request as `gh`'s
+    /// per-branch lookup found it — never by branch name, which a fork's PR can share.
+    func pullRequestRows(_ pullRequests: [GitPullRequest], headPullRequest: GitPullRequest?)
         -> [(item: TopicListItem, pullRequest: GitPullRequest)] {
         pullRequests.map { pullRequest in
             let symbol = GitPullRequestPresentation.statusSymbolName(pullRequest)
@@ -25,7 +26,7 @@ extension GitRefsSidebarViewController {
                 title: "#\(pullRequest.number) \(pullRequest.title)",
                 icon: NSImage(systemSymbolName: symbol, accessibilityDescription: nil),
                 badge: GitPullRequestPresentation.checkSymbol(pullRequest.checks),
-                isEmphasized: head.map { $0.name == pullRequest.headRefName } ?? false)
+                isEmphasized: headPullRequest?.number == pullRequest.number)
             return (item, pullRequest)
         }
     }
@@ -44,9 +45,9 @@ extension GitRefsSidebarViewController {
     }
 
     /// The header's menu: `Create Pull Request for <head>…`; nil on a detached HEAD or
-    /// when an open pull request's head is already that branch.
-    func pullRequestsHeaderMenu(head: GitRef?, pullRequests: [GitPullRequest]) -> NSMenu? {
-        guard let head, !pullRequests.contains(where: { $0.headRefName == head.name }) else { return nil }
+    /// when the branch already has its own open pull request (`headPullRequest`).
+    func pullRequestsHeaderMenu(head: GitRef?, headPullRequest: GitPullRequest?) -> NSMenu? {
+        guard let head, headPullRequest == nil else { return nil }
         let menu = NSMenu()
         menu.addItem(pullRequestItem("Create Pull Request for \(head.name)…", "create", .create))
         return menu

@@ -14,6 +14,7 @@ private final class PullRequestRefsSource: GitRefsDataSource {
     var worktrees: [GitWorktree] = []
     var operationState: GitOperationState = .none
     var pullRequests: [GitPullRequest]?
+    var headPullRequest: GitPullRequest?
 }
 
 /// Records the pull request intents the sidebar sends and ignores every other call.
@@ -48,11 +49,12 @@ struct GitRefsSidebarPullRequestsTests {
                upstream: nil, ahead: 0, behind: 0, isHead: head)
     }
 
-    private static func source(_ pullRequests: [GitPullRequest]?, headBranch: String? = "feature")
-        -> PullRequestRefsSource {
+    private static func source(_ pullRequests: [GitPullRequest]?, headBranch: String? = "feature",
+                               headPullRequest: GitPullRequest? = nil) -> PullRequestRefsSource {
         let source = PullRequestRefsSource()
         source.refs = [branch("main", head: headBranch == "main"), branch("feature", head: headBranch == "feature")]
         source.pullRequests = pullRequests
+        source.headPullRequest = headPullRequest
         return source
     }
 
@@ -79,9 +81,16 @@ struct GitRefsSidebarPullRequestsTests {
         #expect(section.items.isEmpty)
     }
 
-    @Test("rows read #n title, with the check symbol as the badge, the HEAD branch's row bold")
+    @Test("the section's header carries git.sidebar.pullRequests")
+    func headerIdentifier() throws {
+        let sidebar = GitRefsSidebarViewController(source: Self.source([]))
+        let section = try #require(section(sidebar))
+        #expect(section.accessibilityIdentifier == "git.sidebar.pullRequests")
+    }
+
+    @Test("rows read #n title, with the check symbol as the badge, the HEAD branch's own row bold")
     func rows() throws {
-        let sidebar = GitRefsSidebarViewController(source: Self.source(Self.list))
+        let sidebar = GitRefsSidebarViewController(source: Self.source(Self.list, headPullRequest: Self.list[0]))
         let section = try #require(section(sidebar))
         #expect(section.items.map(\.title) == ["#7 Add the parser", "#5 Fix the docs"])
         #expect(section.items.map(\.id) == ["git.sidebar.pullRequests.7", "git.sidebar.pullRequests.5"])
@@ -127,10 +136,21 @@ struct GitRefsSidebarPullRequestsTests {
         #expect(delegate.intents == [.create])
     }
 
-    @Test("the header menu is absent when an open pull request already has the HEAD branch")
+    @Test("the header menu is absent when the HEAD branch has its own open pull request")
     func headerMenuAbsentWithExistingPullRequest() {
-        let sidebar = GitRefsSidebarViewController(source: Self.source(Self.list, headBranch: "feature"))
+        let source = Self.source(Self.list, headBranch: "feature", headPullRequest: Self.list[0])
+        let sidebar = GitRefsSidebarViewController(source: source)
         #expect(sidebar.contextMenu(forSectionTitle: "Pull Requests") == nil)
+    }
+
+    @Test("a fork's pull request named like the HEAD branch is not bold and leaves Create")
+    func forkPullRequestWithTheHeadName() throws {
+        // The list has #7 from `feature`, but gh's per-branch lookup found none of ours.
+        let sidebar = GitRefsSidebarViewController(source: Self.source(Self.list, headBranch: "feature"))
+        let section = try #require(section(sidebar))
+        #expect(section.items.map(\.isEmphasized) == [false, false])
+        let menu = try #require(sidebar.contextMenu(forSectionTitle: "Pull Requests"))
+        #expect(menu.items.map(\.title) == ["Create Pull Request for feature…"])
     }
 
     @Test("the header menu is absent on a detached HEAD")

@@ -17,14 +17,6 @@ public struct GitPullRequestDraft: Equatable, Sendable {
     }
 }
 
-public extension GitActionPresenting {
-    /// No form, for a presenter that cannot show one: nothing is created.
-    func createPullRequest(head: String, defaultTitle: String, defaultBody: String,
-                           bases: [String]) async -> GitPullRequestDraft? {
-        nil
-    }
-}
-
 extension GitAlertPresenter {
 
     /// The new pull request form as a sheet (recipe `workspace/git/git-views`, "Pull

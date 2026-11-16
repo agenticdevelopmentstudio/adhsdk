@@ -17,13 +17,15 @@ extension GitWindowSession {
 
     static let pullRequestFailureTitle = "Pull request failed"
 
-    /// Turns the Pull Requests section on with `list` and starts its first load. Without
-    /// it, `pullRequests` stays nil and the section is absent.
+    /// Turns the Pull Requests section on with `list`. Without it, `pullRequests` stays
+    /// nil and the section is absent. The first load starts here only when the refs are
+    /// already read; otherwise the model's first refs change starts it, so a window open
+    /// loads once.
     public func configurePullRequests(_ list: GitPullRequestsModel) {
         model.pullRequestList = list
         list.onChange = { [weak self] in self?.pullRequestsDidChange() }
         pullRequestView.onIntent = { [weak self] intent in self?.requestPullRequest(intent) }
-        list.load(force: true)
+        if list.canLoad { list.load(force: true) }
     }
 
     /// The sidebar shows the new list, and the detail the selected pull request's new state.
@@ -64,21 +66,26 @@ extension GitWindowSession {
         } catch {
             showPullRequestFailure(error)
         }
+        // The checked-out branch changing makes the list load again (`refsDidChange`).
         await model.refresh([.refs, .workingCopy])
     }
 
     /// The form, filled from the branch's commits; a push first when the branch has no
-    /// upstream; then `gh pr create`, a reload, and the new pull request selected.
+    /// upstream or is ahead of it; then `gh pr create`, a reload, and the new pull
+    /// request selected.
     private func createPullRequest(list: GitPullRequestsModel) async {
         guard let presenter else { return }
         guard let head = model.headBranch else {
             showFailure(title: Self.pullRequestFailureTitle, message: "HEAD is not on a branch.")
             return
         }
-        let (remote, bases) = pullRequestBases(excluding: head.name)
+        let remote = pullRequestRemote()
+        let defaultBranch = await list.defaultBranch(remote: remote)
+        let bases = pullRequestBases(remote: remote, defaultBranch: defaultBranch, excluding: head.name)
         let subjects: [String]
         do {
-            subjects = try await list.branchSubjects(notOn: bases.first.map { "\(remote ?? "origin")/\($0)" })
+            let base = remote.flatMap { remote in bases.first.map { "\(remote)/\($0)" } }
+            subjects = try await list.branchSubjects(notOn: base)
         } catch {
             showPullRequestFailure(error)
             return
@@ -88,9 +95,9 @@ extension GitWindowSession {
         guard let draft = await presenter.createPullRequest(
             head: head.name, defaultTitle: title, defaultBody: body, bases: bases) else { return }
 
-        if head.upstream == nil {
+        if head.upstream == nil || head.ahead > 0 {
             await push(head)
-            guard model.headBranch?.upstream != nil else { return }
+            guard let pushed = model.headBranch, pushed.upstream != nil, pushed.ahead == 0 else { return }
         }
         let url: URL
         do {
@@ -106,20 +113,24 @@ extension GitWindowSession {
         }
     }
 
-    /// The push remote's branches without the remote's name, `head` left out, `main` then
-    /// `master` first: the bases the form offers, default first. The push remote is
-    /// `origin` when it has branches, else the first remote that does.
-    func pullRequestBases(excluding head: String) -> (remote: String?, bases: [String]) {
-        let remoteBranches = model.refs.filter { $0.kind == .remoteBranch }
-        let remotes = remoteBranches.compactMap(\.remote)
-        let remote = remotes.contains("origin") ? "origin" : remotes.first
-        guard let remote else { return (nil, []) }
-        let names = remoteBranches
-            .filter { $0.remote == remote }
+    /// The push remote: `origin` when it has branches, else the first remote that does.
+    func pullRequestRemote() -> String? {
+        let remotes = model.refs.filter { $0.kind == .remoteBranch }.compactMap(\.remote)
+        return remotes.contains("origin") ? "origin" : remotes.first
+    }
+
+    /// The bases the form offers: the repository's default branch first, then the push
+    /// remote's other branches without the remote's name, `head` left out. With the
+    /// default branch unknown there are none, so the popup is off and `gh` picks the
+    /// base itself — no branch is guessed to be the default.
+    func pullRequestBases(remote: String?, defaultBranch: String?, excluding head: String) -> [String] {
+        guard let defaultBranch, defaultBranch != head else { return [] }
+        guard let remote else { return [defaultBranch] }
+        let names = model.refs
+            .filter { $0.kind == .remoteBranch && $0.remote == remote }
             .map { String($0.name.dropFirst(remote.count + 1)) }
-            .filter { $0 != head && $0 != "HEAD" }
-        let preferred = ["main", "master"].filter(names.contains)
-        return (remote, preferred + names.filter { !preferred.contains($0) })
+            .filter { $0 != head && $0 != "HEAD" && $0 != defaultBranch }
+        return [defaultBranch] + names
     }
 
     private func showPullRequestFailure(_ error: Error) {

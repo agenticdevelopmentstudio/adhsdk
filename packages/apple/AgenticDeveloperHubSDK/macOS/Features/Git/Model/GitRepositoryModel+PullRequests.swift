@@ -7,4 +7,9 @@ extension GitRepositoryModel {
     public var pullRequests: [GitPullRequest]? {
         pullRequestList?.pullRequests
     }
+
+    /// The checked-out branch's own open pull request, as `pullRequestList` last read it.
+    public var headPullRequest: GitPullRequest? {
+        pullRequestList?.headPullRequest
+    }
 }

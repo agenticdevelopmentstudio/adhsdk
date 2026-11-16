@@ -54,5 +54,6 @@
 
 - **gh unavailable**: no section, and no explanation.
 - **No open pull requests**: the section with no rows; its header menu can still create one.
+- **Default branch unknown**: the form's Base popup is empty and disabled; `gh` picks the base.
 - **Nothing selected in the detail**: no fields; both buttons disabled.
 

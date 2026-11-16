@@ -90,6 +90,21 @@ public actor GitHubCLI {
         }
     }
 
+    /// The repository's default branch, as `gh repo view --json defaultBranchRef` reports
+    /// it (`main`, `develop`). An empty name, which `gh` prints for an empty repository,
+    /// is `.failed`.
+    public func defaultBranch(in directory: URL, caller: GitCaller = GitCaller()) async throws -> String {
+        let output = try await run(["repo", "view", "--json", "defaultBranchRef"], in: directory,
+                                   budget: Self.readBudget, caller: caller)
+        struct Repository: Decodable {
+            struct Ref: Decodable { let name: String }
+            let defaultBranchRef: Ref?
+        }
+        let name = try decode(Repository.self, from: output).defaultBranchRef?.name ?? ""
+        guard !name.isEmpty else { throw GitHubCLIError.failed("gh reported no default branch") }
+        return name
+    }
+
     /// `gh pr list --state <state> --limit <limit> --json …`, newest first as `gh` returns them.
     public func pullRequests(in directory: URL, state: String = "open", limit: Int = 50,
                              caller: GitCaller = GitCaller()) async throws -> [GitPullRequest] {

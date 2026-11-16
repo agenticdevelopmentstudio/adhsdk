@@ -7,9 +7,15 @@ import os
 ///
 /// A load runs `availability` first, then lists the open pull requests; any error at
 /// either step leaves `pullRequests` nil, which hides the sidebar's section without a
-/// word. Loads come when the window opens (`load(force: true)`), after a Fetch (forced
-/// too) and on each `.refs` change of the repository model, at most one per
-/// `minimumInterval`: a change inside the interval is answered once, when it ends.
+/// word. Loads come when the window opens, after a Fetch (forced) and on each `.refs`
+/// change of the repository model, at most one per `minimumInterval`: a change inside
+/// the interval is answered once, when it ends. A refs change while a forced load runs,
+/// or inside the interval after one, is already answered by it and starts nothing; a
+/// change of the checked-out branch always loads at once.
+///
+/// Each load also asks `gh` for the checked-out branch's own pull request
+/// (`GitHubCLI.pullRequest(forBranch:in:)`, which drops forks and is not capped by the
+/// list's limit), and the repository's default branch for the create form.
 ///
 /// It runs `gh` only through `GitHubCLI` and git only through `GitClient`, never on
 /// the main thread. Used on the main thread.
@@ -21,6 +27,10 @@ public final class GitPullRequestsModel {
 
     /// The open pull requests; nil while `gh` is unavailable or before the first load.
     public private(set) var pullRequests: [GitPullRequest]?
+
+    /// The checked-out branch's open pull request from this repository (never a fork's);
+    /// nil when there is none, on a detached HEAD, or while `gh` is unavailable.
+    public private(set) var headPullRequest: GitPullRequest?
 
     /// Called after a load that changed `pullRequests`.
     var onChange: (() -> Void)?
@@ -41,10 +51,18 @@ public final class GitPullRequestsModel {
     private(set) var loadTask: Task<Void, Never>?
 
     let root: URL
+    private weak var model: GitRepositoryModel?
     private let gitHub: GitHubCLI
     private let client: GitClient
     private let now: @MainActor () -> ContinuousClock.Instant
     private var lastLoad: ContinuousClock.Instant?
+    /// When the last forced load started; refs changes inside the interval after it are
+    /// its own echo (a Fetch moving remote branches) and start nothing.
+    private var lastForcedLoad: ContinuousClock.Instant?
+    /// How many loads are running or waiting for the one before them.
+    private var loadsRunning = 0
+    /// The checked-out branch the last load asked about; a different one loads at once.
+    private var loadedHead: String?
     /// The load a refs change inside the interval asked for, waiting for it to end.
     private var trailingTask: Task<Void, Never>?
     private var observation: AnyObject?
@@ -61,16 +79,32 @@ public final class GitPullRequestsModel {
     init(model: GitRepositoryModel, gitHub: GitHubCLI, client: GitClient,
          now: @escaping @MainActor () -> ContinuousClock.Instant) {
         root = model.root
+        self.model = model
         self.gitHub = gitHub
         self.client = client
         self.now = now
         observation = model.observe { [weak self] changes in
             guard changes.contains(.refs) else { return }
-            self?.load(force: false)
+            self?.refsDidChange()
         }
     }
 
+    /// Whether the repository model has read its refs, so a load knows the head branch.
+    var canLoad: Bool { !(model?.refs.isEmpty ?? true) }
+
     // MARK: - Loading
+
+    /// A `.refs` change: a new checked-out branch loads at once; otherwise nothing while
+    /// a forced load runs or just ran, else a throttled load.
+    private func refsDidChange() {
+        if model?.headBranch?.name != loadedHead {
+            load(force: true)
+            return
+        }
+        if loadsRunning > 0 { return }
+        if let lastForcedLoad, now() - lastForcedLoad < Self.minimumInterval { return }
+        load(force: false)
+    }
 
     /// Reads the pull requests again: at once when `force`, otherwise at once when the
     /// last load was at least `minimumInterval` ago, else once when the interval ends.
@@ -78,6 +112,7 @@ public final class GitPullRequestsModel {
         if force {
             trailingTask?.cancel()
             trailingTask = nil
+            lastForcedLoad = now()
             startLoad()
             return
         }
@@ -113,32 +148,54 @@ public final class GitPullRequestsModel {
 
     private func startLoad() {
         lastLoad = now()
+        loadsRunning += 1
+        let head = model?.headBranch?.name
+        loadedHead = head
         let previous = loadTask
         let gitHub = gitHub
         let root = root
         loadTask = Task { [weak self] in
             // One `gh` at a time: a forced load waits for the one before it.
             await previous?.value
-            let loaded = await Self.read(gitHub, in: root)
-            guard let self, !Task.isCancelled else { return }
+            let loaded = await Self.read(gitHub, in: root, head: head)
+            guard let self else { return }
+            self.loadsRunning -= 1
+            guard !Task.isCancelled else { return }
             self.apply(loaded)
         }
     }
 
-    /// `availability`, then the open pull requests; nil on any error.
-    private nonisolated static func read(_ gitHub: GitHubCLI, in root: URL) async -> [GitPullRequest]? {
-        guard case .success = await gitHub.availability(in: root) else { return nil }
+    /// What one load read.
+    struct Loaded: Equatable {
+        var pullRequests: [GitPullRequest]?
+        var headPullRequest: GitPullRequest?
+    }
+
+    /// `availability`, then the open pull requests and `head`'s own open one; the list
+    /// nil on any error, the head's nil when its lookup fails.
+    private nonisolated static func read(_ gitHub: GitHubCLI, in root: URL, head: String?) async -> Loaded {
+        guard case .success = await gitHub.availability(in: root) else { return Loaded() }
+        let list: [GitPullRequest]
         do {
-            return try await gitHub.pullRequests(in: root)
+            list = try await gitHub.pullRequests(in: root)
         } catch {
             logger.info("Pull requests unavailable: \(String(describing: error), privacy: .public)")
-            return nil
+            return Loaded()
+        }
+        guard let head else { return Loaded(pullRequests: list) }
+        do {
+            let own = try await gitHub.pullRequest(forBranch: head, in: root)
+            return Loaded(pullRequests: list, headPullRequest: own?.state.uppercased() == "OPEN" ? own : nil)
+        } catch {
+            logger.info("Branch pull request unavailable: \(String(describing: error), privacy: .public)")
+            return Loaded(pullRequests: list)
         }
     }
 
-    private func apply(_ loaded: [GitPullRequest]?) {
-        guard loaded != pullRequests else { return }
-        pullRequests = loaded
+    private func apply(_ loaded: Loaded) {
+        guard loaded != Loaded(pullRequests: pullRequests, headPullRequest: headPullRequest) else { return }
+        pullRequests = loaded.pullRequests
+        headPullRequest = loaded.headPullRequest
         onChange?()
     }
 
@@ -152,6 +209,18 @@ public final class GitPullRequestsModel {
     /// `gh pr create` with `draft`'s values, returning the new pull request's URL.
     func create(_ draft: GitPullRequestDraft) async throws -> URL {
         try await gitHub.create(title: draft.title, body: draft.body, base: draft.base, draft: draft.draft, in: root)
+    }
+
+    /// The repository's default branch: `gh`'s answer, else `<remote>/HEAD` as git
+    /// records it locally; nil when neither knows. Never guessed.
+    func defaultBranch(remote: String?) async -> String? {
+        if let name = try? await gitHub.defaultBranch(in: root) { return name }
+        guard let remote else { return nil }
+        let output = try? await client.run("symbolic-ref", ["--short", "refs/remotes/\(remote)/HEAD"], in: root)
+        let target = output?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let prefix = remote + "/"
+        guard target.hasPrefix(prefix), target.count > prefix.count else { return nil }
+        return String(target.dropFirst(prefix.count))
     }
 
     /// The subjects of HEAD's commits that are not on `base` (a remote branch's full

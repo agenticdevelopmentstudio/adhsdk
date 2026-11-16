@@ -33,5 +33,5 @@ The root view carries `git.fileHistory`, the split `git.fileHistory.split`, the 
 
 ### Pull requests
 
-Rows carry `git.sidebar.pullRequests.<number>` and their menu items `git.sidebar.pullRequests.menu.<checkout|open|copyURL|create>`. The detail's root view carries `git.pullRequest`, its fields `git.pullRequest.<title|number|state|author|branches|review|checks|updated>` in the grid `git.pullRequest.fields`, and its buttons `git.pullRequest.open` and `git.pullRequest.checkout` in `git.pullRequest.buttons`. The form's window carries `git.pullRequest.form`, its controls `git.pullRequest.form.<title|body|bodyScroll|base|draft>` in `git.pullRequest.form.fields`.
+The section header carries `git.sidebar.pullRequests` (`TopicListSection.accessibilityIdentifier`), rows `git.sidebar.pullRequests.<number>` and their menu items `git.sidebar.pullRequests.menu.<checkout|open|copyURL|create>`. The detail's root view carries `git.pullRequest`, its fields `git.pullRequest.<title|number|state|author|branches|review|checks|updated>` in the grid `git.pullRequest.fields`, and its buttons `git.pullRequest.open` and `git.pullRequest.checkout` in `git.pullRequest.buttons`. The form's window carries `git.pullRequest.form`, its controls `git.pullRequest.form.<title|body|bodyScroll|base|draft>` in `git.pullRequest.form.fields`.
 

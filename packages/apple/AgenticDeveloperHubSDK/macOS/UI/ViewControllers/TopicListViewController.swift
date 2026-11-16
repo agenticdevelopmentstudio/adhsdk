@@ -45,10 +45,13 @@ public struct TopicListItem: TopicListItemProtocol {
 public struct TopicListSection: Sendable {
     public let title: String?
     public let items: [any TopicListItemProtocol]
+    /// The header row's accessibility identifier; nil leaves the header without one.
+    public let accessibilityIdentifier: String?
 
-    public init(title: String?, items: [TopicListItem]) {
+    public init(title: String?, items: [TopicListItem], accessibilityIdentifier: String? = nil) {
         self.title = title
         self.items = items
+        self.accessibilityIdentifier = accessibilityIdentifier
     }
 }
 
@@ -594,7 +597,7 @@ open class TopicListViewController: NSViewController {
         var nodes: [TopicListNode] = []
         for section in sections {
             if let title = section.title, !title.isEmpty {
-                nodes.append(.header(title))
+                nodes.append(.header(title, accessibilityIdentifier: section.accessibilityIdentifier))
             }
             for item in section.items {
                 nodes.append(.item(item))
@@ -701,9 +704,15 @@ private final class TopicListNode: NSObject {
         case item(TopicListItemProtocol)
     }
     let kind: Kind
+    /// A header's accessibility identifier, from its section.
+    var headerAccessibilityID: String?
     init(kind: Kind) { self.kind = kind }
 
-    static func header(_ title: String) -> TopicListNode { .init(kind: .header(title)) }
+    static func header(_ title: String, accessibilityIdentifier: String? = nil) -> TopicListNode {
+        let node = TopicListNode(kind: .header(title))
+        node.headerAccessibilityID = accessibilityIdentifier
+        return node
+    }
     static func item(_ item: TopicListItemProtocol) -> TopicListNode { .init(kind: .item(item)) }
 }
 
@@ -788,6 +797,8 @@ extension TopicListViewController: NSOutlineViewDelegate {
             let cell = outlineView.makeView(withIdentifier: id, owner: nil) as? NSTableCellView
                 ?? Self.makeHeaderCell(identifier: id)
             cell.textField?.stringValue = title
+            // Set on every use, cleared when absent: header cells are pooled.
+            cell.textField?.setAccessibilityIdentifier(node.headerAccessibilityID)
             cell.textField?.font = CellMetrics.headerFont
             cell.textField?.textColor = palette.secondaryTextColor
             return cell

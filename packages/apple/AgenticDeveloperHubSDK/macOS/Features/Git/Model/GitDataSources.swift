@@ -14,6 +14,9 @@ import AgenticDeveloperHubSDKCore
     /// The open pull requests (GitDataSources+PullRequests.swift): nil when `gh` is
     /// unavailable, which leaves the Pull Requests section absent; empty when none is open.
     var pullRequests: [GitPullRequest]? { get }
+    /// The checked-out branch's own open pull request, never a fork's; nil when it has
+    /// none. It bolds that row and hides the section's Create item.
+    var headPullRequest: GitPullRequest? { get }
 }
 
 /// The commit list, its graph rows, and the query that selects it.
@@ -34,6 +37,12 @@ import AgenticDeveloperHubSDKCore
     /// Asks for the signatures of the rows on screen: coalesced and debounced, and the
     /// owner hears `.history` when results land. Defaults to doing nothing.
     func requestSignatures(for shas: [String])
+    /// A commit's Coding Partner review, cached; nil when it has none or it has not been
+    /// read yet. Defaults to nil (GitDataSources+Reviews.swift).
+    func review(for sha: String) -> GitCommitReview?
+    /// Asks for the reviews of the rows on screen, like `requestSignatures(for:)`. Defaults
+    /// to doing nothing.
+    func requestReviews(for shas: [String])
 }
 
 /// The working copy split into its staged and unstaged columns.

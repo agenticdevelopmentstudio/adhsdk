@@ -173,6 +173,23 @@ struct GitHubCLITests {
         #expect(call.budget == .seconds(10))
     }
 
+    @Test func defaultBranchArgumentsAndAnswer() async throws {
+        let recorder = Recorder()
+        let subject = Self.client(.output(#"{"defaultBranchRef":{"name":"develop"}}"#), recorder: recorder)
+        #expect(try await subject.defaultBranch(in: Self.directory) == "develop")
+        let call = try #require(await recorder.calls.first)
+        #expect(call.arguments == ["repo", "view", "--json", "defaultBranchRef"])
+        #expect(call.budget == .seconds(10))
+    }
+
+    @Test func emptyDefaultBranchIsFailed() async {
+        let recorder = Recorder()
+        let subject = Self.client(.output(#"{"defaultBranchRef":{"name":""}}"#), recorder: recorder)
+        await #expect(throws: GitHubCLIError.failed("gh reported no default branch")) {
+            try await subject.defaultBranch(in: Self.directory)
+        }
+    }
+
     @Test func pullRequestsArguments() async throws {
         let recorder = Recorder()
         let subject = Self.client(.output("[]"), recorder: recorder)

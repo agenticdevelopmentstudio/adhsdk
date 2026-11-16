@@ -72,8 +72,10 @@ extension GitWindowSession {
         case .operation(let step): await runOperation(step)
         case .merge(let intent): await run(intent)
         case .fetch:
-            await execute(.fetch(remote: nil))
+            // Before the fetch: `gh` reads GitHub, not the fetched refs, and the refs
+            // change the fetch makes then falls in the forced load's interval.
             model.pullRequestList?.load(force: true)
+            await execute(.fetch(remote: nil))
         case .pull: await execute(.pull)
         case .lfsFetch: await execute(.lfsFetch)
         case .lfsPull: await execute(.lfsPull)
@@ -388,7 +390,9 @@ extension GitWindowSession {
         case .delete(let ref): await delete(ref)
         case .push(let ref): await push(ref)
         case .pull: await execute(.pull)
-        case .fetch(let remote): await execute(.fetch(remote: remote))
+        case .fetch(let remote):
+            model.pullRequestList?.load(force: true)
+            await execute(.fetch(remote: remote))
         case .deleteTag(let ref): await deleteTag(ref)
         case .pushTag(let ref): await pushTag(ref)
         case .applyStash(let stash):
@@ -592,6 +596,7 @@ extension GitWindowSession {
     /// and a refusal is shown as git words it. Any other branch with an upstream goes to its
     /// `@{push}`, by refspec, tracking untouched; when git names no destination, nothing is
     /// pushed. Only a branch with no upstream is pushed under its own name, setting it.
+    /// Call only from inside an action (`perform`), which holds `isActing`.
     func push(_ branch: GitRef) async {
         if branch.upstream != nil {
             if branch.fullName == model.headBranch?.fullName {

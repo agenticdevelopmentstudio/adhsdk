@@ -41,6 +41,8 @@ private final class PullRequestPresenter: GitActionPresenting {
 private actor GitHubCallRecorder {
     private(set) var calls: [[String]] = []
     func append(_ arguments: [String]) { calls.append(arguments) }
+    /// Whether `pr create` has run, so `pr list` lists what it made.
+    var created: Bool { calls.contains { $0.starts(with: ["pr", "create"]) } }
 }
 
 /// The Pull Requests section's actions through the session (recipe
@@ -54,13 +56,41 @@ struct GitWindowSessionPullRequestTests {
     private let client = GitClient(configuration: .default)
 
     /// `gh pr list --json …` for one open pull request, #7 from `feature`.
-    static let listJSON = """
+    nonisolated static let listJSON = """
         [{"author": {"login": "octocat"}, "baseRefName": "main", "headRefName": "feature",
           "isDraft": false, "number": 7, "reviewDecision": "REVIEW_REQUIRED", "state": "OPEN",
           "statusCheckRollup": [{"__typename": "CheckRun", "status": "COMPLETED", "conclusion": "SUCCESS"}],
           "title": "Add the parser", "updatedAt": "2026-11-14T12:00:00Z",
           "url": "https://github.com/o/r/pull/7"}]
         """
+
+    /// #8 from `parser`, the pull request the stub's `pr create` makes.
+    nonisolated static let createdJSON = """
+        {"author": {"login": "octocat"}, "baseRefName": "main", "headRefName": "parser",
+         "isDraft": true, "number": 8, "reviewDecision": null, "state": "OPEN", "statusCheckRollup": [],
+         "title": "Parser", "updatedAt": "2026-11-14T13:00:00Z", "url": "https://github.com/o/r/pull/8",
+         "isCrossRepository": false, "headRepositoryOwner": {"login": "o"}}
+        """
+
+    /// A fork's open pull request from a branch also called `parser`: the per-branch
+    /// lookup drops it, so it never counts as the branch's own.
+    nonisolated static let forkJSON = """
+        {"author": {"login": "stranger"}, "baseRefName": "main", "headRefName": "parser",
+         "isDraft": false, "number": 9, "reviewDecision": null, "state": "OPEN", "statusCheckRollup": [],
+         "title": "Their parser", "updatedAt": "2026-11-14T11:00:00Z", "url": "https://github.com/o/r/pull/9",
+         "isCrossRepository": true, "headRepositoryOwner": {"login": "stranger"}}
+        """
+
+    /// `gh pr list` in the stub: `--head` is the per-branch lookup (the fork's, then ours
+    /// once created), otherwise the open list, #8 at the top once created.
+    private nonisolated static func listReply(_ arguments: [String], created: Bool) -> String {
+        // #7's object, without the list's brackets.
+        let row = String(listJSON.trimmingCharacters(in: .whitespacesAndNewlines).dropFirst().dropLast())
+        if arguments.contains("--head") {
+            return "[" + (created ? [forkJSON, createdJSON] : [forkJSON]).joined(separator: ",") + "]"
+        }
+        return "[" + (created ? [createdJSON, row] : [row]).joined(separator: ",") + "]"
+    }
 
     /// What `pr checkout` does in the stub.
     enum CheckoutReply: Sendable {
@@ -78,8 +108,10 @@ struct GitWindowSessionPullRequestTests {
             await recorder.append(arguments)
             let output: String
             switch Array(arguments.prefix(2)) {
+            case ["repo", "view"] where arguments.contains("defaultBranchRef"):
+                output = #"{"defaultBranchRef": {"name": "main"}}"#
             case ["repo", "view"]: output = #"{"url": "https://github.com/o/r"}"#
-            case ["pr", "list"]: output = listJSON
+            case ["pr", "list"]: output = await listReply(arguments, created: recorder.created)
             case ["pr", "checkout"]:
                 if case .timeout = checkout { throw WallClockBudgetExceeded(seconds: 30) }
                 try Data("from the pull request\n".utf8).write(to: directory.appendingPathComponent("from-pr.txt"))
@@ -183,6 +215,56 @@ struct GitWindowSessionPullRequestTests {
         #expect(presenter.failures.isEmpty)
     }
 
+    @Test("after Create the new pull request is listed, the branch's own, and selected")
+    func createSelectsTheNewPullRequest() async throws {
+        let (remote, clone) = try await makeRemoteAndClone()
+        defer { remote.tearDown(); clone.tearDown() }
+        try await clone.run(["switch", "--quiet", "-c", "parser"])
+        try await commitFile(clone, "two.txt", at: 200)
+        let recorder = GitHubCallRecorder()
+        let presenter = PullRequestPresenter()
+        presenter.formAnswer = GitPullRequestDraft(title: "Parser", body: "", base: "main", draft: true)
+        let (_, session, list) = await makeSession(clone, gitHub: Self.gitHub(recorder: recorder),
+                                                   presenter: presenter)
+        defer { session.stop() }
+        // The fork's #9 from a `parser` of its own is not this branch's pull request.
+        #expect(list.headPullRequest == nil)
+
+        await act(session, .create)
+
+        #expect(list.pullRequests?.map(\.number) == [8, 7])
+        #expect(list.headPullRequest?.number == 8)
+        #expect(session.selection == .pullRequest(8))
+        #expect(session.pullRequestView.pullRequest?.number == 8)
+        #expect(presenter.failures.isEmpty)
+    }
+
+    @Test("create on a branch ahead of its upstream pushes the new commits first")
+    func createPushesWhenAhead() async throws {
+        let (remote, clone) = try await makeRemoteAndClone()
+        defer { remote.tearDown(); clone.tearDown() }
+        try await clone.run(["switch", "--quiet", "-c", "parser"])
+        try await commitFile(clone, "two.txt", at: 200)
+        try await clone.run(["push", "--quiet", "-u", "origin", "parser"])
+        try await commitFile(clone, "three.txt", at: 300)
+        let recorder = GitHubCallRecorder()
+        let presenter = PullRequestPresenter()
+        presenter.formAnswer = GitPullRequestDraft(title: "Parser", body: "", base: "main", draft: false)
+        let (model, session, _) = await makeSession(clone, gitHub: Self.gitHub(recorder: recorder),
+                                                    presenter: presenter)
+        defer { session.stop() }
+        #expect(model.headBranch?.ahead == 1)
+
+        await act(session, .create)
+
+        let local = try await clone.run(["rev-parse", "HEAD"])
+        let pushed = try await remote.run(["rev-parse", "refs/heads/parser"])
+        #expect(pushed == local)
+        #expect(model.headBranch?.ahead == 0)
+        #expect(await recorder.calls.contains { $0.starts(with: ["pr", "create"]) })
+        #expect(presenter.failures.isEmpty)
+    }
+
     @Test("a cancelled form runs nothing: no push and no gh pr create")
     func cancelledFormRunsNothing() async throws {
         let (remote, clone) = try await makeRemoteAndClone()
@@ -199,7 +281,9 @@ struct GitWindowSessionPullRequestTests {
         await act(session, .create)
 
         #expect(presenter.forms.count == 1)
-        #expect(await recorder.calls == before)
+        // Only the default branch was asked for, to fill the form.
+        let after = await recorder.calls
+        #expect(Array(after.dropFirst(before.count)) == [["repo", "view", "--json", "defaultBranchRef"]])
         #expect(model.headBranch?.upstream == nil)
         let pushed = try? await remote.run(["rev-parse", "--verify", "--quiet", "refs/heads/parser"])
         #expect(pushed == nil)
