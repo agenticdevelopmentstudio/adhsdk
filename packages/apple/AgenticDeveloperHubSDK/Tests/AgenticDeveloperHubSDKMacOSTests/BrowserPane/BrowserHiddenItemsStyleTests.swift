@@ -71,32 +71,32 @@ final class BrowserHiddenItemsStyleTests: XCTestCase {
 
     func test_emptySelectorsRemovesStyleOnPage() async throws {
         try await run(BrowserHiddenItemsStyle.applyScript(selectors: [".ad"]))
-        let v1 = try await styleCount(BrowserHiddenItemsStyle.styleElementID)
-        XCTAssertEqual(v1, 1)
+        let value1 = try await styleCount(BrowserHiddenItemsStyle.styleElementID)
+        XCTAssertEqual(value1, 1)
         try await run(BrowserHiddenItemsStyle.applyScript(selectors: []))
-        let v2 = try await styleCount(BrowserHiddenItemsStyle.styleElementID)
-        XCTAssertEqual(v2, 0)
-        let v3 = try await display("first")
-        XCTAssertEqual(v3, "block")
+        let value2 = try await styleCount(BrowserHiddenItemsStyle.styleElementID)
+        XCTAssertEqual(value2, 0)
+        let value3 = try await display("first")
+        XCTAssertEqual(value3, "block")
     }
 
     func test_reapplyReplacesRulesInOneElement() async throws {
         try await run(BrowserHiddenItemsStyle.applyScript(selectors: [".ad"]))
         try await run(BrowserHiddenItemsStyle.applyScript(selectors: ["#x"]))
-        let v4 = try await styleCount(BrowserHiddenItemsStyle.styleElementID)
-        XCTAssertEqual(v4, 1)
-        let v5 = try await display("first")
-        XCTAssertEqual(v5, "block")
-        let v6 = try await display("x")
-        XCTAssertEqual(v6, "none")
+        let value4 = try await styleCount(BrowserHiddenItemsStyle.styleElementID)
+        XCTAssertEqual(value4, 1)
+        let value5 = try await display("first")
+        XCTAssertEqual(value5, "block")
+        let value6 = try await display("x")
+        XCTAssertEqual(value6, "none")
     }
 
     func test_badSelectorIsolated() async throws {
         try await run(BrowserHiddenItemsStyle.applyScript(selectors: ["::not-a-selector((", ".ad"]))
-        let v7 = try await display("first")
-        XCTAssertEqual(v7, "none")
-        let v8 = try await display("content")
-        XCTAssertEqual(v8, "block")
+        let value7 = try await display("first")
+        XCTAssertEqual(value7, "none")
+        let value8 = try await display("content")
+        XCTAssertEqual(value8, "block")
     }
 
     func test_lateContentHidden() async throws {
@@ -107,8 +107,8 @@ final class BrowserHiddenItemsStyleTests: XCTestCase {
             document.body.appendChild(el);
             return true;
             """)
-        let v9 = try await display("late")
-        XCTAssertEqual(v9, "none")
+        let value9 = try await display("late")
+        XCTAssertEqual(value9, "none")
     }
 
     func test_previewIndependentOfSavedRules() async throws {

@@ -5,6 +5,7 @@
 
 import AppKit
 import KeyboardShortcuts
+import AgenticDeveloperHubSDKCore
 import AgenticDeveloperHubSDKCoreUI
 
 /// The Browser menu: Reload, Stop, Back and Forward for the browser pane in
