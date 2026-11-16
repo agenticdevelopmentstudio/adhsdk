@@ -331,6 +331,20 @@
       return stateOrder.filter((s) => states.has(s)).join(' ');
     }
 
+    // A select's value is its first selected option the agent may see: a
+    // withheld option (on the agent list, hidden, or in a withheld optgroup)
+    // never reaches the agent through its select's `value`.
+    function selectValue(el) {
+      for (const option of Array.from(el.selectedOptions || [])) {
+        let withheld = false;
+        for (let at = option; at && at !== el; at = at.parentElement) {
+          if (isHiddenUncached(at)) { withheld = true; break; }
+        }
+        if (!withheld) { return option.value ? option.value : null; }
+      }
+      return null;
+    }
+
     // The legacy snapshot's value rule; never a password's.
     function valueOf(el, explicitRole) {
       const tag = el.tagName.toLowerCase();
@@ -340,7 +354,8 @@
         if (valueless.includes(type)) { return null; }
         return el.value ? el.value : null;
       }
-      if (tag === 'select' || tag === 'textarea') { return el.value ? el.value : null; }
+      if (tag === 'select') { return selectValue(el); }
+      if (tag === 'textarea') { return el.value ? el.value : null; }
       if (explicitRole === 'slider' || explicitRole === 'spinbutton') {
         return el.getAttribute('aria-valuenow') || null;
       }

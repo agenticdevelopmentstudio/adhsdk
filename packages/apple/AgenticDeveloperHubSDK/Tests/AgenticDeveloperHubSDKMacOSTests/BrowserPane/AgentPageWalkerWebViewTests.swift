@@ -233,6 +233,47 @@ final class AgentPageWalkerWebViewTests: XCTestCase {
         }
     }
 
+    /// A withheld option never reaches the agent through its select: not as
+    /// the select's value, and not through the select action, which answers
+    /// a withheld option's label as it answers one that names nothing (review f9).
+    func test_withheldOptionStaysOutOfItsSelect() async throws {
+        await host.load(html: """
+            <!doctype html><html><body>
+            <select id="account" name="account">
+              <option value="acct-public">Public</option>
+              <option id="secret" value="acct-secret" selected>Secret Account</option>
+            </select>
+            </body></html>
+            """)
+        let hiding = try store(agentSelectors: ["#secret"])
+        let reading = await source(hiding).read(options: BrowserSnapshotOptions())
+        XCTAssertNil(reading.page.unavailableReason)
+        let select = try XCTUnwrap(nodes(reading.page.root).first { $0.kind == .select }, tree(reading.page))
+        for leaked in ["acct-secret", "Secret Account"] {
+            XCTAssertFalse(tree(reading.page).contains(leaked), tree(reading.page))
+            XCTAssertFalse(reading.page.html().contains(leaked), reading.page.html())
+        }
+        let generation = try XCTUnwrap(reading.generation)
+
+        let automation = BrowserAutomation(driver: driver, console: BrowserConsoleLog())
+        var refusals: [String] = []
+        for guess in ["Secret Account", "acct-secret", "No Such Option"] {
+            do {
+                _ = try await automation.select(ref: select.ref, generation: generation, value: guess)
+                XCTFail("\(guess) was selected")
+            } catch {
+                refusals.append(String(describing: error).replacingOccurrences(of: guess, with: "<guess>"))
+            }
+        }
+        XCTAssertEqual(Set(refusals).count, 1, "the refusals tell a withheld option from none: \(refusals)")
+        let chosen = try await host.webView.evaluateJavaScript("document.getElementById('account').value")
+        XCTAssertEqual(chosen as? String, "acct-secret", "a refused select changed the page")
+
+        _ = try await automation.select(ref: select.ref, generation: generation, value: "Public")
+        let picked = try await host.webView.evaluateJavaScript("document.getElementById('account').value")
+        XCTAssertEqual(picked as? String, "acct-public")
+    }
+
     /// An agent-list selector the page cannot evaluate would hide nothing,
     /// so the page is withheld rather than shown unfiltered (A-M1).
     func test_invalidExcludeSelectorFailsClosed() async throws {

@@ -60,6 +60,11 @@
   checked before it: the agent gets the empty document with an empty
   title, whatever scope it asked for, and no reference into the page
   resolves (MUST, `walker-skips-agent-list`, `withheld-refs-stale`).
+- **A withheld option**: A select's value is its first selected option
+  the agent may see, so an option on the agent list (or hidden, or in a
+  withheld group) never reaches the agent as its select's value, and the
+  select action answers a withheld option's value or label exactly as one
+  that names nothing (MUST, `walker-skips-agent-list`).
 - **Privacy words change mid-read**: The concealment in force when the
   build starts conceals the whole result; the tool reply is concealed
   with the start and end words together, per

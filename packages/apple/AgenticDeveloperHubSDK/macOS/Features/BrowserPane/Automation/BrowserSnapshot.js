@@ -7,7 +7,7 @@
   // Bumping the version re-installs over an older copy: its refs go stale (as after any
   // walk) and its MutationObserver stays behind, unused. Both are harmless. Keep it equal
   // to BrowserSnapshotRuntime.version.
-  if (window.__adkitchen && window.__adkitchen.version === 4) { return; }
+  if (window.__adkitchen && window.__adkitchen.version === 5) { return; }
 
   const refs = new Map();            // ref -> WeakRef<Element>
   window.__adkitchenRefs = refs;
@@ -168,7 +168,7 @@
       el.scrollIntoView({ block: 'center', inline: 'center' });
       if (el.tagName.toLowerCase() === 'option') {
         const select = el.closest('select');
-        if (select) { select.value = el.value; select.dispatchEvent(new Event('input', { bubbles: true })); select.dispatchEvent(new Event('change', { bubbles: true })); }
+        if (select) { select.value = el.value; el.selected = true; select.dispatchEvent(new Event('input', { bubbles: true })); select.dispatchEvent(new Event('change', { bubbles: true })); }
         return true;
       }
       if (el.tagName.toLowerCase() === 'a' && el.getAttribute('target') === '_blank') { el.removeAttribute('target'); }
@@ -304,13 +304,19 @@
     });
   }
 
+  // An option the agent list withholds is no option at all: choosing it by a
+  // guessed label must fail exactly as a label that names nothing, or the
+  // answer would confirm it exists. Setting the value selects the first
+  // option holding it, which may be a withheld one sharing it, so the match
+  // is selected by itself after the setter.
   function select(ref, gen, value) {
     return withElement(ref, gen, (el) => {
       const wanted = String(value);
-      const options = Array.from(el.options || []);
+      const options = Array.from(el.options || []).filter((o) => !isWithheld(o));
       const match = options.find((o) => o.value === wanted) || options.find((o) => collapse(o.textContent) === wanted);
       if (!match) { throw new Error('no option "' + wanted + '"'); }
       setNativeValue(el, match.value);
+      if (!match.selected) { match.selected = true; }
       el.dispatchEvent(new Event('input', { bubbles: true }));
       el.dispatchEvent(new Event('change', { bubbles: true }));
       return true;
@@ -381,7 +387,7 @@
   }
 
   window.__adkitchen = {
-    version: 4,
+    version: 5,
     mutations: () => mutationCount,
     focusedLandmark: focusedLandmark,
     resolve: resolve,
