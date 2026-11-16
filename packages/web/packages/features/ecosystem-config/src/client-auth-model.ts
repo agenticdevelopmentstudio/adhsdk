@@ -179,6 +179,24 @@ function sameEmailList(a: string[] | null, b: string[] | null): boolean {
   return ca.length === cb.length && ca.every((e) => cb.includes(e));
 }
 
+/**
+ * Whether a save sent the login allow-list and the saved policy came back without it. A
+ * backend that predates the list drops the unknown field and answers 200. Re-seeding from that
+ * answer would turn the switch back off, while every customer can still sign in. An absent
+ * field reads as `null` (everyone), so sending `null` to such a backend is not a drop.
+ */
+export function allowListDropped(
+  sent: Partial<ClientAuthPolicy>,
+  saved: Partial<ClientAuthPolicy>,
+): boolean {
+  if (!("loginAllowedEmails" in sent)) return false;
+  return !sameEmailList(sent.loginAllowedEmails ?? null, saved.loginAllowedEmails ?? null);
+}
+
+/** The error a save shows when the backend dropped the allow-list. */
+export const ALLOW_LIST_NOT_SAVED =
+  "The sign-in list was not saved, so everyone can still sign in. This backend does not support the list yet.";
+
 /** Why the policy cannot be saved as it stands, or null when it can. The backend is
  *  authoritative; this only says it sooner. */
 export function policyError(policy: ClientAuthPolicy | null): string | null {

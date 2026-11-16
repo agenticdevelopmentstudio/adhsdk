@@ -150,6 +150,22 @@ describe('ClientAuthSettingsPane: who can sign in', () => {
     expect(putBody()?.settings).toEqual({ loginAllowedEmails: null })
   })
 
+  it('ecosystem-config-037: fails the save, keeping the list, when the backend drops it', async () => {
+    const loaded = config()
+    await renderPane(loaded)
+    // A backend without the allow-list strips the unknown field and answers 200.
+    vi.mocked(clientAuthApi.updateEcosystem).mockImplementation(async (_id, update) => {
+      const { loginAllowedEmails: _dropped, ...kept } = update.settings ?? {}
+      return { ...loaded, settings: { ...loaded.settings, ...kept } }
+    })
+    fireEvent.click(sw('Only listed people'))
+    fireEvent.change(emailInputs()[0]!, { target: { value: ALICE } })
+    save()
+    expect(await screen.findByText(/sign-in list was not saved/)).toBeInTheDocument()
+    expect(sw('Only listed people')).toHaveAttribute('data-checked')
+    expect(emailInputs().map((i) => i.value)).toEqual([ALICE])
+  })
+
   it('a blank row added to a saved list is not an edit', async () => {
     await renderPane(config({ loginAllowedEmails: [ALICE] }))
     addPerson()

@@ -69,6 +69,14 @@
   local part with no whitespace and no quote, and a domain of at least two
   non-empty dot-separated labels) — the backend's own bounds, mirrored so the
   refusal comes before the round trip. The backend stays authoritative.
+- **auth-login-allow-list-dropped**: when a save sent `loginAllowedEmails` and
+  the saved policy comes back without that list (a backend that predates the
+  allow-list strips the unknown field and still answers 200), the save MUST fail
+  with "The sign-in list was not saved, so everyone can still sign in. This
+  backend does not support the list yet." The draft MUST keep the owner's list and
+  the switch, rather than re-seeding them off. The cache still takes the answer,
+  because the other fields did save. An absent list reads as `null`, so sending
+  `null` to such a backend is not a failure.
 
 ### Sign-in Apps
 
