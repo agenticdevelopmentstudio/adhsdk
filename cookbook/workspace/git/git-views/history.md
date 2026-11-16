@@ -18,3 +18,4 @@
 | 1.9.0 | 2026-11-15 | Mike Fullerton | Merge and rebase: the sidebar's Merge into and Rebase onto items, refs dragged and dropped on the checked-out branch for a drop menu, the in-progress operation banner, refs dropped on the history; vectors 074-081 |
 | 1.10.0 | 2026-11-15 | Mike Fullerton | Working copy conflicts: a Conflicts list above Staged while there are conflicts, its paths left out of Unstaged; Open in Merge View (markers only), Resolve Using Ours…, Resolve Using Theirs… and Mark Resolved, and double-click to open; vectors 082-086 |
 | 1.10.1 | 2026-11-15 | Mike Fullerton | the working copy's conflicts pane, list and menu identifiers in accessibility, appearance and configuration |
+| 1.11.0 | 2026-11-16 | Mike Fullerton | History menu: Interactive Rebase from Here…, left out on HEAD's row and during an operation; the data source gives the HEAD commit and the operation state; vector 087 |

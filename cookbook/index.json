@@ -3497,6 +3497,31 @@
       "path": "ai/chat/chat-window/chat-bubble-view",
       "rdid": "adhsdk.ingredient.ai.chat.chat-window.chat-bubble-view"
     },
+    "241d5e8b-3395-4093-ad77-1e138b7fe3a1": {
+      "implementations": [
+        {
+          "conformance": {
+            "hash": "sha256:38fe068353e7a2479848b9c9385e27151b5bf7f352a23191c73578c9c17dfc37",
+            "state": "confirmed",
+            "version": "1.0.0"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitRebaseEditorViewController.swift",
+          "platform": "apple"
+        },
+        {
+          "conformance": {
+            "hash": "sha256:e3169003a5d5fb41b5c737f379ad9d789e5dc2108b65fda1493c1ef20f9aa104",
+            "state": "confirmed",
+            "version": "1.0.0"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Window/GitActionPresenting.swift",
+          "platform": "apple"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "workspace/git/git-rebase-editor",
+      "rdid": "adhsdk.ingredient.workspace.git.git-rebase-editor"
+    },
     "2469d716-84aa-4984-9e71-4cfe49d05854": {
       "implementations": [
         {
@@ -8808,9 +8833,9 @@
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:08f3adace8527c7a807e3ddeef611508f5a257ae0b8e6ae079a531598c2f8659",
+            "hash": "sha256:f93399aec60056f2493a3ef4cb048928cbce5bd546b1db7d91de0033471e1d08",
             "state": "confirmed",
-            "version": "1.8.0"
+            "version": "1.9.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Window/",
           "platform": "macos"
@@ -8819,16 +8844,16 @@
           "conformance": {
             "hash": "sha256:c9473d14aba9a8346385337253788cfdcce9208e5928eddf20927ad75559b189",
             "state": "confirmed",
-            "version": "1.8.0"
+            "version": "1.9.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Window/GitWindowSession.swift",
           "platform": "apple"
         },
         {
           "conformance": {
-            "hash": "sha256:c4aae6d3415946b576aa1952d4642db1da14f0d2ebf8ac88a5c9c7da3775b904",
+            "hash": "sha256:182ca73c2a6fdf6fd7f8b58c12d8873d085427f983004171936ae59ddedb060b",
             "state": "confirmed",
-            "version": "1.8.0"
+            "version": "1.9.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Window/GitWindowSession+Actions.swift",
           "platform": "apple"
@@ -9804,7 +9829,7 @@
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:ace0684ad5dc06883c483da7a5a21f943fb670733a88796fac0c1624c3fe110a",
+            "hash": "sha256:53c8b00dd35c04683a8384d917dda741770bd50ec5fba6d4cc5bd638cc925f65",
             "state": "confirmed",
             "version": "2.0.0"
           },
@@ -9831,7 +9856,7 @@
         },
         {
           "conformance": {
-            "hash": "sha256:69818d8a1bb20ad98f3385bc185a717546435161b7939b1c0edeec2147061746",
+            "hash": "sha256:6c9d1ee2893079a216a535deed2df30e3277b88305836c6f3313e75b69933be3",
             "state": "confirmed",
             "version": "2.0.0"
           },
@@ -16513,9 +16538,9 @@
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:5dbf1bfa40ccc8f93ccc4aa70bf718f041c32ac2e3e6ebac121a5bc2acdd49ad",
+            "hash": "sha256:6c61464f2dc244a67fb7dc9e643e363de58f98706ff1cacbf9347e898e865a5c",
             "state": "confirmed",
-            "version": "1.10.0"
+            "version": "1.11.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/",
           "platform": "apple"
@@ -16524,7 +16549,7 @@
           "conformance": {
             "hash": "sha256:89c5b6d54c6bf328fc8223f850d2f26c9978a2023b50ec769ea4f20075d67a4d",
             "state": "confirmed",
-            "version": "1.10.0"
+            "version": "1.11.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Git/GitHistorySearch.swift",
           "platform": "apple"
@@ -16533,7 +16558,7 @@
           "conformance": {
             "hash": "sha256:593070f97af18f3629fd3c20443251a80859a29d88575ab9c431f471ae7f984f",
             "state": "confirmed",
-            "version": "1.10.0"
+            "version": "1.11.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Git/GitFileListItem.swift",
           "platform": "apple"
@@ -16542,7 +16567,7 @@
           "conformance": {
             "hash": "sha256:a4550a6cf4acabf6fbaf93bfa97f6577c8421e960012aba4cbed3a68d1350bd3",
             "state": "confirmed",
-            "version": "1.10.0"
+            "version": "1.11.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitDiffLineModels.swift",
           "platform": "macos"
@@ -16551,7 +16576,7 @@
           "conformance": {
             "hash": "sha256:58255e34a72b3d6aa1dbb75a65d22a2b13c34b76731177e8e9cec56256fef780",
             "state": "confirmed",
-            "version": "1.10.0"
+            "version": "1.11.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitSyntaxColoring.swift",
           "platform": "macos"
@@ -16560,7 +16585,7 @@
           "conformance": {
             "hash": "sha256:3bff1ee5748151ac23afb857043053a3d51d7abe0b552af5b05e51af92b7994d",
             "state": "confirmed",
-            "version": "1.10.0"
+            "version": "1.11.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitDiffViewController.swift",
           "platform": "macos"
@@ -16569,7 +16594,7 @@
           "conformance": {
             "hash": "sha256:cabd6c13d64cc0be5f228ba877652aff1a8d7744343b59a836643d88621bfba3",
             "state": "confirmed",
-            "version": "1.10.0"
+            "version": "1.11.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitBlameViewController.swift",
           "platform": "macos"
@@ -16578,7 +16603,7 @@
           "conformance": {
             "hash": "sha256:52d9045038dc81aaa012a0392663f9e515b26ed7bd3850e957ab90d16ccd5fba",
             "state": "confirmed",
-            "version": "1.10.0"
+            "version": "1.11.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitFileHistoryViewController.swift",
           "platform": "macos"
@@ -16587,7 +16612,7 @@
           "conformance": {
             "hash": "sha256:b812e8ef8c5eff5b36bf3df3faa473a1df51eba93e6bd8b715bcfcec3d54f25a",
             "state": "confirmed",
-            "version": "1.10.0"
+            "version": "1.11.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/SDK/SourcesUI/macOS/Theme/ThemedViews.swift",
           "platform": "apple"
@@ -16596,7 +16621,7 @@
           "conformance": {
             "hash": "sha256:6f51fe0eb4d35f7ec88e067e89e52a6f7193178281494c5423c51a986665b3ae",
             "state": "confirmed",
-            "version": "1.10.0"
+            "version": "1.11.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Git/GitFileStatus.swift",
           "platform": "apple"
@@ -16605,7 +16630,7 @@
           "conformance": {
             "hash": "sha256:23e70f5961672beef92993ea01bbc89464f18b4d779797be480fc04114918d36",
             "state": "confirmed",
-            "version": "1.10.0"
+            "version": "1.11.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitOperationBannerViewController.swift",
           "platform": "macos"
@@ -16614,7 +16639,7 @@
           "conformance": {
             "hash": "sha256:0f9e6b563ba2ad0221a12e58728b9f48c41722a9e2e62a874c803284d22f749e",
             "state": "confirmed",
-            "version": "1.10.0"
+            "version": "1.11.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitWorkingCopyViewController.swift",
           "platform": "apple"

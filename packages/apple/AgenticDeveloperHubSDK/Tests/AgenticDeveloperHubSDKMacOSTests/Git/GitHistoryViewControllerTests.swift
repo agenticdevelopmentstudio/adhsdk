@@ -10,6 +10,8 @@ private final class FakeHistorySource: GitHistoryDataSource {
     var commits: [GitCommit] = []
     var graphRows: [CommitGraphLayout<String>.Row] = []
     var query = GitLogQuery()
+    var headCommit: String?
+    var operationState: GitOperationState = .none
     var refsByCommit: [String: [GitRef]] = [:]
 
     private(set) var setQueries: [GitLogQuery] = []
@@ -558,13 +560,13 @@ struct GitHistoryViewControllerTests {
         history.loadViewIfNeeded()
         let menu = try #require(history.contextMenu(forRow: 1))
         #expect(menu.items.map { $0.isSeparatorItem ? "-" : $0.title } == [
-            "Checkout", "New Branch…", "New Tag…", "-", "Cherry-pick", "Revert", "-",
-            "Reset Current Branch to Here", "-", "Copy SHA"
+            "Checkout", "New Branch…", "New Tag…", "-", "Cherry-pick", "Revert", "Interactive Rebase from Here…",
+            "-", "Reset Current Branch to Here", "-", "Copy SHA"
         ])
         #expect(menu.items.filter { !$0.isSeparatorItem }.map { $0.accessibilityIdentifier() } == [
             "git.history.menu.checkout", "git.history.menu.newBranch", "git.history.menu.newTag",
-            "git.history.menu.cherryPick", "git.history.menu.revert", "git.history.menu.reset",
-            "git.history.menu.copySha"
+            "git.history.menu.cherryPick", "git.history.menu.revert", "git.history.menu.interactiveRebase",
+            "git.history.menu.reset", "git.history.menu.copySha"
         ])
         let reset = try #require(menu.items.first { $0.title == "Reset Current Branch to Here" }?.submenu)
         #expect(reset.items.map(\.title) == ["Soft", "Mixed", "Hard…"])
@@ -582,19 +584,37 @@ struct GitHistoryViewControllerTests {
         history.select(commitID: Self.sha("c000"))
         let menu = try #require(history.contextMenu(forRow: 2))
         let reset = try #require(menu.items.first { $0.title == "Reset Current Branch to Here" }?.submenu)
-        for title in ["Checkout", "New Branch…", "New Tag…", "Cherry-pick", "Revert"] {
+        for title in ["Checkout", "New Branch…", "New Tag…", "Cherry-pick", "Revert", "Interactive Rebase from Here…"] {
             try fire(menu.items.first { $0.title == title })
         }
         for title in ["Soft", "Mixed", "Hard…"] {
             try fire(reset.items.first { $0.title == title })
         }
         let expected: [GitCommitIntent] = [
-            .checkout, .createBranch, .createTag, .cherryPick, .revert,
+            .checkout, .createBranch, .createTag, .cherryPick, .revert, .interactiveRebase,
             .reset(.soft), .reset(.mixed), .reset(.hard)
         ]
         #expect(delegate.intents.map(\.intent) == expected)
         #expect(delegate.intents.allSatisfy { $0.commitID == Self.sha("c002") })
         #expect(history.selectedCommitID == Self.sha("c000"))
+    }
+
+    @Test("Interactive Rebase from Here is absent on HEAD's row and on every row during an operation")
+    func interactiveRebaseItemPresence() throws {
+        let source = Self.source(count: 3)
+        source.headCommit = Self.sha("c000")
+        let history = GitHistoryViewController(source: source)
+        history.loadViewIfNeeded()
+        let identifier = "git.history.menu.interactiveRebase"
+        func offered(_ row: Int) throws -> Bool {
+            try #require(history.contextMenu(forRow: row)).items.contains { $0.accessibilityIdentifier() == identifier }
+        }
+        #expect(try !offered(0), "HEAD has nothing after it to replay")
+        #expect(try offered(1))
+        #expect(try offered(2))
+        source.operationState = .merging(head: nil)
+        #expect(try !offered(1))
+        #expect(try !offered(2))
     }
 
     @Test("Copy SHA puts the full sha on the pasteboard and sends no intent")

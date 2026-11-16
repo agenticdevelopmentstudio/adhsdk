@@ -2,11 +2,11 @@
 id: bdd3a72d-8810-439b-bad7-ec16233cb2a3
 title: "Git Views"
 type: ingredient
-version: 1.10.1
+version: 1.11.0
 status: review
 language: en
 created: 2026-11-13
-modified: 2026-11-15
+modified: 2026-11-16
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -85,7 +85,7 @@ The **diff** (`GitDiffViewController`) shows one file's change for a `GitDiffTar
 - **history-search-parse**: `GitHistorySearch.parse(_:)` MUST be pure and return a `GitLogQuery` with the default revisions, limit and skip and at most one filter, from the text trimmed of whitespace: empty → no filter; `author:<x>` (prefix in any case) → `author` `x`; `sha:<x>` (prefix in any case) → no filter; `-S <x>` or `-S<x>` → `pickaxe` `x`; anything else → `messageGrep`, the whole trimmed text. A prefix with nothing after it is no filter. `GitHistorySearch.shaPrefix(_:)` MUST return the lowercased `x` of the `sha:` form and nil for every other form.
 - **history-set-query**: `setQuery(_:)` MUST parse the text, and when the parsed query differs from the one the list last sent (applied or in flight; the data source's query before the first search), send it to the data source after a quiet period (`searchDelay`, 250 ms), cancelling the send it replaces, so a burst of keystrokes runs one `git log` and a superseded one is terminated rather than left to run. Cancelling the latest caller cancels its send, and the next call with that query sends it afresh; an older caller's cancellation never cancels a send a newer call shares. A parsed query equal to one still in flight MUST wait for that request rather than skip or resend it, because the data source takes a new query before its results arrive. The latest call then reloads. For the `sha:` form it MUST then select the first loaded commit whose id starts with the prefix (case-insensitively), as `select(commitID:)` does; no match selects nothing. A `setQuery` overtaken by a later one MUST NOT select.
 - **history-intents-only**: The history list MUST NOT run git. Every action chosen from a row's context menu, except Copy SHA, is one call of the delegate's `history(_:didRequest:for:)` with a `GitCommitIntent` (`checkout`, `createBranch`, `createTag`, `cherryPick`, `revert`, `reset(GitResetMode)`) and the commit; confirming a hard reset is the owner's.
-- **history-menu**: A row's context menu MUST hold, in order, `Checkout`, `New Branch…`, `New Tag…`, a separator, `Cherry-pick`, `Revert`, a separator, a `Reset Current Branch to Here` submenu of `Soft`, `Mixed` and `Hard…` (`.reset(.soft)`, `.reset(.mixed)`, `.reset(.hard)`), a separator and `Copy SHA`. It acts on the right-clicked row (`clickedRow`), not the selection, and leaves the selection alone; a click outside the rows shows no menu. `Copy SHA` MUST put the commit's full sha on the list's `pasteboard` and send no intent.
+- **history-menu**: A row's context menu MUST hold, in order, `Checkout`, `New Branch…`, `New Tag…`, a separator, `Cherry-pick`, `Revert`, `Interactive Rebase from Here…` (`.interactiveRebase`, `git.history.menu.interactiveRebase`), a separator, a `Reset Current Branch to Here` submenu of `Soft`, `Mixed` and `Hard…` (`.reset(.soft)`, `.reset(.mixed)`, `.reset(.hard)`), a separator and `Copy SHA`. `Interactive Rebase from Here…` MUST be left out on the row whose sha is the source's `headCommit` (nothing after it to replay) and on every row while the source's `operationState` is not `.none`. It acts on the right-clicked row (`clickedRow`), not the selection, and leaves the selection alone; a click outside the rows shows no menu. `Copy SHA` MUST put the commit's full sha on the list's `pasteboard` and send no intent.
 - **history-ref-drop**: The table MUST accept a drag of the topic list's item pasteboard type onto a row, retargeted to `.on` that row, when `refDropValidator` answers yes for the dragged ref's full name (and while it is unset), and an accepted drop MUST call `onRefDrop` once with that name. The drop does not depend on the row it lands on.
 - **history-ui-thread**: The history list MUST be used on the UI thread; every data-source call that waits is awaited, never blocked on.
 
@@ -342,7 +342,7 @@ The root view carries `git.fileHistory`, the split `git.fileHistory.split`, the 
 | git-views-059 | wc-stage-all | Press `Stage All`, then `Unstage All` | `.stageAll`, then `.unstageAll`. |
 | git-views-060 | wc-commit-box | Nothing staged, message `Fix\n\nBody`; then Amend ticked; press Commit | Commit disabled for an empty or blank message and with a message but nothing staged; enabled with Amend; `.commit(message: "Fix\n\nBody", amend: true)`. |
 | git-views-061 | wc-amend | `canAmend` true, tick Amend; set `canAmend` false; then `commitDidSucceed()` | `.amendChanged(true)` once; the checkbox disabled and unticked; the message empty. |
-| git-views-062 | history-menu, history-intents-only | Three commits, the first selected; open row 2's menu, choose each item and each reset mode | Titles `Checkout`, `New Branch…`, `New Tag…`, separator, `Cherry-pick`, `Revert`, separator, `Reset Current Branch to Here` (submenu `Soft`, `Mixed`, `Hard…`), separator, `Copy SHA`; `.checkout`, `.createBranch`, `.createTag`, `.cherryPick`, `.revert`, `.reset(.soft)`, `.reset(.mixed)`, `.reset(.hard)`, each for the third commit; the first stays selected. |
+| git-views-062 | history-menu, history-intents-only | Three commits, the first selected; open row 2's menu, choose each item and each reset mode | Titles `Checkout`, `New Branch…`, `New Tag…`, separator, `Cherry-pick`, `Revert`, `Interactive Rebase from Here…`, separator, `Reset Current Branch to Here` (submenu `Soft`, `Mixed`, `Hard…`), separator, `Copy SHA`; `.checkout`, `.createBranch`, `.createTag`, `.cherryPick`, `.revert`, `.interactiveRebase`, `.reset(.soft)`, `.reset(.mixed)`, `.reset(.hard)`, each for the third commit; the first stays selected. |
 | git-views-063 | history-menu | Choose `Copy SHA` on row 1 | The pasteboard holds the second commit's full sha; no intent. A row outside the list has no menu. |
 | git-views-064 | sidebar-menus, sidebar-intents-only | The git-views-001 source; `dev`'s menu, each item | `Checkout`, `New Branch…`, `Rename…`, `Delete…`, separator, `Push`; `.checkout(dev)`, `.createBranch(from: dev)`, `.rename(dev)`, `.delete(dev)`, `.push(dev)`; no selection call. |
 | git-views-065 | sidebar-menus | `main` (head)'s menu, each item | `New Branch…`, `Rename…`, separator, `Push`, `Pull`; `.createBranch(from: main)`, `.rename(main)`, `.push(main)`, `.pull`. |
@@ -367,6 +367,7 @@ The root view carries `git.fileHistory`, the split `git.fileHistory.split`, the 
 | git-views-084 | wc-conflict-menu | the menu of `gone.txt` (DU) | `Resolve Using Ours…`, `Resolve Using Theirs…`, `Mark Resolved`, no Open |
 | git-views-085 | wc-conflict-menu | double-click `both.txt`, then `gone.txt` | `.openMerge("both.txt")` only |
 | git-views-086 | wc-conflicts-list | select `b`, then `both.txt`, then a staged row | `.unstaged([b])`, `.unstaged([both.txt])`; each selection clears the other lists |
+| git-views-087 | history-menu | three commits, `headCommit` the first; the menus of rows 0, 1 and 2; then `operationState` merging | `Interactive Rebase from Here…` absent on row 0, present on rows 1 and 2; then absent on both |
 ## Edge Cases
 
 - **Null / empty input**: An unborn repository lists only the working copy (and its worktree).
@@ -415,7 +416,7 @@ The root view carries `git.fileHistory`, the split `git.fileHistory.split`, the 
 |--------|------|---------|-------------|
 | `source` | `GitRefsDataSource` | none | Where the sidebar reads refs, stashes, submodules, worktrees and the repository root. |
 | `delegate` | `GitRefsSidebarDelegate?` | nil | Told what the user selected, and every `GitRefIntent`. |
-| `source` (history) | `GitHistoryDataSource` | none | Where the history list reads commits, graph rows, the query and the refs at a commit, and asks for pages and queries. |
+| `source` (history) | `GitHistoryDataSource` | none | Where the history list reads commits, graph rows, the query, the HEAD commit, the operation in progress and the refs at a commit, and asks for pages and queries. |
 | `delegate` (history) | `GitHistoryDelegate?` | nil | Told which commit is selected, or nil, and every `GitCommitIntent` with its commit. |
 | `pasteboard` (history) | `NSPasteboard` | `.general` | Where Copy SHA puts the sha. |
 | `identifier` (file list) | `String` | none | The list's context (`commit`, `conflicts`, `staged`, `unstaged`); its root identifier is `git.fileList.<identifier>`. |
@@ -478,18 +479,18 @@ The commit detail, the diff, the blame and the file history each log a failed lo
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/` | confirmed (1.10.0) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Git/GitHistorySearch.swift` | confirmed (1.10.0) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Git/GitFileListItem.swift` | confirmed (1.10.0) |
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitDiffLineModels.swift` | confirmed (1.10.0) |
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitSyntaxColoring.swift` | confirmed (1.10.0) |
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitDiffViewController.swift` | confirmed (1.10.0) |
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitBlameViewController.swift` | confirmed (1.10.0) |
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitFileHistoryViewController.swift` | confirmed (1.10.0) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/SourcesUI/macOS/Theme/ThemedViews.swift` | confirmed (1.10.0) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Git/GitFileStatus.swift` | confirmed (1.10.0) |
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitOperationBannerViewController.swift` | confirmed (1.10.0) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitWorkingCopyViewController.swift` | confirmed (1.10.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/` | confirmed (1.11.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Git/GitHistorySearch.swift` | confirmed (1.11.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Git/GitFileListItem.swift` | confirmed (1.11.0) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitDiffLineModels.swift` | confirmed (1.11.0) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitSyntaxColoring.swift` | confirmed (1.11.0) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitDiffViewController.swift` | confirmed (1.11.0) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitBlameViewController.swift` | confirmed (1.11.0) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitFileHistoryViewController.swift` | confirmed (1.11.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/SourcesUI/macOS/Theme/ThemedViews.swift` | confirmed (1.11.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Git/GitFileStatus.swift` | confirmed (1.11.0) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitOperationBannerViewController.swift` | confirmed (1.11.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitWorkingCopyViewController.swift` | confirmed (1.11.0) |
 
 ## Design Decisions
 
@@ -595,3 +596,4 @@ The commit detail, the diff, the blame and the file history each log a failed lo
 | 1.9.0 | 2026-11-15 | Mike Fullerton | Merge and rebase: the sidebar's Merge into and Rebase onto items, refs dragged and dropped on the checked-out branch for a drop menu, the in-progress operation banner, refs dropped on the history; vectors 074-081 |
 | 1.10.0 | 2026-11-15 | Mike Fullerton | Working copy conflicts: a Conflicts list above Staged while there are conflicts, its paths left out of Unstaged; Open in Merge View (markers only), Resolve Using Ours…, Resolve Using Theirs… and Mark Resolved, and double-click to open; vectors 082-086 |
 | 1.10.1 | 2026-11-15 | Mike Fullerton | the working copy's conflicts pane, list and menu identifiers in accessibility, appearance and configuration |
+| 1.11.0 | 2026-11-16 | Mike Fullerton | History menu: Interactive Rebase from Here…, left out on HEAD's row and during an operation; the data source gives the HEAD commit and the operation state; vector 087 |

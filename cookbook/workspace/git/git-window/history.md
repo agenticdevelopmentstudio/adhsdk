@@ -1,6 +1,7 @@
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.9.0 | 2026-11-16 | Mike Fullerton | Interactive Rebase from Here: the plan built with every message filled from one call, the rebase editor shown as a sheet through the presenter's editRebase, the edited plan run, cancel runs nothing; vectors 064-067 |
 | 1.8.1 | 2026-11-15 | Mike Fullerton | Stage All stages only the Unstaged list and leaves conflicts unmerged (git-window-062, 063) |
 | 1.8.0 | 2026-11-15 | Mike Fullerton | Conflicts: Resolve Using Ours… and Theirs… confirmed, then resolved and staged or removed; Mark Resolved stages; Discard All skips conflicts; the merge view opened from the working copy, saved through the model and staged; vectors 056-061 |
 | 1.7.0 | 2026-11-15 | Mike Fullerton | Merge and rebase from the sidebar's menus and drop menus without a confirmation; the operation banner's Continue, Skip and confirmed Abort through the funnel; the banner follows the model; refs dropped on the history; vectors 051-055 |

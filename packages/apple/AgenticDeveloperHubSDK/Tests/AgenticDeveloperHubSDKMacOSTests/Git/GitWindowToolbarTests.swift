@@ -26,6 +26,8 @@ private final class RecordingPresenter: GitActionPresenting {
     func showFailure(title: String, message: String) {
         failures.append(title)
     }
+
+    func editRebase(_ plan: GitRebasePlan) async -> GitRebasePlan? { nil }
 }
 
 /// The Git window's toolbar (recipe `workspace/git/git-window`, "Toolbar"): six

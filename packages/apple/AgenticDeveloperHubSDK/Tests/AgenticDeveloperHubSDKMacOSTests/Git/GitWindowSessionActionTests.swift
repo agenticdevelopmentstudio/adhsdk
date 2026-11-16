@@ -36,6 +36,16 @@ private final class StubPresenter: GitActionPresenting {
     func showFailure(title: String, message: String) {
         failures.append("\(title): \(message)")
     }
+
+    /// Every plan the editor was shown, in order.
+    var rebasePlans: [GitRebasePlan] = []
+    /// What the editor answers for a plan; nil (the default) cancels it.
+    var editRebaseAnswer: ((GitRebasePlan) -> GitRebasePlan?)?
+
+    func editRebase(_ plan: GitRebasePlan) async -> GitRebasePlan? {
+        rebasePlans.append(plan)
+        return editRebaseAnswer?(plan)
+    }
 }
 
 /// The Git window's actions (recipe `workspace/git/git-window`, "Actions"), each run
@@ -1456,5 +1466,85 @@ struct GitWindowSessionActionTests {
         #expect(presenter.failures.isEmpty)
         #expect(model.conflicts == ["f.txt": .bothModified])
         #expect(model.staged.isEmpty)
+    }
+
+    // MARK: Interactive rebase
+
+    /// A repository with `base` and three commits after it, each touching its own file.
+    private func makeRebaseRepository() async throws -> GitTestRepository {
+        let repository = try await GitTestRepository.make(prefix: "git-actions")
+        try await commitFile(repository, "base.txt", "base\n", at: 10)
+        try await commitFile(repository, "a.txt", "a\n", at: 20)
+        try await commitFile(repository, "b.txt", "b\n", at: 30)
+        try await commitFile(repository, "c.txt", "c\n", at: 40)
+        return repository
+    }
+
+    private func subjects(_ repository: GitTestRepository, _ range: String) async throws -> [String] {
+        try await repository.run(["log", "--format=%s", "--reverse", range])
+            .split(separator: "\n").map(String.init)
+    }
+
+    @Test("Interactive Rebase from Here shows the plan with messages filled and runs what the editor returns")
+    func interactiveRebaseSwapsTwoCommits() async throws {
+        let repository = try await makeRebaseRepository()
+        defer { repository.tearDown() }
+        let base = try await commit(repository, "HEAD~3")
+        let presenter = StubPresenter()
+        presenter.editRebaseAnswer = { plan in
+            var edited = plan
+            edited.entries.swapAt(1, 2)
+            return edited
+        }
+        let (_, session) = await makeSession(repository, presenter: presenter)
+
+        await act(session, .commit(.interactiveRebase, base))
+
+        #expect(presenter.failures.isEmpty)
+        let shown = try #require(presenter.rebasePlans.first)
+        #expect(presenter.rebasePlans.count == 1)
+        #expect(shown.onto == base.id)
+        #expect(shown.entries.map(\.subject) == ["a.txt 20", "b.txt 30", "c.txt 40"])
+        #expect(shown.entries.map(\.message) == ["a.txt 20", "b.txt 30", "c.txt 40"])
+        #expect(shown.entries.allSatisfy { $0.action == .pick })
+        #expect(try await subjects(repository, "\(base.id)..HEAD") == ["a.txt 20", "c.txt 40", "b.txt 30"])
+    }
+
+    @Test("cancelling the rebase editor runs nothing")
+    func interactiveRebaseCancelled() async throws {
+        let repository = try await makeRebaseRepository()
+        defer { repository.tearDown() }
+        let before = try await repository.run(["rev-parse", "HEAD"])
+        let base = try await commit(repository, "HEAD~3")
+        let presenter = StubPresenter()
+        let (_, session) = await makeSession(repository, presenter: presenter)
+
+        await act(session, .commit(.interactiveRebase, base))
+
+        #expect(presenter.rebasePlans.count == 1)
+        #expect(presenter.failures.isEmpty)
+        #expect(try await repository.run(["rev-parse", "HEAD"]) == before)
+        #expect(try await subjects(repository, "\(base.id)..HEAD") == ["a.txt 20", "b.txt 30", "c.txt 40"])
+    }
+
+    @Test("a range the plan cannot be built for shows Interactive rebase failed and no editor")
+    func interactiveRebaseOverAMerge() async throws {
+        let repository = try await GitTestRepository.make(prefix: "git-actions")
+        defer { repository.tearDown() }
+        try await commitFile(repository, "base.txt", "base\n", at: 10)
+        try await repository.run(["checkout", "--quiet", "-b", "side"])
+        try await commitFile(repository, "side.txt", "side\n", at: 20)
+        try await repository.run(["checkout", "--quiet", "main"])
+        try await commitFile(repository, "main.txt", "main\n", at: 30)
+        try await repository.run(["merge", "--quiet", "--no-ff", "--no-edit", "side"])
+        let base = try await commit(repository, "HEAD~2")
+        let presenter = StubPresenter()
+        let (_, session) = await makeSession(repository, presenter: presenter)
+
+        await act(session, .commit(.interactiveRebase, base))
+
+        #expect(presenter.rebasePlans.isEmpty)
+        #expect(presenter.failures.count == 1)
+        #expect(presenter.failures.first?.hasPrefix("Interactive rebase failed: ") == true)
     }
 }

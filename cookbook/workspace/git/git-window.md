@@ -2,11 +2,11 @@
 id: 6a830cf8-0b95-4ffd-b175-f5cf481490c4
 title: "Git Window"
 type: ingredient
-version: 1.8.1
+version: 1.9.0
 status: review
 language: en
 created: 2026-11-14
-modified: 2026-11-15
+modified: 2026-11-16
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -83,11 +83,12 @@ The branch card's [branch management](cookbook:92f11498-2cb2-4b04-92b9-560d9f2de
 
 ### Asking the user
 
-- **presenter-seam**: The window MUST ask the user only through `GitActionPresenting` (`confirm`, `askForText`, `showFailure`), never through `NSAlert` directly, so a test answers with a fake.
+- **presenter-seam**: The window MUST ask the user only through `GitActionPresenting` (`confirm`, `askForText`, `showFailure`, `editRebase`), never through `NSAlert` directly, so a test answers with a fake.
 - **sheets-only**: `GitAlertPresenter` MUST show each question as an `NSAlert` sheet on the window its provider returns (`beginSheetModal`, bridged to `async` with a checked continuation); it MUST NOT run a modal loop or activate the app. With no window it MUST log at error level and answer as cancelled: `confirm` false, `askForText` nil, `showFailure` nothing shown. When the window closes while a sheet is up, the sheet MUST be ended and the question answered as cancelled, so the caller always resumes, exactly once.
 - **confirm-buttons**: A confirmation MUST have the action button first and Cancel second, and answer true only for the first; a destructive one MUST set `hasDestructiveAction` on its first button.
 - **text-fields**: A text request MUST stack one `NSTextField` per field in the alert's accessory view, labelled with the field's label and filled with its initial text and with no placeholder, the first field focused; it MUST answer one value per field, trimmed of whitespace and newlines, or nil when cancelled.
 - **text-action-enablement**: The action button MUST be enabled exactly while `GitTextRequest.isComplete(_:)` holds for the fields' current text: every non-optional field holds something other than whitespace (and there is one value per field). It MUST be re-checked on every keystroke.
+- **rebase-editor-sheet**: `editRebase(_:)` MUST show the [rebase editor](cookbook:241d5e8b-3395-4093-ad77-1e138b7fe3a1) on the plan as a sheet on the window (an `NSWindow` titled `Interactive Rebase`, `git.rebase.sheet`, over a `GitRebaseEditorViewController`), bridged to `async` like the alerts, and answer the edited plan when the editor finishes with one and nil when it finishes with nil. With no window it MUST log and answer nil; when the window closes under the sheet, the sheet MUST be ended, the editor's finish handler dropped, and nil answered, exactly once.
 - **failure-sheet**: `showFailure(title:message:)` MUST show an informational sheet with one OK button and not wait for it. The message for a failed git call MUST be `GitClientError.userMessage(of:)`: git's trimmed standard error, else the error's description.
 
 ### Actions
@@ -109,6 +110,7 @@ The branch card's [branch management](cookbook:92f11498-2cb2-4b04-92b9-560d9f2de
 - **stashes**: Stash MUST ask one optional `Message` and run `.stashSave`; the toolbar's Pop MUST run `.stashPop(0)` when there is a stash and nothing otherwise; the sidebar's Apply, Pop and Drop MUST act on the stash the menu named, found again by its sha in the current stash list just before git runs, so a stash pushed or dropped meanwhile by another tool never shifts the target; a stash that is gone MUST fail under the action's title with `That stash no longer exists.` and run nothing. Drop MUST confirm (destructive).
 - **merge-rebase**: The sidebar's `.merge(ref)` MUST run `.merge(ref: <full name>, fastForward: .allowed)` and `.rebaseOnto(ref)` `.rebase(onto: <full name>)`, at once: the menu or the drop menu the user chose from is the confirmation. A conflict fails under `Merge failed` or `Rebase failed` and leaves the operation in progress, which the refresh shows in the banner and the working copy.
 - **operation-steps**: A banner step MUST run `.operation(<kind>, <step>)` for the kind the model's `operationState` names, and nothing while it is `.none`. Abort MUST first confirm `Abort the <verb>?` / `The working tree and the branch go back to how they were before it started.` with the destructive action `Abort`, and needs the presenter; Continue and Skip run at once. A failed step is shown under its own title (`Continue rebase failed`, ...) and leaves the operation, and so the banner, in place.
+- **interactive-rebase**: The history's `.interactiveRebase` on a commit MUST build the plan with the model's `rebasePlan(onto: <sha>)`, then fill every entry's message from one `commitMessages(after: <onto>)` call, both while git runs; either failing MUST show `Interactive rebase failed` and present nothing. It MUST then ask the presenter's `editRebase` (and needs the presenter), run nothing when it answers nil, and otherwise run `.interactiveRebase(<edited plan>)` at once, failing under `Rebase failed`. A stop (a conflict, an `edit`) leaves the rebase in progress, which the banner shows.
 - **banner-follows-model**: The banner's state MUST be the model's `operationState` at session start, on every change that touches `.operation` or the working copy, and on `reloadAll`, so an operation begun outside the window shows once the model reads it.
 - **ref-drop-on-history**: A ref dropped on the history list MUST pop up the sidebar's `dropMenu(forRefNamed:)` over the history table through the sidebar's `menuPresenter`; a ref with no drop menu is refused by the history's `refDropValidator` and pops up nothing.
 - **commit-actions**: Cherry-pick and Revert MUST pass `mainline: 1` for a commit with more than one parent. A soft or mixed reset MUST run at once; a hard one MUST confirm `Reset <branch> to <shortID>?` / `Uncommitted changes are lost.` (destructive) first, naming `HEAD` when detached, where a reset is allowed.
@@ -124,10 +126,11 @@ The project window's frame and unified toolbar: the six verbs, then the project 
 - **Stash load failed**: the commit detail is cleared and a plain error label shows the failure's description; selecting anything else hides it.
 - **Repository deleted underneath**: the model keeps its last state and logs; the window keeps showing it until closed.
 - **Highlighting unavailable**: diffs and blame show uncoloured text.
+- **Editing a rebase**: the rebase editor's sheet is attached to the window; nothing runs until Start Rebase.
 - **Asking**: a confirmation, text or failure sheet is attached to the window; the window's other controls wait behind it.
 ## Accessibility
 
-The window keeps the project window's identifiers. Its panes carry `git.window.overview`, `git.window.centre` (the history pane) and `git.window.commit`; inside the commit pane the detail host `git.window.detail`, its error label `git.window.error`, the split `git.window.right` and the bottom container `git.window.bottom`; in the overview's title bar the spinner `git.window.busy` (label `Running`) and Refresh `git.window.refresh`; the toolbar's verbs `git.toolbar.fetch`, `git.toolbar.pull`, `git.toolbar.push`, `git.toolbar.branch`, `git.toolbar.stash` and `git.toolbar.pop`. The views inside keep their own identifiers. Its sheets carry `git.prompt.confirm`, `git.prompt.text` or `git.prompt.failure`; their buttons `git.prompt.action`, `git.prompt.cancel` and `git.prompt.ok`; a text request's fields `git.prompt.field.<index>` (each with its label as accessibility label) inside `git.prompt.fields`. The not-in-a-repository alert's window carries `git.prompt.failure` and its OK `git.prompt.ok`.
+The window keeps the project window's identifiers. Its panes carry `git.window.overview`, `git.window.centre` (the history pane) and `git.window.commit`; inside the commit pane the detail host `git.window.detail`, its error label `git.window.error`, the split `git.window.right` and the bottom container `git.window.bottom`; in the overview's title bar the spinner `git.window.busy` (label `Running`) and Refresh `git.window.refresh`; the toolbar's verbs `git.toolbar.fetch`, `git.toolbar.pull`, `git.toolbar.push`, `git.toolbar.branch`, `git.toolbar.stash` and `git.toolbar.pop`. The views inside keep their own identifiers. Its sheets carry `git.prompt.confirm`, `git.prompt.text` or `git.prompt.failure`, and the rebase editor's `git.rebase.sheet` (the editor keeps its own identifiers); their buttons `git.prompt.action`, `git.prompt.cancel` and `git.prompt.ok`; a text request's fields `git.prompt.field.<index>` (each with its label as accessibility label) inside `git.prompt.fields`. The not-in-a-repository alert's window carries `git.prompt.failure` and its OK `git.prompt.ok`.
 ## Conformance Test Vectors
 
 | ID | Requirements | Input | Expected |
@@ -195,6 +198,10 @@ The window keeps the project window's identifiers. Its panes carry `git.window.o
 | git-window-061 | conflicts-resolve | Discard All over a UU `f.txt` and untracked `new.txt` | `Discard changes to 1 file?`; the conflict kept |
 | git-window-062 | conflicts-resolve | Stage All over a UU `f.txt` and a modified tracked `other.txt` | nothing confirmed; `other.txt` staged; `f.txt` still unmerged and listed under Conflicts |
 | git-window-063 | conflicts-resolve | Stage All over a UU `f.txt` alone | nothing runs; no failure; the conflict kept |
+| git-window-064 | interactive-rebase | `base`, then `a.txt 20`, `b.txt 30`, `c.txt 40`; Interactive Rebase from Here on `base`, the editor swapping the last two | one plan shown, onto `base`, subjects and messages `a.txt 20`, `b.txt 30`, `c.txt 40`, all pick; no failure; the log after `base` is `a.txt 20`, `c.txt 40`, `b.txt 30` |
+| git-window-065 | interactive-rebase | the same; the editor cancelled | one plan shown; no failure; HEAD unchanged |
+| git-window-066 | interactive-rebase | `base`, then `main.txt` and a `--no-ff` merge of `side`; Interactive Rebase from Here on `HEAD~2` | no editor; one failure `Interactive rebase failed: …` |
+| git-window-067 | rebase-editor-sheet | `editRebase` with fake sheets: Start after moving the second entry up; Cancel; the window closing | the sheet `Interactive Rebase` (`git.rebase.sheet`) begun; the edited plan answered and the sheet ended once; nil; nil, the sheet ended once and the editor's finish handler gone |
 ## Edge Cases
 
 - **Symlinked spelling**: `/tmp/r` and `/private/tmp/r` resolve to one key and one window.
@@ -258,9 +265,9 @@ Under the `Loggable` categories of `GitWindowFeature`, `GitWindowSession` and `G
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Window/` | confirmed (1.8.0) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Window/GitWindowSession.swift` | confirmed (1.8.0) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Window/GitWindowSession+Actions.swift` | confirmed (1.8.0) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Window/` | confirmed (1.9.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Window/GitWindowSession.swift` | confirmed (1.9.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Window/GitWindowSession+Actions.swift` | confirmed (1.9.0) |
 
 ## Design Decisions
 
@@ -315,6 +322,7 @@ Under the `Loggable` categories of `GitWindowFeature`, `GitWindowSession` and `G
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.9.0 | 2026-11-16 | Mike Fullerton | Interactive Rebase from Here: the plan built with every message filled from one call, the rebase editor shown as a sheet through the presenter's editRebase, the edited plan run, cancel runs nothing; vectors 064-067 |
 | 1.8.1 | 2026-11-15 | Mike Fullerton | Stage All stages only the Unstaged list and leaves conflicts unmerged (git-window-062, 063) |
 | 1.8.0 | 2026-11-15 | Mike Fullerton | Conflicts: Resolve Using Ours… and Theirs… confirmed, then resolved and staged or removed; Mark Resolved stages; Discard All skips conflicts; the merge view opened from the working copy, saved through the model and staged; vectors 056-061 |
 | 1.7.0 | 2026-11-15 | Mike Fullerton | Merge and rebase from the sidebar's menus and drop menus without a confirmation; the operation banner's Continue, Skip and confirmed Abort through the funnel; the banner follows the model; refs dropped on the history; vectors 051-055 |

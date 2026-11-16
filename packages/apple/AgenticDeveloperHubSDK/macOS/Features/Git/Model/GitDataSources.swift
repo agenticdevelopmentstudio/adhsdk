@@ -18,6 +18,10 @@ import AgenticDeveloperHubSDKCore
     var commits: [GitCommit] { get }
     var graphRows: [CommitGraphLayout<String>.Row] { get }
     var query: GitLogQuery { get }
+    /// The commit HEAD resolves to; nil on an unborn HEAD.
+    var headCommit: String? { get }
+    /// The operation in progress; while there is one, nothing offers to start a rebase.
+    var operationState: GitOperationState { get }
     func setQuery(_ query: GitLogQuery) async
     func loadMore() async
     func refs(at commitID: String) -> [GitRef]

@@ -217,6 +217,45 @@ public actor GitClient {
         return GitRebasePlan(onto: onto, entries: commits.map { GitRebaseEntry(commit: $0.id, subject: $0.subject) })
     }
 
+    /// The full message (`%B`, trailing whitespace and newlines trimmed) of every commit in
+    /// `rebasePlan`'s range, `log --first-parent <onto>..HEAD`, by full sha: one `git log`
+    /// for the whole range, so a plan's rewords can be prefilled up front. Throws
+    /// `.invalidArgument` for an empty `onto` or one that begins with `-`.
+    public func commitMessages(
+        after onto: String,
+        in directory: URL,
+        caller: GitCaller = GitCaller()
+    ) async throws -> [String: String] {
+        guard !onto.isEmpty, !onto.hasPrefix("-") else {
+            throw GitClientError.invalidArgument(verb: "log", argument: onto)
+        }
+        let output = try await execute(
+            verb: "log",
+            arguments: ["--no-color", "--no-show-signature", "--first-parent", "--format=%H%x1f%B%x1e",
+                        "--end-of-options", "\(onto)..HEAD"],
+            directory: directory,
+            caller: caller,
+            configuration: await configurationProvider()
+        )
+        return Self.commitMessages(fromLog: output)
+    }
+
+    /// Parses `%H%x1f%B%x1e` records into messages by sha, each message's trailing
+    /// whitespace trimmed; a record without a separator is dropped.
+    static func commitMessages(fromLog output: String) -> [String: String] {
+        var messages: [String: String] = [:]
+        for raw in output.split(separator: "\u{1E}", omittingEmptySubsequences: true) {
+            let record = raw.drop { $0 == "\n" }
+            guard let separator = record.firstIndex(of: "\u{1F}") else { continue }
+            let sha = String(record[..<separator])
+            guard !sha.isEmpty else { continue }
+            var message = record[record.index(after: separator)...]
+            while let last = message.last, last.isWhitespace { message.removeLast() }
+            messages[sha] = String(message)
+        }
+        return messages
+    }
+
     /// `rev-parse --git-path` answers relative to the directory it ran in unless the path is absolute.
     private static func gitPathURL(_ path: String, in directory: URL) -> URL {
         path.hasPrefix("/") ? URL(fileURLWithPath: path) : directory.appendingPathComponent(path)

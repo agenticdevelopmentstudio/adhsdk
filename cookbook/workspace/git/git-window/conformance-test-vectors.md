@@ -64,3 +64,7 @@
 | git-window-061 | conflicts-resolve | Discard All over a UU `f.txt` and untracked `new.txt` | `Discard changes to 1 file?`; the conflict kept |
 | git-window-062 | conflicts-resolve | Stage All over a UU `f.txt` and a modified tracked `other.txt` | nothing confirmed; `other.txt` staged; `f.txt` still unmerged and listed under Conflicts |
 | git-window-063 | conflicts-resolve | Stage All over a UU `f.txt` alone | nothing runs; no failure; the conflict kept |
+| git-window-064 | interactive-rebase | `base`, then `a.txt 20`, `b.txt 30`, `c.txt 40`; Interactive Rebase from Here on `base`, the editor swapping the last two | one plan shown, onto `base`, subjects and messages `a.txt 20`, `b.txt 30`, `c.txt 40`, all pick; no failure; the log after `base` is `a.txt 20`, `c.txt 40`, `b.txt 30` |
+| git-window-065 | interactive-rebase | the same; the editor cancelled | one plan shown; no failure; HEAD unchanged |
+| git-window-066 | interactive-rebase | `base`, then `main.txt` and a `--no-ff` merge of `side`; Interactive Rebase from Here on `HEAD~2` | no editor; one failure `Interactive rebase failed: …` |
+| git-window-067 | rebase-editor-sheet | `editRebase` with fake sheets: Start after moving the second entry up; Cancel; the window closing | the sheet `Interactive Rebase` (`git.rebase.sheet`) begun; the edited plan answered and the sheet ended once; nil; nil, the sheet ended once and the editor's finish handler gone |

@@ -105,6 +105,29 @@ struct GitClientConflictTests {
         #expect(reason.contains("merge commit"))
     }
 
+    @Test("commitMessages gives every commit in the plan's range its full message, in one call")
+    func commitMessagesForTheRange() async throws {
+        let repository = try await featureRepository("rebase-messages")
+        defer { repository.tearDown() }
+        try repository.write("4\n", to: "four.txt")
+        try await repository.run(["add", "four.txt"])
+        try await repository.run(["commit", "-q", "-m", "add four", "-m", "with a body\nof two lines"])
+        let messages = try await client.commitMessages(after: "main", in: repository.root)
+        let plan = try await client.rebasePlan(onto: "main", in: repository.root)
+        #expect(Set(messages.keys) == Set(plan.entries.map(\.commit)))
+        #expect(messages[try await repository.sha("HEAD")] == "add four\n\nwith a body\nof two lines")
+        #expect(messages[try await repository.sha("HEAD~3")] == "add one")
+
+        let refused = await failure { _ = try await client.commitMessages(after: "-x", in: repository.root) }
+        #expect(refused == .invalidArgument(verb: "log", argument: "-x"))
+    }
+
+    @Test("commitMessages parses records split by the unit and record separators")
+    func commitMessagesParsing() {
+        let log = "aaa\u{1F}one\n\n\u{1E}\nbbb\u{1F}two\n\nbody \u{1F} kept\n\u{1E}\nbroken\u{1E}\n"
+        #expect(GitClient.commitMessages(fromLog: log) == ["aaa": "one", "bbb": "two\n\nbody \u{1F} kept"])
+    }
+
     // MARK: - Interactive rebase
 
     @Test("reordering two commits")

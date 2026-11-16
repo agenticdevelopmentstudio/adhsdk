@@ -16,6 +16,8 @@ struct GitAlertPresenterTests {
         var begun: [NSAlert] = []
         var ended: [NSAlert] = []
         var handlers: [(NSApplication.ModalResponse) -> Void] = []
+        var windowsBegun: [NSWindow] = []
+        var windowsEnded: [NSWindow] = []
     }
 
     private static func presenter(window: NSWindow?, sheets: FakeSheets) -> GitAlertPresenter {
@@ -25,7 +27,19 @@ struct GitAlertPresenterTests {
                 sheets.begun.append(alert)
                 sheets.handlers.append(handler)
             },
-            endSheet: { alert, _ in sheets.ended.append(alert) })
+            endSheet: { alert, _ in sheets.ended.append(alert) },
+            beginWindowSheet: { sheet, _, handler in
+                sheets.windowsBegun.append(sheet)
+                sheets.handlers.append(handler)
+            },
+            endWindowSheet: { sheet, _ in sheets.windowsEnded.append(sheet) })
+    }
+
+    private static func rebasePlan() -> GitRebasePlan {
+        GitRebasePlan(onto: String(repeating: "b", count: 40), entries: [
+            GitRebaseEntry(commit: String(repeating: "1", count: 40), subject: "one"),
+            GitRebaseEntry(commit: String(repeating: "2", count: 40), subject: "two")
+        ])
     }
 
     private static func window() -> NSWindow {
@@ -146,5 +160,55 @@ struct GitAlertPresenterTests {
         sheets.handlers.first?(.alertFirstButtonReturn)
         NotificationCenter.default.post(name: NSWindow.willCloseNotification, object: window)
         #expect(sheets.ended.count == 1)
+    }
+
+    @Test("the rebase editor is a sheet; Start Rebase answers the edited plan and ends it")
+    func rebaseEditorStarts() async throws {
+        let sheets = FakeSheets()
+        let window = Self.window()
+        let presenter = Self.presenter(window: window, sheets: sheets)
+        let answer = Task { await presenter.editRebase(Self.rebasePlan()) }
+        await Self.settle { !sheets.windowsBegun.isEmpty }
+        let sheet = try #require(sheets.windowsBegun.first)
+        #expect(sheet.title == "Interactive Rebase")
+        #expect(sheet.accessibilityIdentifier() == "git.rebase.sheet")
+        let editor = try #require(sheet.contentViewController as? GitRebaseEditorViewController)
+        editor.moveEntry(from: 1, to: 0)
+        editor.startButton.performClick(nil)
+        let edited = await answer.value
+        #expect(edited?.entries.map(\.subject) == ["two", "one"])
+        #expect(sheets.windowsEnded.count == 1)
+        #expect(sheets.windowsEnded.first === sheet)
+    }
+
+    @Test("Cancel in the rebase editor answers nil")
+    func rebaseEditorCancels() async throws {
+        let sheets = FakeSheets()
+        let window = Self.window()
+        let presenter = Self.presenter(window: window, sheets: sheets)
+        let answer = Task { await presenter.editRebase(Self.rebasePlan()) }
+        await Self.settle { !sheets.windowsBegun.isEmpty }
+        let editor = try #require(sheets.windowsBegun.first?.contentViewController as? GitRebaseEditorViewController)
+        editor.cancelButton.performClick(nil)
+        #expect(await answer.value == nil)
+        #expect(sheets.windowsEnded.count == 1)
+    }
+
+    @Test("a window closing under the rebase editor ends its sheet and answers nil, once")
+    func rebaseEditorWindowCloses() async throws {
+        let sheets = FakeSheets()
+        let window = Self.window()
+        let presenter = Self.presenter(window: window, sheets: sheets)
+        let answer = Task { await presenter.editRebase(Self.rebasePlan()) }
+        await Self.settle { !sheets.windowsBegun.isEmpty }
+        let editor = try #require(sheets.windowsBegun.first?.contentViewController as? GitRebaseEditorViewController)
+
+        NotificationCenter.default.post(name: NSWindow.willCloseNotification, object: window)
+        #expect(await answer.value == nil)
+        #expect(sheets.windowsEnded.count == 1)
+        #expect(editor.onFinish == nil, "closing breaks the editor's hold on its sheet")
+
+        editor.startButton.performClick(nil)
+        #expect(sheets.windowsEnded.count == 1)
     }
 }

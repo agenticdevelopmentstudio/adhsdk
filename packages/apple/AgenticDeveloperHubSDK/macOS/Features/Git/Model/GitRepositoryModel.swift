@@ -382,6 +382,17 @@ public final class GitRepositoryModel: GitRefsDataSource, GitHistoryDataSource, 
         try await client.lastCommitMessage(in: root, caller: caller)
     }
 
+    /// The interactive rebase of the checked-out branch onto `commit`, every entry picked.
+    public func rebasePlan(onto commit: String, caller: GitCaller = GitCaller()) async throws -> GitRebasePlan {
+        try await client.rebasePlan(onto: commit, in: root, caller: caller)
+    }
+
+    /// The full message of every commit after `onto` on HEAD's first-parent line, by sha.
+    public func commitMessages(after onto: String, caller: GitCaller = GitCaller()) async throws
+        -> [String: String] {
+        try await client.commitMessages(after: onto, in: root, caller: caller)
+    }
+
     /// Where `git push` would send local `branch` (its `@{push}`, such as `origin/feature`).
     public func pushDestination(of branch: String, caller: GitCaller = GitCaller()) async throws -> String {
         try await client.pushDestination(of: branch, in: root, caller: caller)

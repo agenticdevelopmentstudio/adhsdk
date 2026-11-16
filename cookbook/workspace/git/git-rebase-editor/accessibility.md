@@ -1,0 +1,2 @@
+
+The root view carries `git.rebase`, the scroll view `git.rebase.scroll`, the table `git.rebase.table`, each action pop-up `git.rebase.action`, each sha `git.rebase.sha`, each subject `git.rebase.subject`, each reword field `git.rebase.message` (accessibility label `Message`), the button row `git.rebase.buttons` and the buttons `git.rebase.cancel` and `git.rebase.start`. The pop-ups and buttons are standard controls, so they answer accessibility presses.

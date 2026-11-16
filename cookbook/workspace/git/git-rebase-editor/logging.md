@@ -1,0 +1,2 @@
+
+The editor logs nothing.

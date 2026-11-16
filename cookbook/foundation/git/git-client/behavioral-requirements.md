@@ -369,6 +369,14 @@
   begins with `-` or names no commit, an empty range, and a range holding a
   merge commit (a plan replays a straight line; `rebase -i` without
   `--rebase-merges` would flatten the merge).
+- **rebase-plan-messages**: The commit-messages verb MUST list
+  `log --first-parent <onto>..HEAD` (no colour, no signatures) with each
+  commit's full sha and its raw message (`%B`), records split by the record
+  separator and sha from message by the unit separator, in one call, and
+  answer a map from sha to message with its trailing whitespace trimmed, so a
+  rebase editor can show every reword's message without a call per commit. It
+  MUST refuse, as invalid-argument naming `log`, an onto that is empty or
+  begins with `-`; a record with no separator or no sha is dropped.
 - **rebase-plan-actions**: An entry's action MUST be one of pick, reword,
   edit, squash, fixup and drop; a reword carries its new message.
 - **rebase-plan-validation**: A plan MUST report why git would refuse it,

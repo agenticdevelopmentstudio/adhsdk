@@ -66,6 +66,8 @@ public protocol GitActionPresenting: AnyObject {
     /// One value per field, trimmed; nil when cancelled.
     func askForText(_ request: GitTextRequest) async -> [String]?
     func showFailure(title: String, message: String)
+    /// The plan as the user edited it in the rebase editor; nil when cancelled.
+    func editRebase(_ plan: GitRebasePlan) async -> GitRebasePlan?
 }
 
 /// `GitActionPresenting` as `NSAlert` sheets on the Git window. Never runs a modal
@@ -78,10 +80,17 @@ public final class GitAlertPresenter: GitActionPresenting {
     typealias SheetBeginner = @MainActor (NSAlert, NSWindow, @escaping (NSApplication.ModalResponse) -> Void) -> Void
     /// Ends the sheet `alert` shows on a window.
     typealias SheetEnder = @MainActor (NSAlert, NSWindow) -> Void
+    /// Begins a window (the rebase editor's) as a sheet on the Git window.
+    typealias WindowSheetBeginner = @MainActor (NSWindow, NSWindow, @escaping (NSApplication.ModalResponse) -> Void)
+        -> Void
+    /// Ends a window's sheet on the Git window.
+    typealias WindowSheetEnder = @MainActor (NSWindow, NSWindow) -> Void
 
     private let window: @MainActor () -> NSWindow?
     private let beginSheet: SheetBeginner
     private let endSheet: SheetEnder
+    private let beginWindowSheet: WindowSheetBeginner
+    private let endWindowSheet: WindowSheetEnder
 
     public convenience init(window: @escaping @MainActor () -> NSWindow?) {
         self.init(
@@ -92,10 +101,18 @@ public final class GitAlertPresenter: GitActionPresenting {
 
     /// How a sheet begins and ends is injected, so a test shows none.
     init(window: @escaping @MainActor () -> NSWindow?, beginSheet: @escaping SheetBeginner,
-         endSheet: @escaping SheetEnder) {
+         endSheet: @escaping SheetEnder,
+         beginWindowSheet: @escaping WindowSheetBeginner = { sheet, window, handler in
+             window.beginSheet(sheet, completionHandler: handler)
+         },
+         endWindowSheet: @escaping WindowSheetEnder = { sheet, window in
+             window.endSheet(sheet, returnCode: .cancel)
+         }) {
         self.window = window
         self.beginSheet = beginSheet
         self.endSheet = endSheet
+        self.beginWindowSheet = beginWindowSheet
+        self.endWindowSheet = endWindowSheet
     }
 
     public func confirm(_ request: GitConfirmation) async -> Bool {
@@ -116,6 +133,32 @@ public final class GitAlertPresenter: GitActionPresenting {
     public func showFailure(title: String, message: String) {
         let alert = Self.failureAlert(title: title, message: message)
         Task { _ = await present(alert, purpose: "failure") }
+    }
+
+    /// Shows the rebase editor as a sheet. Start Rebase answers its plan, Cancel and the
+    /// window closing under it nil.
+    public func editRebase(_ plan: GitRebasePlan) async -> GitRebasePlan? {
+        let editor = GitRebaseEditorViewController(plan: plan)
+        let sheet = Self.rebaseSheet(editor)
+        let beginWindowSheet = beginWindowSheet
+        let endWindowSheet = endWindowSheet
+        let response = await present(
+            purpose: "rebase editor",
+            begin: { window, handler in
+                editor.onFinish = { edited in
+                    // Answer first: ending the sheet calls the handler again, which then does nothing.
+                    handler(edited == nil ? .cancel : .OK)
+                    endWindowSheet(sheet, window)
+                }
+                beginWindowSheet(sheet, window, handler)
+            },
+            end: { window in
+                // Breaks sheet -> editor -> onFinish -> sheet when the window closes first.
+                editor.onFinish = nil
+                endWindowSheet(sheet, window)
+            })
+        guard response == .OK else { return nil }
+        return editor.plan
     }
 
     // MARK: Alerts
@@ -171,6 +214,17 @@ public final class GitAlertPresenter: GitActionPresenting {
         return alert
     }
 
+    /// The rebase editor in a titled window of its own, for a sheet.
+    static func rebaseSheet(_ editor: GitRebaseEditorViewController) -> NSWindow {
+        let sheet = NSWindow(contentViewController: editor)
+        sheet.styleMask = [.titled, .resizable]
+        sheet.title = "Interactive Rebase"
+        sheet.isReleasedWhenClosed = false
+        sheet.setContentSize(editor.preferredContentSize)
+        sheet.setAccessibilityIdentifier("git.rebase.sheet")
+        return sheet
+    }
+
     /// A built text request: the alert, its fields in order, and what enables its action.
     struct TextPrompt {
         let alert: NSAlert
@@ -184,20 +238,34 @@ public final class GitAlertPresenter: GitActionPresenting {
     /// is no window to attach it to. The window closing first ends the sheet and
     /// answers `.cancel`.
     private func present(_ alert: NSAlert, purpose: String) async -> NSApplication.ModalResponse? {
+        let endSheet = endSheet
+        let beginSheet = beginSheet
+        return await present(
+            purpose: purpose,
+            begin: { window, handler in beginSheet(alert, window, handler) },
+            end: { window in endSheet(alert, window) })
+    }
+
+    /// Runs a sheet `begin` starts on the window, handing it the handler that answers, and
+    /// returns how it ended; nil when there is no window. The window closing first calls
+    /// `end` and answers `.cancel`; whichever comes first answers, once.
+    private func present(
+        purpose: String,
+        begin: @escaping @MainActor (NSWindow, @escaping (NSApplication.ModalResponse) -> Void) -> Void,
+        end: @escaping @MainActor (NSWindow) -> Void
+    ) async -> NSApplication.ModalResponse? {
         guard let window = window() else {
             Self.logger.error("Git \(purpose, privacy: .public) not shown: the Git window has no window")
             return nil
         }
-        let endSheet = endSheet
-        let beginSheet = beginSheet
         return await withCheckedContinuation { continuation in
-            let completion = SheetCompletion(continuation, alert: alert, window: window, endSheet: endSheet)
+            let completion = SheetCompletion(continuation, window: window, end: end)
             completion.observer = NotificationCenter.default.addObserver(
                 forName: NSWindow.willCloseNotification, object: window, queue: .main
             ) { _ in
                 MainActor.assumeIsolated { completion.windowWillClose() }
             }
-            beginSheet(alert, window) { response in completion.finish(response) }
+            begin(window) { response in completion.finish(response) }
         }
     }
 
@@ -231,22 +299,20 @@ extension GitAlertPresenter: Loggable {
 @MainActor
 private final class SheetCompletion {
     private var continuation: CheckedContinuation<NSApplication.ModalResponse?, Never>?
-    private weak var alert: NSAlert?
     private weak var window: NSWindow?
-    private let endSheet: GitAlertPresenter.SheetEnder
+    private let end: @MainActor (NSWindow) -> Void
     var observer: NSObjectProtocol?
 
-    init(_ continuation: CheckedContinuation<NSApplication.ModalResponse?, Never>, alert: NSAlert,
-         window: NSWindow, endSheet: @escaping GitAlertPresenter.SheetEnder) {
+    init(_ continuation: CheckedContinuation<NSApplication.ModalResponse?, Never>,
+         window: NSWindow, end: @escaping @MainActor (NSWindow) -> Void) {
         self.continuation = continuation
-        self.alert = alert
         self.window = window
-        self.endSheet = endSheet
+        self.end = end
     }
 
     /// Ends the sheet, then answers cancelled if ending it did not already answer.
     func windowWillClose() {
-        if continuation != nil, let alert, let window { endSheet(alert, window) }
+        if continuation != nil, let window { end(window) }
         finish(.cancel)
     }
 

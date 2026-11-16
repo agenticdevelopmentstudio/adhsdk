@@ -5,6 +5,8 @@ import AgenticDeveloperHubSDKCore
 /// its delegate does.
 public enum GitCommitIntent: Equatable {
     case checkout, createBranch, createTag, cherryPick, revert, reset(GitResetMode)
+    /// Rebase the commits after this one interactively, onto it.
+    case interactiveRebase
 }
 
 /// Told which commit the history list has selected, or nil when nothing is, and every
@@ -302,6 +304,11 @@ extension GitHistoryViewController: NSMenuDelegate {
         menu.addItem(.separator())
         menu.addItem(intentItem("Cherry-pick", "cherryPick", .cherryPick, commit))
         menu.addItem(intentItem("Revert", "revert", .revert, commit))
+        // Nothing after HEAD to replay, and no new rebase while an operation is in progress.
+        if commit.id != source.headCommit, source.operationState == .none {
+            let title = "Interactive Rebase from Here…"
+            menu.addItem(intentItem(title, "interactiveRebase", .interactiveRebase, commit))
+        }
         menu.addItem(.separator())
         let reset = NSMenuItem(title: "Reset Current Branch to Here", action: nil, keyEquivalent: "")
         reset.accessibilityID("git.history.menu.reset")

@@ -238,7 +238,31 @@ extension GitWindowSession {
         case .cherryPick: await execute(.cherryPick(commit: commit.id, mainline: mainline))
         case .revert: await execute(.revert(commit: commit.id, mainline: mainline))
         case .reset(let mode): await reset(to: commit, mode: mode)
+        case .interactiveRebase: await interactiveRebase(onto: commit)
         }
+    }
+
+    /// Plans the rebase of the commits after `commit` onto it, every entry's message filled
+    /// up front (one `git log` for the range) so switching one to reword needs no fetch,
+    /// shows the editor, then runs the plan it answers; Cancel runs nothing. A plan git
+    /// cannot build (a merge in the range) is shown as "Interactive rebase failed"; a stop
+    /// partway (a conflict, an `edit`) is the banner's.
+    private func interactiveRebase(onto commit: GitCommit) async {
+        guard let presenter else { return }
+        var plan: GitRebasePlan
+        do {
+            plan = try await whileGitRuns { try await model.rebasePlan(onto: commit.id) }
+            let onto = plan.onto
+            let messages = try await whileGitRuns { try await model.commitMessages(after: onto) }
+            for index in plan.entries.indices {
+                plan.entries[index].message = messages[plan.entries[index].commit]
+            }
+        } catch {
+            showFailure(title: "Interactive rebase failed", error: error)
+            return
+        }
+        guard let edited = await presenter.editRebase(plan) else { return }
+        await execute(.interactiveRebase(edited))
     }
 
     /// Soft and mixed run at once; hard confirms first. On a detached HEAD it moves HEAD.

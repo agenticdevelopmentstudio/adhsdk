@@ -914,6 +914,7 @@
 		2ABEF8F70133758A669D41B0 /* SafariExtensionsTopicPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 68C753F15472132AF0F28E12 /* SafariExtensionsTopicPanel.swift */; };
 		2AD013DF35BDFB0FF91DD5DB /* ProcessLivenessTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D922AA4DC0CD73FE97E3F32 /* ProcessLivenessTests.swift */; };
 		2ADA5F342A5ECFC4E9F0E0F9 /* GitClientConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = D56B2E091B1B9BC1AD076A99 /* GitClientConfiguration.swift */; };
+		2AE7E64FF741A8EC77A67068 /* GitRebaseEditorViewControllerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72A9671C8C6EE1EB9252A02E /* GitRebaseEditorViewControllerTests.swift */; };
 		2AEF0A5B18DC67C0BDCB80C3 /* AIProviderDefaultsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA317FDF6BDD927244EC4A59 /* AIProviderDefaultsTests.swift */; };
 		2AFBE0FE8EFC32F587124BFF /* ConversationFeedTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E55843F026C5A839606F151 /* ConversationFeedTests.swift */; };
 		2B02639DDC97C3DC7AE5C2EA /* UsageStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1895395D75E5F0DD130453A /* UsageStoreTests.swift */; };
@@ -1611,6 +1612,7 @@
 		566C0ED4E21C7DC86970D80B /* PartnerInboundConformanceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90BDC31A93E3E8C9B2E8B182 /* PartnerInboundConformanceTests.swift */; };
 		567980708C96E33C86E13602 /* PartnerStore+Transcript.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB85E722AE9DCB7FEE23B2EF /* PartnerStore+Transcript.swift */; };
 		5689A31FE6FA877037747A62 /* ProjectsGeneralSettingsPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8469FA0E8BB63F81487766DE /* ProjectsGeneralSettingsPanel.swift */; };
+		569C88C430474CFF1769009D /* GitRebaseEditorViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77816982820B4106CE7A6D90 /* GitRebaseEditorViewController.swift */; };
 		569CB3DA0E858487E74FB49F /* TimelineFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2FD2795131A5DE729761555 /* TimelineFormat.swift */; };
 		56A46F217FF8910BE08D3424 /* Tool.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86E5F67903F71CECF7ABACBA /* Tool.swift */; };
 		56AB86D5DA3D14EDE569DEA2 /* RootDataSourceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39F28B8B5D574525D4A59436 /* RootDataSourceTests.swift */; };
@@ -9029,6 +9031,7 @@
 		71CEDB3091BE1D70C3D114EB /* MarkdownText.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownText.swift; sourceTree = "<group>"; };
 		71F6C61C5CDABE50EC0A9454 /* BrowserSiteData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowserSiteData.swift; sourceTree = "<group>"; };
 		7279CA33353A602FA0A52E0E /* ClosureMenuItemTarget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClosureMenuItemTarget.swift; sourceTree = "<group>"; };
+		72A9671C8C6EE1EB9252A02E /* GitRebaseEditorViewControllerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GitRebaseEditorViewControllerTests.swift; sourceTree = "<group>"; };
 		72BB7953ECEBFEE5B98B9CCB /* UserSettings+SessionWatcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UserSettings+SessionWatcher.swift"; sourceTree = "<group>"; };
 		72EF092921EA87473A7D2F1C /* TextDocumentStorageTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextDocumentStorageTests.swift; sourceTree = "<group>"; };
 		72FFF30B186926C8BA59A8A6 /* AccountDetailPanelViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountDetailPanelViewController.swift; sourceTree = "<group>"; };
@@ -9083,6 +9086,7 @@
 		775C36F521A20F55B54F4715 /* AIChatBubbleLayoutConformanceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIChatBubbleLayoutConformanceTests.swift; sourceTree = "<group>"; };
 		775E6BF89806492DB528E015 /* PreCompact.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = PreCompact.json; sourceTree = "<group>"; };
 		7773944069F4D7716717EE4A /* FileTreeOutlineViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileTreeOutlineViewController.swift; sourceTree = "<group>"; };
+		77816982820B4106CE7A6D90 /* GitRebaseEditorViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GitRebaseEditorViewController.swift; sourceTree = "<group>"; };
 		778A0543ECF32E68E375B8E5 /* CodableIgnoredConformanceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodableIgnoredConformanceTests.swift; sourceTree = "<group>"; };
 		779135595BD53CB07F95E5A5 /* FileBrowserClickFocusTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileBrowserClickFocusTests.swift; sourceTree = "<group>"; };
 		7794704A1D1EBFF5989BBDC4 /* ToolResult.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToolResult.swift; sourceTree = "<group>"; };
@@ -12806,6 +12810,7 @@
 				985FDEAFD0A4A364F091116B /* GitMergeLineModels.swift */,
 				D161E9B925F7101CB8D0B11D /* GitMergeViewController.swift */,
 				6B08962D7E1310EDB963F7E9 /* GitOperationBannerViewController.swift */,
+				77816982820B4106CE7A6D90 /* GitRebaseEditorViewController.swift */,
 				C336895FBCD90446344FA0E4 /* GitRefsSidebarViewController.swift */,
 				C2D1A7855BB957635690E30C /* GitSyntaxColoring.swift */,
 				2CF9BB7668579FAA4C425015 /* GitWorkingCopyViewController.swift */,
@@ -13962,6 +13967,7 @@
 				F6619E611C713D480F973AFF /* GitMergeViewControllerTests.swift */,
 				06CC5F4C73BDCE2D4B045450 /* GitOperationBannerViewControllerTests.swift */,
 				AADCD69671F525F3E65FE5F4 /* GitProcessBottleneckTests.swift */,
+				72A9671C8C6EE1EB9252A02E /* GitRebaseEditorViewControllerTests.swift */,
 				57E80C07DA719AEF0A70436F /* GitRefsSidebarViewControllerTests.swift */,
 				752D2148927E356114EDDF91 /* GitRepositoryModelActionTests.swift */,
 				16C36BA21576FC151D13F16E /* GitRepositoryModelTests.swift */,
@@ -22606,6 +22612,7 @@
 				65FB40E2F3813B13BED792DF /* GitMergeViewControllerTests.swift in Sources */,
 				73D9833000FB10E816A8C06E /* GitOperationBannerViewControllerTests.swift in Sources */,
 				3AFC2FA4A1E46ABF8BDD6EE1 /* GitProcessBottleneckTests.swift in Sources */,
+				2AE7E64FF741A8EC77A67068 /* GitRebaseEditorViewControllerTests.swift in Sources */,
 				D51F0701FD0E4A28F57ED00E /* GitRefsSidebarViewControllerTests.swift in Sources */,
 				67DED517690F36074600C8BD /* GitRepoScannerTests.swift in Sources */,
 				0E78EE3AC55684F2ECE6E638 /* GitRepositoryModelActionTests.swift in Sources */,
@@ -24771,6 +24778,7 @@
 				E8C4C929661F47D852CE7895 /* GitMergeLineModels.swift in Sources */,
 				AAA8E38F8F6280C320E02426 /* GitMergeViewController.swift in Sources */,
 				EA95490D1D9893A8ADC70EB1 /* GitOperationBannerViewController.swift in Sources */,
+				569C88C430474CFF1769009D /* GitRebaseEditorViewController.swift in Sources */,
 				CE064ED8D7500B6C83D6DA50 /* GitRefsSidebarViewController.swift in Sources */,
 				F2D911526327D373352E8E97 /* GitRepo.swift in Sources */,
 				555631C7CB51C19FFE4E7A05 /* GitRepoScanner.swift in Sources */,
