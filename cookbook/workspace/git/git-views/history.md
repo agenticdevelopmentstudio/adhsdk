@@ -24,3 +24,4 @@
 | 1.12.2 | 2026-11-16 | Mike Fullerton | Selecting a conflict with markers opens the merge view; one without shows its .conflicted diff (vector 086) |
 | 1.12.3 | 2026-11-16 | Mike Fullerton | A conflicted diff's old side is coloured from the revision the diff used (vector 093) |
 | 1.13.0 | 2026-11-16 | Mike Fullerton | Command log view: columns, root filter, follow-bottom, Copy Command, failure tooltip. |
+| 1.14.0 | 2026-11-16 | Mike Fullerton | Signing badges: a symbol per signed history row, the visible-row requests through the debounced, coalesced `GitShaBatchLoader` (replace the queued batch, a running one finishes and is cached), and the Signature line in the commit detail. |

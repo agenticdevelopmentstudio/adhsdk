@@ -61,6 +61,12 @@ private final class FakeHistorySource: GitHistoryDataSource {
     }
 
     func refs(at commitID: String) -> [GitRef] { refsByCommit[commitID] ?? [] }
+
+    var signatures: [String: GitSignature] = [:]
+    /// Every `requestSignatures` call's shas, in order.
+    private(set) var signatureRequests: [[String]] = []
+    func signature(for sha: String) -> GitSignature? { signatures[sha] }
+    func requestSignatures(for shas: [String]) { signatureRequests.append(shas) }
 }
 
 /// Records every delegate call in order: the selected commit's id, or nil.
@@ -208,6 +214,67 @@ struct GitHistoryViewControllerTests {
         let second: GitHistorySubjectCellView = try #require(cell(history, "subject", row: 1))
         #expect(second.badges.isEmpty)
         #expect(second.badgeViews.isEmpty)
+    }
+
+    @Test("signing badges: a symbol per signed row, with the status and signer as its text; none unsigned")
+    func signatureBadges() throws {
+        let source = FakeHistorySource()
+        source.commits = [Self.commit("aa11"), Self.commit("bb22"), Self.commit("cc33"), Self.commit("dd44")]
+        source.graphRows = source.commits.map { _ in Self.row(width: 1) }
+        source.signatures[Self.sha("aa11")] = GitSignature(status: .good, signer: "Ann Lee", key: "SHA256:abc")
+        source.signatures[Self.sha("bb22")] = GitSignature(status: .bad, signer: "Bo")
+        source.signatures[Self.sha("cc33")] = GitSignature(status: .unsigned)
+        let history = GitHistoryViewController(source: source)
+        history.loadViewIfNeeded()
+
+        let good: GitHistorySubjectCellView = try #require(cell(history, "subject", row: 0))
+        #expect(good.signatureBadge?.symbolName == "checkmark.seal")
+        #expect(good.signatureBadge?.role == .success)
+        #expect(!good.signatureView.isHidden)
+        #expect(good.signatureView.symbolName == "checkmark.seal")
+        #expect(good.signatureView.toolTip == "Good signature by Ann Lee")
+        #expect(good.signatureView.accessibilityLabel() == "Good signature by Ann Lee")
+        #expect(good.signatureView.accessibilityIdentifier() == "git.history.signature")
+
+        let bad: GitHistorySubjectCellView = try #require(cell(history, "subject", row: 1))
+        #expect(bad.signatureBadge?.symbolName == "exclamationmark.triangle")
+        #expect(bad.signatureView.toolTip == "Bad signature by Bo")
+
+        let unsigned: GitHistorySubjectCellView = try #require(cell(history, "subject", row: 2))
+        #expect(unsigned.signatureBadge == nil)
+        #expect(unsigned.signatureView.isHidden)
+        let unchecked: GitHistorySubjectCellView = try #require(cell(history, "subject", row: 3))
+        #expect(unchecked.signatureBadge == nil)
+        #expect(unchecked.signatureView.isHidden)
+    }
+
+    @Test("signing badges: each status has its symbol")
+    func signatureSymbols() {
+        func symbol(_ status: GitSignatureStatus) -> String? {
+            GitHistorySignatureBadge(GitSignature(status: status))?.symbolName
+        }
+        #expect(symbol(.good) == "checkmark.seal")
+        #expect(symbol(.unknownValidity) == "seal")
+        for status in [GitSignatureStatus.bad, .revokedKey, .expired, .expiredKey] {
+            #expect(symbol(status) == "exclamationmark.triangle")
+        }
+        #expect(symbol(.cannotCheck) == "questionmark.diamond")
+        #expect(symbol(.unsigned) == nil)
+        #expect(GitHistorySignatureBadge(nil) == nil)
+    }
+
+    @Test("reload asks the source for the signatures of the rows on screen")
+    func signatureRequestsOnReload() {
+        let source = Self.source(count: 200)
+        let history = GitHistoryViewController(source: source)
+        history.view.frame = NSRect(x: 0, y: 0, width: 800, height: 240)
+        history.view.layoutSubtreeIfNeeded()
+        history.reload()
+
+        let visible = history.visibleCommitIDs
+        #expect(!visible.isEmpty)
+        #expect(visible.count < 200)
+        #expect(source.signatureRequests.last == visible)
     }
 
     @Test("paging: a row in the last 50 asks for more once, not again until the count changes")

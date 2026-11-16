@@ -40,12 +40,49 @@ public struct GitHistoryRefBadge: Equatable, Sendable {
     }
 }
 
-/// The subject column: a badge per ref at the commit, then the subject.
+/// A history row's signing badge (recipe `workspace/git/git-views`, "Signing badges"): an
+/// SF Symbol for how git judged the commit's signature, with the status and the signer as
+/// its tooltip and accessibility label. An unsigned or unchecked commit has none.
+public struct GitHistorySignatureBadge: Equatable, Sendable {
+    public let signature: GitSignature
+
+    /// Nil for a commit not checked yet or `.unsigned`.
+    public init?(_ signature: GitSignature?) {
+        guard let signature, signature.status != .unsigned else { return nil }
+        self.signature = signature
+    }
+
+    public var symbolName: String {
+        switch signature.status {
+        case .good: return "checkmark.seal"
+        case .unknownValidity: return "seal"
+        case .bad, .revokedKey, .expired, .expiredKey: return "exclamationmark.triangle"
+        case .cannotCheck, .unsigned: return "questionmark.diamond"
+        }
+    }
+
+    /// Green for a good signature, the warning colour for a bad or stale one.
+    public var role: ThemeRole {
+        switch signature.status {
+        case .good: return .success
+        case .bad, .revokedKey, .expired, .expiredKey: return .warning
+        case .unknownValidity, .cannotCheck, .unsigned: return .secondaryText
+        }
+    }
+
+    /// The tooltip and the accessibility label: the status and the signer.
+    public var text: String { signature.summary }
+}
+
+/// The subject column: the signing badge, a badge per ref at the commit, then the subject.
 @MainActor
 final class GitHistorySubjectCellView: NSView {
     static let identifier = NSUserInterfaceItemIdentifier("git.history.subject")
 
     let subjectLabel = ThemedLabel(role: .primaryText, textRole: .body)
+    /// The signing badge; hidden for a commit without one.
+    let signatureView = ThemedSymbolImageView(symbolName: nil, role: .secondaryText)
+    private(set) var signatureBadge: GitHistorySignatureBadge?
     private(set) var badges: [GitHistoryRefBadge] = []
     private(set) var badgeViews: [Badge] = []
     private let stack = NSStackView()
@@ -56,10 +93,15 @@ final class GitHistorySubjectCellView: NSView {
         accessibilityID("git.history.subject")
         subjectLabel.lineBreakMode = .byTruncatingTail
         subjectLabel.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        signatureView.accessibilityID("git.history.signature")
+        signatureView.setAccessibilityElement(true)
+        signatureView.setAccessibilityRole(.image)
+        signatureView.isHidden = true
         stack.orientation = .horizontal
         stack.alignment = .centerY
         stack.spacing = 4
         stack.translatesAutoresizingMaskIntoConstraints = false
+        stack.addArrangedSubview(signatureView)
         stack.addArrangedSubview(subjectLabel)
         addSubview(stack)
         NSLayoutConstraint.activate([
@@ -73,8 +115,9 @@ final class GitHistorySubjectCellView: NSView {
     @available(*, unavailable)
     required init?(coder: NSCoder) { fatalError("init(coder:) is not supported") }
 
-    func configure(subject: String, badges: [GitHistoryRefBadge]) {
+    func configure(subject: String, badges: [GitHistoryRefBadge], signature: GitHistorySignatureBadge? = nil) {
         subjectLabel.stringValue = subject
+        configureSignature(signature)
         guard badges != self.badges else { return }
         self.badges = badges
         for view in badgeViews { view.removeFromSuperview() }
@@ -82,9 +125,20 @@ final class GitHistorySubjectCellView: NSView {
         badgeViews = badges.enumerated().map { index, badge in
             let view = Badge(text: badge.title, color: palette.nsColor(badge.role), style: badge.style)
             view.accessibilityID(badge.accessibilityIdentifier)
-            stack.insertArrangedSubview(view, at: index)
+            // After the signing badge, which is always the first arranged view.
+            stack.insertArrangedSubview(view, at: index + 1)
             return view
         }
+    }
+
+    private func configureSignature(_ badge: GitHistorySignatureBadge?) {
+        guard badge != signatureBadge else { return }
+        signatureBadge = badge
+        signatureView.isHidden = badge == nil
+        signatureView.symbolName = badge?.symbolName
+        signatureView.role = badge?.role ?? .secondaryText
+        signatureView.toolTip = badge?.text
+        signatureView.setAccessibilityLabel(badge?.text)
     }
 
     private func paintBadges(_ palette: SemanticPalette) {

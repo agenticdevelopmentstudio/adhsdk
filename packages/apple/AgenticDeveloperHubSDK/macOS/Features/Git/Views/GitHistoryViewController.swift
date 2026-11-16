@@ -185,6 +185,27 @@ public final class GitHistoryViewController: NSViewController {
         }
         isApplyingSelection = false
         if survivor == nil { report(nil) }
+        requestVisibleSignatures()
+    }
+
+    // MARK: - Signatures
+
+    /// The shas of the rows the table shows now; empty before it has a size.
+    var visibleCommitIDs: [String] {
+        guard isViewLoaded else { return [] }
+        let range = tableView.rows(in: tableView.visibleRect)
+        guard range.location != NSNotFound, range.length > 0 else { return [] }
+        let rows = range.location..<(range.location + range.length)
+        return rows.compactMap { commits.indices.contains($0) ? commits[$0].id : nil }
+    }
+
+    /// Asks the data source for the visible rows' signatures, on reload and as rows appear
+    /// while the list scrolls. The data source debounces and coalesces (150ms), so a scroll
+    /// runs one `git log` once it settles, and the history never waits on it.
+    func requestVisibleSignatures() {
+        let shas = visibleCommitIDs
+        guard !shas.isEmpty else { return }
+        source.requestSignatures(for: shas)
     }
 
     // MARK: - Selection
@@ -406,7 +427,8 @@ extension GitHistoryViewController: NSTableViewDelegate {
         case .subject:
             let cell = reuse(tableView, GitHistorySubjectCellView.identifier) { GitHistorySubjectCellView() }
             let refs = refsByCommit[commit.id] ?? []
-            cell.configure(subject: commit.subject, badges: GitHistoryRefBadge.badges(for: refs))
+            cell.configure(subject: commit.subject, badges: GitHistoryRefBadge.badges(for: refs),
+                           signature: GitHistorySignatureBadge(source.signature(for: commit.id)))
             return cell
         case .author:
             let cell = reuse(tableView, GitHistoryAuthorCellView.identifier) { GitHistoryAuthorCellView() }
@@ -436,6 +458,7 @@ extension GitHistoryViewController: NSTableViewDelegate {
 
     public func tableView(_ tableView: NSTableView, didAdd rowView: NSTableRowView, forRow row: Int) {
         rowWillAppear(row)
+        requestVisibleSignatures()
     }
 
     public func tableViewSelectionDidChange(_ notification: Notification) {

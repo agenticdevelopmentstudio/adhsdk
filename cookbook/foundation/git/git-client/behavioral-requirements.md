@@ -881,3 +881,29 @@ input it cannot read rather than failing.
 - **reflog-previous**: Each entry's previous sha MUST be the next (older)
   record's sha, and the oldest entry read has none.
 
+### Signatures
+
+- **signatures-read**: `signatures(for:in:caller:)` MUST run
+  `log --no-show-signature --no-walk=unsorted --format=%H%x1f%G?%x1f%GS%x1f%GK%x1e <shas…>`
+  in one call bounded by a 15 s budget (`signatureBudget`), and return each
+  commit's signature keyed by full sha. No shas MUST answer empty without
+  running git; a sha that is empty or not all hex digits MUST be refused as an
+  invalid argument before git runs, so nothing can be read as an option.
+- **signature-status**: The status MUST come from git's `%G?` letter: `G`
+  good, `B` bad, `U` unknown validity, `X` expired, `Y` expired key, `R`
+  revoked key, `E` cannot check, `N` unsigned; any other letter MUST read as
+  cannot check.
+- **signature-parse**: Records MUST be split on the record separator and
+  fields on the unit separator, each trimmed of whitespace; a record with no
+  sha or no status field MUST be dropped, and an empty signer (`%GS`) or key
+  (`%GK`) MUST be absent rather than empty.
+- **signature-summary**: A signature's summary MUST be its status's title
+  (`Good signature`, `Bad signature`, `Signature of unknown validity`,
+  `Expired signature`, `Signed with an expired key`, `Signed with a revoked
+  key`, `Signature cannot be checked`, `Not signed`) followed by ` by
+  <signer>` when git named a signer.
+- **signature-verification-config**: Verification MUST use only the
+  repository's and the user's own git configuration (`gpg.format`,
+  `gpg.ssh.allowedSignersFile`, the keyring); the client adds no signing
+  settings of its own.
+

@@ -60,6 +60,15 @@ public final class GitCommitDetailViewController: NSViewController {
         set { agentSessionsView.onOpen = newValue }
     }
 
+    /// The "Signature" line beside the author and committer (ruling R2), filled by
+    /// GitCommitDetailViewController+Signature.swift; hidden for an unsigned or unchecked commit.
+    let signatureRow = GitCommitDetailSignatureRow()
+    /// A commit's signature; nil (no provider, or not checked yet) hides the line. Asked for
+    /// each commit shown, and again by `reloadSignature()`.
+    public var signatureLookup: ((GitCommit) -> GitSignature?)? {
+        didSet { reloadSignature() }
+    }
+
     private let source: GitContentSource
     private let pasteboard: NSPasteboard
     private let parentsCaption = ThemedLabel(string: "Parents", role: .secondaryText, textRole: .caption)
@@ -244,7 +253,7 @@ public final class GitCommitDetailViewController: NSViewController {
         parentsRow.accessibilityID("git.detail.parents")
         parentsCaption.accessibilityID("git.detail.parentsCaption")
 
-        for view in [subjectLabel, bodyLabel, authorRow, committerRow, shaRow, parentsRow] {
+        for view in [subjectLabel, bodyLabel, authorRow, committerRow, signatureRow, shaRow, parentsRow] {
             headerStack.addArrangedSubview(view)
         }
         // A section below the message and its metadata (ruling R2: Agent Sessions, then Review).
@@ -262,6 +271,7 @@ public final class GitCommitDetailViewController: NSViewController {
         shaLabel.stringValue = commit?.id ?? ""
         copyButton.isHidden = commit == nil
         setParents(commit?.parents ?? [])
+        reloadSignature()
         reloadAgentSessions()
     }
 

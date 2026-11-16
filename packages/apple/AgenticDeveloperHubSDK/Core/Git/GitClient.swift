@@ -364,6 +364,32 @@ public actor GitClient {
         }
     }
 
+    /// The wall-clock limit of one `signatures(for:in:caller:)` batch: verifying a page of
+    /// signatures can take longer than a plain read.
+    public static let signatureBudget: TimeInterval = 15
+
+    /// The signature of each of `shas`, keyed by full sha (recipe `foundation/git/git-client`,
+    /// "Signatures"): `git log --no-show-signature --no-walk=unsorted
+    /// --format=GitSignature.format <shas…>`, bounded by `signatureBudget`. No shas is an
+    /// empty answer without running git; anything that is not a hex object name is refused
+    /// before git runs, so it can never be read as an option.
+    public func signatures(for shas: [String], in directory: URL, caller: GitCaller = GitCaller())
+        async throws -> [String: GitSignature] {
+        guard !shas.isEmpty else { return [:] }
+        if let bad = shas.first(where: { $0.isEmpty || !$0.allSatisfy(\.isHexDigit) }) {
+            throw GitClientError.invalidArgument(verb: "log", argument: bad)
+        }
+        let output = try await execute(
+            verb: "log",
+            arguments: ["--no-show-signature", "--no-walk=unsorted", "--format=\(GitSignature.format)"] + shas,
+            directory: directory,
+            caller: caller,
+            configuration: await configurationProvider(),
+            budget: Self.signatureBudget
+        )
+        return GitSignature.parse(log: output)
+    }
+
     /// Every local branch, remote-tracking branch and tag, with each tag peeled to its commit.
     public func refs(in directory: URL, caller: GitCaller = GitCaller()) async throws -> [GitRef] {
         let output = try await execute(
