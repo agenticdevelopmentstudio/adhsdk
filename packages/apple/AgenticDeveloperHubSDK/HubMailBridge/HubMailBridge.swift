@@ -105,7 +105,9 @@ public final class HubMailBridge: Sendable {
         let lastSyncAt: String?
 
         var account: MailAccount {
-            MailAccount(id: id, email: email, status: .active, lastSyncAt: lastSyncAt, lastError: nil, settings: .default)
+            MailAccount(
+                id: id, email: email, status: .active, lastSyncAt: lastSyncAt, lastError: nil, settings: .default
+            )
         }
     }
 
