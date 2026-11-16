@@ -8840,9 +8840,9 @@
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:65339811b49acddca66ee13a56574402a0ae8a08c02d2549dca086b843907b2b",
+            "hash": "sha256:907bd2b27e6b6f2c98ef4bfa3a3db5b47d98a802b225137802bed607ff9e7467",
             "state": "confirmed",
-            "version": "1.1.2"
+            "version": "1.2.0"
           },
           "location": "packages/web/packages/hub-mail/src/",
           "platform": "web"

@@ -23,3 +23,4 @@
 | hmw-020 | two messages with equal `internal_date` and ids "a" and "b" | "b" lists before "a" |
 | hmw-021 | `accounts()` called twice | two connection-list requests |
 | hmw-022 | `refresh()` called while a pull is in flight | one pull request; both calls resolve when it does |
+| hmw-023 | `reset()` while a pull is in flight, its page then resolves, then `messages()` | the late page is not applied; a second pull request with no `cursor` is sent |
