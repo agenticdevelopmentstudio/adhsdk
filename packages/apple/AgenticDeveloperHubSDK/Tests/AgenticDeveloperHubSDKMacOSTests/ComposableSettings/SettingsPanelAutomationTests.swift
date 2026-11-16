@@ -107,6 +107,20 @@ final class SettingsPanelAutomationTests: XCTestCase {
         XCTAssertEqual(row.toggle.accessibilityIdentifier(), "settings.start-at-login")
     }
 
+    // group-view-036
+    func testATextAreaRowsEditorIsNamedNotItsScroller() {
+        let group = ComposableSettings.GroupView(withTitle: "AI Summaries")
+        let row = ComposableSettings.TextAreaEditView(with: ComposableSettings.ViewModel<String>(
+            title: "Instructions sent to the model", get: { "" }, set: { _ in }))
+        group.addSettingSubview(row)
+        XCTAssertEqual(row.textView.accessibilityIdentifier(), "settings.instructions-sent-to-the-model")
+        let scrollView = row.textView.enclosingScrollView
+        XCTAssertNotNil(scrollView?.verticalScroller)
+        for scroller in [scrollView?.verticalScroller, scrollView?.horizontalScroller].compactMap({ $0 }) {
+            XCTAssertEqual(scroller.accessibilityIdentifier(), "")
+        }
+    }
+
     func testAPanelsOwnIdentifierIsKept() {
         let panel = StubPanel("Tracking", identifier: "custom.tracking")
         let split = makeSplit([StubPanel("General"), panel])

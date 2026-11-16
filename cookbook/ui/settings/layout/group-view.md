@@ -123,8 +123,8 @@ recipes fulfill for that reason.
   edges by 14pt on each side.
 - **row-control-identifiers**: When a row's content is an explained setting
   with a non-empty title, the component MUST give each interactive control in
-  that content (every control except a non-editable text label), in subview
-  order, the automation identifier `settings.<slug of the title>` for the
+  that content (every control except a non-editable text label or a scroll
+  bar, plus every editable multi-line text editor), in subview order, the automation identifier `settings.<slug of the title>` for the
   first and `settings.<slug>.<n>` for the n-th from 2 on. A control that
   already has an identifier MUST keep it.
 - **confines-to-ui-thread**: The component MUST be usable only on the UI thread.
@@ -241,6 +241,7 @@ recipes fulfill for that reason.
 | group-view-033 | row-control-identifiers | Add a row whose content is titled "Read mail from" and holds a label, a pop-up and a button | The pop-up's identifier is `settings.read-mail-from`, the button's is `settings.read-mail-from.2`, and the label has none |
 | group-view-034 | row-control-identifiers | Add the same row with the button already identified `custom.refresh` | The pop-up is `settings.read-mail-from`; the button keeps `custom.refresh` |
 | group-view-035 | row-control-identifiers | Add a checkbox row titled "Start at Login" | The checkbox's identifier is `settings.start-at-login` |
+| group-view-036 | row-control-identifiers | Add a text-area row titled "Instructions sent to the model", its editor inside a scroll view | The editor's identifier is `settings.instructions-sent-to-the-model`; the scroll bars have none |
 
 Two implementation-only construction-rule checks (autoresizing-mask
 disabling and the rejection of a coder-based/decoding constructor on the
@@ -304,7 +305,7 @@ them there.
   widths ever differ (MUST-level consequence of source; this component
   never stores or deactivates a previously created width constraint — see
   Design Decisions).
-
+- A row whose editor sits inside a scroll view: the scroll bars are controls to the platform but not to a UI driver, so they are passed over and the editor itself takes the row's identifier.
 ## Configuration
 
 | Option | Type | Default | Description |

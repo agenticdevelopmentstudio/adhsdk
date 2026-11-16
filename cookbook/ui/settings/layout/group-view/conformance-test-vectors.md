@@ -34,6 +34,7 @@
 | group-view-033 | row-control-identifiers | Add a row whose content is titled "Read mail from" and holds a label, a pop-up and a button | The pop-up's identifier is `settings.read-mail-from`, the button's is `settings.read-mail-from.2`, and the label has none |
 | group-view-034 | row-control-identifiers | Add the same row with the button already identified `custom.refresh` | The pop-up is `settings.read-mail-from`; the button keeps `custom.refresh` |
 | group-view-035 | row-control-identifiers | Add a checkbox row titled "Start at Login" | The checkbox's identifier is `settings.start-at-login` |
+| group-view-036 | row-control-identifiers | Add a text-area row titled "Instructions sent to the model", its editor inside a scroll view | The editor's identifier is `settings.instructions-sent-to-the-model`; the scroll bars have none |
 
 Two implementation-only construction-rule checks (autoresizing-mask
 disabling and the rejection of a coder-based/decoding constructor on the

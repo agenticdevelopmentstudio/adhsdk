@@ -72,8 +72,8 @@
   edges by 14pt on each side.
 - **row-control-identifiers**: When a row's content is an explained setting
   with a non-empty title, the component MUST give each interactive control in
-  that content (every control except a non-editable text label), in subview
-  order, the automation identifier `settings.<slug of the title>` for the
+  that content (every control except a non-editable text label or a scroll
+  bar, plus every editable multi-line text editor), in subview order, the automation identifier `settings.<slug of the title>` for the
   first and `settings.<slug>.<n>` for the n-th from 2 on. A control that
   already has an identifier MUST keep it.
 - **confines-to-ui-thread**: The component MUST be usable only on the UI thread.
