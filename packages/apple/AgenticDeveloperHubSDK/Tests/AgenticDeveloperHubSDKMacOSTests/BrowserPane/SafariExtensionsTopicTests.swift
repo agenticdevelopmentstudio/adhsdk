@@ -292,6 +292,30 @@ final class SafariExtensionsTopicTests: XCTestCase {
         XCTAssertNotEqual(saved.allowsFileAccess, true)
     }
 
+    /// A keyed install over an extension set to "On specific sites" is
+    /// granted those sites again, so it runs where its details page says it
+    /// does rather than nowhere.
+    func test_keyedReplacementKeepsGrantsInStepWithSpecificSites() async throws {
+        let host = makeHost()
+        let keyed = try XCTUnwrap(WebStoreExtension.id(ofKey: Self.sharedKey))
+        let first = try makeFolder("First", extensionName: "Sideloaded", key: Self.sharedKey)
+        host.confirmInstall = { _, _, _, _, _ in true }
+        let installed = try await host.installDownloaded(at: first)
+        XCTAssertTrue(installed)
+        let site = "*://*.github.com/*"
+        try host.setSiteAccess(keyed, .specificSites, sites: [site])
+
+        let update = try makeFolder("Update", extensionName: "Sideloaded 1.1", key: Self.sharedKey)
+        let replaced = try await host.installDownloaded(at: update)
+        XCTAssertTrue(replaced)
+        let details = try XCTUnwrap(host.details(of: keyed))
+        XCTAssertEqual(details.siteAccess, .specificSites)
+        XCTAssertEqual(details.sites, [site])
+        let saved = try XCTUnwrap(SafariExtensionLibrary(root: root.appendingPathComponent("Library"))
+            .records().first { $0.id == keyed })
+        XCTAssertEqual(saved.grantedOrigins, [site])
+    }
+
     /// The link check fails closed: a folder that is itself a link, or is not
     /// there to read, is reported rather than passed.
     func test_symbolicLinkCheckFailsClosed() throws {

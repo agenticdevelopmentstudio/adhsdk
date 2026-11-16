@@ -613,10 +613,17 @@ public final class SafariExtensionHost: NSObject {
         entry.record.grantedPermissions = Array(Set(entry.record.grantedPermissions)
             .union(webExtension.requestedPermissions.map(\.rawValue))).sorted()
         // Sites follow the site access setting: all of them only when that
-        // is what it says.
-        if entry.record.effectiveSiteAccess == .allSites {
+        // is what it says. A replacement, which kept no grants, is granted
+        // what the setting grants, so the sites its details page lists are
+        // the ones it runs on.
+        let requestedOrigins = webExtension.allRequestedMatchPatterns.map(\.string)
+        if replacing != nil {
+            entry.record.grantedOrigins = SafariExtensionSettings.grantedOrigins(
+                for: entry.record.effectiveSiteAccess, requested: requestedOrigins,
+                sites: entry.record.sites ?? [])
+        } else if entry.record.effectiveSiteAccess == .allSites {
             entry.record.grantedOrigins = Array(Set(entry.record.grantedOrigins)
-                .union(webExtension.allRequestedMatchPatterns.map(\.string))).sorted()
+                .union(requestedOrigins)).sorted()
         }
         entry.record.isEnabled = existing == nil ? true : wasEnabled
         if existing == nil { entries.append(entry) }
