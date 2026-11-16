@@ -28,8 +28,11 @@ actually present.
 Each framework name is looked up in <products-dir>, searched at its top
 level and in its `PackageFrameworks` subdirectory (where Xcode places Swift
 Package Manager package-product frameworks shared by more than one target),
-and copied into the app's Frameworks folder. Idempotent: existing copies are
-replaced.
+and copied into the app's Frameworks folder: `Contents/Frameworks` for a
+macOS app, `Frameworks` at the bundle root for an iOS-family app (see
+`bundle_layout`). When Xcode supplies a signing identity, every framework in
+that folder without a valid signature is signed with it (see
+`signing_identity`). Idempotent: existing copies are replaced.
 
 Exits non-zero -- copying everything it *could* find along the way, never
 partway silently declaring success -- if the app binary or the products
@@ -49,6 +52,7 @@ indirect), not a symptom of never having looked.
 from __future__ import annotations
 
 import os
+import plistlib
 import shutil
 import subprocess
 import sys
@@ -239,6 +243,59 @@ def discover(
     return frameworks, other_binaries, requirements, unresolved
 
 
+def bundle_layout(app: Path) -> tuple[Path, Path]:
+    """The app's main binary and its Frameworks folder.
+
+    A macOS app keeps both under `Contents/` (`Contents/MacOS/<exe>`,
+    `Contents/Frameworks`). An iOS, tvOS, watchOS or visionOS app is flat:
+    the binary sits at the bundle root next to `Frameworks`. The `Contents`
+    directory is what tells them apart. The binary's name comes from the
+    bundle's `CFBundleExecutable` when the Info.plist names one, and falls
+    back to the bundle's own name, which is what Xcode uses by default."""
+    contents = app / "Contents"
+    root = contents if contents.is_dir() else app
+    binary_dir = contents / "MacOS" if root is contents else app
+    executable = app.stem
+    info = root / "Info.plist"
+    if info.exists():
+        try:
+            with info.open("rb") as handle:
+                executable = plistlib.load(handle).get("CFBundleExecutable") or executable
+        except (plistlib.InvalidFileException, OSError, ValueError):
+            pass  # an unreadable plist leaves the default; a wrong name fails as "binary not found".
+    return binary_dir / executable, root / "Frameworks"
+
+
+def signing_identity(env: dict[str, str]) -> str | None:
+    """The identity to sign each copied framework with, or None to leave
+    them unsigned. Xcode hands a run-script phase the identity it will sign
+    the app with as `EXPANDED_CODE_SIGN_IDENTITY` (`-` for ad-hoc). Frameworks
+    Xcode embeds itself are signed in its Embed Frameworks phase; the ones this
+    script copies are not, and an iOS device refuses to install an app holding
+    an unsigned framework. Xcode signs the app itself after the script phases,
+    so its seal covers the signed copies."""
+    if env.get("CODE_SIGNING_ALLOWED") == "NO":
+        return None
+    return env.get("EXPANDED_CODE_SIGN_IDENTITY") or None
+
+
+def verifies(framework: Path) -> bool:
+    return subprocess.run(["codesign", "--verify", str(framework)], capture_output=True).returncode == 0
+
+
+def sign(framework: Path, identity: str) -> bool:
+    """Sign one copied framework the way Xcode's Embed Frameworks phase does."""
+    result = subprocess.run(
+        ["codesign", "--force", "--sign", identity, "--preserve-metadata=identifier,entitlements,flags",
+         "--timestamp=none", str(framework)],
+        capture_output=True,
+        text=True,
+    )
+    if result.returncode != 0:
+        print(result.stderr.strip(), file=sys.stderr)
+    return result.returncode == 0
+
+
 def main(argv: list[str]) -> int:
     if len(argv) != 3:
         print(__doc__, file=sys.stderr)
@@ -250,12 +307,11 @@ def main(argv: list[str]) -> int:
         print(f"error: products directory not found: {products}", file=sys.stderr)
         return 1
 
-    app_binary = app / "Contents" / "MacOS" / app.stem
+    app_binary, frameworks_dir = bundle_layout(app)
     if not app_binary.exists():
         print(f"error: app binary not found: {app_binary}", file=sys.stderr)
         return 1
 
-    frameworks_dir = app / "Contents" / "Frameworks"
     frameworks_dir.mkdir(parents=True, exist_ok=True)
 
     search_dirs = [products, products / "PackageFrameworks"]
@@ -267,6 +323,8 @@ def main(argv: list[str]) -> int:
     binary_queue: list[Path] = [app_binary]
     missing: set[str] = set()
     unreadable: set[str] = set()
+    unsigned: set[str] = set()
+    identity = signing_identity(os.environ)
     requirements: set[Path] = set()
 
     def enqueue_framework_binary(framework: Path, required: bool) -> None:
@@ -321,7 +379,17 @@ def main(argv: list[str]) -> int:
 
     absent = sorted(str(path) for path in requirements if not path.exists())
 
-    if missing or unresolved or unreadable or absent:
+    # Sign whatever in the Frameworks folder does not verify: this run's copies
+    # and an earlier run's, which an incremental build keeps rather than
+    # re-copying. The frameworks Xcode embedded itself verify already.
+    if identity:
+        for framework in sorted(frameworks_dir.glob("*.framework")):
+            if not verifies(framework) and not sign(framework, identity):
+                unsigned.add(framework.stem)
+
+    if missing or unresolved or unreadable or absent or unsigned:
+        for name in sorted(unsigned):
+            print(f"error: could not sign embedded {name}.framework", file=sys.stderr)
         for name in sorted(missing):
             print(f"error: {name}.framework not found in {products}", file=sys.stderr)
         for entry in sorted(unresolved):

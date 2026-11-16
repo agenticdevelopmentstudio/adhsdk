@@ -1,0 +1,70 @@
+#!/usr/bin/env python3
+"""Tests for embed_transitive_frameworks.py: the bundle layout it embeds into.
+
+Run: python3 -m pytest tools/apple/embed_transitive_frameworks_test.py -q
+"""
+from __future__ import annotations
+
+import plistlib
+from pathlib import Path
+
+import embed_transitive_frameworks as etf
+
+
+def write_plist(path: Path, values: dict) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("wb") as handle:
+        plistlib.dump(values, handle)
+
+
+def test_a_macos_app_keeps_its_binary_and_frameworks_under_contents(tmp_path: Path):
+    app = tmp_path / "Hub.app"
+    write_plist(app / "Contents" / "Info.plist", {"CFBundleExecutable": "Hub"})
+    assert etf.bundle_layout(app) == (app / "Contents" / "MacOS" / "Hub", app / "Contents" / "Frameworks")
+
+
+def test_an_ios_app_is_flat(tmp_path: Path):
+    app = tmp_path / "Hub.app"
+    write_plist(app / "Info.plist", {"CFBundleExecutable": "Hub"})
+    assert etf.bundle_layout(app) == (app / "Hub", app / "Frameworks")
+
+
+def test_the_executable_name_comes_from_the_info_plist(tmp_path: Path):
+    app = tmp_path / "Agentic Developer Hub.app"
+    write_plist(app / "Info.plist", {"CFBundleExecutable": "ADHub"})
+    binary, _ = etf.bundle_layout(app)
+    assert binary == app / "ADHub"
+
+
+def test_without_an_info_plist_the_bundle_name_is_the_executable(tmp_path: Path):
+    app = tmp_path / "Hub.app"
+    (app / "Contents").mkdir(parents=True)
+    binary, _ = etf.bundle_layout(app)
+    assert binary == app / "Contents" / "MacOS" / "Hub"
+
+
+def test_an_unreadable_info_plist_falls_back_to_the_bundle_name(tmp_path: Path):
+    app = tmp_path / "Hub.app"
+    app.mkdir()
+    (app / "Info.plist").write_bytes(b"not a plist")
+    assert etf.bundle_layout(app) == (app / "Hub", app / "Frameworks")
+
+
+def test_a_missing_ios_binary_is_an_error_not_a_crash(tmp_path: Path, capsys):
+    app = tmp_path / "Hub.app"
+    write_plist(app / "Info.plist", {"CFBundleExecutable": "Hub"})
+    products = tmp_path / "products"
+    products.mkdir()
+    assert etf.main(["embed", str(app), str(products)]) == 1
+    assert f"app binary not found: {app.resolve() / 'Hub'}" in capsys.readouterr().err
+
+
+def test_copies_are_signed_with_the_identity_xcode_hands_the_build_phase():
+    assert etf.signing_identity({"EXPANDED_CODE_SIGN_IDENTITY": "ABC123"}) == "ABC123"
+    assert etf.signing_identity({"EXPANDED_CODE_SIGN_IDENTITY": "-"}) == "-"
+
+
+def test_copies_stay_unsigned_without_an_identity_or_when_signing_is_off():
+    assert etf.signing_identity({}) is None
+    assert etf.signing_identity({"EXPANDED_CODE_SIGN_IDENTITY": ""}) is None
+    assert etf.signing_identity({"EXPANDED_CODE_SIGN_IDENTITY": "ABC123", "CODE_SIGNING_ALLOWED": "NO"}) is None
