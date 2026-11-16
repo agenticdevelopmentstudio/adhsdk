@@ -63,4 +63,5 @@
 | mdc-060 | malformed-frontmatter-yaml-handling | web `processMarkdown("---\ntitle: [unclosed\n---\n# Body")` | the promise resolves; the HTML holds an `<h1>` with `Body` and no `---` text | no test yet |
 | mdc-061 | pretty-json-layout | `prettyJson('{"a":1}\n\n{"b":2}\n')`, `prettyJson('not json')`, `fenceCode('a ```` b', 'json')` | JSON Lines are re-indented one record after another; `null` for the second; a five-backtick fence for the third | pretty-json.test.ts "indents each record of JSON Lines", "returns null for text that is neither", "fences with more backticks than the body holds" |
 | mdc-062 | prose-class-order | `proseClassName({ wrap: true, measure: 'fill', className: 'x y' })` | `adh-mv-prose adh-mv-prose--wrap adh-mv-prose--fill x y` | prose-class.test.ts "combines wrap, measure and extra classes in a stable order" |
+| mdc-063 | sanitize-allowlist-not-denylist | `processMarkdown("```ts\nconst x = 1\n```")` | the `<pre>` keeps `class="shiki …"` and `tabindex="0"` | process-markdown.test.ts "keeps the highlighted pre focusable, so a keyboard user can scroll a wide block" |
 

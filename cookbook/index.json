@@ -13869,7 +13869,7 @@
           "conformance": {
             "hash": "sha256:e39a93a7f857db0f4204ab37f213d5eba2a810f3a196e1daaaa6b5238af7707c",
             "state": "confirmed",
-            "version": "1.0.4"
+            "version": "1.1.0"
           },
           "location": "packages/web/packages/markdown/src/hooks/useMarkdownDocument.ts",
           "platform": "web"
@@ -13878,7 +13878,7 @@
           "conformance": {
             "hash": "sha256:49e73a52dcbf6d971da7352dd3de67e7ef08166b810b51935f71fddcb6e1a82c",
             "state": "confirmed",
-            "version": "1.0.4"
+            "version": "1.1.0"
           },
           "location": "packages/web/packages/markdown/src/lib/document-title.ts",
           "platform": "web"
@@ -13887,16 +13887,16 @@
           "conformance": {
             "hash": "sha256:b837906f215b9cb38ac77854d33b67e42862fd9029ff72d15848402d55e3278c",
             "state": "confirmed",
-            "version": "1.0.4"
+            "version": "1.1.0"
           },
           "location": "packages/web/packages/markdown/src/lib/pretty-json.ts",
           "platform": "web"
         },
         {
           "conformance": {
-            "hash": "sha256:81ad600d901f31089bfda1a58649449c866ac881693cd8952d51ac0d95b20803",
+            "hash": "sha256:f8ac8c60644c67a8140772a50facbf315b41e7b312e4300f505f6a5ea68eaa60",
             "state": "confirmed",
-            "version": "1.0.4"
+            "version": "1.1.0"
           },
           "location": "packages/web/packages/markdown/src/lib/process-markdown.ts",
           "platform": "web"
@@ -13905,7 +13905,7 @@
           "conformance": {
             "hash": "sha256:f71f7e0b2aa547089e3616cf74a8ce5e176d8d0800673c2ec872edf05d270c0e",
             "state": "confirmed",
-            "version": "1.0.4"
+            "version": "1.1.0"
           },
           "location": "packages/web/packages/markdown/src/lib/prose-class.ts",
           "platform": "web"
@@ -13914,7 +13914,7 @@
           "conformance": {
             "hash": "sha256:4966e3dfc4fabc5425ea0b5e1584d67e3a457bf0cf52f7f48eca3bd3ddfabe80",
             "state": "confirmed",
-            "version": "1.0.4"
+            "version": "1.1.0"
           },
           "location": "packages/web/packages/markdown/src/lib/remark-adh-alerts.ts",
           "platform": "web"
@@ -13923,7 +13923,7 @@
           "conformance": {
             "hash": "sha256:3fed68d54a2246ba3a56874e25f420f6d7f3ceef3879f6c4f6a77ffa8b6f2f9e",
             "state": "confirmed",
-            "version": "1.0.4"
+            "version": "1.1.0"
           },
           "location": "packages/web/packages/markdown/src/themes/palettes.ts",
           "platform": "web"
@@ -13932,7 +13932,7 @@
           "conformance": {
             "hash": "sha256:85790f13ad576196e1c9362dc1244d353af2ccef64eb8ca37cb48b798967abfc",
             "state": "confirmed",
-            "version": "1.0.4"
+            "version": "1.1.0"
           },
           "location": "packages/web/packages/markdown/src/themes/registry.ts",
           "platform": "web"
@@ -13941,7 +13941,7 @@
           "conformance": {
             "hash": "sha256:1436968e1c8878d34f4e92db954435ee4d688b128b09cd20a300727e6d9bfac0",
             "state": "confirmed",
-            "version": "1.0.4"
+            "version": "1.1.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Markdown/",
           "platform": "apple"

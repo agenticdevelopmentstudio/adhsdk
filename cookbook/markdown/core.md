@@ -2,11 +2,11 @@
 id: 9f938c20-ea6e-42d7-9ddf-9531a96e3ad0
 title: "Markdown Core"
 type: ingredient
-version: 1.0.4
+version: 1.1.0
 status: review
 language: en
 created: 2026-09-23
-modified: 2026-11-14
+modified: 2026-11-16
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -119,7 +119,7 @@ Both sides independently derive title and excerpt text from the same three regex
 - **pipeline-stage-order**: `processMarkdown(raw)` MUST run its unified pipeline in order: the `splitFrontmatter` frontmatter split (the `yaml`-based splitter shared with `document-title.ts`), `remark-parse`, `remark-gfm`, `remarkAdhAlerts`, `remark-rehype` (`allowDangerousHtml` left at its default `false`, so raw HTML in source is dropped, not passed through), `rehype-slug`, `rehype-autolink-headings` (`behavior: 'wrap'`), shiki syntax highlighting via `rehypeShikiFromHighlighter`, `rehype-sanitize`, then `rehype-stringify`.
 - **highlight-before-sanitize**: Syntax highlighting MUST run before sanitization, because the highlighter produces real hast element nodes for the sanitizer to filter; sanitizing first would strip the highlighter's own token markup.
 - **highlighter-lazy-singleton**: `getHighlighter()` MUST lazily create the shiki highlighter exactly once at module scope, and `getProcessor()` MUST likewise lazily build the unified processor once, reusing both across calls in the same process.
-- **sanitize-allowlist-not-denylist**: `sanitizeSchema` MUST sanitize by an explicit tag/attribute/protocol allowlist; `script`, `style`, `iframe`, `object`, `embed`, and `form` MUST be stripped, and the `style` attribute MUST be permitted only on `code`, `pre`, and `span` — never globally — so shiki's dual-theme CSS variables survive while an inline-style vector on other tags does not. `className` is, by contrast, allowed globally (the schema's `'*'` entry, plus `li`), which is what lets `remark-adh-alerts`'s retagged `div`/`p` alert markup keep its `adh-mv-alert`/`adh-mv-alert-title` classes through sanitization (see **marker-stripped-title-injected**).
+- **sanitize-allowlist-not-denylist**: `sanitizeSchema` MUST sanitize by an explicit tag/attribute/protocol allowlist; `script`, `style`, `iframe`, `object`, `embed`, and `form` MUST be stripped, and the `style` attribute MUST be permitted only on `code`, `pre`, and `span` — never globally — so shiki's dual-theme CSS variables survive while an inline-style vector on other tags does not. `className` is, by contrast, allowed globally (the schema's `'*'` entry, plus `li`), which is what lets `remark-adh-alerts`'s retagged `div`/`p` alert markup keep its `adh-mv-alert`/`adh-mv-alert-title` classes through sanitization (see **marker-stripped-title-injected**). On `pre`, the schema MUST also allow shiki's raw lowercase `class` and `tabindex` properties, which hast-util-sanitize matches exactly, so a highlighted block keeps `pre.shiki` and stays keyboard-focusable (`tabindex="0"`) to scroll sideways.
 - **sanitize-protocol-allowlist**: `sanitizeSchema.protocols` MUST restrict `href` to `http`, `https`, `mailto`, and `tel`, and `src`/`cite` to `http`/`https` only; no `data:` URI is permitted anywhere.
 - **frontmatter-exposed-as-metadata**: `processMarkdown(raw)` MUST return the frontmatter object `splitFrontmatter` parses alongside `html`, and MUST return `title` only when `frontmatter['title']` is itself a string.
 - **malformed-frontmatter-yaml-handling**: `processMarkdown(raw)` MUST NOT reject because the leading frontmatter block is malformed YAML or not a mapping. The block is still removed from the rendered body, `frontmatter` is whatever mapping the `yaml` package recovers under `logLevel: 'silent'` (or `{}` when none), and the body renders normally. This follows `splitFrontmatter`'s fail-soft contract and mirrors **real-yaml-parser-for-frontmatter**.
@@ -213,6 +213,7 @@ Not applicable — markdown-core renders no interactive UI; the HTML string `pro
 | mdc-060 | malformed-frontmatter-yaml-handling | web `processMarkdown("---\ntitle: [unclosed\n---\n# Body")` | the promise resolves; the HTML holds an `<h1>` with `Body` and no `---` text | no test yet |
 | mdc-061 | pretty-json-layout | `prettyJson('{"a":1}\n\n{"b":2}\n')`, `prettyJson('not json')`, `fenceCode('a ```` b', 'json')` | JSON Lines are re-indented one record after another; `null` for the second; a five-backtick fence for the third | pretty-json.test.ts "indents each record of JSON Lines", "returns null for text that is neither", "fences with more backticks than the body holds" |
 | mdc-062 | prose-class-order | `proseClassName({ wrap: true, measure: 'fill', className: 'x y' })` | `adh-mv-prose adh-mv-prose--wrap adh-mv-prose--fill x y` | prose-class.test.ts "combines wrap, measure and extra classes in a stable order" |
+| mdc-063 | sanitize-allowlist-not-denylist | `processMarkdown("```ts\nconst x = 1\n```")` | the `<pre>` keeps `class="shiki …"` and `tabindex="0"` | process-markdown.test.ts "keeps the highlighted pre focusable, so a keyboard user can scroll a wide block" |
 
 ## Edge Cases
 
@@ -286,15 +287,15 @@ Not applicable — no source file in this ingredient writes to a log, console, o
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/markdown/src/hooks/useMarkdownDocument.ts` | confirmed (1.0.4) |
-| web | `packages/web/packages/markdown/src/lib/document-title.ts` | confirmed (1.0.4) |
-| web | `packages/web/packages/markdown/src/lib/pretty-json.ts` | confirmed (1.0.4) |
-| web | `packages/web/packages/markdown/src/lib/process-markdown.ts` | confirmed (1.0.4) |
-| web | `packages/web/packages/markdown/src/lib/prose-class.ts` | confirmed (1.0.4) |
-| web | `packages/web/packages/markdown/src/lib/remark-adh-alerts.ts` | confirmed (1.0.4) |
-| web | `packages/web/packages/markdown/src/themes/palettes.ts` | confirmed (1.0.4) |
-| web | `packages/web/packages/markdown/src/themes/registry.ts` | confirmed (1.0.4) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Markdown/` | confirmed (1.0.4) |
+| web | `packages/web/packages/markdown/src/hooks/useMarkdownDocument.ts` | confirmed (1.1.0) |
+| web | `packages/web/packages/markdown/src/lib/document-title.ts` | confirmed (1.1.0) |
+| web | `packages/web/packages/markdown/src/lib/pretty-json.ts` | confirmed (1.1.0) |
+| web | `packages/web/packages/markdown/src/lib/process-markdown.ts` | confirmed (1.1.0) |
+| web | `packages/web/packages/markdown/src/lib/prose-class.ts` | confirmed (1.1.0) |
+| web | `packages/web/packages/markdown/src/lib/remark-adh-alerts.ts` | confirmed (1.1.0) |
+| web | `packages/web/packages/markdown/src/themes/palettes.ts` | confirmed (1.1.0) |
+| web | `packages/web/packages/markdown/src/themes/registry.ts` | confirmed (1.1.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Markdown/` | confirmed (1.1.0) |
 
 ## Design Decisions
 
@@ -343,4 +344,4 @@ Not applicable — no source file in this ingredient writes to a log, console, o
 | 1.0.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |
 | 1.0.2 | 2026-09-24 | Claude | Added a WinUI 3 Platform Notes bullet with .NET type, regex, line-splitting, YAML-frontmatter, JSON, hashing, byte-identical, and concurrency guidance for a C# port. |
 | 1.0.3 | 2026-09-25 | Mike Fullerton | Fixed byte-exact-round-trip/mdc-006/WinUI to prefix+body (block is substring of prefix, not concatenated); stale-response-suppression to show late timeout resolves as success; sanitize-allowlist scoped style-only, className stays global; write-path-never-touches-name allows reading name via deriveDocumentTitle; real-yaml-parser-for-frontmatter notes silent logLevel recovers malformed YAML instead of nulling. |
-| 1.0.4 | 2026-11-14 | Mike Fullerton | Corrected frontmatter, endpoint and reference claims; added helper requirements, vectors mdc-038 to mdc-062, and re-keyed platform notes. |
+| 1.1.0 | 2026-11-16 | Mike Fullerton | Sanitize keeps shiki's tabindex on pre (mdc-063) |
