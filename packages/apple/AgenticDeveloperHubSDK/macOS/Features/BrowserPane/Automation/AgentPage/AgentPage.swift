@@ -83,13 +83,13 @@ public struct AgentPage: Sendable, Equatable {
 
     /// The page in `browser_snapshot`'s tree format, line for line what
     /// `BrowserSnapshotRenderer` printed for the equivalent legacy tree,
-    /// honoring `interactiveOnly`, `depth` (0 is the root alone) and
+    /// honoring `interactiveOnly`, `depth` (0 or less is unlimited, as in the legacy walk) and
     /// `includeURLs`. Scope is the walk's (the root is the scoped element);
     /// delta and generation stamps are the tool's, on this text.
     public func snapshotTree(_ options: BrowserSnapshotOptions) -> String {
         if let unavailableReason { return unavailableReason }
         guard let root else { return "" }
-        let depth = options.depth.flatMap { $0 >= 0 ? $0 : nil }
+        let depth = options.depth.flatMap { $0 > 0 ? $0 : nil }
         let mapper = AgentSnapshotMapper(interactiveOnly: options.interactiveOnly, title: title)
         return BrowserSnapshotRenderer.render(mapper.root(root, depth: depth), includeURLs: options.includeURLs)
     }
@@ -159,8 +159,9 @@ enum AgentPageText {
         text.count > limit ? String(text.prefix(limit)) + "…" : text
     }
 
-    /// Every text in `node`'s subtree, its own first, joined by spaces;
-    /// images contribute none, as an element's `textContent` holds no alt.
+    /// Every text in `node`'s subtree, its own first, concatenated with no
+    /// separator as an element's `textContent` is (`a<b>b</b>` gives "ab");
+    /// images contribute none, as `textContent` holds no alt.
     static func allText(_ node: AgentNode) -> String {
         if node.kind == .image { return "" }
         var parts: [String] = node.text.isEmpty ? [] : [node.text]
@@ -168,7 +169,7 @@ enum AgentPageText {
             let text = allText(child)
             if !text.isEmpty { parts.append(text) }
         }
-        return parts.joined(separator: " ")
+        return parts.joined()
     }
 }
 
@@ -206,6 +207,7 @@ struct AgentSnapshotMapper {
     static let genericKinds: Set<AgentNodeKind> = [.text, .paragraph, .label]
     static let nameFromContent: Set<AgentNodeKind> = [.button, .link, .heading, .cell, .option]
     static let controls: Set<AgentNodeKind> = [.textField, .textArea, .select, .checkbox, .radio]
+    static let valueShown: Set<AgentNodeKind> = [.textField, .textArea, .select]
     static let interactiveKinds: Set<AgentNodeKind> = [
         .link, .button, .textField, .textArea, .checkbox, .radio, .select, .option
     ]
@@ -329,10 +331,11 @@ struct AgentSnapshotMapper {
         return 2
     }
 
-    /// A value as the legacy walk showed one: text fields and selects only
-    /// (a checkbox's or radio's is its state), collapsed, cut, empty as none.
+    /// A value as the legacy walk showed one: text fields (a slider's or
+    /// spinbutton's `aria-valuenow` among them), text areas and selects —
+    /// a checkbox's or radio's is its state — collapsed, cut, empty as none.
     private func legacyValue(_ node: AgentNode) -> String? {
-        guard node.kind == .textField || node.kind == .select, let value = node.value else { return nil }
+        guard Self.valueShown.contains(node.kind), let value = node.value else { return nil }
         let collapsed = AgentPageText.collapse(value)
         return collapsed.isEmpty ? nil : AgentPageText.cut(collapsed, Self.valueLimit)
     }
@@ -378,7 +381,7 @@ struct AgentHTMLRenderer {
 
     /// Input types the preview may show; anything else is shown as text.
     private static let inputTypes: Set<String> = [
-        "text", "search", "email", "url", "tel", "number", "password", "date", "time", "datetime-local",
+        "text", "search", "email", "url", "tel", "number", "range", "password", "date", "time", "datetime-local",
         "month", "week"
     ]
 
@@ -463,7 +466,7 @@ struct AgentHTMLRenderer {
                 }
                 extra.append(("disabled", ""))
                 $0.open("textarea", node, extra: extra)
-                $0.output += "</textarea>"
+                $0.output += Self.escape(node.value ?? "") + "</textarea>"
             }
         case .checkbox, .radio:
             labelled(node) {

@@ -124,13 +124,57 @@ final class AgentPageBuilderTests: XCTestCase {
         XCTAssertEqual(page.node(ref: "e1")?.value, "hello")
         XCTAssertNil(page.node(ref: "e2")?.value)
         XCTAssertNil(page.node(ref: "e3")?.value)
-        XCTAssertNil(page.node(ref: "e4")?.value)
+        XCTAssertEqual(page.node(ref: "e4")?.value, "private notes")
         XCTAssertTrue(page.snapshotTree(BrowserSnapshotOptions()).contains("[value=\"hello\"]"))
         for rendering in allRenderings(page) {
             XCTAssertFalse(rendering.contains("hunter2"), rendering)
-            XCTAssertFalse(rendering.contains("private notes"), rendering)
             XCTAssertFalse(rendering.contains("value=\"go\""), rendering)
         }
+    }
+
+    func test_textAreaValueShownAsLegacy() {
+        let page = build(document([
+            node("e1", "textArea", text: "Notes", value: "Line one\n   line two"),
+            node("e2", "textArea", text: "Empty", value: "")
+        ]), title: "T")
+        XCTAssertEqual(page.node(ref: "e1")?.value, "Line one\n   line two")
+        XCTAssertEqual(page.snapshotTree(BrowserSnapshotOptions()), """
+        - document "T":
+          - textbox "Notes" [ref=e1] [value="Line one line two"]
+          - textbox "Empty" [ref=e2]
+
+        """)
+        XCTAssertTrue(page.html().contains(">Line one\n   line two</textarea>"), page.html())
+    }
+
+    func test_inlineTextConcatenatedAsTextContent() {
+        // `<p>a<b>b</b></p>` and `<button>Sign<b>in</b></button>`: textContent has no separator.
+        let page = build(document([
+            node("e1", "paragraph", children: [node("e2", "text", text: "a"), node("e3", "text", text: "b")]),
+            node("e4", "button", text: "Sign", children: [node("e5", "text", text: "in")])
+        ]), title: "T")
+        XCTAssertEqual(page.snapshotTree(BrowserSnapshotOptions()), """
+        - document "T":
+          - text: ab
+          - button "Signin" [ref=e4]
+
+        """)
+    }
+
+    func test_sliderAndSpinbuttonValueKept() {
+        // A `role=slider` or `role=spinbutton` element arrives from the walker
+        // as a text field of type range or number, its value `aria-valuenow`.
+        let page = build(document([
+            node("e1", "textField", attrs: ["type": "range", "aria-label": "Volume"], value: "40"),
+            node("e2", "textField", text: "Count", attrs: ["type": "number"], value: "3")
+        ]), title: "T")
+        XCTAssertEqual(page.node(ref: "e1")?.value, "40")
+        XCTAssertEqual(page.snapshotTree(BrowserSnapshotOptions()), """
+        - document "T":
+          - slider "Volume" [ref=e1] [value="40"]
+          - spinbutton "Count" [ref=e2] [value="3"]
+
+        """)
     }
 
     func test_hideImagesDropsImages() {
@@ -229,7 +273,11 @@ final class AgentPageBuilderTests: XCTestCase {
                 node("e9", "textField", text: "Email",
                      attrs: ["type": "email", "placeholder": "you@example.com"], value: "a@b.c"),
                 node("e10", "checkbox", text: "Remember me", attrs: ["states": "checked"], value: "on"),
-                node("e11", "button", text: "Sign in", attrs: ["states": "disabled bogus"])
+                node("e11", "button", text: "Sign in", attrs: ["states": "disabled bogus"]),
+                node("e12", "textArea", text: "Notes", value: "Line one\n  two"),
+                node("e13", "paragraph", children: [node("e14", "text", text: "a"), node("e15", "text", text: "b")]),
+                node("e16", "textField", attrs: ["type": "range", "aria-label": "Volume"], value: "40"),
+                node("e17", "textField", text: "Count", attrs: ["type": "number"], value: "3")
             ])
         ]), title: "Fixture")
 
@@ -245,15 +293,24 @@ final class AgentPageBuilderTests: XCTestCase {
             {"role": "text", "text": "Hello there."},
             {"role": "textbox", "name": "Email", "ref": "e9", "states": [], "value": "a@b.c", "children": []},
             {"role": "checkbox", "name": "Remember me", "ref": "e10", "states": ["checked"], "children": []},
-            {"role": "button", "name": "Sign in", "ref": "e11", "states": ["disabled"], "children": []}]}]}
+            {"role": "button", "name": "Sign in", "ref": "e11", "states": ["disabled"], "children": []},
+            {"role": "textbox", "name": "Notes", "ref": "e12", "states": [], "value": "Line one two", "children": []},
+            {"role": "text", "text": "ab"},
+            {"role": "slider", "name": "Volume", "ref": "e16", "states": [], "value": "40", "children": []},
+            {"role": "spinbutton", "name": "Count", "ref": "e17", "states": [], "value": "3", "children": []}]}]}
         """
         let legacy = try JSONDecoder().decode(BrowserSnapshotNode.self, from: Data(legacyJSON.utf8))
 
+        // depth 0 and below are unlimited in the legacy walk, the same as none.
         for includeURLs in [false, true] {
-            var options = BrowserSnapshotOptions()
-            options.includeURLs = includeURLs
-            XCTAssertEqual(page.snapshotTree(options).split(separator: "\n"),
-                           BrowserSnapshotRenderer.render(legacy, includeURLs: includeURLs).split(separator: "\n"))
+            for depth in [nil, 0, -1] as [Int?] {
+                var options = BrowserSnapshotOptions()
+                options.includeURLs = includeURLs
+                options.depth = depth
+                XCTAssertEqual(page.snapshotTree(options).split(separator: "\n"),
+                               BrowserSnapshotRenderer.render(legacy, includeURLs: includeURLs)
+                                   .split(separator: "\n"))
+            }
         }
         // Spelled out once, so a change to the shared renderer shows here too.
         var withURLs = BrowserSnapshotOptions()
@@ -270,6 +327,10 @@ final class AgentPageBuilderTests: XCTestCase {
             - textbox "Email" [ref=e9] [value="a@b.c"]
             - checkbox "Remember me" [ref=e10] [checked]
             - button "Sign in" [ref=e11] [disabled]
+            - textbox "Notes" [ref=e12] [value="Line one two"]
+            - text: ab
+            - slider "Volume" [ref=e16] [value="40"]
+            - spinbutton "Count" [ref=e17] [value="3"]
 
         """)
     }
@@ -292,9 +353,13 @@ final class AgentPageBuilderTests: XCTestCase {
         var shallow = BrowserSnapshotOptions()
         shallow.depth = 1
         XCTAssertEqual(page.snapshotTree(shallow), "- document \"T\":\n  - main [ref=e1]\n")
-        var rootOnly = BrowserSnapshotOptions()
-        rootOnly.depth = 0
-        XCTAssertEqual(page.snapshotTree(rootOnly), "- document \"T\":\n")
+        // As in the legacy walk, a depth of 0 or less is no limit at all.
+        for unlimited in [0, -3] {
+            var options = BrowserSnapshotOptions()
+            options.depth = unlimited
+            XCTAssertEqual(page.snapshotTree(options), page.snapshotTree(BrowserSnapshotOptions()))
+            XCTAssertTrue(page.snapshotTree(options).contains("- button \"Go\" [ref=e4]"))
+        }
     }
 
     // MARK: Always runs

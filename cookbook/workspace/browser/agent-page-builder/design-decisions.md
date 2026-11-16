@@ -34,7 +34,7 @@ those states already close the pane to tools.
 `footer` by role), heading → `h1`–`h6` by level, paragraph → `p`, list →
 `ul`, list item → `li`, link → `a` with the sanitized `href`, button →
 `button`, text field → `input` (disabled), text area → `textarea`
-(disabled), checkbox/radio → `input` of that type (disabled), select →
+(disabled, holding its value), checkbox/radio → `input` of that type (disabled), select →
 `select` (disabled), option → `option`, table/row/cell → `table`/`tr`/`td`,
 label → `label`, image → `<span class="adk-image">[image: alt]</span>`,
 text → escaped character data. One fixed stylesheet of the builder's own

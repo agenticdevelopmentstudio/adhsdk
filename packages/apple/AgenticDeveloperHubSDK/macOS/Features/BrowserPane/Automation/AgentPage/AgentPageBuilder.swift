@@ -37,8 +37,10 @@ public struct AgentPageBuilder: Sendable {
     public let privacy: BrowserAgentPrivacy
     public let hideImages: Bool
 
-    /// The kinds whose value is kept: never a text area's, never a button's.
-    static let valueKinds: Set<AgentNodeKind> = [.textField, .select, .checkbox, .radio]
+    /// The kinds whose value is kept, as the legacy walk kept them: a text
+    /// field's (a slider's or spinbutton's `aria-valuenow` arrives as one),
+    /// a text area's, a select's; never a password's, never a button's.
+    static let valueKinds: Set<AgentNodeKind> = [.textField, .textArea, .select, .checkbox, .radio]
 
     public init(allowlist: AgentPageAllowlist = .standard, privacy: BrowserAgentPrivacy, hideImages: Bool) {
         self.allowlist = allowlist

@@ -59,8 +59,14 @@
   drop every image node; when it is off, an image MUST enter the result
   only as its alternative text, never as an image source.
 - **value-kept-only-for-form-controls**: The component MUST keep a node's
-  value only for text fields, selects, checkboxes and radio buttons, and
-  MUST never keep the value of a password field.
+  value only for text fields, text areas, selects, checkboxes and radio
+  buttons, and MUST never keep the value of a password field. The snapshot
+  rendering MUST print the value of a text field, text area or select as
+  today's snapshot does (whitespace collapsed, cut at 50 characters, an
+  empty value printed as none). An element with the `slider` or
+  `spinbutton` role that is not an `input` reaches the component as a text
+  field of type `range` or `number` whose value is its `aria-valuenow`, and
+  that value MUST be kept and printed the same way.
 - **fail-closed-on-walker-failure**: When the walker throws, does not
   finish within its timeout (1500 milliseconds by default), or returns a
   payload that does not decode, the component MUST return an empty page —
@@ -82,7 +88,11 @@
   reproduce today's tree format, line for line, for the equivalent tree,
   and MUST honor the existing options — interactive only, depth, scope,
   include URLs, delta — and generation-stamped references; existing tool
-  descriptions MUST remain true.
+  descriptions MUST remain true. As today, a depth of 0 or less MUST mean
+  no limit, and the text a generic element collapses to, or a button,
+  link, heading, cell or option is named by, MUST be its subtree's text
+  concatenated with no separator, as an element's `textContent` is
+  (`a<b>b</b>` gives "ab").
 - **refs-drive-actions**: Every reference in the result MUST be one that
   click, type, fill, select and hover resolve to the same element.
 - **selector-recorded-per-node**: Each node MUST record a selector for its

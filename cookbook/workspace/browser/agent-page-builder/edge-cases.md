@@ -4,7 +4,8 @@
   payload with no error is a malformed payload and yields the unavailable
   page (MUST, `fail-closed-on-walker-failure`). An empty string through the
   string path stays empty.
-- **Boundary values**: A depth option of 0 renders only the root; a very
+- **Boundary values**: A depth option of 0 or less is no limit, as in
+  today's snapshot (MUST, `snapshot-tool-contract-unchanged`); a very
   large page is bounded by the walker's timeout, after which the page is
   unavailable, never truncated (MUST, `no-partial-content-on-failure`). An
   `href` with only a fragment resolves against the page address and is
