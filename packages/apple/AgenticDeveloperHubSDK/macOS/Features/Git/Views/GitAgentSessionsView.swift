@@ -17,7 +17,14 @@ final class GitAgentSessionsView: NSStackView {
 
     /// Opens a session by id; nil leaves the rows unclickable.
     var onOpen: ((String) -> Void)? {
-        didSet { for button in rowButtons { button.isEnabled = onOpen != nil } }
+        didSet {
+            guard (oldValue != nil) != (onOpen != nil) else { return }
+            // Rebuilt rather than toggled: a row's colour follows whether it is
+            // clickable, and the theme closure reads that when it builds the title.
+            let shown = sessions
+            sessions = []
+            show(shown)
+        }
     }
 
     init() {
@@ -71,11 +78,16 @@ final class GitAgentSessionsView: NSStackView {
 
     /// The session's time span, from its start to its last activity.
     static func spanText(from start: Date, to end: Date) -> String {
+        spanFormatter.string(from: start, to: max(start, end))
+    }
+
+    /// One formatter for every row and submenu item, rather than one built per row.
+    private static let spanFormatter: DateIntervalFormatter = {
         let formatter = DateIntervalFormatter()
         formatter.dateStyle = .medium
         formatter.timeStyle = .short
-        return formatter.string(from: start, to: max(start, end))
-    }
+        return formatter
+    }()
 
     @objc private func open(_ sender: NSButton) {
         guard let onOpen, sessions.indices.contains(sender.tag) else { return }
