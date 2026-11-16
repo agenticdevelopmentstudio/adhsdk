@@ -227,11 +227,19 @@ export function SyncTablesPane({
   title?: ReactNode;
   help?: ReactNode;
 }) {
+  if (!ecosystemId) {
+    return (
+      <div className="min-h-0 flex-1 overflow-y-auto px-6 py-6">
+        <p className="text-sm text-apt-text-muted">No product selected.</p>
+      </div>
+    );
+  }
+
   return (
     <DetailsPane
       help={help}
       api={{
-        path: "/ecosystem/sync-tables/{id}",
+        path: "/v1/ecosystems/{id}/sync_tables",
         pathValues: { id: ecosystemId },
         title: "Sync tables API",
       }}
@@ -242,7 +250,7 @@ export function SyncTablesPane({
         for this ecosystem; &ldquo;Reset to default&rdquo; removes the override. Syncing a table
         never shows anyone rows they could not already read.
       </p>
-      {ecosystemId && <SyncTablesEditor key={ecosystemId} ecosystemId={ecosystemId} />}
+      <SyncTablesEditor key={ecosystemId} ecosystemId={ecosystemId} />
     </DetailsPane>
   );
 }

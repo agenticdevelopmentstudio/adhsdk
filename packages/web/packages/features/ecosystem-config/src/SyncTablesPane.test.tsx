@@ -22,7 +22,7 @@ vi.mock("@adh-sdk/data/ecosystem-config", () => ({
   schemaOf: (row: { resource: string }) => row.resource.split(".")[0] ?? "",
 }));
 
-import { SyncTablesEditor } from "./SyncTablesPane";
+import { SyncTablesEditor, SyncTablesPane } from "./SyncTablesPane";
 import { syncTablesKey } from "./sync-tables-hooks";
 
 const row = (resource: string, enabled: boolean, overridden = false) => ({
@@ -150,5 +150,13 @@ describe("SyncTablesEditor", () => {
     renderEditor();
     expect(await screen.findByText("Couldn't load sync tables")).toBeTruthy();
     expect(screen.queryByText("No catalog tables.")).toBeNull();
+  });
+});
+
+describe("SyncTablesPane", () => {
+  it("says no product is selected, and reads nothing, without an ecosystem", () => {
+    render(<SyncTablesPane />);
+    expect(screen.getByText("No product selected.")).toBeTruthy();
+    expect(get).not.toHaveBeenCalled();
   });
 });
