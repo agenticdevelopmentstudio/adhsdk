@@ -276,7 +276,7 @@ final class BrowserPaneToolbarTests: XCTestCase {
             pane.newTab(nil)
             pane.view.frame = NSRect(x: 0, y: 0, width: 1000, height: 600)
             for showsStrip in [false, true] {
-                pane.isPrivacyStripShown = showsStrip
+                pane.settings.set(showsStrip, for: UserSettings.browserPrivacyShowToolbar)
                 pane.refreshAddressRowControls()
                 pane.view.layoutSubtreeIfNeeded()
                 let context = "(own toolbar \(ownToolbar), privacy toolbar \(showsStrip))"
