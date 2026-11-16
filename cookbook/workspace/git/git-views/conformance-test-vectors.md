@@ -100,3 +100,10 @@
 | git-views-097 | command-log-tooltip | a passed `status`; a failed `push` (1, `rejected`) | no tooltip; `rejected`, `xmark.octagon`, `1`, `12 ms`. |
 | git-views-098 | command-log-columns | 14:05:09 and 00:00:07 UTC | `14:05:09` and `00:00:07`. |
 | git-views-099 | command-log-filter | 20 entries in the root and one in `other`; reload; change the roots to `other`; reload | 20 shown, the roots asked for at most twice; then only `other`'s. |
+| git-views-100 | sessions-match-commit | roots `/repo`, `/worktrees/feature`; sessions in `/worktrees/feature`, `/repo/App/Sources`, `/repobc`, `/worktrees/featurex/a`, each active 0–3600 s; a commit at 60 s, no branch | the first two only. |
+| git-views-101 | sessions-match-commit | one session on `feature` that ended a day before the commit; one active 0–3600 s; commits at -600, -601, 4200 and 4201 s | the `feature` one for branch `feature`, none for `main`; the active one at -600 and 4200, not at -601 or 4201. |
+| git-views-102 | sessions-match-commit, sessions-match-branch | sessions `b` and `a` started at 0, `c` at 100; on-branch `feature` with one session in `/other` | `c`, `a`, `b`; the one in `/other` left out. |
+| git-views-103 | sessions-daemon-adapter | rows with empty title and branch; empty id; start `not a date`; empty last activity; last activity before the start; since now, 3601 s ago and 400 days ago | nil title and branch; dropped; dropped; the start; the start; 1, 2 and 2160 hours. |
+| git-views-104 | detail-sessions-section | no `agentSessionMatches`; matches answering `[]`; two sessions for `c1`, then show `c2` | hidden; hidden; `Fix it · main · …` and `abcdefgh · main · …`, disabled; hidden again. |
+| git-views-105 | detail-sessions-open | `onOpenAgentSession` set; click row 1 | called once with `second`. |
+| git-views-106 | sidebar-sessions-submenu | no provider; `[]`; 25 sessions; 2 sessions, `onOpenAgentSession` nil then set, choose item 1 | no submenu; no submenu; the last item `Agent Sessions` holding 20; items disabled, then called with `session-1`. |

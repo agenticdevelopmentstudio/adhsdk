@@ -84,3 +84,5 @@
 | git-window-081 | merge-view | the conflicts of 079; select `f.txt` and at once `gone.txt`; then, with `isActing` true, select `f.txt` | the diff shows `gone.txt` and the merge view was never shown; then the merge view shows `f.txt`. |
 | git-window-082 | toolbar-command-log | a layout with a terminal region; toggle; toggle | the region holds the terminal and the Command Log (the session's controller); then the terminal alone. |
 | git-window-083 | toolbar-verbs | `GitWindowToolbar(showsCommandLog: false)` | the six verbs from `git.toolbar.fetch` to `git.toolbar.pop`, no `git.toolbar.commandLog`. |
+| git-window-084 | sessions-cache | a provider answering one session; roots `/repo`, `/wt`; refresh at 0 s, 59 s and 60 s | one read at 0 s over `/repo`, `/wt` since 90 days before, one change; none at 59 s; a second read at 60 s and no second change. |
+| git-window-085 | sessions-provider-optional | a feature built without `sessions:` | the commit detail has no `agentSessionMatches` and the sidebar no `agentSessionsOnBranch`. |

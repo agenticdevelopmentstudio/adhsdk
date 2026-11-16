@@ -88,6 +88,12 @@ public final class GitRefsSidebarViewController: NSViewController {
 
     private static let workingCopyID = "workspace.working-copy"
 
+    /// The agent sessions that ran on a local branch; nil (no provider) leaves the branch
+    /// menu without its Agent Sessions submenu.
+    public var agentSessionsOnBranch: ((GitRef) -> [GitAgentSession])?
+    /// Opens an agent session by id; nil leaves the submenu's items disabled.
+    public var onOpenAgentSession: ((String) -> Void)?
+
     /// Shows a drop menu at the pointer in `view`. Tests replace it to capture the menu.
     var menuPresenter: @MainActor (NSMenu, NSView) -> Void = { menu, view in
         // After the drop returns: a menu tracked inside the drag session's callback
@@ -358,7 +364,9 @@ public final class GitRefsSidebarViewController: NSViewController {
         entries.append(nil)
         entries.append(("Push", "push", .push(ref)))
         if ref.isHead { entries.append(("Pull", "pull", .pull)) }
-        return makeMenu(entries)
+        let menu = makeMenu(entries)
+        addAgentSessionsSubmenu(to: menu, for: ref)
+        return menu
     }
 
     private func remoteBranchMenu(_ ref: GitRef) -> NSMenu {

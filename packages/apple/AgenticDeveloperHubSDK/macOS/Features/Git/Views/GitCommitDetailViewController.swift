@@ -47,6 +47,19 @@ public final class GitCommitDetailViewController: NSViewController {
     /// moved belongs to an older call and is dropped.
     private(set) var generation = 0
 
+    /// The "Agent Sessions" section, below the message and the metadata.
+    let agentSessionsView = GitAgentSessionsView()
+    /// The agent sessions beside a commit; nil (no provider) leaves the section absent.
+    /// Asked for each commit shown, and again by `reloadAgentSessions()`.
+    public var agentSessionMatches: ((GitCommit) -> [GitAgentSession])? {
+        didSet { reloadAgentSessions() }
+    }
+    /// Opens an agent session by id; nil leaves its rows unclickable.
+    public var onOpenAgentSession: ((String) -> Void)? {
+        get { agentSessionsView.onOpen }
+        set { agentSessionsView.onOpen = newValue }
+    }
+
     private let source: GitContentSource
     private let pasteboard: NSPasteboard
     private let parentsCaption = ThemedLabel(string: "Parents", role: .secondaryText, textRole: .caption)
@@ -234,6 +247,8 @@ public final class GitCommitDetailViewController: NSViewController {
         for view in [subjectLabel, bodyLabel, authorRow, committerRow, shaRow, parentsRow] {
             headerStack.addArrangedSubview(view)
         }
+        // A section below the message and its metadata (ruling R2: Agent Sessions, then Review).
+        headerStack.addArrangedSubview(agentSessionsView)
     }
 
     private func fillHeader(_ commit: GitCommit?) {
@@ -247,6 +262,7 @@ public final class GitCommitDetailViewController: NSViewController {
         shaLabel.stringValue = commit?.id ?? ""
         copyButton.isHidden = commit == nil
         setParents(commit?.parents ?? [])
+        reloadAgentSessions()
     }
 
     private func setParents(_ parents: [String]) {

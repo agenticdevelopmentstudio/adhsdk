@@ -30,6 +30,13 @@
 - **close-stops-model**: Closing the window MUST cancel the running search and action (a cancelled action shows nothing), stop the model's watcher, drop the window's session and toolbar, and tell the feature, unless the app is terminating.
 - **confines-to-ui-thread**: The feature and the window MUST be usable only on the UI thread.
 
+### Agent sessions
+
+- **sessions-provider-optional**: The feature MUST take an optional `GitSessionsProviding` (`sessions:`, default nil) and hand it to every window it builds; with nil (ADTerminal, tests, no daemon) no window shows any agent session, neither the commit detail's section nor the branch menu's submenu. The window MUST never write to the provider.
+- **sessions-cache**: A window with a provider MUST keep one `GitAgentSessionCache` over its top level and its worktrees (read again at each fetch), read once when the model has started and again when the commit detail or a branch menu asks, at most once every 60 seconds and never while a read is in flight, each read covering the last 90 days. A read that changes the sessions MUST re-match the commit shown.
+- **sessions-commit-branch**: The branch a commit is matched on MUST be the first local branch whose tip it is, else the selected sidebar ref when that is a local branch, else unknown; its date is the committer date.
+- **sessions-open**: The feature's `onOpenAgentSession` MUST reach every open window's commit detail and refs sidebar, and every window built later; nil leaves the sessions shown but unclickable.
+
 ### Toolbar
 
 - **toolbar-verbs**: The window's toolbar MUST carry, after the project window's title item and ahead of the search field and help, seven icon buttons in order: `git.toolbar.fetch` "Fetch" `arrow.down.circle`, `git.toolbar.pull` "Pull" `arrow.down.to.line`, `git.toolbar.push` "Push" `arrow.up.to.line`, `git.toolbar.branch` "Branch" `arrow.triangle.branch`, `git.toolbar.stash` "Stash" `tray.and.arrow.down`, `git.toolbar.pop` "Pop" `tray.and.arrow.up`, `git.toolbar.commandLog` "Command Log" `list.bullet.rectangle` — that last one only when the window has a terminal region; built without terminals it carries the first six — each the identifier as its accessibility identifier and the label as its tooltip.

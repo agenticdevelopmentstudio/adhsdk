@@ -68,6 +68,14 @@ public final class GitWindowFeature: AppFeature {
     private let notInRepository: (@MainActor (URL) -> Void)?
     /// The not-in-a-repository alert on screen, kept until its OK closes it.
     private var notInRepositoryAlert: NotInRepositoryAlert?
+    /// Where the agent sessions shown beside commits and branches come from; nil leaves
+    /// them absent. Read-only.
+    private let sessionsProvider: (any GitSessionsProviding)?
+    /// Opens an agent session by id, for every window; nil leaves the sessions shown
+    /// but unclickable.
+    public var onOpenAgentSession: ((String) -> Void)? {
+        didSet { for session in sessions.values { session.onOpenAgentSession = onOpenAgentSession } }
+    }
 
     /// - Parameters:
     ///   - resources: the bundled TextMate resources; nil leaves every window uncoloured.
@@ -83,6 +91,8 @@ public final class GitWindowFeature: AppFeature {
     ///   - openRoots: where the open windows' roots are remembered.
     ///   - notInRepository: tells the user a chosen folder is in no repository; nil
     ///     shows `NotInRepositoryAlert`.
+    ///   - sessions: the agent sessions shown beside commits and branches; nil (no
+    ///     daemon) leaves them absent.
     public init(
         commandRegistry registry: CommandRegistry,
         database: ProjectDatabase,
@@ -94,8 +104,10 @@ public final class GitWindowFeature: AppFeature {
         client: GitClient = .shared,
         terminals: TerminalPaneFamily? = nil,
         openRoots: UserSetting<[String]> = UserSettings.openGitWindowRoots,
-        notInRepository: (@MainActor (URL) -> Void)? = nil
+        notInRepository: (@MainActor (URL) -> Void)? = nil,
+        sessions: (any GitSessionsProviding)? = nil
     ) {
+        self.sessionsProvider = sessions
         self.resources = resources
         self.userGrammarsDirectory = userGrammarsDirectory
         self.extensionGrammars = extensionGrammars
@@ -300,7 +312,8 @@ public final class GitWindowFeature: AppFeature {
         let root = context.project.directoryURL
         let model = GitRepositoryModel(
             root: root, client: client, watcher: GitDeferredRepositoryWatcher(root: root, client: client))
-        let session = GitWindowSession(model: model, client: client, coloring: coloring())
+        let session = GitWindowSession(model: model, client: client, coloring: coloring(), sessions: sessionsProvider)
+        session.onOpenAgentSession = onOpenAgentSession
         sessions[context.project.id] = session
         return session
     }
