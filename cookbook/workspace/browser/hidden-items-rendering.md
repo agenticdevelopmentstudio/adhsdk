@@ -235,7 +235,17 @@ address host; no selector text is logged.
   only place user scripts are added or removed
   (`WKUserContentController` can only remove all of them). The engine
   re-runs it on `BrowserHiddenItemsStore.didChangeNotification` and in
-  `webView(_:didCommit:)`. Each rule goes in through its own
+  `webView(_:didCommit:)`, and also reads the selectors for a main-frame
+  navigation's destination in its policy decision, before the new
+  document starts, so the document-start script already carries that
+  address's rules (WebKit injects document-start scripts in the web
+  process before the commit reaches the delegate); a navigation that fails
+  provisionally puts the committed address's rules back. Reads go through
+  the store's `perform` off the main thread, and a generation counter
+  keeps only the last read asked for. When a page's Content Security
+  Policy refuses inline styles the element gets no sheet, so the rules go
+  in an adopted constructed sheet instead (which `style-src` does not
+  govern) and the element stays as the marker. Each rule goes in through its own
   `CSSStyleSheet.insertRule` in a `try`/`catch`, after a
   `CSS.supports('selector(…)')` check. The preview rule set is
   `WebKitBrowserEngine.setPreviewHiddenSelectors(_ selectors: [String]?)`,

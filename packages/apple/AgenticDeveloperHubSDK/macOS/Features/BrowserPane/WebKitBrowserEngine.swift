@@ -262,6 +262,7 @@ public final class WebKitBrowserEngine: WebKitPageDriver, BrowserEngine {
         installUserScripts()
         applyLiveSettings()
         observeSettings()
+        observeHiddenItems()
         observeWebView()
     }
 
@@ -474,7 +475,8 @@ public final class WebKitBrowserEngine: WebKitPageDriver, BrowserEngine {
     /// the console hook when this web view captures the console, the
     /// activation shield's script while the shield is up, the page word
     /// filter while Agent Privacy draws the page through the privacy words,
-    /// and Hide Images' script, always, with its setting written in.
+    /// Hide Images' script, always, with its setting written in, and the
+    /// hidden-items style while the user list hides anything here.
     ///
     /// The only place user scripts are added or removed.
     /// `WKUserContentController` cannot remove one script, only all of them,
@@ -499,6 +501,87 @@ public final class WebKitBrowserEngine: WebKitPageDriver, BrowserEngine {
                 source: source, injectionTime: .atDocumentStart, forMainFrameOnly: false,
                 in: .world(name: BrowserPageWordFilter.worldName)))
         }
+        // Hide distracting items: the user list's rules for the address the
+        // next document is for, in every frame, in the page's world.
+        if !hiddenItemSelectors.isEmpty {
+            controller.addUserScript(WKUserScript(
+                source: BrowserHiddenItemsStyle.installScript(selectors: hiddenItemSelectors),
+                injectionTime: .atDocumentStart, forMainFrameOnly: false, in: .page))
+        }
+    }
+
+    // MARK: - Hidden items
+
+    /// The user list's enabled selectors the user script carries: those for
+    /// the address the next document is for.
+    private var hiddenItemSelectors: [String] = []
+    /// Counts hidden-item reads, so the last one asked for is the one that
+    /// stands when a store change and a navigation race.
+    private var hiddenItemsGeneration = 0
+
+    /// Re-renders the page showing whenever the hidden-items store changes,
+    /// and once now for whatever the web view starts on.
+    private func observeHiddenItems() {
+        NotificationCenter.default.publisher(for: BrowserHiddenItemsStore.didChangeNotification)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in self?.refreshHiddenItems(live: true) }
+            .store(in: &cancellables)
+        refreshHiddenItems(live: true)
+    }
+
+    /// Reads the selectors for the current address and applies them; `live`
+    /// also restyles the page showing, without a reload.
+    private func refreshHiddenItems(live: Bool) {
+        let url = webView.url
+        Task { [weak self] in
+            guard let self, let selectors = await self.readHiddenItemSelectors(for: url) else { return }
+            self.applyHiddenItems(selectors, live: live)
+        }
+    }
+
+    /// Puts the rules for `url`, where the main frame is about to go, in the
+    /// next document's script, so a matching item is never drawn on it.
+    private func prepareHiddenItems(for url: URL?) async {
+        guard let selectors = await readHiddenItemSelectors(for: url) else { return }
+        applyHiddenItems(selectors, live: false)
+    }
+
+    /// The user list's enabled selectors for `url`, read off the main thread;
+    /// nil when a newer read has started since, or the read failed (the page
+    /// keeps the rules it last had). No store means nothing hidden.
+    private func readHiddenItemSelectors(for url: URL?) async -> [String]? {
+        hiddenItemsGeneration += 1
+        let generation = hiddenItemsGeneration
+        guard let store = BrowserHiddenItemsStore.shared else { return [] }
+        do {
+            let selectors = try await store.perform { try $0.enabledSelectors(list: .user, for: url) }
+            return generation == hiddenItemsGeneration ? selectors : nil
+        } catch {
+            let host = url?.host ?? "no address"
+            logger.error(
+                "hidden items could not be read for \(host): \(error.localizedDescription, privacy: .public)")
+            return nil
+        }
+    }
+
+    private func applyHiddenItems(_ selectors: [String], live: Bool) {
+        if selectors != hiddenItemSelectors {
+            hiddenItemSelectors = selectors
+            installUserScripts()
+        }
+        guard live, webView.url != nil else { return }
+        webView.evaluateJavaScript(
+            BrowserHiddenItemsStyle.applyScript(selectors: selectors), in: nil, in: .page) { _ in }
+    }
+
+    /// The picker dialog's "Show page with selected element removed": hides
+    /// `selectors` on the page showing in a rule set of its own
+    /// (`__adk_hidden_items_preview`), saving nothing and leaving the saved
+    /// list's rules alone; nil removes it.
+    public func setPreviewHiddenSelectors(_ selectors: [String]?) {
+        guard webView.url != nil else { return }
+        webView.evaluateJavaScript(
+            BrowserHiddenItemsStyle.previewScript(selectors: selectors ?? []), in: nil, in: .page) { _ in }
     }
 
     // MARK: - Settings
@@ -724,6 +807,7 @@ public final class WebKitBrowserEngine: WebKitPageDriver, BrowserEngine {
         downloads.forEach { $0.cancel() }
         downloads.removeAll()
         contentRulesGeneration += 1
+        hiddenItemsGeneration += 1
         heldLoad = nil
         webView.stopLoading()
         webView.navigationDelegate = nil
@@ -766,7 +850,10 @@ extension WebKitBrowserEngine: WKNavigationDelegate {
                     return (.cancel, preferences)
                 }
             }
-            if !navigationAction.shouldPerformDownload { preparePageWords(for: navigationAction.request.url) }
+            if !navigationAction.shouldPerformDownload {
+                preparePageWords(for: navigationAction.request.url)
+                await prepareHiddenItems(for: navigationAction.request.url)
+            }
         }
         return (navigationAction.shouldPerformDownload ? .download : .allow, preferences)
     }
@@ -801,6 +888,7 @@ extension WebKitBrowserEngine: WKNavigationDelegate {
     public func webView(_ webView: WKWebView, didCommit navigation: WKNavigation!) {
         provisionalNavigation = nil
         pageWordFilter = preparedPageWordFilter
+        refreshHiddenItems(live: true)
         delegate?.browserEngineDidCommitNavigation(self)
     }
 
@@ -818,7 +906,11 @@ extension WebKitBrowserEngine: WKNavigationDelegate {
         // (the one that cancelled this) has prepared its own since.
         if let provisional = provisionalNavigation, provisional.navigation === navigation {
             provisionalNavigation = nil
-            if provisional.preparations == pageWordPreparations { restoreCommittedPageWords() }
+            if provisional.preparations == pageWordPreparations {
+                restoreCommittedPageWords()
+                // The hidden items, too, go back to the committed address's.
+                refreshHiddenItems(live: false)
+            }
         }
         // A cancelled load is the next navigation starting, not a failure.
         guard (error as NSError).code != NSURLErrorCancelled else { return }
