@@ -24,6 +24,8 @@ final class BrowserElementPickerWebViewTests: XCTestCase {
       <a href="http://fixture.test/elsewhere" data-test="link">Go</a>
       <button data-test="button" onclick="window.pageClicked = true">Press</button>
       <section><p>One</p><p>Two</p><p>Three</p><p>Four</p><p>Five</p><p>Six</p></section>
+      <div data-test="frame-holder"><iframe data-test="frame" style="width: 200px; height: 100px"
+        srcdoc="<a href='http://ads.test/'>Ad</a>"></iframe></div>
     </body></html>
     """
 
@@ -152,6 +154,36 @@ final class BrowserElementPickerWebViewTests: XCTestCase {
         let href = try await page("return location.href;")
         XCTAssertEqual(href as? String, "http://fixture.test/", "the link was not followed")
         XCTAssertEqual(picks.count, 2, "one pick message per click")
+    }
+
+    /// A frame's clicks never reach the main frame, so selecting turns its
+    /// pointer events off: the click lands on what holds it and picks the
+    /// frame element itself (vector 032).
+    func test_clickOverFramePicksFrameElement() async throws {
+        let pointer = try await page("return getComputedStyle(document.querySelector('iframe')).pointerEvents;")
+        XCTAssertEqual(pointer as? String, "none", "frames take no pointer events while selecting")
+
+        let expectation = expectation(description: "frame pick")
+        pickExpectation = expectation
+        _ = try await page(
+            """
+            const r = document.querySelector('[data-test="frame"]').getBoundingClientRect();
+            document.querySelector('[data-test="frame-holder"]').dispatchEvent(new MouseEvent('click', {
+              bubbles: true, cancelable: true, view: window,
+              clientX: r.left + r.width / 2, clientY: r.top + r.height / 2 }));
+            return true;
+            """)
+        await fulfillment(of: [expectation], timeout: 5)
+        pickExpectation = nil
+        let selector = try XCTUnwrap(picks.last?.thisItem)
+        let isFrame = try await page(
+            "return document.querySelector(selector) === document.querySelector('[data-test=\"frame\"]');",
+            ["selector": selector])
+        XCTAssertEqual(isFrame as? Bool, true, "picked the iframe: \(selector)")
+
+        picker.stop()
+        let restored = try await page("return getComputedStyle(document.querySelector('iframe')).pointerEvents;")
+        XCTAssertEqual(restored as? String, "auto", "stop gives frames their pointer events back")
     }
 
     func test_escapePostsCancel() async throws {

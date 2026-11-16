@@ -14,7 +14,8 @@ public struct BrowserPickCandidate: Decodable, Sendable, Equatable {
 
     public var kind: Kind
     /// Finder's shortest unique selector; `nil` when none could be computed
-    /// (shadow roots, SVG `use`, frames), which refuses the pick.
+    /// (shadow roots, SVG `use`), which refuses the pick. A click over a
+    /// frame picks the frame element itself.
     public var thisItem: String?
     /// The tag and stable class names; `nil` when it would be the same as
     /// `thisItem` or could not be computed.
@@ -72,7 +73,10 @@ public struct BrowserPickCandidate: Decodable, Sendable, Equatable {
 /// The selecting-mode script on one web view: outlines the element under the
 /// pointer, swallows the page's clicks and reports picks. The vendored finder
 /// and the picker run in their own content world, `adk-element-picker`, so
-/// the page's scripts cannot see, call or replace them.
+/// the page's scripts cannot see, call or replace them. It runs in the main
+/// frame, where WebKit's public API can reach every page; while selecting,
+/// frame elements take no pointer events, so a click over an ad in a frame
+/// is swallowed and picks the frame element instead of reaching the ad.
 @MainActor
 public final class BrowserElementPicker: NSObject, WKScriptMessageHandler {
     public static let contentWorldName = "adk-element-picker"

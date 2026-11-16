@@ -69,9 +69,15 @@
   element), or cannot be computed, the pick MUST carry no All items like it
   selector.
 - **pick-without-selector-refused**: A pick with no This item selector
-  (finder failed or threw, for instance inside a shadow root, an SVG `use`
-  or a frame) MUST be refused with a beep: no dialog opens and selecting
-  mode continues.
+  (finder failed or threw, for instance inside a shadow root or an SVG
+  `use`) MUST be refused with a beep: no dialog opens and selecting mode
+  continues.
+- **frame-click-picks-frame**: While selecting, every `iframe` and `frame`
+  element MUST take no pointer events, so a click over a frame never
+  reaches the frame's document (an ad served in a frame never opens its
+  link). That click, and the outline under the pointer, MUST resolve to the
+  frame element itself in the main document; `stop` MUST give the frames
+  their pointer events back.
 - **loose-selector-disabled**: The All items like it choice MUST be
   disabled when there is no looser selector, with the tooltip "No looser
   selector is available", and when it matches more than half of the

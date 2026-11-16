@@ -32,4 +32,4 @@
 | element-picker-029 | all-like-it-needs-a-class | Candidates with `allLikeIt` `div` (count 2 of 100), and `main.page` (count 1 of 100) | Both have All items like it disabled |
 | element-picker-030 | all-like-it-needs-a-class | Pick a `<div>` with no class, then the `<body>` | Neither pick carries an All items like it selector |
 | element-picker-031 | popover-transient | Open the popover; the page commits a navigation | The popover closes |
-
+| element-picker-032 | frame-click-picks-frame | Selecting on a page with an `<iframe>` in a `<div>`; click the `<div>` at the frame's centre; stop | The pick's This item matches the `<iframe>`; the frame's pointer events are `none` while selecting and restored after stop |

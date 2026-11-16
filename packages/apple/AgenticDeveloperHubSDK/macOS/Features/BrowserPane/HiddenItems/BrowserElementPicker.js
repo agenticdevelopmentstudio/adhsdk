@@ -7,6 +7,13 @@
 // clicks, posts one `pick` message per click and a `cancel` message on Esc to
 // the `adkitchenPicker` handler. `__adkPicker.pause()` / `.resume()` /
 // `.stop()` are its controls; `stop` leaves the page as it found it.
+//
+// It runs in the main frame only: WebKit has no public way to evaluate in a
+// frame that is already loaded, and a cross-origin frame is out of the main
+// frame's reach. A frame's own events never reach the main frame, so while
+// selecting every frame element is made transparent to the pointer: its
+// clicks land in the main frame, are swallowed there, and pick the frame
+// element itself, which is what an entry then hides.
 (function () {
   'use strict';
   if (globalThis.__adkPicker) { return; }   // one picker per world
@@ -48,6 +55,38 @@
     if (!target) { return null; }
     if (target.nodeType === Node.ELEMENT_NODE) { return target; }
     return target.parentElement || null;
+  }
+
+  // Frames stop taking pointer events while selecting, so a click on an ad
+  // served in a frame is swallowed here instead of following the ad's link.
+  const frameShield = document.createElement('style');
+  frameShield.textContent = 'iframe, frame { pointer-events: none !important; }';
+  const FRAMES = 'iframe, frame';
+
+  // The frame element drawn under the point, when the point is over one: a
+  // frame that takes no pointer events is never an event's target, so the
+  // hit lands on what lies beneath it, usually an ancestor. A frame inside
+  // the hit element that covers the point is drawn over it, the later of
+  // several the higher; an element over the frame is the hit itself.
+  function frameAt(el, x, y) {
+    if (typeof x !== 'number' || typeof y !== 'number') { return null; }
+    let frames;
+    try { frames = document.querySelectorAll(FRAMES); } catch (e) { return null; }
+    for (let i = frames.length - 1; i >= 0; i -= 1) {
+      const frame = frames[i];
+      if (frame !== el && !el.contains(frame)) { continue; }
+      const r = frame.getBoundingClientRect();
+      if (x >= r.left && x < r.right && y >= r.top && y < r.bottom) { return frame; }
+    }
+    return null;
+  }
+
+  // The element an event is about: its target, or the frame element the
+  // pointer is over.
+  function pickedBy(event) {
+    const el = elementOf(event.target);
+    if (!el || el === outline) { return null; }
+    return frameAt(el, event.clientX, event.clientY) || el;
   }
 
   function place() {
@@ -140,8 +179,8 @@
 
   function onMove(event) {
     if (paused) { return; }
-    const el = elementOf(event.target);
-    if (el && el !== outline && el !== current) {
+    const el = pickedBy(event);
+    if (el && el !== current) {
       current = el;
       place();
     }
@@ -154,8 +193,8 @@
   function onClick(event) {
     swallow(event);
     if (paused) { return; }
-    const el = elementOf(event.target);
-    if (!el || el === outline) { return; }
+    const el = pickedBy(event);
+    if (!el) { return; }
     post(candidateFor(el));
   }
 
@@ -181,6 +220,12 @@
   for (const [type, fn] of listeners) {
     window.addEventListener(type, fn, { capture: true });
   }
+  (document.head || document.documentElement).appendChild(frameShield);
+  // Focus left in a frame would keep Esc there, out of this listener's reach.
+  try {
+    const focused = document.activeElement;
+    if (focused && focused.matches(FRAMES)) { focused.blur(); }
+  } catch (e) {}
 
   globalThis.__adkPicker = {
     pause() {
@@ -196,6 +241,7 @@
         window.removeEventListener(type, fn, { capture: true });
       }
       outline.remove();
+      frameShield.remove();
       current = null;
       paused = true;
       delete globalThis.__adkPicker;

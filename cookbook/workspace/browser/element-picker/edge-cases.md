@@ -29,9 +29,11 @@
   removes the outline, listeners and handler and clears the preview (MUST,
   see `stop-cleans-up`).
 - **Frames and shadow roots**: The picker runs in the main frame. An
-  element inside a cross-origin frame cannot be reached; clicking the frame
-  picks the frame element itself. An element inside a shadow root may get
-  no unique document selector and is then refused.
+  element inside a frame, same-origin or cross-origin, cannot be reached;
+  while selecting every frame element takes no pointer events, so a click
+  over a frame is swallowed in the main frame and picks the frame element
+  itself (MUST, see `frame-click-picks-frame`). An element inside a shadow
+  root may get no unique document selector and is then refused.
 - **Pages that re-render**: An item the page rebuilds under new class
   names may escape its selector and reappear; that is what the first-use
   notice warns of.
