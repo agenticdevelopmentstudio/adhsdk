@@ -1,6 +1,7 @@
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.3.6 | 2026-11-16 | Mike Fullerton | A move writes every message, not only those the mirror shows changing (review f11) |
 | 1.3.5 | 2026-11-16 | Mike Fullerton | Hub accounts report the last completed pull as lastSyncAt (review f6) |
 | 1.3.4 | 2026-11-16 | Mike Fullerton | A refused pull token is renewed and the pull retried (review f2) |
 | 1.3.3 | 2026-11-16 | Mike Fullerton | Sign-out purges a mirror a previous launch left; a sign-in waits for a running purge |

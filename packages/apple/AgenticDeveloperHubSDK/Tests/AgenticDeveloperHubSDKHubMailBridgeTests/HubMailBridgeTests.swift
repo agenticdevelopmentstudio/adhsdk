@@ -336,7 +336,7 @@ final class HubMailBridgeTests: XCTestCase {
     }
 
     // 018
-    func testMoveWritesOnlyTheMessagesThatChange() async throws {
+    func testMoveWritesEveryMessageEvenOneTheMirrorShowsMoved() async throws {
         try seedStandardLabels()
         try upsertMessage("m1", Seed(labels: ["Label_1"]))
         try upsertMessage("m2", Seed(labels: ["INBOX"]))
@@ -344,7 +344,8 @@ final class HubMailBridgeTests: XCTestCase {
             to: .moveMessages(account: "c1", messageIds: ["m1", "m2"], destination: "Work", from: nil))
         guard case .moved(let results) = response else { return XCTFail("\(response)") }
         let writes = await recorder.writes
-        XCTAssertEqual(writes.map(\.messageIds), [["ext-m2"]])
+        // m1 reads as already in Work, but the mirror may lag Gmail.
+        XCTAssertEqual(writes.map(\.messageIds), [["ext-m1", "ext-m2"]])
         XCTAssertEqual(results.map(\.added), [[], ["Work"]])
         XCTAssertEqual(results.map(\.removed), [[], ["INBOX"]])
         XCTAssertEqual(try store.message(id: "m2")?.labelIds, ["Label_1"])

@@ -2,7 +2,7 @@
 id: e12914f0-3a3b-4fb7-ac0c-6332de37de4f
 title: "Hub Mail Bridge"
 type: ingredient
-version: 1.3.5
+version: 1.3.6
 status: review
 language: en
 created: 2026-11-14
@@ -68,7 +68,7 @@ What it does with each request:
 - **message-lookup**: A message id MUST match a live message of the connection by hub row id, else by provider id; no match MUST answer `.notFound("unknown message: …")`.
 - **thread-lookup**: `getThread` MUST take a thread id, or a message id standing for that message's thread, and answer the thread's live messages oldest first with the thread id as `id`; neither MUST answer `.notFound("unknown thread: …")`.
 - **modify-through-hub**: `modifyLabels` MUST resolve every message and label first, then post one `modify_labels` action for the connection with the messages' provider ids and the resolved add and remove ids, then write the same change into the mirror, and answer the messages as they now stand, in request order. With nothing to add or remove it MUST post nothing and answer the messages unchanged.
-- **move-through-hub**: `moveMessages` MUST add `destination` and remove every label in `from`, where the labels removed are decided by `from`: a `from` that is given removes exactly those labels; a `nil` `from` removes INBOX when the destination is not INBOX; a `nil` `from` removes nothing when the destination is INBOX. A destination that is also in `from` MUST answer `.failure`. Only messages the move changes MUST be written, in one action; every message MUST get a result naming, by label name, what was added and removed.
+- **move-through-hub**: `moveMessages` MUST add `destination` and remove every label in `from`, where the labels removed are decided by `from`: a `from` that is given removes exactly those labels; a `nil` `from` removes INBOX when the destination is not INBOX; a `nil` `from` removes nothing when the destination is INBOX. A destination that is also in `from` MUST answer `.failure`. Every requested message MUST be written, in one action, even one the mirror shows already moved, because the mirror can lag Gmail and the hub's change is idempotent; every message MUST get a result naming, by label name, what was added and removed as measured against the mirror just before the write.
 - **write-failure**: When the hub refuses a label write or answers a result whose `ok` is false, the bridge MUST answer `.failure` carrying that result's `error` text, or "the hub did not change the labels" when it has none, and leave the mirror unchanged.
 - **mirror-write**: Writing a label change into the mirror MUST keep each row's sync version, so the next pull of that row from the hub replaces it.
 - **sync-now**: `syncNow` MUST run one pull through the hub sync, for any account argument, and answer `.ok`.
@@ -135,7 +135,7 @@ Not applicable: no visual or interactive element.
 | hub-mail-bridge-015 | thread-lookup | `getThread` by a message id of a three-message thread | the three, oldest first, `id` the thread id |
 | hub-mail-bridge-016 | modify-through-hub, mirror-write | Add "Work", remove `INBOX` on one message | one write with the provider id, `["Label_1"]`, `["INBOX"]`; the answer and a re-read show the new labels; the row's sync version is unchanged |
 | hub-mail-bridge-017 | modify-through-hub | Nothing to add or remove | no write; the message unchanged |
-| hub-mail-bridge-018 | move-through-hub | Move two messages, one already in "Work" and out of INBOX, to "Work" | one write for the other message only; results name `Work` added and `INBOX` removed for it, nothing for the first |
+| hub-mail-bridge-018 | move-through-hub | Move two messages, one already in "Work" and out of INBOX, to "Work" | one write for both messages; results name `Work` added and `INBOX` removed for the other, nothing for the first |
 | hub-mail-bridge-019 | move-through-hub | Move to INBOX from `["INBOX"]` | `.failure` |
 | hub-mail-bridge-020 | write-failure | The writer throws | `.failure` with its message; the mirror unchanged |
 | hub-mail-bridge-021 | sync-now | `syncNow(account: nil)` | the pull ran once; `.ok` |
@@ -176,6 +176,7 @@ Not applicable: no visual or interactive element.
 - A sign-in that arrives while a sign-out is still purging waits for the purge, then opens the mirror; otherwise the purge would delete the rows the new identity had just pulled.
 - `HubMailLocation.app(_:)` only names the file; a folder that does not exist yet is created when the database first opens, on sign-in or on a sign-out purge.
 - The background sync pulls new mail while the mail browser is open: the browser polls `listAccounts` and reloads when `lastSyncAt` moves, so the hub bridge reports the time of each completed pull rather than nil, which would never move.
+- A message archived here, moved back to the inbox in Gmail on the web, then archived here again before the next pull: the mirror still shows it archived, so the move writes it anyway rather than trusting the mirror, and Gmail archives it.
 ## Configuration
 
 | Option | Type | Default | Description |
@@ -298,6 +299,7 @@ Vectors 001 to 032 have a named test in `AgenticDeveloperHubSDKHubMailBridgeTest
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.3.6 | 2026-11-16 | Mike Fullerton | A move writes every message, not only those the mirror shows changing (review f11) |
 | 1.3.5 | 2026-11-16 | Mike Fullerton | Hub accounts report the last completed pull as lastSyncAt (review f6) |
 | 1.3.4 | 2026-11-16 | Mike Fullerton | A refused pull token is renewed and the pull retried (review f2) |
 | 1.3.3 | 2026-11-16 | Mike Fullerton | Sign-out purges a mirror a previous launch left; a sign-in waits for a running purge |

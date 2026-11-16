@@ -18,7 +18,7 @@
 | hub-mail-bridge-015 | thread-lookup | `getThread` by a message id of a three-message thread | the three, oldest first, `id` the thread id |
 | hub-mail-bridge-016 | modify-through-hub, mirror-write | Add "Work", remove `INBOX` on one message | one write with the provider id, `["Label_1"]`, `["INBOX"]`; the answer and a re-read show the new labels; the row's sync version is unchanged |
 | hub-mail-bridge-017 | modify-through-hub | Nothing to add or remove | no write; the message unchanged |
-| hub-mail-bridge-018 | move-through-hub | Move two messages, one already in "Work" and out of INBOX, to "Work" | one write for the other message only; results name `Work` added and `INBOX` removed for it, nothing for the first |
+| hub-mail-bridge-018 | move-through-hub | Move two messages, one already in "Work" and out of INBOX, to "Work" | one write for both messages; results name `Work` added and `INBOX` removed for the other, nothing for the first |
 | hub-mail-bridge-019 | move-through-hub | Move to INBOX from `["INBOX"]` | `.failure` |
 | hub-mail-bridge-020 | write-failure | The writer throws | `.failure` with its message; the mirror unchanged |
 | hub-mail-bridge-021 | sync-now | `syncNow(account: nil)` | the pull ran once; `.ok` |
