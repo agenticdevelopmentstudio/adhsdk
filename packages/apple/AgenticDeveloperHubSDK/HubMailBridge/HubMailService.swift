@@ -52,6 +52,10 @@ public final class HubMailService {
     private let current: BridgeBox
     private var sync: HubMailSync?
     private var trigger: PeriodicTriggerSource?
+    /// The purge `signedOut()` is running. A sign-in waits for it, so a new
+    /// identity never opens the mirror while the old one is being cleared
+    /// (the purge would delete what the new sync pulled).
+    private var signingOut: Task<Void, Never>?
 
     private static let log = Logger(subsystem: "com.agenticdevelopmentstudio.hubmail", category: "service")
 
@@ -75,8 +79,10 @@ public final class HubMailService {
     }
 
     /// Opens the mirror for the identity now signed in and pulls once. A
-    /// second call while connected does nothing.
+    /// second call while connected does nothing. A sign-out still purging
+    /// finishes first.
     public func signedIn() async {
+        while let pending = signingOut { await pending.value }
         guard sync == nil else { return }
         let connection: Connection
         do {
@@ -104,16 +110,38 @@ public final class HubMailService {
 
     /// Purges the departing identity's mail and stops syncing. Reads fail
     /// with `signedOutMessage` from the moment this is called.
+    ///
+    /// With no mirror open (a launch whose restore ended signed out, or a
+    /// failed sign-in) it still opens the file through `connect` and purges
+    /// it: the mirror outlives the process, so mail a previous launch's
+    /// identity left on disk must not be served to whoever signs in next.
     public func signedOut() async {
-        guard let sync else {
-            if case .failed = status { status = .signedOut }
-            return
-        }
-        self.sync = nil
+        while let pending = signingOut { await pending.value }
+        let departing = sync
+        sync = nil
         current.bridge = nil
         trigger?.stop()
         trigger = nil
         status = .signedOut
+        let purge = Task { await self.purge(departing) }
+        signingOut = purge
+        await purge.value
+        if signingOut == purge { signingOut = nil }
+    }
+
+    private func purge(_ departing: HubMailSync?) async {
+        let sync: HubMailSync
+        if let departing {
+            sync = departing
+        } else {
+            do {
+                sync = try connect().sync
+            } catch {
+                // Nothing reachable to clear; the next sign-in reports the cause.
+                Self.log.error("hub mail could not open to purge: \(error.localizedDescription, privacy: .public)")
+                return
+            }
+        }
         do {
             try await sync.signOut()
         } catch {

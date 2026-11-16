@@ -25,8 +25,9 @@ extension HubMailService {
     /// A live session over direct HTTPS (the same Keychain login
     /// `HubAccount.live` uses), with the mirror at `databaseURL`.
     ///
-    /// The database opens on the first sign-in and stays open, so signing
-    /// out and back in reuses it. Pulls authenticate with the stored session;
+    /// The database opens on the first sign-in, or on a launch whose restore
+    /// ends signed out (to purge what a previous launch left), and stays
+    /// open, so signing out and back in reuses it. Pulls authenticate with the stored session;
     /// label changes go through the hub client, whose middleware refreshes
     /// an expired token.
     public static func live(
