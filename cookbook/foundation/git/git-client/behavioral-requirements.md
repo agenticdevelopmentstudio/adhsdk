@@ -561,20 +561,24 @@
   literal string `"unfinished"` when no exit status is available), and
   MUST NOT log the process's standard output or standard error to OSLog.
   The in-memory ring (command-log-ring) keeps a call's standard error only
-  when its exit status is present and non-zero, cut to its first 2048
-  UTF-8 bytes on a character boundary and passed through the URL user-info
-  rule; standard output is never kept anywhere.
+  when its exit status is present and non-zero, passed through the URL
+  user-info rule first and then cut to its first 2048 UTF-8 bytes on a
+  character boundary, so a credential the cut would split is already gone;
+  standard output is never kept anywhere.
 - **command-log-ring**: Besides OSLog, every recorded call MUST be appended
   to one shared in-memory ring, `GitCommandLog.book`, holding the newest
   500 entries, oldest first. An entry carries an increasing id, its date,
   the tool (`git` by default; `record(tool:)` names another, such as `gh`),
-  the verb followed by the redacted arguments, the working directory's path
+  the arguments as spawned after the tool — `-c <key=value>` for each
+  config override, then the verb, then its redacted arguments (the
+  positional rule applies to the verb's arguments; the URL rule to all of
+  them) — the working directory's path
   (empty when there is none), the caller as `<file>:<function>`, the
   duration rounded to milliseconds, the exit status (nil when unfinished)
   and the kept standard error. Its command line is the tool and the
-  arguments joined by spaces. `record`'s `tool:` and `standardError:`
-  parameters default to `git` and nil, so every existing caller is
-  unchanged. Nothing in the ring is persisted.
+  arguments joined by spaces, so it is the command that ran. `record`'s
+  `tool:`, `configOverrides:` and `standardError:` parameters default to
+  `git`, none and nil, so every existing caller is unchanged. Nothing in the ring is persisted.
 - **command-log-updates**: `GitCommandLogBook.updates()` MUST yield every
   entry appended after the call, in order, to each subscriber, buffering at
   most the ring's capacity of the newest; a subscriber whose stream ends is

@@ -323,8 +323,9 @@ final class GitWindowSession {
 
     /// Shows the Command Log beside the terminal below the commit pane, or closes it
     /// when it is shown — the toolbar's toggle. It is a pane of the terminal region,
-    /// the same one its Split menu offers, so the two ways in are one mechanism. With
-    /// no terminal region (a layout built without terminals), it does nothing.
+    /// the same one its Split menu offers, so the two ways in are one mechanism. A layout
+    /// built without terminals has no region for it, and its toolbar has no toggle
+    /// (`GitWindowToolbar.showsCommandLog`); called there anyway, it does nothing.
     func toggleCommandLog() {
         let panes = commitPane.tabPanes()
         if let shown = panes.first(where: { $0.viewID == GitWindowPanes.commandLog }) {

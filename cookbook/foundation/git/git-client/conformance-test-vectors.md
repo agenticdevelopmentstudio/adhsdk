@@ -114,3 +114,5 @@
 | git-client-111 | command-log-ring | Record 520 calls `status <i>` into a ring of 500 | 500 entries, the first `status 20`; a `gh` call `pr list` reads `gh pr list`, 250 ms. |
 | git-client-112 | command-log-fields | Record status 0, nil and 128 with standard error `boom`; then 128 with `é`×3000 | Only the 128 entry keeps `boom`; the long one keeps 2048 bytes. |
 | git-client-113 | redaction-scope-and-positional-rule | `push` `["https://user:tok@github.com/o/r.git", "main"]` | `["push", "https://***@github.com/o/r.git", "main"]`. |
+| git-client-114 | command-log-ring | `perform(.commit(message: "secret"))` through a script standing in for git that records its argv | the entry's arguments start `-c core.editor=true commit`; its command line is `git ` plus the spawned argv with `secret` read as `<redacted:6>`. |
+| git-client-115 | command-log-fields | Standard error of filler then `https://user:ghp_secrettoken@example.com/…` whose user info straddles byte 2048, status 128 | at most 2048 bytes kept, starting with the filler and `https://`, and no `user:` or `ghp_`. |

@@ -84,6 +84,15 @@ struct GitWindowToolbarTests {
         ])
     }
 
+    @Test("a window without terminals has the six verbs and no Command Log toggle")
+    func noTerminalsNoCommandLog() {
+        let identifiers = GitWindowToolbar(showsCommandLog: false).items.compactMap { wiring($0)?.0 }
+        #expect(identifiers == [
+            "git.toolbar.fetch", "git.toolbar.pull", "git.toolbar.push",
+            "git.toolbar.branch", "git.toolbar.stash", "git.toolbar.pop"
+        ])
+    }
+
     @Test("every item is aimed at the toolbar itself, with a selector it answers")
     func itemsTargetTheToolbar() {
         let toolbar = GitWindowToolbar()

@@ -1054,7 +1054,7 @@ public actor GitClient {
     /// The record, the failure mapping and the cancellation rule above are this method's.
     ///
     /// `configOverrides` are `key=value` pairs passed as `-c key=value` ahead of the verb and
-    /// logged at the front of the arguments. An exit status outside `acceptedExitCodes`
+    /// logged there too, ahead of the verb. An exit status outside `acceptedExitCodes`
     /// throws `.commandFailed`. `budget` replaces `configuration.timeout` as the wall-clock
     /// limit when given; only the write verbs pass one. `standardInput` is written to the
     /// child's standard input and is never recorded: the log is told the arguments only.
@@ -1072,14 +1072,13 @@ public actor GitClient {
         environment: [String: String] = [:]
     ) async throws -> SubprocessChannel.RunResult {
         let overrides = configOverrides.flatMap { ["-c", $0] }
-        let arguments = overrides + verbArguments
         let executablePath = configuration.executableURL.path
         guard FileManager.default.isExecutableFile(atPath: executablePath) else {
             // Recorded even though nothing was spawned. A user who types a
             // wrong path into Settings makes every git call fail here, and an
             // empty log is the least useful thing to hand them.
-            GitCommandLog.record(verb: verb, arguments: arguments, directory: directory, caller: caller,
-                                 duration: 0, exitStatus: nil)
+            GitCommandLog.record(verb: verb, arguments: verbArguments, configOverrides: configOverrides,
+                                 directory: directory, caller: caller, duration: 0, exitStatus: nil)
             throw GitClientError.executableNotFound(path: executablePath)
         }
         let channelConfiguration = SubprocessChannel.Configuration(
@@ -1105,25 +1104,29 @@ public actor GitClient {
                                                      budget: budget ?? configuration.timeout)
         } catch is WallClockBudgetExceeded {
             GitCommandLog.record(
-                verb: verb, arguments: arguments, directory: directory, caller: caller,
+                verb: verb, arguments: verbArguments, configOverrides: configOverrides,
+                directory: directory, caller: caller,
                 duration: Date().timeIntervalSince(started), exitStatus: nil
             )
             throw GitClientError.timedOut(verb: verb)
         } catch let error as CancellationError {
             GitCommandLog.record(
-                verb: verb, arguments: arguments, directory: directory, caller: caller,
+                verb: verb, arguments: verbArguments, configOverrides: configOverrides,
+                directory: directory, caller: caller,
                 duration: Date().timeIntervalSince(started), exitStatus: nil
             )
             throw error
         } catch {
             GitCommandLog.record(
-                verb: verb, arguments: arguments, directory: directory, caller: caller,
+                verb: verb, arguments: verbArguments, configOverrides: configOverrides,
+                directory: directory, caller: caller,
                 duration: Date().timeIntervalSince(started), exitStatus: nil
             )
             throw GitClientError.launchFailed(verb: verb, reason: error.localizedDescription)
         }
         GitCommandLog.record(
-            verb: verb, arguments: arguments, directory: directory, caller: caller,
+            verb: verb, arguments: verbArguments, configOverrides: configOverrides,
+            directory: directory, caller: caller,
             duration: result.duration, exitStatus: result.exitStatus,
             // Kept by the log only for a status other than 0, in memory, never in OSLog.
             standardError: result.standardError

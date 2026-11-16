@@ -199,4 +199,18 @@ struct GitCommandLogRingTests {
         let kept = try #require(book.entries().first?.standardError)
         #expect(kept.utf8.count == 2048)
     }
+
+    @Test("standard error is redacted before it is cut, so a token across the cut never survives")
+    func standardErrorRedactedBeforeTruncating() throws {
+        let book = GitCommandLogBook(capacity: 4)
+        let url = "https://user:ghp_secrettoken@example.com/repo.git"
+        // The cut at 2048 bytes lands inside the user info, between "ghp_sec" and "rettoken".
+        let filler = String(repeating: "x", count: 2048 - "https://user:ghp_sec".utf8.count)
+        Self.record(in: book, exitStatus: 128, standardError: filler + url + "\nfatal: denied")
+        let kept = try #require(book.entries().first?.standardError)
+        #expect(kept.utf8.count <= 2048)
+        #expect(!kept.contains("user:"))
+        #expect(!kept.contains("ghp_"))
+        #expect(kept.hasPrefix(filler + "https://"))
+    }
 }

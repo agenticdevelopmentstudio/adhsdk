@@ -11,8 +11,8 @@
   so a caller-supplied value or message never reaches log output in clear
   text, and replaces any URL's user information with `***`; standard-error
   text — which may itself echo a repository path — MUST NEVER reach OSLog.
-  The in-memory command-log ring keeps it for a failed call only, cut to
-  2048 bytes and URL-redacted, and never persists it.
+  The in-memory command-log ring keeps it for a failed call only, URL-redacted
+  before it is cut to 2048 bytes, and never persists it.
 - **Nothing leaves the device through this component**: every verb spawns
   a local git subprocess; nothing in this component performs network I/O
   itself, though the git binary it spawns may contact a remote if a future

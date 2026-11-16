@@ -9,7 +9,8 @@ public struct GitCommandLogEntry: Sendable, Hashable, Identifiable {
     public let date: Date
     /// The executable run: `"git"` or `"gh"`.
     public let tool: String
-    /// The verb then its arguments, already redacted.
+    /// What was spawned after the tool, in order and redacted: `-c key=value` per
+    /// config override, the verb, then its arguments.
     public let arguments: [String]
     /// The working directory's path, or `""` when there was none.
     public let directory: String
@@ -35,7 +36,7 @@ public struct GitCommandLogEntry: Sendable, Hashable, Identifiable {
         self.standardError = standardError
     }
 
-    /// The command as typed: `git <arguments>`.
+    /// The command as it ran: `git -c key=value <verb> <arguments>`, redacted.
     public var commandLine: String { ([tool] + arguments).joined(separator: " ") }
 
     /// True when the process finished with status 0.
@@ -147,6 +148,8 @@ public enum GitCommandLog {
     /// launched, or its output channel failed. `tool` is the executable
     /// (`"git"`, or `"gh"`); `standardError` is kept, trimmed, only when
     /// `exitStatus` is a status other than 0, and only in the ring.
+    /// `configOverrides` are the `key=value` pairs spawned as `-c key=value` ahead of the
+    /// verb; they are logged there, in spawn order, so the logged command is the one that ran.
     ///
     /// Arguments are logged at `.public` because they are the feature: a log
     /// that hides `--porcelain=v1 -uall` cannot answer "what did the app
@@ -156,29 +159,35 @@ public enum GitCommandLog {
         tool: String = "git",
         verb: String,
         arguments: [String],
+        configOverrides: [String] = [],
         directory: URL?,
         caller: GitCaller,
         duration: TimeInterval,
         exitStatus: Int32?,
         standardError: String? = nil
     ) {
-        record(in: book, tool: tool, verb: verb, arguments: arguments, directory: directory, caller: caller,
-               duration: duration, exitStatus: exitStatus, standardError: standardError)
+        record(in: book, tool: tool, verb: verb, arguments: arguments, configOverrides: configOverrides,
+               directory: directory, caller: caller, duration: duration, exitStatus: exitStatus,
+               standardError: standardError)
     }
 
     /// `record` into `book` — the shared one, or a test's own.
     static func record(
-        in book: GitCommandLogBook, tool: String, verb: String, arguments: [String], directory: URL?,
+        in book: GitCommandLogBook, tool: String, verb: String, arguments: [String],
+        configOverrides: [String] = [], directory: URL?,
         caller: GitCaller, duration: TimeInterval, exitStatus: Int32?, standardError: String?
     ) {
         let milliseconds = Int((duration * 1000).rounded())
         let status = exitStatus.map(String.init) ?? "unfinished"
-        let redacted = redactedArguments(verb: verb, arguments: arguments)
-        let joinedArguments = redacted.joined(separator: " ")
+        // Spawn order: `-c key=value` for each override, the verb, then its arguments. The
+        // positional rules apply to the verb's arguments only; the URL rule to all of them.
+        let overrides = configOverrides.flatMap { ["-c", redactedURLUserInfo($0)] }
+        let spawned = overrides + [verb] + redactedArguments(tool: tool, verb: verb, arguments: arguments)
+        let joinedArguments = spawned.joined(separator: " ")
         let path = directory?.path ?? "-"
         logger.info(
             """
-            \(tool, privacy: .public) \(verb, privacy: .public) \(joinedArguments, privacy: .public) \
+            \(tool, privacy: .public) \(joinedArguments, privacy: .public) \
             cwd=\(path, privacy: .public) \
             from=\(caller.file, privacy: .public):\(caller.function, privacy: .public) \
             \(milliseconds, privacy: .public)ms status=\(status, privacy: .public)
@@ -186,7 +195,7 @@ public enum GitCommandLog {
         )
         let failed = exitStatus.map { $0 != 0 } ?? false
         book.append(
-            tool: tool, arguments: [verb] + redacted, directory: directory?.path ?? "",
+            tool: tool, arguments: spawned, directory: directory?.path ?? "",
             caller: "\(caller.file):\(caller.function)",
             duration: .milliseconds(max(milliseconds, 0)), exitStatus: exitStatus,
             standardError: failed ? standardError.map(keptStandardError) : nil)
@@ -198,17 +207,18 @@ public enum GitCommandLog {
     /// Each entry recorded in the shared ring from now on.
     public static func updates() -> AsyncStream<GitCommandLogEntry> { book.updates() }
 
-    /// `standardError`'s first `standardErrorLimit` UTF-8 bytes, cut on a
-    /// character boundary, with URL user info redacted.
+    /// `standardError` with URL user info redacted, then cut to its first
+    /// `standardErrorLimit` UTF-8 bytes on a character boundary. Redacting first is
+    /// the point: a cut inside `user:token@` would leave no `@` for the rule to find.
     static func keptStandardError(_ standardError: String) -> String {
         var kept = ""
         var bytes = 0
-        for character in standardError {
+        for character in redactedURLUserInfo(standardError) {
             bytes += character.utf8.count
             if bytes > standardErrorLimit { break }
             kept.append(character)
         }
-        return redactedURLUserInfo(kept)
+        return kept
     }
 
     /// `text` with the user info of every URL in it (`https://user:token@host`)
@@ -278,9 +288,19 @@ public enum GitCommandLog {
     /// is replaced with `***` (`https://***@host/repo`) in any argument, so a
     /// remote added, pushed to or cloned with a token in it shows its host and
     /// never the token.
-    static func redactedArguments(verb: String, arguments: [String]) -> [String] {
-        positionallyRedacted(verb: verb, arguments: arguments).map(redactedURLUserInfo)
+    ///
+    /// For `tool` `"gh"` the positional rule is `gh`'s own: the argument after
+    /// `--title`, `--body`, `-t` or `-b` (a pull request's title and body, the user's
+    /// own text) is redacted, whatever the verb; git's rules do not apply to it.
+    static func redactedArguments(tool: String = "git", verb: String, arguments: [String]) -> [String] {
+        let positional = tool == "gh"
+            ? redactedAfter(ghTextFlags, in: arguments)
+            : positionallyRedacted(verb: verb, arguments: arguments)
+        return positional.map(redactedURLUserInfo)
     }
+
+    /// The `gh` flags followed by the user's own text.
+    static let ghTextFlags: Set<String> = ["--title", "--body", "-t", "-b"]
 
     private static func positionallyRedacted(verb: String, arguments: [String]) -> [String] {
         if messageVerbs.contains(verb) { return redactedMessages(arguments) }
@@ -313,6 +333,19 @@ public enum GitCommandLog {
                 return "<redacted:\(argument.count)>"
             }
             redactNext = argument == "-m"
+            return argument
+        }
+    }
+
+    /// `arguments` with the argument after each of `flags` redacted.
+    private static func redactedAfter(_ flags: Set<String>, in arguments: [String]) -> [String] {
+        var redactNext = false
+        return arguments.map { argument in
+            if redactNext {
+                redactNext = false
+                return "<redacted:\(argument.count)>"
+            }
+            redactNext = flags.contains(argument)
             return argument
         }
     }

@@ -249,7 +249,7 @@ public final class GitWindowFeature: AppFeature {
             return nil
         }
         let wasOpen = windows.windowController(for: repo.id) != nil
-        let toolbar = GitWindowToolbar()
+        let toolbar = GitWindowToolbar(showsCommandLog: terminals != nil)
         guard let controller = windows.openStandaloneWindow(
             repo, layout: layout, startsLanguageServices: false, activates: activates,
             toolbarItems: toolbar.items,

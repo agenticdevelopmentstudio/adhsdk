@@ -29,6 +29,22 @@ public final class GitCommandLogViewController: NSViewController {
     /// The newest entry id taken in, so an entry read by `reload` and then yielded
     /// by the stream is shown once.
     private var lastID: UInt64 = 0
+    /// The roots as last asked, and their paths in both forms: recomputed only when the
+    /// roots the closure returns change, so no entry costs a filesystem call per root.
+    private var cachedRoots: [URL]?
+    private var rootPaths: Set<String> = []
+    /// Each directory an entry ran in, resolved once, in both forms.
+    private var directoryPaths: [String: [String]] = [:]
+
+    /// The 24-hour `HH:mm:ss` of the Time column, whatever the locale's clock.
+    static func timeText(of date: Date, in timeZone: TimeZone = .current) -> String {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.calendar = Calendar(identifier: .gregorian)
+        formatter.timeZone = timeZone
+        formatter.dateFormat = "HH:mm:ss"
+        return formatter.string(from: date)
+    }
 
     enum Column: String, CaseIterable {
         case time, command, directory, duration, status
@@ -115,6 +131,7 @@ public final class GitCommandLogViewController: NSViewController {
         loadViewIfNeeded()
         let all = book.entries()
         lastID = all.last?.id ?? lastID
+        refreshRoots()
         shown = all.filter(isInRoots)
         tableView.reloadData()
         scrollToBottom()
@@ -142,6 +159,7 @@ public final class GitCommandLogViewController: NSViewController {
     private func take(_ entry: GitCommandLogEntry) {
         guard entry.id > lastID else { return }
         lastID = entry.id
+        refreshRoots()
         guard isInRoots(entry) else { return }
         let following = isAtBottom
         shown.append(entry)
@@ -165,17 +183,32 @@ public final class GitCommandLogViewController: NSViewController {
         tableView.scrollRowToVisible(shown.count - 1)
     }
 
-    /// True when the entry ran in a root or below one.
+    /// True when the entry ran in a root or below one, its directory and the roots each
+    /// compared in both their standardized and their symlink-resolved forms.
     private func isInRoots(_ entry: GitCommandLogEntry) -> Bool {
         guard !entry.directory.isEmpty else { return false }
-        let directory = URL(fileURLWithPath: entry.directory).standardizedFileURL.path
-        return rootPaths().contains { root in directory == root || directory.hasPrefix(root + "/") }
+        return paths(of: entry.directory).contains { directory in
+            rootPaths.contains { root in directory == root || directory.hasPrefix(root + "/") }
+        }
     }
 
-    private func rootPaths() -> Set<String> {
-        Set(roots().flatMap { url in
-            [url.standardizedFileURL.path, url.resolvingSymlinksInPath().standardizedFileURL.path]
-        })
+    /// Asks for the roots (an in-memory list) and resolves them again only when they changed.
+    private func refreshRoots() {
+        let current = roots()
+        guard current != cachedRoots else { return }
+        cachedRoots = current
+        rootPaths = Set(current.flatMap { Self.bothForms(of: $0) })
+    }
+
+    private func paths(of directory: String) -> [String] {
+        if let known = directoryPaths[directory] { return known }
+        let resolved = Self.bothForms(of: URL(fileURLWithPath: directory))
+        directoryPaths[directory] = resolved
+        return resolved
+    }
+
+    private static func bothForms(of url: URL) -> [String] {
+        [url.standardizedFileURL.path, url.resolvingSymlinksInPath().standardizedFileURL.path]
     }
 
     // MARK: - Copy
@@ -203,7 +236,7 @@ public final class GitCommandLogViewController: NSViewController {
     static func text(of entry: GitCommandLogEntry, in column: Column) -> String {
         switch column {
         case .time:
-            return entry.date.formatted(.dateTime.hour(.twoDigits(amPM: .omitted)).minute().second())
+            return Self.timeText(of: entry.date)
         case .command:
             return entry.commandLine
         case .directory:

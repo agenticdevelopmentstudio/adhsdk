@@ -4,14 +4,14 @@ configuration assigns.
 
 | Event | Level | Message shape |
 |-------|-------|---------------|
-| Every invocation attempt, regardless of outcome | info | `` `git <verb> <redacted-arguments> cwd=<path> from=<file>:<function> <ms>ms status=<exitStatus-or-"unfinished">` `` |
+| Every invocation attempt, regardless of outcome | info | `` `git [-c <key=value>]… <verb> <redacted-arguments> cwd=<path> from=<file>:<function> <ms>ms status=<exitStatus-or-"unfinished">` `` |
 
 The command log MUST NOT log the process's standard output or standard
 error to OSLog — only that a call happened and where it came from, so git
 usage can be counted, attributed, and audited without the log becoming a
 copy of the repository. The in-memory ring (`GitCommandLog.book`, see
-command-log-ring) keeps a failed call's standard error, truncated to 2048
-bytes and URL-redacted, for the Git window's Command Log; it is never
+command-log-ring) keeps a failed call's standard error, URL-redacted and
+then truncated to 2048 bytes, for the Git window's Command Log; it is never
 persisted and never written to OSLog. Arguments are logged at public visibility after passing through
 the redaction rule (see Behavioral Requirements and Privacy above), never
 collapsed as a whole, because that would hide the entire interpolation for

@@ -176,6 +176,32 @@ struct GitClientTests {
         #expect(succeeded.standardError == nil)
     }
 
+    @Test("a write's config overrides are logged ahead of the verb, as spawned, message redacted")
+    func commandLogKeepsSpawnOrder() async throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("git-client-spawn-order-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let argvLog = directory.appendingPathComponent("argv.log")
+        let script = directory.appendingPathComponent("argv-git")
+        try "#!/bin/sh\necho \"$*\" >> \"$ARGV_LOG\"\n".write(to: script, atomically: true, encoding: .utf8)
+        try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: script.path)
+        let client = GitClient(configuration: GitClientConfiguration(
+            executableURL: script, timeout: 10, extraEnvironment: ["ARGV_LOG": argvLog.path]))
+
+        // The stand-in prints nothing, so the rebase-helper probe after the commit may throw.
+        _ = try? await client.perform(.commit(message: "secret", amend: false), in: directory)
+
+        let spawned = try #require(try String(contentsOf: argvLog, encoding: .utf8)
+            .split(separator: "\n").map(String.init).first { $0.contains(" commit ") })
+        #expect(spawned.hasPrefix("-c core.editor=true commit "))
+        let entry = try #require(GitCommandLog.entries().first { entry in
+            entry.directory == directory.path && entry.arguments.contains("commit")
+        })
+        #expect(Array(entry.arguments.prefix(3)) == ["-c", "core.editor=true", "commit"])
+        #expect(entry.commandLine == "git " + spawned.replacingOccurrences(of: "secret", with: "<redacted:6>"))
+    }
+
     @Test("currentBranch names the checked-out branch")
     func currentBranch() async throws {
         let fixture = try await Fixture.make()

@@ -98,3 +98,5 @@
 | git-views-095 | command-log-follow | 40 entries shown at the bottom; one more; scroll to the top; one more | the last row visible; then still the first row visible. |
 | git-views-096 | command-log-copy | `push https://***@github.com/o/r.git main`; Copy Command on row 0 | the pasteboard holds `git push https://***@github.com/o/r.git main`. |
 | git-views-097 | command-log-tooltip | a passed `status`; a failed `push` (1, `rejected`) | no tooltip; `rejected`, `xmark.octagon`, `1`, `12 ms`. |
+| git-views-098 | command-log-columns | 14:05:09 and 00:00:07 UTC | `14:05:09` and `00:00:07`. |
+| git-views-099 | command-log-filter | 20 entries in the root and one in `other`; reload; change the roots to `other`; reload | 20 shown, the roots asked for at most twice; then only `other`'s. |

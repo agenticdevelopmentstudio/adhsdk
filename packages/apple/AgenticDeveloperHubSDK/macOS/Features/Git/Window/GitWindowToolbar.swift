@@ -16,10 +16,22 @@ final class GitWindowToolbar: NSObject {
     /// every button does nothing.
     weak var session: GitWindowSession?
 
-    /// The seven buttons, in order, every one aimed at this object.
+    /// Whether the Command Log toggle is offered: only a layout with a terminal region
+    /// has somewhere to put the Command Log, so a window built without terminals leaves
+    /// the button out rather than showing one that can do nothing.
+    let showsCommandLog: Bool
+
+    init(showsCommandLog: Bool = true) {
+        self.showsCommandLog = showsCommandLog
+        super.init()
+    }
+
+    /// The buttons, in order, every one aimed at this object: seven, or six without the
+    /// Command Log toggle.
     var items: [WindowToolbarItem] {
         let target = WindowToolbarTarget(self)
-        return Self.specs.map { spec in
+        let specs = showsCommandLog ? Self.specs : Self.specs.filter { $0.identifier != Self.commandLogIdentifier }
+        return specs.map { spec in
             .targetedButton(
                 identifier: NSToolbarItem.Identifier(spec.identifier), symbol: spec.symbol,
                 label: spec.label, target: target, action: spec.action)
@@ -32,6 +44,8 @@ final class GitWindowToolbar: NSObject {
         let symbol: String
         let action: Selector
     }
+
+    static let commandLogIdentifier = "git.toolbar.commandLog"
 
     private static let specs: [Spec] = [
         Spec(identifier: "git.toolbar.fetch", label: "Fetch", symbol: "arrow.down.circle",
@@ -46,7 +60,7 @@ final class GitWindowToolbar: NSObject {
              action: #selector(GitWindowToolbar.stash(_:))),
         Spec(identifier: "git.toolbar.pop", label: "Pop", symbol: "tray.and.arrow.up",
              action: #selector(GitWindowToolbar.popStash(_:))),
-        Spec(identifier: "git.toolbar.commandLog", label: "Command Log", symbol: "list.bullet.rectangle",
+        Spec(identifier: commandLogIdentifier, label: "Command Log", symbol: "list.bullet.rectangle",
              action: #selector(GitWindowToolbar.toggleCommandLog(_:)))
     ]
 
