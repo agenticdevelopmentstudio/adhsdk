@@ -161,6 +161,37 @@ final class AgentPageWalkerWebViewTests: XCTestCase {
         }
     }
 
+    /// An agent-list entry naming the page root withholds the whole page,
+    /// title and refs included: the walk starts beneath body, so the entry
+    /// would otherwise withhold nothing (review f3).
+    func test_pageRootAgentListEntryWithholdsThePage() async throws {
+        let first = await source(try emptyStore()).read(options: BrowserSnapshotOptions())
+        let press = try XCTUnwrap(firstNode(first.page, kind: .button, named: "Press me"))
+        let generation = try XCTUnwrap(first.generation)
+        for selector in ["body", "html"] {
+            var scoped = BrowserSnapshotOptions()
+            scoped.scope = press.ref
+            for options in [BrowserSnapshotOptions(), scoped] {
+                let reading = await source(try store(agentSelectors: [selector])).read(options: options,
+                                                                                      keepingRefs: true)
+                XCTAssertNil(reading.page.unavailableReason, selector)
+                XCTAssertEqual(reading.page.title, "", selector)
+                XCTAssertTrue(reading.page.text().isEmpty, "\(selector): \(reading.page.text())")
+                for shown in ["Visible heading", "Press me", "Keep link"] {
+                    XCTAssertFalse(tree(reading.page).contains(shown), "\(selector): \(shown) reached the agent")
+                    XCTAssertFalse(reading.page.html().contains(shown), "\(selector): \(shown) in the html")
+                }
+            }
+            let automation = BrowserAutomation(driver: driver, console: BrowserConsoleLog())
+            do {
+                _ = try await automation.click(ref: press.ref, generation: generation, native: false)
+                XCTFail("\(selector): a ref into a withheld page was clicked")
+            } catch let error as BrowserAutomationError {
+                guard case .staleRef = error else { return XCTFail("\(selector): \(error)") }
+            }
+        }
+    }
+
     /// An agent-list selector the page cannot evaluate would hide nothing,
     /// so the page is withheld rather than shown unfiltered (A-M1).
     func test_invalidExcludeSelectorFailsClosed() async throws {

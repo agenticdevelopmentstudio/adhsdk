@@ -52,6 +52,11 @@
   snapshot does. Selectors never decide exclusion: the agent list is
   evaluated before the walk, and a selector it cannot evaluate refuses the
   walk, as `invalid-exclude-selector-fails-closed` says.
+- **The page root on the agent list**: The walk starts beneath `body`, so
+  an agent-list entry matching `html` or `body` (or a hidden `body`) is
+  checked before it: the agent gets the empty document with an empty
+  title, whatever scope it asked for, and no reference into the page
+  resolves (MUST, `walker-skips-agent-list`, `withheld-refs-stale`).
 - **Privacy words change mid-read**: The concealment in force when the
   build starts conceals the whole result; the tool reply is concealed
   with the start and end words together, per

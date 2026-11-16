@@ -21,7 +21,7 @@
 // stays what it was for the same page.
 (function () {
   'use strict';
-  const VERSION = 6;
+  const VERSION = 7;
   if (globalThis.__adkAgentWalkVersion === VERSION && typeof globalThis.__adkAgentWalk === 'function') { return; }
 
   const DEFAULT_TIMEOUT_MS = 1500;
@@ -471,25 +471,38 @@
       return false;
     }
 
+    // The page root itself withheld (an agent-list entry of `html` or
+    // `body`, or a hidden body): the walk starts beneath body, so it must
+    // say so here, or that entry would withhold nothing. The agent gets the
+    // empty document, title included, whatever scope it asked for, and no
+    // ref into the page resolves.
+    const body = document.body;
+    const pageWithheld = isHiddenUncached(document.documentElement) || (body !== null && isHiddenUncached(body));
+
     // The runtime refuses refs to withheld elements from here on (resolve
     // and resolveScope), whatever walk handed them out.
-    if (typeof kitchen.setWithheld === 'function') { kitchen.setWithheld(Array.from(excluded)); }
-    const resolved = options.scopeRef ? kitchen.resolveScope(options.scopeRef) : null;  // before refs reset
+    if (typeof kitchen.setWithheld === 'function') {
+      kitchen.setWithheld(pageWithheld ? [document.documentElement] : Array.from(excluded));
+    }
+    // Resolved before beginWalk resets the refs.
+    const resolved = (options.scopeRef && !pageWithheld) ? kitchen.resolveScope(options.scopeRef) : null;
     const scopeEl = (resolved && !scopeIsWithheld(resolved)) ? resolved : null;
     // `keepRefs`: a reading walk that leaves the last snapshot's refs valid.
     const generation = kitchen.beginWalk(options.keepRefs === true);
     const depth = (typeof options.maxDepth === 'number' && options.maxDepth > 0) ? options.maxDepth : null;
-    const title = document.title || '';
+    const title = pageWithheld ? '' : (document.title || '');
     const documentNode = (children) => ({ ref: 'doc', kind: 'document', children: children });
 
     let root;
-    if (scopeEl) {
+    if (pageWithheld) {
+      root = documentNode([]);
+    } else if (scopeEl) {
       const built = [];
       build(scopeEl, depth, built);
       root = (built.length === 1 && built[0].kind !== 'text') ? built[0] : documentNode(built);
     } else {
       const children = [];
-      if (document.body) { childrenOf(document.body, depth, children); }
+      if (body) { childrenOf(body, depth, children); }
       root = documentNode(children);
     }
     return { url: location.href, title: title, generation: generation, warnings: warnings, root: root };
