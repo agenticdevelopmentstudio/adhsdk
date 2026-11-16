@@ -8,4 +8,5 @@
 | executable-locator-005 | de-duplicated | PATH `/usr/bin:/opt/homebrew/bin/::/usr/bin` | `searchDirectories` is `/usr/bin`, `/opt/homebrew/bin`, `/usr/local/bin`, `/bin`, each tested once (test: repeatedDirectoriesAreSearchedOnce). |
 | executable-locator-006 | nil-when-absent | PATH `/usr/bin`; executable: `/usr/bin/git` | `find("gh")` is nil (test: nilWhenAbsent). |
 | executable-locator-007 | bare-name-only | `find("")`, `find("bin/gh")` | nil, no path tested (test: nameWithSlashOrEmptyFindsNothing). |
+| executable-locator-008 | de-duplicated | PATH `.:bin:/usr/bin`; executable: `./gh`, `bin/gh` | `searchDirectories` starts at `/usr/bin`, and `find(\"gh\")` is nil (test: relativeEntriesAreDropped). |
 

@@ -23,7 +23,7 @@ public struct ExecutableLocator: Sendable {
     public init(
         environment: [String: String] = ProcessInfo.processInfo.environment,
         extraDirectories: [String] = ["/opt/homebrew/bin", "/usr/local/bin", "/usr/bin", "/bin"],
-        isExecutable: @escaping @Sendable (String) -> Bool = { FileManager.default.isExecutableFile(atPath: $0) }
+        isExecutable: @escaping @Sendable (String) -> Bool = { ExecutableLocator.isExecutableFile($0) }
     ) {
         self.environment = environment
         self.extraDirectories = extraDirectories
@@ -31,14 +31,15 @@ public struct ExecutableLocator: Sendable {
     }
 
     /// Every directory searched, in order: the `PATH` entries, then `extraDirectories`.
-    /// Empty entries are dropped, a trailing `/` does not make a directory a different
+    /// Empty and relative entries are dropped (a relative one would resolve against
+    /// the app's current directory), a trailing `/` does not make a directory a different
     /// one, and a repeated directory keeps only its first place.
     public var searchDirectories: [String] {
         let inherited = (environment["PATH"] ?? "").split(separator: ":").map(String.init)
         var seen = Set<String>()
         return (inherited + extraDirectories)
             .map(Self.normalized)
-            .filter { !$0.isEmpty && seen.insert($0).inserted }
+            .filter { $0.hasPrefix("/") && seen.insert($0).inserted }
     }
 
     /// The first executable file called `name` in `searchDirectories`, or nil when
@@ -51,6 +52,13 @@ public struct ExecutableLocator: Sendable {
             if isExecutable(path) { return URL(fileURLWithPath: path) }
         }
         return nil
+    }
+
+    /// True for an executable regular file; a directory with its x bit set is not one.
+    static func isExecutableFile(_ path: String) -> Bool {
+        var isDirectory: ObjCBool = false
+        return FileManager.default.fileExists(atPath: path, isDirectory: &isDirectory)
+            && !isDirectory.boolValue && FileManager.default.isExecutableFile(atPath: path)
     }
 
     /// `directory` without trailing slashes, except the root itself.

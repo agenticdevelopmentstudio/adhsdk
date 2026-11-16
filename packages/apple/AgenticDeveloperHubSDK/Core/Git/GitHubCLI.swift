@@ -99,18 +99,19 @@ public actor GitHubCLI {
         return try decode([GitPullRequest].self, from: output)
     }
 
-    /// The pull request whose head is `branch`, or nil when there is none:
-    /// `gh pr view <branch> --json …`, whose "no pull requests found" is that nil.
+    /// The newest pull request, in any state, whose head is `branch`, or nil when there
+    /// is none: `gh pr list --head <branch> --state all --limit 1 --json …`. Not
+    /// `gh pr view <branch>`, which reads its argument as a number or URL first, so a
+    /// branch named `4521` would answer pull request #4521.
     public func pullRequest(forBranch branch: String, in directory: URL,
                             caller: GitCaller = GitCaller()) async throws -> GitPullRequest? {
         guard !branch.isEmpty, !branch.hasPrefix("-") else {
             throw GitHubCLIError.failed("not a branch name: \(branch)")
         }
-        let arguments = ["pr", "view", branch, "--json", Self.pullRequestFields.joined(separator: ",")]
-        let output = try await run(arguments, in: directory, budget: Self.readBudget, caller: caller,
-                                   absentWhen: "no pull requests found")
-        guard let output else { return nil }
-        return try decode(GitPullRequest.self, from: output)
+        let arguments = ["pr", "list", "--head", branch, "--state", "all", "--limit", "1",
+                         "--json", Self.pullRequestFields.joined(separator: ",")]
+        let output = try await run(arguments, in: directory, budget: Self.readBudget, caller: caller)
+        return try decode([GitPullRequest].self, from: output).first
     }
 
     /// `gh pr checkout <number>`: fetches the pull request's head and switches to it.
@@ -141,14 +142,6 @@ public actor GitHubCLI {
     /// the mapped `GitHubCLIError`. Records the call in the command log whatever happens.
     private func run(_ arguments: [String], in directory: URL, budget: Duration,
                      caller: GitCaller) async throws -> Data {
-        // Without `absentWhen` the optional is never nil.
-        try await run(arguments, in: directory, budget: budget, caller: caller, absentWhen: nil) ?? Data()
-    }
-
-    /// As `run`, returning nil instead of throwing when the call failed and its standard
-    /// error contains `absentWhen` (case-insensitive).
-    private func run(_ arguments: [String], in directory: URL, budget: Duration, caller: GitCaller,
-                     absentWhen: String?) async throws -> Data? {
         let verb = arguments.first ?? ""
         let verbArguments = Array(arguments.dropFirst())
         guard let executable = locator.find("gh") else {
@@ -177,12 +170,7 @@ public actor GitHubCLI {
         }
         record(verb: verb, arguments: verbArguments, directory: directory, caller: caller,
                duration: result.duration, exitStatus: result.exitStatus, standardError: result.standardError)
-        guard result.exitStatus == 0 else {
-            if let absentWhen, result.standardError.lowercased().contains(absentWhen.lowercased()) {
-                return nil
-            }
-            throw Self.error(forStandardError: result.standardError)
-        }
+        guard result.exitStatus == 0 else { throw Self.error(forStandardError: result.standardError) }
         return result.standardOutput
     }
 
@@ -195,13 +183,21 @@ public actor GitHubCLI {
 
     // MARK: - Mapping
 
+    /// Standard error that means the repository has no GitHub to ask: no GitHub remote,
+    /// no remote at all, or several remotes and no `gh repo set-default`.
+    static let notGitHubMarkers = [
+        "none of the git remotes", "not a github", "no git remotes found", "no default remote repository"
+    ]
+
     /// The error a failed `gh` call's standard error names, matched case-insensitively:
-    /// a login prompt is `.notAuthenticated`, a repository without a GitHub remote is
-    /// `.notGitHub`, and anything else is `.failed` with the standard error, trimmed.
+    /// a repository without a GitHub remote is `.notGitHub`, a login prompt
+    /// `.notAuthenticated`, and anything else `.failed` with the standard error, trimmed.
+    /// Not-GitHub is tested first: gh's "none of the git remotes … point to a known
+    /// GitHub host" message goes on to suggest `gh auth login`.
     static func error(forStandardError standardError: String) -> GitHubCLIError {
         let text = standardError.lowercased()
+        if notGitHubMarkers.contains(where: { text.contains($0) }) { return .notGitHub }
         if text.contains("gh auth login") || text.contains("not logged") { return .notAuthenticated }
-        if text.contains("none of the git remotes") || text.contains("not a github") { return .notGitHub }
         return .failed(standardError.trimmingCharacters(in: .whitespacesAndNewlines))
     }
 

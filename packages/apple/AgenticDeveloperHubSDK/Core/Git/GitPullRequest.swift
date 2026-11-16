@@ -63,7 +63,7 @@ struct GitHubStatusCheck: Decodable {
         }
         guard status?.uppercased() == "COMPLETED" else { return .pending }
         switch conclusion?.uppercased() {
-        case "SUCCESS", "NEUTRAL", "SKIPPED": return .passing
+        case "SUCCESS", "NEUTRAL", "SKIPPED", "STALE": return .passing
         case nil, "": return .pending
         default: return .failing
         }

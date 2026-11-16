@@ -65,6 +65,13 @@ struct ExecutableLocatorTests {
         #expect(probe.paths == ["/usr/bin/gh", "/opt/homebrew/bin/gh", "/usr/local/bin/gh", "/bin/gh"])
     }
 
+    @Test func relativeEntriesAreDropped() {
+        let probe = Probe(present: ["./gh", "bin/gh"])
+        let subject = locator(path: ".:bin:/usr/bin", probe: probe)
+        #expect(subject.searchDirectories == ["/usr/bin", "/opt/homebrew/bin", "/usr/local/bin", "/bin"])
+        #expect(subject.find("gh") == nil)
+    }
+
     @Test func nilWhenAbsent() {
         let probe = Probe(present: ["/usr/bin/git"])
         #expect(locator(path: "/usr/bin", probe: probe).find("gh") == nil)

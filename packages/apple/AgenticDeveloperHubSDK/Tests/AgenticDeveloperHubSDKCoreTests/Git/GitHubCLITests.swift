@@ -104,9 +104,10 @@ struct GitHubCLITests {
     ]
     """
 
-    /// `gh pr view <branch> --json <fields>` for one merged pull request.
+    /// `gh pr list --head <branch> --state all --limit 1 --json <fields>` for one merged
+    /// pull request.
     static let onePullRequest = """
-    {
+    [{
       "author": {"login": "octocat"},
       "baseRefName": "main",
       "headRefName": "feature/login",
@@ -120,7 +121,7 @@ struct GitHubCLITests {
       "title": "Add the login screen",
       "updatedAt": "2026-11-14T09:30:00Z",
       "url": "https://github.com/o/r/pull/42"
-    }
+    }]
     """
 
     // MARK: - Environment and arguments
@@ -166,8 +167,23 @@ struct GitHubCLITests {
         let subject = Self.client(.output(Self.onePullRequest), recorder: recorder)
         _ = try await subject.pullRequest(forBranch: "feature/login", in: Self.directory)
         let call = try #require(await recorder.calls.first)
-        #expect(call.arguments == ["pr", "view", "feature/login", "--json", Self.fields])
+        #expect(call.arguments == [
+            "pr", "list", "--head", "feature/login", "--state", "all", "--limit", "1", "--json", Self.fields
+        ])
         #expect(call.budget == .seconds(10))
+    }
+
+    /// A branch named like a pull request number is still a branch: `--head` keeps gh
+    /// from reading `4521` as pull request #4521, which `gh pr view 4521` would.
+    @Test func numericBranchNameIsLookedUpAsAHead() async throws {
+        let recorder = Recorder()
+        let subject = Self.client(.output("[]"), recorder: recorder)
+        let request = try await subject.pullRequest(forBranch: "4521", in: Self.directory)
+        #expect(request == nil)
+        let call = try #require(await recorder.calls.first)
+        #expect(call.arguments == [
+            "pr", "list", "--head", "4521", "--state", "all", "--limit", "1", "--json", Self.fields
+        ])
     }
 
     @Test func checkoutArguments() async throws {
@@ -262,10 +278,29 @@ struct GitHubCLITests {
         }
     }
 
+    /// gh's whole message, which ends by suggesting `gh auth login`: still not GitHub.
     @Test func noGitHubRemoteIsNotGitHub() async {
-        let stderr = "None of the git remotes configured for this repository point to a known GitHub host."
+        let stderr = "none of the git remotes configured for this repository point to a known GitHub host. "
+            + "To tell gh about a new GitHub host, please use `gh auth login`\n"
         let subject = Self.client(.failure(status: 1, standardError: stderr), recorder: Recorder())
         #expect(await subject.availability(in: Self.directory) == .failure(.notGitHub))
+    }
+
+    /// A repository with no remote at all, as `gh repo view` answers it.
+    @Test func noRemotesIsNotGitHub() async {
+        let stderr = "no git remotes found\n"
+        let subject = Self.client(.failure(status: 1, standardError: stderr), recorder: Recorder())
+        #expect(await subject.availability(in: Self.directory) == .failure(.notGitHub))
+    }
+
+    /// Several remotes and no `gh repo set-default`, as the `pr` commands answer it.
+    @Test func noDefaultRemoteIsNotGitHub() async {
+        let stderr = "No default remote repository has been set. To learn more about the default repository, "
+            + "run: gh repo set-default --help\n"
+        let subject = Self.client(.failure(status: 1, standardError: stderr), recorder: Recorder())
+        await #expect(throws: GitHubCLIError.notGitHub) {
+            _ = try await subject.pullRequests(in: Self.directory)
+        }
     }
 
     @Test func notAGitHubRepositoryIsNotGitHub() async {
@@ -292,9 +327,9 @@ struct GitHubCLITests {
         }
     }
 
-    @Test func noPullRequestsFoundIsNil() async throws {
-        let stderr = "no pull requests found for branch \"feature/none\"\n"
-        let subject = Self.client(.failure(status: 1, standardError: stderr), recorder: Recorder())
+    /// `gh pr list --json` answers an empty array, with exit 0, when nothing matches.
+    @Test func noPullRequestForBranchIsNil() async throws {
+        let subject = Self.client(.output("[]\n"), recorder: Recorder())
         let request = try await subject.pullRequest(forBranch: "feature/none", in: Self.directory)
         #expect(request == nil)
     }
@@ -316,13 +351,17 @@ struct GitHubCLITests {
     @Test func entriesAreLoggedWithToolGh() async throws {
         let book = GitCommandLogBook(capacity: 8)
         let subject = Self.client(.output("[]"), recorder: Recorder(), book: book)
-        _ = try await subject.pullRequests(in: Self.directory, limit: 3)
+        let caller = GitCaller(file: "AgenticDeveloperHubSDKCoreTests/GitHubCLITests.swift",
+                               function: "entriesAreLoggedWithToolGh()")
+        _ = try await subject.pullRequests(in: Self.directory, limit: 3, caller: caller)
         let entry = try #require(book.entries().last)
         #expect(entry.tool == "gh")
         #expect(entry.arguments == ["pr", "list", "--state", "open", "--limit", "3", "--json", Self.fields])
         #expect(entry.directory == Self.directory.path)
         #expect(entry.exitStatus == 0)
-        #expect(entry.caller.hasPrefix("AgenticDeveloperHubSDKCoreTests/GitHubCLITests.swift:"))
+        // An explicit caller, as GitCommandLogTests checks it: a `GitCaller()` default argument
+        // expands `#fileID` where the default is written, so it names GitHubCLI.swift, not this file.
+        #expect(entry.caller == "AgenticDeveloperHubSDKCoreTests/GitHubCLITests.swift:entriesAreLoggedWithToolGh()")
     }
 
     @Test func failedEntryKeepsStandardError() async throws {
