@@ -369,10 +369,12 @@ public actor GitClient {
     public static let signatureBudget: TimeInterval = 15
 
     /// The signature of each of `shas`, keyed by full sha (recipe `foundation/git/git-client`,
-    /// "Signatures"): `git log --no-show-signature --no-walk=unsorted
-    /// --format=GitSignature.format <shas…>`, bounded by `signatureBudget`. No shas is an
-    /// empty answer without running git; anything that is not a hex object name is refused
-    /// before git runs, so it can never be read as an option.
+    /// "Signatures"): `git log --no-show-signature --no-walk=unsorted --ignore-missing
+    /// --format=GitSignature.format <shas…> --`, bounded by `signatureBudget`. A sha the
+    /// repository does not have (a stash dropped elsewhere) is skipped and simply absent
+    /// from the answer, so it never fails the rest of the batch. No shas is an empty answer
+    /// without running git; anything that is not a hex object name is refused before git
+    /// runs, so it can never be read as an option.
     public func signatures(for shas: [String], in directory: URL, caller: GitCaller = GitCaller())
         async throws -> [String: GitSignature] {
         guard !shas.isEmpty else { return [:] }
@@ -381,7 +383,8 @@ public actor GitClient {
         }
         let output = try await execute(
             verb: "log",
-            arguments: ["--no-show-signature", "--no-walk=unsorted", "--format=\(GitSignature.format)"] + shas,
+            arguments: ["--no-show-signature", "--no-walk=unsorted", "--ignore-missing",
+                        "--format=\(GitSignature.format)"] + shas + ["--"],
             directory: directory,
             caller: caller,
             configuration: await configurationProvider(),

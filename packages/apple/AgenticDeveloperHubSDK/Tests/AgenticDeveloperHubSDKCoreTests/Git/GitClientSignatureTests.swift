@@ -80,3 +80,28 @@ struct GitClientSignatureTests {
         }
     }
 }
+
+/// A sha the repository does not have, such as a stash dropped from another terminal, is
+/// skipped rather than failing the batch it shares with the visible rows. Needs no key.
+@Suite("GitClient signatures, missing objects", .serialized)
+struct GitClientSignatureMissingTests {
+    private let client = GitClient(configuration: GitClientConfiguration(
+        extraEnvironment: ["GIT_CONFIG_GLOBAL": "/dev/null", "GIT_CONFIG_NOSYSTEM": "1"]
+    ))
+
+    @Test("an unknown sha is absent from the answer and the other commits still answer")
+    func unknownShaSkipped() async throws {
+        let repository = try await GitTestRepository.make(prefix: "git-signature-missing")
+        defer { repository.tearDown() }
+        try repository.write("one\n", to: "a.txt")
+        try await repository.run(["add", "a.txt"])
+        try await repository.run(["commit", "-q", "--no-gpg-sign", "-m", "one"])
+        let head = try await repository.sha("HEAD")
+        let missing = "0123456789abcdef0123456789abcdef01234567"
+
+        let signatures = try await client.signatures(for: [missing, head], in: repository.root)
+        #expect(signatures.keys.sorted() == [head])
+        #expect(signatures[head]?.status == .unsigned)
+        #expect(try await client.signatures(for: [missing], in: repository.root).isEmpty)
+    }
+}

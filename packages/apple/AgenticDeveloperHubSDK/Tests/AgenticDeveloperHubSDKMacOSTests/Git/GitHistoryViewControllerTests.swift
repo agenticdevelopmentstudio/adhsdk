@@ -277,6 +277,25 @@ struct GitHistoryViewControllerTests {
         #expect(source.signatureRequests.last == visible)
     }
 
+    @Test("scrolling asks for the rows where the scroll stopped, the leading edge included")
+    func signatureRequestsOnScroll() throws {
+        let source = Self.source(count: 200)
+        let history = GitHistoryViewController(source: source)
+        history.view.frame = NSRect(x: 0, y: 0, width: 800, height: 240)
+        history.view.layoutSubtreeIfNeeded()
+        history.reload()
+        let before = history.visibleCommitIDs
+        let requestsBefore = source.signatureRequests.count
+
+        let clip = try #require(history.tableView.enclosingScrollView?.contentView)
+        clip.scroll(to: NSPoint(x: 0, y: history.tableView.rect(ofRow: 120).minY))
+        let after = history.visibleCommitIDs
+        #expect(after != before)
+        #expect(after.contains(source.commits[120].id))
+        #expect(source.signatureRequests.count > requestsBefore)
+        #expect(source.signatureRequests.last == after)
+    }
+
     @Test("paging: a row in the last 50 asks for more once, not again until the count changes")
     func pagingTrigger() async {
         let source = Self.source(count: 120)

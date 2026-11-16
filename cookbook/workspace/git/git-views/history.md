@@ -25,3 +25,4 @@
 | 1.12.3 | 2026-11-16 | Mike Fullerton | A conflicted diff's old side is coloured from the revision the diff used (vector 093) |
 | 1.13.0 | 2026-11-16 | Mike Fullerton | Command log view: columns, root filter, follow-bottom, Copy Command, failure tooltip. |
 | 1.14.0 | 2026-11-16 | Mike Fullerton | Signing badges: a symbol per signed history row, the visible-row requests through the debounced, coalesced `GitShaBatchLoader` (replace the queued batch, a running one finishes and is cached), and the Signature line in the commit detail. |
+| 1.14.1 | 2026-11-16 | Mike Fullerton | Signing badges fix round 1: requests on every clip-view bounds or frame change; single-sha requests kept apart from the replaceable queue; a failed batch cools down for a minute. |

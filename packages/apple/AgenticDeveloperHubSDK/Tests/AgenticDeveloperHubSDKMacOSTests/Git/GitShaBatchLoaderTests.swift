@@ -68,7 +68,48 @@ struct GitShaBatchLoaderTests {
         loader.request(["a1", "b2"])
         loader.request(["c3"], replacingQueued: false)
         await settle(loader)
-        #expect(await recorder.batches == [["a1", "b2", "c3"]])
+        #expect(await recorder.batches == [["c3", "a1", "b2"]])
+    }
+
+    @Test("a list request never drops a queued single sha, even when every listed row is cached")
+    func replacementKeepsSingleSha() async {
+        let recorder = BatchRecorder()
+        let loader = loader(recorder)
+        loader.request(["a1", "b2"])
+        await settle(loader)
+        loader.request(["c3"], replacingQueued: false)
+        loader.request(["a1", "b2"])
+        await settle(loader)
+        loader.request(["d4"], replacingQueued: false)
+        loader.request(["e5"])
+        await settle(loader)
+
+        #expect(await recorder.batches == [["a1", "b2"], ["c3"], ["d4", "e5"]])
+        #expect(loader.value(for: "c3") == "value-c3")
+        #expect(loader.value(for: "d4") == "value-d4")
+    }
+
+    @Test("a failed batch's shas are left alone for the cooldown, then asked for again")
+    func failureCooldown() async {
+        let recorder = BatchRecorder()
+        var failures = 0
+        let loader = GitShaBatchLoader<String>(delay: .milliseconds(20), provider: { batch in
+            await recorder.record(batch)
+            throw CancellationError()
+        }, onLoad: {}, onFailure: { _ in failures += 1 })
+        loader.request(["a1", "b2"])
+        await settle(loader)
+        loader.request(["a1", "b2"])
+        await settle(loader)
+        #expect(await recorder.batches == [["a1", "b2"]])
+        #expect(failures == 1)
+        #expect(loader.queueTask == nil)
+
+        loader.failureCooldown = .zero
+        loader.request(["a1", "b2"])
+        await settle(loader)
+        #expect(await recorder.batches == [["a1", "b2"], ["a1", "b2"]])
+        #expect(failures == 2)
     }
 
     @Test("a sha the batch did not answer is not asked for again, and no answer posts no load")

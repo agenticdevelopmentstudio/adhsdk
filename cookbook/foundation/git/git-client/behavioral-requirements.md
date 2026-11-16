@@ -895,9 +895,10 @@ input it cannot read rather than failing.
 ### Signatures
 
 - **signatures-read**: `signatures(for:in:caller:)` MUST run
-  `log --no-show-signature --no-walk=unsorted --format=%H%x1f%G?%x1f%GS%x1f%GK%x1e <shas…>`
+  `log --no-show-signature --no-walk=unsorted --ignore-missing --format=%H%x1f%G?%x1f%GS%x1f%GK%x1e <shas…> --`
   in one call bounded by a 15 s budget (`signatureBudget`), and return each
-  commit's signature keyed by full sha. No shas MUST answer empty without
+  commit's signature keyed by full sha. A sha the repository does not have
+  MUST be absent from the answer without failing the others. No shas MUST answer empty without
   running git; a sha that is empty or not all hex digits MUST be refused as an
   invalid argument before git runs, so nothing can be read as an option.
 - **signature-status**: The status MUST come from git's `%G?` letter: `G`

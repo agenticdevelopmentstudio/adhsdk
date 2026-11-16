@@ -144,6 +144,7 @@ public final class GitHistoryViewController: NSViewController {
         scrollView.hasHorizontalScroller = true
         scrollView.autohidesScrollers = true
         scrollView.translatesAutoresizingMaskIntoConstraints = false
+        observeVisibleRows()
         root.addSubview(scrollView)
         NSLayoutConstraint.activate([
             scrollView.leadingAnchor.constraint(equalTo: root.leadingAnchor),
@@ -186,6 +187,7 @@ public final class GitHistoryViewController: NSViewController {
         isApplyingSelection = false
         if survivor == nil { report(nil) }
         requestVisibleSignatures()
+        requestVisibleReviews()
     }
 
     // MARK: - Signatures
@@ -199,9 +201,29 @@ public final class GitHistoryViewController: NSViewController {
         return rows.compactMap { commits.indices.contains($0) ? commits[$0].id : nil }
     }
 
-    /// Asks the data source for the visible rows' signatures, on reload and as rows appear
-    /// while the list scrolls. The data source debounces and coalesces (150ms), so a scroll
-    /// runs one `git log` once it settles, and the history never waits on it.
+    /// Watches the clip view, so every scroll step and every resize asks for the rows then
+    /// in `visibleRect` (`clipViewDidChange(_:)`). Selector observers are removed by
+    /// Foundation when the controller goes away.
+    private func observeVisibleRows() {
+        let clip = scrollView.contentView
+        clip.postsBoundsChangedNotifications = true
+        clip.postsFrameChangedNotifications = true
+        let center = NotificationCenter.default
+        center.addObserver(self, selector: #selector(clipViewDidChange(_:)),
+                           name: NSView.boundsDidChangeNotification, object: clip)
+        center.addObserver(self, selector: #selector(clipViewDidChange(_:)),
+                           name: NSView.frameDidChangeNotification, object: clip)
+    }
+
+    @objc private func clipViewDidChange(_ notification: Notification) {
+        requestVisibleSignatures()
+        requestVisibleReviews()
+    }
+
+    /// Asks the data source for the visible rows' signatures, after every reload and every
+    /// time the clip view scrolls or resizes. The data source debounces and coalesces
+    /// (150ms) and each request replaces the queued one, so a scroll runs one `git log` for
+    /// the rows where it stopped, and the history never waits on it.
     func requestVisibleSignatures() {
         let shas = visibleCommitIDs
         guard !shas.isEmpty else { return }
@@ -428,7 +450,8 @@ extension GitHistoryViewController: NSTableViewDelegate {
             let cell = reuse(tableView, GitHistorySubjectCellView.identifier) { GitHistorySubjectCellView() }
             let refs = refsByCommit[commit.id] ?? []
             cell.configure(subject: commit.subject, badges: GitHistoryRefBadge.badges(for: refs),
-                           signature: GitHistorySignatureBadge(source.signature(for: commit.id)))
+                           signature: GitHistorySignatureBadge(source.signature(for: commit.id)),
+                           review: GitHistoryReviewBadge(source.review(for: commit.id)))
             return cell
         case .author:
             let cell = reuse(tableView, GitHistoryAuthorCellView.identifier) { GitHistoryAuthorCellView() }
@@ -458,7 +481,6 @@ extension GitHistoryViewController: NSTableViewDelegate {
 
     public func tableView(_ tableView: NSTableView, didAdd rowView: NSTableRowView, forRow row: Int) {
         rowWillAppear(row)
-        requestVisibleSignatures()
     }
 
     public func tableViewSelectionDidChange(_ notification: Notification) {
