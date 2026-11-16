@@ -1019,6 +1019,133 @@ struct GitWindowSessionActionTests {
         #expect(try await repository.sha("HEAD") == first.id)
     }
 
+    // MARK: Reflog and Undo
+
+    /// Three commits, then the third amended to change `c.txt`; returns the pre-amend sha.
+    private func makeAmendedRepository() async throws -> (GitTestRepository, String) {
+        let repository = try await GitTestRepository.make(prefix: "git-actions-undo")
+        do {
+            try await commitFile(repository, "a.txt", "a\n", at: 100)
+            try await commitFile(repository, "b.txt", "b\n", at: 200)
+            try await commitFile(repository, "c.txt", "c\n", at: 300)
+            let beforeAmend = try await repository.sha("HEAD")
+            try repository.write("c, amended\n", to: "c.txt")
+            try await repository.run(["add", "--", "c.txt"])
+            try await repository.run(["commit", "--amend", "-m", "c.txt amended"],
+                                     environment: GitTestRepository.dated(Self.epoch + 400))
+            return (repository, beforeAmend)
+        } catch {
+            repository.tearDown()
+            throw error
+        }
+    }
+
+    @Test("the model's reflog lists the amend first, and its undo target is the pre-amend commit")
+    func undoTargetAfterAmend() async throws {
+        let (repository, beforeAmend) = try await makeAmendedRepository()
+        defer { repository.tearDown() }
+        let (model, _) = await makeSession(repository, presenter: StubPresenter())
+
+        let entries = try await model.reflog(limit: 10)
+        #expect(entries.first?.action == "commit (amend)")
+        #expect(entries.first?.message == "c.txt amended")
+        #expect(model.lastReflogEntry?.action == "commit (amend)")
+        #expect(model.undoTarget?.sha == beforeAmend)
+    }
+
+    @Test("undo on a clean tree is a mixed reset to HEAD@{1}, at once, leaving the amend's change unstaged")
+    func undoClean() async throws {
+        let (repository, beforeAmend) = try await makeAmendedRepository()
+        defer { repository.tearDown() }
+        let presenter = StubPresenter()
+        let (model, session) = await makeSession(repository, presenter: presenter)
+
+        await act(session, .undo)
+
+        #expect(presenter.confirmations.isEmpty)
+        #expect(presenter.failures.isEmpty)
+        #expect(try await repository.sha("HEAD") == beforeAmend)
+        #expect(model.staged.isEmpty)
+        #expect(model.unstaged.map(\.path) == ["c.txt"])
+        #expect(try String(contentsOf: repository.url("c.txt"), encoding: .utf8) == "c, amended\n")
+    }
+
+    @Test("undo on a dirty tree asks first; declining keeps HEAD, confirming keeps the changes unstaged")
+    func undoDirty() async throws {
+        let (repository, beforeAmend) = try await makeAmendedRepository()
+        defer { repository.tearDown() }
+        let afterAmend = try await repository.sha("HEAD")
+        try repository.write("a, edited\n", to: "a.txt")
+        let presenter = StubPresenter()
+        presenter.confirmAnswers = [false, true]
+        let (model, session) = await makeSession(repository, presenter: presenter)
+        let expected = GitConfirmation(
+            title: "Undo \"c.txt amended\"?",
+            message: "HEAD moves back to \(String(beforeAmend.prefix(8))); changes stay in the working copy.",
+            actionTitle: "Undo", isDestructive: false)
+
+        await act(session, .undo)
+        #expect(presenter.confirmations == [expected])
+        #expect(try await repository.sha("HEAD") == afterAmend)
+
+        await act(session, .undo)
+        #expect(presenter.confirmations == [expected, expected])
+        #expect(presenter.failures.isEmpty)
+        #expect(try await repository.sha("HEAD") == beforeAmend)
+        #expect(model.staged.isEmpty)
+        #expect(Set(model.unstaged.map(\.path)) == ["a.txt", "c.txt"])
+        #expect(try String(contentsOf: repository.url("a.txt"), encoding: .utf8) == "a, edited\n")
+    }
+
+    @Test("mid-rebase there is no undo target, and Undo does nothing")
+    func undoMidRebase() async throws {
+        let repository = try await GitTestRepository.make(prefix: "git-actions-undo-rebase")
+        defer { repository.tearDown() }
+        try await commitFile(repository, "a.txt", "base\n", at: 100)
+        try await repository.run(["branch", "feature"])
+        try await commitFile(repository, "a.txt", "main\n", at: 200)
+        try await repository.run(["switch", "-q", "feature"])
+        try await commitFile(repository, "a.txt", "feature\n", at: 300)
+        _ = try? await repository.run(["rebase", "main"])
+        let presenter = StubPresenter()
+        let (model, session) = await makeSession(repository, presenter: presenter)
+        #expect(model.operationState != .none)
+        #expect(model.undoTarget == nil)
+        let head = try await repository.sha("HEAD")
+
+        await act(session, .undo)
+
+        #expect(presenter.confirmations.isEmpty)
+        #expect(try await repository.sha("HEAD") == head)
+    }
+
+    @Test("a reflog entry's hard reset confirms; its checkout detaches and its branch is created there")
+    func reflogIntents() async throws {
+        let (repository, beforeAmend) = try await makeAmendedRepository()
+        defer { repository.tearDown() }
+        let afterAmend = try await repository.sha("HEAD")
+        let presenter = StubPresenter()
+        presenter.confirmAnswers = [false]
+        presenter.textAnswers = [["from-reflog"]]
+        let (model, session) = await makeSession(repository, presenter: presenter)
+        let entry = try #require(try await model.reflog(limit: 10).first { $0.sha == beforeAmend })
+
+        await act(session, .reflog(.reset(entry, .hard)))
+        #expect(presenter.confirmations == [GitConfirmation(
+            title: "Reset main to \(entry.shortSha)?", message: "Uncommitted changes are lost.",
+            actionTitle: "Reset", isDestructive: true)])
+        #expect(try await repository.sha("HEAD") == afterAmend)
+
+        await act(session, .reflog(.createBranch(entry)))
+        #expect(await branchExists(repository, "from-reflog"))
+        #expect(try await repository.sha("refs/heads/from-reflog") == beforeAmend)
+
+        await act(session, .reflog(.checkout(entry)))
+        #expect(presenter.failures.isEmpty)
+        #expect(try await headName(repository) == "HEAD")
+        #expect(try await repository.sha("HEAD") == beforeAmend)
+    }
+
     // MARK: Diff staging
 
     /// Twenty numbered lines, committed, then lines 2 and 18 changed: two hunks.

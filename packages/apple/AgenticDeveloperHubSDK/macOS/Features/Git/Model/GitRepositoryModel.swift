@@ -28,6 +28,9 @@ public final class GitRepositoryModel: GitRefsDataSource, GitHistoryDataSource, 
     /// Whether and how the repository uses Git LFS; nil until it first loads, with the
     /// refs, and kept at its last good value when a load fails.
     public private(set) var lfs: GitLFSState?
+    /// The repository's open pull requests, read through `gh`; nil (no `GitHubCLI`)
+    /// leaves `pullRequests` nil (GitRepositoryModel+PullRequests.swift).
+    public internal(set) var pullRequestList: GitPullRequestsModel?
 
     public private(set) var commits: [GitCommit] = []
     public private(set) var graphRows: [CommitGraphLayout<String>.Row] = []

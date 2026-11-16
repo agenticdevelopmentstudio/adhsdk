@@ -856,3 +856,25 @@ input it cannot read rather than failing.
 - **blame-runs**: A blame's runs MUST be the maximal sequences of
   consecutive final lines that belong to one commit, in final-line order.
 
+### Reflog
+
+- **reflog-read**: `reflog(ref:limit:in:caller:)` MUST run
+  `reflog show --no-show-signature -z --format=%gd%x1f%H%x1f%gs%x1f%ct -n <limit> <ref>`
+  (`ref` defaulting to `HEAD`, a limit below 1 read as 1) and return its
+  entries newest first; a ref beginning with `-` MUST be refused as an
+  invalid argument before git runs.
+- **reflog-unborn**: A ref with no reflog that names no commit (an unborn
+  `HEAD`) MUST read as no entries rather than an error; any other failure
+  MUST be thrown.
+- **reflog-parse**: Each NUL-terminated record MUST be read as selector, sha,
+  subject and committer epoch separated by the unit separator, the subject
+  being every field between the sha and the epoch; a record with fewer than
+  four fields, an empty selector or sha, or an unreadable epoch MUST be
+  dropped.
+- **reflog-subject-split**: The subject MUST split at its first `": "` into
+  the action (`commit (amend)`, `checkout`, `rebase (finish)`) and the
+  message, so a message holding `": "` keeps it; a subject without one is all
+  action and an empty message.
+- **reflog-previous**: Each entry's previous sha MUST be the next (older)
+  record's sha, and the oldest entry read has none.
+

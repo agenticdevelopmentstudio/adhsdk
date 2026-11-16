@@ -116,3 +116,7 @@
 | git-client-113 | redaction-scope-and-positional-rule | `push` `["https://user:tok@github.com/o/r.git", "main"]` | `["push", "https://***@github.com/o/r.git", "main"]`. |
 | git-client-114 | command-log-ring | `perform(.commit(message: "secret"))` through a script standing in for git that records its argv | the entry's arguments start `-c core.editor=true commit`; its command line is `git ` plus the spawned argv with `secret` read as `<redacted:6>`. |
 | git-client-115 | command-log-fields | Standard error of filler then `https://user:ghp_secrettoken@example.com/…` whose user info straddles byte 2048, status 128 | at most 2048 bytes kept, starting with the filler and `https://`, and no `user:` or `ghp_`. |
+| git-client-116 | reflog-parse, reflog-subject-split | Records for `rebase (finish): returning to refs/heads/feature`, `checkout: moving from main to feature`, `commit (amend): fix: the typo`, `commit: two` | Actions `rebase (finish)`, `checkout`, `commit (amend)`, `commit`; the amend's message `fix: the typo`. |
+| git-client-117 | reflog-subject-split | The subjects `commit: fix: a: b` and `reset` | (`commit`, `fix: a: b`); (`reset`, empty). |
+| git-client-118 | reflog-read, reflog-previous | Three commits, then the third amended; read `HEAD` with limit 10, then 2 | Four entries, `commit (amend)` first, its previous sha the pre-amend commit; limit 2 gives the amend and the pre-amend commit. |
+| git-client-119 | reflog-unborn, reflog-read | A repository with no commits; then the ref `--all` | No entries; then invalid-argument. |

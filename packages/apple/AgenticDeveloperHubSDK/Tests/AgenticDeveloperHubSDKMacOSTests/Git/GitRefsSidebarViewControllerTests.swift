@@ -38,6 +38,18 @@ private final class RecordingDelegate: GitRefsSidebarDelegate {
     func sidebar(_ sidebar: GitRefsSidebarViewController, didRequest intent: GitRefIntent) { intents.append(intent) }
 }
 
+/// A delegate that counts Reflog row selections and ignores every other call.
+@MainActor
+private final class ReflogRecordingDelegate: GitRefsSidebarDelegate {
+    private(set) var reflogSelections = 0
+    func sidebarDidSelectReflog(_ sidebar: GitRefsSidebarViewController) { reflogSelections += 1 }
+    func sidebar(_ sidebar: GitRefsSidebarViewController, didSelect ref: GitRef) {}
+    func sidebarDidSelectWorkingCopy(_ sidebar: GitRefsSidebarViewController) {}
+    func sidebar(_ sidebar: GitRefsSidebarViewController, didSelectStash stash: GitStash) {}
+    func sidebar(_ sidebar: GitRefsSidebarViewController, open directory: URL) {}
+    func sidebar(_ sidebar: GitRefsSidebarViewController, didRequest intent: GitRefIntent) {}
+}
+
 @Suite("GitRefsSidebarViewController")
 @MainActor
 struct GitRefsSidebarViewControllerTests {
@@ -100,7 +112,8 @@ struct GitRefsSidebarViewControllerTests {
             "Worktrees"
         ])
         #expect(rows(sidebar) == [
-            ["Working Copy"], ["main", "dev"], ["main", "dev"], ["main"], ["v1"], ["WIP on main", "stash@{1}"],
+            ["Working Copy", "Reflog"], ["main", "dev"], ["main", "dev"], ["main"], ["v1"],
+            ["WIP on main", "stash@{1}"],
             ["lib/sub dir"], ["repo", "feature"]
         ])
     }
@@ -136,7 +149,25 @@ struct GitRefsSidebarViewControllerTests {
 
         let unborn = GitRefsSidebarViewController(source: FakeRefsSource())
         #expect(titles(unborn) == ["Workspace"])
-        #expect(rows(unborn) == [["Working Copy"]])
+        #expect(rows(unborn) == [["Working Copy", "Reflog"]])
+    }
+
+    @Test("the Workspace section's Reflog row reports itself, has no menu and survives a reload")
+    func reflogRow() {
+        let source = FakeRefsSource()
+        let sidebar = GitRefsSidebarViewController(source: source)
+        let delegate = ReflogRecordingDelegate()
+        sidebar.delegate = delegate
+        _ = sidebar.view
+        let reflog = item(sidebar, section: 0, row: 1)
+        #expect(reflog.id == "git.sidebar.reflog")
+        #expect(reflog.title == "Reflog")
+        click(sidebar, "git.sidebar.reflog")
+        #expect(delegate.reflogSelections == 1)
+        #expect(sidebar.contextMenu(forItemID: "git.sidebar.reflog") == nil)
+        sidebar.reload()
+        #expect(sidebar.list.selectedItem?.id == "git.sidebar.reflog")
+        #expect(delegate.reflogSelections == 1)
     }
 
     @Test("selecting each row kind calls the delegate once with what it names")
@@ -175,7 +206,7 @@ struct GitRefsSidebarViewControllerTests {
         source.refs.append(Self.branch("x"))
         sidebar.reload()
 
-        #expect(rows(sidebar) == [["Working Copy"], ["main", "x"]])
+        #expect(rows(sidebar) == [["Working Copy", "Reflog"], ["main", "x"]])
         #expect(delegate.events.isEmpty)
     }
 
@@ -263,7 +294,7 @@ struct GitRefsSidebarViewControllerTests {
         source.worktrees = [Self.worktree("/repo", main: true)]
         let sidebar = GitRefsSidebarViewController(source: source)
         #expect(titles(sidebar) == ["Workspace", "Worktrees"])
-        #expect(rows(sidebar) == [["Working Copy"], ["repo"]])
+        #expect(rows(sidebar) == [["Working Copy", "Reflog"], ["repo"]])
     }
 
     @Test("the root view carries git.sidebar and hosts the topic list")

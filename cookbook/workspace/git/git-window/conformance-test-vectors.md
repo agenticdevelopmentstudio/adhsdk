@@ -86,3 +86,9 @@
 | git-window-083 | toolbar-verbs | `GitWindowToolbar(showsCommandLog: false)` | the six verbs from `git.toolbar.fetch` to `git.toolbar.pop`, no `git.toolbar.commandLog`. |
 | git-window-084 | sessions-cache | a provider answering one session; roots `/repo`, `/wt`; refresh at 0 s, 59 s and 60 s | one read at 0 s over `/repo`, `/wt` since 90 days before, one change; none at 59 s; a second read at 60 s and no second change. |
 | git-window-085 | sessions-provider-optional | a feature built without `sessions:` | the commit detail has no `agentSessionMatches` and the sidebar no `agentSessionsOnBranch`. |
+| git-window-086 | toolbar-verbs, toolbar-undo | a toolbar with and without terminals | `git.toolbar.undo` "Undo" `arrow.uturn.backward` between Pop and Command Log; seven items without terminals, Undo last. |
+| git-window-087 | toolbar-undo | HEAD@{0} `commit (amend)` / `two`; none | tooltip `Undo commit (amend): two`; `Undo`. |
+| git-window-088 | toolbar-undo | three commits, then the third amended; Undo on a clean tree | no confirmation; HEAD the pre-amend commit; nothing staged, the amend's file unstaged with the amended text. |
+| git-window-089 | toolbar-undo | the same repository with `a.txt` edited; Undo declined, then confirmed | `Undo "c.txt amended"?` / `HEAD moves back to <8 chars>; changes stay in the working copy.` (Undo, not destructive) twice; HEAD unmoved, then the pre-amend commit with `a.txt` and `c.txt` unstaged. |
+| git-window-090 | toolbar-undo | a rebase stopped on a conflict; Undo | `undoTarget` nil; no confirmation; HEAD unmoved. |
+| git-window-091 | reflog-row | the reflog entry for the pre-amend commit: Hard (declined), Create Branch Here… `from-reflog`, Check Out (detached) | `Reset main to <short sha>?` / `Uncommitted changes are lost.` and HEAD unmoved; `from-reflog` at the commit; HEAD detached there. |

@@ -30,8 +30,8 @@ private final class RecordingPresenter: GitActionPresenting {
     func editRebase(_ plan: GitRebasePlan) async -> GitRebasePlan? { nil }
 }
 
-/// The Git window's toolbar (recipe `workspace/git/git-window`, "Toolbar"): six verb
-/// buttons then the Command Log toggle, in order, each aimed at the toolbar and
+/// The Git window's toolbar (recipe `workspace/git/git-window`, "Toolbar"): seven verb
+/// buttons (Undo last) then the Command Log toggle, in order, each aimed at the toolbar and
 /// forwarding to its session.
 @Suite("GitWindowToolbar", .serialized)
 @MainActor
@@ -66,7 +66,7 @@ struct GitWindowToolbarTests {
         return (identifier.rawValue, target.object, action)
     }
 
-    @Test("the seven items, in order, with their labels and symbols")
+    @Test("the eight items, in order, with their labels and symbols")
     func itemsInOrder() {
         let toolbar = GitWindowToolbar()
         let described: [String] = toolbar.items.compactMap { item in
@@ -80,16 +80,17 @@ struct GitWindowToolbarTests {
             "git.toolbar.branch Branch arrow.triangle.branch",
             "git.toolbar.stash Stash tray.and.arrow.down",
             "git.toolbar.pop Pop tray.and.arrow.up",
+            "git.toolbar.undo Undo arrow.uturn.backward",
             "git.toolbar.commandLog Command Log list.bullet.rectangle"
         ])
     }
 
-    @Test("a window without terminals has the six verbs and no Command Log toggle")
+    @Test("a window without terminals has the seven verbs and no Command Log toggle")
     func noTerminalsNoCommandLog() {
         let identifiers = GitWindowToolbar(showsCommandLog: false).items.compactMap { wiring($0)?.0 }
         #expect(identifiers == [
             "git.toolbar.fetch", "git.toolbar.pull", "git.toolbar.push",
-            "git.toolbar.branch", "git.toolbar.stash", "git.toolbar.pop"
+            "git.toolbar.branch", "git.toolbar.stash", "git.toolbar.pop", "git.toolbar.undo"
         ])
     }
 
@@ -97,7 +98,7 @@ struct GitWindowToolbarTests {
     func itemsTargetTheToolbar() {
         let toolbar = GitWindowToolbar()
         let wirings = toolbar.items.compactMap(wiring)
-        #expect(wirings.count == 7)
+        #expect(wirings.count == 8)
         for (identifier, target, action) in wirings {
             #expect(target === toolbar, "\(identifier)")
             #expect(toolbar.responds(to: action), "\(identifier)")
@@ -114,7 +115,7 @@ struct GitWindowToolbarTests {
         toolbar.session = session
 
         let verbs = toolbar.items.compactMap(wiring).filter { $0.0 != "git.toolbar.commandLog" }
-        #expect(verbs.count == 6)
+        #expect(verbs.count == 7)
         for (identifier, _, action) in verbs {
             session.actionTask = nil
             toolbar.perform(action, with: nil)
@@ -123,9 +124,27 @@ struct GitWindowToolbarTests {
             await task.value
             #expect(!session.isActing, "\(identifier)")
         }
-        // Branch and Stash asked their questions; Push found no remote; Pop had no stash.
+        // Branch and Stash asked their questions; Push found no remote; Pop had no stash;
+        // Undo had no HEAD@{1}.
         #expect(presenter.textTitles == ["New Branch", "Stash Changes"])
         #expect(presenter.failures.contains("Push failed"))
+    }
+
+    @Test("Undo's tooltip names HEAD@{0}'s action and message, or is plain Undo")
+    func undoToolTip() {
+        let entry = GitReflogEntry(
+            selector: "HEAD@{0}", sha: String(repeating: "a", count: 40),
+            previousSha: String(repeating: "b", count: 40),
+            action: "commit (amend)", message: "two", date: Date(timeIntervalSince1970: 0))
+        #expect(GitWindowToolbar.undoToolTip(for: entry) == "Undo commit (amend): two")
+        #expect(GitWindowToolbar.undoToolTip(for: nil) == "Undo")
+    }
+
+    @Test("without a session or a window, updating Undo is harmless")
+    func updateUndoWithoutWindow() {
+        let toolbar = GitWindowToolbar()
+        toolbar.followUndo()
+        #expect(toolbar.undoButton == nil)
     }
 
     @Test("with no session, a button does nothing")

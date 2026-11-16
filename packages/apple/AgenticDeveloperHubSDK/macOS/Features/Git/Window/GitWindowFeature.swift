@@ -142,7 +142,8 @@ public final class GitWindowFeature: AppFeature {
                 slot: .fileNew, title: "New Git Window…",
                 commandID: CommandID.open, registry: registry,
                 order: 45
-            )
+            ),
+            registerUndoCommand(in: registry)
         ]
     }
 
@@ -272,6 +273,8 @@ public final class GitWindowFeature: AppFeature {
         toolbars[repo.id] = toolbar
         if let session = sessions[repo.id] {
             toolbar.session = session
+            toolbar.window = controller.window
+            toolbar.followUndo()
             session.onRefsChange = { [weak controller] in controller?.refreshTitleBranch() }
             session.presenter = GitAlertPresenter(window: { [weak controller] in controller?.window })
             session.onOpenDirectory = { [weak self] directory in

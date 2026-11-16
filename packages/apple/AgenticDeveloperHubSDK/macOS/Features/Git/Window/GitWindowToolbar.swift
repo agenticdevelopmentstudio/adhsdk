@@ -2,7 +2,7 @@ import AppKit
 import AgenticDeveloperHubSDKUI
 
 /// The Git window's toolbar verbs (recipe `workspace/git/git-window`, "Toolbar"):
-/// Fetch, Pull, Push, Branch, Stash and Pop, then the Command Log toggle, each a
+/// Fetch, Pull, Push, Branch, Stash, Pop and Undo, then the Command Log toggle, each a
 /// `.targetedButton` aimed at this object, which forwards it to its session.
 ///
 /// The window is the project window's controller, which owns its toolbar delegate and
@@ -16,6 +16,12 @@ final class GitWindowToolbar: NSObject {
     /// every button does nothing.
     weak var session: GitWindowSession?
 
+    /// The window whose toolbar holds these items, where Undo's button is found to enable
+    /// and retitle (`GitWindowToolbar+Undo`); nil until the feature sets it.
+    weak var window: NSWindow?
+    /// The model observation that keeps Undo current; held for as long as this object.
+    var undoObservation: AnyObject?
+
     /// Whether the Command Log toggle is offered: only a layout with a terminal region
     /// has somewhere to put the Command Log, so a window built without terminals leaves
     /// the button out rather than showing one that can do nothing.
@@ -26,7 +32,7 @@ final class GitWindowToolbar: NSObject {
         super.init()
     }
 
-    /// The buttons, in order, every one aimed at this object: seven, or six without the
+    /// The buttons, in order, every one aimed at this object: eight, or seven without the
     /// Command Log toggle.
     var items: [WindowToolbarItem] {
         let target = WindowToolbarTarget(self)
@@ -60,6 +66,8 @@ final class GitWindowToolbar: NSObject {
              action: #selector(GitWindowToolbar.stash(_:))),
         Spec(identifier: "git.toolbar.pop", label: "Pop", symbol: "tray.and.arrow.up",
              action: #selector(GitWindowToolbar.popStash(_:))),
+        Spec(identifier: undoIdentifier, label: "Undo", symbol: "arrow.uturn.backward",
+             action: #selector(GitWindowToolbar.undo(_:))),
         Spec(identifier: commandLogIdentifier, label: "Command Log", symbol: "list.bullet.rectangle",
              action: #selector(GitWindowToolbar.toggleCommandLog(_:)))
     ]
@@ -71,5 +79,6 @@ final class GitWindowToolbar: NSObject {
     @objc func newBranch(_ sender: Any?) { session?.newBranch() }
     @objc func stash(_ sender: Any?) { session?.stash() }
     @objc func popStash(_ sender: Any?) { session?.popStash() }
+    @objc func undo(_ sender: Any?) { session?.undo() }
     @objc func toggleCommandLog(_ sender: Any?) { session?.toggleCommandLog() }
 }

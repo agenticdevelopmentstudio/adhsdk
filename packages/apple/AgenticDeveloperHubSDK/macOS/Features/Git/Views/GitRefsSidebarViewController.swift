@@ -32,6 +32,13 @@ public enum GitRefIntent: Equatable {
     func sidebar(_ sidebar: GitRefsSidebarViewController, open directory: URL)
     /// An action chosen from a row's context menu, or a branch double-clicked.
     func sidebar(_ sidebar: GitRefsSidebarViewController, didRequest intent: GitRefIntent)
+    /// The Workspace section's Reflog row.
+    func sidebarDidSelectReflog(_ sidebar: GitRefsSidebarViewController)
+}
+
+public extension GitRefsSidebarDelegate {
+    /// A delegate with no reflog browser ignores the Reflog row.
+    func sidebarDidSelectReflog(_ sidebar: GitRefsSidebarViewController) {}
 }
 
 /// A git window's sidebar: the working copy, branches with ahead/behind badges,
@@ -71,6 +78,7 @@ public final class GitRefsSidebarViewController: NSViewController {
 
     private enum Target {
         case workingCopy
+        case reflog
         case ref(GitRef)
         case stash(GitStash)
         case submodule(GitSubmodule, URL)
@@ -81,12 +89,13 @@ public final class GitRefsSidebarViewController: NSViewController {
             switch self {
             case .submodule(_, let url): url
             case .worktree(let worktree): worktree.directory
-            case .workingCopy, .ref, .stash: nil
+            case .workingCopy, .reflog, .ref, .stash: nil
             }
         }
     }
 
     private static let workingCopyID = "workspace.working-copy"
+    static let reflogID = "git.sidebar.reflog"
 
     /// The agent sessions that ran on a local branch; nil (no provider) leaves the branch
     /// menu without its Agent Sessions submenu.
@@ -149,9 +158,10 @@ public final class GitRefsSidebarViewController: NSViewController {
     /// ref or stash is gone, the selection falls back to the working copy and
     /// the delegate is told, so the owner never keeps showing what vanished.
     public func reload() {
-        var targets: [String: Target] = [Self.workingCopyID: .workingCopy]
+        var targets: [String: Target] = [Self.workingCopyID: .workingCopy, Self.reflogID: .reflog]
         var sections = [TopicListSection(title: "Workspace", items: [
-            TopicListItem(id: Self.workingCopyID, title: "Working Copy", icon: Self.symbol("square.and.pencil"))
+            TopicListItem(id: Self.workingCopyID, title: "Working Copy", icon: Self.symbol("square.and.pencil")),
+            TopicListItem(id: Self.reflogID, title: "Reflog", icon: Self.symbol("clock.arrow.circlepath"))
         ])]
 
         func add(_ title: String, _ rows: [(item: TopicListItem, target: Target)]) {
@@ -271,6 +281,7 @@ public final class GitRefsSidebarViewController: NSViewController {
         guard let delegate else { return }
         switch target {
         case .workingCopy: delegate.sidebarDidSelectWorkingCopy(self)
+        case .reflog: delegate.sidebarDidSelectReflog(self)
         case .ref(let ref): delegate.sidebar(self, didSelect: ref)
         case .stash(let stash): delegate.sidebar(self, didSelectStash: stash)
         case .submodule, .worktree: break
@@ -308,7 +319,7 @@ public final class GitRefsSidebarViewController: NSViewController {
             ])
         case .worktree(let worktree):
             return worktreeMenu(worktree)
-        case .workingCopy, nil:
+        case .workingCopy, .reflog, nil:
             return nil
         }
     }
