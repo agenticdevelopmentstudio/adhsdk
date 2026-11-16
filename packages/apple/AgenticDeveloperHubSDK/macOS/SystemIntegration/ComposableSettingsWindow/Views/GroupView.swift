@@ -243,7 +243,10 @@ extension ComposableSettings {
         /// `view`'s view-model explanation as a help note, or nil when it has none.
         /// The accessibility identifier a titled row's first control gets when it
         /// set none: `settings.<slug of the row's title>`. Further controls in the
-        /// same row get `.2`, `.3` and so on. Static labels are not controls here.
+        /// same row get `.2`, `.3` and so on. Static labels and scroll bars are
+        /// not controls here; an editable text view is, though it is no
+        /// `NSControl`, so a text-area row's editor gets the name rather than
+        /// the scroller of the scroll view around it.
         ///
         /// Done once, here, so every row type is reachable by a UI driver without
         /// each one carrying its own identifier code; a row or panel that sets its
@@ -260,11 +263,14 @@ extension ComposableSettings {
             }
         }
 
-        private static func interactiveControls(in view: NSView) -> [NSControl] {
-            var found: [NSControl] = []
+        private static func interactiveControls(in view: NSView) -> [NSView] {
+            var found: [NSView] = []
             for subview in view.subviews {
                 if let field = subview as? NSTextField, !field.isEditable { continue }
-                if let control = subview as? NSControl {
+                if subview is NSScroller { continue }
+                if let editor = subview as? NSTextView {
+                    if editor.isEditable { found.append(editor) }
+                } else if let control = subview as? NSControl {
                     found.append(control)
                 } else {
                     found += interactiveControls(in: subview)
