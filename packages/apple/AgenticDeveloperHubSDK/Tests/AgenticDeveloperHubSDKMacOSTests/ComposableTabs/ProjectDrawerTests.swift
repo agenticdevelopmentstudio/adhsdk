@@ -94,12 +94,15 @@ final class ProjectDrawerTests: XCTestCase {
 
     // MARK: - The toolbar button
 
+    /// A window with no shelf leads with its title, which sits in the toolbar
+    /// at heading size in every non-shelf window (ff684280b).
     func testTheToolbarCarriesAHelpButtonAfterTheSearchField() {
         let identifiers = ProjectWindowTestSupport.buildToolbarItems(makeController(for: makeProject()))
 
         XCTAssertEqual(
             identifiers,
             [
+                NSToolbarItem.Identifier("project.toolbar.title"),
                 .flexibleSpace,
                 NSToolbarItem.Identifier("project.toolbar.search"),
                 NSToolbarItem.Identifier("project.toolbar.help")
@@ -107,7 +110,8 @@ final class ProjectDrawerTests: XCTestCase {
     }
 
     /// A window's own items go before the flexible space (after the shelf's,
-    /// when it has a shelf), aimed at the target they name.
+    /// when it has a shelf, or after the title alone when it has none —
+    /// ff684280b), aimed at the target they name.
     func testExtraToolbarItemsComeBeforeTheFlexibleSpace() throws {
         final class Receiver: NSObject { @objc func fire() {} }
         let receiver = Receiver()
@@ -129,6 +133,7 @@ final class ProjectDrawerTests: XCTestCase {
         XCTAssertEqual(
             identifiers,
             [
+                NSToolbarItem.Identifier("project.toolbar.title"),
                 first, second, .flexibleSpace,
                 NSToolbarItem.Identifier("project.toolbar.search"),
                 NSToolbarItem.Identifier("project.toolbar.help")

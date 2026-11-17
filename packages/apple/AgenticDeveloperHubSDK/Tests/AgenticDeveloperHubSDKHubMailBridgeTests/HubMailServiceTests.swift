@@ -223,7 +223,8 @@ final class HubMailServiceTests: XCTestCase {
         await out.value
 
         XCTAssertEqual(service.status, .connected)
-        XCTAssertEqual(try await service.client.accounts().map(\.id), ["c1"])
+        let accounts = try await service.client.accounts()
+        XCTAssertEqual(accounts.map(\.id), ["c1"])
         await service.signedOut()
     }
 

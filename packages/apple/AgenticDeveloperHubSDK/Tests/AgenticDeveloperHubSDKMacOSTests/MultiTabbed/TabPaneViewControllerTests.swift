@@ -277,6 +277,14 @@ final class TabPaneViewControllerTests: XCTestCase {
         XCTAssertEqual(pane.paneView.cardBorderColor, NSColor(palette.projectPaneOutline))
     }
 
+    /// How far short of the workspace's line a card behind stops on this edge:
+    /// one `inactiveInset` step on a horizontal bar, and on a vertical bar the
+    /// larger `verticalInactiveShortfall`, so the card in front is plainly the
+    /// longest one in the column (6c9f4385b).
+    private func behindOverhang(on edge: Edge) -> CGFloat {
+        edge.isVertical ? -TabPaneView.verticalInactiveShortfall : -TabPaneView.inactiveInset
+    }
+
     /// The workspace's outline is covered by the one card that is joined to the
     /// workspace, and by nothing else: a card behind stands back from that line
     /// instead, so it runs past whole.
@@ -285,7 +293,7 @@ final class TabPaneViewControllerTests: XCTestCase {
         for edge in Edge.allCases {
             let pane = makePane(edge: edge, source: source)
             XCTAssertEqual(
-                pane.paneView.workspaceOverhang, -TabPaneView.inactiveInset, "inactive card on \(edge)")
+                pane.paneView.workspaceOverhang, behindOverhang(on: edge), "inactive card on \(edge)")
 
             pane.isHighlighted = true
             XCTAssertEqual(
@@ -293,48 +301,51 @@ final class TabPaneViewControllerTests: XCTestCase {
 
             pane.isHighlighted = false
             XCTAssertEqual(
-                pane.paneView.workspaceOverhang, -TabPaneView.inactiveInset, "deselected card on \(edge)")
+                pane.paneView.workspaceOverhang, behindOverhang(on: edge), "deselected card on \(edge)")
         }
     }
 
-    /// A card behind is the smaller shape on every side, not only on the side
-    /// facing the workspace — that is what makes the card in front look nearer
-    /// rather than merely attached.
+    /// On a vertical bar a card behind is the shorter shape across the bar:
+    /// it keeps the card's outer edge and its full height, and stops
+    /// `verticalInactiveShortfall` short of the workspace — so the card in
+    /// front, which runs from that same outer edge out over the workspace's
+    /// line, is plainly the longest (9a9964e21 slid the vertical cards instead
+    /// of shrinking them on every side; 6c9f4385b made the front one the
+    /// longest).
     func testACardBehindIsPaintedSmallerThanTheCardInFront() {
         let source = StubSource()
         let pane = makePane(edge: .left, source: source)
         pane.paneView.frame = NSRect(x: 0, y: 0, width: 260, height: 140)
         pane.paneView.layoutSubtreeIfNeeded()
-        let inset = TabPaneView.inactiveInset
+        let bounds = pane.paneView.bounds
         let behind = pane.paneView.cardPaintFrame
-        XCTAssertEqual(behind, pane.paneView.bounds.insetBy(dx: inset, dy: inset))
+        XCTAssertEqual(
+            behind,
+            NSRect(x: bounds.minX, y: bounds.minY,
+                   width: bounds.width - TabPaneView.verticalInactiveShortfall, height: bounds.height))
 
         pane.isHighlighted = true
         pane.paneView.layoutSubtreeIfNeeded()
         let front = pane.paneView.cardPaintFrame
         XCTAssertGreaterThan(front.width, behind.width)
-        XCTAssertGreaterThan(front.height, behind.height)
+        XCTAssertEqual(front.minX, behind.minX, accuracy: 0.01, "the two share the outer edge")
     }
 
-    /// The deck: on a vertical bar each card further from the one in front
-    /// stands another step back from the workspace, until the steps stop
-    /// adding up at `maxStackDepth`.
-    func testEachCardBehindStandsAStepFurtherBackOnAVerticalBar() {
+    /// On a vertical bar every card behind stops the same distance short of
+    /// the workspace, however far it is from the card in front: the cards are
+    /// spaced like a horizontal bar's, no longer fanned as an overlapping deck
+    /// that stepped back further per depth (fcdbf39fb).
+    func testEveryCardBehindStopsTheSameShortfallShortOfTheWorkspaceOnAVerticalBar() {
         let source = StubSource()
         for edge in Edge.allCases where edge.isVertical {
             let pane = makePane(edge: edge, source: source)
-            for depth in 1...TabPaneView.maxStackDepth {
+            for depth in 1...(TabPaneView.maxStackDepth + 4) {
                 pane.stackDepth = depth
                 XCTAssertEqual(
                     pane.paneView.workspaceOverhang,
-                    -CGFloat(depth) * TabPaneView.inactiveInset,
+                    -TabPaneView.verticalInactiveShortfall,
                     "depth \(depth) on \(edge)")
             }
-            pane.stackDepth = TabPaneView.maxStackDepth + 4
-            XCTAssertEqual(
-                pane.paneView.workspaceOverhang,
-                -CGFloat(TabPaneView.maxStackDepth) * TabPaneView.inactiveInset,
-                "past the cap on \(edge)")
         }
     }
 
@@ -352,22 +363,27 @@ final class TabPaneViewControllerTests: XCTestCase {
         }
     }
 
-    /// The fan is on every side, not only the side facing the workspace: a
-    /// card two steps back is painted two steps smaller than the card, so the
-    /// column is a deck seen edge-on rather than a row of equal blocks at
-    /// different distances.
-    func testACardTwoStepsBackIsPaintedTwoStepsSmallerOnAVerticalBar() {
+    /// Every card behind on a vertical bar is painted the same shape, at any
+    /// depth: the slot's full height, the slot's outer edge, and its workspace
+    /// side pulled in by `verticalInactiveShortfall` — a column of equal cards
+    /// spaced down the bar, not a deck shrinking card by card (fcdbf39fb,
+    /// 9a9964e21, 6c9f4385b).
+    func testEveryCardBehindIsPaintedTheSameShapeOnAVerticalBar() {
         let source = StubSource()
+        let shortfall = TabPaneView.verticalInactiveShortfall
         for edge in Edge.allCases where edge.isVertical {
             let pane = makePane(edge: edge, source: source)
             pane.paneView.frame = NSRect(x: 0, y: 0, width: 260, height: 140)
             for depth in 1...TabPaneView.maxStackDepth {
                 pane.stackDepth = depth
                 pane.paneView.layoutSubtreeIfNeeded()
-                let step = CGFloat(depth) * TabPaneView.inactiveInset
+                let bounds = pane.paneView.bounds
+                // The workspace is on the trailing side of a left bar and the
+                // leading side of a right one.
+                let minX = edge == .left ? bounds.minX : bounds.minX + shortfall
                 XCTAssertEqual(
                     pane.paneView.cardPaintFrame,
-                    pane.paneView.bounds.insetBy(dx: step, dy: step),
+                    NSRect(x: minX, y: bounds.minY, width: bounds.width - shortfall, height: bounds.height),
                     "depth \(depth) on \(edge)")
             }
         }
@@ -375,7 +391,8 @@ final class TabPaneViewControllerTests: XCTestCase {
 
     /// The card moves, not the frame drawn around it: a card standing back
     /// takes its text with it, so the words are where the card is rather than
-    /// where the card used to be.
+    /// where the card used to be. Along the bar the text is centred in the
+    /// slot (9a9964e21).
     func testACardStandingBackTakesItsTextWithIt() {
         let source = StubSource()
         let pane = makePane(edge: .left, source: source)
@@ -383,24 +400,28 @@ final class TabPaneViewControllerTests: XCTestCase {
         for depth in 1...TabPaneView.maxStackDepth {
             pane.stackDepth = depth
             pane.paneView.layoutSubtreeIfNeeded()
-            let step = CGFloat(depth) * TabPaneView.inactiveInset
-            XCTAssertEqual(
-                pane.paneView.cardTextFrame,
-                pane.paneView.bounds.insetBy(dx: step, dy: step),
-                "depth \(depth)")
+            let text = pane.paneView.cardTextFrame
+            let paint = pane.paneView.cardPaintFrame
+            XCTAssertEqual(text.minX, paint.minX, accuracy: 0.01, "depth \(depth)")
+            XCTAssertEqual(text.maxX, paint.maxX, accuracy: 0.01, "depth \(depth)")
+            XCTAssertEqual(text.midY, pane.paneView.bounds.midY, accuracy: 0.5, "depth \(depth)")
         }
     }
 
     /// The card in front is the one place the two part company: its paint
     /// reaches out over the workspace's own line, and its text does not follow
-    /// it out there.
+    /// it out there — it spans the card across the bar, centred along it.
     func testTheFrontCardsTextStaysInsideTheCardItsPaintReachesOutOf() {
         let source = StubSource()
         let pane = makePane(edge: .left, source: source)
         pane.paneView.frame = NSRect(x: 0, y: 0, width: 260, height: 140)
         pane.isHighlighted = true
         pane.paneView.layoutSubtreeIfNeeded()
-        XCTAssertEqual(pane.paneView.cardTextFrame, pane.paneView.bounds)
+        let bounds = pane.paneView.bounds
+        let text = pane.paneView.cardTextFrame
+        XCTAssertEqual(text.minX, bounds.minX, accuracy: 0.01)
+        XCTAssertEqual(text.maxX, bounds.maxX, accuracy: 0.01)
+        XCTAssertEqual(text.midY, bounds.midY, accuracy: 0.5)
         XCTAssertEqual(
             pane.paneView.cardPaintFrame.maxX,
             pane.paneView.bounds.maxX + TabPaneView.workspaceOverlap,
@@ -409,14 +430,18 @@ final class TabPaneViewControllerTests: XCTestCase {
 
     /// A card off screen lands at its new depth rather than moving to it —
     /// there is nothing to watch, and an animated constraint would still read
-    /// its old value to whatever measured the card next.
+    /// its old value to whatever measured the card next. Measured on the move
+    /// from behind to in front, the one change of depth that moves a vertical
+    /// bar's card at all now that every card behind stands the same distance
+    /// back (fcdbf39fb).
     func testACardOffScreenTakesItsNewDepthImmediately() {
         let source = StubSource()
         let pane = makePane(edge: .left, source: source)
         XCTAssertFalse(pane.paneView.animatesDepthChanges)
+        XCTAssertEqual(pane.paneView.workspaceOverhang, -TabPaneView.verticalInactiveShortfall)
 
-        pane.stackDepth = 2
-        XCTAssertEqual(pane.paneView.workspaceOverhang, -2 * TabPaneView.inactiveInset)
+        pane.isHighlighted = true
+        XCTAssertEqual(pane.paneView.workspaceOverhang, TabPaneView.workspaceOverlap)
     }
 
     /// On screen it moves instead, so the deck is seen to turn.
@@ -451,13 +476,13 @@ final class TabPaneViewControllerTests: XCTestCase {
         let pane = makePane(edge: .left, source: source)
 
         pane.stackDepth = 0
-        XCTAssertEqual(pane.paneView.workspaceOverhang, -TabPaneView.inactiveInset)
+        XCTAssertEqual(pane.paneView.workspaceOverhang, behindOverhang(on: .left))
 
         pane.isHighlighted = true
         XCTAssertEqual(pane.paneView.workspaceOverhang, TabPaneView.workspaceOverlap)
 
         pane.isHighlighted = false
-        XCTAssertEqual(pane.paneView.workspaceOverhang, -TabPaneView.inactiveInset)
+        XCTAssertEqual(pane.paneView.workspaceOverhang, behindOverhang(on: .left))
     }
 
     /// The words are readable whichever card they are on — an inactive tab

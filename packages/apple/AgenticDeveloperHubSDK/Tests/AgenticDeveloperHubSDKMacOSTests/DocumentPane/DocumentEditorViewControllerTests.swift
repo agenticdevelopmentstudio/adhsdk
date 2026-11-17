@@ -9,7 +9,11 @@ final class DocumentEditorViewControllerTests: XCTestCase {
 
     private func makeController(store: PaneStateStore = EphemeralPaneStateStore())
         -> DocumentEditorViewController {
-        DocumentEditorViewController(
+        // Opening a `.md` file starts a load task that runs `LanguageDetection`
+        // on a later main-queue turn — inside whichever test spins the run loop
+        // next — and its first `CodeLanguage` traps without the override.
+        ensureEditorLanguageResourcesLocated()
+        return DocumentEditorViewController(
             store: store,
             documentStore: TextDocumentStore(),
             saveScheduler: TextDocumentSaveScheduler(write: { _ in }),

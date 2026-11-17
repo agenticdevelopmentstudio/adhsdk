@@ -45,6 +45,7 @@ import Testing
 
     @Test("V7: reading every property touches no file")
     func testV7_noFileAccess() {
+        // temp-leak-check: ok — never created; the test asserts it still does not exist
         let home = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         let value = PartnerPaths(home: home, token: "tok")
         let urls = [value.directory, value.mcpConfig, value.systemPrompt, value.jobsDirectory,

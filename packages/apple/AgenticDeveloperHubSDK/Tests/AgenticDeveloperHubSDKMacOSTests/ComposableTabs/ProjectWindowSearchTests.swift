@@ -108,12 +108,15 @@ final class ProjectWindowSearchTests: XCTestCase {
         super.tearDown()
     }
 
+    /// A window with no shelf leads with its title, which every non-shelf
+    /// window now carries in the toolbar (ff684280b).
     func testTheToolbarIsASpacerASearchFieldAndHelp() {
         let identifiers = ProjectWindowTestSupport.buildToolbarItems(makeController(searchable: true))
 
         XCTAssertEqual(
             identifiers,
             [
+                NSToolbarItem.Identifier("project.toolbar.title"),
                 .flexibleSpace,
                 NSToolbarItem.Identifier("project.toolbar.search"),
                 NSToolbarItem.Identifier("project.toolbar.help")

@@ -10,12 +10,17 @@ import Testing
 @MainActor
 struct GitWindowFeatureTests {
 
-    /// A database of its own, deleted with `removeDatabase`.
-    private let databaseURL = FileManager.default.temporaryDirectory
-        .appendingPathComponent("git-window-feature-\(UUID().uuidString).db")
+    /// A directory of its own holding the database (and its -wal and -shm),
+    /// deleted whole with `removeDatabase`.
+    private let directory = FileManager.default.temporaryDirectory
+        .appendingPathComponent("git-window-feature-\(UUID().uuidString)", isDirectory: true)
+    private var databaseURL: URL {
+        try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        return directory.appendingPathComponent("project.db")
+    }
 
     private func removeDatabase() {
-        try? FileManager.default.removeItem(at: databaseURL)
+        try? FileManager.default.removeItem(at: directory)
     }
 
     /// A feature over its own registry, database, window manager and remembered-roots
@@ -163,7 +168,11 @@ struct GitWindowFeatureTests {
 
         let controller = try #require(await feature.open(path: repository.root, activates: false))
         defer { controller.window?.close() }
-        controller.window?.orderOut(nil)
+        // Hidden the window manager's way, recorded as hidden: a bare
+        // `orderOut` left it saved as visible, and a `restoreOnLaunch()` on
+        // the shared manager from a test running alongside reopened it during
+        // the `await` below.
+        controller.dismiss()
         let again = await feature.open(path: repository.root, activates: false)
 
         #expect(again === controller)

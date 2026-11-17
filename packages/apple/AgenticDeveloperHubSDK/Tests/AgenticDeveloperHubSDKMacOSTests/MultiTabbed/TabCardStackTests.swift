@@ -3,8 +3,9 @@ import AppKit
 import XCTest
 @testable import AgenticDeveloperHubSDKMacOS
 
-/// The tab cards as a deck: how far they overlap, how far each one stands from
-/// the card in front, and which of them is drawn — and clicked — over which.
+/// The tab cards as a stack: how far apart they are, how far each one stands
+/// from the card in front, and which of them is drawn — and clicked — over
+/// which.
 @MainActor
 final class TabCardStackTests: XCTestCase {
 
@@ -64,12 +65,15 @@ final class TabCardStackTests: XCTestCase {
         self.panes(of: views.sorted { $0.frame.maxY > $1.frame.maxY }, among: panes)
     }
 
-    func testCardsOnAVerticalBarOverlapEachOther() {
+    /// A column of cards is spaced like a row: `itemSpacing` between each
+    /// card and the next, no longer overlapped as a deck (fcdbf39fb, "uniform
+    /// 4pt spacing on vertical bars").
+    func testCardsOnAVerticalBarAreSpacedLikeAHorizontalBarsCards() {
         let (controller, panes) = makeBar(edge: .left, cards: 3)
         let column = cardViews(controller, on: .left).sorted { $0.frame.maxY > $1.frame.maxY }
         XCTAssertEqual(column.count, panes.count)
         for (upper, lower) in zip(column, column.dropFirst()) {
-            XCTAssertEqual(lower.frame.maxY - upper.frame.minY, TabBarView.cardOverlap, accuracy: 0.5)
+            XCTAssertEqual(upper.frame.minY - lower.frame.maxY, TabBarView.itemSpacing, accuracy: 0.5)
         }
     }
 

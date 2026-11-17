@@ -22,6 +22,10 @@ final class ProjectWindowManagerControllerTests: XCTestCase {
 
     override func setUp() async throws {
         try await super.setUp()
+        // The manager reads `NSApp` (the frontmost group), which is nil until
+        // something asks for the shared application. Some earlier suite always
+        // has in a full run; run alone, every test here crashed on it.
+        _ = NSApplication.shared
         let repoRootPath = FileManager.default.temporaryDirectory
             .appendingPathComponent("window-manager-controller-test-\(UUID().uuidString)")
         try FileManager.default.createDirectory(at: repoRootPath, withIntermediateDirectories: true)
@@ -70,6 +74,7 @@ final class ProjectWindowManagerControllerTests: XCTestCase {
         manager.gitClient = GitClient(configuration: .default)
 
         manager.openProject(repo)
+        await ProjectWindowTestSupport.awaitDeferredProjectBuild()
         let controller = try XCTUnwrap(manager.projectController(for: repo.id))
         XCTAssertEqual(controller.workspace.directoryURL.resolvingSymlinksInPath(), repoRoot.resolvingSymlinksInPath())
 
@@ -130,6 +135,10 @@ final class ProjectWindowManagerControllerTests: XCTestCase {
         manager.activateApp = { activations += 1 }
 
         manager.openProject(repo)
+        // The ask comes with the window, which is built a turn later
+        // (2cf5c4bd0) — not before there is anything to bring forward.
+        XCTAssertEqual(activations, 0, "nothing comes forward before the window is built")
+        await ProjectWindowTestSupport.awaitDeferredProjectBuild()
         XCTAssertEqual(activations, 1, "a new project window comes to the front")
 
         // `open()` runs in a task the manager starts; let it land before the
@@ -164,6 +173,7 @@ final class ProjectWindowManagerControllerTests: XCTestCase {
         manager.gitClient = GitClient(configuration: .default)
 
         manager.openProject(repo)
+        await ProjectWindowTestSupport.awaitDeferredProjectBuild()
         let controller = try XCTUnwrap(manager.projectController(for: repo.id))
 
         let deadline = Date().addingTimeInterval(5)
@@ -232,6 +242,7 @@ final class ProjectWindowManagerControllerTests: XCTestCase {
         manager.gitClient = GitClient(configuration: .default)
 
         manager.openProject(openedRepo)
+        await ProjectWindowTestSupport.awaitDeferredProjectBuild()
         XCTAssertNotNil(manager.projectController(for: openedRepo.id))
 
         let adoptedWorkspace = ProjectWindowTestSupport.makeProject(label: "ProjectWindowManagerControllerTests")
@@ -370,6 +381,7 @@ final class ProjectWindowManagerControllerTests: XCTestCase {
         manager.languageServicesFactory = { [openedServices] _ in openedServices }
 
         manager.openProject(openedRepo)
+        await ProjectWindowTestSupport.awaitDeferredProjectBuild()
         let projectController = try XCTUnwrap(manager.projectController(for: openedRepo.id))
         XCTAssertTrue(projectController.workspace.languageServices === openedServices)
 
@@ -430,6 +442,7 @@ final class ProjectWindowManagerControllerTests: XCTestCase {
         manager.gitClient = GitClient(configuration: GitClientConfiguration(executableURL: fakeGitURL, timeout: 10))
 
         manager.openProject(repo)
+        await ProjectWindowTestSupport.awaitDeferredProjectBuild()
         let controller = try XCTUnwrap(manager.projectController(for: repo.id))
         let windowController = try XCTUnwrap(manager.windowController(for: repo.id))
 
@@ -450,6 +463,14 @@ final class ProjectWindowManagerControllerTests: XCTestCase {
             FileManager.default.fileExists(atPath: startedMarker),
             "the fixture's git call never started — the fixture itself is broken, not the code under test"
         )
+
+        // What the window was built from, before any scan answered: the seed
+        // (bad5b4c64 opens a window whole from cached repo state, else the
+        // project directory as its main checkout), and the tabs built from
+        // it. A reconcile that lands after the close would replace both.
+        let seededCheckouts = controller.checkouts
+        let seededTabKinds = tabKinds(windowController.tabItems(on: .top))
+        XCTAssertFalse(seededCheckouts.isEmpty, "the window should open from its seeded checkouts")
 
         manager.closeProject(repoID: repo.id)
         XCTAssertNil(manager.projectController(for: repo.id))
@@ -473,23 +494,24 @@ final class ProjectWindowManagerControllerTests: XCTestCase {
         // `reconcile()` re-checks `!isClosed` after the `await` a close can
         // land inside of, before assigning it, and everything downstream
         // (`branchControllers` and the persisted tabs) flows from that same
-        // assignment.
-        XCTAssertTrue(
-            controller.checkouts.isEmpty,
+        // assignment. So the checkouts are still the seed, not the scan's.
+        XCTAssertEqual(
+            controller.checkouts, seededCheckouts,
             "a window closed mid-scan must never have its checkouts updated by the in-flight reconcile"
         )
-        // Downstream of the same guard: with `checkouts` never populated,
-        // `branchController(forDirectory:)` can never resolve one, so the
-        // data source's fallback keeps every tab a plain title — this would
-        // hold even if `reloadTabs()` ran regardless, but proves the window
-        // was never handed a hosted pane for the checkout either way.
-        XCTAssertTrue(
-            windowController.tabItems(on: .top).allSatisfy { item in
-                if case .viewController = item { return false }
-                return true
-            },
-            "a window closed mid-scan must never be reloaded with the checkout's hosted pane"
+        // Downstream of the same guard: the window was never reloaded, so its
+        // tabs are still the ones it was built with.
+        XCTAssertEqual(
+            tabKinds(windowController.tabItems(on: .top)), seededTabKinds,
+            "a window closed mid-scan must never be reloaded by the in-flight reconcile"
         )
+    }
+
+    private func tabKinds(_ items: [TabItem]) -> [String] {
+        items.map { item in
+            if case .viewController = item { return "hosted" }
+            return "plain"
+        }
     }
 
     /// BLOCKER 2 (final review B): the window and the project controller are
@@ -529,10 +551,13 @@ final class ProjectWindowManagerControllerTests: XCTestCase {
         manager.gitClient = GitClient(configuration: GitClientConfiguration(executableURL: fakeGitURL, timeout: 10))
 
         manager.openProject(repo)
+        await ProjectWindowTestSupport.awaitDeferredProjectBuild()
         let controller = try XCTUnwrap(manager.projectController(for: repo.id))
         let windowController = try XCTUnwrap(manager.windowController(for: repo.id))
-        // Still in the turn that opened the window, so this is provably armed
-        // before the reconcile's own write — the ordering the bug needs.
+        // Right behind the turn that built the window (the build is queued a
+        // turn after `openProject`, 2cf5c4bd0), so this is still armed before
+        // the reconcile's own write, which waits on the fake git — the
+        // ordering the bug needs.
         try armFocusPersist(on: windowController)
 
         // Past the 250 ms debounce and past the checkout scan, but nowhere
@@ -571,6 +596,7 @@ final class ProjectWindowManagerControllerTests: XCTestCase {
         manager.gitClient = GitClient(configuration: .default)
 
         manager.openProject(repo)
+        await ProjectWindowTestSupport.awaitDeferredProjectBuild()
         let firstController = try XCTUnwrap(manager.projectController(for: repo.id))
         let firstDeadline = Date().addingTimeInterval(5)
         while firstController.workspace.storedTabs() == nil, Date() < firstDeadline {
@@ -580,9 +606,11 @@ final class ProjectWindowManagerControllerTests: XCTestCase {
         manager.closeProject(repoID: repo.id)
 
         manager.openProject(repo)
+        await ProjectWindowTestSupport.awaitDeferredProjectBuild()
         let windowController = try XCTUnwrap(manager.windowController(for: repo.id))
-        // Read in the opening turn: these are the panes `init` built, before
-        // any reconcile could have landed.
+        // Read right behind the turn that built the window (queued a turn
+        // after `openProject`, 2cf5c4bd0): these are the panes `init` built,
+        // before any reconcile, which waits on git, could have landed.
         // Held strongly, and compared by identity rather than by address: a
         // rebuild would deallocate these, and a fresh pane could land on a
         // recycled address and pass an `ObjectIdentifier` comparison for the
@@ -638,6 +666,7 @@ final class ProjectWindowManagerControllerTests: XCTestCase {
         manager.gitClient = GitClient(configuration: .default)
 
         manager.openProject(repo)
+        await ProjectWindowTestSupport.awaitDeferredProjectBuild()
         let controller = try XCTUnwrap(manager.projectController(for: repo.id))
         XCTAssertFalse(controller.isClosed, "an open project's controller is not closed")
 
@@ -668,6 +697,7 @@ final class ProjectWindowManagerControllerTests: XCTestCase {
         manager.gitClient = GitClient(configuration: .default)
 
         manager.openProject(repo)
+        await ProjectWindowTestSupport.awaitDeferredProjectBuild()
         let controller = try XCTUnwrap(manager.projectController(for: repo.id))
 
         let firstDeadline = Date().addingTimeInterval(5)
@@ -706,6 +736,14 @@ final class ProjectWindowManagerControllerTests: XCTestCase {
         let windowController = try XCTUnwrap(manager.windowController(for: repo.id))
         let tabDeadline = Date().addingTimeInterval(5)
         while windowController.tabItems(on: .top).count != 2, Date() < tabDeadline {
+            try await Task.sleep(for: .milliseconds(20))
+        }
+
+        // The main checkout's branch controller is the one seeded before the
+        // scan (bad5b4c64), with no branch; the scan keeps it and its branch
+        // arrives with the refresh that follows the reconcile.
+        let branchDeadline = Date().addingTimeInterval(5)
+        while Set(manager.scriptableProjectTabs.map(\.tabBranch)) != ["main", "feature"], Date() < branchDeadline {
             try await Task.sleep(for: .milliseconds(20))
         }
 

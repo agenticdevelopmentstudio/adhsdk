@@ -580,7 +580,7 @@ final class ProjectScriptingTests: XCTestCase {
     /// close observer also clears the persisted "reopen me" flag, so undoing
     /// that registration through the wrong door would leave the project marked
     /// open for ever and reopening at every launch with no window to close it.
-    func testForgettingCannotUndoAWindowTheManagerOpenedItself() throws {
+    func testForgettingCannotUndoAWindowTheManagerOpenedItself() async throws {
         let project = makeProject()
         let manager = ProjectWindowManager()
         // A registry of its own: this test is about which registration a
@@ -592,6 +592,8 @@ final class ProjectScriptingTests: XCTestCase {
         manager.attach(to: coordinator)
 
         manager.openProject(project.repo)
+        // The window is built a turn after the ask (2cf5c4bd0).
+        await ProjectWindowTestSupport.awaitDeferredProjectBuild()
         let controller = try XCTUnwrap(manager.windowController(for: project.id))
 
         manager.forgetForScripting(controller)

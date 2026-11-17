@@ -79,6 +79,23 @@ enum ProjectWindowTestSupport {
         return identifiers
     }
 
+    /// Lets a project window that `ProjectWindowManager.openProject(_:)` (or
+    /// `openProjectForScripting(_:)`) asked for actually be built.
+    ///
+    /// A load no longer builds in the call that asks for it: since 2cf5c4bd0
+    /// it queues the build one turn of the main run loop later, so the busy
+    /// overlay on the window in front is drawn before the build holds the main
+    /// thread. Until then the manager has no window controller, no project
+    /// controller and has not asked for the foreground. The main queue is
+    /// FIFO, so a block queued after that build runs only once it has — and
+    /// the caller resumes right behind it, before any git answer the build's
+    /// checkout scan is waiting for can land.
+    static func awaitDeferredProjectBuild() async {
+        await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
+            DispatchQueue.main.async { continuation.resume() }
+        }
+    }
+
     /// A workspace on its own temporary database, so two tests never share a
     /// remembered anything.
     ///
@@ -125,6 +142,10 @@ enum ProjectWindowTestSupport {
     static func makeDocumentLayout(
         viewID: ComposableTabsViewID = ComposableTabsViewID("document.editor")
     ) throws -> ComposableTabsLayout {
+        // Every editor this layout vends can open a `.md` file, whose load task
+        // runs `LanguageDetection` on a later main-queue turn; see
+        // `ensureEditorLanguageResourcesLocated`.
+        ensureEditorLanguageResourcesLocated()
         let registry = ComposableTabsViewRegistry()
         registry.register(viewID, descriptor: .init(displayName: "Editor")) { context in
             DocumentEditorViewController(

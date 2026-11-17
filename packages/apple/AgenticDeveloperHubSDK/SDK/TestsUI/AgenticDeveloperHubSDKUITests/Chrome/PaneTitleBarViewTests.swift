@@ -47,7 +47,11 @@ struct PaneTitleBarViewTests {
         bar.icon = nil
         bar.layoutSubtreeIfNeeded()
         #expect(bar.iconView.isHidden)
-        #expect(abs(bar.titleLabel.frame.minX - (bar.controls.frame.maxX + 8)) < 1)
+        // The constraint pins alignment rects, and a label's frame overhangs its
+        // alignment rect, so measure what layout actually placed.
+        let title = bar.titleLabel.alignmentRect(forFrame: bar.titleLabel.frame)
+        let controls = bar.controls.alignmentRect(forFrame: bar.controls.frame)
+        #expect(abs(title.minX - (controls.maxX + 8)) < 1)
     }
 
     @Test("setting the title updates the label and its tooltip")
@@ -124,9 +128,12 @@ struct PaneTitleBarViewTests {
         let bar = PaneTitleBarView()
         bar.yieldWidthToContainer()
 
+        // The title sits one step above the floor on purpose, so a centered
+        // title slides off center before it truncates; that is still below
+        // anything a container asks for.
         func demandsWidth(_ view: NSView) -> Bool {
-            view.contentCompressionResistancePriority(for: .horizontal)
-                > NSLayoutConstraint.Priority(rawValue: 1)
+            let floor = NSLayoutConstraint.Priority(rawValue: view === bar.titleLabel ? 2 : 1)
+            return view.contentCompressionResistancePriority(for: .horizontal) > floor
                 || view.subviews.contains(where: demandsWidth)
         }
 

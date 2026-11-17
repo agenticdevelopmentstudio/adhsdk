@@ -13,12 +13,14 @@ import AppKit
 ///
 /// A card behind stops short of its own edge instead, leaving the workspace's
 /// line whole where it passes: the outline belongs to the workspace and to
-/// whatever is joined to it, and a waiting card is not that. How far short —
-/// and how much smaller — is `stackDepth`'s doing: on a vertical bar, where the
-/// cards overlap down a column, each one further from the card in front pulls
-/// in another step on every side — the whole card, text included — so the
-/// column reads as a deck turned to the tab you are in. A change of depth is
-/// animated, so the deck is seen to turn.
+/// whatever is joined to it, and a waiting card is not that. How far short
+/// depends on the bar: on a horizontal bar a card behind pulls in one
+/// `inactiveInset` step on every side — the whole card, text included; on a
+/// vertical bar it keeps its full size and outer edge and stops
+/// `verticalInactiveShortfall` short of the workspace, so the card in front is
+/// the longest in the column. Every card behind stands the same distance back,
+/// whatever its `stackDepth`. A change between behind and in front is
+/// animated, so the card is seen to move.
 ///
 /// `TabBarView` supplies the other half of the attachment: it pads the outer
 /// side of the bar and leaves the workspace side at zero.
@@ -46,7 +48,8 @@ final class TabPaneView: NSView {
     /// that shrank around stationary words would read as a box closing in on
     /// them rather than as a card standing further off.
     ///
-    /// On a vertical bar the steps accumulate — see `recession`.
+    /// A horizontal bar's alone: a vertical bar slides its cards by
+    /// `verticalInactiveShortfall` instead — see `place(animated:)`.
     static let inactiveInset: CGFloat = 4
     /// How far short of the workspace a card behind stops on a vertical bar,
     /// so the card in front is plainly the longest one.
@@ -344,16 +347,13 @@ final class TabPaneView: NSView {
     /// Whether this is the card the workspace is showing.
     private var isFrontCard: Bool { stackDepth == 0 }
 
-    /// How far this card is drawn in from its full size — on every side, the
-    /// one facing the workspace included, and its text along with it.
+    /// How far this card is drawn in from its full size on a horizontal bar —
+    /// on every side, the one facing the workspace included, and its text
+    /// along with it.
     ///
-    /// On a vertical bar the steps accumulate: each card further from the one
-    /// in front pulls in another `inactiveInset`, up to `maxStackDepth`, so a
-    /// column of cards fans away from the workspace and shrinks as it goes,
-    /// like a deck being turned rather than one flat row of blocks waiting
-    /// behind the front card. A horizontal bar has no such column — its cards
-    /// are laid out along their long side — so every card behind takes the same
-    /// single step.
+    /// One `inactiveInset` step for every card behind, whatever its depth: the
+    /// steps no longer accumulate on a vertical bar (fcdbf39fb), whose cards
+    /// slide by `verticalInactiveShortfall` instead of being inset.
     private var recession: CGFloat { recession(atDepth: stackDepth) }
 
     /// As far in as a card on this bar is ever drawn. What the slot has to be

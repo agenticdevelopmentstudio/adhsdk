@@ -88,7 +88,13 @@ public func applicationElementSpecifier(
     }
     let box = Box(key: key, uniqueID: uniqueID)
     MainActor.assumeIsolated {
-        guard let appDescription = NSApp.classDescription as? NSScriptClassDescription else { return }
+        // Not `NSApp.classDescription`: `-[NSObject classDescription]` is
+        // imported as non-optional, but it returns nil in a process with no
+        // scripting definition (an xctest host, say), and Swift traps on that
+        // nil before any `as?` can reject it. The class-side lookup is the
+        // same registry query with a nullable return.
+        guard let app = NSApp,
+              let appDescription = NSScriptClassDescription(for: type(of: app)) else { return }
         box.value = NSUniqueIDSpecifier(
             containerClassDescription: appDescription,
             containerSpecifier: nil,

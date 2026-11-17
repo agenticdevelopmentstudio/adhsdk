@@ -529,17 +529,25 @@ struct CoordinatorCommandRoutingTests {
         #expect(registry.command(id: TerminalCoordinator.CommandID.newSession)?.category == "Terminal")
     }
 
-    @Test("Its two New Terminal Window items share one command id")
+    /// The two menu items that open a terminal window: File ▸ New ▸ New
+    /// Terminal and the status item's New Terminal Window. File ▸ New's copy
+    /// moved to the `.fileNew` slot (and the File menu's New Terminal Session
+    /// item went to the window's own New) in 562d5624b, then dropped "Window"
+    /// from its title in 64b38cfdc; the status item kept the full title.
+    private static let windowItemTitles: Set<String> = ["New Terminal", "New Terminal Window"]
+
+    @Test("Its two new-terminal-window items share one command id")
     func repeatedMenuItemsShareOneCommand() {
         let registry = CommandRegistry()
         let coordinator = TerminalCoordinator(commandRegistry: registry)
         defer { coordinator.unregister() }
 
-        let windowItems = coordinator.menuContributions.filter { $0.title == "New Terminal Window" }
+        let windowItems = coordinator.menuContributions.filter { Self.windowItemTitles.contains($0.title) }
         #expect(windowItems.count == 2)
-        // Two menu items, one command: the registry holds three commands for
-        // four contributions.
-        #expect(coordinator.menuContributions.count == 4)
+        // Two menu items, one command: the registry holds three commands —
+        // New Terminal Session among them, for the palette and File ▸ New —
+        // for three contributions.
+        #expect(coordinator.menuContributions.count == 3)
         #expect(registry.allCommands.count == 3)
     }
 
@@ -549,13 +557,13 @@ struct CoordinatorCommandRoutingTests {
         let coordinator = TerminalCoordinator(commandRegistry: registry)
         defer { coordinator.unregister() }
 
-        #expect(coordinator.menuContributions.count == 4)
+        #expect(coordinator.menuContributions.count == 3)
         #expect(coordinator.menuContributions.allSatisfy { $0.isEnabled() })
 
         // The negative control, and the reason `commandRegistry` is required
         // rather than defaulted: disabling a command *on the caller's registry*
         // must reach the menu items. A coordinator that had quietly fallen back
-        // to a private registry would ignore this entirely and leave all four
+        // to a private registry would ignore this entirely and leave all three
         // items enabled — which is exactly the silent half-populated palette an
         // optional parameter made possible.
         registry.register(AppCommand(
@@ -566,11 +574,11 @@ struct CoordinatorCommandRoutingTests {
             run: {}
         ))
 
-        let windowItems = coordinator.menuContributions.filter { $0.title == "New Terminal Window" }
+        let windowItems = coordinator.menuContributions.filter { Self.windowItemTitles.contains($0.title) }
         #expect(windowItems.count == 2)
         #expect(windowItems.allSatisfy { !$0.isEnabled() })
         #expect(coordinator.menuContributions
-            .filter { $0.title != "New Terminal Window" }
+            .filter { !Self.windowItemTitles.contains($0.title) }
             .allSatisfy { $0.isEnabled() })
     }
 }

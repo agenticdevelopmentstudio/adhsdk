@@ -2141,6 +2141,8 @@ aggregateTargets:
   AgenticDeveloperHubSDKMacOSAll:
     targets:
       - AIPluginKit
+      - AgenticDeveloperHubSDK-macOS
+      - AgenticDeveloperHubSDKUI-macOS
       - AgenticDeveloperHubSDKCore
       - AgenticDeveloperHubSDKCoreUI
       - AgenticDeveloperHubSDKCoreMacOS
@@ -2186,6 +2188,8 @@ aggregateTargets:
   AgenticDeveloperHubSDKiOSAll:
     targets:
       - AgenticDeveloperHubSDKDatabase
+      - AgenticDeveloperHubSDK-iOS
+      - AgenticDeveloperHubSDKUI-iOS
       - AgenticDeveloperHubSDKNotifications
       - AgenticDeveloperHubSDKSync
       - AgenticDeveloperHubSDKSyncGRDB
@@ -2206,6 +2210,10 @@ aggregateTargets:
   AgenticDeveloperHubSDKMacOSTestsAll:
     targets:
       - AIPluginKit
+      - AgenticDeveloperHubSDK-macOS
+      - AgenticDeveloperHubSDKTests-macOS
+      - AgenticDeveloperHubSDKUI-macOS
+      - AgenticDeveloperHubSDKUITests-macOS
       - AgenticDeveloperHubSDKCore
       - AgenticDeveloperHubSDKCoreMacOS
       - AgenticDeveloperHubSDKCoreUI
@@ -2259,6 +2267,7 @@ aggregateTargets:
       - AgenticDeveloperHubSDKMarkdownTests
       - AgenticDeveloperHubSDKHTDV-macOS
       - AgenticDeveloperHubSDKHTDVTests
+      - AgenticDeveloperHubSDKHubAuth-macOS
       - AgenticDeveloperHubSDKHub-macOS
       - AgenticDeveloperHubSDKHubTests
       - AgenticDeveloperHubSDKHubService-macOS

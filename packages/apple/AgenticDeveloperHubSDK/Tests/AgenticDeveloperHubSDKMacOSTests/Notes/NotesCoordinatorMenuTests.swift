@@ -2,11 +2,13 @@ import AppKit
 import XCTest
 @testable import AgenticDeveloperHubSDKMacOS
 
-/// Task 10 (spec §8): the Notes File-menu items — New Folder, Import Markdown
-/// File…, Delete Note, Delete Folder. All four live in the `.file` slot, use
-/// `isEnabled` rather than `isHidden` (task-10-grounding G1 — a merely
-/// unavailable item stays visible and disables itself), and are enabled only
-/// while the Notes window is key.
+/// Task 10 (spec §8): the Notes menu items — New Folder, Import Markdown
+/// File…, Delete Note, Delete Folder. They began in the File menu and moved to
+/// the Notes menu's `.notes` slot in 562d5624b ("menu slots and commands for
+/// File/Projects/Notes"). All four use `isEnabled` rather than `isHidden`
+/// (task-10-grounding G1 — a merely unavailable item stays visible and
+/// disables itself), and are enabled only while a notes view is in the key
+/// window.
 @MainActor
 final class NotesCoordinatorMenuTests: XCTestCase {
 
@@ -29,18 +31,20 @@ final class NotesCoordinatorMenuTests: XCTestCase {
         return coordinator
     }
 
-    private func fileMenuItems(_ coordinator: NotesCoordinator) -> [MenuContribution] {
+    /// The four items, out of the Notes menu. That menu also opens the Notes
+    /// window — its "Notes" item, first at order 0 — which is not one of them.
+    private func notesMenuItems(_ coordinator: NotesCoordinator) -> [MenuContribution] {
         coordinator.menuContributions.filter {
-            if case .file = $0.slot { return true }
-            return false
+            guard case .notes = $0.slot else { return false }
+            return $0.title != "Notes"
         }
     }
 
     // MARK: - The four contributions exist, in the spec's order
 
-    func testFileMenuHasFourItemsInTheSpecOrder() {
+    func testNotesMenuHasFourItemsInTheSpecOrder() {
         let coordinator = makeCoordinator()
-        let items = fileMenuItems(coordinator)
+        let items = notesMenuItems(coordinator)
 
         XCTAssertEqual(items.map(\.title), [
             "New Folder", "Import Markdown File…", "Delete Note", "Delete Folder"
@@ -53,7 +57,7 @@ final class NotesCoordinatorMenuTests: XCTestCase {
     func testNoneOfTheFourUseIsHidden() {
         let coordinator = makeCoordinator()
 
-        for item in fileMenuItems(coordinator) {
+        for item in notesMenuItems(coordinator) {
             XCTAssertNil(item.isHidden, "\(item.title) must disable itself, not disappear")
         }
     }
@@ -62,7 +66,7 @@ final class NotesCoordinatorMenuTests: XCTestCase {
 
     func testNewFolderIsShiftCommandN() {
         let coordinator = makeCoordinator()
-        let newFolder = fileMenuItems(coordinator).first { $0.title == "New Folder" }
+        let newFolder = notesMenuItems(coordinator).first { $0.title == "New Folder" }
 
         XCTAssertEqual(newFolder?.key, "n")
         XCTAssertEqual(newFolder?.modifiers, [.command, .shift])
@@ -70,7 +74,7 @@ final class NotesCoordinatorMenuTests: XCTestCase {
 
     func testTheOtherThreeItemsHaveNoKeyEquivalent() {
         let coordinator = makeCoordinator()
-        let others = fileMenuItems(coordinator).filter { $0.title != "New Folder" }
+        let others = notesMenuItems(coordinator).filter { $0.title != "New Folder" }
 
         XCTAssertEqual(others.map(\.key), Array(repeating: "", count: others.count))
     }
@@ -81,7 +85,7 @@ final class NotesCoordinatorMenuTests: XCTestCase {
         let coordinator = makeCoordinator()
         XCTAssertNil(coordinator.notesWindowController.window)
 
-        for item in fileMenuItems(coordinator) {
+        for item in notesMenuItems(coordinator) {
             XCTAssertFalse(item.isEnabled(), "\(item.title) must be disabled with no Notes window")
         }
     }
@@ -96,7 +100,7 @@ final class NotesCoordinatorMenuTests: XCTestCase {
         coordinator.notesWindowController.showWindow()
         XCTAssertNotNil(coordinator.notesWindowController.window)
 
-        for item in fileMenuItems(coordinator) {
+        for item in notesMenuItems(coordinator) {
             XCTAssertFalse(item.isEnabled(), "\(item.title) must stay disabled while the window is not key")
         }
     }

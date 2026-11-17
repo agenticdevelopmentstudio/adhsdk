@@ -15,6 +15,24 @@ import XCTest
 @MainActor
 final class ConversationsShelfTests: XCTestCase {
 
+    /// Where `NSSplitView` keeps the split's frames — collapsed state included
+    /// — under its `autosaveName`, in the test process's own defaults domain.
+    /// Setting the name restores them, over the collapsed start `viewDidLoad`
+    /// gives the shelf, so a split one test disclosed came back disclosed in
+    /// every later test and every later run, and the shelf "started away" only
+    /// on a machine that had never run this suite.
+    private static let splitAutosaveKey = "NSSplitView Subview Frames conversations-split"
+
+    override func setUp() async throws {
+        try await super.setUp()
+        UserDefaults.standard.removeObject(forKey: Self.splitAutosaveKey)
+    }
+
+    override func tearDown() async throws {
+        UserDefaults.standard.removeObject(forKey: Self.splitAutosaveKey)
+        try await super.tearDown()
+    }
+
     /// A call counter a `@Sendable` closure may reach.
     private final class Counter: @unchecked Sendable {
         private let lock = NSLock()

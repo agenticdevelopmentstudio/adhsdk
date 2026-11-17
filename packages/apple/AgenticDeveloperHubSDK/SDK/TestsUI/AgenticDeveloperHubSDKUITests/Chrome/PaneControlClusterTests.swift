@@ -25,15 +25,36 @@ struct PaneControlClusterTests {
         }
     }
 
+    /// Move and Fit Width (5afad606c, ecd43d5ed) follow the window's three and
+    /// stay hidden until a host sets `onMove` / `onFit`, so a plain pane still
+    /// shows exactly close, minimize, zoom.
     @Test("the buttons sit in close, minimize, zoom order")
     func orderMatchesTheWindowConvention() {
         let cluster = PaneControlCluster()
-        #expect(cluster.arrangedSubviews == [cluster.closeButton, cluster.minimizeButton, cluster.zoomButton])
+        #expect(cluster.arrangedSubviews == [cluster.closeButton, cluster.minimizeButton, cluster.zoomButton,
+                                             cluster.moveButton, cluster.fitButton])
+        #expect(cluster.arrangedSubviews.filter { !$0.isHidden }
+                == [cluster.closeButton, cluster.minimizeButton, cluster.zoomButton])
+    }
+
+    /// `performClick` runs through `NSCell`, which does nothing for a control
+    /// with no window, so a click test passed only when an earlier test had
+    /// happened to leave the process in a state that let it through. The window
+    /// is never ordered front (`quiet-development`).
+    private func hosted(_ cluster: PaneControlCluster) -> NSWindow {
+        let window = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 200, height: 40),
+            styleMask: [.titled], backing: .buffered, defer: false)
+        window.isReleasedWhenClosed = false
+        window.contentView?.addSubview(cluster)
+        return window
     }
 
     @Test("clicking each button fires its own closure and no other")
     func clicksAreRouted() {
         let cluster = PaneControlCluster()
+        let window = hosted(cluster)
+        defer { withExtendedLifetime(window) {} }
         var closed = 0, minimized = 0, zoomed = 0, restored = 0
         cluster.onClose = { closed += 1 }
         cluster.onMinimize = { _ in minimized += 1 }
@@ -55,6 +76,8 @@ struct PaneControlClusterTests {
     @Test("minimize reports the button the picker should hang off")
     func minimizePassesItsAnchor() {
         let cluster = PaneControlCluster()
+        let window = hosted(cluster)
+        defer { withExtendedLifetime(window) {} }
         var anchor: NSButton?
         cluster.onMinimize = { anchor = $0 }
         cluster.minimizeButton.performClick(nil)
@@ -67,6 +90,8 @@ struct PaneControlClusterTests {
     @Test("minimized swaps the middle button for restore, identifier and all")
     func minimizedBecomesRestore() {
         let cluster = PaneControlCluster()
+        let window = hosted(cluster)
+        defer { withExtendedLifetime(window) {} }
         let before = cluster.minimizeButton.image
 
         cluster.isMinimized = true

@@ -37,15 +37,24 @@ final class BranchControllerTests: XCTestCase {
         )
     }
 
-    func testAVendedPaneShowsThePlaceholdersAndTheCheckout() {
+    /// A branch card is its top line and summary only (e49139475): the top
+    /// line names the branch (and the session, when one is named), and the
+    /// session, directory and branch lines under it are hidden. The branch
+    /// line is left empty, since `reload()` asks for no branch on a card
+    /// without details; the session line is still filled, because the pane's
+    /// title falls back on it.
+    func testAVendedPaneShowsTheBranchOnItsTopLineAndNoDetails() {
         let controller = makeController()
         let pane = controller.makeTabPane(edge: .left, tabID: UUID())
         pane.loadViewIfNeeded()
         pane.reload()
-        XCTAssertEqual(pane.paneView.agentLabel.stringValue, "Claude")
+        XCTAssertEqual(pane.paneView.agentLabel.stringValue, "main")
         XCTAssertEqual(pane.paneView.sessionLabel.stringValue, "main")
-        XCTAssertEqual(pane.paneView.branchLabel.stringValue, "main")
+        XCTAssertTrue(pane.paneView.sessionLabel.isHidden)
+        XCTAssertEqual(pane.paneView.branchLabel.stringValue, "")
+        XCTAssertTrue(pane.paneView.branchLabel.isHidden)
         XCTAssertTrue(pane.paneView.directoryLabel.stringValue.hasSuffix(tempRoot.lastPathComponent))
+        XCTAssertTrue(pane.paneView.directoryLabel.isHidden)
         XCTAssertTrue(pane.paneView.summaryLabel.isHidden)
         XCTAssertTrue(pane.dataSource === controller)
         XCTAssertTrue(pane.delegate === controller)
@@ -77,7 +86,9 @@ final class BranchControllerTests: XCTestCase {
         pane.loadViewIfNeeded()
         await controller.refresh()
         XCTAssertEqual(controller.currentBranch, "feature")
-        XCTAssertEqual(pane.paneView.branchLabel.stringValue, "feature")
+        // The branch reaches the card through its top line; the branch line
+        // is a detail, and branch cards show none (e49139475).
+        XCTAssertEqual(pane.paneView.agentLabel.stringValue, "feature")
         XCTAssertEqual(pane.paneView.sessionLabel.stringValue, "feature")
     }
 

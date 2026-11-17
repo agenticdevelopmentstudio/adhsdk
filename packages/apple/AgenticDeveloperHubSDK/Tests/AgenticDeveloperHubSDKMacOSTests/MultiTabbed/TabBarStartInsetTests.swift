@@ -90,6 +90,15 @@ final class TabBarStartInsetTests: XCTestCase {
         return button
     }
 
+    /// Where the accessory's constraints put it: its ALIGNMENT rect, not its
+    /// frame. A textured rounded button's frame overhangs its bezel by a point
+    /// on each side, and Auto Layout pins the alignment rect — so against the
+    /// frame the accessory reads a point early and the gap after it a point
+    /// short, though the bar laid both out exactly.
+    private func placed(_ accessory: NSView) -> NSRect {
+        accessory.alignmentRect(forFrame: accessory.frame)
+    }
+
     /// The first tab, in the bar's coordinates.
     private func firstTabFrame(in bar: TabBarView) -> NSRect {
         guard let item = bar.subviews.first?.subviews.first else {
@@ -111,9 +120,9 @@ final class TabBarStartInsetTests: XCTestCase {
         let bar = try XCTUnwrap(controller.tabBars[.top])
         XCTAssertTrue(plus.superview === bar)
         let tab = firstTabFrame(in: bar)
-        XCTAssertEqual(plus.frame.minX, TabBarView.endPadding, accuracy: 0.5)
-        XCTAssertEqual(tab.minX, plus.frame.maxX + TabBarView.itemSpacing, accuracy: 0.5)
-        XCTAssertEqual(plus.frame.midY, tab.midY, accuracy: 0.5)
+        XCTAssertEqual(placed(plus).minX, TabBarView.endPadding, accuracy: 0.5)
+        XCTAssertEqual(tab.minX, placed(plus).maxX + TabBarView.itemSpacing, accuracy: 0.5)
+        XCTAssertEqual(placed(plus).midY, tab.midY, accuracy: 0.5)
     }
 
     func testTheStartInsetMovesTheAccessoryAndTheTabsWithIt() throws {
@@ -125,8 +134,8 @@ final class TabBarStartInsetTests: XCTestCase {
         controller.view.layoutSubtreeIfNeeded()
 
         let bar = try XCTUnwrap(controller.tabBars[.top])
-        XCTAssertEqual(plus.frame.minX, 30, accuracy: 0.5)
-        XCTAssertEqual(firstTabFrame(in: bar).minX, plus.frame.maxX + TabBarView.itemSpacing, accuracy: 0.5)
+        XCTAssertEqual(placed(plus).minX, 30, accuracy: 0.5)
+        XCTAssertEqual(firstTabFrame(in: bar).minX, placed(plus).maxX + TabBarView.itemSpacing, accuracy: 0.5)
     }
 
     func testRemovingTheAccessoryGivesTheTabsTheirPlaceBack() throws {
@@ -155,11 +164,11 @@ final class TabBarStartInsetTests: XCTestCase {
         XCTAssertTrue(plus.superview === bar)
         let tab = firstTabFrame(in: bar)
         XCTAssertEqual(tab.minX, TabBarView.endPadding, accuracy: 0.5)
-        XCTAssertEqual(plus.frame.minX, tab.maxX + TabBarView.itemSpacing, accuracy: 0.5)
-        XCTAssertEqual(plus.frame.midY, tab.midY, accuracy: 0.5)
+        XCTAssertEqual(placed(plus).minX, tab.maxX + TabBarView.itemSpacing, accuracy: 0.5)
+        XCTAssertEqual(placed(plus).midY, tab.midY, accuracy: 0.5)
 
         controller.addTab(.init(item: .viewController(Item()), viewController: makeContent()), on: .top)
         controller.view.layoutSubtreeIfNeeded()
-        XCTAssertGreaterThan(plus.frame.minX, tab.maxX + TabBarView.itemSpacing)
+        XCTAssertGreaterThan(placed(plus).minX, tab.maxX + TabBarView.itemSpacing)
     }
 }

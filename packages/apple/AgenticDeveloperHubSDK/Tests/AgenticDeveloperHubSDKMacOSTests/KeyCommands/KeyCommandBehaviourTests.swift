@@ -175,9 +175,16 @@ final class KeyCommandBehaviourTests: XCTestCase {
     func testTheSwitchRefusesToPutATakenChordBackInPlay() throws {
         let chord = KeyboardShortcuts.Shortcut(.f10, modifiers: [.command, .option])
         let sleeper = command(id("sleeper"))
+        let holder = id("holder")
         registry.install(KeyCommandSection(title: "W", scope: .global, commands: [
-            sleeper, command(id("holder"), chord: chord)
+            sleeper, command(holder, chord: chord)
         ]))
+        // A global command ships switched off whatever its declarer said, so
+        // the holder's default chord holds nothing until it is switched on —
+        // and with nothing holding the chord there is nothing to refuse. The
+        // test moved to global commands in 70664ae57 and kept the holder on
+        // its shipped default, which is why it stopped testing the refusal.
+        registry.setBinding(KeyCommandBinding(shortcut: chord, isEnabled: true), for: holder)
         registry.setBinding(KeyCommandBinding(shortcut: chord, isEnabled: false), for: sleeper.id)
         let row = try hosted(KeyCommandRowView(
             command: try XCTUnwrap(registry.descriptor(for: sleeper.id)), registry: registry))

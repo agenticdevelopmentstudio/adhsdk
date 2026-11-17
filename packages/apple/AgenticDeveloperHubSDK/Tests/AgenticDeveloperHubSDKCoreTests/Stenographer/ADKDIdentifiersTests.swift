@@ -67,6 +67,7 @@ final class ADKDIdentifiersTests: XCTestCase {
     }
 
     func testV10_aMissingHomeStillYieldsEveryPathAndCreatesNothing() {
+        // temp-leak-check: ok — never created; the test asserts it still does not exist
         let missing = FileManager.default.temporaryDirectory
             .appendingPathComponent("adkd-missing-\(UUID().uuidString)", isDirectory: true)
         let derived = ADKDPaths(home: missing)

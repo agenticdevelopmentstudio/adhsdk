@@ -463,7 +463,8 @@ public final class EventStore: @unchecked Sendable {
     /// `includingRawRef: false` also drops `raw_ref`, for comparing stores built from
     /// different archives: archive ids follow arrival order, and when several records
     /// feed one turn at the same `as_of`, which of them the row points back to is
-    /// arbitrary. Stores replayed from the same archive compare with it included.
+    /// arbitrary. It drops a turn's `session_id` rank in `field_as_of` too, which is
+    /// `-raw_ref`. Stores replayed from the same archive compare with both included.
     public func canonicalDump(includingRawRef: Bool = true) throws -> [String] {
         let tables: [(name: String, order: String)] = [
             ("sessions", "provider, session_id"),
@@ -486,11 +487,25 @@ public final class EventStore: @unchecked Sendable {
                         case .blob(let data): object[column] = .string(data.base64EncodedString())
                         }
                     }
+                    if !includingRawRef, table.name == "turns" {
+                        object["field_as_of"] = try Self.withoutRawRefRank(object["field_as_of"])
+                    }
                     lines.append(try NormalizedValue.object(object).canonicalString())
                 }
             }
             return lines
         }
+    }
+
+    /// A turn's `field_as_of` without its `session_id` rank, which is `-raw_ref`
+    /// (the lowest archive id owns the turn, see `offer`): an archive id in all
+    /// but name, so a dump that leaves out `raw_ref` has to leave it out too.
+    private static func withoutRawRefRank(_ times: NormalizedValue?) throws -> NormalizedValue? {
+        guard case .string(let text) = times,
+              case .object(var object) = try JSONDecoder().decode(NormalizedValue.self, from: Data(text.utf8))
+        else { return times }
+        object["session_id"] = nil
+        return .string(try NormalizedValue.object(object).canonicalString())
     }
 
     // MARK: - Inserts

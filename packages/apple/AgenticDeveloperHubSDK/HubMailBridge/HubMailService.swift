@@ -108,7 +108,7 @@ public final class HubMailService {
     /// second call while connected does nothing. A sign-out still purging
     /// finishes first.
     public func signedIn() async {
-        while let pending = signingOut { await pending.value }
+        await finishPendingSignOut()
         guard sync == nil else { return }
         let connection: Connection
         do {
@@ -145,7 +145,7 @@ public final class HubMailService {
     /// it: the mirror outlives the process, so mail a previous launch's
     /// identity left on disk must not be served to whoever signs in next.
     public func signedOut() async {
-        while let pending = signingOut { await pending.value }
+        await finishPendingSignOut()
         let departing = sync
         sync = nil
         current.bridge = nil
@@ -156,10 +156,21 @@ public final class HubMailService {
         authRetry?.cancel()
         authRetry = nil
         status = .signedOut
-        let purge = Task { await self.purge(departing) }
-        signingOut = purge
-        await purge.value
-        if signingOut == purge { signingOut = nil }
+        signingOut = Task { await self.purge(departing) }
+        await finishPendingSignOut()
+    }
+
+    /// Waits out a sign-out's purge, clearing it as soon as it is done.
+    ///
+    /// Whoever sees the purge finish clears it, not only the sign-out that
+    /// started it: an awaited task that has already completed returns without
+    /// suspending, so a waiter that left the field for its owner to clear
+    /// would spin on the main actor and the owner would never get the turn.
+    private func finishPendingSignOut() async {
+        while let pending = signingOut {
+            await pending.value
+            if signingOut == pending { signingOut = nil }
+        }
     }
 
     private func purge(_ departing: HubMailSync?) async {

@@ -111,27 +111,33 @@ final class PartnerTabCardsTests: XCTestCase {
                        "Claude Code default")
     }
 
+    /// The Partner window's cards live on whichever edge the app-wide tab
+    /// positions make primary — it dropped its left-edge override in c8eb93d4c
+    /// and follows the global setting (default top) like every other tab host —
+    /// so the tests ask the tab view for that edge rather than naming one.
     func testClosingASessionRemovesItsTabAndSelectsThePartner() async {
         let split = PartnerSplitViewController(controller: controller)
         split.loadViewIfNeeded()
+        let edge = split.tabbed.primaryEdge
         let session = registry.open(directory: directory.path, title: "t", firstCommand: nil)
-        await waitUntil { split.tabbed.tabs(on: .left).count == 2 }
-        XCTAssertEqual(split.tabbed.tabs(on: .left).map(\.id), [split.partnerTabID, session.id])
+        await waitUntil { split.tabbed.tabs(on: edge).count == 2 }
+        XCTAssertEqual(split.tabbed.tabs(on: edge).map(\.id), [split.partnerTabID, session.id])
         split.select(sessionID: session.id)
-        XCTAssertEqual(split.tabbed.selectedTabID(on: .left), session.id)
+        XCTAssertEqual(split.tabbed.selectedTabID(on: edge), session.id)
 
         registry.close(id: session.id)
-        await waitUntil { split.tabbed.tabs(on: .left).count == 1 }
-        XCTAssertEqual(split.tabbed.tabs(on: .left).map(\.id), [split.partnerTabID])
-        XCTAssertEqual(split.tabbed.selectedTabID(on: .left), split.partnerTabID)
+        await waitUntil { split.tabbed.tabs(on: edge).count == 1 }
+        XCTAssertEqual(split.tabbed.tabs(on: edge).map(\.id), [split.partnerTabID])
+        XCTAssertEqual(split.tabbed.selectedTabID(on: edge), split.partnerTabID)
     }
 
     func testThePartnerTabCannotClose() {
         let split = PartnerSplitViewController(controller: controller)
         split.loadViewIfNeeded()
-        split.multiTabbedViewController(split.tabbed, didRequestCloseTab: split.partnerTabID, on: .left)
+        let edge = split.tabbed.primaryEdge
+        split.multiTabbedViewController(split.tabbed, didRequestCloseTab: split.partnerTabID, on: edge)
         XCTAssertEqual(split.cards[split.partnerTabID]?.card.showsCloseButton, false)
-        XCTAssertEqual(split.tabbed.tabs(on: .left).map(\.id), [split.partnerTabID])
+        XCTAssertEqual(split.tabbed.tabs(on: edge).map(\.id), [split.partnerTabID])
     }
 
     func testThePartnerTabShowsPartnerAndNotificationsPanesThatCannotClose() throws {

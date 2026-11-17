@@ -110,6 +110,7 @@ struct SessionDaemonConfigurationTests {
     func testV11_noDirectoryCreated() {
         let fresh = SessionDaemonConfiguration.test().supportDirectory
         #expect(!FileManager.default.fileExists(atPath: fresh.path))
+        // temp-leak-check: ok — never created; the test asserts it still does not exist
         let missing = FileManager.default.temporaryDirectory
             .appendingPathComponent("sdc-missing-\(UUID().uuidString)")
         let config = SessionDaemonConfiguration.test(root: missing)

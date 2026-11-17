@@ -14,6 +14,8 @@
 			);
 			dependencies = (
 				897FF6648AC247AB08ACA230 /* PBXTargetDependency */,
+				C7B8B056D8B31B98FF2E5E60 /* PBXTargetDependency */,
+				9611CCF955FCD50093585CCE /* PBXTargetDependency */,
 				214AE01A241646483D404AF8 /* PBXTargetDependency */,
 				7F4FE8B365F8AA1226013628 /* PBXTargetDependency */,
 				D4732402DDDBAEF775CB202B /* PBXTargetDependency */,
@@ -61,6 +63,10 @@
 			);
 			dependencies = (
 				83789512E95CA8F10F8750C1 /* PBXTargetDependency */,
+				4C2258545136B5DC0AEEFDDF /* PBXTargetDependency */,
+				5EA9F11D23D806A0C97D76B3 /* PBXTargetDependency */,
+				8E339B05186C9BC19F98E69B /* PBXTargetDependency */,
+				7264A69A4864B3B272DBCFD1 /* PBXTargetDependency */,
 				5EB78E6BDA4328B14559139A /* PBXTargetDependency */,
 				4E8E6F11AFE089010374F6A4 /* PBXTargetDependency */,
 				750F42B77DDBC3577FC080C8 /* PBXTargetDependency */,
@@ -114,6 +120,7 @@
 				3C6F8CD1C828164189A5FEBC /* PBXTargetDependency */,
 				4DCADAF4E5AC1309E8871C2C /* PBXTargetDependency */,
 				62DD68B6B2D1DE3759601F23 /* PBXTargetDependency */,
+				A7F5718A04F2A5E5DD0330D7 /* PBXTargetDependency */,
 				EA1CD4189AC041CB9523BB14 /* PBXTargetDependency */,
 				C313FB0F2ED2F0E9240A05AE /* PBXTargetDependency */,
 				1B6E919FAB08CD983B8AE0BB /* PBXTargetDependency */,
@@ -137,6 +144,8 @@
 			);
 			dependencies = (
 				38E8BBFA289E75021B571882 /* PBXTargetDependency */,
+				AE12594AC753553A1D53AE9A /* PBXTargetDependency */,
+				22F7EB56427EFD206833D748 /* PBXTargetDependency */,
 				B32C7AF1FA816788353E55EB /* PBXTargetDependency */,
 				612433035BBA0906A7F35823 /* PBXTargetDependency */,
 				FFDE34B25026F04491D37B0B /* PBXTargetDependency */,
@@ -4635,6 +4644,13 @@
 			remoteGlobalIDString = 9D281B684229A970D4743DF3;
 			remoteInfo = "AgenticDeveloperHubSDK-macOS";
 		};
+		19311D9AED95AA30379E13CA /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 690505BAB2A4A104CA5F0127 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 79F55FC91B5E10ED39F57E75;
+			remoteInfo = "AgenticDeveloperHubSDKUI-macOS";
+		};
 		1B02633D9505E5952F80CC98 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 690505BAB2A4A104CA5F0127 /* Project object */;
@@ -4775,6 +4791,13 @@
 			remoteGlobalIDString = 599D5D6CE8F4429C83443B3A;
 			remoteInfo = AgenticDeveloperHubSDKSystemMonitorUITests;
 		};
+		25830912E05BA5C0AB6C48FF /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 690505BAB2A4A104CA5F0127 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 9D281B684229A970D4743DF3;
+			remoteInfo = "AgenticDeveloperHubSDK-macOS";
+		};
 		25C2FB118315E68918401FBF /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 690505BAB2A4A104CA5F0127 /* Project object */;
@@ -4880,6 +4903,13 @@
 			remoteGlobalIDString = A19D9F098802C1111F47276C;
 			remoteInfo = "AgenticDeveloperHubSDKHTDV-macOS";
 		};
+		30553378837FCFF3814E8DB3 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 690505BAB2A4A104CA5F0127 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 59A3EE6C1FFF47969139E3EB;
+			remoteInfo = "AgenticDeveloperHubSDKHubAuth-macOS";
+		};
 		3138972A98F3D1D152E9BC09 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 690505BAB2A4A104CA5F0127 /* Project object */;
@@ -4963,6 +4993,13 @@
 			proxyType = 1;
 			remoteGlobalIDString = 7C7A3F984D8DFB3478946500;
 			remoteInfo = AgenticDeveloperHubSDKScripting;
+		};
+		39A2F63DA680B1FAA537710D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 690505BAB2A4A104CA5F0127 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = DA007219DD6944A596E34BE7;
+			remoteInfo = "AgenticDeveloperHubSDKTests-macOS";
 		};
 		3A0C7994CF1786E13148FF2A /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -5258,6 +5295,13 @@
 			remoteGlobalIDString = A9D9A16532E27ADDF444BE21;
 			remoteInfo = AgenticDeveloperHubSDKSync;
 		};
+		53D8E813F830125E787741B4 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 690505BAB2A4A104CA5F0127 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 9D281B684229A970D4743DF3;
+			remoteInfo = "AgenticDeveloperHubSDK-macOS";
+		};
 		546B615422FED87521A40887 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 690505BAB2A4A104CA5F0127 /* Project object */;
@@ -5446,6 +5490,13 @@
 			proxyType = 1;
 			remoteGlobalIDString = DBC823A1665705B9CDD79C15;
 			remoteInfo = AgenticDeveloperHubSDKPermissions;
+		};
+		601C55444FEF5FA5283C301C /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 690505BAB2A4A104CA5F0127 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 683CD3A838BF2813558DCDED;
+			remoteInfo = "AgenticDeveloperHubSDK-iOS";
 		};
 		60203EC113D894AE91B16E51 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -5978,6 +6029,13 @@
 			proxyType = 1;
 			remoteGlobalIDString = 7C7A3F984D8DFB3478946500;
 			remoteInfo = AgenticDeveloperHubSDKScripting;
+		};
+		88AB86C26E2BFCE2AFA4E642 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 690505BAB2A4A104CA5F0127 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = D097D7A551088911E17506AF;
+			remoteInfo = "AgenticDeveloperHubSDKUITests-macOS";
 		};
 		890F93B62C6C01B83C114512 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -6538,6 +6596,13 @@
 			proxyType = 1;
 			remoteGlobalIDString = DBC823A1665705B9CDD79C15;
 			remoteInfo = AgenticDeveloperHubSDKPermissions;
+		};
+		C001F2CAED0D1188FB93DF75 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 690505BAB2A4A104CA5F0127 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 79F55FC91B5E10ED39F57E75;
+			remoteInfo = "AgenticDeveloperHubSDKUI-macOS";
 		};
 		C04D7F9BACFD09A49D97A11A /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -7168,6 +7233,13 @@
 			proxyType = 1;
 			remoteGlobalIDString = DA6123F2162644AB014772BD;
 			remoteInfo = AgenticDeveloperHubSDKIntegrations;
+		};
+		F666F8DD19F2B5103CBE4685 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 690505BAB2A4A104CA5F0127 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 8C281F9F218187145415D30C;
+			remoteInfo = "AgenticDeveloperHubSDKUI-iOS";
 		};
 		F6FBD5896B86EBA487A24472 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -13650,8 +13722,8 @@
 		4558E03D6716AADAE16CEE53 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				6AB5ADC411A6E4F89369D8BB /* AgenticDeveloperHubAuth.framework */,
 				F9DE09DEB7DF42737BAD552E /* AgenticDeveloperHubClient.framework */,
+				6AB5ADC411A6E4F89369D8BB /* AgenticDeveloperHubAuth.framework */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -21184,89 +21256,89 @@
 			projectRoot = "";
 			targets = (
 				9BA325FD0BB5842EE22D0346 /* AIPluginKit */,
-				4EE9A79383EF5D54D3B16B63 /* AIPluginKitTests */,
-				683CD3A838BF2813558DCDED /* AgenticDeveloperHubSDK-iOS */,
-				9D281B684229A970D4743DF3 /* AgenticDeveloperHubSDK-macOS */,
-				03CB1E462E90CE211DBA0DAE /* AgenticDeveloperHubSDK-tvOS */,
-				83737C973B9AA2C727C0348E /* AgenticDeveloperHubSDK-visionOS */,
-				5C4E5379E248E1AF5B74E27A /* AgenticDeveloperHubSDK-watchOS */,
-				E059326762EED1CFBD0504DC /* AgenticDeveloperHubSDKActivity-iOS */,
-				8ABFAB5650C254337C7D0148 /* AgenticDeveloperHubSDKActivity-macOS */,
-				E499AA25C19168ADA281D2B0 /* AgenticDeveloperHubSDKActivityTests */,
-				81898ED34B63C7DF99E6548D /* AgenticDeveloperHubSDKChromium */,
 				1E47A2430B1F0FB2BC8699EA /* AgenticDeveloperHubSDKCore */,
-				707B74E43BA1DF6822BCD5E8 /* AgenticDeveloperHubSDKCoreMacOS */,
-				BFF911AF35212C742E730661 /* AgenticDeveloperHubSDKCoreMacOSTests */,
-				1B766FC5142B8AD81866D455 /* AgenticDeveloperHubSDKCoreTests */,
-				D33CF928023D6855666D42F3 /* AgenticDeveloperHubSDKCoreUI */,
-				F46B44A03965A16F13BBCC09 /* AgenticDeveloperHubSDKCoreUITests */,
-				BBD2DF0CFB513099434BE201 /* AgenticDeveloperHubSDKDatabase */,
-				D199DF20D6FF180113697869 /* AgenticDeveloperHubSDKDatabaseTests */,
-				47DB4B924482CBC6260559CD /* AgenticDeveloperHubSDKDisplays */,
-				754912831752EBB176C8DADC /* AgenticDeveloperHubSDKDisplaysTests */,
-				48C9EF60B52C157DF72BE792 /* AgenticDeveloperHubSDKHTDV-iOS */,
-				A19D9F098802C1111F47276C /* AgenticDeveloperHubSDKHTDV-macOS */,
-				0D8CBAF5AAA0C68150FDB917 /* AgenticDeveloperHubSDKHTDVTests */,
-				B1DEA78502E7FEC19BDCD571 /* AgenticDeveloperHubSDKHub-iOS */,
-				833A8BDFA4A99BE1FC7DE69B /* AgenticDeveloperHubSDKHub-macOS */,
-				EF77FB81BB5F5161AF5D9D7E /* AgenticDeveloperHubSDKHubAuth-iOS */,
-				59A3EE6C1FFF47969139E3EB /* AgenticDeveloperHubSDKHubAuth-macOS */,
-				428EBE427E93FDDC6A754565 /* AgenticDeveloperHubSDKHubMail */,
-				EC7931A12A18EB3A73180163 /* AgenticDeveloperHubSDKHubMailBridge */,
-				B210CBCD1D73C3A199C4AEFC /* AgenticDeveloperHubSDKHubMailBridgeTests */,
-				844C8158DCBDFFFB4E9FB3D6 /* AgenticDeveloperHubSDKHubMailTests */,
-				37120EC95EAF4B7C396A3DD3 /* AgenticDeveloperHubSDKHubService-iOS */,
-				DCF2682A34DDE41098D3748B /* AgenticDeveloperHubSDKHubService-macOS */,
-				412C4BD98575F18B75E3E582 /* AgenticDeveloperHubSDKHubServiceTests */,
-				202CDB9075B0295FBF7090C2 /* AgenticDeveloperHubSDKHubSync */,
-				B5732C87332EFD092DED2B22 /* AgenticDeveloperHubSDKHubTests */,
-				F416950B445DF08C09979039 /* AgenticDeveloperHubSDKHubUI-iOS */,
-				F06283ABD0B6E7AAA5152482 /* AgenticDeveloperHubSDKHubUI-macOS */,
-				38C2F9E1267B60ABA49464C5 /* AgenticDeveloperHubSDKHubUITests */,
-				DA6123F2162644AB014772BD /* AgenticDeveloperHubSDKIntegrations */,
-				9DEDC2B13B5C86473E378744 /* AgenticDeveloperHubSDKIntegrationsTests */,
 				4918BF3029D45394054B3C60 /* AgenticDeveloperHubSDKLanguage */,
-				E62294B6036FCAFA8028EC4D /* AgenticDeveloperHubSDKLanguageTests */,
-				2D6B0C98E5F4BC0EF9C93E91 /* AgenticDeveloperHubSDKLaunch */,
-				72F1ECCD15F5F1C540D11A90 /* AgenticDeveloperHubSDKLaunchTests */,
-				229499935CE1FBC9267420A6 /* AgenticDeveloperHubSDKLaunchUI */,
-				F4EF9B1ADF7DCC2C2D2B4BA2 /* AgenticDeveloperHubSDKLaunchUITests */,
+				D33CF928023D6855666D42F3 /* AgenticDeveloperHubSDKCoreUI */,
+				707B74E43BA1DF6822BCD5E8 /* AgenticDeveloperHubSDKCoreMacOS */,
 				03714E84C5F66E1445582C76 /* AgenticDeveloperHubSDKMacOS */,
-				1A948AD1F9476B93DC9E567A /* AgenticDeveloperHubSDKMacOSAll */,
-				739CAA10AD576461D3C220BA /* AgenticDeveloperHubSDKMacOSTests */,
-				6CE63602DBC264A476E9CE06 /* AgenticDeveloperHubSDKMacOSTestsAll */,
-				5003D60B66CD81192480E948 /* AgenticDeveloperHubSDKMail */,
-				18757C3689B3B0C14C0841F0 /* AgenticDeveloperHubSDKMarkdown-iOS */,
-				1FE0337CCA30E5FFC5CDD1D4 /* AgenticDeveloperHubSDKMarkdown-macOS */,
-				F66563A61BB692C3ADAB55A5 /* AgenticDeveloperHubSDKMarkdownTests */,
+				DBC823A1665705B9CDD79C15 /* AgenticDeveloperHubSDKPermissions */,
+				2D6B0C98E5F4BC0EF9C93E91 /* AgenticDeveloperHubSDKLaunch */,
+				229499935CE1FBC9267420A6 /* AgenticDeveloperHubSDKLaunchUI */,
+				47DB4B924482CBC6260559CD /* AgenticDeveloperHubSDKDisplays */,
+				81898ED34B63C7DF99E6548D /* AgenticDeveloperHubSDKChromium */,
+				C1E4FD4E86276A0E4D43F5AE /* AgenticDeveloperHubSDKPermissionsUI */,
+				245401FB9A7DA57D2DC7EB2A /* AgenticDeveloperHubSDKSystemMonitor */,
+				4EE04E3667B57BF3557EF935 /* AgenticDeveloperHubSDKSystemMonitorUI */,
 				568786FB60D45A4F8A1F68CF /* AgenticDeveloperHubSDKMenuBar */,
-				FA93819604368C923C9822AB /* AgenticDeveloperHubSDKMenuBarTests */,
+				7C7A3F984D8DFB3478946500 /* AgenticDeveloperHubSDKScripting */,
 				EF764434B4A7D4BC733D1605 /* AgenticDeveloperHubSDKNotifications */,
 				CE331300ADAD911494A73E6E /* AgenticDeveloperHubSDKNotificationsTests */,
 				42B152FC64B71145FFE36A4C /* AgenticDeveloperHubSDKNotificationsUI */,
 				DFEF0B62BC3E665F1BD10A23 /* AgenticDeveloperHubSDKNotificationsUITests */,
-				DBC823A1665705B9CDD79C15 /* AgenticDeveloperHubSDKPermissions */,
-				6657366A4FEA0301A565CE2C /* AgenticDeveloperHubSDKPermissionsTests */,
-				C1E4FD4E86276A0E4D43F5AE /* AgenticDeveloperHubSDKPermissionsUI */,
-				37CBB925DB5D0306087F1406 /* AgenticDeveloperHubSDKPermissionsUITests */,
-				7C7A3F984D8DFB3478946500 /* AgenticDeveloperHubSDKScripting */,
+				BBD2DF0CFB513099434BE201 /* AgenticDeveloperHubSDKDatabase */,
+				D199DF20D6FF180113697869 /* AgenticDeveloperHubSDKDatabaseTests */,
+				E62294B6036FCAFA8028EC4D /* AgenticDeveloperHubSDKLanguageTests */,
+				A9D9A16532E27ADDF444BE21 /* AgenticDeveloperHubSDKSync */,
+				3603DFBD39FE49F4B5D1B393 /* AgenticDeveloperHubSDKSyncTests */,
+				450BB683B77164DB541359E5 /* AgenticDeveloperHubSDKSyncGRDB */,
 				DDEEB3FD1D47997DF494475C /* AgenticDeveloperHubSDKSemanticSearch */,
+				F8EAD0095E9DA1321A22A130 /* AgenticDeveloperHubSDKSemanticSearchTests */,
 				DE26EA872FD10D9D2BC1D4F3 /* AgenticDeveloperHubSDKSemanticSearchStore */,
 				75CDBD1F110A741301BDF9E0 /* AgenticDeveloperHubSDKSemanticSearchStoreTests */,
-				F8EAD0095E9DA1321A22A130 /* AgenticDeveloperHubSDKSemanticSearchTests */,
-				A9D9A16532E27ADDF444BE21 /* AgenticDeveloperHubSDKSync */,
-				450BB683B77164DB541359E5 /* AgenticDeveloperHubSDKSyncGRDB */,
 				6578216E09CD9A74117DF48B /* AgenticDeveloperHubSDKSyncGRDBTests */,
-				3603DFBD39FE49F4B5D1B393 /* AgenticDeveloperHubSDKSyncTests */,
-				245401FB9A7DA57D2DC7EB2A /* AgenticDeveloperHubSDKSystemMonitor */,
+				202CDB9075B0295FBF7090C2 /* AgenticDeveloperHubSDKHubSync */,
+				428EBE427E93FDDC6A754565 /* AgenticDeveloperHubSDKHubMail */,
+				844C8158DCBDFFFB4E9FB3D6 /* AgenticDeveloperHubSDKHubMailTests */,
+				5003D60B66CD81192480E948 /* AgenticDeveloperHubSDKMail */,
+				EC7931A12A18EB3A73180163 /* AgenticDeveloperHubSDKHubMailBridge */,
+				B210CBCD1D73C3A199C4AEFC /* AgenticDeveloperHubSDKHubMailBridgeTests */,
+				1FE0337CCA30E5FFC5CDD1D4 /* AgenticDeveloperHubSDKMarkdown-macOS */,
+				18757C3689B3B0C14C0841F0 /* AgenticDeveloperHubSDKMarkdown-iOS */,
+				F66563A61BB692C3ADAB55A5 /* AgenticDeveloperHubSDKMarkdownTests */,
+				DA6123F2162644AB014772BD /* AgenticDeveloperHubSDKIntegrations */,
+				9DEDC2B13B5C86473E378744 /* AgenticDeveloperHubSDKIntegrationsTests */,
+				8ABFAB5650C254337C7D0148 /* AgenticDeveloperHubSDKActivity-macOS */,
+				E059326762EED1CFBD0504DC /* AgenticDeveloperHubSDKActivity-iOS */,
+				E499AA25C19168ADA281D2B0 /* AgenticDeveloperHubSDKActivityTests */,
+				1B766FC5142B8AD81866D455 /* AgenticDeveloperHubSDKCoreTests */,
+				F46B44A03965A16F13BBCC09 /* AgenticDeveloperHubSDKCoreUITests */,
+				BFF911AF35212C742E730661 /* AgenticDeveloperHubSDKCoreMacOSTests */,
+				4EE9A79383EF5D54D3B16B63 /* AIPluginKitTests */,
+				6657366A4FEA0301A565CE2C /* AgenticDeveloperHubSDKPermissionsTests */,
+				72F1ECCD15F5F1C540D11A90 /* AgenticDeveloperHubSDKLaunchTests */,
+				F4EF9B1ADF7DCC2C2D2B4BA2 /* AgenticDeveloperHubSDKLaunchUITests */,
+				754912831752EBB176C8DADC /* AgenticDeveloperHubSDKDisplaysTests */,
+				37CBB925DB5D0306087F1406 /* AgenticDeveloperHubSDKPermissionsUITests */,
 				152C08D28B2895E98894CF52 /* AgenticDeveloperHubSDKSystemMonitorTests */,
-				4EE04E3667B57BF3557EF935 /* AgenticDeveloperHubSDKSystemMonitorUI */,
+				FA93819604368C923C9822AB /* AgenticDeveloperHubSDKMenuBarTests */,
 				599D5D6CE8F4429C83443B3A /* AgenticDeveloperHubSDKSystemMonitorUITests */,
+				739CAA10AD576461D3C220BA /* AgenticDeveloperHubSDKMacOSTests */,
+				A19D9F098802C1111F47276C /* AgenticDeveloperHubSDKHTDV-macOS */,
+				48C9EF60B52C157DF72BE792 /* AgenticDeveloperHubSDKHTDV-iOS */,
+				0D8CBAF5AAA0C68150FDB917 /* AgenticDeveloperHubSDKHTDVTests */,
+				59A3EE6C1FFF47969139E3EB /* AgenticDeveloperHubSDKHubAuth-macOS */,
+				EF77FB81BB5F5161AF5D9D7E /* AgenticDeveloperHubSDKHubAuth-iOS */,
+				833A8BDFA4A99BE1FC7DE69B /* AgenticDeveloperHubSDKHub-macOS */,
+				B1DEA78502E7FEC19BDCD571 /* AgenticDeveloperHubSDKHub-iOS */,
+				B5732C87332EFD092DED2B22 /* AgenticDeveloperHubSDKHubTests */,
+				DCF2682A34DDE41098D3748B /* AgenticDeveloperHubSDKHubService-macOS */,
+				37120EC95EAF4B7C396A3DD3 /* AgenticDeveloperHubSDKHubService-iOS */,
+				412C4BD98575F18B75E3E582 /* AgenticDeveloperHubSDKHubServiceTests */,
+				F06283ABD0B6E7AAA5152482 /* AgenticDeveloperHubSDKHubUI-macOS */,
+				F416950B445DF08C09979039 /* AgenticDeveloperHubSDKHubUI-iOS */,
+				38C2F9E1267B60ABA49464C5 /* AgenticDeveloperHubSDKHubUITests */,
+				9D281B684229A970D4743DF3 /* AgenticDeveloperHubSDK-macOS */,
 				DA007219DD6944A596E34BE7 /* AgenticDeveloperHubSDKTests-macOS */,
-				8C281F9F218187145415D30C /* AgenticDeveloperHubSDKUI-iOS */,
 				79F55FC91B5E10ED39F57E75 /* AgenticDeveloperHubSDKUI-macOS */,
-				5AAB6BD321F3D35A66633F1B /* AgenticDeveloperHubSDKUITests-iOS */,
 				D097D7A551088911E17506AF /* AgenticDeveloperHubSDKUITests-macOS */,
+				8C281F9F218187145415D30C /* AgenticDeveloperHubSDKUI-iOS */,
+				5AAB6BD321F3D35A66633F1B /* AgenticDeveloperHubSDKUITests-iOS */,
+				683CD3A838BF2813558DCDED /* AgenticDeveloperHubSDK-iOS */,
+				5C4E5379E248E1AF5B74E27A /* AgenticDeveloperHubSDK-watchOS */,
+				03CB1E462E90CE211DBA0DAE /* AgenticDeveloperHubSDK-tvOS */,
+				83737C973B9AA2C727C0348E /* AgenticDeveloperHubSDK-visionOS */,
+				1A948AD1F9476B93DC9E567A /* AgenticDeveloperHubSDKMacOSAll */,
+				6CE63602DBC264A476E9CE06 /* AgenticDeveloperHubSDKMacOSTestsAll */,
 				D78FA780D3185CEB5CE42F36 /* AgenticDeveloperHubSDKiOSAll */,
 			);
 		};
@@ -27125,6 +27197,11 @@
 			target = 9D281B684229A970D4743DF3 /* AgenticDeveloperHubSDK-macOS */;
 			targetProxy = 99924AD49CB1DF49699615A3 /* PBXContainerItemProxy */;
 		};
+		22F7EB56427EFD206833D748 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 8C281F9F218187145415D30C /* AgenticDeveloperHubSDKUI-iOS */;
+			targetProxy = F666F8DD19F2B5103CBE4685 /* PBXContainerItemProxy */;
+		};
 		234180988A7E6D3D96B9AF06 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 8C281F9F218187145415D30C /* AgenticDeveloperHubSDKUI-iOS */;
@@ -27481,6 +27558,11 @@
 			target = A9D9A16532E27ADDF444BE21 /* AgenticDeveloperHubSDKSync */;
 			targetProxy = 538FD1205C8806F65A278B7A /* PBXContainerItemProxy */;
 		};
+		4C2258545136B5DC0AEEFDDF /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 9D281B684229A970D4743DF3 /* AgenticDeveloperHubSDK-macOS */;
+			targetProxy = 25830912E05BA5C0AB6C48FF /* PBXContainerItemProxy */;
+		};
 		4CA5FE0788FCF864BF218C53 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 03714E84C5F66E1445582C76 /* AgenticDeveloperHubSDKMacOS */;
@@ -27646,6 +27728,11 @@
 			target = DE26EA872FD10D9D2BC1D4F3 /* AgenticDeveloperHubSDKSemanticSearchStore */;
 			targetProxy = 768BCFCB9B8210682CD11805 /* PBXContainerItemProxy */;
 		};
+		5EA9F11D23D806A0C97D76B3 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = DA007219DD6944A596E34BE7 /* AgenticDeveloperHubSDKTests-macOS */;
+			targetProxy = 39A2F63DA680B1FAA537710D /* PBXContainerItemProxy */;
+		};
 		5EB78E6BDA4328B14559139A /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 1E47A2430B1F0FB2BC8699EA /* AgenticDeveloperHubSDKCore */;
@@ -27798,6 +27885,11 @@
 			isa = PBXTargetDependency;
 			target = BBD2DF0CFB513099434BE201 /* AgenticDeveloperHubSDKDatabase */;
 			targetProxy = 0659073D6383623A208825E2 /* PBXContainerItemProxy */;
+		};
+		7264A69A4864B3B272DBCFD1 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = D097D7A551088911E17506AF /* AgenticDeveloperHubSDKUITests-macOS */;
+			targetProxy = 88AB86C26E2BFCE2AFA4E642 /* PBXContainerItemProxy */;
 		};
 		733BCFB40019A80D6905A5DD /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
@@ -28024,6 +28116,11 @@
 			name = AgenticDeveloperHubAuth;
 			targetProxy = F2A83D3464A4617AB9082F07 /* PBXContainerItemProxy */;
 		};
+		8E339B05186C9BC19F98E69B /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 79F55FC91B5E10ED39F57E75 /* AgenticDeveloperHubSDKUI-macOS */;
+			targetProxy = C001F2CAED0D1188FB93DF75 /* PBXContainerItemProxy */;
+		};
 		9005708A74BD4A3B85330EBD /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = BBD2DF0CFB513099434BE201 /* AgenticDeveloperHubSDKDatabase */;
@@ -28068,6 +28165,11 @@
 			isa = PBXTargetDependency;
 			target = 707B74E43BA1DF6822BCD5E8 /* AgenticDeveloperHubSDKCoreMacOS */;
 			targetProxy = 24A7D86740BB50D8D5740C18 /* PBXContainerItemProxy */;
+		};
+		9611CCF955FCD50093585CCE /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 79F55FC91B5E10ED39F57E75 /* AgenticDeveloperHubSDKUI-macOS */;
+			targetProxy = 19311D9AED95AA30379E13CA /* PBXContainerItemProxy */;
 		};
 		9675BB2243210A7EC401493D /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
@@ -28267,6 +28369,11 @@
 			target = 9D281B684229A970D4743DF3 /* AgenticDeveloperHubSDK-macOS */;
 			targetProxy = 7B914985CD377C9420F95458 /* PBXContainerItemProxy */;
 		};
+		A7F5718A04F2A5E5DD0330D7 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 59A3EE6C1FFF47969139E3EB /* AgenticDeveloperHubSDKHubAuth-macOS */;
+			targetProxy = 30553378837FCFF3814E8DB3 /* PBXContainerItemProxy */;
+		};
 		A819DC801CE2DD8DE33F58E0 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = B1DEA78502E7FEC19BDCD571 /* AgenticDeveloperHubSDKHub-iOS */;
@@ -28326,6 +28433,11 @@
 			isa = PBXTargetDependency;
 			target = A9D9A16532E27ADDF444BE21 /* AgenticDeveloperHubSDKSync */;
 			targetProxy = 2A429EEDC9E4C45339530121 /* PBXContainerItemProxy */;
+		};
+		AE12594AC753553A1D53AE9A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 683CD3A838BF2813558DCDED /* AgenticDeveloperHubSDK-iOS */;
+			targetProxy = 601C55444FEF5FA5283C301C /* PBXContainerItemProxy */;
 		};
 		AE1BBB347EF6AB6E5D95A67C /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
@@ -28537,6 +28649,11 @@
 			isa = PBXTargetDependency;
 			target = FA93819604368C923C9822AB /* AgenticDeveloperHubSDKMenuBarTests */;
 			targetProxy = 4F456A0A0793DDF83AE8F3B3 /* PBXContainerItemProxy */;
+		};
+		C7B8B056D8B31B98FF2E5E60 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 9D281B684229A970D4743DF3 /* AgenticDeveloperHubSDK-macOS */;
+			targetProxy = 53D8E813F830125E787741B4 /* PBXContainerItemProxy */;
 		};
 		CA296C72650D1A53111A4807 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;

@@ -15,7 +15,9 @@ import Testing
         #expect(config.arguments.contains("--strict-mcp-config") && config.arguments.contains("--replay-user-messages"))
     }
     @Test func mcpConfigWritesHeadersAndMode0600() throws {
-        let url = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString + ".json")
+        let dir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let url = dir.appendingPathComponent("mcp.json")
         try PartnerMCPConfig.write(port: 51477, token: "tok", callerID: "c1", to: url)
         let attrs = try FileManager.default.attributesOfItem(atPath: url.path)
         #expect((attrs[.posixPermissions] as? Int) == 0o600)
@@ -25,6 +27,7 @@ import Testing
     }
     @Test func mcpConfigOverwritesLooseFileAndSecuresDirectory() throws {
         let dir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: dir) }
         try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true,
                                                 attributes: [.posixPermissions: 0o755])
         let url = dir.appendingPathComponent("mcp.json")

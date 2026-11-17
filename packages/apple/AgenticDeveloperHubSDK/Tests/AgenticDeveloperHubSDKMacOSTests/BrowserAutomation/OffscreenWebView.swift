@@ -104,16 +104,19 @@ struct AgentTestSnapshot {
     let page: AgentPage
 }
 
-/// One empty agent list for every automation test, made once per run.
+/// One empty agent list for every automation test, made once per run and
+/// removed when the test process exits: the store is shared across suites, so
+/// no single test owns its directory.
 @MainActor
 enum AgentTestPages {
     private static var shared: BrowserHiddenItemsStore?
+    private nonisolated static let directory = FileManager.default.temporaryDirectory
+        .appendingPathComponent("AgentTestPages-\(UUID().uuidString)")
 
     static func store() throws -> BrowserHiddenItemsStore {
         if let shared { return shared }
-        let directory = FileManager.default.temporaryDirectory
-            .appendingPathComponent("AgentTestPages-\(UUID().uuidString)")
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        atexit { try? FileManager.default.removeItem(at: AgentTestPages.directory) }
         let store = try BrowserHiddenItemsStore.open(
             at: directory.appendingPathComponent(BrowserHiddenItemsStore.fileName))
         shared = store

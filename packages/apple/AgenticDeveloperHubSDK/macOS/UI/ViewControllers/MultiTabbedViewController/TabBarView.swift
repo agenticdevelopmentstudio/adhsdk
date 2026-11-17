@@ -27,15 +27,9 @@ final class TabBarView: NSView {
     /// The gap at each end of the bar, along the direction it lays items out.
     static let endPadding: CGFloat = 8
 
-    /// The gap between two items along the bar.
+    /// The gap between two items along the bar — on every edge, a vertical
+    /// bar's column of cards included.
     static let itemSpacing: CGFloat = 4
-
-    /// How far two cards on a vertical bar overlap along the column — a
-    /// negative gap, so each card is partly behind its neighbour and the column
-    /// reads as a deck being turned rather than a list. A horizontal bar keeps
-    /// `itemSpacing`: its cards are laid out along their long side, where the
-    /// window runs out before a stack has any depth to show.
-    static let cardOverlap: CGFloat = 16
 
     /// Where the first item begins, measured along the bar from its start —
     /// the top of a left or right bar, the leading edge of a top or bottom

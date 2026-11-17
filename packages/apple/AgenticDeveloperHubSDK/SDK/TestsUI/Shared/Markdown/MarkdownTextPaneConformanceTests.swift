@@ -129,6 +129,9 @@ struct MarkdownTextPaneMacOSConformanceTests {
         let window = NSWindow(
             contentRect: NSRect(x: 0, y: 0, width: 400, height: 300),
             styleMask: [.titled], backing: .buffered, defer: false)
+        // A window made in code defaults to releasing itself on close, which
+        // under ARC is an over-release that crashes a later autorelease pop.
+        window.isReleasedWhenClosed = false
         window.contentView = pane
         window.makeKeyAndOrderFront(nil)
 

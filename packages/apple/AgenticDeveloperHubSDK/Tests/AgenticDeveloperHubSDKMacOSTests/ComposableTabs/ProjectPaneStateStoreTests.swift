@@ -433,7 +433,18 @@ final class ProjectPaneStateStoreTests: XCTestCase {
         XCTAssertEqual(item.maximumThickness, pane.minimizedThickness(for: .leading),
                        "appearing as a tab restored the tree's half")
         let shares = try second.layoutChildren.map { try XCTUnwrap($0.thicknessFraction) }
-        XCTAssertEqual(shares.reduce(0, +), 1.0, accuracy: 0.02,
+        // The shares tile the split *bar the divider*, and the divider is no
+        // longer a hairline: c4eeef49b made every pane gutter default to 10pt
+        // (it was 1pt). This window is held at its minimum width — the
+        // `MultiTabbedViewController`'s root has no frame of its own, so the
+        // window takes the content's fitting size, 150 + 10 + 150 — and the
+        // gutter alone is then 10/310 of the split, which the 0.02 tolerance
+        // once absorbed at 1/301 and no longer does. So the gutter's share is
+        // added back rather than the tolerance widened: the placeholder-frame
+        // capture this guards against still sums to about 1.2.
+        let split = second.splitView
+        let gutterShare = split.bounds.width > 0 ? split.dividerThickness / split.bounds.width : 0
+        XCTAssertEqual(shares.reduce(0, +) + gutterShare, 1.0, accuracy: 0.02,
                        "the capture read a laid-out arrangement, not loadView's placeholder frames")
     }
 

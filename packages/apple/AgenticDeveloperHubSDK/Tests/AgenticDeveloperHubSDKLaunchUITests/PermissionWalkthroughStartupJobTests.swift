@@ -54,7 +54,8 @@ private func readCompleteOffMainActor() -> @Sendable () -> Bool {
         var alertShown = false
         let presenter = ModalProgressPanel(appName: "Stenographer", modal: PanelSession()) { _ in
             alertShown = true
-            return .alertFirstButtonReturn
+            // Try Again is the second button (Continue is first); it answers true.
+            return .alertSecondButtonReturn
         }
         presenter.begin(needsAdministrator: false)
         presenter.willRun(FakeJob(order: .last))

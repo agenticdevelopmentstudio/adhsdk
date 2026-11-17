@@ -1,6 +1,7 @@
 import AgenticDeveloperHubSDKCore
 import XCTest
 import Foundation
+import GRDB
 @testable import AgenticDeveloperHubSDKDatabase
 
 /// Sink vectors of the session-event-sink recipe that drive `EventIngestor`, the real caller.
@@ -76,7 +77,13 @@ final class SessionEventSinkConformanceTests: XCTestCase {
 
         try ingestor.ingest(event(session: "s-drop"))
 
-        XCTAssertEqual(try database.fetchEvents(sessionId: "s-drop", eventType: nil, limit: 10).count, 1)
+        // `EventIngestor.ingest` writes the legacy `event_log`; `fetchEvents` reads
+        // the pipeline's `events` table, which this path never fills.
+        let logged = try database.write { conn in
+            try Int.fetchOne(conn, sql: "SELECT COUNT(*) FROM event_log WHERE session_id = ?",
+                             arguments: ["s-drop"]) ?? 0
+        }
+        XCTAssertEqual(logged, 1)
     }
 
     func testV13_encodeFailureSkipsTheBroadcast() throws {

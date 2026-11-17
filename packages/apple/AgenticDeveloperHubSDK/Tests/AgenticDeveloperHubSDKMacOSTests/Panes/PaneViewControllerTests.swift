@@ -154,8 +154,20 @@ final class PaneViewControllerTests: XCTestCase {
         return pane.view.bounds.maxY - frame.maxY
     }
 
+    /// Where the content's top sits with no title bar: the pane's own
+    /// `contentInset` and the app-wide pane-content spacing the pane applies
+    /// itself (`contentSpacingInsets`, 10pt by default from
+    /// `UserSettings.paneContentSpacingTop`) — and nothing for the bar. Read
+    /// back from the pane rather than spelled, because the spacing is a user
+    /// setting and the test must not depend on what the machine has it set to.
+    private func barlessTopGap(of pane: PaneViewController) -> CGFloat {
+        pane.contentInset + pane.contentSpacingInsets.top
+    }
+
     /// The bar is hidden *and* the content starts at the top: the bar's
-    /// required height would otherwise leave a 26pt gap where it was.
+    /// required height would otherwise leave a 26pt gap where it was. The
+    /// pane-content spacing still holds the content off the top edge, as it
+    /// does every other edge.
     func testAPaneWithoutATitleBarLaysItsContentFromTheTop() throws {
         let pane = TestPane(content: RichContent())
         pane.showsTitleBar = false
@@ -167,7 +179,7 @@ final class PaneViewControllerTests: XCTestCase {
         windows.append(window)
 
         XCTAssertTrue(pane.titleBar.isHidden)
-        XCTAssertEqual(try contentTopGap(of: pane), 0, accuracy: 0.5)
+        XCTAssertEqual(try contentTopGap(of: pane), barlessTopGap(of: pane), accuracy: 0.5)
     }
 
     /// Stamped after the view loaded — which is when a split stamps a pane it
@@ -175,11 +187,11 @@ final class PaneViewControllerTests: XCTestCase {
     func testHidingTheTitleBarAfterLoadMovesTheContentUpAndBack() throws {
         let (pane, _) = loadedPane(content: RichContent())
         let withBar = try contentTopGap(of: pane)
-        XCTAssertGreaterThan(withBar, 0, "the bar holds the content down")
+        XCTAssertGreaterThan(withBar, barlessTopGap(of: pane), "the bar holds the content down")
 
         pane.showsTitleBar = false
         XCTAssertTrue(pane.titleBar.isHidden)
-        XCTAssertEqual(try contentTopGap(of: pane), 0, accuracy: 0.5)
+        XCTAssertEqual(try contentTopGap(of: pane), barlessTopGap(of: pane), accuracy: 0.5)
 
         pane.showsTitleBar = true
         XCTAssertFalse(pane.titleBar.isHidden)

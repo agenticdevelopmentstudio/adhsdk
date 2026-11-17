@@ -237,9 +237,13 @@ struct SyntaxHighlighterTests {
     /// than a millisecond even with the JIT.
     private static let slowGrammar = #"{"scopeName":"source.slow","patterns":[{"match":"a","name":"keyword.slow"}]}"#
 
-    private func slowHighlighter(lineTimeLimit: Int, timeBudget: Int) throws -> SyntaxHighlighter {
-        let directory = FileManager.default.temporaryDirectory
+    /// A grammar directory of the test's own, removed by the caller when it finishes.
+    private func grammarDirectory() -> URL {
+        FileManager.default.temporaryDirectory
             .appendingPathComponent("SyntaxHighlighterTests-\(UUID().uuidString)", isDirectory: true)
+    }
+
+    private func slowHighlighter(in directory: URL, lineTimeLimit: Int, timeBudget: Int) throws -> SyntaxHighlighter {
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         try Data(Self.slowGrammar.utf8).write(to: directory.appendingPathComponent("slow.tmLanguage.json"))
         let registry = GrammarRegistry(sources: [DirectoryGrammarSource(directory: directory)])
@@ -249,7 +253,9 @@ struct SyntaxHighlighterTests {
 
     @Test("a line that runs past the per-line limit leaves the text uncoloured and the engine usable")
     func lineTimeLimitStopsALine() async throws {
-        let highlighter = try slowHighlighter(lineTimeLimit: 1, timeBudget: 60_000)
+        let directory = grammarDirectory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let highlighter = try slowHighlighter(in: directory, lineTimeLimit: 1, timeBudget: 60_000)
         let theme = try TextMateFixture.theme("dark-plus")
         let long = String(repeating: "a", count: 9_000)
 
@@ -259,7 +265,9 @@ struct SyntaxHighlighterTests {
 
     @Test("a text that runs past the overall budget is left uncoloured")
     func timeBudgetStopsTheText() async throws {
-        let highlighter = try slowHighlighter(lineTimeLimit: 0, timeBudget: 0)
+        let directory = grammarDirectory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let highlighter = try slowHighlighter(in: directory, lineTimeLimit: 0, timeBudget: 0)
         let theme = try TextMateFixture.theme("dark-plus")
         let text = Array(repeating: String(repeating: "a", count: 2_000), count: 50).joined(separator: "\n")
 
