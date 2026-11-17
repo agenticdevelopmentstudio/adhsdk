@@ -1394,12 +1394,12 @@ messages, and any URL's user information (a token in a push URL logs as
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Git/` | confirmed (2.1.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Git/` | confirmed (2.2.2) |
 | macos | `packages/apple/AgenticDeveloperHubSDK/Core/Git/GitFileHistoryEntry.swift` | confirmed (2.1.0) |
 | macos | `packages/apple/AgenticDeveloperHubSDK/Core/Git/GitAction.swift` | confirmed (2.1.0) |
 | macos | `packages/apple/AgenticDeveloperHubSDK/Core/Git/GitPatchBuilder.swift` | confirmed (2.1.0) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Git/GitOperationState.swift` | confirmed (2.1.0) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Git/GitRebasePlan.swift` | confirmed (2.1.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Git/GitOperationState.swift` | confirmed (2.2.2) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Git/GitRebasePlan.swift` | confirmed (2.2.2) |
 
 ## Design Decisions
 
