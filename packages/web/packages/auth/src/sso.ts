@@ -624,6 +624,20 @@ export function readCentralParams(search?: string): CentralParams | null {
   return { clientId: params.get('clientId') ?? 'adh', returnUrl }
 }
 
+/**
+ * The OAuth clients that sign in with a password or a passkey: the hub (`adh`) and the
+ * admin console (`admin`). They are the backend's built-in clients (BUILT_IN_CLIENT_SLUGS
+ * in the AS's clients.ts), the only ones whose login realm is the hub's or the operators'.
+ * Every other client belongs to a customer ecosystem, signs in with a social provider only,
+ * and the AS answers 400 at the central password and passkey routes for it.
+ */
+export const CREDENTIAL_LOGIN_CLIENT_IDS: readonly string[] = ['adh', 'admin']
+
+/** Whether a central login for this client may offer the password form and the passkey. */
+export function offersCredentialLogin(clientId: string): boolean {
+  return CREDENTIAL_LOGIN_CLIENT_IDS.includes(clientId)
+}
+
 /** Which brand site a central login step owes its exchange code to, and where to
  *  ask. Carried on EVERY step (the AS re-validates the pair each time — a pending
  *  token names a user and their factors, deliberately not a destination). */
@@ -801,6 +815,7 @@ export async function centralPasswordlessPasskey(
   const assertion = await assertPasswordlessPasskey(
     identifier,
     asEndpoint(PASSKEY_OPTIONS_PATH, target.authApiBase),
+    target.clientId,
   )
   return centralLoginStep('/oauth/signin/login/webauthn', target, { ...assertion })
 }

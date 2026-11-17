@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, type FormEvent, type ReactElement, type ReactNode } from 'react'
+import { useState, useSyncExternalStore, type FormEvent, type ReactElement, type ReactNode } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { reportUnexpectedAuthError } from '../report'
@@ -11,9 +11,18 @@ import {
   centralLoginTarget,
   centralPasswordlessPasskey,
   centralSendMfaSms,
+  offersCredentialLogin,
   providerSigninUrl,
+  readCentralParams,
   type CentralLoginTarget,
 } from '../sso'
+
+// The relayed query never changes while the login page is open, so there is nothing to
+// subscribe to; the store exists so the server render and hydration read "not relayed"
+// and the browser then reads the real query, without a hydration mismatch.
+const subscribeNever = (): (() => void) => () => {}
+const readRelayedClientId = (): string | null => readCentralParams()?.clientId ?? null
+const readNoRelayedClientId = (): string | null => null
 import type { MfaChallenge } from '../mfa'
 import { MfaStep, type MfaOperations } from './MfaStep'
 import { GithubIcon } from './GithubIcon'
@@ -231,7 +240,15 @@ export function LoginCard({
   // In in-site mode the handler IS the passkey button's reason to exist; in central
   // mode there is no handler to infer from, so the host says (a site gating passkeys
   // behind a feature flag passes the flag's answer).
-  const passkeyVisible = showPasskey ?? Boolean(onPasskeyLogin)
+  // The client this central login is FOR: the relayed one when the AS sent another
+  // site's login here, else this card's own. Only the hub and the admin console sign in
+  // with a password or a passkey; a customer (ecosystem) client signs in through its
+  // social providers alone, and the AS refuses the credential routes for it, so the
+  // form is not offered. In-site mode is its own authorization server and is not gated.
+  const relayedClientId = useSyncExternalStore(subscribeNever, readRelayedClientId, readNoRelayedClientId)
+  const credentialsOffered = !isCentral || offersCredentialLogin(relayedClientId ?? clientId)
+  const emailVisible = showEmail && credentialsOffered
+  const passkeyVisible = (showPasskey ?? Boolean(onPasskeyLogin)) && credentialsOffered
 
   /** The brand site this login owes its exchange code to — the AS's own parameters
    *  when it relayed another site's login here, otherwise the ones it would have
@@ -429,7 +446,7 @@ export function LoginCard({
         </div>
       ) : null)}
 
-      {!methodsPending && ((oauthProviders && oauthProviders.length > 0) || showGithub) && showEmail && (
+      {!methodsPending && ((oauthProviders && oauthProviders.length > 0) || showGithub) && emailVisible && (
         <div className="auth-card__divider">
           <span className="auth-card__divider-line" />
           <span className="auth-card__divider-text">{dividerLabel}</span>
@@ -437,7 +454,7 @@ export function LoginCard({
         </div>
       )}
 
-      {!methodsPending && showEmail && (
+      {!methodsPending && emailVisible && (
         <form onSubmit={handleSubmit} className="auth-card__form">
           {error && <div className="auth-card__error">{error}</div>}
           <div className="auth-card__field">
