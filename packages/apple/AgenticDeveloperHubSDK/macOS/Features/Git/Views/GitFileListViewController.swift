@@ -36,9 +36,19 @@ public final class GitFileListViewController: NSViewController {
     public var onDoubleClick: ((GitFileListItem) -> Void)?
 
     /// Whether a path is stored in Git LFS, which badges its row; nil badges none. Setting
-    /// it redraws the rows.
+    /// it redraws the rows in place: the selection stays, and the delegate hears nothing.
     public var isLFSTracked: ((String) -> Bool)? {
-        didSet { if isViewLoaded { tableView.reloadData() } }
+        didSet { redrawRows() }
+    }
+
+    /// Redraws every row's cell without a `reloadData`, which drops the selection (and
+    /// so reported nil) when it runs before `files` is set to the new list.
+    private func redrawRows() {
+        guard isViewLoaded, tableView.numberOfRows > 0 else { return }
+        isApplyingSelection = true
+        tableView.reloadData(forRowIndexes: IndexSet(integersIn: 0..<tableView.numberOfRows),
+                             columnIndexes: IndexSet(integersIn: 0..<tableView.numberOfColumns))
+        isApplyingSelection = false
     }
 
     let tableView = ThemedTableView()

@@ -32,14 +32,27 @@ public struct GitLFSPointer: Sendable, Hashable {
     /// first line other than `versionLine`, or no `oid sha256:<64 hex>` or `size <N>` line.
     /// Lines may end in CRLF; blank lines are ignored.
     public static func parse(_ text: String) -> GitLFSPointer? {
+        parse(text, requiresVersionLine: true)
+    }
+
+    /// `parse(_:)`, except that with `requiresVersionLine` false the version line may be
+    /// missing, as it is from a diff side whose context was trimmed (`-U0`). Without it,
+    /// every line must be a pointer's own (`oid`, `size` or `ext-…`), so ordinary text
+    /// never reads as a pointer.
+    static func parse(_ text: String, requiresVersionLine: Bool) -> GitLFSPointer? {
         guard text.utf8.count <= maximumBytes else { return nil }
         let lines = text.split(whereSeparator: \.isNewline)
             .map { $0.trimmingCharacters(in: .whitespaces) }
             .filter { !$0.isEmpty }
-        guard lines.first == versionLine else { return nil }
+        if requiresVersionLine || lines.first == versionLine {
+            guard lines.first == versionLine else { return nil }
+        } else {
+            let ownPrefixes = ["oid sha256:", "size ", "ext-"]
+            guard lines.allSatisfy({ line in ownPrefixes.contains { line.hasPrefix($0) } }) else { return nil }
+        }
         var oid: String?
         var size: Int64?
-        for line in lines.dropFirst() {
+        for line in lines where line != versionLine {
             if line.hasPrefix("oid sha256:") {
                 let hex = String(line.dropFirst("oid sha256:".count)).lowercased()
                 guard hex.count == 64, hex.allSatisfy(\.isHexDigit) else { return nil }
@@ -68,7 +81,8 @@ public struct GitLFSDiffSummary: Sendable, Hashable {
     /// The summary of `diff`, or nil unless it is a pointer diff: both sides parse as a
     /// `GitLFSPointer`, or one does and the other side is missing (an added or deleted
     /// file). A binary diff is never one. The old side is the context and removed lines,
-    /// the new side the context and added lines.
+    /// the new side the context and added lines. A side may lack the version line, which
+    /// is unchanged and so dropped from a diff with no context (`-U0`).
     public static func of(_ diff: GitFileDiff) -> GitLFSDiffSummary? {
         guard !diff.isBinary, !diff.hunks.isEmpty else { return nil }
         let lines = diff.hunks.flatMap(\.lines)
@@ -103,7 +117,8 @@ public struct GitLFSDiffSummary: Sendable, Hashable {
 
     private static func side(_ lines: [String]) -> Side {
         guard !lines.isEmpty else { return .missing }
-        return GitLFSPointer.parse(lines.joined(separator: "\n")).map(Side.pointer) ?? .other
+        let text = lines.joined(separator: "\n")
+        return GitLFSPointer.parse(text, requiresVersionLine: false).map(Side.pointer) ?? .other
     }
 
     private static func format(_ size: Int64) -> String {

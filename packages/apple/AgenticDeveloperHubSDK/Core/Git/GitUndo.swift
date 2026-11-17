@@ -23,8 +23,17 @@ public struct GitUndoState: Sendable, Equatable {
     /// The state before anything has loaded: nothing to undo.
     public static let empty = GitUndoState(ref: "HEAD", tip: nil, entries: [])
 
-    /// The newest entry: what Undo would undo.
+    /// The newest entry. It is not always what Undo undoes: see `undoneEntry`.
     public var last: GitReflogEntry? { entries.first }
+
+    /// The step Undo takes back: the entry just before `target`, which moved the ref from
+    /// the target to the tip. Nil when there is no target, or when the newest entry is
+    /// already not the tip (the reflog lags the ref: `update-ref` without a log, or a tool
+    /// that writes none), since then no logged step is the one being undone.
+    public var undoneEntry: GitReflogEntry? {
+        guard let tip, let index = entries.firstIndex(where: { $0.sha != tip }), index > 0 else { return nil }
+        return entries[index - 1]
+    }
 
     /// Where Undo moves the ref back to: the first entry whose commit differs from the tip,
     /// so a step that left the tip where it was (`@{1}` equal to `@{0}`) is skipped. Nil
@@ -41,11 +50,24 @@ public struct GitUndoPreflight: Sendable, Equatable {
     public let operation: GitOperationState
     /// Whether the index or the working tree has any change, untracked files included.
     public let isDirty: Bool
+    /// Whether the index differs from HEAD: anything is staged.
+    public let hasStagedChanges: Bool
 
-    public init(state: GitUndoState, operation: GitOperationState, isDirty: Bool) {
+    public init(state: GitUndoState, operation: GitOperationState, isDirty: Bool,
+                hasStagedChanges: Bool = false) {
         self.state = state
         self.operation = operation
-        self.isDirty = isDirty
+        self.isDirty = isDirty || hasStagedChanges
+        self.hasStagedChanges = hasStagedChanges
+    }
+
+    /// How Undo resets: `.soft` while anything is staged, so the index, with what was
+    /// staged apart from the working tree, is kept and the undone commit's changes join
+    /// it; `.mixed` otherwise, which leaves the undone changes unstaged in the working
+    /// copy. A mixed reset over a staged index would replace it with the target's tree
+    /// and lose a staged version that differs from the working copy.
+    public var resetMode: GitResetMode {
+        hasStagedChanges ? .soft : .mixed
     }
 
     /// `state.target`, or nil while a merge, rebase, cherry-pick or revert is in progress.
@@ -75,14 +97,15 @@ extension GitClient {
         return GitUndoState(ref: ref, tip: tip, entries: entries)
     }
 
-    /// `undoState` together with the operation in progress and whether the tree is dirty,
-    /// for Undo to decide on at the moment it is pressed.
+    /// `undoState` together with the operation in progress, whether the tree is dirty and
+    /// whether anything is staged, for Undo to decide on at the moment it is pressed.
     public func undoPreflight(in directory: URL, caller: GitCaller = GitCaller()) async throws
         -> GitUndoPreflight {
         let state = try await undoState(in: directory, caller: caller)
         let operation = try await operationState(in: directory, caller: caller)
         let changes = try await status(in: directory, caller: caller)
-        let isDirty = !changes.stagedFiles.isEmpty || !changes.unstagedFiles.isEmpty
-        return GitUndoPreflight(state: state, operation: operation, isDirty: isDirty)
+        let hasStaged = !changes.stagedFiles.isEmpty
+        return GitUndoPreflight(state: state, operation: operation,
+                                isDirty: hasStaged || !changes.unstagedFiles.isEmpty, hasStagedChanges: hasStaged)
     }
 }

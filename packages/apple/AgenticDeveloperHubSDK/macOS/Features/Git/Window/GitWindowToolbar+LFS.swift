@@ -46,7 +46,7 @@ extension GitWindowToolbar {
         let item = NSMenuItem(title: title, action: action, keyEquivalent: "")
         item.target = self
         item.identifier = NSUserInterfaceItemIdentifier(identifier)
-        item.setAccessibilityIdentifier(identifier)
+        item.accessibilityID(identifier)
         return item
     }
 }

@@ -236,7 +236,8 @@ struct GitClientPatchTests {
             .compactMap { $0 as? OSLogEntryLog }
             .filter { $0.category == "GitCommandLog" && $0.composedMessage.contains(repository.root.path) }
             .map(\.composedMessage)
-        let apply = entries.filter { $0.hasPrefix("git apply ") }
+        // The command line is the spawned argv: every write runs under `-c core.editor=true`.
+        let apply = entries.filter { $0.hasPrefix("git -c core.editor=true apply ") }
         #expect(apply.count == 1)
         #expect(apply.first?.contains(" --cached --whitespace=nowarn - cwd=") == true)
         #expect(!entries.contains { $0.contains("early") || $0.contains("@@") })

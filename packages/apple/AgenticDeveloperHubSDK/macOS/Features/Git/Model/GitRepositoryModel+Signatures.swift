@@ -9,7 +9,7 @@ extension GitRepositoryModel {
 
     /// Checks the signatures of `shas` — the rows the history draws — in one coalesced,
     /// debounced batch off the main thread; a newer call replaces a batch still waiting.
-    /// `.history` is posted when results land.
+    /// `.annotations` is posted when results land.
     public func requestSignatures(for shas: [String]) {
         signatureLoader.request(shas)
     }

@@ -18,8 +18,8 @@ extension PartnerCoordinator {
                 }
             }.value
             guard let self else { return }
-            self.showWindow()
-            PartnerWindowController.current?.splitViewController.select(sessionID: sessionID)
+            PartnerWindowController.present(controller: self.controller)
+                .splitViewController.select(sessionID: sessionID)
         }
     }
 }

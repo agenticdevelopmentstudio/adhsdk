@@ -24,6 +24,9 @@ private final class PullRequestPresenter: GitActionPresenting {
     var forms: [FormRequest] = []
     /// What the form answers; nil (the default) is Cancel.
     var formAnswer: GitPullRequestDraft?
+    /// Runs while the form is open, after the request is recorded: what the user does
+    /// elsewhere before pressing Create.
+    var whileFilling: (() async throws -> Void)?
 
     func confirm(_ request: GitConfirmation) async -> Bool { false }
     func askForText(_ request: GitTextRequest) async -> [String]? { nil }
@@ -33,16 +36,35 @@ private final class PullRequestPresenter: GitActionPresenting {
     func createPullRequest(head: String, defaultTitle: String, defaultBody: String,
                            bases: [String]) async -> GitPullRequestDraft? {
         forms.append(FormRequest(head: head, defaultTitle: defaultTitle, defaultBody: defaultBody, bases: bases))
+        try? await whileFilling?()
         return formAnswer
     }
+}
+
+/// How the stub's reads fail, from the moment it is set.
+private enum GitHubReadFailure: Sendable {
+    /// `repo view --json url` and `pr list` run past their budget.
+    case timeout
+    /// `repo view --json url` and `pr list` answer with gh's login prompt.
+    case notAuthenticated
+    /// Only the per-branch `pr list --head` runs past its budget.
+    case headLookupTimeout
 }
 
 /// Every `gh` argument list the stub runner was handed, in order.
 private actor GitHubCallRecorder {
     private(set) var calls: [[String]] = []
+    private var exists = false
+    private(set) var failure: GitHubReadFailure?
+    /// From `empty()` on, `pr list` lists nothing: every pull request was merged elsewhere.
+    private(set) var isEmptied = false
+    func empty() { isEmptied = true }
     func append(_ arguments: [String]) { calls.append(arguments) }
-    /// Whether `pr create` has run, so `pr list` lists what it made.
-    var created: Bool { calls.contains { $0.starts(with: ["pr", "create"]) } }
+    /// Whether `pr create` has run (or #8 is made to exist), so `pr list` lists it.
+    var created: Bool { exists || calls.contains { $0.starts(with: ["pr", "create"]) } }
+    /// #8 exists from now on, as if it had been created before the window opened.
+    func makeCreated() { exists = true }
+    func fail(_ failure: GitHubReadFailure?) { self.failure = failure }
 }
 
 /// The Pull Requests section's actions through the session (recipe
@@ -106,11 +128,24 @@ struct GitWindowSessionPullRequestTests {
             isExecutable: { $0 == "/opt/homebrew/bin/gh" })
         let runner: GitHubCLI.Runner = { _, arguments, directory, _, _ in
             await recorder.append(arguments)
+            let isRead = arguments == ["repo", "view", "--json", "url"] || arguments.starts(with: ["pr", "list"])
+            switch await recorder.failure {
+            case .timeout? where isRead:
+                throw WallClockBudgetExceeded(seconds: 30)
+            case .notAuthenticated? where isRead:
+                return SubprocessChannel.RunResult(
+                    standardOutput: Data(), standardError: "To get started with GitHub CLI, please run:  gh auth login",
+                    exitStatus: 4, duration: 0.01)
+            case .headLookupTimeout? where arguments.starts(with: ["pr", "list"]) && arguments.contains("--head"):
+                throw WallClockBudgetExceeded(seconds: 30)
+            default: break
+            }
             let output: String
             switch Array(arguments.prefix(2)) {
             case ["repo", "view"] where arguments.contains("defaultBranchRef"):
                 output = #"{"defaultBranchRef": {"name": "main"}}"#
             case ["repo", "view"]: output = #"{"url": "https://github.com/o/r"}"#
+            case ["pr", "list"] where await recorder.isEmptied: output = "[]"
             case ["pr", "list"]: output = await listReply(arguments, created: recorder.created)
             case ["pr", "checkout"]:
                 if case .timeout = checkout { throw WallClockBudgetExceeded(seconds: 30) }
@@ -211,7 +246,8 @@ struct GitWindowSessionPullRequestTests {
         #expect(!pushed.isEmpty)
         #expect(model.headBranch?.upstream == "origin/parser")
         let creates = await recorder.calls.filter { $0.starts(with: ["pr", "create"]) }
-        #expect(creates == [["pr", "create", "--title", "Parser", "--body", "Adds it", "--base", "main", "--draft"]])
+        #expect(creates == [["pr", "create", "--title", "Parser", "--body", "Adds it", "--base", "main",
+                             "--head", "parser", "--draft"]])
         #expect(presenter.failures.isEmpty)
     }
 
@@ -236,7 +272,32 @@ struct GitWindowSessionPullRequestTests {
         #expect(list.headPullRequest?.number == 8)
         #expect(session.selection == .pullRequest(8))
         #expect(session.pullRequestView.pullRequest?.number == 8)
+        // #8 is from `parser`, the checked-out branch, so there is nothing to check out.
+        #expect(!session.pullRequestView.checkoutButton.isEnabled)
         #expect(presenter.failures.isEmpty)
+    }
+
+    @Test("a selected pull request that leaves the list empties the detail")
+    func selectedPullRequestLeavingTheListEmptiesTheDetail() async throws {
+        let (remote, clone) = try await makeRemoteAndClone()
+        defer { remote.tearDown(); clone.tearDown() }
+        let recorder = GitHubCallRecorder()
+        let presenter = PullRequestPresenter()
+        let (_, session, list) = await makeSession(clone, gitHub: Self.gitHub(recorder: recorder),
+                                                   presenter: presenter)
+        defer { session.stop() }
+        let pullRequest = try #require(list.pullRequests?.first)
+        session.sidebar(session.sidebar, didRequestPullRequest: .show(pullRequest))
+        #expect(session.pullRequestView.pullRequest == pullRequest)
+        #expect(session.pullRequestView.checkoutButton.isEnabled)
+
+        await recorder.empty()
+        await list.reload()
+
+        #expect(list.pullRequests == [])
+        #expect(session.pullRequestView.pullRequest == nil)
+        #expect(!session.pullRequestView.checkoutButton.isEnabled)
+        #expect(!session.pullRequestView.openButton.isEnabled)
     }
 
     @Test("create on a branch ahead of its upstream pushes the new commits first")
@@ -305,5 +366,73 @@ struct GitWindowSessionPullRequestTests {
 
         #expect(presenter.failures == ["Pull request failed: gh did not answer in time."])
         #expect(list.pullRequests == before)
+    }
+
+    @Test("a branch switched while the form is open aborts Create: no push and no gh pr create")
+    func branchChangedDuringFormAborts() async throws {
+        let (remote, clone) = try await makeRemoteAndClone()
+        defer { remote.tearDown(); clone.tearDown() }
+        try await clone.run(["switch", "--quiet", "-c", "parser"])
+        try await commitFile(clone, "two.txt", at: 200)
+        let recorder = GitHubCallRecorder()
+        let presenter = PullRequestPresenter()
+        presenter.formAnswer = GitPullRequestDraft(title: "Parser", body: "", base: "main", draft: false)
+        presenter.whileFilling = { _ = try await clone.run(["switch", "--quiet", "-c", "other"]) }
+        let (model, session, _) = await makeSession(clone, gitHub: Self.gitHub(recorder: recorder),
+                                                    presenter: presenter)
+        defer { session.stop() }
+
+        await act(session, .create)
+
+        #expect(presenter.forms.map(\.head) == ["parser"])
+        #expect(presenter.failures == ["Pull request failed: \(GitWindowSession.branchChangedMessage)"])
+        #expect(!(await recorder.calls.contains { $0.starts(with: ["pr", "create"]) }))
+        let pushed = try? await remote.run(["rev-parse", "--verify", "--quiet", "refs/heads/other"])
+        #expect(pushed == nil)
+        #expect(model.headBranch?.name == "other")
+    }
+
+    /// A clone on `parser` whose open pull request #8 exists before the window opens.
+    private func makeSessionWithHeadPullRequest(_ recorder: GitHubCallRecorder) async throws
+        -> (GitTestRepository, GitTestRepository, GitWindowSession, GitPullRequestsModel) {
+        let (remote, clone) = try await makeRemoteAndClone()
+        try await clone.run(["switch", "--quiet", "-c", "parser"])
+        await recorder.makeCreated()
+        let (_, session, list) = await makeSession(clone, gitHub: Self.gitHub(recorder: recorder),
+                                                   presenter: PullRequestPresenter())
+        return (remote, clone, session, list)
+    }
+
+    @Test("a load that times out keeps the section and the head branch's pull request")
+    func timedOutLoadKeepsTheSection() async throws {
+        let recorder = GitHubCallRecorder()
+        let (remote, clone, session, list) = try await makeSessionWithHeadPullRequest(recorder)
+        defer { session.stop(); remote.tearDown(); clone.tearDown() }
+        #expect(list.pullRequests?.map(\.number) == [8, 7])
+        #expect(list.headPullRequest?.number == 8)
+
+        await recorder.fail(.timeout)
+        await list.reload()
+        #expect(list.pullRequests?.map(\.number) == [8, 7])
+        #expect(list.headPullRequest?.number == 8)
+
+        await recorder.fail(.headLookupTimeout)
+        await list.reload()
+        #expect(list.pullRequests?.map(\.number) == [8, 7])
+        #expect(list.headPullRequest?.number == 8)
+    }
+
+    @Test("a gh that is not logged in hides the section and the head branch's pull request")
+    func notAuthenticatedHidesTheSection() async throws {
+        let recorder = GitHubCallRecorder()
+        let (remote, clone, session, list) = try await makeSessionWithHeadPullRequest(recorder)
+        defer { session.stop(); remote.tearDown(); clone.tearDown() }
+        #expect(list.headPullRequest?.number == 8)
+
+        await recorder.fail(.notAuthenticated)
+        await list.reload()
+
+        #expect(list.pullRequests == nil)
+        #expect(list.headPullRequest == nil)
     }
 }

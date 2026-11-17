@@ -8,7 +8,9 @@ import Foundation
 ///
 /// `request(_:)` queues the shas that are neither cached nor already loading and starts a
 /// batch after `delay`. A new request replaces the queued one (ruling R6: what was visible
-/// a moment ago no longer matters); a batch already running finishes and is cached.
+/// a moment ago no longer matters); a batch already running finishes and is cached. One
+/// batch runs at a time: a batch due while another runs waits for it to land, then starts
+/// with whatever is queued by then, so stepped scrolling never runs several `git log`s.
 /// `request(_:replacingQueued: false)` is for a single commit asked for outside the list:
 /// it is kept apart from the list's queue, so no replacement drops it, and joins the next
 /// batch. A sha a successful batch did not answer is not asked for again. A batch that
@@ -53,6 +55,9 @@ public final class GitShaBatchLoader<Value: Sendable & Equatable> {
     private var stale: Set<String> = []
     /// Bumped by `invalidate()`; a batch started before it is dropped when it lands.
     private var generation = 0
+    /// Set when a batch fell due while another was running; the running one starts it as
+    /// it lands.
+    private var isWaitingForRunning = false
 
     public init(delay: Duration = .milliseconds(150), provider: @escaping Provider,
                 onLoad: @escaping @MainActor () -> Void, onFailure: (@MainActor (Error) -> Void)? = nil) {
@@ -80,6 +85,7 @@ public final class GitShaBatchLoader<Value: Sendable & Equatable> {
         running = []
         queued = []
         kept = []
+        isWaitingForRunning = false
         queueTask?.cancel()
         queueTask = nil
     }
@@ -113,6 +119,11 @@ public final class GitShaBatchLoader<Value: Sendable & Equatable> {
     }
 
     private func startQueued() {
+        guard running.isEmpty else {
+            isWaitingForRunning = true
+            return
+        }
+        isWaitingForRunning = false
         var seen = Set<String>()
         let batch = (kept + queued).filter { needsLoad($0) && seen.insert($0).inserted }
         queued = []
@@ -156,5 +167,6 @@ public final class GitShaBatchLoader<Value: Sendable & Equatable> {
             for sha in batch { failedAt[sha] = now }
             onFailure?(error)
         }
+        if isWaitingForRunning { startQueued() }
     }
 }

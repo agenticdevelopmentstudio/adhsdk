@@ -16,6 +16,7 @@ extension GitWindowSession.Selection {
 extension GitWindowSession {
 
     static let pullRequestFailureTitle = "Pull request failed"
+    static let branchChangedMessage = "The checked-out branch changed while the form was open."
 
     /// Turns the Pull Requests section on with `list`. Without it, `pullRequests` stays
     /// nil and the section is absent. The first load starts here only when the refs are
@@ -28,12 +29,14 @@ extension GitWindowSession {
         if list.canLoad { list.load(force: true) }
     }
 
-    /// The sidebar shows the new list, and the detail the selected pull request's new state.
+    /// The sidebar shows the new list, and the detail the selected pull request's new
+    /// state; a selected pull request the list no longer has (merged or closed elsewhere)
+    /// empties the detail, so it never offers Check Out on a stale "Open".
     private func pullRequestsDidChange() {
         sidebar.reload()
-        guard case .pullRequest(let number) = selection,
-              let pullRequest = model.pullRequests?.first(where: { $0.number == number }) else { return }
-        pullRequestView.show(pullRequest)
+        guard case .pullRequest(let number) = selection else { return }
+        pullRequestView.checkedOutBranch = model.headBranch?.name
+        pullRequestView.show(model.pullRequests?.first(where: { $0.number == number }))
     }
 
     /// Opening in the browser runs no git and no `gh`; checkout and create are actions.
@@ -95,13 +98,21 @@ extension GitWindowSession {
         guard let draft = await presenter.createPullRequest(
             head: head.name, defaultTitle: title, defaultBody: body, bases: bases) else { return }
 
-        if head.upstream == nil || head.ahead > 0 {
-            await push(head)
-            guard let pushed = model.headBranch, pushed.upstream != nil, pushed.ahead == 0 else { return }
+        // The form waits on the user, so the branch is read again: a pull request is only
+        // ever opened from the branch the form was filled from.
+        await model.refresh([.refs])
+        guard let fresh = model.headBranch, fresh.name == head.name else {
+            showFailure(title: Self.pullRequestFailureTitle, message: Self.branchChangedMessage)
+            return
+        }
+        if fresh.upstream == nil || fresh.ahead > 0 {
+            await push(fresh)
+            guard let pushed = model.headBranch, pushed.name == head.name,
+                  pushed.upstream != nil, pushed.ahead == 0 else { return }
         }
         let url: URL
         do {
-            url = try await whileGitRuns { try await list.create(draft) }
+            url = try await whileGitRuns { try await list.create(draft, head: head.name) }
         } catch {
             showPullRequestFailure(error)
             return

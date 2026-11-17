@@ -73,10 +73,15 @@ extension GitAlertPresenter {
         let draftBox = NSButton(checkboxWithTitle: "Draft", target: nil, action: nil)
         draftBox.setAccessibilityIdentifier("git.pullRequest.form.draft")
 
+        let captions = ["Title", "Body", "Base"].map { title in
+            let caption = NSTextField(labelWithString: title)
+            caption.setAccessibilityIdentifier("git.pullRequest.form.caption.\(title.lowercased())")
+            return caption
+        }
         let grid = NSGridView(views: [
-            [NSTextField(labelWithString: "Title"), titleField],
-            [NSTextField(labelWithString: "Body"), bodyScroll],
-            [NSTextField(labelWithString: "Base"), basePopUp],
+            [captions[0], titleField],
+            [captions[1], bodyScroll],
+            [captions[2], basePopUp],
             [NSGridCell.emptyContentView, draftBox]
         ])
         grid.setAccessibilityIdentifier("git.pullRequest.form.fields")

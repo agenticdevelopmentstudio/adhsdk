@@ -2,14 +2,14 @@ import AppKit
 import AgenticDeveloperHubSDKCore
 
 /// The Undo button (recipe `workspace/git/git-window`, "Undo"): always in the toolbar,
-/// enabled only while the session's model has an `undoTarget`, and titled after the newest
-/// reflog entry in its tooltip. It follows the model, so it is current after every refresh.
+/// enabled only while the session's model has an `undoTarget`, and titled after the reflog
+/// step it takes back (`undoneEntry`) in its tooltip. It follows the model, so it is current after every refresh.
 extension GitWindowToolbar {
 
     static let undoIdentifier = "git.toolbar.undo"
 
-    /// "Undo <action>: <message>" for the ref's newest entry, "Undo <action>" when its
-    /// message is empty, and "Undo" when there is none.
+    /// "Undo <action>: <message>" for the step Undo takes back, "Undo <action>" when its
+    /// message is empty, and "Undo" when there is none (the reflog lags the ref).
     static func undoToolTip(for entry: GitReflogEntry?) -> String {
         guard let entry else { return "Undo" }
         return entry.message.isEmpty ? "Undo \(entry.action)" : "Undo \(entry.action): \(entry.message)"
@@ -25,11 +25,11 @@ extension GitWindowToolbar {
     }
 
     /// Enables Undo when the session's model has an `undoTarget` and sets its tooltip from
-    /// the newest reflog entry; without a session it is disabled.
+    /// the step it takes back; without a session it is disabled.
     func updateUndo() {
         let model = session?.model
         let enabled = model?.undoTarget != nil
-        let toolTip = Self.undoToolTip(for: model?.lastReflogEntry)
+        let toolTip = Self.undoToolTip(for: model?.undoneEntry)
         undoItem?.isEnabled = enabled
         undoItem?.toolTip = toolTip
         undoButton?.isEnabled = enabled
@@ -38,7 +38,9 @@ extension GitWindowToolbar {
 
     /// Keeps Undo current with the session's model from now on, and sets it at once.
     func followUndo() {
-        undoObservation = session?.model.observe { [weak self] _ in
+        undoObservation = session?.model.observe { [weak self] changes in
+            // Signatures and reviews landing say nothing about the reflog.
+            guard changes != [.annotations] else { return }
             self?.updateUndo()
         }
         updateUndo()

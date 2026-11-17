@@ -73,24 +73,31 @@ enum GitPullRequestPresentation {
 /// One pull request in the Git window's centre pane (recipe `workspace/git/git-views`,
 /// "Pull requests"): its title, number, state, author, `head → base`, review decision,
 /// check counts and updated date, with Open in Browser and Check Out. The body is not
-/// fetched; it opens in the browser. Used on the main thread.
+/// fetched; it opens in the browser. Check Out is off for the checked-out branch's own
+/// pull request, and both buttons are off with nothing shown. Used on the main thread.
 @MainActor
 public final class GitPullRequestViewController: NSViewController {
 
     /// Called with the button the user pressed.
     var onIntent: ((GitPullRequestIntent) -> Void)?
 
-    /// The pull request shown; nil before the first `show(_:)`.
+    /// The pull request shown; nil before the first `show(_:)`, and after `show(nil)`.
     public private(set) var pullRequest: GitPullRequest?
 
-    let titleLabel = NSTextField(wrappingLabelWithString: "")
-    let numberLabel = NSTextField(labelWithString: "")
-    let stateLabel = NSTextField(labelWithString: "")
-    let authorLabel = NSTextField(labelWithString: "")
-    let branchesLabel = NSTextField(labelWithString: "")
-    let reviewLabel = NSTextField(labelWithString: "")
-    let checksLabel = NSTextField(labelWithString: "")
-    let updatedLabel = NSTextField(labelWithString: "")
+    /// The branch HEAD is on, set by the session; a pull request from it is already
+    /// checked out, so Check Out is off for it.
+    public var checkedOutBranch: String? {
+        didSet { if checkedOutBranch != oldValue { apply() } }
+    }
+
+    let titleLabel = ThemedLabel.wrapping("", width: 480, role: .primaryText, textRole: .heading, weight: .bold)
+    let numberLabel = ThemedLabel(role: .primaryText, textRole: .body)
+    let stateLabel = ThemedLabel(role: .primaryText, textRole: .body)
+    let authorLabel = ThemedLabel(role: .primaryText, textRole: .body)
+    let branchesLabel = ThemedLabel(role: .primaryText, textRole: .body)
+    let reviewLabel = ThemedLabel(role: .primaryText, textRole: .body)
+    let checksLabel = ThemedLabel(role: .primaryText, textRole: .body)
+    let updatedLabel = ThemedLabel(role: .primaryText, textRole: .body)
     let openButton = NSButton(title: "Open in Browser", target: nil, action: nil)
     let checkoutButton = NSButton(title: "Check Out", target: nil, action: nil)
 
@@ -113,9 +120,9 @@ public final class GitPullRequestViewController: NSViewController {
         let root = NSView()
         root.accessibilityID("git.pullRequest")
 
-        titleLabel.font = .boldSystemFont(ofSize: NSFont.systemFontSize + 4)
+        titleLabel.isSelectable = true
         titleLabel.accessibilityID("git.pullRequest.title")
-        let fields: [(String, NSTextField, String)] = [
+        let fields: [(String, ThemedLabel, String)] = [
             ("Number", numberLabel, "number"), ("State", stateLabel, "state"),
             ("Author", authorLabel, "author"), ("Branches", branchesLabel, "branches"),
             ("Review", reviewLabel, "review"), ("Checks", checksLabel, "checks"),
@@ -125,9 +132,9 @@ public final class GitPullRequestViewController: NSViewController {
             label.isSelectable = true
             label.accessibilityID("git.pullRequest.\(name)")
         }
-        let grid = NSGridView(views: fields.map { title, label, _ in
-            let caption = NSTextField(labelWithString: title)
-            caption.textColor = .secondaryLabelColor
+        let grid = NSGridView(views: fields.map { title, label, name in
+            let caption = ThemedLabel(string: title, role: .secondaryText, textRole: .body)
+            caption.accessibilityID("git.pullRequest.caption.\(name)")
             return [caption, label]
         })
         grid.accessibilityID("git.pullRequest.fields")
@@ -165,14 +172,20 @@ public final class GitPullRequestViewController: NSViewController {
         apply()
     }
 
-    /// Shows `pullRequest`'s fields.
-    public func show(_ pullRequest: GitPullRequest) {
+    /// Shows `pullRequest`'s fields; nil empties them and turns both buttons off, for a
+    /// selected pull request the list no longer has.
+    public func show(_ pullRequest: GitPullRequest?) {
         self.pullRequest = pullRequest
         apply()
     }
 
     private func apply() {
+        guard isViewLoaded else { return }
         guard let pullRequest else {
+            for label in [titleLabel, numberLabel, stateLabel, authorLabel, branchesLabel, reviewLabel,
+                          checksLabel, updatedLabel] {
+                label.stringValue = ""
+            }
             openButton.isEnabled = false
             checkoutButton.isEnabled = false
             return
@@ -186,7 +199,7 @@ public final class GitPullRequestViewController: NSViewController {
         checksLabel.stringValue = GitPullRequestPresentation.checksText(pullRequest.checks)
         updatedLabel.stringValue = Self.dateFormatter.string(from: pullRequest.updatedAt)
         openButton.isEnabled = true
-        checkoutButton.isEnabled = true
+        checkoutButton.isEnabled = pullRequest.headRefName != checkedOutBranch
     }
 
     @objc private func openPressed(_ sender: NSButton) {

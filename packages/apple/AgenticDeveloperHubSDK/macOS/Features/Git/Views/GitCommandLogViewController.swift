@@ -164,12 +164,29 @@ public final class GitCommandLogViewController: NSViewController {
         let following = isAtBottom
         shown.append(entry)
         if shown.count > book.capacity {
-            shown.removeFirst(shown.count - book.capacity)
-            tableView.reloadData()
+            dropOldest(shown.count - book.capacity, keepingScroll: !following)
         } else {
             tableView.insertRows(at: IndexSet(integer: shown.count - 1), withAnimation: [])
         }
         if following { scrollToBottom() }
+    }
+
+    /// At the cap, the oldest `count` rows go and the new one comes in as one update,
+    /// never a full reload. A reader scrolled up keeps the rows in view: the clip moves
+    /// up by the rows removed above it.
+    private func dropOldest(_ count: Int, keepingScroll: Bool) {
+        shown.removeFirst(count)
+        let clip = scrollView.contentView
+        let origin = clip.bounds.origin
+        tableView.beginUpdates()
+        tableView.removeRows(at: IndexSet(integersIn: 0..<count), withAnimation: [])
+        tableView.insertRows(at: IndexSet(integer: shown.count - 1), withAnimation: [])
+        tableView.endUpdates()
+        guard keepingScroll else { return }
+        let shift = CGFloat(count) * (tableView.rowHeight + tableView.intercellSpacing.height)
+        let top = -clip.contentInsets.top
+        clip.scroll(to: NSPoint(x: origin.x, y: max(origin.y - shift, top)))
+        scrollView.reflectScrolledClipView(clip)
     }
 
     /// True when the last row is in view, or there is nothing to scroll.

@@ -254,6 +254,28 @@ struct GitHubCLITests {
         #expect(calls.allSatisfy { $0.budget == .seconds(60) })
     }
 
+    @Test func createPassesTheHeadBranch() async throws {
+        let recorder = Recorder()
+        let subject = Self.client(.output("https://github.com/o/r/pull/43\n"), recorder: recorder)
+        _ = try await subject.create(title: "Fix it", body: "", base: "main", head: "parser", draft: true,
+                                     in: Self.directory)
+        let call = try #require(await recorder.calls.first)
+        #expect(call.arguments == [
+            "pr", "create", "--title", "Fix it", "--body", "", "--base", "main", "--head", "parser", "--draft"
+        ])
+    }
+
+    @Test(arguments: ["", "-R", "--web"])
+    func createRefusesAHeadThatIsNotABranchName(_ head: String) async throws {
+        let recorder = Recorder()
+        let subject = Self.client(.output("https://github.com/o/r/pull/43\n"), recorder: recorder)
+        await #expect(throws: GitHubCLIError.failed("not a branch name: \(head)")) {
+            try await subject.create(title: "Fix it", body: "", base: nil, head: head, draft: false,
+                                     in: Self.directory)
+        }
+        #expect(await recorder.calls.isEmpty)
+    }
+
     // MARK: - Decoding
 
     @Test func decodesARecordedTwoPullRequestList() async throws {
@@ -309,6 +331,15 @@ struct GitHubCLITests {
         ].joined(separator: ",") + "]").utf8)
         let requests = (try? JSONDecoder().decode(rows, from: data)) ?? []
         #expect(GitHubCLI.preferred(requests)?.number == 6)
+    }
+
+    @Test func staleCheckRunIsPending() throws {
+        let rollup = """
+        [{"__typename": "CheckRun", "status": "COMPLETED", "conclusion": "STALE"},
+         {"__typename": "CheckRun", "status": "COMPLETED", "conclusion": "SKIPPED"}]
+        """
+        let checks = try JSONDecoder().decode([GitHubStatusCheck].self, from: Data(rollup.utf8))
+        #expect(GitPullRequestChecks.rollUp(checks) == GitPullRequestChecks(passing: 1, failing: 0, pending: 1))
     }
 
     @Test func pullRequestForBranchDecodesOne() async throws {

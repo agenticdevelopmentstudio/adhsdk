@@ -20,10 +20,13 @@ private final class StubPresenter: GitActionPresenting {
     var textAnswers: [[String]?] = []
     /// Called as each confirmation or text request arrives, before it is answered.
     var onAsk: (() -> Void)?
+    /// Awaited while a confirmation is up, before it is answered: what happens meanwhile.
+    var whileConfirming: (() async -> Void)?
 
     func confirm(_ request: GitConfirmation) async -> Bool {
         onAsk?()
         confirmations.append(request)
+        await whileConfirming?()
         return confirmAnswers.isEmpty ? false : confirmAnswers.removeFirst()
     }
 
@@ -1106,6 +1109,51 @@ struct GitWindowSessionActionTests {
         #expect(try String(contentsOf: repository.url("a.txt"), encoding: .utf8) == "a, edited\n")
     }
 
+    @Test("undo with a partly staged file is a soft reset: the staged version survives, and the dialog says so")
+    func undoPartlyStaged() async throws {
+        let (repository, beforeAmend) = try await makeAmendedRepository()
+        defer { repository.tearDown() }
+        try repository.write("a, staged\n", to: "a.txt")
+        try await repository.run(["add", "--", "a.txt"])
+        try repository.write("a, staged\nand not staged\n", to: "a.txt")
+        let presenter = StubPresenter()
+        presenter.confirmAnswers = [true]
+        let (model, session) = await makeSession(repository, presenter: presenter)
+
+        await act(session, .undo)
+
+        #expect(presenter.confirmations == [GitConfirmation(
+            title: "Undo \"c.txt amended\"?",
+            message: "HEAD moves back to \(String(beforeAmend.prefix(8))); "
+                + "the undone changes are staged with what is already staged.",
+            actionTitle: "Undo", isDestructive: false)])
+        #expect(presenter.failures.isEmpty)
+        #expect(try await repository.sha("HEAD") == beforeAmend)
+        #expect(try await repository.run(["show", ":a.txt"]) == "a, staged\n")
+        #expect(try await repository.run(["show", ":c.txt"]) == "c, amended\n")
+        #expect(try String(contentsOf: repository.url("a.txt"), encoding: .utf8) == "a, staged\nand not staged\n")
+        #expect(Set(model.staged.map(\.path)) == ["a.txt", "c.txt"])
+        #expect(model.unstaged.map(\.path) == ["a.txt"])
+    }
+
+    @Test("a commit landing while the Undo dialog is up makes Undo refresh instead of resetting past it")
+    func undoRereadsAfterConfirming() async throws {
+        let (repository, _) = try await makeAmendedRepository()
+        defer { repository.tearDown() }
+        try repository.write("a, edited\n", to: "a.txt")
+        let presenter = StubPresenter()
+        presenter.confirmAnswers = [true]
+        let (model, session) = await makeSession(repository, presenter: presenter)
+        presenter.whileConfirming = { try? await self.commitFile(repository, "d.txt", "d\n", at: 500) }
+
+        await act(session, .undo)
+
+        let newTip = try await repository.sha("HEAD")
+        #expect(presenter.confirmations.count == 1)
+        #expect(try await repository.run(["log", "-1", "--format=%s"]) == "d.txt 500\n")
+        #expect(model.undoState.tip == newTip)
+    }
+
     @Test("mid-rebase there is no undo target, and Undo does nothing")
     func undoMidRebase() async throws {
         let repository = try await GitTestRepository.make(prefix: "git-actions-undo-rebase")
@@ -1152,7 +1200,13 @@ struct GitWindowSessionActionTests {
         let (repository, beforeAmend) = try await makeAmendedRepository()
         defer { repository.tearDown() }
         let tip = try await repository.sha("HEAD")
-        try await repository.run(["reset", "-q", "HEAD"])
+        // Git 2.54 never logs a ref update that leaves the branch where it was (`reset HEAD`
+        // writes only HEAD's reflog), but older gits and other tools do: append that entry.
+        let log = try FileHandle(forWritingTo: repository.url(".git/logs/refs/heads/main"))
+        try log.seekToEnd()
+        let line = "\(tip) \(tip) Test <test@example.com> \(Self.epoch + 450) +0000\treset: moving to HEAD\n"
+        try log.write(contentsOf: Data(line.utf8))
+        try log.close()
         let presenter = StubPresenter()
         let (model, session) = await makeSession(repository, presenter: presenter)
         #expect(model.lastReflogEntry?.sha == tip)

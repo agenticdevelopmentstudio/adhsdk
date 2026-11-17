@@ -169,13 +169,22 @@ public actor GitHubCLI {
                           budget: Self.writeBudget, caller: caller)
     }
 
-    /// `gh pr create --title … --body … [--base …] [--draft]`, returning the URL `gh`
-    /// prints for the new pull request. `base` nil (or empty) leaves the base to `gh`,
-    /// which uses the repository's default branch.
-    public func create(title: String, body: String, base: String?, draft: Bool, in directory: URL,
-                       caller: GitCaller = GitCaller()) async throws -> URL {
+    /// `gh pr create --title … --body … [--base …] [--head …] [--draft]`, returning the URL
+    /// `gh` prints for the new pull request. `base` nil (or empty) leaves the base to `gh`,
+    /// which uses the repository's default branch. `head` names the branch the pull request
+    /// is from, so it never follows whatever is checked out when `gh` runs; nil leaves it to
+    /// `gh` (the current branch). An empty head, or one starting with `-`, is `.failed` and
+    /// nothing runs.
+    public func create(title: String, body: String, base: String?, head: String? = nil, draft: Bool,
+                       in directory: URL, caller: GitCaller = GitCaller()) async throws -> URL {
         var arguments = ["pr", "create", "--title", title, "--body", body]
         if let base, !base.isEmpty { arguments += ["--base", base] }
+        if let head {
+            guard !head.isEmpty, !head.hasPrefix("-") else {
+                throw GitHubCLIError.failed("not a branch name: \(head)")
+            }
+            arguments += ["--head", head]
+        }
         if draft { arguments.append("--draft") }
         let output = try await run(arguments, in: directory, budget: Self.writeBudget, caller: caller)
         guard let url = Self.lastURL(in: output) else {

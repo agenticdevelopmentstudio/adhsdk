@@ -190,14 +190,20 @@ final class GitWindowSession {
         agentSessionCache?.refreshIfStale()
     }
 
-    /// Stops watching the repository and drops a search and an action in flight; the
-    /// window closed. A cancelled action's git gets SIGTERM, which git answers by
-    /// removing its lock files, no step after it runs, and nothing is shown.
+    /// Stops watching the repository and drops a search, an action, a reflog or commit read
+    /// and an agent-session read in flight; the window closed. A cancelled action's git gets
+    /// SIGTERM, which git answers by removing its lock files, no step after it runs, and
+    /// nothing is shown.
     func stop() {
         searchTask?.cancel()
         actionTask?.cancel()
         mergeOpenTask?.cancel()
         reviewChangesTask?.cancel()
+        reflogLoadTask?.cancel()
+        // A commit load checks its generation, not cancellation: bumping it drops the answer.
+        loadGeneration += 1
+        commitLoadTask?.cancel()
+        agentSessionCache?.stop()
         commandLog.stop()
         model.pullRequestList?.stop()
         model.stop()
@@ -245,11 +251,21 @@ final class GitWindowSession {
     /// so the history already holds a commit the refs moved to. The bottom pane reads
     /// again when what it shows can have changed: a working-copy diff or a blame of the
     /// working file on a working-copy change, a file's history on a history change.
+    /// `.annotations` (a batch of signatures or reviews) only redraws the history rows on
+    /// screen and the detail's signature and review: no reload, no reflog or file-history read.
     func modelDidChange(_ changes: Set<GitRepositoryChange>) {
+        if changes.contains(.annotations) {
+            if !changes.contains(.history) { history.reloadAnnotations() }
+            detail.reloadSignature()
+            detail.reloadReview()
+        }
+        let changes = changes.subtracting([.annotations])
+        guard !changes.isEmpty else { return }
         let workingCopyChanged = !changes.isDisjoint(with: [.workingCopy, .operation])
         banner.state = model.operationState
         if changes.contains(.refs) {
             sidebar.reload()
+            pullRequestView.checkedOutBranch = model.headBranch?.name
             onRefsChange?()
         }
         if changes.contains(.history) {
@@ -464,6 +480,7 @@ extension GitWindowSession: GitRefsSidebarDelegate {
         appliedRefTarget = nil
         detailHost.clearError()
         detail.show(commit: nil)
+        pullRequestView.checkedOutBranch = model.headBranch?.name
         pullRequestView.show(pullRequest)
         centre.show(pullRequestView)
         clearDiff()

@@ -20,6 +20,8 @@
 | github-cli-017 | logged-as-gh | a failed `repo view`, status 4 | the entry keeps the standard error (test: failedEntryKeepsStandardError). |
 | github-cli-018 | text-redacted | `create(title: "Secret title", body: "token abc", base: "main", draft: true)` | logged as `pr create --title <redacted:12> --body <redacted:9> --base main --draft` (test: createTitleAndBodyAreRedactedInTheLog). |
 | github-cli-019 | text-redacted | gh `pr view -m`; git `commit --title x` | both unchanged (test: ghRedactionLeavesGitRulesAlone). |
+| github-cli-020 | create-command | `create` with base `main`, head `parser` and draft | `pr create --title … --body … --base main --head parser --draft` (test: createPassesTheHeadBranch). |
+| github-cli-021 | create-command, input-sanitization | `create` with head `` and with head `-x` | `failed("not a branch name: <head>")`; nothing runs (test: createRefusesAHeadThatIsNotABranchName). |
 | github-cli-020 | view-command | `pullRequest(forBranch: \"4521\")` | `pr list --head 4521 --state all --limit 20 --json …`, never `pr view 4521` (test: numericBranchNameIsLookedUpAsAHead). |
 | github-cli-021 | error-mapping | stderr `no git remotes found`; stderr `No default remote repository has been set. …` | `notGitHub` (tests: noRemotesIsNotGitHub, noDefaultRemoteIsNotGitHub). |
 | github-cli-022 | view-command | branch `main`: a stranger's newest open fork PR #90, this repository's merged #80 and older open #70 | #70: the fork row dropped, open preferred over newer (test: forkPullRequestWithTheSameBranchNameIsSkipped). |

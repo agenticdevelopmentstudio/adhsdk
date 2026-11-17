@@ -2,7 +2,7 @@
 id: 779ac6ea-9ef5-4fb0-8ed9-dc6b9d617344
 title: "Git Client"
 type: ingredient
-version: 2.1.0
+version: 2.2.2
 status: review
 language: en
 created: 2026-09-24
@@ -592,7 +592,10 @@ picker) is a consumer of this contract, not part of it.
   other side is missing (no lines); the old side is its context and removed
   lines, the new side its context and added lines. The summary reads `LFS
   object <short oid> · <size>`, sizes in `ByteCountFormatter`'s file style,
-  with `<old> → <new>` when both sides exist.
+  with `<old> → <new>` when both sides exist. A side may lack the
+  `version` line, which a diff's context leaves out when it did not
+  change, so long as every line it has is a pointer's own (`oid`, `size`
+  or `ext-…`); ordinary text never reads as a pointer.
 - **lfs-actions**: The LFS fetch and LFS pull actions MUST run `lfs fetch`
   and `lfs pull`, with no operands, as long-running writes.
 
@@ -698,7 +701,10 @@ picker) is a consumer of this contract, not part of it.
   when its exit status is present and non-zero, passed through the URL
   user-info rule first and then cut to its first 2048 UTF-8 bytes on a
   character boundary, so a credential the cut would split is already gone;
-  standard output is never kept anywhere.
+  standard output is never kept anywhere. An exit status the verb accepts
+  (exit 1 of `symbolic-ref -q` on a detached HEAD, of `diff --exit-code`
+  with differences) is still the status recorded, so its entry keeps its
+  standard error and the Command Log shows it as failed.
 - **command-log-ring**: Besides OSLog, every recorded call MUST be appended
   to one shared in-memory ring, `GitCommandLog.book`, holding the newest
   500 entries, oldest first. An entry carries an increasing id, its date,
@@ -729,8 +735,8 @@ picker) is a consumer of this contract, not part of it.
   used only to decide whether to *keep* the argument found at that
   position, never to relocate the position itself. After the positional
   rule, for every verb, any URL's user information (the part of its
-  authority before the last `@`, the authority ending at `/`, whitespace or
-  a quote) MUST be replaced with `***`, so
+  authority before the last `@`, the authority ending at `/`, `?`, `#`,
+  whitespace or a quote) MUST be replaced with `***`, so
   `https://user:token@host/r.git` is logged as `https://***@host/r.git`.
 - **config-entry-key-validator**: The config-entry key validator MUST
   return true only for a non-empty string that contains at least one `.`,
@@ -980,11 +986,15 @@ input it cannot read rather than failing.
   reflog, so a branch's Undo never reads HEAD's reflog. Its `target` MUST be
   the first entry whose sha differs from the tip (skipping a step that left
   the tip in place, such as `reset: moving to HEAD`), nil with no tip or no
-  such entry; `last` is the newest entry.
+  such entry; `last` is the newest entry. `undoneEntry` MUST be the step
+  Undo takes back, the entry just before `target`; nil with no target, or
+  when the newest entry is already not the tip (the reflog lags the ref).
 - **undo-preflight**: `undoPreflight(in:caller:)` MUST return the undo state,
   the operation in progress and whether any file is staged or unstaged
-  (untracked included); its `target` is nil while an operation is in
-  progress.
+  (untracked included), and whether anything is staged
+  (`hasStagedChanges`); `isDirty` is true when anything is staged too.
+  `resetMode` MUST be `.soft` when anything is staged and `.mixed`
+  otherwise. Its `target` is nil while an operation is in progress.
 
 ### Signatures
 
@@ -1541,3 +1551,4 @@ one.
 | 2.1.0 | 2026-11-16 | Mike Fullerton | Command log: the in-memory ring (500 entries, updates, tool), standard error kept only on failure and never in OSLog, URL user-info redaction. |
 | 2.2.0 | 2026-11-16 | Mike Fullerton | Signatures: one `log --no-walk=unsorted` call for a list of shas (15 s budget), the eight `%G?` statuses, the parser and the summary; non-hex shas refused before git runs. |
 | 2.2.1 | 2026-11-16 | Mike Fullerton | Signatures fix round 1: `--ignore-missing` and a closing `--`, so a sha the repository lacks is absent instead of failing the batch. |
+| 2.2.2 | 2026-11-16 | Mike Fullerton | Phase 4 final review: LFS pointers without a version line in a diff side; an accepted non-zero exit is recorded as failed; `?` and `#` end a URL authority; `undoneEntry`; `hasStagedChanges` and `resetMode` in the undo preflight. |

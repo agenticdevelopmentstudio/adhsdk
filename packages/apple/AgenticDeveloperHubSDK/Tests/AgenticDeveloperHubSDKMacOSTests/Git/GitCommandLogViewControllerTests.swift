@@ -121,6 +121,31 @@ struct GitCommandLogViewControllerTests {
         controller.stop()
     }
 
+    @Test("at the cap a reader scrolled up keeps the same rows in view as the oldest go")
+    func capKeepsTheScrollAnchor() async {
+        let book = GitCommandLogBook(capacity: 30)
+        for index in 0..<30 { record(book, ["status", "\(index)"]) }
+        let controller = makeController(book)
+        let table = controller.tableView
+        table.scrollRowToVisible(0)
+        table.scrollRowToVisible(12)
+        controller.view.layoutSubtreeIfNeeded()
+        #expect(!controller.isAtBottom)
+        let anchor = table.rows(in: table.visibleRect)
+        let before = controller.shown[anchor.location + anchor.length / 2].id
+
+        record(book, ["status", "30"])
+        await waitUntil(controller) { controller.shown.last?.arguments == ["status", "30"] }
+        controller.view.layoutSubtreeIfNeeded()
+
+        #expect(controller.shown.count == 30)
+        #expect(table.numberOfRows == 30)
+        #expect(controller.shown.first?.arguments == ["status", "1"])
+        let after = table.rows(in: table.visibleRect)
+        #expect(controller.shown[after.location + after.length / 2].id == before)
+        controller.stop()
+    }
+
     @Test("Copy Command puts the row's command line on the pasteboard")
     func copiesTheCommand() throws {
         let book = GitCommandLogBook(capacity: 10)

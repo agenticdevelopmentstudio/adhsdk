@@ -335,36 +335,62 @@ extension GitWindowSession {
         }
     }
 
-    /// Always a mixed reset to HEAD@{1}, which loses nothing the reflog cannot restore, so
-    /// it runs at once on a clean tree and confirms only on a dirty one (ruling R5).
-    /// Nothing happens without an `undoTarget`.
-    /// Undo re-reads the ref, its tip, its target and the tree from git before acting: when
-    /// any of them differs from what the window showed, it refreshes instead of resetting.
+    /// A reset to the undo target that loses nothing (ruling R5): soft while anything is
+    /// staged, so the index is kept and the undone changes join it, mixed otherwise, so they
+    /// are left unstaged. It runs at once on a clean tree and confirms on a dirty one, saying
+    /// which of the two it does. Nothing happens without an `undoTarget`.
+    /// Undo re-reads the ref, its tip, its target and the tree from git before acting, and
+    /// again after a confirmation: when any of them differs from what the window showed (or
+    /// from what was confirmed), it refreshes instead of resetting.
     private func undoLastAction() async {
         let shown = model.undoState
         guard let shownTarget = model.undoTarget else { return }
+        guard let fresh = await undoPreflight(matching: shown, target: shownTarget.sha) else { return }
+        if fresh.isDirty {
+            guard let presenter, let target = fresh.target else { return }
+            guard await presenter.confirm(Self.undoConfirmation(fresh, target: target)) else { return }
+            guard let confirmed = await undoPreflight(matching: shown, target: shownTarget.sha) else { return }
+            guard confirmed == fresh else {
+                await model.refresh([.refs, .workingCopy, .operation])
+                return
+            }
+        }
+        guard let target = fresh.target else { return }
+        await execute(.reset(commit: target.sha, mode: fresh.resetMode))
+    }
+
+    /// A fresh `undoPreflight`, when its ref, tip and target are still the ones `shown` had;
+    /// nil after showing a failure, or after refreshing because they moved.
+    private func undoPreflight(matching shown: GitUndoState, target: String) async -> GitUndoPreflight? {
         let fresh: GitUndoPreflight
         do {
             fresh = try await model.undoPreflight()
         } catch {
             showFailure(title: "Undo failed", error: error)
-            return
+            return nil
         }
-        guard let target = fresh.target, let last = fresh.state.last,
-              fresh.state.ref == shown.ref, fresh.state.tip == shown.tip,
-              target.sha == shownTarget.sha else {
+        guard fresh.target?.sha == target, fresh.state.ref == shown.ref, fresh.state.tip == shown.tip else {
             await model.refresh([.refs, .workingCopy, .operation])
-            return
+            return nil
         }
-        if fresh.isDirty {
-            guard let presenter else { return }
-            let confirmation = GitConfirmation(
-                title: last.message.isEmpty ? "Undo \(last.action)?" : "Undo \"\(last.message)\"?",
-                message: "HEAD moves back to \(target.shortSha); changes stay in the working copy.",
-                actionTitle: "Undo", isDestructive: false)
-            guard await presenter.confirm(confirmation) else { return }
+        return fresh
+    }
+
+    /// Titled after the step Undo takes back, and true about what the reset does to the
+    /// index: a soft reset adds the undone changes to what is staged; a mixed one (nothing
+    /// staged) leaves them unstaged.
+    static func undoConfirmation(_ preflight: GitUndoPreflight, target: GitReflogEntry) -> GitConfirmation {
+        let title: String
+        if let undone = preflight.state.undoneEntry {
+            title = undone.message.isEmpty ? "Undo \(undone.action)?" : "Undo \"\(undone.message)\"?"
+        } else {
+            let ref = preflight.state.ref
+            title = "Undo the last change to \(ref.hasPrefix("refs/heads/") ? String(ref.dropFirst(11)) : ref)?"
         }
-        await execute(.reset(commit: target.sha, mode: .mixed))
+        let message = preflight.resetMode == .soft
+            ? "HEAD moves back to \(target.shortSha); the undone changes are staged with what is already staged."
+            : "HEAD moves back to \(target.shortSha); changes stay in the working copy."
+        return GitConfirmation(title: title, message: message, actionTitle: "Undo", isDestructive: false)
     }
 
     private func createTag(at commit: GitCommit) async {

@@ -54,10 +54,12 @@ struct GitReflogViewControllerTests {
         target.perform(action, with: item)
     }
 
-    @Test("the columns are Selector, Action, Message, Commit and Date, with their ids")
+    @Test("the columns are Selector, Action, Message, Commit and Commit Date, with their ids")
     func columns() {
         let (reflog, _) = makeReflog()
-        #expect(reflog.tableView.tableColumns.map(\.title) == ["Selector", "Action", "Message", "Commit", "Date"])
+        #expect(reflog.tableView.tableColumns.map(\.title) == [
+            "Selector", "Action", "Message", "Commit", "Commit Date"
+        ])
         #expect(reflog.tableView.tableColumns.map(\.identifier.rawValue) == [
             "git.reflog.selector", "git.reflog.action", "git.reflog.message", "git.reflog.commit", "git.reflog.date"
         ])
@@ -137,5 +139,17 @@ struct GitReflogViewControllerTests {
         #expect(selected.selector == "HEAD@{2}")
         #expect(selected.sha == Self.entries[1].sha)
         #expect(delegate.selections.count == 1)
+    }
+
+    @Test("a selected entry that is gone from the next list is deselected and reported as nil")
+    func vanishedSelectionIsReported() {
+        let (reflog, delegate) = makeReflog()
+        reflog.select(row: 2)
+        reflog.show(Array(Self.entries.prefix(2)))
+        #expect(reflog.selectedEntry == nil)
+        #expect(delegate.selections == [Self.entries[2], nil])
+        // Nothing was selected, so the next list reports nothing.
+        reflog.show(Self.entries)
+        #expect(delegate.selections.count == 2)
     }
 }

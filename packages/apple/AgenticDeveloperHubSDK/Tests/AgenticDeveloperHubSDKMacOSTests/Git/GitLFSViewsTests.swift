@@ -135,4 +135,11 @@ struct GitLFSViewsTests {
         #expect(GitRepositoryWatcher.classify(relativePath: "assets/.gitattributes") == [.workingCopy, .refs])
         #expect(GitRepositoryWatcher.classify(relativePath: "README.md") == [.workingCopy])
     }
+
+    @Test("the repository's info/attributes reloads the refs too; the rest of info does not")
+    func infoAttributesReloadsRefs() {
+        #expect(GitRepositoryWatcher.classify(relativePath: ".git/info/attributes") == [.refs])
+        #expect(GitRepositoryWatcher.classify(relativePath: ".git/info/exclude") == [])
+        #expect(GitRepositoryWatcher.classify(relativePath: ".git/info/attributes.lock") == [])
+    }
 }

@@ -19,7 +19,8 @@ public struct GitPullRequestChecks: Sendable, Hashable {
     ///
     /// The array mixes two GraphQL types. A `CheckRun` (GitHub Actions and other
     /// check apps) is pending until its `status` is `COMPLETED`, then passing for a
-    /// `SUCCESS`, `NEUTRAL` or `SKIPPED` conclusion and failing for any other one. A
+    /// `SUCCESS`, `NEUTRAL` or `SKIPPED` conclusion, pending for `STALE` (a result about an
+    /// older head) or none, and failing for any other one. A
     /// `StatusContext` (the older commit status API) carries one `state`: `SUCCESS`
     /// passes, `FAILURE` and `ERROR` fail, `PENDING` and `EXPECTED` are pending.
     /// Anything unrecognised counts as pending, never as passing.
@@ -63,8 +64,10 @@ struct GitHubStatusCheck: Decodable {
         }
         guard status?.uppercased() == "COMPLETED" else { return .pending }
         switch conclusion?.uppercased() {
-        case "SUCCESS", "NEUTRAL", "SKIPPED", "STALE": return .passing
-        case nil, "": return .pending
+        case "SUCCESS", "NEUTRAL", "SKIPPED": return .passing
+        // GitHub marks a run STALE when it was not re-run on a new head: its result is
+        // about an older commit, so it says nothing yet about this one.
+        case nil, "", "STALE": return .pending
         default: return .failing
         }
     }

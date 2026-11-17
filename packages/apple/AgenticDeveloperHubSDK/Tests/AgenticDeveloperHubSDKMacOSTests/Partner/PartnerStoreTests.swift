@@ -60,7 +60,7 @@ final class PartnerStoreTests: XCTestCase {
                        [String(PartnerStore.currentSchemaVersion)])
         store = nil
         store = try PartnerStore(path: databasePath)
-        XCTAssertEqual(try rawQuery("SELECT COUNT(*) FROM schema_migrations"), ["2"])
+        XCTAssertEqual(try rawQuery("SELECT COUNT(*) FROM schema_migrations"), ["3"])
     }
 
     func testNewerSchemaFileFailsToOpen() throws {
@@ -118,7 +118,10 @@ final class PartnerStoreTests: XCTestCase {
         store = nil
         store = try PartnerStore(path: databasePath)
         XCTAssertTrue(expected.isSubset(of: try tableNames()))
-        XCTAssertEqual(PartnerStore.currentSchemaVersion, 2)
+        XCTAssertEqual(PartnerStore.currentSchemaVersion, 3)
+        // Migration 3: the Git window's review query by path and sha.
+        let index = "SELECT name FROM sqlite_master WHERE type = 'index' AND name = 'idx_review_path_sha'"
+        XCTAssertEqual(try rawQuery(index), ["idx_review_path_sha"])
     }
 
     func testDefaultPathNamesPartnerDB() {

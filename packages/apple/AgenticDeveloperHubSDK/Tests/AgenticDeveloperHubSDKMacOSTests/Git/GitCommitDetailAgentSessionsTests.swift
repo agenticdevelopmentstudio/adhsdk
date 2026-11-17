@@ -63,7 +63,8 @@ struct GitCommitDetailAgentSessionsTests {
         detail.onOpenAgentSession = { opened.append($0) }
         detail.agentSessionMatches = { _ in [Self.session("first"), Self.session("second")] }
         detail.show(commit: Self.commit("c1"))
-        #expect(detail.agentSessionsView.rowButtons.allSatisfy(\.isEnabled))
+        let allEnabled = detail.agentSessionsView.rowButtons.allSatisfy { $0.isEnabled }
+        #expect(allEnabled)
         detail.agentSessionsView.rowButtons[1].performClick(nil)
         #expect(opened == ["second"])
     }

@@ -11,6 +11,9 @@ public enum GitRepositoryChange: Sendable, Hashable, CaseIterable {
     case workingCopy
     /// A merge, rebase, cherry-pick or revert starting, stopping or ending.
     case operation
+    /// A batch of signatures or reviews landed: only the rows already drawn need
+    /// drawing again. Never posted by the watcher, and `refresh` loads nothing for it.
+    case annotations
 }
 
 /// Reports changes to a repository, already sorted into kinds. The model only ever
@@ -130,8 +133,9 @@ public final class GitRepositoryWatcher: GitRepositoryWatching, @unchecked Senda
     /// `MERGE_HEAD`, `CHERRY_PICK_HEAD`, `REVERT_HEAD` and anything under `rebase-merge/`,
     /// `rebase-apply/` or `sequencer/` is an operation; a worktree's entry appearing or going, or another
     /// worktree's `worktrees/<name>/HEAD` moving, is refs (the refs reload lists worktrees).
-    /// Lock files, objects and everything else mean nothing. A `.gitattributes` file is
-    /// refs too, because the refs reload is what re-reads the LFS state.
+    /// Lock files, objects and everything else mean nothing. A `.gitattributes` file, and
+    /// the repository's own `info/attributes`, is refs too, because the refs reload is what
+    /// re-reads the LFS state.
     public static func classify(relativePath: String) -> Set<GitRepositoryChange> {
         let components = relativePath.split(separator: "/", omittingEmptySubsequences: true)
         guard components.first == ".git" else {
@@ -149,7 +153,8 @@ public final class GitRepositoryWatcher: GitRepositoryWatching, @unchecked Senda
              "rebase-merge", "rebase-apply", "sequencer":
             return [.operation]
         case "worktrees" where rest.count == 2,
-             "worktrees" where rest.count == 3 && last == "HEAD":
+             "worktrees" where rest.count == 3 && last == "HEAD",
+             "info" where rest.count == 2 && last == "attributes":
             return [.refs]
         default:
             return []

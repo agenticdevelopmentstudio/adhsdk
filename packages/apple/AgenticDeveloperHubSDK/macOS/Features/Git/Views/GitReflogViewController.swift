@@ -11,7 +11,7 @@ import AgenticDeveloperHubSDKCoreUI
 
 /// The Git window's reflog browser (recipe `workspace/git/git-views`, "Reflog"): HEAD's
 /// reflog, newest first, in a table of Selector, Action, Message, Commit (short sha) and
-/// Date. Selecting a row reports its entry; a row's menu resets HEAD to it (Soft, Mixed or
+/// Commit Date. Selecting a row reports its entry; a row's menu resets HEAD to it (Soft, Mixed or
 /// Hard…), checks it out detached, or creates a branch at it. Used on the main thread.
 @MainActor
 public final class GitReflogViewController: NSViewController {
@@ -39,7 +39,8 @@ public final class GitReflogViewController: NSViewController {
             case .action: "Action"
             case .message: "Message"
             case .commit: "Commit"
-            case .date: "Date"
+            // The commit's committer date, not the reflog entry's own time (`%ct`).
+            case .date: "Commit Date"
             }
         }
 
@@ -102,18 +103,24 @@ public final class GitReflogViewController: NSViewController {
 
     /// Shows `entries`, keeping the selected entry selected when it is still listed. An
     /// entry is matched on its commit, date, action and message, never its selector, which
-    /// shifts from `@{n}` to `@{n+1}` with every new action.
+    /// shifts from `@{n}` to `@{n+1}` with every new action. A selected entry that is gone
+    /// (expired, or collected) is deselected and the delegate is told nil, so the detail
+    /// does not go on showing it.
     public func show(_ entries: [GitReflogEntry]) {
         loadViewIfNeeded()
         let selected = selectedEntry
         self.entries = entries
         isApplyingSelection = true
-        defer { isApplyingSelection = false }
         tableView.reloadData()
-        if let selected, let row = entries.firstIndex(where: { Self.isSameStep($0, as: selected) }) {
-            tableView.selectRowIndexes(IndexSet(integer: row), byExtendingSelection: false)
+        let survivor = selected.flatMap { selected in entries.firstIndex { Self.isSameStep($0, as: selected) } }
+        if let survivor {
+            tableView.selectRowIndexes(IndexSet(integer: survivor), byExtendingSelection: false)
         } else {
             tableView.deselectAll(nil)
+        }
+        isApplyingSelection = false
+        if selected != nil, survivor == nil {
+            delegate?.reflog(self, didSelect: nil)
         }
     }
 

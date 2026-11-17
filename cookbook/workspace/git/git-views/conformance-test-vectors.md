@@ -107,7 +107,7 @@
 | git-views-104 | detail-sessions-section | no `agentSessionMatches`; matches answering `[]`; two sessions for `c1`, then show `c2` | hidden; hidden; `Fix it · main · …` and `abcdefgh · main · …`, disabled; hidden again. |
 | git-views-105 | detail-sessions-open | `onOpenAgentSession` set; click row 1 | called once with `second`. |
 | git-views-106 | sidebar-sessions-submenu | no provider; `[]`; 25 sessions; 2 sessions, `onOpenAgentSession` nil then set, choose item 1 | no submenu; no submenu; the last item `Agent Sessions` holding 20; items disabled, then called with `session-1`. |
-| git-views-107 | reflog-columns | three entries, `HEAD@{0}` `commit (amend)` `three again` at sha `c`×40 | columns Selector, Action, Message, Commit, Date (`git.reflog.<name>`); three rows; the first reads `HEAD@{0}`, `commit (amend)`, `three again`, `cccccccc`. |
+| git-views-107 | reflog-columns | three entries, `HEAD@{0}` `commit (amend)` `three again` at sha `c`×40 | columns Selector, Action, Message, Commit, Commit Date (`git.reflog.<name>`); three rows; the first reads `HEAD@{0}`, `commit (amend)`, `three again`, `cccccccc`. |
 | git-views-108 | reflog-menu | row 1's menu; then rows -1 and 3 | `Reset HEAD to Here` (submenu `Soft`, `Mixed`, `Hard…`), `Check Out (detached)`, `Create Branch Here…` with their `git.reflog.menu.*` ids; no menu for either. |
 | git-views-109 | reflog-menu | choose `Hard…`, `Soft`, `Mixed`, `Check Out (detached)`, `Create Branch Here…` on row 1 | the delegate gets `.reset(e, .hard)`, `.reset(e, .soft)`, `.reset(e, .mixed)`, `.checkout(e)`, `.createBranch(e)`. |
 | git-views-110 | reflog-selection | select row 1, then show the same entries | one report of entry 1; it stays selected with no second report. |

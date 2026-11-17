@@ -35,7 +35,7 @@ import AgenticDeveloperHubSDKCore
     /// (GitDataSources+Signatures.swift).
     func signature(for sha: String) -> GitSignature?
     /// Asks for the signatures of the rows on screen: coalesced and debounced, and the
-    /// owner hears `.history` when results land. Defaults to doing nothing.
+    /// owner hears `.annotations` when results land. Defaults to doing nothing.
     func requestSignatures(for shas: [String])
     /// A commit's Coding Partner review, cached; nil when it has none or it has not been
     /// read yet. Defaults to nil (GitDataSources+Reviews.swift).

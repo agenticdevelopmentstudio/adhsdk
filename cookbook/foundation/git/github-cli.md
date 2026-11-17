@@ -2,7 +2,7 @@
 id: b7e2c4d1-8f3a-4c6e-a1d9-2e5f7b0c3d84
 title: "GitHub CLI"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: draft
 language: en
 created: 2026-11-16
@@ -48,11 +48,11 @@ A client for the GitHub CLI, `gh`, that answers pull request questions for the r
 - **list-command**: `pullRequests(in:state:limit:)` MUST run `gh pr list --state <state> --limit <limit> --json number,title,state,isDraft,author,headRefName,baseRefName,url,updatedAt,statusCheckRollup,reviewDecision`, with defaults `open` and `50`.
 - **view-command**: `pullRequest(forBranch:in:)` MUST run `gh pr list --head <branch> --state all --limit 20 --json <the same fields>,isCrossRepository,headRepositoryOwner`, MUST drop every row whose `isCrossRepository` is true (`--head` matches the branch name in forks too), and MUST answer the open pull request among the rest if there is one, else the one updated most recently, else nil. It MUST NOT use `gh pr view <branch>`, which reads a branch named like a number or URL as that pull request. An empty or dash-led branch MUST be refused as `failed` before anything runs.
 - **checkout-command**: `checkout(_:in:)` MUST run `gh pr checkout <number>`; a number below 1 MUST be refused as `failed` before anything runs.
-- **create-command**: `create(title:body:base:draft:in:)` MUST run `gh pr create --title <title> --body <body>`, then `--base <base>` when `base` is non-empty, then `--draft` when `draft`; it MUST answer the last `http`/`https` URL line of standard output, and `failed` when there is none.
+- **create-command**: `create(title:body:base:head:draft:in:)` MUST run `gh pr create --title <title> --body <body>`, then `--base <base>` when `base` is non-empty, then `--head <head>` when `head` is given, then `--draft` when `draft`; an empty or dash-led `head` MUST be refused as `failed("not a branch name: <head>")` before anything runs; it MUST answer the last `http`/`https` URL line of standard output, and `failed` when there is none.
 - **budgets**: Reads (`repo view`, `pr list`) MUST run under a 10-second budget; `pr checkout` and `pr create` under 60 seconds.
 - **error-mapping**: A non-zero exit MUST map by standard error, case-insensitively, testing not-GitHub first (gh's not-GitHub message itself suggests `gh auth login`): containing `none of the git remotes`, `not a github`, `no git remotes found` or `no default remote repository` → `notGitHub`; containing `gh auth login` or `not logged` → `notAuthenticated`; anything else → `failed(<standard error, trimmed>)`. A runner that exceeds its budget → `timedOut`. A cancellation MUST propagate unchanged. Any other runner error, or output that does not decode → `failed`.
 - **pull-request-model**: A pull request MUST carry `number`, `title`, `state` (`OPEN`, `CLOSED`, `MERGED`), `isDraft`, `author` (the login), `headRefName`, `baseRefName`, `url`, `updatedAt` (ISO 8601, with or without fractional seconds), `checks` and `reviewDecision`; its identity is its number. An empty `reviewDecision` MUST decode as nil.
-- **check-rollup**: `checks` MUST be nil for an empty or missing `statusCheckRollup`, and otherwise count each entry once: a `CheckRun` is pending until its status is `COMPLETED`, then passing for conclusion `SUCCESS`, `NEUTRAL`, `SKIPPED` or `STALE`, pending for an empty conclusion, and failing for any other; a `StatusContext` is passing for `SUCCESS`, failing for `FAILURE` or `ERROR`, and pending otherwise.
+- **check-rollup**: `checks` MUST be nil for an empty or missing `statusCheckRollup`, and otherwise count each entry once: a `CheckRun` is pending until its status is `COMPLETED`, then passing for conclusion `SUCCESS`, `NEUTRAL` or `SKIPPED`, pending for an empty conclusion or `STALE` (a result about an earlier head), and failing for any other; a `StatusContext` is passing for `SUCCESS`, failing for `FAILURE` or `ERROR`, and pending otherwise.
 - **logged-as-gh**: Every call MUST be recorded in the command log with tool `gh`, verb the first argument, the remaining arguments, the directory, the caller, the duration, the exit status (none when nothing ran or the run did not finish) and, for a non-zero exit, standard error.
 - **text-redacted**: The log MUST redact the argument after `--title`, `--body`, `-t` and `-b` of a `gh` call as `<redacted:<length>>`; the git rules do not apply to `gh`, and the URL user-info rule applies to every argument.
 
@@ -91,6 +91,8 @@ Not applicable: `GitHubCLI` presents no UI.
 | github-cli-017 | logged-as-gh | a failed `repo view`, status 4 | the entry keeps the standard error (test: failedEntryKeepsStandardError). |
 | github-cli-018 | text-redacted | `create(title: "Secret title", body: "token abc", base: "main", draft: true)` | logged as `pr create --title <redacted:12> --body <redacted:9> --base main --draft` (test: createTitleAndBodyAreRedactedInTheLog). |
 | github-cli-019 | text-redacted | gh `pr view -m`; git `commit --title x` | both unchanged (test: ghRedactionLeavesGitRulesAlone). |
+| github-cli-020 | create-command | `create` with base `main`, head `parser` and draft | `pr create --title … --body … --base main --head parser --draft` (test: createPassesTheHeadBranch). |
+| github-cli-021 | create-command, input-sanitization | `create` with head `` and with head `-x` | `failed("not a branch name: <head>")`; nothing runs (test: createRefusesAHeadThatIsNotABranchName). |
 | github-cli-020 | view-command | `pullRequest(forBranch: \"4521\")` | `pr list --head 4521 --state all --limit 20 --json …`, never `pr view 4521` (test: numericBranchNameIsLookedUpAsAHead). |
 | github-cli-021 | error-mapping | stderr `no git remotes found`; stderr `No default remote repository has been set. …` | `notGitHub` (tests: noRemotesIsNotGitHub, noDefaultRemoteIsNotGitHub). |
 | github-cli-022 | view-command | branch `main`: a stranger's newest open fork PR #90, this repository's merged #80 and older open #70 | #70: the fork row dropped, open preferred over newer (test: forkPullRequestWithTheSameBranchNameIsSkipped). |
@@ -180,10 +182,11 @@ Recorded through the git command log, so the line and the in-memory entry follow
 | [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 | [adc.check.security.input-sanitization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d7d737e1-b124-5f9a-b1c2-0ca1b96eeb8a) | passed | Security |
 
-`separation-of-concerns` passes because the client only runs `gh` and decodes its answers; finding the executable is `ExecutableLocator`'s and recording is the command log's. `unit-test-coverage` passes: `GitHubCLITests` (`Tests/AgenticDeveloperHubSDKCoreTests/Git/GitHubCLITests.swift`) covers all 19 vectors with a stub runner. `input-sanitization` passes because a dash-led or empty branch and a non-positive number are refused before anything runs, and arguments are passed as an argument vector, never through a shell.
+`separation-of-concerns` passes because the client only runs `gh` and decodes its answers; finding the executable is `ExecutableLocator`'s and recording is the command log's. `unit-test-coverage` passes: `GitHubCLITests` (`Tests/AgenticDeveloperHubSDKCoreTests/Git/GitHubCLITests.swift`) covers all 21 vectors with a stub runner. `input-sanitization` passes because a dash-led or empty branch and a non-positive number are refused before anything runs, and arguments are passed as an argument vector, never through a shell.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
 | 1.0.0 | 2026-11-16 | Mike Fullerton | Initial creation |
+| 1.0.1 | 2026-11-16 | Mike Fullerton | Phase 4 final review: `create` passes `--head` and refuses a head that is not a branch name (vectors 020-021); a STALE check is pending. |

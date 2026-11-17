@@ -10,3 +10,4 @@
 | 2.1.0 | 2026-11-16 | Mike Fullerton | Command log: the in-memory ring (500 entries, updates, tool), standard error kept only on failure and never in OSLog, URL user-info redaction. |
 | 2.2.0 | 2026-11-16 | Mike Fullerton | Signatures: one `log --no-walk=unsorted` call for a list of shas (15 s budget), the eight `%G?` statuses, the parser and the summary; non-hex shas refused before git runs. |
 | 2.2.1 | 2026-11-16 | Mike Fullerton | Signatures fix round 1: `--ignore-missing` and a closing `--`, so a sha the repository lacks is absent instead of failing the batch. |
+| 2.2.2 | 2026-11-16 | Mike Fullerton | Phase 4 final review: LFS pointers without a version line in a diff side; an accepted non-zero exit is recorded as failed; `?` and `#` end a URL authority; `undoneEntry`; `hasStagedChanges` and `resetMode` in the undo preflight. |

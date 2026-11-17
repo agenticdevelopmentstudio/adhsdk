@@ -2,11 +2,11 @@
 id: a2394ca0-3988-410b-9fc8-e0c9e253fc94
 title: "Git Repository Model"
 type: ingredient
-version: 1.3.0
+version: 1.3.1
 status: review
 language: en
 created: 2026-11-13
-modified: 2026-11-15
+modified: 2026-11-16
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -43,7 +43,8 @@ The one place a git window's views read a repository from. `GitRepositoryModel` 
 - **set-query**: `setQuery(_:)` MUST replace the query, clear commits, graph rows and paging, and load the first page of the new query.
 - **refs-at**: `refs(at:)` MUST return every ref whose `target` is the commit id, in ref order, and none for an unknown id.
 - **working-copy-split**: `staged` and `unstaged` MUST come from `GitClient.status`'s per-column maps, sorted by path; untracked files MUST be unstaged with `isUntracked` true; a file changed in both columns MUST appear in both lists.
-- **refresh-scope**: `refresh(_:)` MUST reload `.refs` → refs, stashes, submodules and worktrees; `.history` → the history from the top, covering at least as many commits as were loaded, with the graph rebuilt; `.workingCopy` and `.operation` → the working-copy status and the operation state.
+- **refresh-scope**: `refresh(_:)` MUST reload `.refs` → refs, stashes, submodules and worktrees; `.history` → the history from the top, covering at least as many commits as were loaded, with the graph rebuilt; `.workingCopy` and `.operation` → the working-copy status and the operation state; `.annotations` → nothing.
+- **annotations-change**: `.annotations` MUST be posted only when a batch of signatures or reviews lands, never by the watcher, and only means the rows already drawn need drawing again: an observer redraws what it shows and reloads nothing.
 - **watcher-drives-refresh**: Every change set the watcher reports MUST be passed to `refresh(_:)` on the main actor.
 - **observe**: After a refresh, every live observer MUST be called on the main actor with the kinds whose data reloaded, and with history after `setQuery(_:)` and after each page `loadMore()` appends; dropping the token returned by `observe(_:)` MUST stop its calls. No call is made when nothing reloaded.
 - **failures-keep-state**: A git call that fails MUST leave that part's last loaded value in place and be logged; `start()` and `refresh(_:)` MUST NOT throw. A repository deleted under the model keeps showing what it last loaded. A load that was cancelled (a search the window replaced, whose `git log` was terminated) is not a failure and MUST be logged at debug level only.
@@ -212,6 +213,7 @@ A failed load logs one line at error level naming the part (refs, history, statu
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.3.1 | 2026-11-16 | Mike Fullerton | `.annotations`: posted when a signature or review batch lands; refresh loads nothing for it. |
 | 1.3.0 | 2026-11-15 | Mike Fullerton | Conflicts: `conflicts` reloaded with the working copy; `writeResolution` writes a resolved file atomically off the main actor, inside the root, keeping its permissions |
 | 1.2.0 | 2026-11-14 | Mike Fullerton | Actions: perform refreshes every kind after any action and rethrows; isPerforming, headBranch, hasCommits; remotes and last commit message; operation state: loaded with the working copy, kept on failure, reported as `.operation` when it changes; the watcher classifies `REVERT_HEAD` and `sequencer` as operation |
 | 1.1.0 | 2026-11-14 | Mike Fullerton | Final review: refs, stashes, submodules and worktrees load independently; cancelled loads log at debug; contents pass a size cap; a capped file history is logged; the deferred watcher makes one watcher per latest start |

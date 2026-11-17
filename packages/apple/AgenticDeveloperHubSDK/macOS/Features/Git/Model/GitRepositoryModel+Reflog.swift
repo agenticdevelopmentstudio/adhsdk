@@ -11,9 +11,14 @@ extension GitRepositoryModel {
         return undoState.target
     }
 
-    /// The ref's newest reflog entry: what Undo would undo, whose action and message make
-    /// its tooltip.
+    /// The ref's newest reflog entry.
     public var lastReflogEntry: GitReflogEntry? {
         undoState.last
+    }
+
+    /// The reflog step Undo would take back, whose action and message make its tooltip and
+    /// its confirmation's title; nil when no logged step is (`GitUndoState.undoneEntry`).
+    public var undoneEntry: GitReflogEntry? {
+        undoState.undoneEntry
     }
 }

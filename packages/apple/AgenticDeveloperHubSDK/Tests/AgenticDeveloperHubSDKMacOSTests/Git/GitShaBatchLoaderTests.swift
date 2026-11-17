@@ -124,4 +124,31 @@ struct GitShaBatchLoaderTests {
         #expect(await recorder.batches == [["a1"]])
         #expect(loads == 0)
     }
+
+    @Test("a batch due while another runs waits for it to land, so one batch runs at a time")
+    func oneBatchAtATime() async {
+        let recorder = BatchRecorder()
+        let (gate, release) = AsyncStream<Void>.makeStream()
+        let loader = GitShaBatchLoader<String>(delay: .milliseconds(20), provider: { batch in
+            await recorder.record(batch)
+            if batch == ["a1"] {
+                for await _ in gate { break }
+            }
+            return Dictionary(uniqueKeysWithValues: batch.map { ($0, "value-\($0)") })
+        }, onLoad: {})
+        loader.request(["a1"])
+        await loader.queueTask?.value
+        let first = loader.loadTask
+        loader.request(["b2"])
+        await loader.queueTask?.value
+        #expect(loader.batchCount == 1)
+        #expect(loader.loadTask == first)
+
+        release.yield()
+        await first?.value
+        await loader.loadTask?.value
+        #expect(await recorder.batches == [["a1"], ["b2"]])
+        #expect(loader.batchCount == 2)
+        #expect(loader.value(for: "b2") == "value-b2")
+    }
 }

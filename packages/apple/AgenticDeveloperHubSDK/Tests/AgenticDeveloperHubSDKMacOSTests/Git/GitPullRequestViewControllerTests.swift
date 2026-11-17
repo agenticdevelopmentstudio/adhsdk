@@ -68,4 +68,46 @@ struct GitPullRequestViewControllerTests {
         controller.checkoutButton.performClick(nil)
         #expect(intents == [.openInBrowser(Self.pullRequest), .checkout(Self.pullRequest)])
     }
+
+    @Test("every caption carries git.pullRequest.caption.<field>")
+    func captionIdentifiers() {
+        let controller = GitPullRequestViewController()
+        controller.loadViewIfNeeded()
+        var identifiers: [String] = []
+        var pending: [NSView] = [controller.view]
+        while let view = pending.popLast() {
+            if let label = view as? NSTextField, label.accessibilityIdentifier().hasPrefix("git.pullRequest.caption.") {
+                identifiers.append(label.accessibilityIdentifier())
+            }
+            pending.append(contentsOf: view.subviews)
+        }
+        let names = ["number", "state", "author", "branches", "review", "checks", "updated"]
+        #expect(Set(identifiers) == Set(names.map { "git.pullRequest.caption.\($0)" }))
+    }
+
+    @Test("Check Out is off for the checked-out branch's own pull request")
+    func checkoutOffForTheHead() {
+        let controller = GitPullRequestViewController()
+        controller.loadViewIfNeeded()
+        controller.show(Self.pullRequest)
+        #expect(controller.checkoutButton.isEnabled)
+        controller.checkedOutBranch = "feature"
+        #expect(!controller.checkoutButton.isEnabled)
+        #expect(controller.openButton.isEnabled)
+        controller.checkedOutBranch = "main"
+        #expect(controller.checkoutButton.isEnabled)
+    }
+
+    @Test("showing nil empties the fields and turns both buttons off")
+    func showNilEmpties() {
+        let controller = GitPullRequestViewController()
+        controller.loadViewIfNeeded()
+        controller.show(Self.pullRequest)
+        controller.show(nil)
+        #expect(controller.pullRequest == nil)
+        #expect(controller.titleLabel.stringValue.isEmpty)
+        #expect(controller.stateLabel.stringValue.isEmpty)
+        #expect(!controller.openButton.isEnabled)
+        #expect(!controller.checkoutButton.isEnabled)
+    }
 }

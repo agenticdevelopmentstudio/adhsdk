@@ -180,6 +180,14 @@ struct GitCommandLogRingTests {
                 == ["https://github.com/o/r"])
     }
 
+    @Test("the authority ends at ? and #, so an @ in a query or fragment is not user info")
+    func urlAuthorityEndsAtQueryAndFragment() {
+        #expect(GitCommandLog.redactedURLUserInfo("https://host/?a=b@c") == "https://host/?a=b@c")
+        #expect(GitCommandLog.redactedURLUserInfo("https://host?a=b@c") == "https://host?a=b@c")
+        #expect(GitCommandLog.redactedURLUserInfo("https://host#x@y") == "https://host#x@y")
+        #expect(GitCommandLog.redactedURLUserInfo("https://u:t@host?q=1@2") == "https://***@host?q=1@2")
+    }
+
     @Test("standard error is kept only when the exit status is not 0")
     func standardErrorOnlyOnFailure() {
         let book = GitCommandLogBook(capacity: 4)

@@ -5,9 +5,11 @@ import os
 /// One repository's open pull requests, read through the user's own `gh` (recipe
 /// `workspace/git/git-views`, "Pull requests").
 ///
-/// A load runs `availability` first, then lists the open pull requests; any error at
-/// either step leaves `pullRequests` nil, which hides the sidebar's section without a
-/// word. Loads come when the window opens, after a Fetch (forced) and on each `.refs`
+/// A load runs `availability` first, then lists the open pull requests. An answer that
+/// `gh` cannot be asked (not installed, not logged in, no GitHub remote) at either step
+/// leaves `pullRequests` nil, which hides the sidebar's section without a word; any other
+/// failure (a timeout, a `gh` error, cancellation) leaves the section and the head
+/// branch's pull request as they were. Loads come when the window opens, after a Fetch (forced) and on each `.refs`
 /// change of the repository model, at most one per `minimumInterval`: a change inside
 /// the interval is answered once, when it ends. A refs change while a forced load runs,
 /// or inside the interval after one, is already answered by it and starts nothing; a
@@ -25,7 +27,8 @@ public final class GitPullRequestsModel {
     /// The shortest time between two loads a refs change starts.
     public static let minimumInterval: Duration = .seconds(30)
 
-    /// The open pull requests; nil while `gh` is unavailable or before the first load.
+    /// The open pull requests; nil while `gh` cannot be asked, or before the first load
+    /// that got an answer.
     public private(set) var pullRequests: [GitPullRequest]?
 
     /// The checked-out branch's open pull request from this repository (never a fork's);
@@ -161,7 +164,7 @@ public final class GitPullRequestsModel {
             guard let self else { return }
             self.loadsRunning -= 1
             guard !Task.isCancelled else { return }
-            self.apply(loaded)
+            self.apply(loaded, head: head)
         }
     }
 
@@ -169,18 +172,35 @@ public final class GitPullRequestsModel {
     struct Loaded: Equatable {
         var pullRequests: [GitPullRequest]?
         var headPullRequest: GitPullRequest?
+        /// The head branch's lookup failed for a passing reason: the head pull request shown
+        /// stays, when it is still that branch's.
+        var keepsHeadPullRequest = false
     }
 
-    /// `availability`, then the open pull requests and `head`'s own open one; the list
-    /// nil on any error, the head's nil when its lookup fails.
-    private nonisolated static func read(_ gitHub: GitHubCLI, in root: URL, head: String?) async -> Loaded {
-        guard case .success = await gitHub.availability(in: root) else { return Loaded() }
+    /// Whether `error` says `gh` cannot be asked at all (not installed, not logged in, no
+    /// GitHub remote), which hides the section; anything else is passing and keeps it.
+    nonisolated static func hidesPullRequests(_ error: Error) -> Bool {
+        switch error as? GitHubCLIError {
+        case .notInstalled?, .notAuthenticated?, .notGitHub?: true
+        default: false
+        }
+    }
+
+    /// `availability`, then the open pull requests and `head`'s own open one. nil keeps
+    /// what is shown (a passing failure of either of the first two steps); an empty
+    /// `Loaded` hides it (`hidesPullRequests`). A passing failure of the head lookup keeps
+    /// the head pull request shown; one that says `gh` cannot be asked drops it.
+    nonisolated static func read(_ gitHub: GitHubCLI, in root: URL, head: String?) async -> Loaded? {
+        if case .failure(let error) = await gitHub.availability(in: root) {
+            logger.info("gh unavailable: \(String(describing: error), privacy: .public)")
+            return hidesPullRequests(error) ? Loaded() : nil
+        }
         let list: [GitPullRequest]
         do {
             list = try await gitHub.pullRequests(in: root)
         } catch {
             logger.info("Pull requests unavailable: \(String(describing: error), privacy: .public)")
-            return Loaded()
+            return hidesPullRequests(error) ? Loaded() : nil
         }
         guard let head else { return Loaded(pullRequests: list) }
         do {
@@ -188,14 +208,25 @@ public final class GitPullRequestsModel {
             return Loaded(pullRequests: list, headPullRequest: own?.state.uppercased() == "OPEN" ? own : nil)
         } catch {
             logger.info("Branch pull request unavailable: \(String(describing: error), privacy: .public)")
-            return Loaded(pullRequests: list)
+            return Loaded(pullRequests: list, keepsHeadPullRequest: !hidesPullRequests(error))
         }
     }
 
-    private func apply(_ loaded: Loaded) {
-        guard loaded != Loaded(pullRequests: pullRequests, headPullRequest: headPullRequest) else { return }
-        pullRequests = loaded.pullRequests
-        headPullRequest = loaded.headPullRequest
+    /// Shows what a load of `head` read. A kept head pull request (nil `loaded`, or
+    /// `keepsHeadPullRequest`) survives only while it is `head`'s, so a branch switch
+    /// never leaves the old branch's pull request on the new one.
+    private func apply(_ loaded: Loaded?, head: String?) {
+        let kept = headPullRequest.flatMap { $0.headRefName == head ? $0 : nil }
+        let list = loaded.map(\.pullRequests) ?? pullRequests
+        let own: GitPullRequest?
+        if let loaded, !loaded.keepsHeadPullRequest {
+            own = loaded.headPullRequest
+        } else {
+            own = kept
+        }
+        guard list != pullRequests || own != headPullRequest else { return }
+        pullRequests = list
+        headPullRequest = own
         onChange?()
     }
 
@@ -206,9 +237,10 @@ public final class GitPullRequestsModel {
         try await gitHub.checkout(number, in: root)
     }
 
-    /// `gh pr create` with `draft`'s values, returning the new pull request's URL.
-    func create(_ draft: GitPullRequestDraft) async throws -> URL {
-        try await gitHub.create(title: draft.title, body: draft.body, base: draft.base, draft: draft.draft, in: root)
+    /// `gh pr create` from `head` with `draft`'s values, returning the new pull request's URL.
+    func create(_ draft: GitPullRequestDraft, head: String) async throws -> URL {
+        try await gitHub.create(title: draft.title, body: draft.body, base: draft.base, head: head,
+                                draft: draft.draft, in: root)
     }
 
     /// The repository's default branch: `gh`'s answer, else `<remote>/HEAD` as git

@@ -1,6 +1,7 @@
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 2.0.1 | 2026-11-16 | Mike Fullerton | Phase 4 final review: Undo's tooltip from the undone entry, a soft reset while anything is staged, a second preflight after the confirmation; Create Pull Request re-reads the branch after the form and passes `--head`. |
 | 2.0.0 | 2026-11-16 | Mike Fullerton | The Command Log in the terminal region, and the toolbar's seventh button toggling it. |
 | 1.10.4 | 2026-11-16 | Mike Fullerton | Opening the merge view on selection is ungated and only the latest selection lands (vector 081) |
 | 1.10.3 | 2026-11-16 | Mike Fullerton | The merge view's fallback is the .conflicted diff (vectors 079-080) |

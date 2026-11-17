@@ -121,6 +121,33 @@ struct GitLFSTests {
         #expect(summary.text == "LFS object 4d7a214 · \(oldSize) → bbbbbbb · \(newSize)")
     }
 
+    @Test("a pointer diff with no context lines (-U0) still summarises; stray text does not")
+    func pointerDiffWithoutContext() throws {
+        let newOID = String(repeating: "b", count: 64)
+        let hunk = GitDiffHunk(oldStart: 2, oldCount: 2, newStart: 2, newCount: 2, section: "", lines: [
+            GitDiffLine(kind: .removed, text: "oid sha256:\(Self.oid)", oldNumber: 2, newNumber: nil),
+            GitDiffLine(kind: .removed, text: "size 2048", oldNumber: 3, newNumber: nil),
+            GitDiffLine(kind: .added, text: "oid sha256:\(newOID)", oldNumber: nil, newNumber: 2),
+            GitDiffLine(kind: .added, text: "size 4096", oldNumber: nil, newNumber: 3)
+        ])
+        let diff = GitFileDiff(oldPath: "a.bin", newPath: "a.bin", change: .modified, isBinary: false, hunks: [hunk])
+        let summary = try #require(GitLFSDiffSummary.of(diff))
+        #expect(summary.old == GitLFSPointer(oid: Self.oid, size: 2048))
+        #expect(summary.new == GitLFSPointer(oid: newOID, size: 4096))
+
+        let stray = GitDiffHunk(oldStart: 1, oldCount: 2, newStart: 1, newCount: 2, section: "", lines: [
+            GitDiffLine(kind: .removed, text: "oid sha256:\(Self.oid)", oldNumber: 1, newNumber: nil),
+            GitDiffLine(kind: .removed, text: "size 2048 and more", oldNumber: 2, newNumber: nil),
+            GitDiffLine(kind: .added, text: "notes: oid sha256:\(newOID)", oldNumber: nil, newNumber: 1),
+            GitDiffLine(kind: .added, text: "size 4096", oldNumber: nil, newNumber: 2)
+        ])
+        let notes = GitFileDiff(oldPath: "a.txt", newPath: "a.txt", change: .modified, isBinary: false,
+                                hunks: [stray])
+        #expect(GitLFSDiffSummary.of(notes) == nil)
+        // A whole file still needs its version line.
+        #expect(GitLFSPointer.parse("oid sha256:\(Self.oid)\nsize 1") == nil)
+    }
+
     @Test("an added pointer summarises its one side; an ordinary diff does not summarise")
     func addedPointerSummary() throws {
         let lines = Self.pointerText().split(separator: "\n").enumerated().map { index, text in

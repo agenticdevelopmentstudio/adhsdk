@@ -49,10 +49,22 @@ final class PartnerStoreGitReviewsTests: XCTestCase {
         XCTAssertEqual(found["s1"]?.supersededBy, ["s9"])
     }
 
-    func testTwoRepoIdsAtOnePathAnswerTheRowWrittenLast() throws {
+    func testTwoRepoIdsAtOnePathAnswerTheRowInsertedLastOnATie() throws {
         try store.insertReview(makeReview("old", sha: "s1", repo: "id-1", path: "/r/shared"))
         try store.insertReview(makeReview("new", sha: "s1", repo: "id-2", path: "/r/shared"))
         XCTAssertEqual(try store.reviews(repoPath: "/r/shared", shas: ["s1"])["s1"]?.id, "new")
+    }
+
+    func testARowReviewedAgainLaterWinsOverANewerInsert() throws {
+        var old = makeReview("old", sha: "s1", repo: "id-1", path: "/r/shared")
+        var new = makeReview("new", sha: "s1", repo: "id-2", path: "/r/shared")
+        new.finishedAt = Date(timeIntervalSince1970: 2_000)
+        try store.insertReview(old)
+        try store.insertReview(new)
+        // The older row is re-reviewed after the newer one finished; an UPDATE keeps its rowid.
+        old.finishedAt = Date(timeIntervalSince1970: 3_000)
+        try store.updateReview(old)
+        XCTAssertEqual(try store.reviews(repoPath: "/r/shared", shas: ["s1"])["s1"]?.id, "old")
     }
 
     func testMoreShasThanOneChunkAreAllAsked() throws {

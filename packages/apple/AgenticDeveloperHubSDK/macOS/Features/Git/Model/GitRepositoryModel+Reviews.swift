@@ -12,7 +12,7 @@ extension GitRepositoryModel {
 
     /// Reads the reviews of `shas` — the rows the history draws — in one coalesced,
     /// debounced batch off the main thread; a newer call replaces a batch still waiting.
-    /// `.history` is posted when results land.
+    /// `.annotations` is posted when results land.
     public func requestReviews(for shas: [String]) {
         reviewLoader?.request(shas)
     }

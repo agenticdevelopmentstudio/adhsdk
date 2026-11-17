@@ -36,6 +36,13 @@ final class GitAgentSessionCache {
         self.now = now
     }
 
+    /// Drops a read in flight: its answer is never stored or reported. Later calls to
+    /// `refreshIfStale()` read again as usual; the window that owns the cache has closed.
+    func stop() {
+        fetchTask?.cancel()
+        onChange = nil
+    }
+
     /// Reads the sessions again unless a read is in flight or one started less than
     /// `refreshInterval` ago.
     func refreshIfStale() {
@@ -51,7 +58,7 @@ final class GitAgentSessionCache {
             let found = await provider.sessions(under: roots, since: since)
             guard let self else { return }
             self.isFetching = false
-            guard found != self.sessions else { return }
+            guard !Task.isCancelled, found != self.sessions else { return }
             self.sessions = found
             self.onChange?()
         }

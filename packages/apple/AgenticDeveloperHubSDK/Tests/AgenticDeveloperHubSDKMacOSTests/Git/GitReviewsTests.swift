@@ -261,4 +261,40 @@ struct GitReviewsTests {
         session.detail.reviewView.openButton.performClick(nil)
         #expect(opened == ["repo:\(head)"])
     }
+
+    @Test("a review batch posts .annotations alone: the rows redraw, the reflog is not read again")
+    func batchPostsAnnotationsOnly() async throws {
+        let repository = try await GitTestRepository.make(prefix: "git-window-reviews")
+        defer { repository.tearDown() }
+        try repository.write("one\n", to: "a.txt")
+        try await repository.run(["add", "a.txt"])
+        try await repository.commit("first", at: 1_800_000_000)
+        let head = try await repository.sha("HEAD")
+
+        let reviews = FakeReviews()
+        reviews.set(Self.review(head, .queued))
+        let session = await window(repository, reviews: reviews)
+        defer { session.stop() }
+        let loader = try #require(session.model.reviewLoader)
+        loader.delay = .milliseconds(1)
+        await loader.queueTask?.value
+        await loader.loadTask?.value
+        session.sidebarDidSelectReflog(session.sidebar)
+        await session.reflogLoadTask?.value
+        let reflogRead = session.reflogLoadTask
+        var posted: [Set<GitRepositoryChange>] = []
+        let observation = session.model.observe { posted.append($0) }
+
+        // A changed review, read whether or not the window's first batch already read it.
+        reviews.set(Self.review(head, .done, summary: "Fine."))
+        session.model.invalidateReviews()
+        session.model.requestReview(for: head)
+        await loader.queueTask?.value
+        await loader.loadTask?.value
+
+        #expect(session.model.review(for: head)?.state == .done)
+        #expect(posted == [[.annotations]])
+        #expect(session.reflogLoadTask == reflogRead)
+        withExtendedLifetime(observation) {}
+    }
 }

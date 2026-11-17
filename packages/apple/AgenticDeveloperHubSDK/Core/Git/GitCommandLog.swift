@@ -223,7 +223,7 @@ public enum GitCommandLog {
 
     /// `text` with the user info of every URL in it (`https://user:token@host`)
     /// replaced by `***`, so a token embedded in a remote URL never reaches a log.
-    /// The authority runs from `://` to the next `/`, whitespace or quote; the user
+    /// The authority runs from `://` to the next `/`, `?`, `#`, whitespace or quote; the user
     /// info is everything in it before its last `@`.
     static func redactedURLUserInfo(_ text: String) -> String {
         guard text.contains("://") else { return text }
@@ -232,7 +232,7 @@ public enum GitCommandLog {
         while let scheme = rest.range(of: "://") {
             result += rest[..<scheme.upperBound]
             let authorityEnd = rest[scheme.upperBound...].firstIndex { character in
-                character == "/" || character.isWhitespace || character == "\"" || character == "'"
+                "/?#\"'".contains(character) || character.isWhitespace
             } ?? rest.endIndex
             let authority = rest[scheme.upperBound..<authorityEnd]
             if let atSign = authority.lastIndex(of: "@") {

@@ -43,6 +43,9 @@ public final class GitHistoryViewController: NSViewController {
     private let rowMenu = NSMenu()
     /// Where Copy SHA puts the sha.
     private let pasteboard: NSPasteboard
+    /// The one pending ask for the visible rows' signatures and reviews, while a scroll
+    /// posts its steps; nil between turns.
+    private(set) var visibleRequestTask: Task<Void, Never>?
     /// The page request in flight or last finished; tests await it.
     private(set) var pagingTask: Task<Void, Never>?
 
@@ -190,6 +193,19 @@ public final class GitHistoryViewController: NSViewController {
         requestVisibleReviews()
     }
 
+    /// Redraws the subject cells of the rows on screen, where the signature and review
+    /// badges sit, after a batch of either lands (`.annotations`). Nothing is re-read from
+    /// the data source but those badges, the selection is untouched and no request is sent.
+    public func reloadAnnotations() {
+        guard isViewLoaded else { return }
+        let range = tableView.rows(in: tableView.visibleRect)
+        guard range.location != NSNotFound, range.length > 0,
+              let column = tableView.tableColumns.firstIndex(where: { $0.identifier == Column.subject.identifier })
+        else { return }
+        let rows = IndexSet(integersIn: range.location..<(range.location + range.length))
+        tableView.reloadData(forRowIndexes: rows, columnIndexes: IndexSet(integer: column))
+    }
+
     // MARK: - Signatures
 
     /// The shas of the rows the table shows now; empty before it has a size.
@@ -201,9 +217,10 @@ public final class GitHistoryViewController: NSViewController {
         return rows.compactMap { commits.indices.contains($0) ? commits[$0].id : nil }
     }
 
-    /// Watches the clip view, so every scroll step and every resize asks for the rows then
-    /// in `visibleRect` (`clipViewDidChange(_:)`). Selector observers are removed by
-    /// Foundation when the controller goes away.
+    /// Watches the clip view, so scrolling and resizing ask for the rows then in
+    /// `visibleRect` (`clipViewDidChange(_:)`), once per main-actor turn however many
+    /// steps a scroll posts. Selector observers are removed by Foundation when the
+    /// controller goes away.
     private func observeVisibleRows() {
         let clip = scrollView.contentView
         clip.postsBoundsChangedNotifications = true
@@ -216,8 +233,13 @@ public final class GitHistoryViewController: NSViewController {
     }
 
     @objc private func clipViewDidChange(_ notification: Notification) {
-        requestVisibleSignatures()
-        requestVisibleReviews()
+        guard visibleRequestTask == nil else { return }
+        visibleRequestTask = Task { [weak self] in
+            guard let self else { return }
+            self.visibleRequestTask = nil
+            self.requestVisibleSignatures()
+            self.requestVisibleReviews()
+        }
     }
 
     /// Asks the data source for the visible rows' signatures, after every reload and every
