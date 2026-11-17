@@ -112,7 +112,7 @@ extension GitWindowSession {
         }
         let url: URL
         do {
-            url = try await whileGitRuns { try await list.create(draft, head: head.name) }
+            url = try await whileGitRuns { try await list.create(draft) }
         } catch {
             showPullRequestFailure(error)
             return

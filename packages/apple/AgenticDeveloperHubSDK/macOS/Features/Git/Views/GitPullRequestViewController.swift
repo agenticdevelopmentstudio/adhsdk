@@ -199,7 +199,7 @@ public final class GitPullRequestViewController: NSViewController {
         checksLabel.stringValue = GitPullRequestPresentation.checksText(pullRequest.checks)
         updatedLabel.stringValue = Self.dateFormatter.string(from: pullRequest.updatedAt)
         openButton.isEnabled = true
-        checkoutButton.isEnabled = pullRequest.headRefName != checkedOutBranch
+        checkoutButton.isEnabled = pullRequest.isCrossRepository || pullRequest.headRefName != checkedOutBranch
     }
 
     @objc private func openPressed(_ sender: NSButton) {

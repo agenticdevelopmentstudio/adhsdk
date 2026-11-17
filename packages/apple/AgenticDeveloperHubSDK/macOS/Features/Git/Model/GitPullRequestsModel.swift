@@ -237,9 +237,12 @@ public final class GitPullRequestsModel {
         try await gitHub.checkout(number, in: root)
     }
 
-    /// `gh pr create` from `head` with `draft`'s values, returning the new pull request's URL.
-    func create(_ draft: GitPullRequestDraft, head: String) async throws -> URL {
-        try await gitHub.create(title: draft.title, body: draft.body, base: draft.base, head: head,
+    /// `gh pr create` with `draft`'s values, returning the new pull request's URL. No `--head`:
+    /// a bare branch name means a branch in the base repository, which breaks a fork or an
+    /// upstream branch named differently, so `gh` takes the head from the checked-out branch's
+    /// tracking ref. The caller re-reads the branch after the form, so that is the form's branch.
+    func create(_ draft: GitPullRequestDraft) async throws -> URL {
+        try await gitHub.create(title: draft.title, body: draft.body, base: draft.base,
                                 draft: draft.draft, in: root)
     }
 

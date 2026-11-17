@@ -247,7 +247,7 @@ struct GitWindowSessionPullRequestTests {
         #expect(model.headBranch?.upstream == "origin/parser")
         let creates = await recorder.calls.filter { $0.starts(with: ["pr", "create"]) }
         #expect(creates == [["pr", "create", "--title", "Parser", "--body", "Adds it", "--base", "main",
-                             "--head", "parser", "--draft"]])
+                             "--draft"]])
         #expect(presenter.failures.isEmpty)
     }
 

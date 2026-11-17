@@ -93,12 +93,16 @@ public struct GitPullRequest: Sendable, Hashable, Identifiable, Decodable {
     public let checks: GitPullRequestChecks?
     /// `APPROVED`, `CHANGES_REQUESTED` or `REVIEW_REQUIRED`.
     public let reviewDecision: String?
+    /// Whether the head branch is in another repository (a fork), so its name says nothing
+    /// about a local branch of the same name.
+    public let isCrossRepository: Bool
 
     public var id: Int { number }
 
     public init(number: Int, title: String, state: String, isDraft: Bool, author: String,
                 headRefName: String, baseRefName: String, url: URL, updatedAt: Date,
-                checks: GitPullRequestChecks?, reviewDecision: String?) {
+                checks: GitPullRequestChecks?, reviewDecision: String?,
+                isCrossRepository: Bool = false) {
         self.number = number
         self.title = title
         self.state = state
@@ -110,11 +114,12 @@ public struct GitPullRequest: Sendable, Hashable, Identifiable, Decodable {
         self.updatedAt = updatedAt
         self.checks = checks
         self.reviewDecision = reviewDecision
+        self.isCrossRepository = isCrossRepository
     }
 
     enum CodingKeys: String, CodingKey {
         case number, title, state, isDraft, author, headRefName, baseRefName, url, updatedAt
-        case statusCheckRollup, reviewDecision
+        case statusCheckRollup, reviewDecision, isCrossRepository
     }
 
     private struct Author: Decodable {
@@ -127,6 +132,7 @@ public struct GitPullRequest: Sendable, Hashable, Identifiable, Decodable {
         title = try container.decode(String.self, forKey: .title)
         state = try container.decode(String.self, forKey: .state)
         isDraft = try container.decodeIfPresent(Bool.self, forKey: .isDraft) ?? false
+        isCrossRepository = try container.decodeIfPresent(Bool.self, forKey: .isCrossRepository) ?? false
         // A deleted account comes back as `{"login": ""}` or not at all.
         author = (try container.decodeIfPresent(Author.self, forKey: .author))?.login ?? ""
         headRefName = try container.decode(String.self, forKey: .headRefName)

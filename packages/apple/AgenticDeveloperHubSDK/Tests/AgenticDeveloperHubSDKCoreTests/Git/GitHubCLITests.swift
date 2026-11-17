@@ -55,8 +55,8 @@ struct GitHubCLITests {
     }
 
     static let fields = "number,title,state,isDraft,author,headRefName,baseRefName,url,updatedAt,"
-        + "statusCheckRollup,reviewDecision"
-    static let branchFields = fields + ",isCrossRepository,headRepositoryOwner"
+        + "statusCheckRollup,reviewDecision,isCrossRepository"
+    static let branchFields = fields + ",headRepositoryOwner"
 
     /// One `pr list --head main --state all --limit 20` row, in gh's shape.
     static func branchRow(number: Int, state: String, updatedAt: String, crossRepository: Bool,

@@ -900,7 +900,8 @@ input it cannot read rather than failing.
   (untracked included), and whether anything is staged
   (`hasStagedChanges`); `isDirty` is true when anything is staged too.
   `resetMode` MUST be `.soft` when anything is staged and `.mixed`
-  otherwise. Its `target` is nil while an operation is in progress.
+  otherwise. Its `target` is nil while an operation is in progress or any path is
+  unmerged (`hasConflicts`, from the status's conflicts).
 
 ### Signatures
 

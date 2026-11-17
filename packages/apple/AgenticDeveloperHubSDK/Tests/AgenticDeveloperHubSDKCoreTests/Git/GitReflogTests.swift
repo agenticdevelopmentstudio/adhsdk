@@ -79,5 +79,7 @@ struct GitReflogTests {
         #expect(GitUndoState.empty.target == nil)
         let preflight = GitUndoPreflight(state: state, operation: .none, isDirty: false)
         #expect(preflight.target?.selector == "main@{2}")
+        let conflicted = GitUndoPreflight(state: state, operation: .none, isDirty: true, hasConflicts: true)
+        #expect(conflicted.target == nil)
     }
 }

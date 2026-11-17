@@ -388,8 +388,8 @@ extension GitWindowSession {
             title = "Undo the last change to \(ref.hasPrefix("refs/heads/") ? String(ref.dropFirst(11)) : ref)?"
         }
         let message = preflight.resetMode == .soft
-            ? "HEAD moves back to \(target.shortSha); the undone changes are staged with what is already staged."
-            : "HEAD moves back to \(target.shortSha); changes stay in the working copy."
+            ? "HEAD moves to \(target.shortSha); the undone changes are staged with what is already staged."
+            : "HEAD moves to \(target.shortSha); changes stay in the working copy."
         return GitConfirmation(title: title, message: message, actionTitle: "Undo", isDestructive: false)
     }
 

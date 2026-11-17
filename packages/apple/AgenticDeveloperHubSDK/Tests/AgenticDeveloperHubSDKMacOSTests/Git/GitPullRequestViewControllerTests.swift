@@ -98,6 +98,19 @@ struct GitPullRequestViewControllerTests {
         #expect(controller.checkoutButton.isEnabled)
     }
 
+    @Test("Check Out stays on for a fork's pull request whose branch shares the local name")
+    func checkoutOnForAFork() {
+        let controller = GitPullRequestViewController()
+        controller.loadViewIfNeeded()
+        let fork = GitPullRequest(
+            number: 9, title: "From a fork", state: "OPEN", isDraft: false, author: "stranger",
+            headRefName: "feature", baseRefName: "main", url: URL(string: "https://github.com/o/r/pull/9")!,
+            updatedAt: Self.updatedAt, checks: nil, reviewDecision: nil, isCrossRepository: true)
+        controller.checkedOutBranch = "feature"
+        controller.show(fork)
+        #expect(controller.checkoutButton.isEnabled)
+    }
+
     @Test("showing nil empties the fields and turns both buttons off")
     func showNilEmpties() {
         let controller = GitPullRequestViewController()

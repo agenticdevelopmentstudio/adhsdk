@@ -1093,7 +1093,7 @@ struct GitWindowSessionActionTests {
         let (model, session) = await makeSession(repository, presenter: presenter)
         let expected = GitConfirmation(
             title: "Undo \"c.txt amended\"?",
-            message: "HEAD moves back to \(String(beforeAmend.prefix(8))); changes stay in the working copy.",
+            message: "HEAD moves to \(String(beforeAmend.prefix(8))); changes stay in the working copy.",
             actionTitle: "Undo", isDestructive: false)
 
         await act(session, .undo)
@@ -1124,7 +1124,7 @@ struct GitWindowSessionActionTests {
 
         #expect(presenter.confirmations == [GitConfirmation(
             title: "Undo \"c.txt amended\"?",
-            message: "HEAD moves back to \(String(beforeAmend.prefix(8))); "
+            message: "HEAD moves to \(String(beforeAmend.prefix(8))); "
                 + "the undone changes are staged with what is already staged.",
             actionTitle: "Undo", isDestructive: false)])
         #expect(presenter.failures.isEmpty)

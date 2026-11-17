@@ -52,13 +52,17 @@ public struct GitUndoPreflight: Sendable, Equatable {
     public let isDirty: Bool
     /// Whether the index differs from HEAD: anything is staged.
     public let hasStagedChanges: Bool
+    /// Whether any path is unmerged. A reset rewrites the index and would drop the
+    /// unmerged stages, so Undo has no target while there are any.
+    public let hasConflicts: Bool
 
     public init(state: GitUndoState, operation: GitOperationState, isDirty: Bool,
-                hasStagedChanges: Bool = false) {
+                hasStagedChanges: Bool = false, hasConflicts: Bool = false) {
         self.state = state
         self.operation = operation
         self.isDirty = isDirty || hasStagedChanges
         self.hasStagedChanges = hasStagedChanges
+        self.hasConflicts = hasConflicts
     }
 
     /// How Undo resets: `.soft` while anything is staged, so the index, with what was
@@ -70,9 +74,10 @@ public struct GitUndoPreflight: Sendable, Equatable {
         hasStagedChanges ? .soft : .mixed
     }
 
-    /// `state.target`, or nil while a merge, rebase, cherry-pick or revert is in progress.
+    /// `state.target`, or nil while a merge, rebase, cherry-pick or revert is in progress or
+    /// any path is unmerged.
     public var target: GitReflogEntry? {
-        operation == .none ? state.target : nil
+        operation == .none && !hasConflicts ? state.target : nil
     }
 }
 
@@ -106,6 +111,7 @@ extension GitClient {
         let changes = try await status(in: directory, caller: caller)
         let hasStaged = !changes.stagedFiles.isEmpty
         return GitUndoPreflight(state: state, operation: operation,
-                                isDirty: hasStaged || !changes.unstagedFiles.isEmpty, hasStagedChanges: hasStaged)
+                                isDirty: hasStaged || !changes.unstagedFiles.isEmpty, hasStagedChanges: hasStaged,
+                                hasConflicts: !changes.conflicts.isEmpty)
     }
 }

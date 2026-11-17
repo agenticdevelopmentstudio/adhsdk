@@ -43,7 +43,7 @@ public actor GitHubCLI {
     /// The fields every pull request query asks for, in `--json` order.
     public static let pullRequestFields = [
         "number", "title", "state", "isDraft", "author", "headRefName", "baseRefName",
-        "url", "updatedAt", "statusCheckRollup", "reviewDecision"
+        "url", "updatedAt", "statusCheckRollup", "reviewDecision", "isCrossRepository"
     ]
 
     /// The variables every `gh` child is given, beside `PATH`.
@@ -118,7 +118,7 @@ public actor GitHubCLI {
     static let branchCandidateLimit = 20
 
     /// The branch lookup's fields: every pull request field, and where its head lives.
-    static let branchLookupFields = pullRequestFields + ["isCrossRepository", "headRepositoryOwner"]
+    static let branchLookupFields = pullRequestFields + ["headRepositoryOwner"]
 
     /// The pull request whose head is this repository's `branch`, or nil when there is
     /// none: `gh pr list --head <branch> --state all --limit 20 --json …`, then the
