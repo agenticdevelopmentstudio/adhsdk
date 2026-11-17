@@ -86,12 +86,20 @@ export function assertSecondFactor(
 }
 
 /** Run the PASSWORDLESS assertion for an account named by identifier (no password
- *  step — the assertion is the only factor). */
+ *  step — the assertion is the only factor).
+ *
+ *  `clientId` names the OAuth client the login is for. The options route picks the login
+ *  realm from it (hub, or the operator realm for `admin`), so a central login must send it:
+ *  without it the AS answers with the hub realm's options. An in-site login omits it. */
 export function assertPasswordlessPasskey(
   identifier: string,
   optionsUrl: string,
+  clientId?: string,
 ): Promise<WebauthnAssertion> {
-  return runAssertion(optionsUrl, { method: 'passkey', identifier }, 'No passkey is available for this account.')
+  const body = clientId
+    ? { method: 'passkey', identifier, client_id: clientId }
+    : { method: 'passkey', identifier }
+  return runAssertion(optionsUrl, body, 'No passkey is available for this account.')
 }
 
 /** Push an SMS login code to the challenged account's verified primary phone. */

@@ -1,4 +1,10 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
+
+// The passkey ceremony itself is the browser's; these tests are about what is POSTed around it.
+vi.mock('@simplewebauthn/browser', () => ({
+  startAuthentication: vi.fn(async () => ({ id: 'cred' })),
+}))
+
 import {
   beginLogin,
   ssoLogout,
@@ -6,6 +12,8 @@ import {
   stripSsoFragment,
   takeReturnTo,
   centralEmailLogin,
+  centralPasswordlessPasskey,
+  offersCredentialLogin,
   readCentralParams,
   beginLinkProvider,
   providerSigninUrl,
@@ -342,6 +350,76 @@ describe('centralEmailLogin', () => {
       }),
     ).rejects.toThrow('invalid credentials')
     expect(loc.href).toBe('') // never navigated
+  })
+})
+
+describe('centralPasswordlessPasskey', () => {
+  let savedFetch: typeof globalThis.fetch
+  beforeEach(() => {
+    savedFetch = globalThis.fetch
+  })
+  afterEach(() => {
+    globalThis.fetch = savedFetch
+  })
+
+  function stubFetchSequence(...bodies: unknown[]): Array<{ url: string; init?: RequestInit }> {
+    const calls: Array<{ url: string; init?: RequestInit }> = []
+    globalThis.fetch = (async (url: string, init?: RequestInit) => {
+      const body = bodies[calls.length]
+      calls.push({ url, init })
+      return new Response(JSON.stringify(body), {
+        status: 200,
+        headers: { 'content-type': 'application/json' },
+      })
+    }) as unknown as typeof fetch
+    return calls
+  }
+
+  // The options request picks the login REALM from the client: without the client an operator
+  // signing in to the admin site got the hub realm's options, so a passkey they hold as an
+  // operator was never offered. `client_id` is the /v1 wire name of the route's `clientId`.
+  it('names the target client on the passkey options request', async () => {
+    stubLocation('https://hub.example.com')
+    const calls = stubFetchSequence(
+      { options: {}, token: 't2' },
+      { redirectUrl: 'https://admin.example.com/auth/callback#code=z' },
+    )
+
+    await centralPasswordlessPasskey(
+      {
+        clientId: 'admin',
+        returnUrl: 'https://admin.example.com/auth/callback',
+        authApiBase: 'https://api.hub.example.com',
+      },
+      'root@example.com',
+    )
+
+    expect(calls[0]!.url).toBe('https://api.hub.example.com/v1/auth/passkey_challenges')
+    expect(JSON.parse(calls[0]!.init!.body as string)).toEqual({
+      method: 'passkey',
+      identifier: 'root@example.com',
+      client_id: 'admin',
+    })
+    // The completion still carries the same client + return, as every central step does.
+    expect(JSON.parse(calls[1]!.init!.body as string)).toMatchObject({
+      clientId: 'admin',
+      return: 'https://admin.example.com/auth/callback',
+    })
+  })
+})
+
+describe('offersCredentialLogin', () => {
+  it('offers a password and a passkey to the hub and the admin console', () => {
+    expect(offersCredentialLogin('adh')).toBe(true)
+    expect(offersCredentialLogin('admin')).toBe(true)
+  })
+
+  // The backend answers 400 at the central password and passkey POSTs for a customer
+  // (ecosystem) client, so offering the form there is offering a button that cannot work.
+  it('does not offer them to any other client', () => {
+    expect(offersCredentialLogin('acme-shop')).toBe(false)
+    expect(offersCredentialLogin('')).toBe(false)
+    expect(offersCredentialLogin('ADMIN')).toBe(false)
   })
 })
 

@@ -10,18 +10,27 @@ const centralCompleteMfaCode = vi.fn()
 const centralCompleteMfaPasskey = vi.fn()
 const centralSendMfaSms = vi.fn()
 const providerSigninUrl = vi.fn((..._args: unknown[]) => 'https://as.example/oauth/signin/start')
+// What the AS relayed to this login page, or null for a direct visit. The real
+// readCentralParams reads the page's query; tests set this instead.
+let relayed: { clientId: string; returnUrl: string } | null = null
 
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push, replace: vi.fn() }) }))
 vi.mock('next/link', () => ({ default: ({ children, href }: { children: ReactNode; href: string }) => <a href={href}>{children}</a> }))
 // The card's whole job is to resolve ONE target and post the central steps against
 // it, so the target resolver is the seam these tests drive: a stub standing in for
 // both the relayed and the synthesized answer (sso.test.ts owns which is which).
-vi.mock('../sso', () => ({
-  centralLoginTarget: (opts: { clientId: string; callbackPath?: string; authApiBase?: string; returnTo?: string }) => ({
-    clientId: opts.clientId,
-    returnUrl: `https://site.example${opts.callbackPath ?? '/auth/callback'}`,
-    authApiBase: opts.authApiBase,
-  }),
+// Which clients get the password form is sso.ts's rule, so the real one is used.
+vi.mock('../sso', async () => ({
+  offersCredentialLogin: (await vi.importActual<typeof import('../sso')>('../sso')).offersCredentialLogin,
+  readCentralParams: () => relayed,
+  centralLoginTarget: (opts: { clientId: string; callbackPath?: string; authApiBase?: string; returnTo?: string }) =>
+    relayed
+      ? { ...relayed, authApiBase: opts.authApiBase }
+      : {
+          clientId: opts.clientId,
+          returnUrl: `https://site.example${opts.callbackPath ?? '/auth/callback'}`,
+          authApiBase: opts.authApiBase,
+        },
   centralEmailLogin: (...a: unknown[]) => centralEmailLogin(...a),
   centralPasswordlessPasskey: (...a: unknown[]) => centralPasswordlessPasskey(...a),
   centralCompleteMfaCode: (...a: unknown[]) => centralCompleteMfaCode(...a),
@@ -50,6 +59,7 @@ beforeEach(() => {
   centralSendMfaSms.mockReset().mockResolvedValue(undefined)
   providerSigninUrl.mockReset().mockReturnValue('https://as.example/oauth/signin/start')
   window.sessionStorage.clear()
+  relayed = null
 })
 
 describe('LoginCard central credential login', () => {
@@ -107,6 +117,60 @@ describe('LoginCard central credential login', () => {
   it('hides the passkey button unless asked for it', () => {
     render(<LoginCard clientId="adh" postLoginRedirect="/home" />)
     expect(screen.queryByRole('button', { name: /sign in with a passkey/i })).toBeNull()
+  })
+})
+
+// The hub's login page is where every site's central login lands, so the client it
+// signs in FOR is whichever one the AS relayed — not the card's own `adh`.
+describe('LoginCard for a relayed client', () => {
+  const google = [{ id: 'google', label: 'Continue with Google' }]
+
+  // An operator signing in to the admin console with a passkey: the options request
+  // has to name `admin`, or the AS hands back the hub realm's options.
+  it('runs the passkey login for the relayed admin client', async () => {
+    relayed = { clientId: 'admin', returnUrl: 'https://admin.example/auth/callback' }
+    render(<LoginCard clientId="adh" authApiBase="https://as.example" postLoginRedirect="/home" showPasskey />)
+    fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'root@example.com' } })
+    fireEvent.click(screen.getByRole('button', { name: /sign in with a passkey/i }))
+    await waitFor(() =>
+      expect(centralPasswordlessPasskey).toHaveBeenCalledWith(
+        { clientId: 'admin', returnUrl: 'https://admin.example/auth/callback', authApiBase: 'https://as.example' },
+        'root@example.com',
+      ),
+    )
+  })
+
+  // A customer (ecosystem) client signs in with a social provider only; the AS answers
+  // 400 to the central password and passkey routes for it, so the card offers neither.
+  it('offers only the social providers to a customer client', () => {
+    relayed = { clientId: 'acme-shop', returnUrl: 'https://acme.example/auth/callback' }
+    render(
+      <LoginCard clientId="adh" postLoginRedirect="/home" showPasskey showGithub={false} oauthProviders={google} />,
+    )
+    expect(screen.getByRole('button', { name: /continue with google/i })).toBeTruthy()
+    expect(screen.queryByLabelText(/email/i)).toBeNull()
+    expect(screen.queryByLabelText(/password/i)).toBeNull()
+    expect(screen.queryByRole('button', { name: /log in with email/i })).toBeNull()
+    expect(screen.queryByRole('button', { name: /sign in with a passkey/i })).toBeNull()
+    expect(screen.queryByText('or')).toBeNull()
+  })
+
+  it('keeps the password form and the passkey for the relayed admin client', () => {
+    relayed = { clientId: 'admin', returnUrl: 'https://admin.example/auth/callback' }
+    render(
+      <LoginCard clientId="adh" postLoginRedirect="/home" showPasskey showGithub={false} oauthProviders={google} />,
+    )
+    expect(screen.getByLabelText(/email/i)).toBeTruthy()
+    expect(screen.getByRole('button', { name: /log in with email/i })).toBeTruthy()
+    expect(screen.getByRole('button', { name: /sign in with a passkey/i })).toBeTruthy()
+  })
+
+  // In-site mode is an app that is its own authorization server; the central client
+  // rule does not reach it.
+  it('leaves in-site mode alone', () => {
+    relayed = { clientId: 'acme-shop', returnUrl: 'https://acme.example/auth/callback' }
+    render(<LoginCard clientId="builds" loginMode="in-site" onEmailLogin={vi.fn()} postLoginRedirect="/overview" />)
+    expect(screen.getByLabelText(/email/i)).toBeTruthy()
   })
 })
 
