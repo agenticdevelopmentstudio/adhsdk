@@ -10,8 +10,10 @@ import { FeedbackPane } from "./panes/FeedbackPane";
 import { InvitationsPane } from "./panes/InvitationsPane";
 import { LlmProvidersPane } from "./panes/LlmProvidersPane";
 import { MessagingPane } from "./panes/MessagingPane";
+import { OperatorsPane } from "./panes/OperatorsPane";
 import { ProcessingConfigsPane } from "./panes/ProcessingConfigsPane";
 import { ReservedIdentifiersPane } from "./panes/ReservedIdentifiersPane";
+import { SecurityPane } from "./panes/SecurityPane";
 import { ServerBagsPane } from "./panes/ServerBagsPane";
 import { SyncPane } from "./panes/SyncPane";
 import { UsageOverviewPane } from "./panes/UsageOverviewPane";
@@ -46,4 +48,6 @@ export const ADMIN_PANES: Record<AdminTopicId, ComponentType<{ help?: ReactNode 
   "reserved-identifiers": ReservedIdentifiersPane,
   "ai-nodes": AiNodesPane,
   "processing-configs": ProcessingConfigsPane,
+  operators: OperatorsPane,
+  security: SecurityPane,
 };

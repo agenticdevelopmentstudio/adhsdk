@@ -16,11 +16,13 @@
  * This package composes @adh-sdk/resource's rail (StackGroupDetail /
  * RailHostBoundary) and @adh-sdk/api-explorer's ApiButton, so a host
  * importing this file gets their sources too and needs no further lines on their
- * account.
+ * account. The Security section mounts @adh-sdk/account's SecurityWorkspace, so its sources are
+ * chained here for the same reason.
  *
  * @import must come before every other at-rule, including @source below: a conformant CSS
  * parser drops a misplaced @import silently, with no build error, which would mean these
  * packages' utilities are never registered and the admin console ships unstyled. */
+@import "@adh-sdk/account/sources.css";
 @import "@adh-sdk/resource/sources.css";
 @import "@adh-sdk/api-explorer/sources.css";
 @source "./src/**/*.{ts,tsx}";

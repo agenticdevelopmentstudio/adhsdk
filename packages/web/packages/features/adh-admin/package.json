@@ -41,6 +41,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@adh-sdk/account": "workspace:*",
     "@adh-sdk/adh": "workspace:*",
     "@adh-sdk/adh-api-types": "workspace:*",
     "@adh-sdk/adh-ui": "workspace:*",
