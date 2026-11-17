@@ -262,8 +262,66 @@ export function useAdminUsers() {
   return { data, isLoading, isError, error, refetch };
 }
 
+// ── Operators ────────────────────────────────────────────────────────────
+//
+// `GET /api/v1/auth/capabilities/operators` (admin-gated): every live account in the Operators
+// ecosystem, oldest first, and whether each holds the `admin` capability. The route is newer than
+// the generated adh-api-types schema, so its /v1 row is written by hand here, the way the audit's
+// pane row is below; `toOperator` maps it onto the camelCase shape the pane reads.
+
+/** One operator row as the /v1 gateway serves it (snake_case, `created` in unix seconds). */
+export interface OperatorWire {
+  id: string;
+  email: string;
+  name: string;
+  created: number;
+  holds_admin: boolean;
+}
+
+/** One operator account, as the Operators pane shows it. */
+export interface Operator {
+  id: string;
+  email: string;
+  name: string;
+  /** ISO timestamp the account was created. */
+  createdAt: string;
+  /** Whether the account holds the `admin` capability. */
+  holdsAdmin: boolean;
+}
+
+function toOperator(w: OperatorWire): Operator {
+  return {
+    id: w.id,
+    email: w.email,
+    name: w.name,
+    createdAt: unixToIso(w.created),
+    holdsAdmin: w.holds_admin,
+  };
+}
+
+const OPERATORS_KEY = ["admin", "operators"];
+
+/** Every operator account, read whole (the list is a handful of people). */
+export function listOperators(): Promise<Operator[]> {
+  return listAllV1<OperatorWire>("/api/v1/auth/capabilities/operators").then((rows) =>
+    rows.map(toOperator),
+  );
+}
+
+export function useOperators() {
+  return useQuery({ queryKey: OPERATORS_KEY, queryFn: listOperators });
+}
+
 // Grant/revoke a capability via the admin-gated capabilities endpoints, which
-// target any user (a plain create would stamp the caller).
+// target any user (a plain create would stamp the caller). Both the Users and the
+// Operators panes show who holds `admin`, so a change refreshes both lists.
+
+function invalidateRoleHolders(qc: ReturnType<typeof useQueryClient>): Promise<void> {
+  return Promise.all([
+    qc.invalidateQueries({ queryKey: ["admin", "users"] }),
+    qc.invalidateQueries({ queryKey: OPERATORS_KEY }),
+  ]).then(() => undefined);
+}
 
 export function useGrantRole() {
   const qc = useQueryClient();
@@ -280,7 +338,7 @@ export function useGrantRole() {
         body: JSON.stringify(body),
       });
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["admin", "users"] }),
+    onSuccess: () => invalidateRoleHolders(qc),
   });
 }
 
@@ -297,7 +355,7 @@ export function useRevokeRole() {
         body: JSON.stringify(body),
       });
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["admin", "users"] }),
+    onSuccess: () => invalidateRoleHolders(qc),
   });
 }
 

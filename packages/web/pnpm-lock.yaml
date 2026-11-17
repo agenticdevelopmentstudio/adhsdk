@@ -1168,6 +1168,9 @@ importers:
 
   packages/features/adh-admin:
     dependencies:
+      '@adh-sdk/account':
+        specifier: workspace:*
+        version: link:../account
       '@adh-sdk/adh':
         specifier: workspace:*
         version: link:../../adh

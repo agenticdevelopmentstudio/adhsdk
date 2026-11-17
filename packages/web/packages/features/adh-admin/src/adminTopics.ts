@@ -8,6 +8,8 @@ import {
   MessageSquare,
   MessageCircle,
   Shield,
+  UserCheck,
+  LockKeyhole,
   Cable,
   FolderSync,
   Gauge,
@@ -61,7 +63,9 @@ export type AdminTopicId =
   | "breakdown"
   | "reserved-identifiers"
   | "ai-nodes"
-  | "processing-configs";
+  | "processing-configs"
+  | "operators"
+  | "security";
 
 /** One category row of the rail's first level. */
 export type AdminCategory = {
@@ -89,7 +93,7 @@ export const ADMIN_CATEGORIES: AdminCategory[] = [
   {
     id: "access",
     label: "Access",
-    description: "Accounts, invitations, and the access audit trail",
+    description: "Accounts, operators, invitations, your sign-in security, and the audit trail",
     icon: UserCog,
   },
   {
@@ -193,6 +197,13 @@ export const ADMIN_TOPICS: AdminTopic[] = [
     icon: MessageSquare,
   },
   {
+    id: "operators",
+    category: "access",
+    label: "Operators",
+    description: "Who can sign in to this console, and who holds admin",
+    icon: UserCheck,
+  },
+  {
     id: "processing-configs",
     category: "ai-processing",
     label: "Processing Configs",
@@ -205,6 +216,13 @@ export const ADMIN_TOPICS: AdminTopic[] = [
     label: "Reserved Identifiers",
     description: "Names held with nothing using them",
     icon: KeyRound,
+  },
+  {
+    id: "security",
+    category: "access",
+    label: "Security",
+    description: "Your passkeys, authenticator app and recovery codes",
+    icon: LockKeyhole,
   },
   {
     id: "server-bags",
