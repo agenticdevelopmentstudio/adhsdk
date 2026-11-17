@@ -131,7 +131,7 @@ extension Array where Element == PrivacyWord {
 /// app's entitlements, not to this type (`dependency-injection`). Access
 /// control needs the data-protection keychain, so the binary must carry a
 /// `keychain-access-groups` entitlement either way.
-public struct PrivacyWordStore: Sendable {
+public struct PrivacyWordStore: PrivacyWordStorage {
 
     public enum StoreError: Error, LocalizedError, Equatable {
         case authenticationFailed(String)
@@ -147,7 +147,7 @@ public struct PrivacyWordStore: Sendable {
             case .needsAuthentication: "The privacy words need you to authenticate once before they can be read."
             case .keychain(let status):
                 (SecCopyErrorMessageString(status, nil) as String?) ?? "Keychain error \(status)."
-            case .unreadable: "The privacy words in the keychain could not be read."
+            case .unreadable: "The stored privacy words could not be read."
             }
         }
     }
@@ -165,6 +165,10 @@ public struct PrivacyWordStore: Sendable {
         self.service = service
         self.account = account
     }
+
+    /// `service.account`: the keychain item, and the change notification
+    /// every app sharing it has always posted (`service.account.changed`).
+    public var changeIdentity: String { "\(service).\(account)" }
 
     /// Asks the user to prove they are the Mac's owner — Touch ID, or the
     /// account password — and returns the context that proved it.

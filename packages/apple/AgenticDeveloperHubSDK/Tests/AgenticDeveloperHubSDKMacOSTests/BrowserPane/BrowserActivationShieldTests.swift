@@ -235,6 +235,49 @@ final class BrowserActivationShieldTests: XCTestCase {
 
     /// Loads `html` into a fresh offscreen web view and waits for it, or
     /// skips when this test host cannot load a page at all.
+    /// Listeners on one target run in the order they were added, so a raise
+    /// over a page already showing cannot get ahead of a listener the page
+    /// added at load by adding its own. The standby the document started
+    /// with is what swallows then; the lift turns it back off.
+    func testALiveRaiseSwallowsBlurBeforeAListenerThePageAddedAtLoad() async throws {
+        let configuration = WKWebViewConfiguration()
+        configuration.userContentController.addUserScript(WKUserScript(
+            source: BrowserActivationShield.standbyScript(active: false), injectionTime: .atDocumentStart,
+            forMainFrameOnly: false, in: .world(name: BrowserActivationShield.standbyWorldName)))
+        let webView = try await loadedWebView("""
+            <script>window.blurs = 0;
+            window.addEventListener('blur', function () { window.blurs += 1; }, true);</script>
+            """, configuration: configuration)
+        let blur = "window.dispatchEvent(new FocusEvent('blur')); String(window.blurs)"
+        let down = try await webView.evaluateJavaScript(blur) as? String
+        XCTAssertEqual(down, "1", "with the shield down the page hears blur")
+
+        let shield = BrowserActivationShield(webView: webView)
+        shield.apply(active: true)
+        _ = try await waitFor("String(document.hasFocus() && document.hidden === false)", toBe: "true", in: webView)
+        let raised = try await webView.evaluateJavaScript(blur) as? String
+        XCTAssertEqual(raised, "1", "a live raise let the page's load-time listener hear blur")
+
+        shield.apply(active: false)
+        _ = try await waitFor(
+            "String(Object.getOwnPropertyDescriptor(document, 'hidden') === undefined)", toBe: "true", in: webView)
+        let lifted = try await webView.evaluateJavaScript(blur) as? String
+        XCTAssertEqual(lifted, "2", "the lift left the standby swallowing")
+    }
+
+    func testTheStandbyIsInstalledInItsOwnWorldWithTheShieldUpOrDown() throws {
+        for hides in [false, true] {
+            let settings = makeSettings()
+            settings.set(hides, for: UserSettings.browserPrivacyHideActivation)
+            let pane = SafariBrowserPaneViewController(store: EphemeralPaneStateStore(), settings: settings)
+            let standby = pane.webView.configuration.userContentController.userScripts
+                .filter { $0.source.contains("__adkActivationStandby") }
+            XCTAssertEqual(standby.count, 1, "shield \(hides ? "up" : "down"): one standby")
+            XCTAssertEqual(standby.first?.isForMainFrameOnly, false, "every frame gets the standby")
+            XCTAssertEqual(standby.first?.source, BrowserActivationShield.standbyScript(active: hides))
+        }
+    }
+
     private func loadedWebView(
         _ html: String,
         configuration: WKWebViewConfiguration = WKWebViewConfiguration()

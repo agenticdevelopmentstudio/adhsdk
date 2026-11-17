@@ -131,7 +131,29 @@ final class AgentPrivacySettingsGroup {
             binding.register(edit, as: Self.editWordsIdentifier)
             group.addSettingSubview(editView)
         }
+        if !binding.isPaneScope, PrivacyTestingWords.isAvailable { addTestingWordsRows(to: group) }
         return group
+    }
+
+    static let testingWordsIdentifier = "settings.browser.agent-privacy.testing-words"
+    static let testingWordsPathIdentifier = "settings.browser.agent-privacy.testing-words-path"
+
+    /// Debug builds: the switch onto a JSON file of testing words and the
+    /// file's path (``PrivacyTestingWords``). Global settings only, so the
+    /// Settings window alone shows them.
+    private func addTestingWordsRows(to group: ComposableSettings.GroupView) {
+        let enabledKey = UserSettings.privacyTestingWordsEnabled
+        let enabled = binding.model("Use testing words", enabledKey)
+        let enabledView = ComposableSettings.CheckboxView(with: enabled)
+        _ = enabledView.toggle.accessibilityID(Self.testingWordsIdentifier)
+        binding.add(enabledView, model: enabled, key: enabledKey, to: group)
+
+        let pathKey = UserSettings.privacyTestingWordsPath
+        let path = binding.model("Testing words file", pathKey)
+        let pathView = ComposableSettings.TextEditView(with: path)
+        pathView.textField.placeholderString = "~/privacy-testing-words.json"
+        _ = pathView.textField.accessibilityID(Self.testingWordsPathIdentifier)
+        binding.add(pathView, model: path, key: pathKey, to: group)
     }
 
     /// Authenticates, then opens the privacy words editor over the panel's

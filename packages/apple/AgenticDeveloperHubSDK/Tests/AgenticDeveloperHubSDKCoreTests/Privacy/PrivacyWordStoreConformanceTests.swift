@@ -50,7 +50,7 @@ import Testing
     @Test("V12: every error has its description")
     func testV12_errorDescriptions() {
         #expect(PrivacyWordStore.StoreError.unreadable.errorDescription
-                == "The privacy words in the keychain could not be read.")
+                == "The stored privacy words could not be read.")
         #expect(PrivacyWordStore.StoreError.needsAuthentication.errorDescription
                 == "The privacy words need you to authenticate once before they can be read.")
         #expect(PrivacyWordStore.StoreError.authenticationFailed("nope").errorDescription == "nope")

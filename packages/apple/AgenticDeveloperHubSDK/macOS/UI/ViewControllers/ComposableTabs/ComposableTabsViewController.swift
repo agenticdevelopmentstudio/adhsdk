@@ -692,7 +692,7 @@ public final class ComposableTabsViewController: ThemedSplitViewController {
         if !showsRail, isViewLoaded, layoutChildren.count > 1,
            splitViewItems.count == layoutChildren.count {
             let total = splitView.isVertical ? splitView.bounds.width : splitView.bounds.height
-            if total > 1 {
+            if total > 1, !panesOverflow(total) {
                 for (child, item) in zip(layoutChildren, splitViewItems) where !item.isCollapsed {
                     child.thicknessFraction = thickness(of: item.viewController.view) / total
                 }
@@ -701,6 +701,17 @@ public final class ComposableTabsViewController: ThemedSplitViewController {
         for child in layoutChildren {
             (child as? ComposableTabsViewController)?.captureThicknessFractions()
         }
+    }
+
+    /// Whether the panes laid out here take more room than the split has —
+    /// their minimums do not fit it, so AppKit has run them past its end. What
+    /// each one measures then is not a share of anything: a 500pt pane in a
+    /// 517pt split beside a 300pt one read as 0.967.
+    private func panesOverflow(_ total: CGFloat) -> Bool {
+        let shown = splitViewItems.filter { !$0.isCollapsed }
+        let panes = shown.reduce(0) { $0 + thickness(of: $1.viewController.view) }
+        let dividers = splitView.dividerThickness * CGFloat(max(shown.count - 1, 0))
+        return panes + dividers > total + 1
     }
 
     // MARK: - Keeping shares while the container moves
@@ -721,7 +732,8 @@ public final class ComposableTabsViewController: ThemedSplitViewController {
     /// divider put back after AppKit has laid the panes out its own way gives
     /// each pane two sizes per step, and a web view paints both: the slide
     /// flickers. Each share is a width (or height) equal to that fraction of
-    /// the split, below required so a pane's minimum still wins; the last pane
+    /// the split, at `heldSharePriority` so a pane's minimum still wins and the
+    /// window keeps its size; the last pane
     /// takes what is left, as it does in `applyPreferredThicknessesIfNeeded`.
     ///
     /// Idempotent: a drag holds on its first step and keeps the shares it
@@ -742,6 +754,14 @@ public final class ComposableTabsViewController: ThemedSplitViewController {
         releaseShares()
     }
 
+    /// Above every pane's holding priority, so the shares decide where the
+    /// dividers go, and below the window's own size (`windowSizeStayPut`), so
+    /// they never decide how big the window is. A share is a fraction of the
+    /// split, and one the split's minimums cannot honour at its current length
+    /// would otherwise be met by growing the window: a 0.967 share beside a
+    /// 300pt pane took a project window to 9562 points tall.
+    static let heldSharePriority = NSLayoutConstraint.Priority.dragThatCannotResizeWindow
+
     private func holdShares() {
         guard isViewLoaded else { return }
         let showsRail = splitViewItems.contains {
@@ -754,7 +774,7 @@ public final class ComposableTabsViewController: ThemedSplitViewController {
                 let pane = item.viewController.view
                 let size = splitView.isVertical ? pane.widthAnchor : pane.heightAnchor
                 let share = size.constraint(equalTo: along, multiplier: fraction)
-                share.priority = .init(999)
+                share.priority = Self.heldSharePriority
                 share.isActive = true
                 heldShares.append(share)
             }

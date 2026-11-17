@@ -27,6 +27,17 @@ import WebKit
 ///   WebKit has no public way to list frames, so a cross-origin frame that is
 ///   already loaded follows only from its next load.
 ///
+/// **The standby** closes the gap a live raise would otherwise leave. Listeners
+/// on one target run in the order they were added, so a shim evaluated over a
+/// page already showing adds its swallowing listeners *after* the page's own,
+/// and the page still hears `blur` first. So a second, small script
+/// (`standbyScript`) goes in at document start in every frame whether the
+/// shield is up or not, in the isolated world `standbyWorldName`, where the
+/// page can neither see nor reach it. It adds its listeners first and swallows
+/// only while armed. A live raise or lift flips it, in the main frame and
+/// every same-origin frame below it. While the shield is down it does nothing
+/// a page can observe: a stopped event is the one effect, and it stops none.
+///
 /// The shield does not install its script itself. `WKUserContentController`
 /// can only remove *every* user script at once, so one owner — the pane's
 /// `installUserScripts()` — puts back everything the pane wants, and asks
@@ -100,6 +111,60 @@ public final class BrowserActivationShield {
         WKUserScript(source: $0, injectionTime: .atDocumentStart, forMainFrameOnly: false, in: .page)
     }
 
+    /// The isolated world the standby runs in, out of the page's reach.
+    public static let standbyWorldName = "adk-activation-standby"
+
+    /// The standby with `active` written in. At document start it arms the
+    /// new document's listeners in that state; run on a page already
+    /// showing, it sets every reachable frame's standby to it. A cross-origin
+    /// frame cannot be reached from the main frame, so a frame already loaded
+    /// keeps the state it loaded with until its next load.
+    public static func standbyScript(active: Bool) -> String {
+        """
+        (function (active) {
+          'use strict';
+          var KEY = '__adkActivationStandby';
+          function arm(w) {
+            var doc = w.document;
+            var state = w[KEY];
+            if (state && state.doc === doc) { return state; }
+            if (state) { state.active = false; }
+            state = { doc: doc, active: false };
+            var own = state;
+            function swallow(e) { if (own.active) { e.stopImmediatePropagation(); } }
+            function windowLevel(e) {
+              if (own.active && (e.target === w || e.target === doc)) { e.stopImmediatePropagation(); }
+            }
+            [w, doc].forEach(function (t) {
+              ['visibilitychange', 'pagehide', 'freeze'].forEach(function (type) {
+                t.addEventListener(type, swallow, true);
+              });
+              ['focus', 'blur'].forEach(function (type) { t.addEventListener(type, windowLevel, true); });
+            });
+            Object.defineProperty(w, KEY, { value: state, configurable: true, writable: true });
+            return state;
+          }
+          function visit(w) {
+            try { arm(w).active = active; } catch (e) { return; }
+            var count = 0;
+            try { count = w.frames.length; } catch (e) { return; }
+            for (var i = 0; i < count; i += 1) {
+              try { visit(w.frames[i]); } catch (e) { /* cross-origin */ }
+            }
+          }
+          visit(window);
+        })(\(active ? "true" : "false"));
+        """
+    }
+
+    /// The standby's document-start user script, with the shield's state
+    /// written in. Installed whether the shield is up or down; the caller
+    /// reinstalls it when `isActive` changes, as it does `userScript`.
+    public var standbyUserScript: WKUserScript {
+        WKUserScript(source: Self.standbyScript(active: isActive), injectionTime: .atDocumentStart,
+                     forMainFrameOnly: false, in: .world(name: Self.standbyWorldName))
+    }
+
     public init(webView: WKWebView) {
         self.webView = webView
     }
@@ -120,7 +185,15 @@ public final class BrowserActivationShield {
         // A Debug build under quiet presentation holds detection off for its
         // screenshots; lowering the shield must not undo that.
         webView.setWindowOcclusionDetectionEnabled(!active && !webView.keepsPaintingUnderQuietPresentation)
-        guard webView.url != nil, let source = active ? source : liftSource else { return }
+        guard webView.url != nil else { return }
+        webView.evaluateJavaScript(
+            Self.standbyScript(active: active), in: nil, in: .world(name: Self.standbyWorldName)) { result in
+            if case .failure(let error) = result {
+                let reason = error.localizedDescription
+                Self.logger.debug("activation standby did not change: \(reason, privacy: .public)")
+            }
+        }
+        guard let source = active ? source : liftSource else { return }
         webView.evaluateJavaScript(source, in: nil, in: .page) { result in
             if case .failure(let error) = result {
                 let reason = error.localizedDescription

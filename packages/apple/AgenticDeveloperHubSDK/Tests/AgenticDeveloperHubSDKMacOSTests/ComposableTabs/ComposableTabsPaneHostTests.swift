@@ -1315,4 +1315,38 @@ final class ComposableTabsPaneHostTests: XCTestCase {
         XCTAssertTrue(inner.rootSplit() === inner,
                       "so it answers for itself rather than for a tab it has left")
     }
+
+    // MARK: - A held share never sizes the window
+
+    /// A held share is a fraction of its split. One the split cannot honour at
+    /// its current length — 0.86 of a split beside a pane with a 150pt minimum,
+    /// once the split is 600 wide — used to be met at 999 by growing the
+    /// window, which holds its size at only 500: a project window went to 9562
+    /// points tall that way. The share now gives way to the window instead.
+    func testAHeldShareTheSplitCannotHonourLeavesTheWindowItsSize() throws {
+        let cases: [(Bool, KeyPath<NSSize, CGFloat>)] = [(true, \.width), (false, \.height)]
+        for (horizontal, axis) in cases {
+            let root = horizontal ? try sideBySide() : try stacked()
+            let window = NSWindow(
+                contentRect: NSRect(x: 100, y: 100, width: 1200, height: 1200),
+                styleMask: [.titled, .resizable], backing: .buffered, defer: false)
+            window.isReleasedWhenClosed = false
+            window.contentViewController = root
+            window.setContentSize(NSSize(width: 1200, height: 1200))
+            root.view.layoutSubtreeIfNeeded()
+            let length = horizontal ? root.splitView.bounds.width : root.splitView.bounds.height
+            root.splitView.setPosition(length - 170, ofDividerAt: 0)
+            root.view.layoutSubtreeIfNeeded()
+
+            root.holdThicknessFractions()
+            window.setContentSize(NSSize(width: 600, height: 600))
+            window.layoutIfNeeded()
+
+            let content = try XCTUnwrap(window.contentView).frame.size
+            XCTAssertEqual(content[keyPath: axis], 600, accuracy: 0.5,
+                           horizontal ? "side by side" : "stacked")
+            root.releaseThicknessFractions()
+            window.close()
+        }
+    }
 }

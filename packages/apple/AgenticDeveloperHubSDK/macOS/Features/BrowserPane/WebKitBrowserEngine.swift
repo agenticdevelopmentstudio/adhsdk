@@ -488,6 +488,8 @@ public final class WebKitBrowserEngine: WebKitPageDriver, BrowserEngine {
         let controller = webView.configuration.userContentController
         controller.removeAllUserScripts()
         if capturesConsole { controller.addUserScript(consoleLog.userScript) }
+        // Shield up or down: its listeners must come before the page's.
+        controller.addUserScript(activationShield.standbyUserScript)
         if let shieldScript = activationShield.userScript {
             controller.addUserScript(shieldScript)
         }
