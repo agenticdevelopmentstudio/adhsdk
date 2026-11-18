@@ -15,6 +15,7 @@ final class StenographerPrefsPushTests: XCTestCase {
         UserSettings.stenographerAIOversightEnabled.remove()
         UserSettings.stenographerAIOversightProviderConfigId.remove()
         UserSettings.stenographerAIOversightLLMEnabled.remove()
+        UserSettings.stenographerAIOversightModel.remove()
         UserSettings.stenographerAISummariesSeededFromDaemon.remove()
         UserSettings.stenographerAIOversightSeededFromDaemon.remove()
     }
@@ -76,9 +77,7 @@ final class StenographerPrefsPushTests: XCTestCase {
         XCTAssertEqual(UserSettings.stenographerAIOversightEnabled.value, true)
         XCTAssertEqual(UserSettings.stenographerAIOversightLLMEnabled.value, true)
         XCTAssertEqual(UserSettings.stenographerAIOversightProviderConfigId.value, Self.configId.uuidString)
-        let hidden = UserDefaults.standard.dictionaryRepresentation().keys
-            .filter { $0.hasPrefix("stenographer_oversight_model") }
-        XCTAssertTrue(hidden.isEmpty, "the daemon's model is not copied into a hidden local setting")
+        XCTAssertEqual(UserSettings.stenographerAIOversightModel.value, "big-model")
         XCTAssertTrue(UserSettings.stenographerAIOversightSeededFromDaemon.value)
         await settle()
         XCTAssertEqual(daemon.oversightRequests.count, 1, "seeding must not itself trigger a push")
@@ -86,7 +85,26 @@ final class StenographerPrefsPushTests: XCTestCase {
         XCTAssertEqual(body?.enabled, true)
         XCTAssertEqual(body?.llmEnabled, true)
         XCTAssertEqual(body?.selectedConfigId, Self.configId.uuidString)
-        XCTAssertEqual(body?.model, "", "the push never sends a model, whatever the daemon stored")
+        XCTAssertEqual(body?.model, "big-model")
+    }
+
+    func testOversightInheritSelectionBecomesTheChoiceItResolvedTo() async {
+        UserSettings.stenographerAISummariesSeededFromDaemon.value = true
+        UserSettings.stenographerAIOversightSeededFromDaemon.value = true
+        UserSettings.stenographerAISummariesProviderConfigId.value = Self.configId.uuidString
+        let daemon = StubDaemonService()
+        StenographerOversightPrefsPush.startObserving(service: daemon)
+        await StenographerOversightPrefsPush.awaitPendingPush()
+        XCTAssertEqual(UserSettings.stenographerAIOversightProviderConfigId.value, Self.configId.uuidString)
+        XCTAssertEqual(daemon.oversightRequests.first?.selectedConfigId, Self.configId.uuidString)
+    }
+
+    func testOversightInheritOfTheCLIBecomesTheCLISentinel() async {
+        UserSettings.stenographerAIOversightSeededFromDaemon.value = true
+        let daemon = StubDaemonService()
+        StenographerOversightPrefsPush.startObserving(service: daemon)
+        await StenographerOversightPrefsPush.awaitPendingPush()
+        XCTAssertEqual(UserSettings.stenographerAIOversightProviderConfigId.value, "claude-cli")
     }
 
     func testSeededMarkerSkipsTheDaemonRead() async {

@@ -53,9 +53,17 @@ public final class OversightCoordinator: AppFeature {
         OversightFindingsWindowController.present(service: service)
     }
 
-    /// The AI Oversight settings pane, for the host's settings window.
+    /// The AI Oversight settings pane, every setting on one row, for a host
+    /// with one row per feature.
     public func settingsPanel() -> AIOversightSettingsPanel {
         AIOversightSettingsPanel(service: service)
+    }
+
+    /// The AI Oversight settings as two rows, General and AI Config, for a host
+    /// that lists several panels under a feature.
+    public func settingsPanels() -> [AIOversightSettingsPanel] {
+        [AIOversightSettingsPanel(service: service, part: .general),
+         AIOversightSettingsPanel(service: service, part: .aiConfig)]
     }
 }
 

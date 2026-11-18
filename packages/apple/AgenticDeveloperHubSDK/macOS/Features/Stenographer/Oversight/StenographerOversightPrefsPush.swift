@@ -5,7 +5,7 @@ import AgenticDeveloperHubSDKCore
 /// The single owner of the "oversight preferences → daemon" contract.
 ///
 /// The settings pane and the AI Oversight window's options dialog edit the same
-/// prefs (enabled, LLM judgment, provider selection; never a model). One set
+/// prefs (enabled, LLM judgment, provider selection, model). One set
 /// of observers lives here; on any change, at startup and on every daemon
 /// reconnect the full idempotent snapshot is pushed, so a daemon restart cannot
 /// strand a stale value. The engine is Core's `SettingsSnapshotPush`.
@@ -39,14 +39,19 @@ public enum StenographerOversightPrefsPush {
                 return await service.setOversightPreferences(request)
             },
             registerReconnect: { service.onReconnect($0) },
-            seed: { await seedFromDaemon(service: service) }
+            seed: {
+                guard await seedFromDaemon(service: service) else { return false }
+                AIOversightProviderControls.adoptOwnSelection()
+                return true
+            }
         )
         push = engine
         engine.start { onChange -> [AnyObject] in
             [
                 UserSettingObserver(UserSettings.stenographerAIOversightEnabled) { _ in onChange() },
                 UserSettingObserver(UserSettings.stenographerAIOversightLLMEnabled) { _ in onChange() },
-                UserSettingObserver(UserSettings.stenographerAIOversightProviderConfigId) { _ in onChange() }
+                UserSettingObserver(UserSettings.stenographerAIOversightProviderConfigId) { _ in onChange() },
+                UserSettingObserver(UserSettings.stenographerAIOversightModel) { _ in onChange() }
             ]
         }
     }
@@ -54,15 +59,15 @@ public enum StenographerOversightPrefsPush {
     /// Takes the daemon's stored values into the local settings once (marker
     /// `stenographerAIOversightSeededFromDaemon`). True when the store is now
     /// current or needs no seeding; false when the daemon could not be reached.
-    /// The response's `contextThresholdPct` has no local setting and is ignored, and so
-    /// is its `model`: no toolkit pane shows or edits a model override, so copying the
-    /// daemon's would pin a hidden value that outlives the configuration's own model.
+    /// The response's `contextThresholdPct` has no local setting and is ignored; its
+    /// model is the AI Config panel's Model row.
     static func seedFromDaemon(service: any StenographerDaemonService) async -> Bool {
         if UserSettings.stenographerAIOversightSeededFromDaemon.value { return true }
         guard let stored = await service.oversightPreferences() else { return false }
         UserSettings.stenographerAIOversightEnabled.value = stored.enabled
         UserSettings.stenographerAIOversightLLMEnabled.value = stored.llmEnabled
         UserSettings.stenographerAIOversightProviderConfigId.value = stored.selectedConfigId
+        UserSettings.stenographerAIOversightModel.value = stored.model
         UserSettings.stenographerAIOversightSeededFromDaemon.value = true
         return true
     }
@@ -78,9 +83,8 @@ public enum StenographerOversightPrefsPush {
         await push?.awaitPendingPush()
     }
 
-    /// The full snapshot the daemon receives — pure so it is unit-testable. The
-    /// model is always "" (= the configuration's own model): the toolkit has no model
-    /// override to send, so the daemon configuration's model is the one oversight uses.
+    /// The full snapshot the daemon receives — pure so it is unit-testable. A
+    /// model of "" means the selected configuration's own model.
     static func makeRequest(
         enabled: Bool, llmEnabled: Bool, selectedConfigId: String, model: String
     ) -> OversightPreferenceRequest {
@@ -93,7 +97,7 @@ public enum StenographerOversightPrefsPush {
             enabled: UserSettings.stenographerAIOversightEnabled.value,
             llmEnabled: UserSettings.stenographerAIOversightLLMEnabled.value,
             selectedConfigId: UserSettings.stenographerAIOversightProviderConfigId.value,
-            model: ""
+            model: UserSettings.stenographerAIOversightModel.value
         )
         return try? StenographerWire.encoder().encode(request)
     }
