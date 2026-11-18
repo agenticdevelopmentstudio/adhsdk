@@ -460,7 +460,17 @@ function PreferredMethodSection({ status }: { status: MfaStatus }): ReactElement
  * second heading here is what used to make Security read as a different site from its siblings.
  * Form width — the passkeys table has four short columns and fits a form's column comfortably.
  */
-export function SecurityWorkspace(): ReactElement {
+export function SecurityWorkspace({
+  phoneNote = "Manage phone numbers on the Notifications page.",
+}: {
+  /**
+   * The line under the factor list about phone numbers. A host whose accounts have nowhere to add
+   * one says so here: the admin console's operators cannot, because the backend's contacts route
+   * does not follow the operator realm, and pointing them at a Notifications page they do not
+   * have sent them looking for a screen that is not there.
+   */
+  phoneNote?: ReactNode;
+} = {}): ReactElement {
   const { data, isLoading, isError } = useQuery({ queryKey: MFA_KEY, queryFn: getMfaStatus });
 
   return (
@@ -487,7 +497,7 @@ export function SecurityWorkspace(): ReactElement {
               <StatusRow on={data.webauthn} label="Passkeys / security keys" />
               <div className="flex items-center gap-2 pt-2 text-xs text-apt-text-dim">
                 <Smartphone className="size-3.5" />
-                Manage phone numbers on the Notifications page.
+                {phoneNote}
               </div>
             </div>
           </FormSection>
