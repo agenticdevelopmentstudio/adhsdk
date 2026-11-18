@@ -16,6 +16,9 @@ import {
   readCentralParams,
   type CentralLoginTarget,
 } from '../sso'
+import type { MfaChallenge } from '../mfa'
+import { MfaStep, type MfaOperations } from './MfaStep'
+import { GithubIcon } from './GithubIcon'
 
 // The relayed query never changes while the login page is open, so there is nothing to
 // subscribe to; the store exists so the server render and hydration read "not relayed"
@@ -23,9 +26,6 @@ import {
 const subscribeNever = (): (() => void) => () => {}
 const readRelayedClientId = (): string | null => readCentralParams()?.clientId ?? null
 const readNoRelayedClientId = (): string | null => null
-import type { MfaChallenge } from '../mfa'
-import { MfaStep, type MfaOperations } from './MfaStep'
-import { GithubIcon } from './GithubIcon'
 
 /** A login result that is a pending second-factor challenge rather than a session. */
 function isMfaChallenge(v: unknown): v is MfaChallenge {
@@ -505,7 +505,9 @@ export function LoginCard({
         </form>
       )}
 
-      {showSignup && (
+      {/* The sign-up makes an account this client could sign in with by credentials; a
+          relayed customer client gets no credential login, so the link is not offered. */}
+      {showSignup && credentialsOffered && (
         <p className="auth-card__signup">
           {signupPromptLabel}{' '}
           <Link href={signupHref} className="auth-card__signup-link">{signupLinkLabel}</Link>
