@@ -5,9 +5,8 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { AuthHttpError } from "@adh-sdk/auth/client";
 import type { AdminUserSummary } from "../api/admin";
 
-const { grantMutate, revokeMutate, users } = vi.hoisted(() => ({
-  grantMutate: vi.fn(),
-  revokeMutate: vi.fn(),
+const { revokeMutateAsync, users } = vi.hoisted(() => ({
+  revokeMutateAsync: vi.fn(),
   users: { current: [] as unknown[] },
 }));
 
@@ -17,8 +16,7 @@ vi.mock("../api/admin", async (importOriginal) => ({
   useAdminUsers: () => ({ data: users.current, isLoading: false, error: null }),
   useHubEcosystemRdid: () => ({ data: null }),
   useDeleteUser: () => ({ mutate: vi.fn(), mutateAsync: vi.fn() }),
-  useGrantRole: () => ({ mutate: grantMutate }),
-  useRevokeRole: () => ({ mutate: revokeMutate }),
+  useRevokeRole: () => ({ mutateAsync: revokeMutateAsync, isPending: false }),
 }));
 vi.mock("../api/memberships", async (importOriginal) => ({
   ...(await importOriginal<typeof import("../api/memberships")>()),
@@ -49,8 +47,7 @@ const customer = (over: Partial<AdminUserSummary>): AdminUserSummary => ({
 });
 
 beforeEach(() => {
-  grantMutate.mockReset();
-  revokeMutate.mockReset();
+  revokeMutateAsync.mockReset();
   users.current = [customer({})];
 });
 afterEach(cleanup);
@@ -66,12 +63,12 @@ function mount() {
 
 describe("UsersPane role menu", () => {
   // Design §8: granting admin to anyone but an operator account is gone; the backend answers 400.
-  it("offers a hub customer no Operator role to grant", async () => {
+  // So a hub customer's role is text, not a menu whose one choice does nothing.
+  it("offers a hub customer no role menu", async () => {
     mount();
-    fireEvent.click(await screen.findByRole("button", { name: "Role for Plain" }));
-    const options = (await screen.findAllByRole("option")).map((o) => o.textContent);
-    expect(options).toEqual(["User"]);
-    expect(grantMutate).not.toHaveBeenCalled();
+    expect(await screen.findByText("Plain")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Role for Plain" })).toBeNull();
+    expect(revokeMutateAsync).not.toHaveBeenCalled();
   });
 
   // A pre-cutover admin row on a hub customer still shows, and "User" revokes it; a refusal from
@@ -79,16 +76,13 @@ describe("UsersPane role menu", () => {
   it("revokes a held admin and shows the server's refusal", async () => {
     const message = "This is the last operator. Make someone else an operator first.";
     users.current = [customer({ name: "Legacy", capabilities: ["admin"] })];
-    revokeMutate.mockImplementation((_vars, opts?: { onError?: (e: unknown) => void }) =>
-      opts?.onError?.(new AuthHttpError(409, message, "last_operator", { error: { message } })),
+    revokeMutateAsync.mockRejectedValue(
+      new AuthHttpError(409, message, "last_operator", { error: { message } }),
     );
     mount();
     fireEvent.click(await screen.findByRole("button", { name: "Role for Legacy" }));
     fireEvent.click(await screen.findByRole("option", { name: "User" }));
-    expect(revokeMutate).toHaveBeenCalledWith(
-      { userId: "u-1", role: "admin" },
-      expect.objectContaining({ onError: expect.any(Function) }),
-    );
+    expect(revokeMutateAsync).toHaveBeenCalledWith({ userId: "u-1", role: "admin" });
     expect(await screen.findByText(message)).toBeTruthy();
   });
 });
