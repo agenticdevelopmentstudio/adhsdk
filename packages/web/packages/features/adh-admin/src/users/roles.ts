@@ -23,6 +23,22 @@ export const NO_ROLE = "user";
 export const roleLabel = (user: AdminUserSummary): string =>
   user.capabilities.length === 0 ? NO_ROLE : [...user.capabilities].sort().join(",");
 
+/**
+ * What the row's role menu offers.
+ *
+ * "User" always; "Operator" (admin) ONLY when this customer already holds it. Admin is an operator
+ * account's capability now (phase 1 design §8): granting it to a hub customer is gone, and the
+ * backend answers 400. A hub customer still carrying a pre-cutover admin row gets the item so the
+ * cell reads true and choosing "User" revokes it.
+ */
+export const roleMenuItems = (user: AdminUserSummary): { value: string; label: string }[] =>
+  user.capabilities.includes("admin")
+    ? [
+        { value: NO_ROLE, label: "User" },
+        { value: "admin", label: "Operator" },
+      ]
+    : [{ value: NO_ROLE, label: "User" }];
+
 /** Every role value a facet menu should offer for this row — the same vocabulary, as a list. */
 export const roleValues = (user: AdminUserSummary): string[] =>
   user.capabilities.length === 0 ? [NO_ROLE] : user.capabilities;
