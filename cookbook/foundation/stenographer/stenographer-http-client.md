@@ -2,11 +2,11 @@
 id: 9c7c78d3-23ca-4ca6-a519-9968b440b8c6
 title: "Stenographer HTTP Client"
 type: ingredient
-version: 1.0.3
+version: 1.0.4
 status: review
 language: en
 created: 2026-11-14
-modified: 2026-11-14
+modified: 2026-11-18
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -234,10 +234,15 @@ Not applicable: the client calls no logging API; every failure is returned as `n
 
 `separation-of-concerns` passes because the client only moves requests and replies; the wire spelling, identifiers and DTOs live in their own types. `unit-test-coverage` passes because every vector has a test in `StenographerHTTPClientTests` (`Tests/AgenticDeveloperHubSDKCoreTests/Stenographer/StenographerHTTPClientTests.swift`): the failure mapping, query building, the 404, the summarize and action failures, both preference encoders, the reconnect trigger and its first-poll and failed-poll cases, `timeout(method:path:)`, URL construction, the content type and the default base URL. `timeout-configuration` passes because every request carries one of three explicit timeouts. `error-response-handling` is partial because the daemon's `error` text is surfaced only for summarize and finding actions; every other failure collapses to `nil` or `false` by design. `retry-with-backoff` is marked failed because the client never retries; that is deliberate (see the Design Decision "The client does not retry or back off"), since the caller decides and the daemon is on loopback, so the check is a known and accepted failure rather than a defect. `secure-transport` is partial because traffic is plain HTTP, which is acceptable only on the loopback address, and the base URL can be overridden to any address through `STENOGRAPHER_URL`.
 
+## Per-Feature Summaries
+
+`summaryPreferences(feature:)` sends `GET /preferences/summaries?feature=<raw>` for AI Conversations and Coding Projects, and no query for Sessions.
+
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.4 | 2026-11-18 | Mike Fullerton | Reads a feature's summary preferences with `?feature=`. |
 | 1.0.3 | 2026-11-14 | Mike Fullerton | Conformance tests added (StenographerHTTPClientTests.swift, 20 of 20 vectors); unit-test-coverage now passed. |
 | 1.0.2 | 2026-11-14 | Mike Fullerton | Linked the daemon service, wire and identifiers specs, reconciled the lock wording, added a remote-base-URL edge case and four test vectors, and rewrote the platform notes as guidance. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Each design decision carries its own approval line |

@@ -2,11 +2,11 @@
 id: e74bbbe4-cc41-40dc-a063-e262522c2301
 title: "Conversation Summary DTOs"
 type: ingredient
-version: 1.0.2
+version: 1.0.3
 status: review
 language: en
 created: 2026-11-14
-modified: 2026-11-14
+modified: 2026-11-18
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -247,9 +247,14 @@ Not applicable: this code makes no log calls.
 
 separation-of-concerns passes: the file maps a session to a conversation reading and decides send eligibility; storage, transport and the terminal injection itself are other types. unit-test-coverage passes: `ConversationSummaryDTOTests` (`Tests/AgenticDeveloperHubSDKCoreTests/Stenographer/ConversationSummaryDTOTests.swift`) covers every vector, 001 to 031. safe-defaults is partial: an ended, waiting, unsupported-terminal, detached or pane-sharing session refuses a send, and a sharer whose process cannot be read blocks, but a session whose own process cannot be read (the probe returns nil) is not refused for that reason.
 
+## Per-Feature Summaries
+
+`ConversationInfoDTO.summary` carries the session's AI Conversations summary (`conversationSummary`), or its Sessions summary while that is empty.
+
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.3 | 2026-11-18 | Mike Fullerton | `ConversationInfoDTO.summary` is AI Conversations' own summary, falling back to Sessions'. |
 | 1.0.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (ConversationSummaryDTOTests.swift, 31 of 31 vectors); unit-test-coverage now passed. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Gave full refusal sentences, rewrote RFC 2119 wording, folded empty-string rules into named requirements, added eight vectors and a localization decision, and made safe-defaults partial. |

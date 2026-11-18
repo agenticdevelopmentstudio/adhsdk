@@ -2,11 +2,11 @@
 id: ea580796-8b16-4832-b11d-ad3cae991ecd
 title: "Database"
 type: ingredient
-version: 1.2.0
+version: 1.2.1
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-10-04
+modified: 2026-11-18
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -368,10 +368,15 @@ Not applicable: neither component performs its own logging; ejections surface as
 
 The module keeps storage mechanics (pool, deadlines, metrics) and storage naming apart from every schema that uses it, and `BoundedDatabaseTests` and `AppStorageLocationTests` cover the cross-lane read, read-your-writes, ejection, in-memory, stats and poisoned-pool paths plus every token and directory rule. Every read and write carries a monotonic deadline and locked writes a busy timeout, and the reader pool keeps reads from queuing behind the writer. `stats` exposes in-flight, completed, evicted and p50/p99 per lane, so a wedge is visible. Explicit error handling is partial because the safety-net `ROLLBACK` discards its own failure, and errors other than an eviction go uncounted in `stats`. Data integrity is partial because the per-thread connection slot is shared across instances, so a call on one database nested inside an op on another runs against the wrong connection.
 
+## Per-Feature Summaries
+
+`summaryAIProviderSettings(for:)` resolves a `SummaryFeature`'s provider. Sessions reads the global selection. AI Conversations and Coding Projects read their own selection key: absent inherits the global one, an empty string means the Claude CLI, and an id picks that configuration.
+
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.2.1 | 2026-11-18 | Mike Fullerton | Per-feature summary provider resolution (`summaryAIProviderSettings(for:)`). |
 | 1.2.0 | 2026-10-04 | Mike Fullerton | Restate rollback-failure and cross-instance-reentrancy as current behavior with pending decisions. |
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to data/storage/. |
 | 1.0.1 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |

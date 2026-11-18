@@ -2,11 +2,11 @@
 id: 844fde57-2231-4516-bcc9-a93c56d74a2d
 title: "Summary Preference Constants"
 type: ingredient
-version: 1.0.2
+version: 1.0.3
 status: review
 language: en
 created: 2026-11-14
-modified: 2026-11-14
+modified: 2026-11-18
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -214,9 +214,14 @@ Not applicable: this code makes no log calls.
 
 separation-of-concerns passes: the file holds constants, the range bounds, one clamp and one cap function; reading the settings table, the XPC push and the reply cleaning live in `SummaryPrefs`, `StenographerSummaryPrefsPush` and `DaemonSessionSummarizer`. unit-test-coverage passes: `SummaryPreferenceDTOsConformanceTests` calls `clamp` and `characterCap` directly and asserts the range bounds, key string, default prompt and defaults (vectors 001 to 003 and 010 to 015); vectors 004 to 009 are covered by the daemon tests named in the vectors file. data-minimization passes: `detailChars` caps how much of each event's detail leaves the session for the prompt, and the source names that cap as data minimization.
 
+## Per-Feature Summaries
+
+`SummaryFeature` (`sessions`, `conversations`, `projects`) names who a summary is for. `key(_:)` keeps Sessions' keys as they were and prefixes the others with `<raw>.`; `enabledKey`, `selectedConfigKey`, `summaryColumn` and `summaryAtColumn` follow from it, so the daemon stores and schedules each feature's summaries independently.
+
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.3 | 2026-11-18 | Mike Fullerton | Adds `SummaryFeature` and its per-feature settings keys and summary columns. |
 | 1.0.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (SummaryPreferenceDTOsConformanceTests.swift, 9 of 15 vectors; 004-009 already covered by daemon tests in other targets); unit-test-coverage now passed. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Named HTTP as the current push transport, added the verbatim default prompt, restated the purge threshold drift as a known non-conformance, rewrote the decision rationales and moved the panel description to the AppKit note. |
