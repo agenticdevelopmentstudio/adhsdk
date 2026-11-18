@@ -96,9 +96,8 @@ export function assertPasswordlessPasskey(
   optionsUrl: string,
   clientId?: string,
 ): Promise<WebauthnAssertion> {
-  const body = clientId
-    ? { method: 'passkey', identifier, client_id: clientId }
-    : { method: 'passkey', identifier }
+  // JSON.stringify drops an undefined key, so an absent clientId sends no client_id at all.
+  const body = { method: 'passkey', identifier, client_id: clientId || undefined }
   return runAssertion(optionsUrl, body, 'No passkey is available for this account.')
 }
 
