@@ -88,11 +88,11 @@ function routeJson(creds = CREDS) {
   });
 }
 
-function renderWorkspace() {
+function renderWorkspace(props: { phoneNote?: string } = {}) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
     <QueryClientProvider client={client}>
-      <SecurityWorkspace />
+      <SecurityWorkspace {...props} />
     </QueryClientProvider>,
   );
 }
@@ -105,6 +105,25 @@ beforeEach(() => {
 afterEach(cleanup);
 
 describe("SecurityWorkspace", () => {
+  it("points a hub user at the Notifications page for phone numbers", async () => {
+    routeJson();
+    renderWorkspace();
+    expect(
+      await screen.findByText("Manage phone numbers on the Notifications page."),
+    ).toBeInTheDocument();
+  });
+
+  // The admin console has no Notifications page and its operators cannot add a phone, so it says
+  // that instead of sending them looking for one.
+  it("shows the host's own phone note in place of the pointer", async () => {
+    routeJson();
+    renderWorkspace({ phoneNote: "Text-message sign-in isn't available for operator accounts." });
+    expect(
+      await screen.findByText("Text-message sign-in isn't available for operator accounts."),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/Notifications page/)).toBeNull();
+  });
+
   it("draws its sections under the registry's title — no page heading or API button of its own", async () => {
     routeJson();
     renderWorkspace();
