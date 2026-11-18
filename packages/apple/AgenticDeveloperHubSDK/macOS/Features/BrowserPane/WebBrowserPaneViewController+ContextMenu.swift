@@ -16,8 +16,9 @@ import AgenticDeveloperHubSDKCoreUI
 ///   element under the click, as if the picker had picked it.
 /// - **Hide Item from Agents** (live page or Agent preview, while the agent
 ///   can see the browser): the agent list's dialog for that element.
-/// - **Replace Private Word…** (a click on text): the privacy words editor
-///   with the clicked word's row, made if it has none, open for its alias.
+/// - **Replace Private Word…** (a click on text): the Secrets window with the
+///   clicked word's row, made if it has none, open for its alias once it is
+///   unlocked.
 ///
 /// What the click was on is read from the page when an item is chosen, at
 /// the point the menu opened at (`BrowserElementPicker.contextTarget`).

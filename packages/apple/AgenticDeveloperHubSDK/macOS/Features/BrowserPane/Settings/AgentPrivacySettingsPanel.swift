@@ -14,10 +14,10 @@ import AgenticDeveloperHubSDKCore
 ///
 /// Shown in both scopes. In the Settings window the switch is the global
 /// value every browser follows; in a pane's sheet the switch is the pane's own
-/// override, with the usual marker. The editor shows every word either way,
-/// each with the sites it applies on (`PrivacyWord`).
-/// The words are the private terminals' list, edited through the same editor
-/// behind the same authentication (`dry`).
+/// override, with the usual marker. Open Secrets… opens the Secrets window,
+/// where the words are kept, each with the sites and terminals it applies in
+/// (`PrivacyWord`): the private terminals' list, behind the window's own
+/// authentication (`dry`).
 @MainActor
 final class AgentPrivacySettingsGroup {
 

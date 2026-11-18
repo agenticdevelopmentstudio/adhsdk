@@ -136,8 +136,8 @@ public final class PrivateTerminalViewController: NSViewController {
     public override func viewDidLoad() {
         super.viewDidLoad()
 
-        // Another private terminal can load the words, and the editor can
-        // change them: a shell already running takes the new words from the
+        // Another private terminal can load the words, and the Secrets
+        // window can change them: a shell already running takes the new words from the
         // next byte. One that has not appeared yet waits until it does.
         vault.$words
             .receive(on: RunLoop.main)
