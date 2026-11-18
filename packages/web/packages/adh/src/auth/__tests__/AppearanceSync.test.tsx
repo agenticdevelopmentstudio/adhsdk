@@ -15,15 +15,16 @@ import { APPEARANCE_STORAGE_KEY } from '@adh-sdk/themes'
 // --- fakes ------------------------------------------------------------------------------------
 
 let auth: { isAuthenticated: boolean; isLoading: boolean; user: { id: string } | null }
-vi.mock('@adh-sdk/auth', () => ({ useAuth: () => auth }))
+// The REAL report gate (reportUnexpectedAuthError + setAuthErrorReporter), only useAuth faked: what
+// reaches the reporter is the thing under test in the failure cases below.
+vi.mock('@adh-sdk/auth', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@adh-sdk/auth')>()),
+  useAuth: () => auth,
+}))
 
 const authedJson = vi.fn()
 vi.mock('@adh-sdk/auth/client', () => ({ authedJson: (...a: unknown[]) => authedJson(...a) }))
 
-// Mocks the specifier AppearanceSync.tsx actually writes — the PACKAGE PATH
-// '@adh-sdk/adh/telemetry/report-error' (see its import comment) — not
-// the former '@adh/chrome/telemetry', which nothing in this merged package imports anymore.
-vi.mock('@adh-sdk/adh/telemetry/report-error', () => ({ captureException: vi.fn() }))
 
 // The OS setting. Both the store and the prepaint read it through matchMedia.
 function systemPrefersDark(dark: boolean) {
@@ -47,10 +48,31 @@ async function renderSync() {
   return render(<AppearanceSync />)
 }
 
+// The telemetry sink AppearanceSync used to call directly — mocked so a test can prove nothing
+// bypasses the auth gate into it. Mocks the PACKAGE PATH the SDK writes (see wired-provider.tsx).
+const captureException = vi.fn()
+vi.mock('@adh-sdk/adh/telemetry/report-error', () => ({
+  captureException: (...a: unknown[]) => captureException(...a),
+}))
+
+/** Wire a spy as the auth error reporter, in the same (reset) module graph AppearanceSync loads. */
+async function reporterSpy() {
+  const spy = vi.fn()
+  const { setAuthErrorReporter } = await import('@adh-sdk/auth')
+  setAuthErrorReporter(spy)
+  return spy
+}
+
+/** The shape authedJson throws on a non-ok response: an Error carrying the HTTP status. */
+function httpError(status: number, message: string) {
+  return Object.assign(new Error(message), { name: 'AuthHttpError', status })
+}
+
 describe('AppearanceSync — whose theme is it?', () => {
   beforeEach(() => {
     vi.resetModules()
     authedJson.mockReset()
+    captureException.mockReset()
     localStorage.clear()
     html().className = ''
     delete html().dataset.colorMode
@@ -117,5 +139,27 @@ describe('AppearanceSync — whose theme is it?', () => {
     await renderSync()
     await waitFor(() => expect(authedJson).toHaveBeenCalled())
     expect(isDark()).toBe(true) // the theme is not yanked out from under the user
+  })
+
+  it('an expired session (401 after the refresh) is NOT reported — GlitchTip #246', async () => {
+    const reported = await reporterSpy()
+    auth = { isAuthenticated: true, isLoading: false, user: { id: 'u1' } }
+    authedJson.mockRejectedValue(httpError(401, 'invalid or expired token'))
+    await renderSync()
+    await waitFor(() => expect(authedJson).toHaveBeenCalled())
+    await new Promise((r) => setTimeout(r, 0)) // let the rejection's .catch run
+    expect(reported).not.toHaveBeenCalled()
+    expect(captureException).not.toHaveBeenCalled()
+  })
+
+  it('a backend failure (5xx) IS reported', async () => {
+    const reported = await reporterSpy()
+    auth = { isAuthenticated: true, isLoading: false, user: { id: 'u1' } }
+    const err = httpError(503, 'unavailable')
+    authedJson.mockRejectedValue(err)
+    await renderSync()
+    await waitFor(() =>
+      expect(reported).toHaveBeenCalledWith(err, { feature: 'appearance', step: 'fetchPrefs' }),
+    )
   })
 })
