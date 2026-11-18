@@ -9,11 +9,10 @@ import { HUB_ROUTE_SEGMENTS } from '@adh-sdk/adh-registry'
  * in-hub mode there; `useSiteMenu` fills the slug the feature links need from the signed-in
  * user's own (`personalSlug`), which is what those links pointed at anyway.
  *
- * `/admin` is the hub's Admin workspace — the operations console, listed in the workspace menu
- * for an admin. Its data is platform-wide, so it belongs to no backend workspace and carries no
- * slug, but it IS a workspace in the switcher, so the switcher must stay in in-hub mode there.
+ * Not `/admin`: the hub no longer hosts the operations console. The path redirects to the admin
+ * site (the hub's site.json), so no hub page ever renders under it.
  */
-const SLUGLESS_APP_SEGMENTS: ReadonlySet<string> = new Set(['home', 'settings', 'admin'])
+const SLUGLESS_APP_SEGMENTS: ReadonlySet<string> = new Set(['home', 'settings'])
 
 /** Is this first path segment one the HUB's own routes have spoken for? */
 function isRouteSegment(segment: string): boolean {

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   Users,
   Mail,
@@ -75,9 +75,9 @@ export type AdminCategory = {
   icon: LucideIcon;
 };
 
-/** One admin section. `id` doubles as the route segment, both on the admin site's own path
- *  scheme (`/<id>`) and on a host that mounts `AdminFeature` under `<basePath>/<id>`. `category`
- *  files it under one {@link AdminCategory} — the rail's second level. */
+/** One admin section. `id` doubles as the route segment on the admin site (`/<id>`, one
+ *  app/(admin)/<id>/page.tsx each). `category` files it under one {@link AdminCategory} — the
+ *  rail's second level. */
 export type AdminTopic = {
   id: AdminTopicId;
   category: AdminCategoryId;
@@ -255,13 +255,6 @@ export const ADMIN_TOPICS: AdminTopic[] = [
   { id: "users", category: "access", label: "Users", description: "Manage accounts and roles", icon: Users },
 ];
 
-const ADMIN_TOPIC_IDS: ReadonlySet<string> = new Set(ADMIN_TOPICS.map((t) => t.id));
-
-/** Narrows an arbitrary URL segment (e.g. the hub's route param) to a known topic id. */
-export function isAdminTopicId(id: string): id is AdminTopicId {
-  return ADMIN_TOPIC_IDS.has(id);
-}
-
 /** The sections filed under one category, in rail (alphabetical) order. */
 export function adminTopicsIn(category: AdminCategoryId): AdminTopic[] {
   return ADMIN_TOPICS.filter((t) => t.category === category);
@@ -277,20 +270,9 @@ export function adminCategoryOf(topicId: AdminTopicId): AdminCategoryId {
   return topic.category;
 }
 
-/** The category the operator last chose (or last had open), kept at module scope so it survives
- *  a host remounting the console between routes — see {@link useAdminCategorySelection}. A full
- *  page load starts it over at null: the bare landing with nothing chosen. */
-let lastCategory: AdminCategoryId | null = null;
-
-/** Test seam: forget the last chosen category, as a fresh page load does. */
-export function resetAdminCategorySelectionForTests(): void {
-  lastCategory = null;
-}
-
 /**
- * The rail's category selection, for a host whose URL names only the SECTION. Both hosts — the
- * admin site's AdminShell and the hub's AdminFeature — run this, so the two rails cannot come to
- * behave differently.
+ * The rail's category selection, for a host whose URL names only the SECTION (the admin site's
+ * AdminShell).
  *
  * With a section open, its category is the one selected: read off the section, so a deep link or
  * a back button lands with the right category open. With none open, it is whichever category the
@@ -302,42 +284,27 @@ export function resetAdminCategorySelectionForTests(): void {
  * category while a section is open has to close the section, since a section can only sit under
  * its own category; if the guard refuses, nothing moves.
  *
- * THE CHOICE OUTLIVES THE COMPONENT ({@link lastCategory}). The hub mounts the console in
- * `/admin/[[...path]]/page.tsx`, and Next REMOUNTS a dynamic page when its params change — so
- * `/admin/llm-providers` → `/admin` built a fresh hook whose state had never heard of the category
- * just clicked. Clicking Communication with LLM Providers open only closed LLM Providers and left
- * no category selected; closing a section dropped its category the same way. The admin site keeps
- * its shell in a layout, which never remounts, so only the hub showed it.
+ * Plain component state. The admin site keeps its shell in a layout, which survives every route
+ * change, so nothing has to outlive the component. (A module-level copy once did, for the hub's
+ * `/admin/[[...path]]` page, which Next remounted on each route; that host is gone.)
  */
 export function useAdminCategorySelection(
   topicId: AdminTopicId | null,
   leaveTopic: () => Promise<boolean>,
 ): { selectedId: AdminCategoryId | null; onSelect: (id: string | null) => void } {
-  const [chosen, setChosenState] = useState<AdminCategoryId | null>(() =>
-    topicId ? adminCategoryOf(topicId) : lastCategory,
+  const [chosen, setChosen] = useState<AdminCategoryId | null>(() =>
+    topicId ? adminCategoryOf(topicId) : null,
   );
-  // For event handlers and settled promises only: never call it during render, where a render
-  // React throws away (StrictMode, a concurrent restart) would leave the module-level choice
-  // naming a category that was never committed.
-  const setChosen = (next: AdminCategoryId | null): void => {
-    lastCategory = next;
-    setChosenState(next);
-  };
   // Following the open section's category is state adjusted DURING render, React's documented
   // pattern for "reset state when a prop changes" — not an effect, which would paint one frame
-  // with the stale category first. Local state only; the effect below records it once committed.
+  // with the stale category first. It is what keeps a section's category open once it closes.
   const [seenTopic, setSeenTopic] = useState(topicId);
   if (topicId !== seenTopic) {
     setSeenTopic(topicId);
-    if (topicId) setChosenState(adminCategoryOf(topicId));
+    if (topicId) setChosen(adminCategoryOf(topicId));
   }
 
   const selectedId = topicId ? adminCategoryOf(topicId) : chosen;
-  // A section opened by URL (a deep link, Back) selects its category without anyone choosing it;
-  // record that too, so closing the section — another remount in the hub — keeps its category.
-  useEffect(() => {
-    if (selectedId !== null) lastCategory = selectedId;
-  }, [selectedId]);
 
   const onSelect = (id: string | null): void => {
     const next = id === null ? null : ADMIN_CATEGORIES.find((c) => c.id === id)?.id ?? null;
@@ -347,14 +314,8 @@ export function useAdminCategorySelection(
     }
     // Re-choosing the open section's own category leaves the section open.
     if (next === selectedId) return;
-    // Recorded BEFORE leaving: in the hub the route can land, and the console remount, before
-    // `leaveTopic` resolves — and the new instance reads its category the moment it mounts. The
-    // guard ALWAYS answers, even when another request (a Back press) replaces this one's dialog,
-    // so a choice that never completed is rolled back here.
-    lastCategory = next;
     void leaveTopic().then((left) => {
       if (left) setChosen(next);
-      else if (lastCategory === next) lastCategory = selectedId; // Stay: the section's category stands.
     });
   };
 

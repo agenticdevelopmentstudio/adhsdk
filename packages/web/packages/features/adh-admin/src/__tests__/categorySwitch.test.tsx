@@ -6,14 +6,12 @@ import { HierarchicalDetailView, type TopicLevel } from "@adh-sdk/ui/blocks";
 import {
   ADMIN_CATEGORIES,
   adminTopicsIn,
-  resetAdminCategorySelectionForTests,
   useAdminCategorySelection,
   type AdminTopicId,
 } from "../adminTopics";
 
 afterEach(() => {
   cleanup();
-  resetAdminCategorySelectionForTests();
 });
 
 // The console's rail in miniature, through the REAL stack, so a click takes the same
@@ -52,24 +50,20 @@ function Console({ topicId, go }: { topicId: AdminTopicId | null; go: (id: Admin
   );
 }
 
-// The router. `remount` is the hub: its console lives in `/admin/[[...path]]/page.tsx`, and Next
-// remounts a dynamic page whenever its params change. The admin site holds its shell in a layout,
-// which keeps the one instance.
-function Router({ initial, remount }: { initial: AdminTopicId | null; remount: boolean }) {
+// The router. The admin site holds its shell in a layout, which keeps the one instance across
+// routes.
+function Router({ initial }: { initial: AdminTopicId | null }) {
   const [topicId, setTopicId] = useState(initial);
-  return <Console key={remount ? (topicId ?? "landing") : "one"} topicId={topicId} go={setTopicId} />;
+  return <Console topicId={topicId} go={setTopicId} />;
 }
 
 const row = (label: string) =>
   screen.getAllByRole("button").find((b) => b.textContent?.trim() === label)!;
 const settle = () => act(() => new Promise((resolve) => setTimeout(resolve, 0)));
 
-describe.each([
-  ["the hub (the console remounts on every route)", true],
-  ["the admin site (the console stays mounted)", false],
-])("the category rail in %s", (_, remount) => {
+describe("the category rail", () => {
   it("selects another category clicked while a section is open, not just closes the section", async () => {
-    render(<Router initial="llm-providers" remount={remount} />);
+    render(<Router initial="llm-providers" />);
     fireEvent.click(row("Communication"));
     await settle();
     expect(screen.getByTestId("detail").textContent).toBe("none");
@@ -79,7 +73,7 @@ describe.each([
   });
 
   it("keeps a section's category open once the section closes", async () => {
-    render(<Router initial="llm-providers" remount={remount} />);
+    render(<Router initial="llm-providers" />);
     // Re-clicking the open section closes it, the in-page way back up.
     fireEvent.click(row("LLM Providers"));
     await settle();
@@ -89,7 +83,7 @@ describe.each([
 });
 
 describe("a category choice the unsaved-changes guard refused", () => {
-  it("leaves the open section's category for the next mount, not the refused one", async () => {
+  it("leaves the open section and its category where they were", async () => {
     // The guard answers false: Stay, or a Back press that replaced this choice's dialog.
     function Guarded({ topicId }: { topicId: AdminTopicId | null }) {
       const category = useAdminCategorySelection(topicId, async () => false);
@@ -103,10 +97,6 @@ describe("a category choice the unsaved-changes guard refused", () => {
     const open = screen.getByRole("button").textContent;
     fireEvent.click(screen.getByRole("button"));
     await settle();
-    cleanup();
-    // The hub remounts the console on the next route (Back to /admin): it opens where the user
-    // actually was.
-    render(<Guarded topicId={null} />);
     expect(screen.getByRole("button").textContent).toBe(open);
   });
 });

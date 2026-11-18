@@ -31,9 +31,9 @@ const HELP_SECTION = 1
 const SECTION_LABELS = { [WORKSPACES_SECTION]: 'Workspaces' }
 // No site rows. The platform's Toolkit, Tools and Support, and an admin's operations consoles,
 // used to close this list; Mike took them out on 2026-09-26 — this menu is the WORKSPACES.
-// That is not a like-for-like swap. The hub's Admin workspace (listed among the workspaces by the
-// host, for an admin) carries the admin site's sections, but Builds and Fleet Monitor were
-// consoles with no Admin section, and they lost their door on a workspace route: an admin reaches
+// That is not a like-for-like swap. The operations console is the admin site alone (the hub's
+// Admin workspace is gone, its path redirects there), and Builds and Fleet Monitor were consoles
+// of their own, and they lost their door on a workspace route: an admin reaches
 // them from the site menu on the landing and the marketing routes (ADMIN_MENU_GROUPS), and from
 // nowhere inside a workspace. The same holds for Toolkit, Tools and Support.
 // useSiteMenu is still called for its `navigate`, which the phone's nav rows go through.

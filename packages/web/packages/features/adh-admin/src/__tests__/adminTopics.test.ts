@@ -5,7 +5,6 @@ import {
   ADMIN_TOPICS,
   adminCategoryOf,
   adminTopicsIn,
-  isAdminTopicId,
 } from "../adminTopics";
 import { INVITATION_TOPICS } from "../panes/InvitationsPane";
 
@@ -61,21 +60,8 @@ describe("ADMIN_TOPICS / ADMIN_PANES", () => {
 describe("AI processing topics", () => {
   it("registers ai-nodes and processing-configs, each with a pane", () => {
     for (const id of ["ai-nodes", "processing-configs"]) {
-      expect(isAdminTopicId(id)).toBe(true);
       expect(ADMIN_TOPICS.find((t) => t.id === id)?.label).toBeTruthy();
       expect(ADMIN_PANES[id as keyof typeof ADMIN_PANES]).toBeDefined();
     }
-  });
-});
-
-describe("isAdminTopicId", () => {
-  it("accepts every real topic id", () => {
-    for (const topic of ADMIN_TOPICS) {
-      expect(isAdminTopicId(topic.id)).toBe(true);
-    }
-  });
-
-  it("rejects an id that isn't a topic", () => {
-    expect(isAdminTopicId("nope")).toBe(false);
   });
 });
