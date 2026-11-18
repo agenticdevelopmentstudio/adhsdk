@@ -4,7 +4,7 @@
 
 // src/auth/wired-provider.tsx
 import { useState } from "react";
-import { captureException as captureException2 } from "@adh-sdk/adh/telemetry/report-error";
+import { captureException } from "@adh-sdk/adh/telemetry/report-error";
 import { markRetriedRequest } from "@adh-sdk/adh/telemetry/retry";
 import {
   AuthProvider as ToolkitAuthProvider,
@@ -14,7 +14,7 @@ import {
 
 // src/auth/AppearanceSync.tsx
 import { useEffect, useRef } from "react";
-import { useAuth } from "@adh-sdk/auth";
+import { reportUnexpectedAuthError, useAuth } from "@adh-sdk/auth";
 import { authedJson } from "@adh-sdk/auth/client";
 import { adoptAppearance, normalizeAppearance, resetAppearance } from "@adh-sdk/themes";
 
@@ -46,7 +46,6 @@ function appearanceToWire(prefs) {
 }
 
 // src/auth/AppearanceSync.tsx
-import { captureException } from "@adh-sdk/adh/telemetry/report-error";
 function AppearanceSync() {
   const { isAuthenticated, isLoading, user } = useAuth();
   const themedFor = useRef(void 0);
@@ -66,7 +65,7 @@ function AppearanceSync() {
     }).catch((err) => {
       if (!live) return;
       themedFor.current = void 0;
-      captureException(err);
+      reportUnexpectedAuthError(err, { feature: "appearance", step: "fetchPrefs" });
     });
     return () => {
       live = false;
@@ -81,7 +80,7 @@ var wired = false;
 function wireAdhTelemetry() {
   if (!wired) {
     wired = true;
-    setAuthErrorReporter(captureException2);
+    setAuthErrorReporter(captureException);
     setAuthRetryMarker(markRetriedRequest);
   }
   return null;
@@ -99,7 +98,7 @@ import { useCallback } from "react";
 import { useAuth as useAuth2 } from "@adh-sdk/auth";
 import { authedRequest } from "@adh-sdk/auth/client";
 import { useAppearancePreferences } from "@adh-sdk/themes";
-import { captureException as captureException3 } from "@adh-sdk/adh/telemetry/report-error";
+import { captureException as captureException2 } from "@adh-sdk/adh/telemetry/report-error";
 function useAppearanceSettings() {
   const { prefs, set: setLocal } = useAppearancePreferences();
   const { isAuthenticated } = useAuth2();
@@ -112,7 +111,7 @@ function useAppearanceSettings() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ appearance: appearanceToWire(next) })
-      }).catch(captureException3);
+      }).catch(captureException2);
     },
     [prefs, setLocal, isAuthenticated]
   );
