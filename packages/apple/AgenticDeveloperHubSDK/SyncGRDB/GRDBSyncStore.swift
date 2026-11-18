@@ -81,6 +81,27 @@ public final class GRDBSyncStore: SyncStore, @unchecked Sendable {
 
     public var database: BoundedDatabase { boundedDatabase }
 
+    /// Whether this host may only pull `resource`, never write it locally —
+    /// the set `stage(_:in:)` refuses with `SyncStoreFailure.pullOnlyResource`.
+    /// Lets a host refuse a write up front, before it is queued anywhere.
+    public func isPullOnly(_ resource: String) -> Bool {
+        pullOnlyResources.contains(resource)
+    }
+
+    /// Whether `resource` takes local versioned writes: a registered generic
+    /// mirror resource that is neither projection-owned nor pull-only.
+    public func acceptsLocalWrites(resource: String) throws -> Bool {
+        guard !isPullOnly(resource) else { return false }
+        return try boundedDatabase.read { conn in
+            do {
+                _ = try self.genericTable(for: resource, in: conn)
+                return true
+            } catch SyncStoreFailure.unknownResource {
+                return false
+            }
+        }
+    }
+
     /// The projection that claims this resource, if any.
     private func projection(for resource: String) -> (any SyncMirrorProjection)? {
         mirrorProjections.first { $0.resources.contains(resource) }
