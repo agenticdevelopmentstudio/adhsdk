@@ -97,6 +97,9 @@ final class BrowserSelectingMode {
     private(set) var previewSelectors: [String]?
     /// The last save started, so a test can wait for it.
     private(set) var lastSave: Task<Void, Never>?
+    /// A pick handed in from outside (the context menu): its dialog alone,
+    /// with no picker before or after it.
+    private(set) var isSinglePick = false
     private static let logger = Logger(subsystem: "AgenticDeveloperHubSDK", category: "BrowserPane")
 
     init(engine: WebKitBrowserEngine, store: BrowserHiddenItemsStore, list: BrowserHiddenItemList,
@@ -143,6 +146,23 @@ final class BrowserSelectingMode {
         installPicker(on: webView)
         let place = logPlace
         Self.logger.info("selecting mode started on \(place, privacy: .public)")
+    }
+
+    /// One pick made somewhere else — the page's context menu — taken
+    /// straight to its dialog, without a picker: closing the dialog, saved
+    /// or not, ends the mode. A pick the dialog cannot take beeps and ends it.
+    func pickOnce(_ candidate: BrowserPickCandidate) {
+        guard state == .idle, pickWebView != nil, Self.canSelect(on: engine?.url) else {
+            NSSound.beep()
+            return
+        }
+        isSinglePick = true
+        state = .selecting
+        handlePick(candidate)
+        guard state == .selecting else { return }
+        // Refused: no selector for it, or the page's root.
+        if candidate.thisItemAccepted == false { NSSound.beep() }
+        end(.failure)
     }
 
     /// Whether a pick on `url` can be saved for its own site. A page with no
@@ -210,6 +230,7 @@ final class BrowserSelectingMode {
         setPreview(nil)
         pickURL = nil
         pickRef = nil
+        isSinglePick = false
         button.showSelecting(false)
         let place = logPlace
         Self.logger.info("selecting mode ended (\(reason.rawValue, privacy: .public)) on \(place, privacy: .public)")
@@ -282,6 +303,7 @@ final class BrowserSelectingMode {
         if let choice { save(choice, label: candidate.label) }
         pickRef = nil
         state = .selecting
+        if isSinglePick { return end(.close) }
         picker?.resume()
     }
 

@@ -27,7 +27,7 @@ final class BrowserAgentPreviewViewController: NSViewController, WKNavigationDel
     }
 
     /// The preview's web view. Internal so the element picker can reach it.
-    let webView: WKWebView
+    let webView: BrowserMenuWebView
 
     /// The installed block-everything list, `nil` until it compiles (and for
     /// good, should it fail).
@@ -59,7 +59,7 @@ final class BrowserAgentPreviewViewController: NSViewController, WKNavigationDel
         configuration.defaultWebpagePreferences.allowsContentJavaScript = false
         configuration.websiteDataStore = .nonPersistent()
         configuration.preferences.javaScriptCanOpenWindowsAutomatically = false
-        webView = WKWebView(frame: .zero, configuration: configuration)
+        webView = BrowserMenuWebView(frame: .zero, configuration: configuration)
         super.init(nibName: nil, bundle: nil)
         webView.navigationDelegate = self
         webView.allowsLinkPreview = false

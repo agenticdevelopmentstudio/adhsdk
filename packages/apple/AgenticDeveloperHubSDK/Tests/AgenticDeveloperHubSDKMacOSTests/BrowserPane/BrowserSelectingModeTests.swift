@@ -258,6 +258,109 @@ final class BrowserSelectingModeTests: XCTestCase {
         XCTAssertTrue(pane.addressBox.hideItemsButton.isEnabled)
         XCTAssertTrue(pane.hideFromAgentButton.isEnabled)
     }
+
+    // MARK: - The context menu's single picks
+
+    /// A pick from the context menu goes straight to its dialog, with no
+    /// picker on the page; Cancel ends the mode instead of resuming.
+    func test_pickOnceShowsDialogAndEndsOnCancel() throws {
+        settings.set(true, for: UserSettings.browserHiddenItemsNoticeShown)
+        let mode = makeMode()
+        mode.pickOnce(candidate)
+        XCTAssertEqual(mode.state, .dialog(candidate))
+        XCTAssertNil(mode.picker)
+        XCTAssertEqual(noticeCount, 0)
+        let dialog = try XCTUnwrap(dialogs.first)
+        dialog.cancel(nil)
+        XCTAssertEqual(mode.state, .idle)
+        XCTAssertNil(mode.picker)
+        XCTAssertEqual(try store.items(list: .user, for: page), [])
+    }
+
+    func test_pickOnceSavesOnOKAndEnds() async throws {
+        let mode = makeMode()
+        mode.pickOnce(candidate)
+        let dialog = try XCTUnwrap(dialogs.first)
+        dialog.confirm(nil)
+        await mode.lastSave?.value
+        XCTAssertEqual(mode.state, .idle)
+        let saved = try store.items(list: .user, for: page)
+        XCTAssertEqual(saved.map(\.selector), ["#first"])
+    }
+
+    /// A pick with no selector of its own (the page's root) opens nothing.
+    func test_pickOnceRefusedPickEndsWithoutDialog() {
+        let mode = makeMode()
+        let root = BrowserPickCandidate(
+            kind: .pick, thisItem: nil, allLikeIt: nil, allLikeItCount: 0,
+            pageElementCount: 6, label: "body", ref: nil)
+        mode.pickOnce(root)
+        XCTAssertEqual(mode.state, .idle)
+        XCTAssertTrue(dialogs.isEmpty)
+    }
+
+    /// What a right-click is on: the element drawn at the point, as the
+    /// picker would pick it, and the text the click selected.
+    func test_contextTargetReadsTheElementAndSelection() async throws {
+        let webView = engine.webView
+        webView.frame = NSRect(x: 0, y: 0, width: 400, height: 300)
+        webView.layoutSubtreeIfNeeded()
+        let pointY: CGFloat = webView.isFlipped ? 12 : webView.bounds.height - 12
+        let target = await BrowserElementPicker.contextTarget(at: NSPoint(x: 12, y: pointY), in: webView)
+        XCTAssertEqual(target?.candidate.thisItem, "#first")
+        XCTAssertEqual(target?.selectedText, "")
+        _ = try await webView.evaluateJavaScript("""
+            const range = document.createRange();
+            range.selectNodeContents(document.getElementById('content'));
+            getSelection().removeAllRanges(); getSelection().addRange(range); true
+            """)
+        let selected = await BrowserElementPicker.contextTarget(at: NSPoint(x: 12, y: pointY), in: webView)
+        XCTAssertEqual(selected?.selectedText, "Content")
+    }
+
+    /// Hide Distracting Item on the live page, Hide Item from Agents while
+    /// the agent can see the browser, Replace Private Word only on text.
+    func test_contextMenuItemsFollowAccessAndText() async throws {
+        let pane = WebBrowserPaneViewController(
+            makeEngine: { WebKitBrowserEngine(configuration: $0) },
+            engineKind: .safari, minimizedSymbol: "globe",
+            store: EphemeralPaneStateStore(), settings: settings, history: nil,
+            homeURL: WebBrowserPaneViewController.blankPage)
+        _ = pane.view
+        defer { pane.paneContentWillBeDiscarded() }
+        try await pane.loadForTesting(page, html: Self.html)
+        let webView = try XCTUnwrap((pane.engine as? WebKitBrowserEngine)?.webView)
+        func ids(_ menu: NSMenu, preview: BrowserAgentPreviewViewController? = nil) -> [String] {
+            pane.contextMenuItems(menu, at: .zero, in: webView, preview: preview).compactMap(\.identifier?.rawValue)
+        }
+        typealias MenuID = WebBrowserPaneViewController.ContextMenuID
+        settings.set(BrowserAgentAccess.full, for: UserSettings.browserPrivacyAgentAccess)
+        XCTAssertEqual(ids(NSMenu()), [MenuID.hideItem, MenuID.hideFromAgents])
+        settings.set(BrowserAgentAccess.hidden, for: UserSettings.browserPrivacyAgentAccess)
+        XCTAssertEqual(ids(NSMenu()), [MenuID.hideItem])
+        // Text: WebKit's menu holds Copy. No vault, no Replace Private Word.
+        let textMenu = NSMenu()
+        let copy = NSMenuItem(title: "Copy", action: nil, keyEquivalent: "")
+        copy.identifier = NSUserInterfaceItemIdentifier("WKMenuItemIdentifierCopy")
+        textMenu.addItem(copy)
+        XCTAssertTrue(BrowserMenuWebView.menuIsForText(textMenu))
+        XCTAssertFalse(BrowserMenuWebView.menuIsForText(NSMenu()))
+        XCTAssertEqual(ids(textMenu), [MenuID.hideItem])
+    }
+
+    /// The word a replace starts on is found by its real word, or by the
+    /// alias a concealed page shows in its place, ignoring case.
+    func test_privacyWordsEditorFindsTheWordsRow() {
+        let words = [
+            PrivacyWord(alias: "Acme", real: "Globex", sites: ["*"]),
+            PrivacyWord(alias: "", real: "Initech", sites: ["*"])
+        ]
+        XCTAssertEqual(PrivacyWordsEditor.row(for: "globex", in: words), 0)
+        XCTAssertEqual(PrivacyWordsEditor.row(for: "ACME", in: words), 0)
+        XCTAssertEqual(PrivacyWordsEditor.row(for: "Initech", in: words), 1)
+        XCTAssertNil(PrivacyWordsEditor.row(for: "Hooli", in: words))
+        XCTAssertNil(PrivacyWordsEditor.row(for: "", in: words))
+    }
 }
 
 extension WebBrowserPaneViewController {
