@@ -85,14 +85,16 @@ extension DaemonDatabase {
         }
     }
 
-    public func updateSessionSummary(_ summary: String, sessionId: String) {
+    /// Stores `feature`'s summary in its own column (``SummaryFeature/summaryColumn``).
+    public func updateSessionSummary(_ summary: String, sessionId: String, feature: SummaryFeature = .sessions) {
         do {
             // Stamped, not just stored: `summary = ''` can say "never summarized"
             // but not "summarized before the session did another hour of work",
             // which is the question `fetchSessionIdsNeedingSummary` has to answer
             // for a session that is still running.
             try execute(
-                "UPDATE sessions SET summary = ?, summary_at = datetime('now') WHERE session_id = ?",
+                "UPDATE sessions SET \(feature.summaryColumn) = ?, \(feature.summaryAtColumn) = datetime('now') "
+                    + "WHERE session_id = ?",
                 params: [summary, sessionId]
             )
         } catch {
@@ -114,12 +116,14 @@ extension DaemonDatabase {
     ///   re-bill a model call for each one at every launch, forever. Pass
     ///   `SummaryDefaults.characterCap(maxWords:)` for the configured limit.
     public func clearOverlongSummaries(
-        maxCharacters: Int = SummaryDefaults.characterCap(maxWords: SummaryDefaults.maxWords) + 10
+        maxCharacters: Int = SummaryDefaults.characterCap(maxWords: SummaryDefaults.maxWords) + 10,
+        feature: SummaryFeature = .sessions
     ) {
+        let column = feature.summaryColumn
         try? execute("""
-            UPDATE sessions SET summary = ''
+            UPDATE sessions SET \(column) = ''
             WHERE status = 'ended'
-              AND (length(summary) > ? OR instr(summary, char(10)) > 0)
+              AND (length(\(column)) > ? OR instr(\(column), char(10)) > 0)
         """, params: [maxCharacters])
     }
 
@@ -274,17 +278,20 @@ extension DaemonDatabase {
     ///      the summary was written. `refreshAfter` is the floor on how often that
     ///      may re-bill a model call; without it a busy session would re-summarize on
     ///      every single pass.
-    public func fetchSessionIdsNeedingSummary(limit: Int, refreshAfter: TimeInterval = 600) throws -> [String] {
+    public func fetchSessionIdsNeedingSummary(
+        limit: Int, refreshAfter: TimeInterval = 600, feature: SummaryFeature = .sessions
+    ) throws -> [String] {
+        let summary = feature.summaryColumn, summaryAt = feature.summaryAtColumn
         // Read-only → read lane (see sessionsNeedingEnrichment).
-        try read { _ in
+        return try read { _ in
             var out: [String] = []
             try query("""
                 SELECT session_id FROM sessions
-                WHERE summary = ''
+                WHERE \(summary) = ''
                    OR (status = ?
-                       AND summary_at != ''
-                       AND last_activity_at > summary_at
-                       AND summary_at <= datetime('now', ?))
+                       AND \(summaryAt) != ''
+                       AND last_activity_at > \(summaryAt)
+                       AND \(summaryAt) <= datetime('now', ?))
                 ORDER BY (status = ?) DESC, last_activity_at DESC
                 LIMIT ?
             """, params: [SessionStatus.active.rawValue,
@@ -307,17 +314,20 @@ extension DaemonDatabase {
     /// `summary_interval_minutes` and takes `maxPerRun` sessions, so a live session
     /// waited out an interval for its first summary even though its transcript had
     /// been complete since the moment `Stop` fired.
-    public func sessionNeedsSummary(sessionId: String, refreshAfter: TimeInterval = 600) throws -> Bool {
-        try read { _ in
+    public func sessionNeedsSummary(
+        sessionId: String, refreshAfter: TimeInterval = 600, feature: SummaryFeature = .sessions
+    ) throws -> Bool {
+        let summary = feature.summaryColumn, summaryAt = feature.summaryAtColumn
+        return try read { _ in
             var needed = false
             try query("""
                 SELECT 1 FROM sessions
                 WHERE session_id = ?
-                  AND (summary = ''
+                  AND (\(summary) = ''
                        OR (status = ?
-                           AND summary_at != ''
-                           AND last_activity_at > summary_at
-                           AND summary_at <= datetime('now', ?)))
+                           AND \(summaryAt) != ''
+                           AND last_activity_at > \(summaryAt)
+                           AND \(summaryAt) <= datetime('now', ?)))
             """, params: [sessionId,
                           SessionStatus.active.rawValue,
                           "-\(Int(refreshAfter)) seconds"]) { _ in
@@ -359,7 +369,8 @@ extension DaemonDatabase {
                    s.last_tool, s.status, s.git_branch, s.summary, s.pid, s.term_program,
                    s.project_root, s.term_session_id, s.transcript_title, s.last_output,
                    s.last_event_type, s.summary_at, 0 as event_count,
-                   \(Self.subagentWorkingColumn), s.turn_state_at
+                   \(Self.subagentWorkingColumn), s.turn_state_at,
+                   s.conversation_summary, s.project_summary
             FROM sessions s
         """
         var conditions: [String] = []
@@ -424,7 +435,9 @@ extension DaemonDatabase {
                 summaryAt: string(row, 16),
                 eventCount: Int(int(row, 17)),
                 subagentWorking: int(row, 18) != 0,
-                turnStateAt: string(row, 19)
+                turnStateAt: string(row, 19),
+                conversationSummary: string(row, 20),
+                projectSummary: string(row, 21)
             ))
         }
         return includeEventCount ? try withEventCounts(results) : results
@@ -587,7 +600,8 @@ extension DaemonDatabase {
                    s.last_tool, s.status, s.git_branch, s.summary, s.pid, s.term_program,
                    s.project_root, s.term_session_id, s.transcript_title, s.last_output,
                    s.last_event_type, s.summary_at, 0 as event_count,
-                   \(Self.subagentWorkingColumn), s.turn_state_at
+                   \(Self.subagentWorkingColumn), s.turn_state_at,
+                   s.conversation_summary, s.project_summary
             FROM sessions s
             WHERE s.session_id = ?
         """, params: [sessionId]) { row in
@@ -611,7 +625,9 @@ extension DaemonDatabase {
                 summaryAt: string(row, 16),
                 eventCount: Int(int(row, 17)),
                 subagentWorking: int(row, 18) != 0,
-                turnStateAt: string(row, 19)
+                turnStateAt: string(row, 19),
+                conversationSummary: string(row, 20),
+                projectSummary: string(row, 21)
             )
         }
         if includeEventCount, let session = result {

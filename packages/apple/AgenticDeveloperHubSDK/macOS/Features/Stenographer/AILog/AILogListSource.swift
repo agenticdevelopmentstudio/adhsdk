@@ -41,6 +41,8 @@ public final class AILogListSource {
     nonisolated static func featureLabel(_ feature: String) -> String {
         switch feature {
         case "summarize": return "Summary"
+        case "summarize_conversations": return "Conversation Summary"
+        case "summarize_projects": return "Project Summary"
         case "oversight": return "Oversight"
         case "": return "—"
         default: return feature.capitalized

@@ -4,11 +4,15 @@ import AgenticDeveloperHubSDKCore
 
 /// The single owner of the "AI summaries → daemon" contract.
 ///
-/// The AI Summaries pane and the Sessions window's gear dialog edit the switch,
-/// the provider selection and seven tuning prefs. One set of observers lives
-/// here; on any change, at startup and on every daemon reconnect the full
-/// idempotent snapshot is pushed through `POST /preferences/summaries`. The
-/// engine is Core's `SettingsSnapshotPush`.
+/// Each feature that summarizes (``SummaryFeature``) has its own AI Summaries
+/// pane, editing its own ``SummaryFeatureSettings``: the switch, the provider
+/// selection and seven tuning prefs. One set of observers per feature lives
+/// here; on any change, at startup and on every daemon reconnect that feature's
+/// full idempotent snapshot is pushed through `POST /preferences/summaries`
+/// with the feature named. The engine is Core's `SettingsSnapshotPush`.
+///
+/// AI Conversations and Coding Projects start as a copy of Sessions' settings
+/// (``SummaryFeatureSettings/seed(from:)``), taken once, before their first push.
 ///
 /// **The first push is preceded by a one-time seed.** The daemon holds the only
 /// copy of what the user chose before these panes moved to a new app, so a store
@@ -19,19 +23,28 @@ import AgenticDeveloperHubSDKCore
 @MainActor
 public enum StenographerSummaryPrefsPush {
 
-    private static var push: SettingsSnapshotPush?
+    private static var pushes: [SettingsSnapshotPush] = []
 
     /// Installs the observers and reconciles the daemon now and on every
     /// reconnect. Call once at startup.
     public static func startObserving(service: any StenographerDaemonService) {
-        guard push == nil else {
+        guard pushes.isEmpty else {
             logger.warning("startObserving called more than once; ignoring the repeat call")
             return
         }
+        for settings in SummaryFeatureSettings.all {
+            pushes.append(startPush(settings, service: service))
+        }
+    }
+
+    private static func startPush(
+        _ settings: SummaryFeatureSettings, service: any StenographerDaemonService
+    ) -> SettingsSnapshotPush {
+        let sessions = SummaryFeatureSettings.for(.sessions)
         let engine = SettingsSnapshotPush(
-            label: "Summary prefs",
+            label: "Summary prefs (\(settings.feature.rawValue))",
             logger: logger,
-            snapshot: { currentBody() },
+            snapshot: { currentBody(settings) },
             send: { body in
                 guard let request = try? StenographerWire.decoder().decode(
                     SummaryPreferenceRequest.self, from: body
@@ -39,28 +52,25 @@ public enum StenographerSummaryPrefsPush {
                 return await service.setSummaryPreferences(request)
             },
             registerReconnect: { service.onReconnect($0) },
-            seed: { await seedFromDaemon(service: service) }
+            seed: {
+                if settings.feature == .sessions { return await seedFromDaemon(service: service) }
+                // Sessions' own values come from the daemon first, so the copy is of them.
+                guard await seedFromDaemon(service: service) else { return false }
+                settings.seed(from: sessions)
+                return true
+            }
         )
-        push = engine
         engine.start { onChange -> [AnyObject] in
-            let strings: [AnyObject] = [
-                UserSettings.stenographerAISummaryPrompt,
-                UserSettings.stenographerAISummariesProviderConfigId,
-                UserSettings.stenographerAISummariesModel
-            ].map { setting in UserSettingObserver(setting) { _ in onChange() } }
-            let bools: [AnyObject] = [
-                UserSettingObserver(UserSettings.stenographerAISummariesEnabled) { _ in onChange() }
-            ]
+            let strings: [AnyObject] = [settings.prompt, settings.providerConfigId, settings.model]
+                .map { setting in UserSettingObserver(setting) { _ in onChange() } }
+            let bools: [AnyObject] = [UserSettingObserver(settings.enabled) { _ in onChange() }]
             let ints: [AnyObject] = [
-                UserSettings.stenographerAISummaryMaxWords,
-                UserSettings.stenographerAISummaryActivityLines,
-                UserSettings.stenographerAISummaryDetailChars,
-                UserSettings.stenographerAISummaryIntervalMinutes,
-                UserSettings.stenographerAISummaryMaxPerRun,
-                UserSettings.stenographerAISummaryTimeoutSeconds
+                settings.maxWords, settings.activityLines, settings.detailChars,
+                settings.intervalMinutes, settings.maxPerRun, settings.timeoutSeconds
             ].map { setting in UserSettingObserver(setting) { _ in onChange() } }
             return strings + bools + ints
         }
+        return engine
     }
 
     /// Takes the daemon's stored values into the local settings once (marker
@@ -94,44 +104,48 @@ public enum StenographerSummaryPrefsPush {
 
     /// Tears the observers down (test isolation; production installs once).
     public static func stopObserving() {
-        push?.stop()
-        push = nil
+        pushes.forEach { $0.stop() }
+        pushes = []
     }
 
-    /// Awaits the most recent push (test-only determinism hook).
+    /// Awaits the most recent push of every feature (test-only determinism hook).
     public static func awaitPendingPush() async {
-        await push?.awaitPendingPush()
+        for push in pushes { await push.awaitPendingPush() }
     }
 
     /// The full snapshot the daemon receives — pure so it is unit-testable.
     /// Values travel as the user set them; the daemon clamps through `SummaryLimits`.
     static func makeRequest(
         enabled: Bool, selectedConfigId: String, prompt: String, maxWords: Int, activityLines: Int,
-        detailChars: Int, intervalMinutes: Int, maxPerRun: Int, timeoutSeconds: Int, model: String = ""
+        detailChars: Int, intervalMinutes: Int, maxPerRun: Int, timeoutSeconds: Int, model: String = "",
+        feature: SummaryFeature? = nil
     ) -> SummaryPreferenceRequest {
         SummaryPreferenceRequest(
             enabled: enabled, selectedConfigId: selectedConfigId, prompt: prompt, maxWords: maxWords,
             activityLines: activityLines, detailChars: detailChars, intervalMinutes: intervalMinutes,
-            maxPerRun: maxPerRun, timeoutSeconds: timeoutSeconds, model: model)
+            maxPerRun: maxPerRun, timeoutSeconds: timeoutSeconds, model: model,
+            // Sessions travels without the field, which every daemon reads as Sessions.
+            feature: feature == .sessions ? nil : feature)
     }
 
-    private static func currentBody() -> Data? {
+    private static func currentBody(_ settings: SummaryFeatureSettings) -> Data? {
         // An unmodified prompt travels blank: the daemon reads a blank prompt as
         // "never configured" and uses its own `SummaryDefaults.prompt`, so a
         // future release's wording applies instead of this build's copy being
         // pinned on the daemon side forever.
-        let prompt = UserSettings.stenographerAISummaryPrompt.value
+        let prompt = settings.prompt.value
         let request = makeRequest(
-            enabled: UserSettings.stenographerAISummariesEnabled.value,
-            selectedConfigId: UserSettings.stenographerAISummariesProviderConfigId.value,
+            enabled: settings.enabled.value,
+            selectedConfigId: settings.providerConfigId.value,
             prompt: prompt == SummaryDefaults.prompt ? "" : prompt,
-            maxWords: UserSettings.stenographerAISummaryMaxWords.value,
-            activityLines: UserSettings.stenographerAISummaryActivityLines.value,
-            detailChars: UserSettings.stenographerAISummaryDetailChars.value,
-            intervalMinutes: UserSettings.stenographerAISummaryIntervalMinutes.value,
-            maxPerRun: UserSettings.stenographerAISummaryMaxPerRun.value,
-            timeoutSeconds: UserSettings.stenographerAISummaryTimeoutSeconds.value,
-            model: UserSettings.stenographerAISummariesModel.value
+            maxWords: settings.maxWords.value,
+            activityLines: settings.activityLines.value,
+            detailChars: settings.detailChars.value,
+            intervalMinutes: settings.intervalMinutes.value,
+            maxPerRun: settings.maxPerRun.value,
+            timeoutSeconds: settings.timeoutSeconds.value,
+            model: settings.model.value,
+            feature: settings.feature
         )
         return try? StenographerWire.encoder().encode(request)
     }

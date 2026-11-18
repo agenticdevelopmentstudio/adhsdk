@@ -2,11 +2,11 @@
 id: eaa5d7f1-c35d-4fe6-91a0-06b6e48b8ba2
 title: "Stenographer Preference DTOs"
 type: ingredient
-version: 1.0.3
+version: 1.0.4
 status: review
 language: en
 created: 2026-11-14
-modified: 2026-11-14
+modified: 2026-11-18
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -171,10 +171,15 @@ Not applicable: the types call no logging API.
 
 `separation-of-concerns` passes because the types only hold values; routes, coding strategy and clamping belong to the HTTP client, `StenographerWire` and the daemon. `unit-test-coverage` is partial because `StenographerPreferenceDTOsTests` (`Tests/AgenticDeveloperHubSDKCoreTests/Stenographer/StenographerPreferenceDTOsTests.swift`) covers every vector except stenographer-preference-dt-os-012 (public initializers used from another module), which is skipped: the test target imports the module with `@testable`, so a unit test cannot show that the initializers are public.
 
+## Per-Feature Summaries
+
+`SummaryPreferenceRequest.feature` names which feature's summary preferences the request sets. It is omitted for Sessions, which every daemon, old or new, reads as Sessions.
+
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.4 | 2026-11-18 | Mike Fullerton | `SummaryPreferenceRequest.feature`, absent for Sessions. |
 | 1.0.3 | 2026-11-14 | Mike Fullerton | Conformance tests added (StenographerPreferenceDTOsTests.swift, 13 of 14 vectors, 012 skipped: @testable import cannot prove public initializers); unit-test-coverage now partial. |
 | 1.0.2 | 2026-11-14 | Mike Fullerton | Moved daemon semantics out of the requirements, linked the wire, HTTP client and summary limits specs, wrote real rationales, added four vectors, and rewrote the platform notes. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Each design decision carries its own approval line |

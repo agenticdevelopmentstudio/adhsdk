@@ -43,6 +43,9 @@ public struct OversightPreferenceResponse: Codable, Sendable, Equatable {
 /// Summaries pane (the Kitchen); the rest are the tuning knobs, clamped by the
 /// daemon through ``SummaryLimits``. All optional: omitted = unchanged.
 public struct SummaryPreferenceRequest: Codable, Sendable {
+    /// ``SummaryFeature`` raw value; nil is sessions, as every request before
+    /// summaries were per feature was.
+    public var feature: String?
     public var enabled: Bool?
     public var selectedConfigId: String?
     public var prompt: String?
@@ -59,8 +62,9 @@ public struct SummaryPreferenceRequest: Codable, Sendable {
         enabled: Bool? = nil, selectedConfigId: String? = nil, prompt: String? = nil,
         maxWords: Int? = nil, activityLines: Int? = nil, detailChars: Int? = nil,
         intervalMinutes: Int? = nil, maxPerRun: Int? = nil, timeoutSeconds: Int? = nil,
-        model: String? = nil
+        model: String? = nil, feature: SummaryFeature? = nil
     ) {
+        self.feature = feature?.rawValue
         self.model = model
         self.enabled = enabled
         self.selectedConfigId = selectedConfigId

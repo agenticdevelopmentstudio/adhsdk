@@ -2,11 +2,11 @@
 id: 96f73261-cf32-42cc-92f3-f8b58542382a
 title: "Stenographer Daemon Service"
 type: ingredient
-version: 1.0.2
+version: 1.0.3
 status: review
 language: en
 created: 2026-11-14
-modified: 2026-11-14
+modified: 2026-11-18
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -266,9 +266,14 @@ Not applicable: neither the protocol nor the HTTP implementation makes log calls
 | [adc.check.security.secure-authentication](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/1d5c23d5-9a26-57fb-a23d-358271e4204a) | failed | Security |
 
 separation-of-concerns passes: the protocol is the seam, the HTTP client is one implementation, and the windows depend only on the protocol. unit-test-coverage passes: `StenographerHTTPClientTests` and `DaemonServiceConformanceTests.swift` between them cover every vector, including the default-argument overloads, `DaemonProviderConfig` decoding, the timeout table and the summarize and unreachable paths. timeout-configuration passes because each request class has a stated limit (10, 15 and 605 seconds). offline-behavior passes because an unreachable daemon yields nil or false and callers keep their current data, though there is no retry. secure-transport is partial because traffic is plain HTTP, acceptable only on the loopback address, and `STENOGRAPHER_URL` can point the client at any address. secure-authentication is marked failed because the client sends no authentication header and `setAIPreferences` replaces the daemon's provider registry over that unauthenticated loopback endpoint, so any local process can call it; that is a known and accepted limit of the loopback design (see impl-no-retry), not a defect in the protocol contract.
+## Per-Feature Summaries
+
+`summaryPreferences(feature:)` reads one feature's summary preferences; the protocol extension's default answers Sessions' for conformers that predate it.
+
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.3 | 2026-11-18 | Mike Fullerton | `summaryPreferences(feature:)`, with a default that reads Sessions'. |
 | 1.0.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (DaemonServiceConformanceTests.swift, 9 new vectors; the other 11 already covered by StenographerHTTPClientTests, 20 of 20 vectors); unit-test-coverage now passed. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Requirements given RFC keywords and split one per operation, four named requirements added for since-hours, reconnect, polling start and encoder split, vectors cite them and new vectors cover timeout, act fallback and defaults, silent-failure cost recorded as a pending Design Decision, configuration timeouts row dropped, WinUI 3 note made concrete, security compliance rows added, and depends-on and related linked. |

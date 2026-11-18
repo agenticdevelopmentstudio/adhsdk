@@ -2,11 +2,11 @@
 id: 2eda149b-21d4-44cb-a1b4-67e2938659a4
 title: "AI Feature"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-14
-modified: 2026-11-14
+modified: 2026-11-18
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -152,7 +152,12 @@ Not applicable: the type contains no logging call; it is the discriminator that 
 
 `separation-of-concerns` passes because the type only names two features; the logging, the settings lookup and the completion all live in other components. `unit-test-coverage` is partial because no test sits beside the enumeration itself; its raw values are exercised indirectly by the interaction log tests (`AIInteractionLogTests`), and the oversight provider reader tests (`OversightProviderReaderTests`) exercise `oversightAIProviderSettings` directly, not the equality test that selects it, and nothing asserts the raw values on their own, the selection by feature, or the raw-value initializer's failure on unknown text.
 
+## Per-Feature Summaries
+
+Two more features summarize sessions: `summarizeConversations` (`summarize_conversations`) for AI Conversations and `summarizeProjects` (`summarize_projects`) for Coding Projects. `AIFeature.summary(for:)` maps a `SummaryFeature` to its case, so the AI log and the guard tell the three apart.
+
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-18 | Mike Fullerton | Adds `summarizeConversations` (`summarize_conversations`) and `summarizeProjects` (`summarize_projects`), the AI Conversations and Coding Projects summarizers. |

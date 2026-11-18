@@ -2,10 +2,11 @@ import AppKit
 
 import AgenticDeveloperHubSDKCore
 
-/// How a Coding Project window behaves: how a pane shows it is the active one,
-/// and whether its branch cards get AI summaries. The General row of the
-/// Coding Projects topic; where projects come from is
-/// `ProjectsSettingsPanelViewController`, its Directories row.
+/// How a Coding Project window behaves: how a pane shows it is the active one.
+/// The General row of the Coding Projects topic; where projects come from is
+/// `ProjectsSettingsPanelViewController`, its Directories row, and its branch
+/// cards' summaries are its AI Summaries row
+/// (`AISummariesSettingsPanel(feature: .projects)`).
 @MainActor
 public final class ProjectsGeneralSettingsPanel: ComposableSettings.SettingsPanelViewController {
 
@@ -19,7 +20,7 @@ public final class ProjectsGeneralSettingsPanel: ComposableSettings.SettingsPane
     public required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
 
     public override var searchKeywords: [String] {
-        ["project", "active pane", "outline", "highlight", "follows mouse", "summary", "summaries"]
+        ["project", "active pane", "outline", "highlight", "follows mouse"]
     }
 
     public override var helpContent: ComposableSettings.PanelHelp? {
@@ -45,12 +46,6 @@ public final class ProjectsGeneralSettingsPanel: ComposableSettings.SettingsPane
                 body: "A theme can carry its own answer for whether the active pane is "
                     + "outlined, and in what color, under the theme's Project topic in Theme "
                     + "settings. When it does, the theme wins over the switch here."
-            ),
-            .init(
-                title: "AI Summaries",
-                body: "The same switch as Settings › AI › Summaries: with it on, the daemon "
-                    + "writes a short summary of each Claude Code session, and a branch card "
-                    + "shows the summary of the session working in its checkout."
             )
         ])
     }
@@ -58,7 +53,6 @@ public final class ProjectsGeneralSettingsPanel: ComposableSettings.SettingsPane
     public override func viewDidLoad() {
         super.viewDidLoad()
         addGroup(createActivePaneGroup())
-        addGroup(AISummariesPluginControls.makeSummariesGroup())
     }
 
     private func createActivePaneGroup() -> ComposableSettings.GroupView {

@@ -46,14 +46,15 @@ public final class SessionsCoordinator: AppFeature {
         // Registered unopened so the toolkit's restore-on-launch can reopen it.
         SessionsWindowController.ensureCurrent(service: service)
         StenographerSummaryPrefsPush.startObserving(service: service)
+        // Coding Project windows show Coding Projects' own summaries, under its switch.
         ProjectSessionMonitor.shared.attach(
-            StenographerSessionListSource(service: service),
-            summariesEnabled: UserSettings.stenographerAISummariesEnabled)
+            StenographerSessionListSource(service: service, summaryFeature: .projects),
+            summariesEnabled: SummaryFeatureSettings.for(.projects).enabled)
     }
 
-    /// The AI Summaries settings pane, for the host's settings window.
-    public func settingsPanel() -> AISummariesSettingsPanel {
-        AISummariesSettingsPanel(service: service)
+    /// One feature's AI Summaries settings pane, for the host's settings window.
+    public func settingsPanel(feature: SummaryFeature = .sessions) -> AISummariesSettingsPanel {
+        AISummariesSettingsPanel(service: service, feature: feature)
     }
 
     public func showWindow() {

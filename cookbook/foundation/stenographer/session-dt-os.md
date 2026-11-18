@@ -2,11 +2,11 @@
 id: 25b6559b-69c1-450f-85b3-fc026d55f469
 title: "Session DTOs"
 type: ingredient
-version: 1.0.2
+version: 1.0.3
 status: review
 language: en
 created: 2026-11-14
-modified: 2026-11-14
+modified: 2026-11-18
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -225,9 +225,14 @@ Not applicable: this code makes no log calls.
 
 separation-of-concerns passes: the file declares four shapes and the tolerant decoder; enrichment, activity derivation, health measurement, routes and transport live in the daemon and the HTTP client. unit-test-coverage passes: every vector has a test, in `SessionDTOsConformanceTests.swift` (decode defaults, required keys, `Mb` casing, strict event decode and the rest), beside the constructions in `DaemonSessionSummarizerTests` and `DaemonProviderPickerViewTests`. graceful-degradation passes because the session decoder defaults the later-added keys instead of failing on an older daemon's payload.
 
+## Per-Feature Summaries
+
+`SessionDTO` carries one summary per `SummaryFeature`: `summary` (Sessions), `conversationSummary` (AI Conversations) and `projectSummary` (Coding Projects), each decoding to "" when absent so an older daemon still decodes. `summary(for:)` picks one by feature.
+
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.3 | 2026-11-18 | Mike Fullerton | `SessionDTO` gains `conversationSummary` and `projectSummary`, and `summary(for:)`. |
 | 1.0.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (SessionDTOsConformanceTests.swift, 18 of 18 vectors); unit-test-coverage now passed. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Daemon and client behavior in Behavioral Requirements rewritten as descriptive field notes, detail-delivery now states the exact SessionDTO?? results, stale doc-comment claims removed from Design Decisions, edge-case keywords made unambiguous, vectors merged, split and added for the uncovered requirements, WinUI 3 note cut to record and serializer guidance with Skip required, and depends-on and related linked. |

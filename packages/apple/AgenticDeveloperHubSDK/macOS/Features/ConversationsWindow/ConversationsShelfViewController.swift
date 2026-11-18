@@ -96,6 +96,11 @@ public final class ConversationsShelfViewController: NSViewController,
         }
     }
 
+    /// Each session's AI Conversations summary, by id, from the same poll. It
+    /// rides the row's tooltip, under the trail, while AI Conversations'
+    /// summaries are switched on; the row itself stays one line.
+    var summaries: [String: String] = [:]
+
     /// Fired when ``activity`` changes, so a host can show the same fact
     /// somewhere else — the feed's status line — without polling a second time.
     public var onActivityChanged: (([String: SessionWatcher.SessionWatcherActivity]) -> Void)?
@@ -732,6 +737,9 @@ public final class ConversationsShelfViewController: NSViewController,
     private func readActivity(from source: SessionWatcher.SessionListSource) async {
         guard let sessions = try? await source.fetchSessions() else { return }
         guard source === activitySource else { return }
+        summaries = Dictionary(
+            sessions.compactMap { $0.summary.isEmpty ? nil : ($0.sessionId, $0.summary) },
+            uniquingKeysWith: { first, _ in first })
         activity = Dictionary(
             sessions.map { ($0.sessionId, $0.activity) },
             // A session id is a session id; if a source hands back two rows for
@@ -927,7 +935,8 @@ public final class ConversationsShelfViewController: NSViewController,
         header.setAccessibilityLabel(session.displayName)
         // The crumbs truncate to fit the shelf, so the whole trail has to be
         // reachable somewhere.
-        header.toolTip = Self.tooltip(for: session)
+        let summary = SummaryFeatureSettings.for(.conversations).enabled.value ? summaries[session.id] : nil
+        header.toolTip = Self.tooltip(for: session, summary: summary)
         // The cell is rebuilt by the table rather than owned by this controller,
         // so it repaints itself instead of waiting to be told.
         header.observeTheme { view, palette in view.applyTheme(palette) }
@@ -956,11 +965,14 @@ public final class ConversationsShelfViewController: NSViewController,
         return cell
     }
 
-    /// The whole trail, untruncated — what the row would say given the room.
-    static func tooltip(for session: Session) -> String {
-        (session.context + [trailName(of: session)])
+    /// The whole trail, untruncated — what the row would say given the room —
+    /// and, on its own line, the session's summary when there is one.
+    static func tooltip(for session: Session, summary: String? = nil) -> String {
+        let trail = (session.context + [trailName(of: session)])
             .filter { !$0.isEmpty }
             .joined(separator: " » ")
+        guard let summary, !summary.isEmpty else { return trail }
+        return trail + "\n" + summary
     }
 }
 

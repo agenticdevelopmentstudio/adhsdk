@@ -35,53 +35,55 @@ public enum SummaryPrefs {
         public var characterCap: Int { SummaryDefaults.characterCap(maxWords: maxWords) }
     }
 
-    public static func snapshot(_ database: DaemonDatabase) -> Snapshot {
-        let words = maxWords(database)
+    public static func snapshot(_ database: DaemonDatabase, feature: SummaryFeature = .sessions) -> Snapshot {
+        let words = maxWords(database, feature: feature)
         return Snapshot(
-            systemPrompt: resolvedPrompt(database, maxWords: words),
+            systemPrompt: resolvedPrompt(database, feature: feature, maxWords: words),
             maxWords: words,
-            activityLines: activityLines(database),
-            detailChars: detailChars(database),
+            activityLines: activityLines(database, feature: feature),
+            detailChars: detailChars(database, feature: feature),
             maxTokens: maxTokens(maxWords: words),
-            timeout: timeoutSeconds(database),
-            maxPerRun: maxPerRun(database)
+            timeout: timeoutSeconds(database, feature: feature),
+            maxPerRun: maxPerRun(database, feature: feature)
         )
     }
 
     /// The raw prompt template, placeholder unresolved. A blank stored value means
     /// "never configured" and yields the default — an empty system prompt would
     /// silently turn a titling model into a chatbot.
-    public static func prompt(_ database: DaemonDatabase) -> String {
-        let raw = ((try? database.setting(for: SummarySettingsKeys.prompt)) ?? nil) ?? ""
+    public static func prompt(_ database: DaemonDatabase, feature: SummaryFeature = .sessions) -> String {
+        let raw = ((try? database.setting(for: feature.key(SummarySettingsKeys.prompt))) ?? nil) ?? ""
         return raw.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? SummaryDefaults.prompt : raw
     }
 
     /// The prompt with `{maxWords}` resolved. A prompt the user stripped the
     /// placeholder out of is sent verbatim — the cap still trims the *reply*.
-    public static func resolvedPrompt(_ database: DaemonDatabase, maxWords resolved: Int? = nil) -> String {
-        prompt(database).replacingOccurrences(
+    public static func resolvedPrompt(
+        _ database: DaemonDatabase, feature: SummaryFeature = .sessions, maxWords resolved: Int? = nil
+    ) -> String {
+        prompt(database, feature: feature).replacingOccurrences(
             of: SummaryDefaults.maxWordsPlaceholder,
-            with: String(resolved ?? maxWords(database))
+            with: String(resolved ?? maxWords(database, feature: feature))
         )
     }
 
-    public static func maxWords(_ database: DaemonDatabase) -> Int {
-        intSetting(database, SummarySettingsKeys.maxWords,
+    public static func maxWords(_ database: DaemonDatabase, feature: SummaryFeature = .sessions) -> Int {
+        intSetting(database, feature.key(SummarySettingsKeys.maxWords),
                    default: SummaryDefaults.maxWords, range: SummaryLimits.maxWords)
     }
 
-    public static func activityLines(_ database: DaemonDatabase) -> Int {
-        intSetting(database, SummarySettingsKeys.activityLines,
+    public static func activityLines(_ database: DaemonDatabase, feature: SummaryFeature = .sessions) -> Int {
+        intSetting(database, feature.key(SummarySettingsKeys.activityLines),
                    default: SummaryDefaults.activityLines, range: SummaryLimits.activityLines)
     }
 
-    public static func detailChars(_ database: DaemonDatabase) -> Int {
-        intSetting(database, SummarySettingsKeys.detailChars,
+    public static func detailChars(_ database: DaemonDatabase, feature: SummaryFeature = .sessions) -> Int {
+        intSetting(database, feature.key(SummarySettingsKeys.detailChars),
                    default: SummaryDefaults.detailChars, range: SummaryLimits.detailChars)
     }
 
-    public static func intervalMinutes(_ database: DaemonDatabase) -> Int {
-        intSetting(database, SummarySettingsKeys.intervalMinutes,
+    public static func intervalMinutes(_ database: DaemonDatabase, feature: SummaryFeature = .sessions) -> Int {
+        intSetting(database, feature.key(SummarySettingsKeys.intervalMinutes),
                    default: SummaryDefaults.intervalMinutes, range: SummaryLimits.intervalMinutes)
     }
 
@@ -89,25 +91,27 @@ public enum SummaryPrefs {
     /// reschedules — i.e. *after the currently armed interval elapses*, so a change
     /// from 4 hours to 1 minute is honored on the tick after the four hours are up,
     /// not immediately. Restarting the daemon applies it at once.
-    public static func intervalSeconds(_ database: DaemonDatabase) -> TimeInterval {
-        TimeInterval(intervalMinutes(database) * 60)
+    public static func intervalSeconds(
+        _ database: DaemonDatabase, feature: SummaryFeature = .sessions
+    ) -> TimeInterval {
+        TimeInterval(intervalMinutes(database, feature: feature) * 60)
     }
 
-    public static func maxPerRun(_ database: DaemonDatabase) -> Int {
-        intSetting(database, SummarySettingsKeys.maxPerRun,
+    public static func maxPerRun(_ database: DaemonDatabase, feature: SummaryFeature = .sessions) -> Int {
+        intSetting(database, feature.key(SummarySettingsKeys.maxPerRun),
                    default: SummaryDefaults.maxPerRun, range: SummaryLimits.maxPerRun)
     }
 
-    public static func timeoutSeconds(_ database: DaemonDatabase) -> TimeInterval {
-        TimeInterval(intSetting(database, SummarySettingsKeys.timeoutSeconds,
+    public static func timeoutSeconds(_ database: DaemonDatabase, feature: SummaryFeature = .sessions) -> TimeInterval {
+        TimeInterval(intSetting(database, feature.key(SummarySettingsKeys.timeoutSeconds),
                                 default: SummaryDefaults.timeoutSeconds, range: SummaryLimits.timeoutSeconds))
     }
 
     /// Completion budget for one title. Derived from the word cap rather than
     /// configured separately: the reply is a phrase, and a user who raises the cap
     /// must not have the answer truncated mid-word by a stale token limit.
-    public static func maxTokens(_ database: DaemonDatabase) -> Int {
-        maxTokens(maxWords: maxWords(database))
+    public static func maxTokens(_ database: DaemonDatabase, feature: SummaryFeature = .sessions) -> Int {
+        maxTokens(maxWords: maxWords(database, feature: feature))
     }
 
     public static func maxTokens(maxWords: Int) -> Int { max(64, maxWords * 8) }

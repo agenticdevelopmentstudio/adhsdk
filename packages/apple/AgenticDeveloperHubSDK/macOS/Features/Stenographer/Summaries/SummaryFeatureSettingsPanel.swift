@@ -1,19 +1,18 @@
 import AppKit
 import AgenticDeveloperHubSDKCore
 
-/// The settings topic of a window the AI summaries feed — Sessions or
-/// Conversations: the summaries switch, the same one Settings › AI › Summaries
-/// holds, so the window that shows summaries is where they can be turned on.
+/// The General row of the Sessions or AI Conversations settings topic: how
+/// that window behaves. Its summaries are the topic's AI Summaries row
+/// (`AISummariesSettingsPanel(feature:)`), one per feature.
 @MainActor
 public final class SummaryFeatureSettingsPanel: ComposableSettings.SettingsPanelViewController {
 
-    /// Which window the panel is for; it names the panel and its help.
+    /// Which window the panel is for; it names the panel's settings and help.
     public enum Feature: Sendable {
         case sessions
         case conversations
 
-        var title: String { self == .sessions ? "Sessions" : "Conversations" }
-        var symbol: String { self == .sessions ? "list.bullet.rectangle" : "bubble.left.and.bubble.right" }
+        var title: String { self == .sessions ? "Sessions" : "AI Conversations" }
     }
 
     private let feature: Feature
@@ -21,30 +20,73 @@ public final class SummaryFeatureSettingsPanel: ComposableSettings.SettingsPanel
     public init(feature: Feature) {
         self.feature = feature
         super.init(with: ComposableSettings.SettingsPanelDescriptor(
-            title: feature.title,
-            icon: NSImage(systemSymbolName: feature.symbol, accessibilityDescription: nil)
+            title: "General",
+            icon: NSImage(systemSymbolName: "gearshape", accessibilityDescription: nil)
         ))
     }
 
     public required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
 
     public override var searchKeywords: [String] {
-        [feature.title.lowercased(), "summary", "summaries", "ai"]
+        switch feature {
+        case .sessions: ["sessions", "always on top", "float", "transparency", "opacity", "filter"]
+        case .conversations: ["conversations", "always on top", "float", "work output", "thinking"]
+        }
     }
 
     public override var helpContent: ComposableSettings.PanelHelp? {
-        ComposableSettings.PanelHelp(topics: [
+        var topics: [ComposableSettings.PanelHelp.Topic] = [
             .init(
-                title: "AI Summaries",
-                body: "With this on, the daemon writes a short title for each Claude Code session, "
-                    + "and the \(feature.title) window shows it. The provider, model and prompt "
-                    + "are under Settings › AI › Summaries; this is the same switch."
+                title: "Always on Top",
+                body: "With this on, the \(feature.title) window floats above every other "
+                    + "window, so it stays in sight while you work elsewhere."
             )
-        ])
+        ]
+        switch feature {
+        case .sessions:
+            topics.append(.init(
+                title: "Transparency",
+                body: "How opaque the Sessions window is. Lower values let what is behind "
+                    + "it show through."
+            ))
+        case .conversations:
+            topics.append(.init(
+                title: "Work Output",
+                body: "The agent's narration of what it is doing, and its thinking, shown "
+                    + "beside what it said to you. Off, the window shows the conversation "
+                    + "alone, which is far easier to read."
+            ))
+        }
+        return ComposableSettings.PanelHelp(topics: topics)
     }
 
     public override func viewDidLoad() {
         super.viewDidLoad()
-        addGroup(AISummariesPluginControls.makeSummariesGroup())
+        let group = ComposableSettings.GroupView(withTitle: "Window")
+        switch feature {
+        case .sessions:
+            group.addSettingSubview(ComposableSettings.CheckboxView(with: ComposableSettings.ViewModel<Bool>(
+                title: "Always on top",
+                setting: UserSettings.stenographerSessionsWindowAlwaysOnTop
+            )))
+            group.addSettingSubview(ComposableSettings.CaptionedSliderView(
+                viewModel: ComposableSettings.RangeViewModel<Double>(
+                    title: "Transparency",
+                    setting: UserSettings.stenographerSessionsWindowTransparency,
+                    minValue: 0.3, maxValue: 1.0
+                ),
+                formatter: { "\(Int((1.0 - $0) * 100))% transparent" }
+            ))
+        case .conversations:
+            group.addSettingSubview(ComposableSettings.CheckboxView(with: ComposableSettings.ViewModel<Bool>(
+                title: "Show work output",
+                setting: UserSettings.stenographerConversationsShowWorkOutput
+            )))
+            group.addSettingSubview(ComposableSettings.CheckboxView(with: ComposableSettings.ViewModel<Bool>(
+                title: "Always on top",
+                setting: UserSettings.stenographerConversationsAlwaysOnTop
+            )))
+        }
+        addGroup(group)
     }
 }
