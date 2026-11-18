@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
-import { useAuth } from '@adh-sdk/auth'
+import { reportUnexpectedAuthError, useAuth } from '@adh-sdk/auth'
 import { authedJson } from '@adh-sdk/auth/client'
 import { adoptAppearance, normalizeAppearance, resetAppearance } from '@adh-sdk/themes'
 import {
@@ -9,11 +9,6 @@ import {
   appearanceFromWire,
   type AccountAppearanceBody,
 } from './appearanceWire'
-// Package path, not relative: see wired-provider.tsx's telemetry import comment — this
-// package bundles with tsup `bundle: true, splitting: false`, and `src/auth/index.ts` is
-// its own tsup entry, so a relative '../telemetry/report-error' would inline a private,
-// permanently-null copy of the `reporter` state instead of the one TelemetryProvider wires.
-import { captureException } from '@adh-sdk/adh/telemetry/report-error'
 
 /**
  * Makes the family's theming follow the PERSON, not the browser.
@@ -71,9 +66,14 @@ export function AppearanceSync(): null {
         // The prefs are cosmetic: if they can't be fetched, leave the document as the pre-paint
         // script painted it rather than yanking the user's theme out from under them. Reported, not
         // swallowed — a persistently failing appearance include is a real (if quiet) regression.
+        // Through the auth gate, though, not straight to the reporter: a 4xx here is a session that
+        // died (authedJson already tried the refresh, and it 401'd too), which AuthProvider handles
+        // by signing out — not a bug. Reporting it unconditionally put every expired session in
+        // GlitchTip as `AuthHttpError: invalid or expired token` (#246). Network errors and 5xx
+        // still report, deduped per minute.
         if (!live) return
         themedFor.current = undefined // let a later render retry
-        captureException(err)
+        reportUnexpectedAuthError(err, { feature: 'appearance', step: 'fetchPrefs' })
       })
     return () => {
       live = false
