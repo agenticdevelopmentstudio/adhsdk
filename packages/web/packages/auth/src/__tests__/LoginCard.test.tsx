@@ -155,6 +155,23 @@ describe('LoginCard for a relayed client', () => {
     expect(screen.queryByText('or')).toBeNull()
   })
 
+  // The hub's sign-up makes a hub account, which a customer client cannot sign in with:
+  // it gets no credential login, so the link would lead somewhere that does not help.
+  it('hides the hub sign-up link from a customer client', () => {
+    relayed = { clientId: 'acme-shop', returnUrl: 'https://acme.example/auth/callback' }
+    render(
+      <LoginCard clientId="adh" postLoginRedirect="/home" showSignup showGithub={false} oauthProviders={google} />,
+    )
+    expect(screen.queryByRole('link', { name: 'Sign up' })).toBeNull()
+  })
+
+  it('keeps the sign-up link for a direct visit to the hub login', () => {
+    render(
+      <LoginCard clientId="adh" postLoginRedirect="/home" showSignup showGithub={false} oauthProviders={google} />,
+    )
+    expect(screen.getByRole('link', { name: 'Sign up' })).toBeTruthy()
+  })
+
   it('keeps the password form and the passkey for the relayed admin client', () => {
     relayed = { clientId: 'admin', returnUrl: 'https://admin.example/auth/callback' }
     render(
