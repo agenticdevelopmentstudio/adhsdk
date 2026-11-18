@@ -291,7 +291,9 @@ export interface paths {
         put?: never;
         /**
          * Update the caller's own profile (name, slug, avatar, public-profile toggle)
-         * @description Replaces PATCH /auth/me, PUT /account/privacy (include privacy), PUT /me/appearance (include appearance), PUT /me/communication-settings (include communication_settings), PUT /me/workspace-prefs (include workspace_prefs).
+         * @description An operator session edits its own operator account. It may not change its slug: that request is 400 with error code `operator_slug_immutable`.
+         *
+         *     Replaces PATCH /auth/me, PUT /account/privacy (include privacy), PUT /me/appearance (include appearance), PUT /me/communication-settings (include communication_settings), PUT /me/workspace-prefs (include workspace_prefs).
          */
         post: operations["postV1Account"];
         delete?: never;
@@ -1328,6 +1330,26 @@ export interface paths {
          * @description Replaces POST /auth/capabilities/grant.
          */
         post: operations["postV1AuthCapabilitiesGrant"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/auth/capabilities/operators": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List every live operator account (admin)
+         * @description Replaces GET /auth/capabilities/operators.
+         */
+        get: operations["getV1AuthCapabilitiesOperators"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -24516,6 +24538,68 @@ export interface operations {
             };
         };
     };
+    getV1AuthCapabilitiesOperators: {
+        parameters: {
+            query?: {
+                /** @description Page size, 1–100 (default 10). */
+                limit?: number;
+                /** @description Cursor: an object id; returns the page after it. */
+                starting_after?: string;
+                /** @description Cursor: an object id; returns the page before it. */
+                ending_before?: string;
+                /** @description Related objects to return in full instead of as an id. Up to four levels, e.g. `ecosystem_id`; on a list, `data.<field>`. */
+                "expand[]"?: string[];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Every live operator account */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        object: "list";
+                        data: {
+                            /** @constant */
+                            object?: "auth.operator";
+                            id: string;
+                            email: string;
+                            name: string;
+                            /** @description Unix timestamp, in seconds. */
+                            created: number;
+                            holds_admin: boolean;
+                        }[];
+                        has_more: boolean;
+                        url: string;
+                    };
+                };
+            };
+            /** @description Error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+        };
+    };
     postV1AuthCapabilitiesRevoke: {
         parameters: {
             query?: never;
@@ -24882,6 +24966,8 @@ export interface operations {
                 } | {
                     /** @description Email or login slug */
                     identifier: string;
+                    /** @description Sign-in client the passkey login is for; picks the login realm (the admin client signs in operators). Absent: the hub. */
+                    client_id?: string;
                 }) & {
                     /**
                      * @description Selects which kind of object this call works on.

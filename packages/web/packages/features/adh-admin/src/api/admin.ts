@@ -265,18 +265,12 @@ export function useAdminUsers() {
 // ── Operators ────────────────────────────────────────────────────────────
 //
 // `GET /api/v1/auth/capabilities/operators` (admin-gated): every live account in the Operators
-// ecosystem, oldest first, and whether each holds the `admin` capability. The route is newer than
-// the generated adh-api-types schema, so its /v1 row is written by hand here, the way the audit's
-// pane row is below; `toOperator` maps it onto the camelCase shape the pane reads.
+// ecosystem, oldest first, and whether each holds the `admin` capability. Its /v1 row comes from
+// the generated adh-api-types schema, like the customers row above, so a backend change surfaces
+// as a type error; `toOperator` maps it onto the camelCase shape the pane reads.
 
 /** One operator row as the /v1 gateway serves it (snake_case, `created` in unix seconds). */
-export interface OperatorWire {
-  id: string;
-  email: string;
-  name: string;
-  created: number;
-  holds_admin: boolean;
-}
+export type OperatorWire = SuccessBody<"/v1/auth/capabilities/operators", "get">["data"][number];
 
 /** One operator account, as the Operators pane shows it. */
 export interface Operator {
