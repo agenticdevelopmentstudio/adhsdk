@@ -56,8 +56,10 @@ export function OperatorsPane({ help }: { help?: ReactNode } = {}): ReactElement
         key: "admin",
         header: "Admin",
         width: "14rem",
-        // Sorted by the answer, not by the cell, which is a badge and a button.
-        value: (op) => (op.holdsAdmin ? "admin" : ""),
+        // Sorted by the answer, not by the cell, which is a badge and a button. Both answers are
+        // non-empty: the list treats "" as missing and pins it last in either direction, which
+        // made the descending sort a no-op.
+        value: (op) => (op.holdsAdmin ? "admin" : "operator"),
         render: (op) => {
           const label = op.email || op.name || op.id;
           return (
