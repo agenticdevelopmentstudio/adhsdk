@@ -2,11 +2,11 @@
 id: a11f34ff-116c-47d6-bffa-edd0799cbcb2
 title: "Settings Split View"
 type: ingredient
-version: 1.3.0
+version: 1.4.0
 status: review
 language: en
 created: 2026-09-23
-modified: 2026-11-15
+modified: 2026-11-18
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -163,10 +163,14 @@ This recipe documents only what this component itself declares.
   component MUST set every one of their minimum-sidebar-width overrides
   to the same value: the widest of their own preferred widths, capped at
   `480` points.
-- **raises-detail-floor-for-nested-siblings**: Whenever
-  **unifies-nested-sidebar-widths** applies, the component MUST raise its
-  own nested-detail floor to the largest of `widest + nested's own
-  detail-minimum-thickness` across those nested siblings.
+- **raises-detail-floor-for-nested-siblings**: Whenever any hosted
+  panel is itself a settings split view (one or several, sidebar shown or
+  hidden), the component MUST raise its own nested-detail floor to the
+  largest minimum layout width among them, where a split's minimum layout
+  width is its sidebar width plus divider plus the larger of its own
+  detail-minimum-thickness and its own nested splits' minimum layout
+  widths, at every depth. When a nested split's layout changes, it MUST
+  have its enclosing split re-floor.
 - **floors-detail-pane-thickness**: The detail item's minimum thickness
   MUST always equal the larger of the detail-minimum-thickness floor and
   the nested-detail floor.
@@ -724,6 +728,7 @@ regardless of the app's language.
 
 | Version | Date | Author | Summary |
 |---|---|---|---|
+| 1.4.0 | 2026-11-18 | Mike Fullerton | The nested-detail floor counts every nested split at every depth (a split inside a split inside the window), and a nested split's layout change re-floors its enclosing split, so selecting a deeply nested section never pushes the root divider. |
 | 1.3.0 | 2026-11-15 | Mike Fullerton | Hosted panels get a settings.panel.<slug> accessibility identifier and group role; panels can be selected by title or slug. |
 | 1.2.2 | 2026-10-04 | Mike Fullerton | UI-thread confinement restated as the shared confines-to-ui-thread requirement, with a test vector; the @MainActor mechanism is in Platform Notes. |
 | 1.2.1 | 2026-10-04 | Mike Fullerton | Added unit-test-coverage compliance row (partial: orientation test only). |

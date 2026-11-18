@@ -2,11 +2,11 @@
 id: 45b6d470-4e58-4035-b1c7-e65dbe7716b9
 title: "Panel Scroll View"
 type: ingredient
-version: 1.2.2
+version: 1.3.0
 status: review
 language: en
 created: 2026-09-23
-modified: 2026-10-04
+modified: 2026-11-18
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -34,8 +34,9 @@ The Panel Scroll View is the canonical scroll host for panel content
 inside a composable settings system. It wraps a private, top-down document
 view so hosted content top-anchors (settings read top-to-bottom) instead
 of using the platform's default bottom-up document origin. Content
-installed through the component's set-content operation has its width
-pinned to exactly the scroll view's viewport width and its height
+installed through the component's set-content operation fills the
+scroll view's viewport width (never narrower; wider only when it cannot
+fit, in which case it scrolls sideways) and its height
 constrained to at least the viewport height, so the content's own fitting
 size never drives the size of the panel or its containing window. Per the
 source's own doc comment, the owning split view controller wraps every
@@ -53,9 +54,13 @@ divider.
   the top and leading edges of the scroll view's own visible content area
   (viewport).
 - **content-width-matches-viewport**: Content installed via the
-  set-content operation MUST have its width constrained equal to the
-  scroll view's viewport width, so the content's own fitting width never
-  drives the size of the panel or its containing window.
+  set-content operation MUST be at least the viewport's width and SHOULD
+  equal it, at a strength wrapping text yields to. The width MUST be fed
+  in as a value taken from the viewport whenever it is laid out, never as
+  a constraint tied to the viewport itself: content that needs more width
+  than the viewport has MUST scroll horizontally rather than widen the
+  viewport, so the content's own fitting width never drives the size of
+  the panel, its split view's divider, or its containing window.
 - **content-min-height-viewport**: Content installed via the set-content
   operation MUST have its height constrained to be greater than or equal
   to the scroll view's viewport height, so short content fills the
@@ -439,6 +444,7 @@ Separation-of-concerns is passed: `PanelScrollView` is only the scroll host, pin
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.3.0 | 2026-11-18 | Mike Fullerton | Content width is a value fed from the viewport at layout, preferred at just below the default-high strength, never a constraint to the viewport: a required equal-width constraint let a wide row (a popup beside two buttons) widen the viewport and move the split's divider. Wider content now scrolls sideways. |
 | 1.2.2 | 2026-10-04 | Mike Fullerton | UI-thread confinement restated as the shared confines-to-ui-thread requirement, with a test vector; the @MainActor mechanism is in Platform Notes. |
 | 1.2.1 | 2026-10-04 | Mike Fullerton | Added Compliance rows for separation-of-concerns and unit-test-coverage |
 | 1.2.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to ui/settings/layout/. |
