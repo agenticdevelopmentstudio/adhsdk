@@ -2,11 +2,11 @@
 id: 5a246e6c-2125-4427-a8ab-2f43f2fecba5
 title: "Web Browser Settings Topics"
 type: ingredient
-version: 0.1.7
+version: 0.1.8
 status: draft
 language: en
 created: 2026-11-15
-modified: 2026-11-16
+modified: 2026-11-18
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -314,6 +314,8 @@ The control table. Keys never change when a control moves
 | Privacy and Security | Coding Partner | Agent while paused | `browser.privacy.agent_while_paused` |
 | Privacy and Security | Agent Privacy | Conceal privacy words from agents | `browser.agent_privacy.enabled` |
 | Privacy and Security | Agent Privacy | Hide Images | `browser.privacy.hide_images` |
+| Privacy and Security | Agent Privacy | Let models drive browser panes (global only) | `browser.automation.enabled` |
+| Privacy and Security | Agent Privacy | Allow browser_evaluate (global only) | `browser.automation.evaluate` |
 | Privacy and Security | Storage | Cookie and storage jar | `browser.privacy.storage_jar` |
 | Privacy and Security | Scripts | Third-party content | `browser.privacy.third_party_content` |
 | Privacy and Security | Scripts | Capture page console | `browser.privacy.console_capture` |
@@ -493,6 +495,7 @@ Notes: no compliance checks have been run against the code yet.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 0.1.8 | 2026-11-18 | Mike Fullerton | Agent Privacy gains the two model-automation switches (Settings window only), moved from the retired Automation panel |
 | 0.1.7 | 2026-11-16 | Mike Fullerton | Review fix: Manage Site Data resolves its jar on click and names it in the title and confirmation. |
 | 0.1.6 | 2026-11-16 | Mike Fullerton | The no-history-store note moves from under Record history to the History help topic. |
 | 0.1.5 | 2026-11-16 | Mike Fullerton | Privacy toolbar row with the hide-from-agent button and agent view control; agentHidesImages; notice-shown key is global only. |
