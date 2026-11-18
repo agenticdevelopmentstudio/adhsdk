@@ -391,6 +391,9 @@ extension ComposableSettings {
         func updateSidebarLayout() {
             unifyNestedSidebars()
             applySidebarWidth()
+            // This split's need changed, so the one hosting it re-floors its
+            // detail pane rather than letting this content push its divider.
+            enclosingSettingsSplit?.updateSidebarLayout()
         }
 
         /// Pins the content-sized sidebar to a single width (min == max), so the
@@ -413,6 +416,12 @@ extension ComposableSettings {
         /// inner divider. Force-loads each so its list is populated enough to
         /// report a content width (they otherwise load lazily on first show).
         ///
+        /// Then floors the detail pane at the widest any nested split needs, *at
+        /// every depth*: a section whose topic is itself a split (Coding Partner >
+        /// Jobs) needs both lists plus the innermost detail. A floor that counted
+        /// one level let the deeper content's own constraints push the outer
+        /// divider, so choosing that section resized the sidebar the reader sized.
+        ///
         /// Only once this split has been on screen. Before that the pass would
         /// load every section — and so every section's first panel, whose
         /// `viewDidLoad` may spawn processes, load plugins or call the daemon —
@@ -420,30 +429,44 @@ extension ComposableSettings {
         /// the first time the window does open.
         private func unifyNestedSidebars() {
             guard hasAppeared else { return }
+            let splits = panels.compactMap { $0 as? SplitViewController }
             // A split whose list is hidden (a section of one panel) has no
             // sidebar width to share, and counting it would widen the others'
             // lists to fit a list nobody sees.
-            let nested = panels.compactMap { $0 as? SplitViewController }.filter(\.showsSidebar)
-            guard nested.count > 1 else {
-                nestedDetailFloor = 0
-                applyDetailMinimumThickness()
-                return
-            }
-            let widest = min(
-                nested.map { split -> CGFloat in
-                    _ = split.view
-                    return split.listViewController.preferredWidth()
-                }.max() ?? 0,
-                Self.maximumContentSidebarWidth)
-            for split in nested {
-                split.minimumSidebarWidthOverride = widest
+            let listed = splits.filter(\.showsSidebar)
+            if listed.count > 1 {
+                let widest = min(
+                    listed.map { split -> CGFloat in
+                        _ = split.view
+                        return split.listViewController.preferredWidth()
+                    }.max() ?? 0,
+                    Self.maximumContentSidebarWidth)
+                for split in listed {
+                    split.minimumSidebarWidthOverride = widest
+                }
             }
             // Widen the detail pane hosting these nested splits so the widest one
-            // (its now-fixed sidebar + its own detail floor) can't be squeezed
-            // below that floor at the window's minimum size; this lifts the
-            // window's effective minimum width to fit the content instead.
-            nestedDetailFloor = nested.map { widest + $0.detailMinimumThickness }.max() ?? 0
+            // can't be squeezed below its own floor; this lifts the window's
+            // effective minimum width to fit the content instead of letting the
+            // content move this split's divider.
+            nestedDetailFloor = splits.map(\.minimumLayoutWidth).max() ?? 0
             applyDetailMinimumThickness()
+        }
+
+        /// The narrowest this split can be laid out without its content pushing
+        /// on whatever hosts it: its list (when shown) and divider, plus the
+        /// larger of its own detail floor and the widest nested split's need.
+        var minimumLayoutWidth: CGFloat {
+            _ = view
+            let nested = panels.compactMap { $0 as? SplitViewController }
+                .map(\.minimumLayoutWidth).max() ?? 0
+            let detail = max(detailMinimumThickness, nested)
+            guard showsSidebar else { return detail }
+            let sidebar = contentSizedSidebar
+                ? min(minimumSidebarWidthOverride ?? listViewController.preferredWidth(),
+                      Self.maximumContentSidebarWidth)
+                : (splitViewItems.first?.minimumThickness ?? 0)
+            return sidebar + splitView.dividerThickness + detail
         }
 
         /// Floor the nested splits need, or 0 when this split hosts none. Held

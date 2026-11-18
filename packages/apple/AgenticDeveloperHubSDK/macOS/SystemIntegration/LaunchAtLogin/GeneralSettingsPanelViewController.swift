@@ -86,9 +86,8 @@ public final class GeneralSettingsPanelViewController: ComposableSettings.Settin
         super.viewDidLoad()
         self.settingsView.addGroup(createStartupGroup())
         self.settingsView.addGroup(createWindowBehaviorGroup())
-        if showsNewPrefersTabs || showsSingleDocumentsOpenIn {
-            self.settingsView.addGroup(createTabBehaviorGroup())
-        }
+        // Always shown: Tab Position is every app's, whichever optional rows join it.
+        self.settingsView.addGroup(createTabBehaviorGroup())
     }
 
     private func createStartupGroup() -> ComposableSettings.GroupView {
@@ -130,13 +129,13 @@ public final class GeneralSettingsPanelViewController: ComposableSettings.Settin
             )
         ))
 
-        group.addSettingSubview(makeTabPositionRow())
-
         return group
     }
 
     private func createTabBehaviorGroup() -> ComposableSettings.GroupView {
         let group = ComposableSettings.GroupView(withTitle: "Tab Behavior")
+
+        group.addSettingSubview(makeTabPositionRow())
 
         if showsNewPrefersTabs {
             let checkbox = ComposableSettings.CheckboxView(with: ComposableSettings.ViewModel<Bool>(

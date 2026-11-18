@@ -256,7 +256,13 @@ extension ComposableSettings {
                 let item = NSToolbarItem(itemIdentifier: itemIdentifier)
                 item.label = "Panel"
                 item.paletteLabel = item.label
-                item.view = ThemedSymbolImageView.leading(windowTitleSymbolName, before: panelTitleLabel)
+                // Padded inside the item: macOS 26 draws a toolbar view in a
+                // glass pill, and an unpadded title sat hard against its ends.
+                let title = NSStackView(views: [
+                    ThemedSymbolImageView.leading(windowTitleSymbolName, before: panelTitleLabel)
+                ])
+                title.edgeInsets = NSEdgeInsets(top: 0, left: 12, bottom: 0, right: 12)
+                item.view = title
                 item.visibilityPriority = .high
                 return item
 
