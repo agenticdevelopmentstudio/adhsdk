@@ -5,7 +5,6 @@ import { Trash2, UserPlus } from "lucide-react";
 import {
   useAdminUsers,
   useDeleteUser,
-  useGrantRole,
   useHubEcosystemRdid,
   useRevokeRole,
   type AdminUserSummary,
@@ -66,14 +65,15 @@ export function UsersPane({ help }: { help?: ReactNode } = {}) {
     null,
   );
   const [removeError, setRemoveError] = useState<string | null>(null);
-  /** The backend's refusal of a role change: a revoke or a grant it would not make. */
+  /** The backend's refusal of a revoke (409 `last_operator`, say). */
   const [roleError, setRoleError] = useState<string | null>(null);
 
   const { data: users, isLoading, error } = useAdminUsers();
   const { data: hubRdid } = useHubEcosystemRdid();
   const deleteUser = useDeleteUser();
-  const grantRole = useGrantRole();
   const revokeRole = useRevokeRole();
+  // The cells read only this flag; the mutation object itself is new on every render.
+  const revokePending = revokeRole.isPending;
   const addToEcosystem = useAddToEcosystem();
   const removeFromEcosystem = useRemoveFromEcosystem();
 
@@ -128,25 +128,34 @@ export function UsersPane({ help }: { help?: ReactNode } = {}) {
         render: (user) => (
           <span className="flex items-center gap-2">
             <span className="w-24">
-              <OptionMenu
-                ariaLabel={`Role for ${user.name || user.email}`}
-                value={user.capabilities.includes("admin") ? "admin" : "user"}
-                items={roleMenuItems(user)}
-                onChange={(next) => {
-                  const current = user.capabilities.includes("admin") ? "admin" : "user";
-                  if (next === current) return;
-                  // Both directions surface the server's refusal: a grant the backend answers 400
-                  // must reach the operator, never vanish.
-                  const onError = (e: unknown) => setRoleError(errorMessage(e));
-                  if (next === "admin")
-                    grantRole.mutate({ userId: user.id, capability: "admin" }, { onError });
-                  else revokeRole.mutate({ userId: user.id, role: "admin" }, { onError });
-                }}
-              />
+              {/* Granting admin to a hub customer is gone (design §8: the backend answers 400), so
+                  only a customer still holding a pre-cutover admin row gets a menu, whose one
+                  change is the revoke. Everyone else reads as plain text: a one-item menu whose
+                  only choice does nothing is a control that looks editable and is not. */}
+              {user.capabilities.includes("admin") ? (
+                <OptionMenu
+                  ariaLabel={`Role for ${user.name || user.email}`}
+                  value="admin"
+                  items={roleMenuItems(user)}
+                  disabled={revokePending}
+                  onChange={(next) => {
+                    if (next === "admin") return;
+                    // mutateAsync, not mutate with a per-call onError: every row shares one
+                    // observer, and TanStack Query fires per-call callbacks only for the LATEST
+                    // mutate, so a failed revoke followed quickly by another lost its error. The
+                    // promise rejects for its own call regardless.
+                    revokeRole
+                      .mutateAsync({ userId: user.id, role: "admin" })
+                      .catch((e: unknown) => setRoleError(errorMessage(e)));
+                  }}
+                />
+              ) : (
+                <span className="text-sm text-apt-text">User</span>
+              )}
             </span>
-            {/* Capabilities the two-item menu cannot express. It models admin-or-not, which is the
-                grant an operator makes here; a `billing` capability granted elsewhere would
-                otherwise be invisible on the one page that claims to show a user's roles. */}
+            {/* Capabilities the role cell cannot express. It models admin-or-not only; a `billing`
+                capability granted elsewhere would otherwise be invisible on the one page that
+                claims to show a user's roles. */}
             {user.capabilities
               .filter((cap) => cap !== "admin")
               .map((cap) => (
@@ -204,7 +213,7 @@ export function UsersPane({ help }: { help?: ReactNode } = {}) {
         ),
       },
     ],
-    [grantRole, revokeRole],
+    [revokePending],
   );
 
   const list = useEditableList<AdminUserSummary>({
