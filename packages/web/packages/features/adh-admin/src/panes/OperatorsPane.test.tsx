@@ -18,6 +18,12 @@ vi.mock("../api/http", async (importOriginal) => ({
   listAllV1,
 }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn() }) }));
+// The signed-in operator, whose own row must offer no revoke.
+const { selfUser } = vi.hoisted(() => ({ selfUser: { current: null as { id: string } | null } }));
+vi.mock("@adh-sdk/auth", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@adh-sdk/auth")>()),
+  useOptionalAuth: () => (selfUser.current ? { user: selfUser.current } : null),
+}));
 
 import { OperatorsPane } from "./OperatorsPane";
 
@@ -43,6 +49,7 @@ beforeEach(() => {
       : [],
   );
   authedJson.mockResolvedValue({});
+  selfUser.current = null;
 });
 afterEach(cleanup);
 
@@ -66,6 +73,8 @@ describe("OperatorsPane", () => {
   it("revokes admin by posting the user and the capability to the revoke route", async () => {
     mount();
     fireEvent.click(await screen.findByRole("button", { name: "Revoke admin from root@example.com" }));
+    expect(authedJson).not.toHaveBeenCalled();
+    fireEvent.click(await screen.findByRole("button", { name: "Revoke admin" }));
     await waitFor(() =>
       expect(authedJson).toHaveBeenCalledWith("/api/v1/auth/capabilities/revoke", {
         method: "POST",
@@ -77,6 +86,8 @@ describe("OperatorsPane", () => {
   it("grants admin to an operator who does not hold it", async () => {
     mount();
     fireEvent.click(await screen.findByRole("button", { name: "Grant admin to second@example.com" }));
+    expect(authedJson).not.toHaveBeenCalled();
+    fireEvent.click(await screen.findByRole("button", { name: "Grant admin" }));
     await waitFor(() =>
       expect(authedJson).toHaveBeenCalledWith("/api/v1/auth/capabilities/grant", {
         method: "POST",
@@ -99,6 +110,25 @@ describe("OperatorsPane", () => {
     });
     mount();
     fireEvent.click(await screen.findByRole("button", { name: "Revoke admin from root@example.com" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Revoke admin" }));
     expect(await screen.findByText(message)).toBeTruthy();
+  });
+
+  it("does nothing when the confirmation is cancelled", async () => {
+    mount();
+    fireEvent.click(await screen.findByRole("button", { name: "Revoke admin from root@example.com" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Cancel" }));
+    await waitFor(() => expect(screen.queryByRole("button", { name: "Cancel" })).toBeNull());
+    expect(authedJson).not.toHaveBeenCalled();
+  });
+
+  // The backend refuses only the last holder, so a self-revoke with a second operator present
+  // would succeed and lock the caller out; the pane never offers it.
+  it("offers no revoke on the signed-in operator's own row", async () => {
+    selfUser.current = { id: "op-1" };
+    mount();
+    expect(await screen.findByText("root@example.com")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Revoke admin from root@example.com" })).toBeNull();
+    expect(screen.getByText("You")).toBeTruthy();
   });
 });
