@@ -17,7 +17,7 @@ import WebKit
 public enum BrowserAgentViewMode: String, CaseIterable, Sendable {
     case website, agentPreview, agentSource
 
-    /// The SF Symbol the mode's segment shows; segments carry no titles.
+    /// The SF Symbol the mode's segment shows beside its label.
     public var symbol: String {
         switch self {
         case .website: return "globe"
@@ -26,7 +26,7 @@ public enum BrowserAgentViewMode: String, CaseIterable, Sendable {
         }
     }
 
-    /// The segment's tooltip, the only words the control carries.
+    /// The segment's tooltip, saying what the mode shows.
     public var toolTip: String {
         let bundle = Bundle(for: BrowserAutomationBundleAnchor.self)
         switch self {
@@ -47,20 +47,20 @@ public enum BrowserAgentViewMode: String, CaseIterable, Sendable {
         }
     }
 
-    /// The segment image's accessibility description.
+    /// The segment's label, and its image's accessibility description.
     public var accessibilityLabel: String {
         let bundle = Bundle(for: BrowserAutomationBundleAnchor.self)
         switch self {
         case .website:
             return NSLocalizedString(
-                "browser.agent-view.website.label", bundle: bundle, value: "Website", comment: "Agent view segment")
+                "browser.agent-view.website.label", bundle: bundle, value: "Browser", comment: "Agent view segment")
         case .agentPreview:
             return NSLocalizedString(
-                "browser.agent-view.preview.label", bundle: bundle, value: "Agent preview",
+                "browser.agent-view.preview.label", bundle: bundle, value: "Agent View",
                 comment: "Agent view segment")
         case .agentSource:
             return NSLocalizedString(
-                "browser.agent-view.source.label", bundle: bundle, value: "Agent source",
+                "browser.agent-view.source.label", bundle: bundle, value: "Agent Source",
                 comment: "Agent view segment")
         }
     }
@@ -75,19 +75,23 @@ public enum BrowserAgentViewMode: String, CaseIterable, Sendable {
 }
 
 extension NSSegmentedControl {
-    /// The Agent view control (`browser.agent-view`): one image segment per
-    /// mode, each with its tooltip, selecting exactly one.
+    /// The Agent view control (`browser.agent-view`): one segment per mode,
+    /// an image and a label (Browser, Agent View, Agent Source) with its
+    /// tooltip, selecting exactly one.
     static func browserAgentViewControl(target: AnyObject?, action: Selector?) -> NSSegmentedControl {
         let modes = BrowserAgentViewMode.allCases
         let control = NSSegmentedControl()
         control.segmentCount = modes.count
         control.trackingMode = .selectOne
-        control.segmentStyle = .texturedRounded
-        control.controlSize = .small
+        control.segmentStyle = .rounded
+        control.controlSize = .regular
+        // The selected mode in the accent colour, so which one is showing is
+        // plain at a glance, not only from a subtle bezel.
+        control.selectedSegmentBezelColor = .controlAccentColor
         for (index, mode) in modes.enumerated() {
             let image = NSImage(systemSymbolName: mode.symbol, accessibilityDescription: mode.accessibilityLabel)
             control.setImage(image, forSegment: index)
-            control.setLabel("", forSegment: index)
+            control.setLabel(mode.accessibilityLabel, forSegment: index)
             control.setToolTip(mode.toolTip, forSegment: index)
             control.setImageScaling(.scaleProportionallyDown, forSegment: index)
         }

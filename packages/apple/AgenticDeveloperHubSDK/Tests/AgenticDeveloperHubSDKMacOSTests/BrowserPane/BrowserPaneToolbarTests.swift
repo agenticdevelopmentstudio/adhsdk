@@ -148,13 +148,75 @@ final class BrowserPaneToolbarTests: XCTestCase {
                 .first { $0.title == title }
         }
         let defaults = BrowserPrivacyStatus.items(settings: settings, isPaused: false, agentPrivacy: .off)
-        XCTAssertEqual(defaults.filter { !$0.isOn }.map(\.title), ["Privacy Words", "Hide Images"])
+        XCTAssertEqual(defaults.filter { !$0.isOn }.map(\.title), ["Hide Images", "Read Only", "Privacy Words"])
+        XCTAssertEqual(defaults.filter(\.isProtecting).map(\.title), [], "nothing protects by default")
         XCTAssertEqual(item("Hide Images")?.text, "Hide Images: Off")
 
         settings.set(true, for: UserSettings.browserPrivacyHideImages)
         settings.set(BrowserInputPolicy.block, for: UserSettings.browserPrivacyKeyboard)
         XCTAssertEqual(item("Hide Images")?.isOn, true, "images hidden: Hide Images is on")
+        XCTAssertEqual(item("Hide Images")?.isProtecting, true, "and red")
         XCTAssertEqual(item("Keyboard")?.isOn, false, "keyboard withheld: Keyboard is off")
+        XCTAssertEqual(item("Keyboard")?.isProtecting, true, "and red")
+    }
+
+    /// The items come in the toolbar's three groups, in order.
+    func test_privacyStatusItemsComeInTheirGroups() {
+        let settings = UserSettings(
+            with: InMemorySettingsStorageProvider(),
+            secureSettingsProvider: InMemorySecureSettingsStorageProvider()
+        )
+        let items = BrowserPrivacyStatus.items(settings: settings, isPaused: false, agentPrivacy: .off)
+        XCTAssertEqual(items.map(\.title), [
+            "Third-Party", "Cookies", "Hide Images",
+            "All Events", "Keyboard", "Mouse", "Tracking", "Drag and Drop", "Activation",
+            "Agent", "Read Only", "Privacy Words"
+        ])
+        XCTAssertEqual(items.map(\.group), items.map(\.group).sorted { $0.rawValue < $1.rawValue })
+    }
+
+    /// All Events disabled shows every event item Off and disabled, keeping
+    /// the settings, so enabling it again brings back the same set.
+    func test_allEventsDisabledShowsEveryEventOff() {
+        let settings = UserSettings(
+            with: InMemorySettingsStorageProvider(),
+            secureSettingsProvider: InMemorySecureSettingsStorageProvider()
+        )
+        settings.set(BrowserInputPolicy.block, for: UserSettings.browserPrivacyMouse)
+        let paused = BrowserPrivacyStatus.items(settings: settings, isPaused: true, agentPrivacy: .off)
+        let all = paused.first { $0.kind == .allEvents }
+        XCTAssertEqual(all?.text, "All Events: Disabled")
+        XCTAssertEqual(all?.isProtecting, true)
+        for item in paused where item.group == .events && item.kind != .allEvents {
+            XCTAssertEqual(item.state, "Off", item.title)
+            XCTAssertFalse(item.isEnabled, item.title)
+        }
+        let live = BrowserPrivacyStatus.items(settings: settings, isPaused: false, agentPrivacy: .off)
+        XCTAssertEqual(live.first { $0.kind == .keyboard }?.state, "On")
+        XCTAssertEqual(live.first { $0.kind == .mouse }?.state, "Off")
+    }
+
+    /// Toggling flips the setting an item names; Read Only only narrows
+    /// access that is on, and Agent turns full access on and off.
+    func test_toggleFlipsTheNamedSetting() {
+        let settings = UserSettings(
+            with: InMemorySettingsStorageProvider(),
+            secureSettingsProvider: InMemorySecureSettingsStorageProvider()
+        )
+        XCTAssertTrue(BrowserPrivacyStatus.toggle(.hideImages, in: settings))
+        XCTAssertTrue(settings.get(UserSettings.browserPrivacyHideImages))
+        XCTAssertTrue(BrowserPrivacyStatus.toggle(.readOnly, in: settings))
+        XCTAssertEqual(settings.get(UserSettings.browserPrivacyAgentAccess), .readOnly)
+        XCTAssertTrue(BrowserPrivacyStatus.toggle(.agentAccess, in: settings))
+        XCTAssertEqual(settings.get(UserSettings.browserPrivacyAgentAccess), .hidden)
+        let readOnly = BrowserPrivacyStatus.items(settings: settings, isPaused: false, agentPrivacy: .off)
+            .first { $0.kind == .readOnly }
+        XCTAssertEqual(readOnly?.isEnabled, false, "Read Only needs access on")
+        XCTAssertTrue(BrowserPrivacyStatus.toggle(.agentAccess, in: settings))
+        XCTAssertEqual(settings.get(UserSettings.browserPrivacyAgentAccess), .full)
+        XCTAssertFalse(BrowserPrivacyStatus.toggle(.allEvents, in: settings), "All Events is the pane's pause")
+        BrowserPrivacyStatus.choose(BrowserPointerTracking.whenFocused.rawValue, for: .tracking, in: settings)
+        XCTAssertEqual(settings.get(UserSettings.browserPrivacyPointerTracking), .whenFocused)
     }
 
     /// Privacy Words is on only while the words are applied: the switch on
@@ -186,25 +248,25 @@ final class BrowserPaneToolbarTests: XCTestCase {
         pane.settings.set(true, for: UserSettings.browserPrivacyShowToolbar)
         pane.settings.set(true, for: UserSettings.browserAgentPrivacy)
         pane.refreshAddressRowControls()
-        let item = pane.privacyStrip.arrangedSubviews.first {
-            $0.accessibilityIdentifier() == "browser.privacy-strip.privacy words"
-        }
+        let item = pane.privacyStrip.arrangedSubviews.flatMap { ($0 as? NSStackView)?.arrangedSubviews ?? [] }
+            .first { $0.accessibilityIdentifier() == "browser.privacy-strip.privacy words" }
         XCTAssertEqual(item?.accessibilityValue() as? String, "off")
         XCTAssertEqual(item?.accessibilityLabel(), "Privacy Words: Unavailable")
     }
 
-    /// The strip names the agent's access with the setting's own label,
-    /// the one Settings shows, not a second spelling of it.
-    func test_agentItemUsesTheAccessLabel() {
+    /// Agent access reads as two toggles, like Settings: Agent On or Off,
+    /// and Read Only On only while access is read only.
+    func test_agentItemsSplitAccessIntoOnAndReadOnly() {
         let settings = UserSettings(
             with: InMemorySettingsStorageProvider(),
             secureSettingsProvider: InMemorySecureSettingsStorageProvider()
         )
         for access in BrowserAgentAccess.allCases {
             settings.set(access, for: UserSettings.browserPrivacyAgentAccess)
-            let item = BrowserPrivacyStatus.items(settings: settings, isPaused: false, agentPrivacy: .off)
-                .first { $0.title == "Agent" }
-            XCTAssertEqual(item?.text, "Agent: \(access.label)")
+            let items = BrowserPrivacyStatus.items(settings: settings, isPaused: false, agentPrivacy: .off)
+            XCTAssertEqual(items.first { $0.title == "Agent" }?.text, "Agent: \(access == .hidden ? "Off" : "On")")
+            XCTAssertEqual(items.first { $0.title == "Read Only" }?.text,
+                           "Read Only: \(access == .readOnly ? "On" : "Off")")
         }
     }
 

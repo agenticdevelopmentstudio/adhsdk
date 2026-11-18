@@ -2,7 +2,7 @@
 id: 5a246e6c-2125-4427-a8ab-2f43f2fecba5
 title: "Web Browser Settings Topics"
 type: ingredient
-version: 0.1.8
+version: 0.1.10
 status: draft
 language: en
 created: 2026-11-15
@@ -304,7 +304,7 @@ The control table. Keys never change when a control moves
 | Appearance | Page | Minimum font size | `browser.minimum_font_size` |
 | Appearance | Tabs | Tab position (pane override) | `browser.tabs.positions` (new) |
 | Privacy and Security | General | Pause all events (pane sheet only) | none — the pane's own state |
-| Privacy and Security | General | Show privacy toolbar | `browser.privacy.show_toolbar` |
+| Browser menu | — | Show / Hide Privacy Toolbar | `browser.privacy.show_toolbar` |
 | Privacy and Security | Input | Disable keyboard events | `browser.privacy.keyboard` |
 | Privacy and Security | Input | Disable mouse and scrolling events | `browser.privacy.mouse` |
 | Privacy and Security | Input | Disable pointer tracking | `browser.privacy.pointer_tracking` |
@@ -491,10 +491,20 @@ silenced.
 
 Notes: no compliance checks have been run against the code yet.
 
+## Privacy Tabs
+
+Privacy and Security shows three tabs, matching the privacy toolbar's groups: General (storage, scripts, cookies, camera and microphone, protection, site data, history), Events (Pause all events, input, focus and visibility) and Agents (Agent Access, Agent Privacy). Show privacy toolbar is no longer a row; the View menu toggles it. Agent access is two checkboxes over the one three-way setting: Agent access (anything but hidden; turning it on gives full control) and Read only (enabled only while access is on).
+
+## Privacy Toolbar
+
+The privacy toolbar is three groups, General (Third-Party, Cookies, Hide Images), Events (All Events, Keyboard, Mouse, Tracking, Drag and Drop, Activation) and Agents (Agent, Read Only, Privacy Words, Hide from Agent), spaced evenly across the row, with the Agent view control in a bordered box at the end (`BrowserPrivacyStatus`, `BrowserPrivacyStripButton`, `BrowserPrivacyStripGroupView`). Each item is a button reading "Title: State" ("Mouse: Off"). A two-valued item toggles its setting in the pane's own settings; Tracking and Third-Party, which have three values, pop up a menu of them, marked with a trailing triangle. An item is red while its privacy protection is in force (Hide Images on, Mouse off, Privacy Words on) and plain otherwise. All Events: Enabled / Disabled is the pane's pause: disabled, every event item shows Off and is disabled, and enabling it again brings back the toggles as they were, since pausing never touches them. Agent is On while access is anything but hidden, and Read Only, enabled only while Agent is on, switches between read only and full control. Cookies is disabled where the pane shares the global data store.
+
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 0.1.10 | 2026-11-18 | Mike Fullerton | Privacy toolbar: General / Events / Agents groups of toggle buttons, red while protecting, labels state their state. |
+| 0.1.9 | 2026-11-18 | Mike Fullerton | Privacy and Security in General / Events / Agents tabs; Show privacy toolbar removed; Agent access as On/Off plus Read only. |
 | 0.1.8 | 2026-11-18 | Mike Fullerton | Agent Privacy gains the two model-automation switches (Settings window only), moved from the retired Automation panel |
 | 0.1.7 | 2026-11-16 | Mike Fullerton | Review fix: Manage Site Data resolves its jar on click and names it in the title and confirmation. |
 | 0.1.6 | 2026-11-16 | Mike Fullerton | The no-history-store note moves from under Record history to the History help topic. |

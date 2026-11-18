@@ -3512,6 +3512,7 @@
 		C94449F7486F143663563B9A /* StenographerWireConformanceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DF9A8EADD45A710862A8C92 /* StenographerWireConformanceTests.swift */; };
 		C95B053F5FD4EF0C441587B5 /* MultipleProjectionsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52BCF7E52C0016E7F051F9A8 /* MultipleProjectionsTests.swift */; };
 		C9606D75A59B5149383B6908 /* AILogViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3DC39A54CDABBC0DEA42AF41 /* AILogViewController.swift */; };
+		C97D2B139C7CC591315DCB1A /* BrowserPrivacyStrip.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE69CAAA22AB3FAE68E73A4D /* BrowserPrivacyStrip.swift */; };
 		C98D37BBDE13369BD8D02216 /* AIProviderMigrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24558DBD6662C90B17DF05F2 /* AIProviderMigrationTests.swift */; };
 		C9989519350B4CE825BA130E /* CodeReviewsScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 96CC9AFF7183F7DFDD31AD62 /* CodeReviewsScheduler.swift */; };
 		C99D2E6B08CE7898C21A0E5E /* ActivitySpanBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18B3E6BA8E2B584940A8BBE7 /* ActivitySpanBuilder.swift */; };
@@ -10816,6 +10817,7 @@
 		EE088490AC12DFCB134E4563 /* GitFileStatus+Color.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "GitFileStatus+Color.swift"; sourceTree = "<group>"; };
 		EE1D936E17D1684F978D828E /* UserDefaultsWindowStateStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserDefaultsWindowStateStorage.swift; sourceTree = "<group>"; };
 		EE67F77DC6E61413266848DB /* OffscreenWebView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OffscreenWebView.swift; sourceTree = "<group>"; };
+		EE69CAAA22AB3FAE68E73A4D /* BrowserPrivacyStrip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowserPrivacyStrip.swift; sourceTree = "<group>"; };
 		EE821A83464410D79D2B31CF /* AnchorSolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnchorSolver.swift; sourceTree = "<group>"; };
 		EEA9651F0BE7942A42E89BC2 /* PaneStateSettingsStorageProviderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaneStateSettingsStorageProviderTests.swift; sourceTree = "<group>"; };
 		EEB2EC643E577A07F36F9DDD /* Waiting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Waiting.swift; sourceTree = "<group>"; };
@@ -15056,6 +15058,7 @@
 				7B6D29419B66F92D800D9EF3 /* BrowserPane.swift */,
 				E1B104F85723E2D47D40A761 /* BrowserPaneContext.swift */,
 				374C284935CAEB021F98D764 /* BrowserPaneOpenBeside.swift */,
+				EE69CAAA22AB3FAE68E73A4D /* BrowserPrivacyStrip.swift */,
 				C054030209D6AC08BD3F9714 /* BrowserSettings.swift */,
 				71F6C61C5CDABE50EC0A9454 /* BrowserSiteData.swift */,
 				AB5175EF251288CE237DD3F0 /* BrowserWebView.swift */,
@@ -25136,6 +25139,7 @@
 				BC7E738C64FA61CBFD544879 /* BrowserPaneSettingsWindowController.swift in Sources */,
 				01FA366A7BAFE6653556E8CE /* BrowserPickDialogController.swift in Sources */,
 				D385CD544D401F816FD1E447 /* BrowserPrivacySettingsDialog.swift in Sources */,
+				C97D2B139C7CC591315DCB1A /* BrowserPrivacyStrip.swift in Sources */,
 				70A0A73F1C25AFC7A5A2BE8A /* BrowserSelectingMode.swift in Sources */,
 				E4C1FAAD147CDF40A7102C05 /* BrowserSettings.swift in Sources */,
 				58C34707D4B68538AFAC5B6E /* BrowserSettingsPanelViewController.swift in Sources */,

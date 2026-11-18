@@ -2,11 +2,11 @@
 id: 6cb13be9-e38c-496b-8326-5d1fdccfe778
 title: "Hide From Agent"
 type: ingredient
-version: 0.1.3
+version: 0.1.4
 status: draft
 language: en
 created: 2026-11-15
-modified: 2026-11-16
+modified: 2026-11-18
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -390,10 +390,15 @@ the picker world, never page scripts.
 
 Notes: no compliance checks have been run.
 
+## Toolbar Placement
+
+Hide from Agent is the last button in the privacy toolbar's Agents group, styled like the group's items: "Hide from Agent ▾", and "Hide from Agent: Selecting" in red while its selecting mode runs.
+
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 0.1.4 | 2026-11-18 | Mike Fullerton | Hide from Agent sits in the privacy toolbar's Agents group, styled like its items. |
 | 0.1.3 | 2026-11-16 | Mike Fullerton | Review fix: a body or html entry withholds the whole page. |
 | 0.1.2 | 2026-11-16 | Mike Fullerton | Button disabled on hostless pages with its tooltip kept; popover closes with the page. |
 | 0.1.1 | 2026-11-16 | Mike Fullerton | A preview pick saves under the live page's site, never the concealed AgentPage address. |

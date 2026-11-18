@@ -2,11 +2,11 @@
 id: 4b1a3eb0-0a8a-4059-b2ac-824013072bd5
 title: "Panel View"
 type: ingredient
-version: 1.2.2
+version: 1.2.3
 status: review
 language: en
 created: 2026-09-23
-modified: 2026-10-04
+modified: 2026-11-18
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -468,10 +468,15 @@ child manages its own accessibility per its own recipe.
 
 Separation-of-concerns is passed: `PanelView` only stacks `GroupView` cards vertically with the group-spacing and panel-inset layout tokens and observes the theme for its own paint, with no knowledge of what the cards contain. Unit-test-coverage is failed: no test in the repository's test targets references `PanelView`.
 
+## Tabs
+
+`addTabs(_:identifier:)` puts a centred segmented control at the top of the panel and adds every `Tab`'s groups below it, hiding all but the selected tab's. The stack detaches hidden views, so a hidden tab takes no room. `showTab(_:)` selects a tab by index; `tabControl` is the control, for automation.
+
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.2.3 | 2026-11-18 | Mike Fullerton | Tabs: `addTabs(_:identifier:)` and `showTab(_:)`. |
 | 1.0.0 | 2026-09-23 | Mike Fullerton | Initial creation, extracted from the Apple `PanelView` (AppKit, macOS) source. |
 | 1.1.0 | 2026-09-23 | Mike Fullerton | Lint pass: reformatted frontmatter (references moved to related, depends-on populated with GroupView/PanelHeadingView); renamed requirements to subject-noun form and updated every citation; moved the ignored-frame behavior and the coder-initializer message wording into Design Decisions; removed stray MUST labels and a garbled title from Edge Cases; marked test vector 002 as compile-time and fixed vector 004's timing and vectors 017/018 to assert PanelHeadingView's public inputs instead of its private labels; reformatted Design Decisions to the bold convention and dropped a non-decision entry; trimmed Platform Notes editorializing and moved private stack/observer identifiers there; cleaned the Compliance table to catalog-valid checks with Title Case categories. |
 | 1.1.1 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |
