@@ -23,11 +23,11 @@
 
 **Approved**: pending
 
-### Identity change clears the outbox; resync does not
+### An identity change keeps the data; the store is bound to one account
 
-**Decision**: `resetForResync` keeps every outbox op; `purgeForIdentityChange` deletes all of them, including quarantined ones, and asks the projection to drop its local-only state.
+**Decision**: The store has no identity-change purge. It records the account it belongs to (`_sync_state.bound_account`), and `resetForResync` keeps both the outbox and the binding.
 
-**Rationale**: The `purgeForIdentityChange` doc comment explains that a resync keeps the same identity, which still owes the server its queued edits, while pushing a departing identity's ops under new credentials would misattribute them; `MarkdownProjection`'s sidecar outbox is the cited case for `purgeIdentityState`.
+**Rationale**: Signing out used to destroy un-pushed work. The apps-suite design keeps it: the host pauses sync while nobody, or a different account, is signed in, and resumes from the kept cursor when the bound account returns, so no op is ever pushed under the wrong credentials and nothing is lost.
 
 **Approved**: pending
 
@@ -57,7 +57,7 @@
 
 ### SyncMirrorProjection
 
-**Decision**: Typed storage is opt-in per resource through a projection, and the `isFullRow:` and `purgeIdentityState` requirements have defaults.
+**Decision**: Typed storage is opt-in per resource through a projection, and the `isFullRow:` requirement has a default.
 
 **Rationale**: The protocol doc says the JSON mirror survives schema evolution without migrations and is the right default, while indexed or foreign-keyed local storage needs real columns; the defaults keep projections written before those requirements existed source-compatible.
 

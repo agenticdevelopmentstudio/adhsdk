@@ -44,13 +44,16 @@ public final class HubMailSync: Sendable {
         await engine.syncNow(reason: .manual)
     }
 
-    /// Purges every mirrored row, the cursor and the outbox for the departing
-    /// identity. The engine is paused around the purge and resumed after it,
-    /// never stopped, so the next identity syncs through the same engine.
+    /// Clears every mirrored mail row and the cursor for the departing
+    /// identity. Both resources are pull-only, so the outbox is always empty
+    /// and a resync reset is the whole of it: the hub holds the mail, and the
+    /// next identity pulls its own. The engine is paused around the reset and
+    /// resumed after it, never stopped, so the next identity syncs through the
+    /// same engine.
     public func signOut() async throws {
         await engine.pause()
         do {
-            try await syncStore.purgeForIdentityChange()
+            try await syncStore.resetForResync()
         } catch {
             await engine.resume()
             throw error

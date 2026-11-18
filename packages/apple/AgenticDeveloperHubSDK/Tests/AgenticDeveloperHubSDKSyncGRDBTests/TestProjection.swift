@@ -7,15 +7,14 @@ import AgenticDeveloperHubSDKSync
 /// A projection that keeps its resources in one table with two real columns,
 /// following the projection contract: a delete keeps the row as a tombstone
 /// and takes the delete's version when it has one, and an upsert brings a
-/// tombstoned row back. It records each truncate call's resources and each
-/// identity purge, so a test can see what the store handed it.
+/// tombstoned row back. It records each truncate call's resources, so a test
+/// can see what the store handed it.
 final class TestProjection: SyncMirrorProjection, @unchecked Sendable {
 
     let resources: Set<String>
     let table: String
     private let lock = NSLock()
     private var truncations: [[String]] = []
-    private var purges = 0
     private var fullRowFlags: [Bool] = []
     private var finishes: [Int] = []
 
@@ -25,7 +24,6 @@ final class TestProjection: SyncMirrorProjection, @unchecked Sendable {
     }
 
     var truncated: [[String]] { lock.withLock { truncations } }
-    var purged: Int { lock.withLock { purges } }
     /// The `isFullRow` of every upsert, in order. It stays empty if the store
     /// ever reaches only the requirement without the flag, which is what the
     /// protocol's forwarding default would make it do.
@@ -83,10 +81,6 @@ final class TestProjection: SyncMirrorProjection, @unchecked Sendable {
     func truncate(resources: [String], in conn: Database) throws {
         lock.withLock { truncations.append(resources) }
         try conn.execute(sql: "DELETE FROM \(table)")
-    }
-
-    func purgeIdentityState(in conn: Database) throws {
-        lock.withLock { purges += 1 }
     }
 
     func finishBatch(in conn: Database) throws {

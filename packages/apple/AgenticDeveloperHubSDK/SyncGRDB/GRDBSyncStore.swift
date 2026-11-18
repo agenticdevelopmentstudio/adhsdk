@@ -15,9 +15,16 @@ public struct GRDBSyncStoreStatus: Codable, Sendable {
 /// `SyncStore` on `BoundedDatabase` (WAL pool): JSON-payload mirror tables, an
 /// outbox, and a conflicts audit. The mirror is fed only by apply()/stage();
 /// it is NEVER deleted as a recovery path (resetForResync truncates tables,
-/// preserving the outbox and the file; purgeForIdentityChange additionally
-/// clears the outbox — see its doc comment for why — but still never touches
-/// the file).
+/// preserving the outbox and the file), and nothing in it is deleted when the
+/// signed-in identity changes: a store is *bound* to one account
+/// (`bind(account:)`), and a host that sees another account signed in stops
+/// syncing instead of purging.
+///
+/// Provenance: every generic mirror table carries `origin` (`'local'` for a
+/// row this device wrote, `'account:<principalId>'` for one pulled from an
+/// account) and `reached_accounts` (a JSON array of the principal ids the row
+/// is known to have reached). Projections keep their own tables and are not
+/// given these columns.
 ///
 /// `@unchecked Sendable` because `SyncStore` is a `Sendable` protocol and this
 /// type is shared across tasks. The property it asserts is established, not
@@ -94,8 +101,8 @@ public final class GRDBSyncStore: SyncStore, @unchecked Sendable {
     /// one filtered against `_sync_resources` first, so an unregistered resource
     /// (no mirror table was ever created for it) is silently skipped rather than
     /// throwing "no such table". This is the shared body of the three per-resource
-    /// mirror-truncation sites (`resetForResync`, `purgeResources`,
-    /// `purgeForIdentityChange`) — one place that "empty a mirror table" lives, so
+    /// mirror-truncation sites (`resetForResync`, `purgeResources`) — one
+    /// place that "empty a mirror table" lives, so
     /// purging an unregistered resource is a no-op in every path (twin parity with
     /// `InMemorySyncStore.purgeResources`, which already no-ops the unknown key).
     private func deleteMirrorRows(for resources: [String], in conn: Database) throws {
@@ -142,7 +149,8 @@ public final class GRDBSyncStore: SyncStore, @unchecked Sendable {
     /// truly cold store (no prior `prepare` call ever made) `cursor()` would
     /// otherwise throw "no such table: _sync_state" on the very first sync.
     private static let bookkeepingSchema = """
-        CREATE TABLE IF NOT EXISTS _sync_state (id INTEGER PRIMARY KEY CHECK (id = 1), cursor TEXT);
+        CREATE TABLE IF NOT EXISTS _sync_state (
+            id INTEGER PRIMARY KEY CHECK (id = 1), cursor TEXT, bound_account TEXT);
         CREATE TABLE IF NOT EXISTS _sync_resources (
             resource TEXT PRIMARY KEY, schema_version INTEGER NOT NULL);
         CREATE TABLE IF NOT EXISTS _sync_outbox (
@@ -169,7 +177,7 @@ public final class GRDBSyncStore: SyncStore, @unchecked Sendable {
     /// lets a store built on top of this one register its resources and create
     /// its own tables in a single transaction.
     public func prepare(resources: [SyncResource], in conn: Database) throws {
-        try conn.execute(sql: Self.bookkeepingSchema)
+        try Self.ensureBookkeeping(in: conn)
         for mirrorProjection in mirrorProjections { try mirrorProjection.createTables(in: conn) }
         for resource in resources {
             if projection(for: resource.resource) == nil {
@@ -179,7 +187,9 @@ public final class GRDBSyncStore: SyncStore, @unchecked Sendable {
                         id TEXT PRIMARY KEY NOT NULL,
                         sync_version INTEGER NOT NULL DEFAULT 0,
                         deleted_at TEXT,
-                        data TEXT NOT NULL DEFAULT '{}');
+                        data TEXT NOT NULL DEFAULT '{}',
+                        origin TEXT NOT NULL DEFAULT 'local',
+                        reached_accounts TEXT NOT NULL DEFAULT '[]');
                     """)
             }
             try conn.execute(
@@ -190,13 +200,125 @@ public final class GRDBSyncStore: SyncStore, @unchecked Sendable {
                 arguments: [resource.resource, resource.schemaVersion]
             )
         }
+        try migrateProvenanceColumns(in: conn)
+    }
+
+    /// The bookkeeping tables, plus the one column added to `_sync_state`
+    /// after databases already existed (`bound_account`). `CREATE TABLE IF NOT
+    /// EXISTS` never alters an existing table, so an old `_sync_state` gains
+    /// the column here, in place, keeping its cursor.
+    private static func ensureBookkeeping(in conn: Database) throws {
+        try conn.execute(sql: bookkeepingSchema)
+        try addColumnIfMissing("bound_account", definition: "TEXT", to: "_sync_state", in: conn)
+    }
+
+    private static func addColumnIfMissing(
+        _ column: String, definition: String, to table: String, in conn: Database
+    ) throws {
+        let existing = try conn.columns(in: table).map(\.name)
+        guard !existing.contains(column) else { return }
+        try conn.execute(sql: "ALTER TABLE \"\(table)\" ADD COLUMN \(column) \(definition)")
+    }
+
+    /// Additive, in-place upgrade of every registered generic mirror table
+    /// written before provenance existed: `origin` and `reached_accounts` are
+    /// added with their defaults when missing, so the rows already there stay
+    /// and read as `'local'` with no known account. Projection-owned resources
+    /// are skipped — their tables are the projection's. Idempotent; `prepare`
+    /// runs it too.
+    public func migrateProvenanceColumns() async throws {
+        let store = self
+        try await onQueue {
+            try store.boundedDatabase.write { conn in
+                try Self.ensureBookkeeping(in: conn)
+                try store.migrateProvenanceColumns(in: conn)
+            }
+        }
+    }
+
+    private func migrateProvenanceColumns(in conn: Database) throws {
+        let resources = try String.fetchAll(conn, sql: "SELECT resource FROM _sync_resources")
+        for resource in resources where projection(for: resource) == nil {
+            let table = try Self.mirrorTableName(for: resource)
+            guard try conn.tableExists(table) else { continue }
+            try Self.addColumnIfMissing(
+                "origin", definition: "TEXT NOT NULL DEFAULT 'local'", to: table, in: conn)
+            try Self.addColumnIfMissing(
+                "reached_accounts", definition: "TEXT NOT NULL DEFAULT '[]'", to: table, in: conn)
+        }
+    }
+
+    // MARK: - Account binding
+
+    /// The account this store's rows, outbox and cursor belong to, or `nil`
+    /// before the first sign-in ever bound one. Survives sign-out and
+    /// `resetForResync` — it is what lets a host recognise the same account
+    /// coming back and refuse a different one.
+    public func boundAccount() async throws -> String? {
+        let boundedDatabase = self.boundedDatabase
+        return try await onQueue {
+            try boundedDatabase.write { conn in
+                try Self.ensureBookkeeping(in: conn)
+                return try Self.boundAccount(in: conn)
+            }
+        }
+    }
+
+    /// Binds the store to `account` (a principal id). Keeps the cursor.
+    public func bind(account: String) async throws {
+        let boundedDatabase = self.boundedDatabase
+        try await onQueue {
+            try boundedDatabase.write { conn in
+                try Self.ensureBookkeeping(in: conn)
+                try conn.execute(
+                    sql: """
+                        INSERT INTO _sync_state (id, bound_account) VALUES (1, ?)
+                        ON CONFLICT(id) DO UPDATE SET bound_account = excluded.bound_account
+                        """,
+                    arguments: [account])
+            }
+        }
+    }
+
+    private static func boundAccount(in conn: Database) throws -> String? {
+        try String.fetchOne(conn, sql: "SELECT bound_account FROM _sync_state WHERE id = 1")
+    }
+
+    /// `'account:<principalId>'`, the `origin` of a row pulled from that
+    /// account; `'local'` when the store is bound to none.
+    public static func origin(forAccount account: String?) -> String {
+        account.map { "account:\($0)" } ?? "local"
+    }
+
+    /// `reached_accounts` with `account` added (a JSON array, sorted, no
+    /// duplicates). An unreadable value is replaced rather than failing the
+    /// write it rides in.
+    static func adding(_ account: String, toReached json: String?) -> String {
+        let existing = json.flatMap { $0.data(using: .utf8) }
+            .flatMap { try? JSONDecoder().decode([String].self, from: $0) } ?? []
+        let merged = Array(Set(existing + [account])).sorted()
+        let data = (try? JSONEncoder().encode(merged)) ?? Data("[]".utf8)
+        return String(data: data, encoding: .utf8) ?? "[]"
+    }
+
+    private static func reachedJSON(for account: String?) -> String {
+        account.map { adding($0, toReached: nil) } ?? "[]"
+    }
+
+    private static func markReached(_ account: String, table: String, id: String, in conn: Database) throws {
+        guard let current = try String.fetchOne(
+            conn, sql: "SELECT reached_accounts FROM \"\(table)\" WHERE id = ?", arguments: [id])
+        else { return }
+        try conn.execute(
+            sql: "UPDATE \"\(table)\" SET reached_accounts = ? WHERE id = ?",
+            arguments: [adding(account, toReached: current), id])
     }
 
     public func cursor() async throws -> SyncCursor? {
         let boundedDatabase = self.boundedDatabase
         return try await onQueue {
             try boundedDatabase.write { conn in
-                try conn.execute(sql: Self.bookkeepingSchema)
+                try Self.ensureBookkeeping(in: conn)
                 return try String.fetchOne(conn, sql: "SELECT cursor FROM _sync_state WHERE id = 1")
             }.map(SyncCursor.init(rawValue:))
         }
@@ -209,6 +331,8 @@ public final class GRDBSyncStore: SyncStore, @unchecked Sendable {
         let encoder = JSONEncoder()
         try await onQueue {
             try store.boundedDatabase.write { conn in
+                let bound = try Self.boundAccount(in: conn)
+                let origin = Self.origin(forAccount: bound)
                 for change in batch {
                     let isKnown = try Bool.fetchOne(
                         conn, sql: "SELECT EXISTS(SELECT 1 FROM _sync_resources WHERE resource = ?)",
@@ -254,23 +378,30 @@ public final class GRDBSyncStore: SyncStore, @unchecked Sendable {
                     if change.op == .delete {
                         try conn.execute(
                             sql: """
-                                INSERT INTO "\(table)" (id, sync_version, deleted_at, data)
-                                VALUES (?, ?, datetime('now'), '{}')
+                                INSERT INTO "\(table)" (id, sync_version, deleted_at, data, origin, reached_accounts)
+                                VALUES (?, ?, datetime('now'), '{}', ?, ?)
                                 ON CONFLICT(id) DO UPDATE SET
                                     sync_version = excluded.sync_version, deleted_at = excluded.deleted_at, data = '{}'
                                 """,
-                            arguments: [change.id, version]
+                            arguments: [change.id, version, origin, Self.reachedJSON(for: bound)]
                         )
                     } else {
                         let payload = String(data: try encoder.encode(change.data ?? [:]), encoding: .utf8) ?? "{}"
                         try conn.execute(
                             sql: """
-                                INSERT INTO "\(table)" (id, sync_version, deleted_at, data) VALUES (?, ?, NULL, ?)
+                                INSERT INTO "\(table)" (id, sync_version, deleted_at, data, origin, reached_accounts)
+                                VALUES (?, ?, NULL, ?, ?, ?)
                                 ON CONFLICT(id) DO UPDATE SET
                                     sync_version = excluded.sync_version, deleted_at = NULL, data = excluded.data
                                 """,
-                            arguments: [change.id, version, payload]
+                            arguments: [change.id, version, payload, origin, Self.reachedJSON(for: bound)]
                         )
+                        // A row already here (written locally, or pulled
+                        // before) keeps its origin; it has now reached the
+                        // bound account too.
+                        if let bound {
+                            try Self.markReached(bound, table: table, id: change.id, in: conn)
+                        }
                     }
                 }
                 // Every projection, not only those the batch reached: one may
@@ -528,6 +659,15 @@ public final class GRDBSyncStore: SyncStore, @unchecked Sendable {
                                 }
                             }
                         }
+                        // An applied push has reached the bound account.
+                        if result.status == .applied,
+                           let bound = try Self.boundAccount(in: conn),
+                           let resource = meta?["resource"] as String?,
+                           let rowId = meta?["row_id"] as String?,
+                           store.projection(for: resource) == nil {
+                            try Self.markReached(
+                                bound, table: try Self.mirrorTableName(for: resource), id: rowId, in: conn)
+                        }
                         try conn.execute(sql: "DELETE FROM _sync_outbox WHERE op_id = ?", arguments: [result.opId])
                     case .rejected:
                         try conn.execute(
@@ -543,13 +683,16 @@ public final class GRDBSyncStore: SyncStore, @unchecked Sendable {
         }
     }
 
+    /// Clears the cursor, never the binding: a resync re-fetches data for the
+    /// same account.
     public func resetForResync() async throws {
         let store = self
         try await onQueue {
             try store.boundedDatabase.write { conn in
+                try Self.ensureBookkeeping(in: conn)
                 let tables = try String.fetchAll(conn, sql: "SELECT resource FROM _sync_resources")
                 try store.deleteMirrorRows(for: tables, in: conn)
-                try conn.execute(sql: "DELETE FROM _sync_state")
+                try conn.execute(sql: "UPDATE _sync_state SET cursor = NULL")
             }
         }
     }
@@ -563,7 +706,7 @@ public final class GRDBSyncStore: SyncStore, @unchecked Sendable {
         let boundedDatabase = self.boundedDatabase
         return try await onQueue {
             try boundedDatabase.write { conn in
-                try conn.execute(sql: Self.bookkeepingSchema)
+                try Self.ensureBookkeeping(in: conn)
                 var out: [String: Int] = [:]
                 let rows = try Row.fetchAll(
                     conn, sql: "SELECT resource, schema_version FROM _sync_resources")
@@ -602,59 +745,6 @@ public final class GRDBSyncStore: SyncStore, @unchecked Sendable {
                         sql: "DELETE FROM _sync_resources WHERE resource = ?",
                         arguments: [resource])
                 }
-            }
-        }
-    }
-
-    /// Account-boundary purge: call this when the signed-in identity itself
-    /// changes (sign-out, switch account) — not for an ordinary resync.
-    /// In one write transaction: every registered mirror table is emptied,
-    /// `_sync_state` (the cursor) is cleared, and every `_sync_outbox` row is
-    /// deleted regardless of status — `pending`, `inflight`, *and*
-    /// `quarantined` alike.
-    ///
-    /// This is the deliberate difference from `resetForResync()`, which
-    /// preserves the outbox: a resync happens because the *data* needs
-    /// re-fetching while the identity performing it is unchanged, so
-    /// queued local edits are still owed to the server under that same
-    /// identity and must survive. Here the identity itself is changing —
-    /// every queued op belongs to the *departing* identity, and pushing it
-    /// under a new identity's credentials would misattribute the mutation.
-    /// That's the defect this method exists to close; nothing may survive
-    /// the boundary except the app-level resource registrations.
-    ///
-    /// `_sync_resources` is intentionally left untouched: it's the set of
-    /// resources this app knows how to sync (from `prepare(resources:)`),
-    /// not per-identity state — the next identity needs the same
-    /// registrations, and callers should not need to re-`prepare` before
-    /// their first post-purge `stage(_:)`.
-    ///
-    /// `_sync_conflicts` (the audit log) is also left untouched — it's a
-    /// historical record, not live sync state, and isn't read back into any
-    /// sync decision.
-    ///
-    /// A mirror projection is asked to discard its own local-only state
-    /// (`purgeIdentityState(in:)`) in the same transaction. Emptying the
-    /// mirror tables is not enough for a projection that keeps sidecars this
-    /// store has never heard of: `MarkdownProjection` shares its database
-    /// with `MarkdownStore`, whose `_markdown_outbox` holds the departing
-    /// account's unsent note bodies and whose `_markdown_remote_id` pairs
-    /// their local ids with rows in *their* account. Left behind, the next
-    /// identity's first drain pushes the previous user's text into the new
-    /// user's account and addresses updates to document ids that are not
-    /// theirs.
-    ///
-    /// Like `resetForResync()`, this never touches the database file itself
-    /// — only rows within it, in one transaction.
-    public func purgeForIdentityChange() async throws {
-        let store = self
-        try await onQueue {
-            try store.boundedDatabase.write { conn in
-                let tables = try String.fetchAll(conn, sql: "SELECT resource FROM _sync_resources")
-                try store.deleteMirrorRows(for: tables, in: conn)
-                try conn.execute(sql: "DELETE FROM _sync_state")
-                try conn.execute(sql: "DELETE FROM _sync_outbox")
-                for projection in store.mirrorProjections { try projection.purgeIdentityState(in: conn) }
             }
         }
     }

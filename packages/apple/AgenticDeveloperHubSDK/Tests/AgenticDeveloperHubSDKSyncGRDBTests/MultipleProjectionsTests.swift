@@ -51,8 +51,8 @@ struct MultipleProjectionsTests {
                 == ["id": .string("l1"), "name": .string("Kew Gardens")])
     }
 
-    @Test("a resync hands each projection only its own resources, and an identity change reaches every one")
-    func truncateAndPurgeReachEachProjection() async throws {
+    @Test("a resync hands each projection only its own resources")
+    func truncateReachesEachProjection() async throws {
         let people = TestProjection(resources: ["test.people"], table: "people")
         let places = TestProjection(resources: ["test.places"], table: "places")
         let store = GRDBSyncStore(database: try BoundedDatabase(path: ":memory:"), projections: [people, places])
@@ -60,9 +60,6 @@ struct MultipleProjectionsTests {
         try await store.resetForResync()
         #expect(people.truncated == [["test.people"]])
         #expect(places.truncated == [["test.places"]])
-        try await store.purgeForIdentityChange()
-        #expect(people.purged == 1)
-        #expect(places.purged == 1)
     }
 
     @Test("a pull reaches the projection as a full row and a staged patch as a partial one")
