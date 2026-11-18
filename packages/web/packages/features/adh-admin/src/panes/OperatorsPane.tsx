@@ -28,6 +28,11 @@ export function OperatorsPane({ help }: { help?: ReactNode } = {}): ReactElement
   const { data: operators, isLoading, error } = useOperators();
   const grantRole = useGrantRole();
   const revokeRole = useRevokeRole();
+  // The columns read only these two flags. useMutation returns a new object every render, so
+  // depending on the mutation objects themselves rebuilt the columns (and re-rendered every row)
+  // on each render, which made the memo do nothing.
+  const grantPending = grantRole.isPending;
+  const revokePending = revokeRole.isPending;
   const [roleError, setRoleError] = useState<string | null>(null);
   /** The change a row's button asked for, waiting on its confirmation. */
   const [confirming, setConfirming] = useState<{
@@ -73,7 +78,7 @@ export function OperatorsPane({ help }: { help?: ReactNode } = {}): ReactElement
                     size="xs"
                     variant="destructive-ghost"
                     aria-label={`Revoke admin from ${label}`}
-                    disabled={revokeRole.isPending}
+                    disabled={revokePending}
                     onClick={() => setConfirming({ op, action: "revoke" })}
                   >
                     Revoke admin
@@ -84,7 +89,7 @@ export function OperatorsPane({ help }: { help?: ReactNode } = {}): ReactElement
                   size="xs"
                   variant="ghost"
                   aria-label={`Grant admin to ${label}`}
-                  disabled={grantRole.isPending}
+                  disabled={grantPending}
                   onClick={() => setConfirming({ op, action: "grant" })}
                 >
                   Grant admin
@@ -103,7 +108,7 @@ export function OperatorsPane({ help }: { help?: ReactNode } = {}): ReactElement
         render: (op) => <span className="text-xs text-apt-text-dim">{formatDate(op.createdAt)}</span>,
       },
     ],
-    [grantRole, revokeRole, selfId],
+    [grantPending, revokePending, selfId],
   );
 
   /** Run the confirmed change. The modal stays up, busy, until the server answers. */
@@ -171,7 +176,7 @@ export function OperatorsPane({ help }: { help?: ReactNode } = {}): ReactElement
             onCancel={() => setConfirming(null)}
             confirmLabel={confirming.action === "grant" ? "Grant admin" : "Revoke admin"}
             onConfirm={runConfirmed}
-            busy={grantRole.isPending || revokeRole.isPending}
+            busy={grantPending || revokePending}
           />
         )}
 
