@@ -25,6 +25,8 @@ export const SITE_ROUTES_HUB: Partial<Record<SiteId, readonly string[]>> = {
     '/audit',
     '/auth/callback',
     '/authentication',
+    '/breakdown',
+    '/costs',
     '/feature-flags',
     '/feedback',
     '/invitations',
@@ -40,6 +42,7 @@ export const SITE_ROUTES_HUB: Partial<Record<SiteId, readonly string[]>> = {
     '/sync',
     '/terms',
     '/usage',
+    '/usage-overview',
     '/users',
   ],
   hub: [
