@@ -55,6 +55,7 @@ final class OversightFindingsViewController: NSViewController {
                     )
                 ),
                 picker,
+                AIOversightProviderControls.makeModelField(),
                 ComposableSettings.ExplanationView(
                     withText: "The daemon watches live sessions and records findings here. "
                         + "AI judgment asks the selected provider whether now is a good "

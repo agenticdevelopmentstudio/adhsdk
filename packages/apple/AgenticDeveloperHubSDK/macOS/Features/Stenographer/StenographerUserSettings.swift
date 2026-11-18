@@ -122,11 +122,19 @@ extension UserSettings {
         default: false
     )
 
-    /// Which provider configuration oversight completions use. "" = inherit the
-    /// AI Summaries selection (the pre-existing behavior); "claude-cli" forces the
-    /// zero-config CLI path; anything else is a configuration UUID.
+    /// Which provider configuration oversight completions use: "claude-cli" for
+    /// the zero-config CLI path, otherwise a configuration UUID. "" (inherit the
+    /// AI Summaries selection) is what older stores hold; the oversight push turns
+    /// it into the choice it resolved to (`AIOversightProviderControls.adoptOwnSelection`).
     public static let stenographerAIOversightProviderConfigId = UserSetting<String>(
         "stenographer_ai_oversight_provider_config_id",
+        default: ""
+    )
+
+    /// The model oversight asks, overriding the selected configuration's own
+    /// model for oversight only. "" uses the configuration's model.
+    public static let stenographerAIOversightModel = UserSetting<String>(
+        "stenographer_ai_oversight_model",
         default: ""
     )
 
