@@ -35,7 +35,7 @@ import {
 } from "../components/editable-list";
 import { ConfirmSourceDialog } from "../users/TransferDialog";
 import { transferUser, useTransferPreview } from "../users/transfer";
-import { NO_ROLE, roleLabel, roleValues } from "../users/roles";
+import { NO_ROLE, roleLabel, roleMenuItems, roleValues } from "../users/roles";
 import { formatDate } from "../lib/timestamps";
 
 /**
@@ -48,11 +48,6 @@ import { formatDate } from "../lib/timestamps";
  * thing an operator asks for by ticking boxes) and the ecosystem chips (each chip is one
  * membership of one user, and its ✕ removes exactly that one).
  */
-
-const ROLE_ITEMS = [
-  { value: "user", label: "User" },
-  { value: "admin", label: "Operator" },
-];
 
 /** Module-level so the runs below aren't handed a new key on every render. */
 const USERS_KEY = ["admin", "users"];
@@ -71,7 +66,7 @@ export function UsersPane({ help }: { help?: ReactNode } = {}) {
     null,
   );
   const [removeError, setRemoveError] = useState<string | null>(null);
-  /** The backend's refusal (409 `last_operator`) to revoke the last operator on the platform. */
+  /** The backend's refusal of a role change: a revoke or a grant it would not make. */
   const [roleError, setRoleError] = useState<string | null>(null);
 
   const { data: users, isLoading, error } = useAdminUsers();
@@ -136,16 +131,16 @@ export function UsersPane({ help }: { help?: ReactNode } = {}) {
               <OptionMenu
                 ariaLabel={`Role for ${user.name || user.email}`}
                 value={user.capabilities.includes("admin") ? "admin" : "user"}
-                items={ROLE_ITEMS}
+                items={roleMenuItems(user)}
                 onChange={(next) => {
                   const current = user.capabilities.includes("admin") ? "admin" : "user";
                   if (next === current) return;
-                  if (next === "admin") grantRole.mutate({ userId: user.id, capability: "admin" });
-                  else
-                    revokeRole.mutate(
-                      { userId: user.id, role: "admin" },
-                      { onError: (e) => setRoleError(errorMessage(e)) },
-                    );
+                  // Both directions surface the server's refusal: a grant the backend answers 400
+                  // must reach the operator, never vanish.
+                  const onError = (e: unknown) => setRoleError(errorMessage(e));
+                  if (next === "admin")
+                    grantRole.mutate({ userId: user.id, capability: "admin" }, { onError });
+                  else revokeRole.mutate({ userId: user.id, role: "admin" }, { onError });
                 }}
               />
             </span>
