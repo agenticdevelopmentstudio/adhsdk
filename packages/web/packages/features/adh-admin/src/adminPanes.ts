@@ -27,9 +27,10 @@ import type { AdminTopicId } from "./adminTopics";
 // module that ALSO held this map would pull all the panes — react-query, the editors, the
 // dialogs — into every chunk that wanted a label.
 
-/** Every topic's detail pane, keyed by {@link AdminTopicId}. Both hosts (the admin site's own
- *  `AdminShell` and this package's `AdminFeature`) render off this same map, so a pane added
- *  here appears in both places by construction rather than by two call sites agreeing. */
+/** Every topic's detail pane, keyed by {@link AdminTopicId}. The Record type is the point: a
+ *  topic added to the rail without a pane is a compile error here, and the admin site's
+ *  admin-pages test checks the same list against its app/(admin)/<id>/page.tsx files, so a rail
+ *  entry cannot lead to a 404. */
 export const ADMIN_PANES: Record<AdminTopicId, ComponentType<{ help?: ReactNode }>> = {
   users: UsersPane,
   invitations: InvitationsPane,

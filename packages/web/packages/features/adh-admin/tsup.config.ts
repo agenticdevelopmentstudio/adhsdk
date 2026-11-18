@@ -2,7 +2,7 @@ import { featureTsup } from '../tsup.preset'
 
 // Three entries, split by WHO IMPORTS WHAT (the same reasoning as adh-billing's config).
 //
-// The barrel is the twelve panes plus the AdminFeature mount. A static import of ANY barrel export
+// The barrel is every pane. A static import of ANY barrel export
 // pulls that whole bundled module, so the admin site's AdminShell — which needs only the section
 // names and icons to draw its rail — once loaded every pane, react-query and all the editors into
 // the shell chunk of every admin page. `./topics` (src/adminTopics.ts: the list and the id guard,
