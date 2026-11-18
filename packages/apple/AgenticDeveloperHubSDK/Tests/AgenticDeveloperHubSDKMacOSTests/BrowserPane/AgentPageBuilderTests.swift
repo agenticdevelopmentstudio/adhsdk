@@ -243,6 +243,27 @@ final class AgentPageBuilderTests: XCTestCase {
         XCTAssertTrue(html.contains("<li data-adk-ref=\"e3\">Line one<br data-adk-ref=\"e3\">line two</li>"), html)
     }
 
+    func test_agentViewDrawsNoBlankLines() {
+        // Breaks with whitespace between them, breaks at a block's edge,
+        // breaks from neighbouring nodes and empty blocks each drew an empty
+        // line in the agent view; none does.
+        let page = build(document([
+            node("g1", "paragraph", text: "One\n  \n \n\nTwo"),
+            node("g2", "paragraph", children: [
+                node("t1", "text", text: "Three\n"), node("t2", "text", text: "\n  Four")
+            ]),
+            node("g3", "paragraph", text: "\n\nFive\n\n"),
+            node("g4", "paragraph", children: [node("t3", "text", text: " \n ")]),
+            node("g5", "list", children: [node("g6", "listItem", text: "  ")])
+        ]), title: "T")
+        let html = page.html()
+        XCTAssertTrue(html.contains("<p data-adk-ref=\"g1\">One<br data-adk-ref=\"g1\">Two</p>"), html)
+        XCTAssertTrue(html.contains("<p data-adk-ref=\"g2\">Three<br data-adk-ref=\"t1\">Four</p>"), html)
+        XCTAssertTrue(html.contains("<p data-adk-ref=\"g3\">Five</p>"), html)
+        XCTAssertFalse(html.contains("g4"), "an empty paragraph is left out: \(html)")
+        XCTAssertFalse(html.contains("g5"), "a list of empty items is left out: \(html)")
+    }
+
     func test_privacyWordAcrossALineBreakStillConcealed() {
         // A break never carries a privacy word past the filter: text whose
         // one-line reading holds the word is concealed as that one line.

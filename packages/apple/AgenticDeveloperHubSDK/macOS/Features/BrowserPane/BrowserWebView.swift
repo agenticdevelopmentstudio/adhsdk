@@ -13,7 +13,7 @@ import WebKit
 /// alone, so the pane's address bar and chrome keep working however the page is
 /// gated. `performKeyEquivalent` answers `false` when blocked, which sends the
 /// shortcut on to the menu bar instead of swallowing it.
-public final class BrowserWebView: LiveResizingWebView {
+public final class BrowserWebView: BrowserMenuWebView {
     /// What the pane lets through. Open until the pane sets one.
     public var gate: BrowserInputGate = .open
 

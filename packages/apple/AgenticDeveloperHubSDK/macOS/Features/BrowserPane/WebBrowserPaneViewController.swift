@@ -535,6 +535,12 @@ open class WebBrowserPaneViewController: NSViewController {
         engine.setActivationShieldActive(isActivationShieldWanted)
         engine.setHidesImages(settings.get(UserSettings.browserPrivacyHideImages))
         engine.setPageWordFilter(pageWordFilter(for: engine))
+        if let webView = (engine as? WebKitBrowserEngine)?.webView as? BrowserMenuWebView {
+            webView.contextMenuItems = { [weak self, weak webView] menu, point in
+                guard let self, let webView else { return [] }
+                return self.contextMenuItems(menu, at: point, in: webView, preview: nil)
+            }
+        }
     }
 
     /// The words `engine`'s page is drawn through: the privacy words whose
@@ -1274,7 +1280,7 @@ open class WebBrowserPaneViewController: NSViewController {
 
     /// The shared store, awaited rather than blocked on: a button pressed
     /// while the launch open runs waits for it without stalling the app.
-    private func openHiddenItemsStore() async -> BrowserHiddenItemsStore? {
+    func openHiddenItemsStore() async -> BrowserHiddenItemsStore? {
         guard let store = await BrowserHiddenItemsStore.sharedStore() else {
             Self.logger.error("hidden items: no store is open")
             NSSound.beep()
@@ -1320,6 +1326,24 @@ open class WebBrowserPaneViewController: NSViewController {
         selectingMode = BrowserSelectingMode(
             engine: webKit, store: store, list: list, button: button, preview: preview, settings: settings)
         selectingMode?.begin()
+    }
+
+    /// One pick from the page's context menu, straight to its dialog for
+    /// `list`, without the picker; a selecting mode already running ends
+    /// first, so a pane never has two.
+    func pickOnceForHiding(
+        _ candidate: BrowserPickCandidate, list: BrowserHiddenItemList, store: BrowserHiddenItemsStore,
+        preview: BrowserAgentPreviewViewController?
+    ) {
+        guard let webKit = engine as? WebKitBrowserEngine else {
+            NSSound.beep()
+            return
+        }
+        let button: BrowserHideItemsButton = list == .agent ? hideFromAgentButton : addressBox.hideItemsButton
+        selectingMode?.end(.close)
+        selectingMode = BrowserSelectingMode(
+            engine: webKit, store: store, list: list, button: button, preview: preview, settings: settings)
+        selectingMode?.pickOnce(candidate)
     }
 
     /// Ends selecting for `reason`; with `ended`, only when that is the
@@ -2605,6 +2629,11 @@ extension WebBrowserPaneViewController {
             guard let self, let tab else { return AgentPage.unavailable("the tab has closed", url: nil) }
             let source = await self.agentPageSource(engine: tab.engine)
             return await source.read(options: BrowserSnapshotOptions(), keepingRefs: true).page
+        }
+        let preview = views.preview
+        preview.webView.contextMenuItems = { [weak self, weak preview] menu, point in
+            guard let self, let preview else { return [] }
+            return self.contextMenuItems(menu, at: point, in: preview.webView, preview: preview)
         }
         tab.agentViews = views
         return views

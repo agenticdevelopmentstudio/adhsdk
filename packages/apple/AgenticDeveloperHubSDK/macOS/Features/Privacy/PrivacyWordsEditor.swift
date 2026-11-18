@@ -50,6 +50,8 @@ public final class PrivacyWordsEditor: NSObject {
     private weak var parentWindow: NSWindow?
     /// Keeps the editor alive while its sheet is up: nothing else holds it.
     private var retainedSelf: PrivacyWordsEditor?
+    /// The editor whose sheet is up: there is never more than one.
+    private static weak var shown: PrivacyWordsEditor?
     private var tabObserver: NSObjectProtocol?
 
     /// Opens the editor as a sheet on `parentWindow`.
@@ -57,14 +59,30 @@ public final class PrivacyWordsEditor: NSObject {
     /// - Parameter newWordSite: The site pattern a word added here starts on:
     ///   the page's (`PrivacySitePattern.defaultPattern(for:)`) from a web
     ///   page, `*` (the default) from anywhere else.
+    /// - Parameter startingWord: A word to replace ("Replace Private Word…"
+    ///   on a page): its row, made if there is none, opens with its Shown As
+    ///   cell editing. An editor already up is brought to the front and
+    ///   given the word, rather than a second one opened.
     public static func present(
         vault: PrivacyWordsVault, on parentWindow: NSWindow,
-        newWordSite: String = PrivacySitePattern.everywhere
+        newWordSite: String = PrivacySitePattern.everywhere,
+        startingWord: String? = nil
     ) {
+        if let open = shown {
+            open.parentWindow?.makeKeyAndOrderFront(nil)
+            open.window.makeKeyAndOrderFront(nil)
+            if let startingWord { open.replace(startingWord) }
+            return
+        }
         let editor = PrivacyWordsEditor(vault: vault, parentWindow: parentWindow, newWordSite: newWordSite)
         editor.retainedSelf = editor
+        shown = editor
         parentWindow.beginSheet(editor.window)
-        editor.beginEditingFirstRowIfEmpty()
+        if let startingWord {
+            editor.replace(startingWord)
+        } else {
+            editor.beginEditingFirstRowIfEmpty()
+        }
     }
 
     private init(vault: PrivacyWordsVault, parentWindow: NSWindow, newWordSite: String) {
@@ -201,6 +219,27 @@ public final class PrivacyWordsEditor: NSObject {
         beginEditing(row: rows.count - 1, column: Column.real)
     }
 
+    /// Opens `word`'s row with its Shown As cell editing: the row whose real
+    /// word it is (ignoring case), or a new one for it on `newWordSite`.
+    private func replace(_ word: String) {
+        let word = word.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !word.isEmpty else { return beginEditingFirstRowIfEmpty() }
+        let row = Self.row(for: word, in: rows.map(\.word)) ?? {
+            rows.append(DraftRow(word: PrivacyWord(alias: "", real: word, sites: [newWordSite])))
+            reloadRows()
+            return rows.count - 1
+        }()
+        beginEditing(row: row, column: Column.alias)
+    }
+
+    /// The index of the word whose real word is `word`, ignoring case, or
+    /// failing that whose alias is: a concealed page shows the alias, so a
+    /// word already private is clicked as its alias.
+    static func row(for word: String, in words: [PrivacyWord]) -> Int? {
+        func same(_ other: String) -> Bool { other.compare(word, options: .caseInsensitive) == .orderedSame }
+        return words.firstIndex { same($0.real) } ?? words.firstIndex { !$0.alias.isEmpty && same($0.alias) }
+    }
+
     private func beginEditingFirstRowIfEmpty() {
         if rows.isEmpty { addRow() }
     }
@@ -281,6 +320,7 @@ public final class PrivacyWordsEditor: NSObject {
         card.setRows([])
         parentWindow?.endSheet(window)
         window.orderOut(nil)
+        if Self.shown === self { Self.shown = nil }
         retainedSelf = nil
     }
 }

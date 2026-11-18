@@ -225,6 +225,7 @@ targets:
           - "Features/BrowserPane/BrowserActivationShield.js"
           - "Features/BrowserPane/BrowserPageWordFilter.js"
           - "Features/BrowserPane/HiddenItems/BrowserElementPicker.js"
+          - "Features/BrowserPane/HiddenItems/BrowserPickCandidates.js"
           - "Features/BrowserPane/HiddenItems/vendor/finder.js"
       - path: macOS/Features/BrowserPane/Automation/BrowserSnapshot.js
         buildPhase: resources
@@ -235,6 +236,8 @@ targets:
       - path: macOS/Features/BrowserPane/BrowserPageWordFilter.js
         buildPhase: resources
       - path: macOS/Features/BrowserPane/HiddenItems/BrowserElementPicker.js
+        buildPhase: resources
+      - path: macOS/Features/BrowserPane/HiddenItems/BrowserPickCandidates.js
         buildPhase: resources
       - path: macOS/Features/BrowserPane/HiddenItems/vendor/finder.js
         buildPhase: resources

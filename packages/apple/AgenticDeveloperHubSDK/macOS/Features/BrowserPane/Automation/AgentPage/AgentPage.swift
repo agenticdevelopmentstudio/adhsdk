@@ -420,6 +420,26 @@ struct AgentTextRenderer {
 /// Writes the agent page as HTML, element by element, from node kinds only.
 struct AgentHTMLRenderer {
     private(set) var output = ""
+    /// Whether nothing visible has been written since the last line ended
+    /// (a block's edge or a `<br>`), so a break here would only draw an
+    /// empty line.
+    private var atLineStart = true
+    /// The ref of a break the text asked for and nothing visible has
+    /// followed yet.
+    private var pendingBreak: String?
+
+    /// Tags that start and end a line of their own: a break just inside or
+    /// just after one is a blank line, and is left out.
+    private static let blockTags: Set<String> = [
+        "div", "nav", "main", "header", "footer", "section", "h1", "h2", "h3", "h4", "h5", "h6", "p", "ul", "li",
+        "table", "tbody", "tr", "td", "th"
+    ]
+
+    /// Containers that draw nothing but what they hold, so one holding
+    /// nothing visible is left out instead of drawn as an empty line.
+    private static let containerKinds: Set<AgentNodeKind> = [
+        .document, .landmark, .heading, .paragraph, .list, .listItem
+    ]
 
     /// Input types the preview may show; anything else is shown as text.
     private static let inputTypes: Set<String> = [
@@ -448,37 +468,60 @@ struct AgentHTMLRenderer {
     /// text, so adjacent pieces cannot read as a privacy word together.
     mutating func content(of node: AgentNode) {
         if AgentPageText.isTextRun(node) {
-            output += Self.escapeLines(AgentPageText.allText(node), ref: node.ref)
+            writeLines(AgentPageText.allText(node), ref: node.ref)
             return
         }
-        if !node.text.isEmpty { output += Self.escapeLines(node.text, ref: node.ref) }
+        if !node.text.isEmpty { writeLines(node.text, ref: node.ref) }
         for child in node.children { element(child) }
     }
 
     /// `text` escaped, each line break the page's text keeps written as a
     /// `<br>` carrying `ref`, so the preview breaks lines where the agent's
-    /// text does. A run of breaks is one `<br>`, as the text keeps no empty line.
-    static func escapeLines(_ text: String, ref: String) -> String {
-        guard text.contains(where: \.isNewline) else { return escape(text) }
-        let lineBreak = "<br data-adk-ref=\"" + escape(ref) + "\">"
-        var out = "", breakPending = false
+    /// text does — but never an empty line, as the text keeps none. A break
+    /// waits (`pendingBreak`) until something visible follows it on the same
+    /// line, so a run of breaks with only whitespace between them is one
+    /// `<br>`, and a break at a block's edge, where the line has ended
+    /// anyway, is none.
+    private mutating func writeLines(_ text: String, ref: String) {
         for character in text {
             if character.isNewline {
-                breakPending = true
+                if !atLineStart, pendingBreak == nil { pendingBreak = ref }
                 continue
             }
-            if breakPending { out += lineBreak }
-            breakPending = false
-            out += escape(String(character))
+            if character.isWhitespace, atLineStart || pendingBreak != nil { continue }
+            flushBreak()
+            output += Self.escape(String(character))
+            atLineStart = false
         }
-        if breakPending { out += lineBreak }
-        return out
+    }
+
+    /// Writes the waiting break, if any, before something visible.
+    private mutating func flushBreak() {
+        guard let ref = pendingBreak else { return }
+        pendingBreak = nil
+        while output.last == " " { output.removeLast() }
+        output += "<br data-adk-ref=\"" + Self.escape(ref) + "\">"
+        atLineStart = true
+    }
+
+    /// Whether `node` draws nothing at all: a container whose own text is
+    /// whitespace and whose children draw nothing, or whitespace text.
+    static func isBlank(_ node: AgentNode) -> Bool {
+        switch node.kind {
+        case .text:
+            return node.text.allSatisfy(\.isWhitespace)
+        case _ where containerKinds.contains(node.kind):
+            return node.text.allSatisfy(\.isWhitespace) && node.children.allSatisfy(isBlank)
+        default:
+            return false
+        }
     }
 
     mutating func element(_ node: AgentNode) {
+        if node.kind != .text, Self.isBlank(node) { return }
         switch node.kind {
         case .text:
-            output += Self.escapeLines(node.text, ref: node.ref)
+            writeLines(node.text, ref: node.ref)
         case .document:
             wrap("div", node)
         case .landmark:
@@ -574,7 +617,9 @@ struct AgentHTMLRenderer {
             body(&self)
             return
         }
+        flushBreak()
         output += "<label data-adk-ref=\"" + Self.escape(node.ref) + "\">" + Self.escape(label) + " "
+        atLineStart = false
         body(&self)
         output += "</label>"
     }
@@ -582,6 +627,10 @@ struct AgentHTMLRenderer {
     private mutating func wrap(_ tag: String, _ node: AgentNode, extra: [(String, String)] = []) {
         open(tag, node, extra: extra)
         content(of: node)
+        if Self.blockTags.contains(tag) {
+            pendingBreak = nil
+            atLineStart = true
+        }
         output += "</\(tag)>"
     }
 
@@ -590,8 +639,16 @@ struct AgentHTMLRenderer {
         var attrs: [(String, String)] = [("data-adk-ref", node.ref)]
         for name in ["aria-label", "title"] { if let found = node.attributes[name] { attrs.append((name, found)) } }
         attrs.append(contentsOf: extra)
+        // A block starts a new line, which ends any waiting break; anything
+        // else draws something on this one, after it.
+        if Self.blockTags.contains(tag) {
+            pendingBreak = nil
+        } else {
+            flushBreak()
+        }
         output += "<" + tag
         for (name, value) in attrs { output += " \(name)=\"" + Self.escape(value) + "\"" }
         output += ">"
+        atLineStart = Self.blockTags.contains(tag)
     }
 }

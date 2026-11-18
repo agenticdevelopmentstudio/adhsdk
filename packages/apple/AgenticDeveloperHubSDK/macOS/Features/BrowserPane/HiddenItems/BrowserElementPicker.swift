@@ -91,6 +91,14 @@ public struct BrowserPickCandidate: Decodable, Sendable, Equatable {
     static let pageRoots: Set<String> = ["html", "head", "body", ":root"]
 }
 
+/// What the page's context menu acts on: the element under the right-click,
+/// as the picker would have picked it, and the page's selected text.
+public struct BrowserContextTarget: Sendable, Equatable {
+    public var candidate: BrowserPickCandidate
+    /// Whitespace collapsed; empty when nothing is selected.
+    public var selectedText: String
+}
+
 /// The selecting-mode script on one web view: outlines the element under the
 /// pointer, swallows the page's clicks and reports picks. The vendored finder
 /// and the picker run in their own content world, `adk-element-picker`, so
@@ -115,9 +123,47 @@ public final class BrowserElementPicker: NSObject, WKScriptMessageHandler {
         get throws { try resource("finder") }
     }
 
-    /// `BrowserElementPicker.js`: needs `__adkFinder` in the same world first.
+    /// `BrowserElementPicker.js`: needs `__adkFinder` and
+    /// `__adkPickCandidates` in the same world first.
     public static var pickerSource: String {
         get throws { try resource("BrowserElementPicker") }
+    }
+
+    /// `BrowserPickCandidates.js`: defines `__adkPickCandidates`, what a pick
+    /// is, for the picker and the page's context menu. Needs `__adkFinder`.
+    public static var candidatesSource: String {
+        get throws { try resource("BrowserPickCandidates") }
+    }
+
+    /// Installs the finder and the candidates in the picker's world, each
+    /// only if that world does not hold it yet.
+    static func installCandidates(in webView: WKWebView) async throws {
+        let finder = try finderSource
+        let candidates = try candidatesSource
+        // `;true` gives each evaluation a value WebKit can return.
+        _ = try await webView.evaluateJavaScript(
+            "if (!globalThis.__adkFinder) {\n" + finder + "\n}\n;true", in: nil, contentWorld: world)
+        _ = try await webView.evaluateJavaScript(candidates + "\n;true", in: nil, contentWorld: world)
+    }
+
+    /// What the context menu acts on: the element drawn at `point` (in
+    /// `webView`'s coordinates) as a pick, with the page's selected text —
+    /// the word a right-click selected. `nil` when nothing could be read.
+    static func contextTarget(at point: NSPoint, in webView: WKWebView) async -> BrowserContextTarget? {
+        let scale = webView.pageZoom * webView.magnification
+        let top = webView.isFlipped ? point.y : webView.bounds.height - point.y
+        do {
+            try await installCandidates(in: webView)
+            let body = try await webView.callAsyncJavaScript(
+                "return globalThis.__adkPickCandidates.at(x, y);",
+                arguments: ["x": point.x / scale, "y": top / scale], in: nil, contentWorld: world)
+            guard let body, let candidate = decode(body) else { return nil }
+            let text = (body as? [String: Any])?["selectedText"] as? String ?? ""
+            return BrowserContextTarget(candidate: candidate, selectedText: text)
+        } catch {
+            logger.error("context menu target failed: \(error.localizedDescription, privacy: .public)")
+            return nil
+        }
     }
 
     private static func resource(_ name: String) throws -> String {
@@ -149,15 +195,13 @@ public final class BrowserElementPicker: NSObject, WKScriptMessageHandler {
     public func start() async throws {
         guard !isRunning, let webView else { return }
         let controller = webView.configuration.userContentController
-        let finder = try Self.finderSource
         let picker = try Self.pickerSource
         controller.removeScriptMessageHandler(forName: Self.messageHandlerName, contentWorld: Self.world)
         controller.add(self, contentWorld: Self.world, name: Self.messageHandlerName)
         isRunning = true
         isPaused = false
         do {
-            // `;true` gives each evaluation a value WebKit can return.
-            _ = try await webView.evaluateJavaScript(finder + "\n;true", in: nil, contentWorld: Self.world)
+            try await Self.installCandidates(in: webView)
             // `stop()` while an evaluation was in flight: install nothing
             // more, and take down a picker script that landed after it.
             guard isRunning else { return }

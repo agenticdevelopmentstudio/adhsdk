@@ -2,11 +2,11 @@
 id: 8b187d98-795b-4a9d-9441-e7b8629fefe4
 title: "Element Picker"
 type: ingredient
-version: 0.1.3
+version: 0.1.4
 status: draft
 language: en
 created: 2026-11-15
-modified: 2026-11-16
+modified: 2026-11-18
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -548,10 +548,15 @@ saved entries are fully manageable from the keyboard in the popover.
 
 Notes: no compliance checks have been run against the code yet.
 
+## Context Menu Targets
+
+The candidate logic (selectors, labels, refs) lives in `BrowserPickCandidates.js`, installed with the finder before the picker, so the page's context menu can ask for the element drawn at the click point without starting the picker: `BrowserElementPicker.contextTarget(at:in:)` returns its candidate and the text the click selected. A context-menu pick goes straight to the hide dialog (`BrowserSelectingMode.pickOnce`); Cancel ends the mode rather than resuming a picker that never ran.
+
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 0.1.4 | 2026-11-18 | Mike Fullerton | The candidate builder is shared with the context menu, which reads the element under a right-click. |
 | 0.1.3 | 2026-11-16 | Mike Fullerton | Review fixes: frames ignore the pointer while picking, and the page root is refused for both hide lists. |
 | 0.1.2 | 2026-11-16 | Mike Fullerton | Hostless pages refused; All items like it needs a class and skips html/head/body/main; dialog through AppModalWindowSession; popovers close with the page; row lookup at click; failed saves beep. |
 | 0.1.1 | 2026-11-16 | Mike Fullerton | No-looser-selector tooltip, start failure beeps and ends selecting, popover toggle by event number. |

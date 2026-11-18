@@ -2,11 +2,11 @@
 id: 8bd94d87-6096-4fb1-82a7-d5f712c2958f
 title: "Agent Page Builder (Agent Gatekeeper)"
 type: ingredient
-version: 0.1.4
+version: 0.1.5
 status: draft
 language: en
 created: 2026-11-15
-modified: 2026-11-16
+modified: 2026-11-18
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -722,10 +722,15 @@ plan's tests are `AgentPageBuilderTests` (builder, pure),
 `AgentPageWalkerWebViewTests` (an offscreen web view with fixed HTML) and
 `AgentGatekeeperRoutingTests` (stub engine and privacy).
 
+## Blank Lines
+
+The Agent view's rendering collapses every run of blank or whitespace-only lines to a single break, so empty elements, spacer divs and pre-formatted padding never draw as a column of empty lines (`AgentHTMLRenderer`).
+
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 0.1.5 | 2026-11-18 | Mike Fullerton | The Agent view draws no blank lines: runs of empty lines collapse to one. |
 | 0.1.4 | 2026-11-16 | Mike Fullerton | Review fixes: the page root is refused, the structural path is stable across injected styles, sibling indexes are linear, a withheld option does not leak, and text keeps its line breaks. |
 | 0.1.3 | 2026-11-16 | Mike Fullerton | Scope refs only; withheld scope and invalid agent-list selectors fail closed; grid kinds; walker v6, snapshot v4; work off the main actor; refs stale on withheld or hidden-item changes; claims the privacy word files. |
 | 0.1.2 | 2026-11-16 | Mike Fullerton | Walker version 5: tables keep today's rowgroup, columnheader and rowheader roles (allowlist kinds row group, column header, row header; vector 047) |
