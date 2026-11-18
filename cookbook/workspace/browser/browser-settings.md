@@ -2,7 +2,7 @@
 id: 5a246e6c-2125-4427-a8ab-2f43f2fecba5
 title: "Web Browser Settings Topics"
 type: ingredient
-version: 0.1.8
+version: 0.1.9
 status: draft
 language: en
 created: 2026-11-15
@@ -491,10 +491,15 @@ silenced.
 
 Notes: no compliance checks have been run against the code yet.
 
+## Privacy Tabs
+
+Privacy and Security shows three tabs, matching the privacy toolbar's groups: General (storage, scripts, cookies, camera and microphone, protection, site data, history), Events (Pause all events, input, focus and visibility) and Agents (Agent Access, Agent Privacy). Show privacy toolbar is no longer a row; the View menu toggles it. Agent access is two checkboxes over the one three-way setting: Agent access (anything but hidden; turning it on gives full control) and Read only (enabled only while access is on).
+
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 0.1.9 | 2026-11-18 | Mike Fullerton | Privacy and Security in General / Events / Agents tabs; Show privacy toolbar removed; Agent access as On/Off plus Read only. |
 | 0.1.8 | 2026-11-18 | Mike Fullerton | Agent Privacy gains the two model-automation switches (Settings window only), moved from the retired Automation panel |
 | 0.1.7 | 2026-11-16 | Mike Fullerton | Review fix: Manage Site Data resolves its jar on click and names it in the title and confirmation. |
 | 0.1.6 | 2026-11-16 | Mike Fullerton | The no-history-store note moves from under Record history to the History help topic. |

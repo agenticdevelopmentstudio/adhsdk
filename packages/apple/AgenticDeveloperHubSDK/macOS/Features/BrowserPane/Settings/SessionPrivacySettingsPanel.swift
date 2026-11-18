@@ -49,6 +49,8 @@ final class BrowserPrivacySettingsPanel: BrowserTopicPanel {
     private let hasHistoryStore: Bool
     /// Kept while the Site Data window is up.
     private var siteDataWindow: BrowserSiteDataWindowController?
+    /// Agent access's Read only checkbox, enabled only while access is on.
+    private weak var agentReadOnlyToggle: NSControl?
 
     /// - Parameters:
     ///   - siteData: the store the Site Data window lists, resolved when
@@ -84,20 +86,18 @@ final class BrowserPrivacySettingsPanel: BrowserTopicPanel {
 
     private static let sessionHelpTopics: [ComposableSettings.PanelHelp.Topic] = [
         .init(
-            title: "General",
-            body: "Pause all events, in a tab's privacy settings, keeps every event from "
-                + "that page until you uncheck it; the privacy button turns red while it is on. "
-                + "Show privacy toolbar puts a bar under the address bar that shows every "
-                + "privacy setting, with the privacy button at its left end: each item is green "
-                + "while the thing it names is on and red while it is off, so Keyboard is green "
-                + "while the page gets the keyboard and Hide Images is green while images are "
-                + "hidden. Set in "
-                + "the Settings window it applies to every web browser; set in a tab's "
+            title: "Tabs",
+            body: "The settings are in three tabs, the same three groups as the privacy "
+                + "toolbar: General for what the browser keeps and loads, Events for what "
+                + "the page learns of you, and Agents for what the agent may see and do. Set "
+                + "in the Settings window they apply to every web browser; set in a tab's "
                 + "privacy settings, to that browser alone."
         ),
         .init(
             title: "Input",
-            body: "Disable keyboard events and Disable mouse and scrolling events decide "
+            body: "Pause all events, in a tab's privacy settings, keeps every event from "
+                + "that page until you uncheck it; the privacy button turns red while it is on. "
+                + "Disable keyboard events and Disable mouse and scrolling events decide "
                 + "whether the page receives what you type and click. Checked, the pane drops the event before "
                 + "the browser engine sees it, so the page never learns it happened; menu "
                 + "shortcuts still reach the menu bar, and the address bar and the "
@@ -125,11 +125,11 @@ final class BrowserPrivacySettingsPanel: BrowserTopicPanel {
                 + "window is covered, applies at once."
         ),
         .init(
-            title: "Coding Partner",
-            body: "Agent access decides how much of this browser the agent sees: hidden "
-                + "leaves the pane out of its list altogether, read only lets it read "
-                + "the page, its text, its console and screenshots but not click, type "
-                + "or navigate, and full control lets it drive. Agent while paused "
+            title: "Agent Access",
+            body: "Agent access off leaves the pane out of the agent's list altogether. "
+                + "On, the agent can drive it; Read only, which can be checked only while "
+                + "access is on, lets it read the page, its text, its console and "
+                + "screenshots but not click, type or navigate. Agent while paused "
                 + "decides whether the agent keeps driving a pane you have paused from "
                 + "its browser menu. Both narrow what the master switches allow; the "
                 + "master switches themselves live in the Automation settings and "
@@ -296,27 +296,28 @@ final class BrowserPrivacySettingsPanel: BrowserTopicPanel {
 
     override var searchKeywords: [String] { Self.keywords }
 
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        settingsView.addGroup(makeGeneralGroup())
-        settingsView.addGroup(makeInputGroup())
-        settingsView.addGroup(makeFocusGroup())
-        settingsView.addGroup(makeAgentGroup())
-        settingsView.addGroup(agentPrivacy.makeGroup())
-        settingsView.addGroup(makeStorageGroup())
-        settingsView.addGroup(makeScriptsGroup())
-        // The groups that were topics of their own, after the existing ones.
-        settingsView.addGroup(makeCookiesGroup())
-        settingsView.addGroup(makeCaptureGroup())
-        if showsSafariOnlyGroups { settingsView.addGroup(makeProtectionGroup()) }
-        if siteData != nil { settingsView.addGroup(makeSiteDataGroup()) }
-        settingsView.addGroup(makeHistoryGroup())
+    override func viewWillAppear() {
+        super.viewWillAppear()
+        followAgentAccess()
     }
 
-    /// Pause all events (a pane's own state, so only in a pane's settings)
-    /// and whether the privacy toolbar shows.
-    private func makeGeneralGroup() -> ComposableSettings.GroupView {
-        let group = ComposableSettings.GroupView(withTitle: "General")
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        var general = [makeStorageGroup(), makeScriptsGroup(), makeCookiesGroup(), makeCaptureGroup()]
+        if showsSafariOnlyGroups { general.append(makeProtectionGroup()) }
+        if siteData != nil { general.append(makeSiteDataGroup()) }
+        general.append(makeHistoryGroup())
+        // General / Events / Agents, the same three groups as the privacy toolbar.
+        settingsView.addTabs([
+            .init("General", general),
+            .init("Events", [makeInputGroup(), makeFocusGroup()]),
+            .init("Agents", [makeAgentGroup(), agentPrivacy.makeGroup()])
+        ], identifier: Self.identifier("tabs"))
+    }
+
+    /// Pause all events, a pane's own state, so only in a pane's settings:
+    /// the first row of Input.
+    private func addPauseRow(to group: ComposableSettings.GroupView) {
         if let pane = binding.pane {
             let model = ComposableSettings.ViewModel<Bool>(
                 title: "Pause all events",
@@ -327,8 +328,6 @@ final class BrowserPrivacySettingsPanel: BrowserTopicPanel {
             _ = view.toggle.accessibilityID(Self.identifier("pause"))
             group.addSettingSubview(view)
         }
-        addSwitch("Show privacy toolbar", UserSettings.browserPrivacyShowToolbar, id: "show-toolbar", to: group)
-        return group
     }
 
     private static func identifier(_ row: String) -> String {
@@ -401,6 +400,7 @@ final class BrowserPrivacySettingsPanel: BrowserTopicPanel {
 
     private func makeInputGroup() -> ComposableSettings.GroupView {
         let group = ComposableSettings.GroupView(withTitle: "Input")
+        addPauseRow(to: group)
         addDisable(
             "Disable keyboard events", UserSettings.browserPrivacyKeyboard,
             disabled: .block, allowed: .allow, id: "keyboard", to: group
@@ -430,13 +430,53 @@ final class BrowserPrivacySettingsPanel: BrowserTopicPanel {
     }
 
     private func makeAgentGroup() -> ComposableSettings.GroupView {
-        let group = ComposableSettings.GroupView(withTitle: "Coding Partner")
-        addChoice("Agent access", UserSettings.browserPrivacyAgentAccess, label: \.label, id: "agent-access", to: group)
+        let group = ComposableSettings.GroupView(withTitle: "Agent Access")
+        addAgentAccessRows(to: group)
         addChoice(
             "Agent while paused", UserSettings.browserPrivacyAgentWhilePaused,
             label: \.label, id: "agent-while-paused", to: group
         )
         return group
+    }
+
+    /// Agent access as two checkboxes over the one three-way setting: Agent
+    /// access (anything but hidden) and Read only (enabled only while access
+    /// is on). Turning access on gives full control; Read only narrows it.
+    private func addAgentAccessRows(to group: ComposableSettings.GroupView) {
+        let key = UserSettings.browserPrivacyAgentAccess
+        let access = binding.accessors(key)
+        let onModel = ComposableSettings.ViewModel<Bool>(
+            title: "Agent access",
+            get: { access.get() != .hidden },
+            set: { [weak self] isOn in
+                guard isOn != (access.get() != .hidden) else { return }
+                access.set(isOn ? .full : .hidden)
+                self?.followAgentAccess()
+            }
+        )
+        let onView = ComposableSettings.CheckboxView(with: onModel)
+        _ = onView.toggle.accessibilityID(Self.identifier("agent-access"))
+        binding.add(onView, model: onModel, key: key, to: group)
+
+        let readOnlyModel = ComposableSettings.ViewModel<Bool>(
+            title: "Read only",
+            get: { access.get() == .readOnly },
+            set: { isReadOnly in
+                guard access.get() != .hidden else { return }
+                access.set(isReadOnly ? .readOnly : .full)
+            }
+        )
+        let readOnlyView = ComposableSettings.CheckboxView(with: readOnlyModel)
+        _ = readOnlyView.toggle.accessibilityID(Self.identifier("agent-read-only"))
+        binding.add(readOnlyView, model: readOnlyModel, key: key, to: group)
+        agentReadOnlyToggle = readOnlyView.toggle
+        followAgentAccess()
+    }
+
+    /// Read only is enabled only while Agent access is on.
+    private func followAgentAccess() {
+        let key = UserSettings.browserPrivacyAgentAccess
+        agentReadOnlyToggle?.isEnabled = !binding.isLocked(key.name) && binding.accessors(key).get() != .hidden
     }
 
     private func makeStorageGroup() -> ComposableSettings.GroupView {
