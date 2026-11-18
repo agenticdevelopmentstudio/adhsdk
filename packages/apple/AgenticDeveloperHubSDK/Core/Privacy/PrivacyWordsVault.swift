@@ -7,10 +7,14 @@ import LocalAuthentication
 ///
 /// One per app, shared by every private terminal, so an edit applies to all
 /// of them at once. Reading the words to run a terminal never prompts;
-/// *seeing* them does. Showing a terminal and opening the editor each go
-/// through ``authenticate(reason:)``; the editor saves with ``save(_:)``,
-/// which does not ask again — the editor was opened by whoever proved they
-/// may see the words.
+/// *seeing* them does, and the vault enforces it rather than trusting its
+/// callers to: ``authenticate(reason:)`` returns a ``PrivacyWordsGrant``, and
+/// the words for display (``words(with:)``) and every save (``save(_:with:)``)
+/// need one. A grant proves the owner authenticated for one store's words, so
+/// ``replaceStore(_:authenticator:)`` revokes every grant (``grantGeneration``)
+/// and whatever was showing under one hides until the owner authenticates
+/// again — switching from testing words to the real ones never shows the real
+/// ones on the strength of the testing words' no-prompt answer.
 ///
 /// A private terminal reads ``filter(forTerminalAt:)`` with the directory it
 /// started in: the enabled words whose terminals match it. ``filter`` is the
@@ -39,9 +43,14 @@ public final class PrivacyWordsVault: ObservableObject {
     public private(set) var authenticator: any PrivacyOwnerAuthenticating
 
     /// Every stored word, enabled or not, whatever its sites, or nil while
-    /// they have not been read. What the editor shows and what a browser pane
-    /// watches.
+    /// they have not been read. What a browser pane filters with — never what
+    /// is shown: a view of the words reads ``words(with:)``.
     @Published public private(set) var words: [PrivacyWord]?
+
+    /// Changes whenever every outstanding grant is revoked — on
+    /// ``replaceStore(_:authenticator:)``. Whatever shows words or concealed
+    /// content under a grant watches it and hides when it changes.
+    @Published public private(set) var grantGeneration = 0
 
     /// The enabled global words as a filter — what applies everywhere, and
     /// what a private terminal conceals with — or nil while the words have not
@@ -102,7 +111,7 @@ public final class PrivacyWordsVault: ObservableObject {
     /// — and words never read stay unread. If `store`'s words cannot be read
     /// silently, the old ones are dropped rather than left showing as if they
     /// were the new store's: the vault goes back to unread, and the next
-    /// ``authenticate(reason:)`` reads them.
+    /// ``authenticate(reason:)`` reads them. Every grant is revoked first.
     public func replaceStore(
         _ store: any PrivacyWordStorage,
         authenticator: any PrivacyOwnerAuthenticating
@@ -111,6 +120,9 @@ public final class PrivacyWordsVault: ObservableObject {
         pendingUpgrade = nil
         self.store = store
         self.authenticator = authenticator
+        // Before the words change: what proved access to the old words proves
+        // nothing about the new ones.
+        grantGeneration += 1
         observeChanges()
         guard wasLoaded else { return }
         do {
@@ -148,16 +160,22 @@ public final class PrivacyWordsVault: ObservableObject {
 
     /// Authenticates the user — every call asks the authenticator: this is
     /// what stands between the words and someone else at the keyboard, so
-    /// success is never remembered — and makes sure the words are in memory.
-    /// Words still under the old guard are read with that authentication and
-    /// saved again without it, so they never need it to be read again.
-    public func authenticate(reason: String) async throws {
+    /// success is never remembered — makes sure the words are in memory, and
+    /// returns the grant that shows and saves them. Words still under the old
+    /// guard are read with that authentication and saved again without it, so
+    /// they never need it to be read again.
+    ///
+    /// - Throws: ``PrivacyWordsGrant/Revoked`` when the store changed while
+    ///   the prompt was up: what was proved was the right to see the old
+    ///   words, and the new ones need an authentication of their own.
+    @discardableResult
+    public func authenticate(reason: String) async throws -> PrivacyWordsGrant {
         let store = self.store
+        let generation = grantGeneration
         let context = try await authenticator.authenticate(reason: reason)
-        // The store changed while the prompt was up: what was proved was the
-        // right to see the old words, and the new ones are read by the next
-        // authentication, not by this one.
-        guard store.changeIdentity == self.store.changeIdentity else { return }
+        guard generation == grantGeneration, store.changeIdentity == self.store.changeIdentity else {
+            throw PrivacyWordsGrant.Revoked()
+        }
         do {
             // Read again even when already in memory: whoever authenticates
             // is about to see or replace the words, and another app may have
@@ -168,6 +186,22 @@ public final class PrivacyWordsVault: ObservableObject {
             try persist(words)
             apply(words)
         }
+        return PrivacyWordsGrant(generation: generation, storeIdentity: store.changeIdentity)
+    }
+
+    /// Whether `grant` still shows and saves the words: issued for this
+    /// store, and not revoked since.
+    public func isValid(_ grant: PrivacyWordsGrant) -> Bool {
+        grant.generation == grantGeneration && grant.storeIdentity == store.changeIdentity
+    }
+
+    /// The words, for showing them: every stored word, or `[]` when there are
+    /// none yet.
+    ///
+    /// - Throws: ``PrivacyWordsGrant/Revoked`` when `grant` no longer holds.
+    public func words(with grant: PrivacyWordsGrant) throws -> [PrivacyWord] {
+        guard isValid(grant) else { throw PrivacyWordsGrant.Revoked() }
+        return words ?? []
     }
 
     /// Makes sure the words are in memory, for running a terminal. Silent,
@@ -178,7 +212,7 @@ public final class PrivacyWordsVault: ObservableObject {
         if try load() { return }
         if let pendingUpgrade { return try await pendingUpgrade.value }
         let task = Task {
-            try await self.authenticate(
+            _ = try await self.authenticate(
                 reason: "upgrade how the privacy words are stored. This is asked once")
         }
         pendingUpgrade = task
@@ -188,9 +222,12 @@ public final class PrivacyWordsVault: ObservableObject {
 
     /// Stores `words` and applies them, dropping any with an empty side
     /// (which ``TextSubstitutionFilter`` would ignore anyway). Does not
-    /// authenticate: the caller is the editor, which ``authenticate(reason:)``
-    /// opened.
-    public func save(_ words: [PrivacyWord]) throws {
+    /// prompt: `grant` is the authentication.
+    ///
+    /// - Throws: ``PrivacyWordsGrant/Revoked`` when `grant` no longer holds,
+    ///   before anything is written; a store error from the write.
+    public func save(_ words: [PrivacyWord], with grant: PrivacyWordsGrant) throws {
+        guard isValid(grant) else { throw PrivacyWordsGrant.Revoked() }
         let kept = words.filter { !$0.alias.isEmpty && !$0.real.isEmpty }
         try persist(kept)
         apply(kept)
@@ -213,4 +250,23 @@ public final class PrivacyWordsVault: ObservableObject {
         guard isLoaded, let words = try? store.load() else { return }
         apply(words)
     }
+}
+
+/// Proof that the Mac owner authenticated to see one store's privacy words:
+/// what ``PrivacyWordsVault/words(with:)`` and
+/// ``PrivacyWordsVault/save(_:with:)`` ask for. Only
+/// ``PrivacyWordsVault/authenticate(reason:)`` makes one, and
+/// ``PrivacyWordsVault/replaceStore(_:authenticator:)`` revokes them all.
+public struct PrivacyWordsGrant: Equatable, Sendable {
+
+    /// A grant was used after it was revoked, or an authentication finished
+    /// after the store it was for was replaced.
+    public struct Revoked: LocalizedError, Equatable {
+        public var errorDescription: String? {
+            "The privacy words changed. Authenticate again to see them."
+        }
+    }
+
+    let generation: Int
+    let storeIdentity: String
 }

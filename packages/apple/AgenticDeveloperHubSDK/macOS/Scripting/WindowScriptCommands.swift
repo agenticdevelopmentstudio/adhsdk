@@ -148,11 +148,20 @@ public final class ScriptAccessibilityIDsCommand: ScriptWindowCommand, @unchecke
 }
 
 /// `screenshot window` — a PNG of one of this process's own windows.
+///
+/// A window that keeps itself out of screen capture (`sharingType` `.none`:
+/// the Secrets window while its words show, a private terminal while it is
+/// revealed) is not photographed either: this command is how an agent driving
+/// the app sees it, and those windows are exactly what an agent may not see.
 @objc(ScriptScreenshotWindowCommand)
 public final class ScriptScreenshotWindowCommand: ScriptWindowCommand, @unchecked Sendable {
     public override func performMain() -> Any? {
         guard let entry = requireWindow() else { return nil }
         guard let window = entry.window(), window.isVisible else { return "" }
+        guard window.sharingType != .none else {
+            fail(NSOperationNotSupportedForKeyScriptError, "\(entry.name) keeps itself out of screen capture.")
+            return nil
+        }
         let stamp = ISO8601DateFormatter().string(from: Date()).replacingOccurrences(of: ":", with: "-")
         let url = Self.destination(
             windowName: entry.name,

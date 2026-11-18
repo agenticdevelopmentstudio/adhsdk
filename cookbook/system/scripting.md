@@ -2,11 +2,11 @@
 id: d5812249-f235-43df-9cd7-504220da1a7d
 title: "Scripting Support"
 type: ingredient
-version: 1.1.1
+version: 1.2.0
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-11-15
+modified: 2026-11-18
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -71,7 +71,7 @@ element-locator helper additionally depend on the platform's UI framework.
 - **element-specifier-nil-fallback**: The element-locator helper MUST return an absent value when the application's own class description does not resolve to a scripting class description.
 - **element-specifier-runs-on-serialized-context**: The element-locator helper MUST perform the application's-class-description read, the unique-id call, and the locator construction from inside a bridge onto the platform's serialized main execution context.
 - **element-specifier-no-container-specifier**: The element-locator helper MUST pass an absent container locator, since every element it addresses hangs directly off the application.
-
+- **screenshot-respects-capture-exclusion**: `screenshot window` MUST refuse, with `NSOperationNotSupportedForKeyScriptError` and no file, a window whose `sharingType` is `.none`, so a window that keeps itself out of screen capture (the Secrets window, a revealed private terminal) is never photographed for a script.
 ## Appearance
 
 Not applicable — this is a scripting-bridge utility, not a visual component.
@@ -178,12 +178,6 @@ Not applicable: none of the three given primitives call a logger or any other di
 - **AppKit / UIKit**: this is the source platform. `AppleScriptRunner.swift` (Foundation-only) wraps `NSAppleScript(source:)`/`executeAndReturnError` into the `Result` enum. `MainActorScriptCommand.swift` (AppKit) supplies the `NSScriptCommand` base class and the `applicationElementSpecifier(key:uniqueID:)` helper, both bridging onto the main actor via `MainActor.assumeIsolated` and a private `final class Box: @unchecked Sendable` to satisfy Swift 6 region isolation for the captured `self`/closure/result (see Design Decisions). UIKit has no Cocoa Scripting/AppleEvent equivalent; none of this recipe applies to an iOS target. `AppleScriptRunner.Result` is declared `@frozen`, fixing its three cases as part of the type's binary-stable public contract (**result-value-equality**). `MainActorScriptCommand` declares itself `@unchecked Sendable`, because its superclass `NSScriptCommand` carries mutable state and is not itself `Sendable` (**command-runs-on-serialized-context**, **command-default-implementation-bridges-context**); a `MainActorScriptCommand` subclass instance handed to Cocoa Scripting's arbitrary-thread AppleEvent dispatch and compiled under `SWIFT_STRICT_CONCURRENCY: complete` produces no Sendable-conformance diagnostic as a result.
 - **WinUI 3**: Windows has no AppleScript/Apple Events equivalent, but it has a comparable automation surface: a COM Automation object (a `[ComVisible(true)]` class implementing `IDispatch`, registered so script hosts such as Windows Script Host's VBScript/JScript engines, or PowerShell via `New-Object -ComObject`, can drive it) is the closest analog to Cocoa Scripting's `.sdef`-declared, AppleEvent-dispatched command surface. For an `AppleScriptRunner` analog, `Microsoft.PowerShell.SDK`'s `PowerShell` class can compile and invoke a script string and capture output/errors via `PSDataCollection<PSObject>` and `ErrorRecord`, mirroring `.success`/`.compileFailed`/`.runtimeFailed`. For `MainActorScriptCommand`'s main-actor bridge, a WinUI 3 app's `DispatcherQueue` is the analog to the main actor: a base command class would capture the UI thread's `DispatcherQueue` and call `TryEnqueue` (or an `EnqueueAsync` helper) to marshal `performMain()`'s equivalent onto the UI thread — but `TryEnqueue` enqueues asynchronously by default, so a port preserving `performDefaultImplementation()`'s synchronous return-value contract must block on completion (e.g. via a `TaskCompletionSource`) rather than assume synchronous main-thread execution the way `MainActor.assumeIsolated` does.
 
-## Reference Implementations
-
-| Platform | Location | Conformance |
-|----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Scripting/` | confirmed (1.1.1) |
-
 ## Design Decisions
 
 ### Advisory main-thread requirement is not enforced
@@ -269,6 +263,7 @@ deliberate fail-fast choice (see Design Decisions) that satisfies
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.2.0 | 2026-11-18 | Mike Fullerton | screenshot window refuses a window excluded from screen capture |
 | 1.1.1 | 2026-11-15 | Mike Fullerton | Conformance tests added (AppleScriptRunnerTests.swift extended, ApplicationElementSpecifierTests.swift, 12 of 16 vectors); unit-test-coverage now partial. |
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to system/. |
 | 1.0.1 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |

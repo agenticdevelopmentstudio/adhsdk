@@ -32,7 +32,7 @@ final class BrowserHideFromAgentButton: BrowserHideItemsButton {
     static let title = "Hide from Agent"
 
     /// Drawn as the other privacy toolbar items are (`BrowserPrivacyStripStyle`):
-    /// "Hide from Agent ▾" while idle, "Hide from Agent: Selecting" in red,
+    /// "Hide from Agent ▾" while idle, "Hide from Agent: Selecting" in green,
     /// with the stop symbol, while items are being picked.
     override func showSelecting(_ selecting: Bool) {
         super.showSelecting(selecting)

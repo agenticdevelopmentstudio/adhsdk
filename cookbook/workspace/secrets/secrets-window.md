@@ -2,7 +2,7 @@
 id: 2d3b1d4b-2293-4dcd-8271-c2081acc88ef
 title: "Secrets Window"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: draft
 language: en
 created: 2026-11-18
@@ -40,13 +40,15 @@ The window opens locked and asks for authentication as soon as it is on screen. 
 
 - **single-window**: `SecretsWindowController.show(vault:newWordSite:startingWord:)` MUST open the one Secrets window, or bring the open one forward, never a second.
 - **non-modal**: The window MUST be an ordinary resizable window titled "Secrets" with no OK or Cancel buttons.
-- **opens-locked**: A newly opened window MUST be locked: the table empty, the contents covered by the overlay, and the overlay's button titled "Unlock".
+- **opens-locked**: A newly opened window MUST be locked: the table empty, the contents covered by the overlay, and the overlay's button titled "Unlock Secrets".
 - **show-prompts**: `show` MUST put the window on screen locked first and then, while it is locked, ask for authentication at once, so the prompt never appears before the window.
-- **unlock-authenticates**: Unlock (the overlay button or the toolbar lock) MUST ask the vault to authenticate with the reason "show your secrets" and MUST read the words into the table only after it succeeds.
+- **unlock-authenticates**: Unlock (the overlay button or the toolbar lock) MUST ask the vault to authenticate with the reason "show your secrets" and MUST read the words into the table only through the grant that authentication returns (`words(with:)`), and save only with it.
+- **grant-revoked-locks**: When the vault's `grantGeneration` changes (the store was replaced, as when testing words are turned on or off), the window MUST lock, so words read under the old store's authentication never stay on screen and the new words need a new authentication.
 - **unlock-no-stack**: Pressing Unlock while an authentication is on screen MUST do nothing.
 - **unlock-reveals**: A successful unlock MUST clear any hide the owner set before the lock, so the words show at once.
 - **revealed-rule**: The contents MUST show exactly while the window is unlocked, not hidden by the owner, key, and the app active; otherwise the overlay MUST cover them.
 - **overlay-not-toolbar**: The overlay MUST cover the contents only, never the toolbar.
+- **overlay-content**: The overlay MUST show, centred, the eye, under it the note "Agents are never allowed to see your secrets", and under that one button titled "Unlock Secrets" while locked and "Show Secrets" while unlocked but hidden.
 - **toolbar**: The toolbar MUST hold an eye toggle that hides or shows the contents, a lock button that locks or unlocks, and, right-justified, a gear that shows a transient popover holding the Secrets settings.
 - **lock-empties**: Locking MUST stop the lock policy, unload the table, close the gear popover and need authentication again.
 - **close-locks**: Closing the window MUST lock it.
@@ -56,7 +58,7 @@ The window opens locked and asks for authentication as soon as it is on screen. 
 - **lock-app-inactive**: While unlocked and `secretsLockWhenAppInactive` is on (default on), the app resigning active MUST lock the window.
 - **lock-sleep**: While unlocked and `secretsLockOnSleep` is on (default on), the Mac sleeping, its screens sleeping, the session resigning active or the screen locking MUST lock the window.
 - **lock-idle**: While unlocked and `secretsLockAfterIdleMinutes` is above zero (default 5), going that many minutes without a key or mouse event in the app MUST lock the window; 0 never locks.
-- **settings-panel**: `SecretsSettingsPanel` MUST show a Private Words group with Open Secrets… (omitted in the gear popover), a Locking group with the three settings, and, in a Debug build that composed testing words, a Testing Words group.
+- **settings-panel**: `SecretsSettingsPanel` MUST show a Locking group with the three settings and, only in a Debug build (`#if DEBUG`) that composed testing words, a Testing Words group; it MUST NOT offer a button that opens the Secrets window (Window > Show Secrets Window does).
 
 ## Appearance
 
@@ -124,16 +126,6 @@ One info line when an unlock is refused, carrying the error's description and ne
 
 - **AppKit**: `NSWindow.sharingType = .none` while revealed (from the concealed container) keeps the words out of screenshots, recording and screen sharing. `com.apple.screenIsLocked` on the distributed notification center is the public signal for a locked screen.
 
-## Reference Implementations
-
-| Platform | Location | Conformance |
-|----------|----------|-------------|
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Secrets/SecretsWindowController.swift` | confirmed (1.0.0) |
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Secrets/SecretsLockPolicy.swift` | confirmed (1.0.0) |
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Secrets/PrivateWordsTopicViewController.swift` | confirmed (1.0.0) |
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Secrets/SecretsSettingsPanel.swift` | confirmed (1.0.0) |
-| macos | `packages/apple/AgenticDeveloperHubSDK/Core/Privacy/SecretsSettings.swift` | confirmed (1.0.0) |
-
 ## Design Decisions
 
 **Decision**: Obscure the words whenever the window is not key or the app is not active, not only when locked.
@@ -158,4 +150,5 @@ Separation of concerns passes: the window controller owns locking and concealmen
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-18 | Mike Fullerton | Grants: unlock reads and saves through the vault's grant and locks on a revoked one; overlay note and Unlock/Show Secrets titles; settings panel loses Open Secrets and its testing words are Debug-only |
 | 1.0.0 | 2026-11-18 | Mike Fullerton | Initial recipe: the Secrets window replaces the privacy words editor. |

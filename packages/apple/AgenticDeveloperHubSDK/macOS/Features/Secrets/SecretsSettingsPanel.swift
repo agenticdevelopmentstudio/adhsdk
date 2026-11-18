@@ -1,32 +1,22 @@
 import AppKit
 import AgenticDeveloperHubSDKCore
 
-/// Settings > Features > Secrets: the button that opens the Secrets window,
-/// when the window locks itself (``SecretsLockPolicy``), and in Debug builds
-/// the switch onto a file of testing words (``PrivacyTestingWords``).
+/// Settings > Features > Secrets: when the window locks itself
+/// (``SecretsLockPolicy``), and in Debug builds only the switch onto a file
+/// of testing words (``PrivacyTestingWords``). The window itself opens from
+/// Window > Show Secrets Window and the privacy toolbar's Secrets button.
 ///
-/// The Secrets window's gear shows the same panel in a popover, without the
-/// button that would open the window it is already in.
+/// The Secrets window's gear shows the same panel in a popover.
 @MainActor
 public final class SecretsSettingsPanel: ComposableSettings.SettingsPanelViewController {
 
-    static let openIdentifier = "settings.secrets.open"
     static let lockInactiveIdentifier = "settings.secrets.lock.app-inactive"
     static let lockSleepIdentifier = "settings.secrets.lock.sleep"
     static let lockIdleIdentifier = "settings.secrets.lock.idle"
     static let testingWordsIdentifier = "settings.secrets.testing-words"
     static let testingWordsPathIdentifier = "settings.secrets.testing-words-path"
 
-    private let vault: PrivacyWordsVault?
-    private let showsOpenButton: Bool
-
-    /// - Parameters:
-    ///   - vault: The words the Secrets window edits; `nil` leaves the panel
-    ///     without its Open Secrets… button.
-    ///   - showsOpenButton: `false` in the window's own popover.
-    public init(vault: PrivacyWordsVault?, showsOpenButton: Bool = true) {
-        self.vault = vault
-        self.showsOpenButton = showsOpenButton
+    public init() {
         super.init(with: ComposableSettings.SettingsPanelDescriptor(
             title: "Secrets",
             icon: NSImage(systemSymbolName: "key", accessibilityDescription: nil)
@@ -62,8 +52,11 @@ public final class SecretsSettingsPanel: ComposableSettings.SettingsPanelViewCon
             ),
             .init(
                 title: "The Secrets Window",
-                body: "The window opens with its contents hidden behind an eye with a line "
-                    + "through it, then asks you to authenticate. While it is not the front "
+                body: "Open it from Window > Show Secrets Window, or from Secrets in a web "
+                    + "browser's privacy toolbar. It opens with its contents hidden behind an "
+                    + "eye with a line through it; Unlock Secrets asks you to authenticate. "
+                    + "Turning testing words on or off locks it again, so the other words need "
+                    + "authenticating too. While it is not the front "
                     + "window its contents are hidden the same way. The eye in its toolbar hides "
                     + "them until pressed again; the lock hides them and needs you to "
                     + "authenticate before they show again. Nothing outside the app can read "
@@ -83,21 +76,10 @@ public final class SecretsSettingsPanel: ComposableSettings.SettingsPanelViewCon
 
     public override func viewDidLoad() {
         super.viewDidLoad()
-        if showsOpenButton, vault != nil { addGroup(makeWindowGroup()) }
         addGroup(makeLockingGroup())
+        #if DEBUG
         if PrivacyTestingWords.isAvailable { addGroup(makeTestingWordsGroup()) }
-    }
-
-    private func makeWindowGroup() -> ComposableSettings.GroupView {
-        let group = ComposableSettings.GroupView(withTitle: "Private Words")
-        let open = ComposableSettings.ButtonViewModel(title: "Open Secrets…") { [weak self] in
-            guard let vault = self?.vault else { return }
-            SecretsWindowController.show(vault: vault)
-        }
-        let view = ComposableSettings.ButtonView(viewModel: open, placement: .leading)
-        _ = view.button.accessibilityID(Self.openIdentifier)
-        group.addSettingSubview(view)
-        return group
+        #endif
     }
 
     private func makeLockingGroup() -> ComposableSettings.GroupView {
@@ -133,8 +115,9 @@ public final class SecretsSettingsPanel: ComposableSettings.SettingsPanelViewCon
         }
     }
 
-    /// Debug builds: the switch onto a JSON file of testing words and the
-    /// file's path (``PrivacyTestingWords``).
+    #if DEBUG
+    /// Debug builds only: the switch onto a JSON file of testing words and
+    /// the file's path (``PrivacyTestingWords``).
     private func makeTestingWordsGroup() -> ComposableSettings.GroupView {
         let group = ComposableSettings.GroupView(withTitle: "Testing Words")
         let enabled = ComposableSettings.CheckboxView(with: ComposableSettings.ViewModel<Bool>(
@@ -149,4 +132,5 @@ public final class SecretsSettingsPanel: ComposableSettings.SettingsPanelViewCon
         group.addSettingSubview(path)
         return group
     }
+    #endif
 }

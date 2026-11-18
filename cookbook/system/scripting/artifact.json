@@ -4,11 +4,11 @@
     "id": "d5812249-f235-43df-9cd7-504220da1a7d",
     "title": "Scripting Support",
     "type": "ingredient",
-    "version": "1.1.1",
+    "version": "1.2.0",
     "status": "review",
     "language": "en",
     "created": "2026-09-24",
-    "modified": "2026-11-15",
+    "modified": "2026-11-18",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -37,7 +37,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "9da24f05d5963137",
+  "synced": "dc341ea5c0f8308e",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

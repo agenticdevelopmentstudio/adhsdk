@@ -207,7 +207,8 @@ func settleNotifications(_ nanoseconds: UInt64 = 300_000_000) async {
         let store = InMemoryPrivacyWordStore()
         let subject = vault(store)
         let recorder = ChangeNotificationRecorder(for: store)
-        try subject.save([secret])
+        let grant = try await subject.authenticate(reason: "test")
+        try subject.save([secret], with: grant)
         #expect(store.words == [secret])
         #expect(subject.filter?.pairs == [secret.pair])
         await settleNotifications()
@@ -218,7 +219,8 @@ func settleNotifications(_ nanoseconds: UInt64 = 300_000_000) async {
     func testV13_ignoreOwnPosts() async throws {
         let store = FaultyPrivacyWordStore()
         let subject = vault(store)
-        try subject.save([secret])
+        let grant = try await subject.authenticate(reason: "test")
+        try subject.save([secret], with: grant)
         let reads = store.loadCount
         await settleNotifications()
         #expect(store.loadCount == reads)
@@ -255,10 +257,11 @@ func settleNotifications(_ nanoseconds: UInt64 = 300_000_000) async {
     }
 
     @Test("V17: save drops words with an empty alias or real")
-    func testV17_saveNormalises() throws {
+    func testV17_saveNormalises() async throws {
         let store = InMemoryPrivacyWordStore()
         let subject = vault(store)
-        try subject.save([secret, PrivacyWord(alias: "", real: "x"), PrivacyWord(alias: "y", real: "")])
+        let grant = try await subject.authenticate(reason: "test")
+        try subject.save([secret, PrivacyWord(alias: "", real: "x"), PrivacyWord(alias: "y", real: "")], with: grant)
         #expect(store.words == [secret])
         #expect(subject.words == [secret])
     }
@@ -275,12 +278,12 @@ func settleNotifications(_ nanoseconds: UInt64 = 300_000_000) async {
     }
 
     @Test("V19: a store write failure propagates and leaves the words unchanged")
-    func testV19_saveStoreError() throws {
+    func testV19_saveStoreError() async throws {
         let store = FaultyPrivacyWordStore(InMemoryPrivacyWordStore(words: [secret]))
         let subject = vault(store)
-        try subject.load()
+        let grant = try await subject.authenticate(reason: "test")
         store.failSaves = true
-        #expect(throws: PrivacyWordStore.StoreError.self) { try subject.save([siteWord]) }
+        #expect(throws: PrivacyWordStore.StoreError.self) { try subject.save([siteWord], with: grant) }
         #expect(subject.words == [secret])
     }
 
@@ -298,7 +301,8 @@ func settleNotifications(_ nanoseconds: UInt64 = 300_000_000) async {
         let store = InMemoryPrivacyWordStore()
         let subject = vault(store)
         let recorder = ChangeNotificationRecorder(for: store)
-        try subject.save([secret])
+        let grant = try await subject.authenticate(reason: "test")
+        try subject.save([secret], with: grant)
         await settleNotifications()
         let note = try #require(recorder.notes.first)
         #expect(!note.hasUserInfo)
@@ -370,17 +374,18 @@ func settleNotifications(_ nanoseconds: UInt64 = 300_000_000) async {
     }
 
     @Test("V27: save goes to the replacement store")
-    func testV27_saveAfterReplace() throws {
+    func testV27_saveAfterReplace() async throws {
         let old = InMemoryPrivacyWordStore()
         let new = InMemoryPrivacyWordStore()
         let subject = vault(old)
         subject.replaceStore(new, authenticator: ScriptedOwnerAuthenticator())
-        try subject.save([secret])
+        let grant = try await subject.authenticate(reason: "test")
+        try subject.save([secret], with: grant)
         #expect(new.words == [secret])
         #expect(old.words == [])
     }
 
-    @Test("V28: a store swapped while the prompt is up is not read by that authentication")
+    @Test("V28: a store swapped while the prompt is up is not read, and that authentication grants nothing")
     func testV28_replaceDuringPrompt() async throws {
         let owner = ScriptedOwnerAuthenticator(delayNanoseconds: 200_000_000)
         let old = FaultyPrivacyWordStore(InMemoryPrivacyWordStore(words: [secret]))
@@ -389,9 +394,44 @@ func settleNotifications(_ nanoseconds: UInt64 = 300_000_000) async {
         try? await Task.sleep(nanoseconds: 50_000_000)
         let new = FaultyPrivacyWordStore(InMemoryPrivacyWordStore(words: [siteWord]))
         subject.replaceStore(new, authenticator: owner)
-        try await pending.value
+        await #expect(throws: PrivacyWordsGrant.Revoked.self) { try await pending.value }
         #expect(old.loadCount == 0)
         #expect(new.loadCount == 0)
         #expect(subject.isLoaded == false)
+    }
+
+    @Test("V29: a grant shows the words it was issued for")
+    func testV29_grantShowsWords() async throws {
+        let subject = vault(InMemoryPrivacyWordStore(words: [secret]))
+        let grant = try await subject.authenticate(reason: "test")
+        #expect(subject.isValid(grant))
+        #expect(try subject.words(with: grant) == [secret])
+    }
+
+    @Test("V30: replacing the store revokes every grant: no words shown, nothing saved")
+    func testV30_replaceRevokes() async throws {
+        let testing = InMemoryPrivacyWordStore(words: [siteWord])
+        let real = InMemoryPrivacyWordStore(words: [secret])
+        // Testing words answer without a prompt; the real ones must not ride on that.
+        let subject = vault(testing)
+        let grant = try await subject.authenticate(reason: "test")
+        let generation = subject.grantGeneration
+        subject.replaceStore(real, authenticator: ScriptedOwnerAuthenticator())
+        #expect(subject.grantGeneration == generation + 1)
+        #expect(!subject.isValid(grant))
+        #expect(throws: PrivacyWordsGrant.Revoked.self) { try subject.words(with: grant) }
+        #expect(throws: PrivacyWordsGrant.Revoked.self) { try subject.save([siteWord], with: grant) }
+        #expect(real.words == [secret])
+    }
+
+    @Test("V31: after a replacement, a new authentication grants the new store's words")
+    func testV31_reauthenticateAfterReplace() async throws {
+        let owner = ScriptedOwnerAuthenticator()
+        let subject = vault(InMemoryPrivacyWordStore(words: [siteWord]), owner)
+        _ = try await subject.authenticate(reason: "test")
+        subject.replaceStore(InMemoryPrivacyWordStore(words: [secret]), authenticator: owner)
+        let grant = try await subject.authenticate(reason: "test")
+        #expect(owner.promptCount == 2)
+        #expect(try subject.words(with: grant) == [secret])
     }
 }

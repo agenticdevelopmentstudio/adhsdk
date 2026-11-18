@@ -7,6 +7,7 @@
 - **reveal-failure-message**: When authentication fails, the screen MUST stay up and the screen message MUST show the error's localized description.
 - **reveal-starts-shell**: A successful reveal MUST give the session the vault's filter if one exists, which starts the shell the first time, before setting `isRevealed` true.
 - **hide-no-auth**: `hide()` MUST put the privacy screen back up without asking for authentication.
+- **hide-on-revoke**: When the vault's `grantGeneration` changes (the store was replaced), the controller MUST hide, so a terminal revealed under the old store's authentication does not stay revealed.
 - **reveal-state-views**: When `isRevealed` changes, the privacy screen MUST be hidden exactly when revealed, the terminal view MUST be hidden exactly when not revealed, and the concealed container's reveal flag MUST equal `isRevealed`.
 - **reveal-focus**: On reveal the controller MUST make the terminal view the window's first responder on the next main-queue turn.
 - **hide-resigns-focus**: On hide, when the window's first responder is a view inside the concealed container, the controller MUST clear the first responder so keystrokes do not go into a terminal nobody can see.

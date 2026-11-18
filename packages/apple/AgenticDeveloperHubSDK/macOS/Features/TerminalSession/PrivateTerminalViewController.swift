@@ -148,6 +148,15 @@ public final class PrivateTerminalViewController: NSViewController {
             }
             .store(in: &cancellables)
 
+        // The words were swapped for another store's: seeing the terminal was
+        // proved against the old ones, so the screen goes back up until the
+        // owner authenticates again.
+        vault.$grantGeneration
+            .dropFirst()
+            .receive(on: RunLoop.main)
+            .sink { [weak self] _ in self?.hide() }
+            .store(in: &cancellables)
+
         UserSettings.shared.changes
             .filter { TerminalAppearance.settingKeys.contains($0) }
             .receive(on: RunLoop.main)

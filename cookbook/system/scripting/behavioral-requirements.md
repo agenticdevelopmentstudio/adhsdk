@@ -17,4 +17,4 @@
 - **element-specifier-nil-fallback**: The element-locator helper MUST return an absent value when the application's own class description does not resolve to a scripting class description.
 - **element-specifier-runs-on-serialized-context**: The element-locator helper MUST perform the application's-class-description read, the unique-id call, and the locator construction from inside a bridge onto the platform's serialized main execution context.
 - **element-specifier-no-container-specifier**: The element-locator helper MUST pass an absent container locator, since every element it addresses hangs directly off the application.
-
+- **screenshot-respects-capture-exclusion**: `screenshot window` MUST refuse, with `NSOperationNotSupportedForKeyScriptError` and no file, a window whose `sharingType` is `.none`, so a window that keeps itself out of screen capture (the Secrets window, a revealed private terminal) is never photographed for a script.

@@ -9,6 +9,10 @@
 - **load-other-errors**: `load()` MUST propagate any other store error (`keychain`, `unreadable`) unchanged.
 - **load-empty**: `load()` on a keychain with no item MUST succeed and publish a filter with no pairs, so `isLoaded` is true.
 - **authenticate-prompts-every-time**: `authenticate(reason:)` MUST prompt for owner authentication on every call and MUST NOT remember a success.
+- **authenticate-grants**: A successful `authenticate(reason:)` MUST return a `PrivacyWordsGrant` for the store it authenticated against; a grant MUST NOT be constructible outside the vault's module.
+- **authenticate-store-swapped**: When `replaceStore(_:authenticator:)` runs while the prompt is up, `authenticate` MUST throw `PrivacyWordsGrant.Revoked`, MUST NOT read either store, and MUST NOT return a grant.
+- **words-need-grant**: `words(with:)` MUST return the stored words (or `[]` when there are none) only for a grant that is still valid, and MUST throw `PrivacyWordsGrant.Revoked` otherwise. Anything that shows the words reads them this way; the published `words` and `filter` are for filtering, never for display.
+- **replace-revokes-grants**: `replaceStore(_:authenticator:)` MUST invalidate every outstanding grant before the words change, and MUST change the published `grantGeneration`, so whatever shows words or concealed content under a grant hides until the owner authenticates again.
 - **authenticate-errors**: `authenticate(reason:)` MUST propagate the `authenticationFailed` error from `PrivacyWordStore.authenticate(reason:)` and MUST NOT change `filter` when it fails.
 - **authenticate-rereads**: After a successful authentication, `authenticate` MUST read the words from the store again even when they are already in memory, and replace `filter` with them, because another app may have saved since.
 - **authenticate-upgrades**: When that read throws `needsAuthentication`, `authenticate` MUST read again with the authenticated context, save those pairs back so the item is rewritten without the old guard, and set `filter` to them.
@@ -16,7 +20,7 @@
 - **upgrade-shared**: While an upgrade is in progress, further calls to `loadUpgradingIfNeeded()` MUST await that same upgrade rather than starting a second prompt, so private terminals starting together share one prompt.
 - **authenticate-store-error**: When the re-read or the upgrade read or write inside `authenticate` throws a store error, `authenticate` MUST propagate that error and MUST NOT change `filter`.
 - **upgrade-cleared**: The in-progress upgrade MUST be cleared when the call that started it finishes, whether it succeeded or threw.
-- **save-authenticates**: `save(_:reason:)` MUST call `authenticate(reason:)` first and MUST NOT write to the store when authentication throws.
+- **save-needs-grant**: `save(_:with:)` MUST NOT prompt; it MUST throw `PrivacyWordsGrant.Revoked` without writing when the grant is no longer valid.
 - **save-normalises**: `save` MUST build a `TextSubstitutionFilter` from the given pairs and persist its `pairs`, so pairs with an empty alias or real are dropped before storing.
 - **save-applies**: After a successful write, `save` MUST set `filter` to the new filter.
 - **save-store-error**: `save` MUST propagate a store error from the write and MUST NOT change `filter` to the new words when the write throws.

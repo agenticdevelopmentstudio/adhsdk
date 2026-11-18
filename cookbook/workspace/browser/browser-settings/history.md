@@ -1,7 +1,7 @@
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
-| 0.1.11 | 2026-11-18 | Mike Fullerton | Agent privacy: Open Secrets… opens the Secrets window; its testing-words rows moved to Settings > Features > Secrets; the privacy toolbar's strip is claimed here. |
+| 0.2.0 | 2026-11-18 | Mike Fullerton | Privacy toolbar: bordered groups and bezels, green for protections in force, coloured eye, Secrets button and settings gear, legible shared-jar Cookies |
 | 0.1.10 | 2026-11-18 | Mike Fullerton | Privacy toolbar: General / Events / Agents groups of toggle buttons, red while protecting, labels state their state. |
 | 0.1.9 | 2026-11-18 | Mike Fullerton | Privacy and Security in General / Events / Agents tabs; Show privacy toolbar removed; Agent access as On/Off plus Read only. |
 | 0.1.8 | 2026-11-18 | Mike Fullerton | Agent Privacy gains the two model-automation switches (Settings window only), moved from the retired Automation panel |

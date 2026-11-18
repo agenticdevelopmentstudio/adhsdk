@@ -4,7 +4,7 @@
     "id": "0ca47bff-576f-4e2a-b3f0-5fc0c73ff859",
     "title": "Private Terminal View Controller",
     "type": "ingredient",
-    "version": "1.0.1",
+    "version": "2.0.0",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -29,7 +29,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "2e11fdeee9b42918",
+  "synced": "1e9e0b79723112f5",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

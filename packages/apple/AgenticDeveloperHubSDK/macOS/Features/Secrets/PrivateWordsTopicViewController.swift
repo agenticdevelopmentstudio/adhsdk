@@ -14,9 +14,10 @@ import AgenticDeveloperHubSDKCoreUI
 /// and nothing to confirm. A row with only one half of its pair is kept in
 /// the table, tinted, and left out of what is saved until it is whole.
 ///
-/// The rows exist only while the window is unlocked: ``load()`` fills the
-/// table from the vault's words and ``unload()`` empties it, so a locked
-/// window holds no word in memory. A change saved by another app while it is
+/// The rows exist only while the window is unlocked: ``load(grant:)`` fills
+/// the table from the vault's words under the grant the window unlocked
+/// with, and ``unload()`` empties it, so a locked window holds no word in
+/// memory. A revoked grant reads and saves nothing. A change saved by another app while it is
 /// open replaces the rows, unless it is this table's own save coming back.
 @MainActor
 final class PrivateWordsTopicViewController: NSViewController {
@@ -46,6 +47,9 @@ final class PrivateWordsTopicViewController: NSViewController {
     private let card: ComposableSettings.EditableTableCard
     nonisolated(unsafe) private var tabObserver: NSObjectProtocol?
     private var wordsObserver: AnyCancellable?
+    /// What the window unlocked with: the only way to the words, for reading
+    /// and for saving. Nil while the table is empty.
+    private var grant: PrivacyWordsGrant?
     /// Shows a save that failed.
     var onSaveError: ((Error) -> Void)?
 
@@ -103,15 +107,21 @@ final class PrivateWordsTopicViewController: NSViewController {
 
     // MARK: - Loading
 
-    /// Fills the table from the vault's words and follows later changes.
-    func load() {
+    /// Fills the table from the vault's words under `grant` and follows later
+    /// changes while the grant holds.
+    ///
+    /// - Throws: ``PrivacyWordsGrant/Revoked`` when `grant` no longer holds;
+    ///   the table stays empty.
+    func load(grant: PrivacyWordsGrant) throws {
         loadViewIfNeeded()
-        reload(from: vault.words ?? [])
+        reload(from: try vault.words(with: grant))
+        self.grant = grant
         wordsObserver = vault.$words
             .dropFirst()
             .receive(on: RunLoop.main)
-            .sink { [weak self] words in
-                guard let self, let words, words != self.lastSaved else { return }
+            .sink { [weak self] _ in
+                guard let self, let grant = self.grant,
+                      let words = try? self.vault.words(with: grant), words != self.lastSaved else { return }
                 self.reload(from: words)
             }
     }
@@ -120,6 +130,7 @@ final class PrivateWordsTopicViewController: NSViewController {
     func unload() {
         commitCellEditing()
         wordsObserver = nil
+        grant = nil
         rows.removeAll()
         lastSaved = nil
         if isViewLoaded { card.setRows([]) }
@@ -145,10 +156,10 @@ final class PrivateWordsTopicViewController: NSViewController {
 
     private func save() {
         let kept = rows.map(\.word).filter { !$0.alias.isEmpty && !$0.real.isEmpty }
-        guard kept != lastSaved else { return }
+        guard kept != lastSaved, let grant else { return }
         lastSaved = kept
         do {
-            try vault.save(kept)
+            try vault.save(kept, with: grant)
         } catch {
             onSaveError?(error)
         }

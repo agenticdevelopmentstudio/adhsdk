@@ -1,0 +1,33 @@
+
+- **main-actor**: The vault MUST be a `@MainActor` final class conforming to `ObservableObject`; all of its operations run on the main actor.
+- **store-injected**: The vault MUST be created with a `PrivacyWordStore`, exposed as the read-only property `store`.
+- **filter-published**: `filter` MUST be a published, publicly read-only `TextSubstitutionFilter?` that is nil until the words have been read.
+- **is-loaded**: `isLoaded` MUST be true exactly when `filter` is non-nil.
+- **load-silent**: `load()` MUST return true without touching the store when the words are already in memory.
+- **load-reads-store**: When the words are not in memory, `load()` MUST read them with `store.load()`, build a filter from the pairs (which drops any pair with an empty alias or real), publish it and return true.
+- **load-needs-auth**: `load()` MUST return false and leave `filter` nil when the store throws `needsAuthentication`; this is the case only for words still saved under the old `userPresence` guard.
+- **load-other-errors**: `load()` MUST propagate any other store error (`keychain`, `unreadable`) unchanged.
+- **load-empty**: `load()` on a keychain with no item MUST succeed and publish a filter with no pairs, so `isLoaded` is true.
+- **authenticate-prompts-every-time**: `authenticate(reason:)` MUST prompt for owner authentication on every call and MUST NOT remember a success.
+- **authenticate-errors**: `authenticate(reason:)` MUST propagate the `authenticationFailed` error from `PrivacyWordStore.authenticate(reason:)` and MUST NOT change `filter` when it fails.
+- **authenticate-rereads**: After a successful authentication, `authenticate` MUST read the words from the store again even when they are already in memory, and replace `filter` with them, because another app may have saved since.
+- **authenticate-upgrades**: When that read throws `needsAuthentication`, `authenticate` MUST read again with the authenticated context, save those pairs back so the item is rewritten without the old guard, and set `filter` to them.
+- **load-upgrading**: `loadUpgradingIfNeeded()` MUST return silently when `load()` returns true; only when `load()` returns false MUST it call `authenticate` with the reason `upgrade how the privacy words are stored. This is asked once`; any error `load()` throws (`keychain`, `unreadable`) MUST propagate without prompting.
+- **upgrade-shared**: While an upgrade is in progress, further calls to `loadUpgradingIfNeeded()` MUST await that same upgrade rather than starting a second prompt, so private terminals starting together share one prompt.
+- **authenticate-store-error**: When the re-read or the upgrade read or write inside `authenticate` throws a store error, `authenticate` MUST propagate that error and MUST NOT change `filter`.
+- **upgrade-cleared**: The in-progress upgrade MUST be cleared when the call that started it finishes, whether it succeeded or threw.
+- **save-authenticates**: `save(_:reason:)` MUST call `authenticate(reason:)` first and MUST NOT write to the store when authentication throws.
+- **save-normalises**: `save` MUST build a `TextSubstitutionFilter` from the given pairs and persist its `pairs`, so pairs with an empty alias or real are dropped before storing.
+- **save-applies**: After a successful write, `save` MUST set `filter` to the new filter.
+- **save-store-error**: `save` MUST propagate a store error from the write and MUST NOT change `filter` to the new words when the write throws.
+- **persist-announces**: A successful store write MUST post a distributed notification with delivery immediately, named by `changedNotification(for:)`, with the process identifier as its string object and no user info.
+- **notification-name**: `changedNotification(for:)` MUST return the name `<service>.<account>.changed` built from the store's `service` and `account`, so vaults sharing an item share a name.
+- **notification-no-words**: The notification MUST NOT carry any alias or real word.
+- **observe-changes**: The vault MUST observe that notification for its store on the main queue from creation until deallocation, and MUST remove the observer on deinit.
+- **ignore-own-posts**: A notification whose object equals this process's identifier string MUST be ignored, so a vault does not reload from its own save.
+- **reload-if-loaded**: On another process's notification, the vault MUST read the words again and replace `filter` only when it is already loaded; a vault that never loaded MUST do nothing.
+- **reload-failure-ignored**: NEEDS REVIEW: Not implemented in source. When the reload read throws (a locked Mac, an unreadable value, an item back under authentication), the vault discards the error with `try?` and keeps the old filter with no log, state or callback, so the app keeps concealing with words another app has already replaced. Evidence that would settle it: the pending Design Decision on reload failure.
+- **plain-memory**: The vault MUST hold the words only in memory and in the keychain through the store; it MUST NOT write them elsewhere.
+- **concurrency**: Synchronous steps (`load`, the write inside `save`, a reload) MUST NOT interleave with each other; steps separated by `await` (the authentication in `authenticate`, `save` and the upgrade) MAY interleave with other main-actor calls, and two overlapping `save` calls MUST apply in the order their writes run, the later write winning.
+- **no-timeout-no-retry**: The vault MUST NOT retry a failed store call or time out an authentication.
+

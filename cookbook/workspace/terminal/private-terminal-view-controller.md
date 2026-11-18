@@ -2,7 +2,7 @@
 id: 0ca47bff-576f-4e2a-b3f0-5fc0c73ff859
 title: "Private Terminal View Controller"
 type: ingredient
-version: 1.0.1
+version: 2.0.0
 status: review
 language: en
 created: 2026-11-14
@@ -45,6 +45,7 @@ Nothing outside the app can read the terminal. The terminal sits inside a concea
 - **reveal-failure-message**: When authentication fails, the screen MUST stay up and the screen message MUST show the error's localized description.
 - **reveal-starts-shell**: A successful reveal MUST give the session the vault's filter if one exists, which starts the shell the first time, before setting `isRevealed` true.
 - **hide-no-auth**: `hide()` MUST put the privacy screen back up without asking for authentication.
+- **hide-on-revoke**: When the vault's `grantGeneration` changes (the store was replaced), the controller MUST hide, so a terminal revealed under the old store's authentication does not stay revealed.
 - **reveal-state-views**: When `isRevealed` changes, the privacy screen MUST be hidden exactly when revealed, the terminal view MUST be hidden exactly when not revealed, and the concealed container's reveal flag MUST equal `isRevealed`.
 - **reveal-focus**: On reveal the controller MUST make the terminal view the window's first responder on the next main-queue turn.
 - **hide-resigns-focus**: On hide, when the window's first responder is a view inside the concealed container, the controller MUST clear the first responder so keystrokes do not go into a terminal nobody can see.
@@ -218,16 +219,6 @@ Not applicable: the controller calls no logging API, so words and stream content
 - **AppKit / UIKit**: The source uses `NSViewController` with `ThemedBackgroundView`, `ThemedLabel`, `ConcealedContainerView`, `FrameHoldingView`, `NSStackView` and Combine subscriptions for the vault and settings, and conforms to the pane protocols for accessories, options, connecting, teardown, removal confirmation and spacing. On UIKit use `LAContext` for authentication, `accessibilityElementsHidden` for the terminal, and hide the content with a blur view; excluding capture needs `UIScreen.isCaptured` observation.
 - **WinUI 3**: Use a `UserControl` with a `Grid` holding the terminal control and an overlay `Grid` whose `Visibility` is bound to `IsRevealed`, containing a `Button` with a `FontIcon` (glyph for a hidden eye) and a `TextBlock` with `TextWrapping="Wrap"` and `MaxWidth="320"`. Authenticate each reveal with `Windows.Security.Credentials.UI.UserConsentVerifier.RequestVerificationAsync`, mapping a non-verified result to the message text. Keep the terminal out of UI Automation by returning null from `OnCreateAutomationPeer` or setting `AutomationProperties.AccessibilityView="Raw"` on its container while leaving the eye `Content` with an `AutomationProperties.Name`. Exclude the window from capture with `SetWindowDisplayAffinity` and `WDA_EXCLUDEFROMCAPTURE` while revealed. Move focus to the terminal with `Focus(FocusState.Programmatic)` on the next dispatcher turn (`DispatcherQueue.TryEnqueue`) and clear focus on hide with `FocusManager`.
 
-## Reference Implementations
-
-| Platform | Location | Conformance |
-|----------|----------|-------------|
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/TerminalSession/PrivateTerminalViewController.swift` | confirmed (1.0.1) |
-| apple | (planned) | planned |
-| web | (planned) | planned |
-| android | (planned) | planned |
-| windows | (planned) | planned |
-
 ## Design Decisions
 
 **Decision**: Authenticate on every reveal and never on hide.
@@ -274,4 +265,4 @@ Separation of concerns is partial: authentication and word storage live in the v
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
-| 1.0.1 | 2026-11-18 | Mike Fullerton | Open Secrets… replaces Edit Privacy Words (no authentication or alert of its own); words come from filter(forTerminalAt:) for the start directory. Vectors 016 and 017 removed. |
+| 2.0.0 | 2026-11-18 | Mike Fullerton | Hides when the vault revokes its grants (store replaced) |

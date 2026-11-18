@@ -1,4 +1,5 @@
 import AppKit
+import Combine
 import os
 import AgenticDeveloperHubSDKCore
 import AgenticDeveloperHubSDKCoreUI
@@ -57,6 +58,8 @@ public final class SecretsWindowController: NSWindowController, NSWindowDelegate
     private let overlay = SecretsObscuredView()
     private lazy var lockPolicy = SecretsLockPolicy { [weak self] in self?.lock() }
     private var observers: [NSObjectProtocol] = []
+    /// Locks the window when the vault revokes the grant it unlocked with.
+    private var grantObserver: AnyCancellable?
     private var settingsPopover: NSPopover?
     /// A word to open once the window unlocks ("Replace Private Word…").
     private var pendingWord: String?
@@ -123,6 +126,7 @@ public final class SecretsWindowController: NSWindowController, NSWindowDelegate
         words.onSaveError = { [weak self] error in self?.showSaveError(error) }
         overlay.onAction = { [weak self] in self?.overlayPressed() }
         observeFrontness()
+        observeGrants()
         update()
     }
 
@@ -195,6 +199,16 @@ public final class SecretsWindowController: NSWindowController, NSWindowDelegate
         }
     }
 
+    /// The words were swapped for another store's (testing words on or off):
+    /// what the owner proved was the right to see the old ones, so the window
+    /// locks and the new ones need an authentication of their own.
+    private func observeGrants() {
+        grantObserver = vault.$grantGeneration
+            .dropFirst()
+            .receive(on: RunLoop.main)
+            .sink { [weak self] _ in self?.lock() }
+    }
+
     /// Asks the Mac owner to authenticate, then reads the words and shows them.
     func unlock() {
         guard !isUnlocked, !isAuthenticating else { return }
@@ -202,10 +216,10 @@ public final class SecretsWindowController: NSWindowController, NSWindowDelegate
         Task { [weak self] in
             guard let self else { return }
             do {
-                try await self.vault.authenticate(reason: "show your secrets")
+                let grant = try await self.vault.authenticate(reason: "show your secrets")
                 self.isAuthenticating = false
                 guard Self.shown === self else { return }
-                self.words.load()
+                try self.words.load(grant: grant)
                 // Authenticating is asking to see them: a hide left over from
                 // before the lock does not make the owner press Show as well.
                 self.isHiddenByUser = false
@@ -281,7 +295,7 @@ public final class SecretsWindowController: NSWindowController, NSWindowDelegate
             return
         }
         guard let anchor = toolbarButton(Identifier.settings) else { return }
-        let panel = SecretsSettingsPanel(vault: vault, showsOpenButton: false)
+        let panel = SecretsSettingsPanel()
         let container = NSViewController()
         container.view = NSView(frame: NSRect(x: 0, y: 0, width: 440, height: 300))
         container.addChild(panel)
@@ -471,9 +485,16 @@ final class SecretsObscuredView: NSView {
         button.target = self
         button.action = #selector(pressed(_:))
         button.setAccessibilityIdentifier("secrets.overlay.action")
-        let stack = NSStackView(views: [eye, button])
+        let note = NSTextField(labelWithString: "Agents are never allowed to see your secrets")
+        note.font = .systemFont(ofSize: NSFont.systemFontSize)
+        note.textColor = .secondaryLabelColor
+        note.alignment = .center
+        note.setAccessibilityIdentifier("secrets.overlay.note")
+        let stack = NSStackView(views: [eye, note, button])
         stack.orientation = .vertical
+        stack.alignment = .centerX
         stack.spacing = 16
+        stack.setCustomSpacing(10, after: eye)
         stack.translatesAutoresizingMaskIntoConstraints = false
         addSubview(stack)
         NSLayoutConstraint.activate([
@@ -501,11 +522,11 @@ final class SecretsObscuredView: NSView {
     private func apply() {
         switch state {
         case .locked(let isAuthenticating):
-            button.title = "Unlock"
+            button.title = "Unlock Secrets"
             button.isHidden = false
             button.isEnabled = !isAuthenticating
         case .hiddenByUser:
-            button.title = "Show"
+            button.title = "Show Secrets"
             button.isHidden = false
             button.isEnabled = true
         case .notInFront:

@@ -2,7 +2,7 @@
 id: d54db476-c847-4ac0-827e-eae336109f38
 title: "Privacy Words Vault"
 type: ingredient
-version: 1.0.3
+version: 2.0.0
 status: review
 language: en
 created: 2026-11-14
@@ -31,7 +31,7 @@ approved-date: ""
 
 ## Overview
 
-`PrivacyWordsVault` holds the privacy words while the app runs: read from the keychain through a `PrivacyWordStore` when a private terminal first needs them, kept in memory as a `TextSubstitutionFilter`, and nowhere else. One vault serves the whole app, so an edit applies to every private terminal at once. Reading the words to run a terminal never prompts; seeing them does, so showing a terminal, opening the editor and saving each go through `authenticate(reason:)`. Every app that shares the keychain item keeps its own vault, so a save announces itself with a distributed notification and every other vault that already holds the words reads them again. It is a `@MainActor` `ObservableObject` publishing the current filter.
+`PrivacyWordsVault` holds the privacy words while the app runs: read from the keychain through a `PrivacyWordStore` when a private terminal first needs them, kept in memory as a `TextSubstitutionFilter`, and nowhere else. One vault serves the whole app, so an edit applies to every private terminal at once. Reading the words to run a terminal never prompts; seeing them does, and the vault enforces it: `authenticate(reason:)` returns a grant, and showing the words (`words(with:)`) and saving them (`save(_:with:)`) need one. Replacing the store (testing words on or off) revokes every grant, so nothing shown under the old store's authentication stays shown. Every app that shares the keychain item keeps its own vault, so a save announces itself with a distributed notification and every other vault that already holds the words reads them again. It is a `@MainActor` `ObservableObject` publishing the current filter.
 
 ## Behavioral Requirements
 
@@ -45,6 +45,10 @@ approved-date: ""
 - **load-other-errors**: `load()` MUST propagate any other store error (`keychain`, `unreadable`) unchanged.
 - **load-empty**: `load()` on a keychain with no item MUST succeed and publish a filter with no pairs, so `isLoaded` is true.
 - **authenticate-prompts-every-time**: `authenticate(reason:)` MUST prompt for owner authentication on every call and MUST NOT remember a success.
+- **authenticate-grants**: A successful `authenticate(reason:)` MUST return a `PrivacyWordsGrant` for the store it authenticated against; a grant MUST NOT be constructible outside the vault's module.
+- **authenticate-store-swapped**: When `replaceStore(_:authenticator:)` runs while the prompt is up, `authenticate` MUST throw `PrivacyWordsGrant.Revoked`, MUST NOT read either store, and MUST NOT return a grant.
+- **words-need-grant**: `words(with:)` MUST return the stored words (or `[]` when there are none) only for a grant that is still valid, and MUST throw `PrivacyWordsGrant.Revoked` otherwise. Anything that shows the words reads them this way; the published `words` and `filter` are for filtering, never for display.
+- **replace-revokes-grants**: `replaceStore(_:authenticator:)` MUST invalidate every outstanding grant before the words change, and MUST change the published `grantGeneration`, so whatever shows words or concealed content under a grant hides until the owner authenticates again.
 - **authenticate-errors**: `authenticate(reason:)` MUST propagate the `authenticationFailed` error from `PrivacyWordStore.authenticate(reason:)` and MUST NOT change `filter` when it fails.
 - **authenticate-rereads**: After a successful authentication, `authenticate` MUST read the words from the store again even when they are already in memory, and replace `filter` with them, because another app may have saved since.
 - **authenticate-upgrades**: When that read throws `needsAuthentication`, `authenticate` MUST read again with the authenticated context, save those pairs back so the item is rewritten without the old guard, and set `filter` to them.
@@ -52,7 +56,7 @@ approved-date: ""
 - **upgrade-shared**: While an upgrade is in progress, further calls to `loadUpgradingIfNeeded()` MUST await that same upgrade rather than starting a second prompt, so private terminals starting together share one prompt.
 - **authenticate-store-error**: When the re-read or the upgrade read or write inside `authenticate` throws a store error, `authenticate` MUST propagate that error and MUST NOT change `filter`.
 - **upgrade-cleared**: The in-progress upgrade MUST be cleared when the call that started it finishes, whether it succeeded or threw.
-- **save-authenticates**: `save(_:reason:)` MUST call `authenticate(reason:)` first and MUST NOT write to the store when authentication throws.
+- **save-needs-grant**: `save(_:with:)` MUST NOT prompt; it MUST throw `PrivacyWordsGrant.Revoked` without writing when the grant is no longer valid.
 - **save-normalises**: `save` MUST build a `TextSubstitutionFilter` from the given pairs and persist its `pairs`, so pairs with an empty alias or real are dropped before storing.
 - **save-applies**: After a successful write, `save` MUST set `filter` to the new filter.
 - **save-store-error**: `save` MUST propagate a store error from the write and MUST NOT change `filter` to the new words when the write throws.
@@ -96,24 +100,28 @@ The source has no test of its own; `TerminalPaneFamilyTests` only constructs a v
 | privacy-words-vault-008 | authenticate-errors | The owner cancels the prompt; `authenticate(reason:)`. | Throws `authenticationFailed`; `filter` is unchanged. |
 | privacy-words-vault-009 | authenticate-rereads | Loaded vault; another process rewrites the item; `authenticate` succeeds. | `filter` shows the new pairs. |
 | privacy-words-vault-010 | upgrade-shared | The old-guarded item; start `loadUpgradingIfNeeded()` twice together. | One authentication prompt is shown and both calls complete. |
-| privacy-words-vault-011 | save-authenticates | `save(pairs, reason:)` when authentication throws. | The error propagates and the store is not written. |
-| privacy-words-vault-012 | save-applies, persist-announces | `save([Pair(alias: "a", real: "b")], reason:)` with success. | `filter.pairs` equals the pair and a notification named `<service>.<account>.changed` is posted with the process identifier as its object. |
+| privacy-words-vault-011 | save-needs-grant | `save(words, with:)` with a grant revoked by `replaceStore`. | Throws `PrivacyWordsGrant.Revoked` and neither store is written. |
+| privacy-words-vault-012 | save-applies, persist-announces | `authenticate`, then `save([Pair(alias: "a", real: "b")], with:)` that grant. | `filter.pairs` equals the pair and a notification named `<service>.<account>.changed` is posted with the process identifier as its object. |
 | privacy-words-vault-013 | ignore-own-posts | A vault whose own save posts the notification. | With a subscriber on `$filter`, after the save and one pass of the main run loop there is exactly one emission after the save, so the vault did not reload from its own post. |
 | privacy-words-vault-014 | reload-if-loaded | Two vaults on one item, both loaded; one saves. | The other's `filter` becomes the saved pairs. |
 | privacy-words-vault-015 | reload-if-loaded | A vault that never loaded receives another process's notification. | `filter` stays nil and the store is not read. |
 | privacy-words-vault-016 | notification-name | `changedNotification(for:)` with service `s` and account `a`. | `s.a.changed`. |
-| privacy-words-vault-017 | save-normalises | `save([Pair(alias: "a", real: "b"), Pair(alias: "", real: "c")], reason:)` with success; then `store.load()`. | `filter.pairs` and the stored pairs are only `a`/`b`. |
+| privacy-words-vault-017 | save-normalises | `save([Pair(alias: "a", real: "b"), Pair(alias: "", real: "c")], with:)` a valid grant; then `store.load()`. | `filter.pairs` and the stored pairs are only `a`/`b`. |
 | privacy-words-vault-018 | upgrade-cleared | The old-guarded item; `loadUpgradingIfNeeded()` with the owner cancelling, then again with the owner succeeding. | The first call throws `authenticationFailed`; the second prompts again and completes. |
-| privacy-words-vault-019 | save-store-error | `save(pairs, reason:)` with authentication succeeding and the store write throwing (an access group the app is not signed for). | The store error propagates and `filter` is unchanged. |
+| privacy-words-vault-019 | save-store-error | `save(pairs, with:)` a valid grant and the store write throwing (an access group the app is not signed for). | The store error propagates and `filter` is unchanged. |
 | privacy-words-vault-020 | load-upgrading | A loaded vault, or an item with no guard; `loadUpgradingIfNeeded()`. | Returns with no prompt and `isLoaded` is true. |
 | privacy-words-vault-021 | notification-no-words | Observe the distributed notification during `save` of pair `a`/`b`. | The notification has no user info and its object is only the process identifier string, with neither `a` nor `b`. |
 | privacy-words-vault-022 | authenticate-store-error | A loaded vault; authentication succeeds and the re-read throws `keychain`. | The error propagates and `filter` keeps the earlier pairs. |
+| privacy-words-vault-023 | authenticate-grants, words-need-grant | An item holding `a`/`b`; `authenticate` succeeds; `words(with:)` the grant. | The grant is valid and the words are `a`/`b`. |
+| privacy-words-vault-024 | replace-revokes-grants, words-need-grant, save-needs-grant | `authenticate` on store A (testing words, no prompt); `replaceStore(B, …)`. | `grantGeneration` went up by one; the grant is invalid; `words(with:)` and `save(_:with:)` throw `Revoked`; B is unchanged. |
+| privacy-words-vault-025 | replace-revokes-grants, authenticate-prompts-every-time | After vector 024, `authenticate` again. | A second prompt is shown and the new grant shows B's words. |
+| privacy-words-vault-026 | authenticate-store-swapped | `authenticate` with a slow prompt; `replaceStore` while it is up. | `authenticate` throws `Revoked`; neither store was read; the vault is unread. |
 ## Edge Cases
 
 - **Null / empty input**: Empty pairs saved leave the loaded filter with no pairs and the store removes the keychain item (see `PrivacyWordStore`'s `save-empty-removes`). Pairs with an empty side are dropped on load and on save (MUST).
 - **Boundary values**: There is no limit on the number of pairs; whatever `TextSubstitutionFilter` accepts is kept.
-- **Concurrent access**: `@MainActor` isolation serialises synchronous steps; calls overlapping across an `await` can interleave. Many simultaneous `loadUpgradingIfNeeded` calls share one prompt (MUST). Two overlapping `save` calls each authenticate separately and the later write wins (see the concurrency requirement).
-- **Error states**: `load` and `loadUpgradingIfNeeded` throw store errors; `authenticate` and `save` throw authentication and store errors; the failed `save` leaves the previous in-memory filter in place. The reload after another app's save drops its error silently (see the pending Design Decision on reload failure).
+- **Concurrent access**: `@MainActor` isolation serialises synchronous steps; calls overlapping across an `await` can interleave. Many simultaneous `loadUpgradingIfNeeded` calls share one prompt (MUST). Two overlapping `save` calls write in order and the later write wins; a store swapped while a prompt is up makes that `authenticate` throw `Revoked` (see the concurrency requirement).
+- **Error states**: `load` and `loadUpgradingIfNeeded` throw store errors; `authenticate` throws authentication and store errors and `Revoked`; `save` throws `Revoked` and store errors; the failed `save` leaves the previous in-memory filter in place. The reload after another app's save drops its error silently (see the pending Design Decision on reload failure).
 - **Cross-process staleness**: A vault that has not loaded does not follow other apps' saves; its first `load` then reads the current item (MUST).
 - **Notification from the same process**: A second vault in this same process, with the same store, ignores the post because the object is the shared process identifier; it keeps its old words until `authenticate` re-reads .
 - **Upgrade failure**: When the upgrade prompt is refused, the error propagates to every awaiting caller and the pending upgrade is cleared so a later call prompts again (MUST).
@@ -169,17 +177,6 @@ Not applicable: the vault calls no logging API; the words are never written to a
 - **AppKit / UIKit**: The same file serves both; the macOS private terminal and the Secrets window take the vault by injection. `DistributedNotificationCenter` is macOS only; an iOS port has no cross-app notification for the same items and would reload on foreground.
 - **WinUI 3**: A class implementing `INotifyPropertyChanged` raising for `Filter`, marshalled with `DispatcherQueue.TryEnqueue`; `async Task` methods for `AuthenticateAsync`, `SaveAsync` and `LoadUpgradingIfNeededAsync`, with a stored `Task` field for the shared upgrade (cleared in `finally`) and `SemaphoreSlim` if overlapping saves must be ordered. For cross-app announcements use a named `EventWaitHandle`, a `Windows.ApplicationModel.AppService`, or a `FileSystemWatcher` on a shared file; there is no distributed notification equivalent, so the process id tag becomes an instance or process id carried in the signal. Owner proof comes from `UserConsentVerifier`, as in the store.
 
-## Reference Implementations
-
-| Platform | Location | Conformance |
-|----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Privacy/PrivacyWordsVault.swift` | confirmed (1.0.3) |
-| web | (planned) | planned |
-| android | (planned) | planned |
-| windows | (planned) | planned |
-| macos | `packages/apple/AgenticDeveloperHubSDK/Core/Privacy/PrivacyTestingWords.swift` | confirmed (1.0.3) |
-| macos | `packages/apple/AgenticDeveloperHubSDK/Core/Privacy/SystemAuthenticationPrompt.swift` | confirmed (1.0.3) |
-
 ## Design Decisions
 
 **Decision**: Reading the words to run a terminal never prompts, while seeing them does.
@@ -189,6 +186,10 @@ Not applicable: the vault calls no logging API; the words are never written to a
 **Decision**: Authentication success is never remembered; every `authenticate` call prompts and re-reads.
 **Rationale**: The source says this is the barrier against another person at the keyboard; re-reading also protects an editor opened here from writing back a list that predates another app's save.
 **Approved**: pending
+
+**Decision**: Seeing the words is enforced by the vault with a grant, not by each window remembering that it authenticated.
+**Rationale**: A window's own "unlocked" flag survived the testing-words switch: unlocking on the testing words (whose authenticator never prompts) and then switching them off showed the real words without a password. A grant names the store it was issued for and is revoked by `replaceStore`, so the owner authenticates again for the new words.
+**Alternatives considered**: Re-prompting inside `replaceStore` (a settings toggle would raise a password prompt from nowhere); clearing the words on a swap (breaks the browser panes' silent filtering).
 
 **Decision**: Words still saved under the old `userPresence` guard are upgraded by one prompt, shared by terminals starting together.
 **Rationale**: Reading and saving again without the guard means no later start asks; the shared upgrade task stops several terminals stacking prompts, and the prompt text says it is asked once.
@@ -222,6 +223,6 @@ Separation of concerns passes: the vault holds the in-memory words, the authenti
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
-| 1.0.3 | 2026-11-18 | Mike Fullerton | filter(forTerminalAt:) for private terminals; the Secrets window replaces the privacy words editor; the testing-words store and the system prompt are claimed here. |
+| 2.0.0 | 2026-11-18 | Mike Fullerton | Viewing grants: authenticate returns a grant; words(with:) and save(_:with:) need one; replaceStore revokes them all |
 | 1.0.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (PrivacyWordsVaultConformanceTests.swift, 3 of 22 vectors tested, 19 skipped: need a real entitled keychain or owner authentication); unit-test-coverage now partial. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Added authenticate-store-error and a pending reload-failure Design Decision, reworded concurrency and load-upgrading, stated which inputs are not injectable, added six vectors and an observable vector 013, depends-on the store and filter specs, and fixed Compliance categories. |
