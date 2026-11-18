@@ -92,6 +92,12 @@ public final class OptionsDialogViewController: NSViewController {
     public override func loadView() {
         let container = ThemedBackgroundView(role: .windowBackground)
         container.accessibilityID("\(accessibilityPrefix).dialog")
+        // A plain view is flattened out of the accessibility tree, taking its
+        // identifier with it, so the sheet exposed only its Done button and
+        // `<prefix>.dialog` could not be found. A group keeps it (as in
+        // `WindowDrawer`).
+        container.setAccessibilityElement(true)
+        container.setAccessibilityRole(.group)
 
         let stack = NSStackView(views: [headingLabel] + rows)
         stack.orientation = .vertical

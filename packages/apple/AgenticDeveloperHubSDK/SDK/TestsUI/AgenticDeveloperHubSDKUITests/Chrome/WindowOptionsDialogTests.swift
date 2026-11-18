@@ -330,6 +330,20 @@ struct WindowOptionsDialogTests {
         #expect(controller.view.fittingSize.width >= 640)
     }
 
+    /// The dialog's identifier is how a UI test finds the sheet. On a plain
+    /// view AppKit drops it from the accessibility tree, and the sheet showed
+    /// only its Done button.
+    @Test("the dialog is an accessibility group carrying its identifier")
+    func dialogIsAnAccessibilityGroup() {
+        let controller = OptionsDialogViewController(
+            heading: nil, rows: [], accessibilityPrefix: "pane.options")
+        let view = controller.view
+
+        #expect(view.isAccessibilityElement())
+        #expect(view.accessibilityRole() == .group)
+        #expect(view.accessibilityIdentifier() == "pane.options.dialog")
+    }
+
     /// The only way out of the dialog, and the thing a modal presenter binds to
     /// stop its run loop. A `Done` that reported nothing would strand it.
     @Test("Done reports itself to whoever raised the dialog")
