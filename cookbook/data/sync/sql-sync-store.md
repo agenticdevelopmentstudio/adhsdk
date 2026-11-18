@@ -2,11 +2,11 @@
 id: 14ca2162-b5ec-48bb-95a0-90577e7c9810
 title: "SQL Sync Store"
 type: ingredient
-version: 1.2.0
+version: 1.3.0
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-10-04
+modified: 2026-11-18
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -411,6 +411,7 @@ Storage is behind the `SyncStore` and `SyncMirrorProjection` protocols, and `GRD
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.3.0 | 2026-11-18 | Mike Fullerton | Identity change keeps data; account binding and provenance columns replace purgeForIdentityChange |
 | 1.2.0 | 2026-10-04 | Mike Fullerton | Restate stage-mirror-patch as current behavior with a test vector and pending decision. |
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to data/sync/. |
 | 1.0.1 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |
