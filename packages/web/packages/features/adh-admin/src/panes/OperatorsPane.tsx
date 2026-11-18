@@ -7,6 +7,7 @@ import { Button } from "@adh-sdk/ui/components/button";
 import { AlertModal } from "@adh-sdk/ui/components/alert-modal";
 import { errorMessage } from "@adh-sdk/ui/lib/errors";
 import { FeatureTitle } from "@adh-sdk/resource";
+import { useOptionalAuth } from "@adh-sdk/auth";
 import { EditableList, useEditableList, type EditableListColumn } from "../components/editable-list";
 import { formatDate } from "../lib/timestamps";
 
@@ -17,12 +18,25 @@ import { formatDate } from "../lib/timestamps";
  * The one action is per row, because it means nothing across a selection: one operator holds
  * `admin` or does not. Revoking the last holder is refused by the backend (409 `last_operator`),
  * and its message is shown as it was sent, since it already says what to do instead.
+ *
+ * Both directions ask first: a grant hands an operator the whole console and a revoke takes it
+ * away. The signed-in operator's own row offers no revoke at all. The backend refuses only the
+ * LAST holder, so while a second operator exists a self-revoke succeeds and locks the caller out
+ * of the console on the next page load (the admin site requires `admin`).
  */
 export function OperatorsPane({ help }: { help?: ReactNode } = {}): ReactElement {
   const { data: operators, isLoading, error } = useOperators();
   const grantRole = useGrantRole();
   const revokeRole = useRevokeRole();
   const [roleError, setRoleError] = useState<string | null>(null);
+  /** The change a row's button asked for, waiting on its confirmation. */
+  const [confirming, setConfirming] = useState<{
+    op: Operator;
+    action: "grant" | "revoke";
+  } | null>(null);
+  // Optional: the pane also renders in harnesses with no AuthProvider, where no row is the
+  // caller's. That is the closed reading: every row keeps its confirmation either way.
+  const selfId = useOptionalAuth()?.user?.id ?? null;
 
   const columns: EditableListColumn<Operator>[] = useMemo(
     () => [
@@ -50,32 +64,26 @@ export function OperatorsPane({ help }: { help?: ReactNode } = {}): ReactElement
             <span className="flex items-center gap-2">
               {op.holdsAdmin ? <Badge variant="accent">admin</Badge> : null}
               {op.holdsAdmin ? (
-                <Button
-                  size="xs"
-                  variant="destructive-ghost"
-                  aria-label={`Revoke admin from ${label}`}
-                  disabled={revokeRole.isPending}
-                  onClick={() =>
-                    revokeRole.mutate(
-                      { userId: op.id, role: "admin" },
-                      { onError: (e) => setRoleError(errorMessage(e)) },
-                    )
-                  }
-                >
-                  Revoke admin
-                </Button>
+                op.id === selfId ? (
+                  <span className="text-xs text-apt-text-dim">You</span>
+                ) : (
+                  <Button
+                    size="xs"
+                    variant="destructive-ghost"
+                    aria-label={`Revoke admin from ${label}`}
+                    disabled={revokeRole.isPending}
+                    onClick={() => setConfirming({ op, action: "revoke" })}
+                  >
+                    Revoke admin
+                  </Button>
+                )
               ) : (
                 <Button
                   size="xs"
                   variant="ghost"
                   aria-label={`Grant admin to ${label}`}
                   disabled={grantRole.isPending}
-                  onClick={() =>
-                    grantRole.mutate(
-                      { userId: op.id, capability: "admin" },
-                      { onError: (e) => setRoleError(errorMessage(e)) },
-                    )
-                  }
+                  onClick={() => setConfirming({ op, action: "grant" })}
                 >
                   Grant admin
                 </Button>
@@ -93,8 +101,22 @@ export function OperatorsPane({ help }: { help?: ReactNode } = {}): ReactElement
         render: (op) => <span className="text-xs text-apt-text-dim">{formatDate(op.createdAt)}</span>,
       },
     ],
-    [grantRole, revokeRole],
+    [grantRole, revokeRole, selfId],
   );
+
+  /** Run the confirmed change. The modal stays up, busy, until the server answers. */
+  function runConfirmed(): void {
+    if (!confirming) return;
+    const { op, action } = confirming;
+    const onSettled = (): void => setConfirming(null);
+    const onError = (e: unknown): void => setRoleError(errorMessage(e));
+    if (action === "grant")
+      grantRole.mutate({ userId: op.id, capability: "admin" }, { onError, onSettled });
+    else revokeRole.mutate({ userId: op.id, role: "admin" }, { onError, onSettled });
+  }
+  const confirmingLabel = confirming
+    ? confirming.op.email || confirming.op.name || confirming.op.id
+    : "";
 
   const list = useEditableList<Operator>({
     rows: operators,
@@ -128,6 +150,28 @@ export function OperatorsPane({ help }: { help?: ReactNode } = {}): ReactElement
           emptyLabel="No operators yet."
           emptyFilteredLabel="No operators match this search."
         />
+
+        {confirming && (
+          <AlertModal
+            open
+            destructive={confirming.action === "revoke"}
+            title={
+              confirming.action === "grant"
+                ? `Grant admin to ${confirmingLabel}?`
+                : `Revoke admin from ${confirmingLabel}?`
+            }
+            description={
+              confirming.action === "grant"
+                ? "They will be able to sign in to this console and change anything in it."
+                : "They lose this console on their next page load, and cannot sign back in until an operator grants admin again."
+            }
+            cancelLabel="Cancel"
+            onCancel={() => setConfirming(null)}
+            confirmLabel={confirming.action === "grant" ? "Grant admin" : "Revoke admin"}
+            onConfirm={runConfirmed}
+            busy={grantRole.isPending || revokeRole.isPending}
+          />
+        )}
 
         {roleError && (
           <AlertModal
