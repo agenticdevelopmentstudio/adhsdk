@@ -18,8 +18,6 @@ The repository has no test that names `PrivateTerminalViewController`. The vecto
 | private-terminal-view-controller-013 | words-wait-until-asked | Vault publishes a filter before the pane appears | The shell is not started. |
 | private-terminal-view-controller-014 | words-follow-vault, no-notify-on-update | Started shell; the vault publishes a new filter | The session's filter is replaced; no second notification posts. |
 | private-terminal-view-controller-015 | accessory-toggle, accessory-refresh | Reveal with the pane as parent | One accessory button titled "Hide the private terminal"; the parent was asked to refresh accessories. |
-| private-terminal-view-controller-016 | options-edit-words, edit-words-authenticates | Press Edit Privacy Words | The options dialog is dismissed; the vault is asked with "edit the privacy words"; the editor is presented on the window. |
-| private-terminal-view-controller-017 | edit-words-failure-alert | `authenticate` throws "Denied" while pressing Edit | A sheet reads "The privacy words could not be opened." with "Denied". |
 | private-terminal-view-controller-018 | connectable-while-running | Session not started, then running, then exited | Nil, the session, nil. |
 | private-terminal-view-controller-019 | connect-starts-shell, connect-error-propagates | `startConnectableTerminal()` with the upgrading load succeeding, then throwing | Success returns the running session with the screen still up; the throw propagates to the caller. |
 | private-terminal-view-controller-020 | connect-already-started | Shell already started; `startConnectableTerminal()` | Returns the connectable terminal; the vault load is not called. |

@@ -9,7 +9,7 @@ extension UserSettings {
 
     /// Debug builds: the JSON file of testing words (`[PrivacyWord]`, the
     /// keychain item's own encoding). `~` is expanded. Created by the first
-    /// save from Edit Privacy Words… if it is not there.
+    /// save from the Secrets window if it is not there.
     public static let privacyTestingWordsPath = UserSetting<String>(
         "privacy.testing_words.path", default: "")
 }
@@ -21,7 +21,7 @@ extension UserSettings {
 ///
 /// The point is end-to-end testing: on testing words every privacy word
 /// feature runs exactly as it does on the real ones — the browser's page,
-/// title, address and tab names, private terminals, Edit Privacy Words… — but
+/// title, address and tab names, private terminals, the Secrets window — but
 /// over fake words a test wrote, in a file it can read back, with no Touch ID
 /// prompt standing in the way (``UnattendedOwnerAuthenticator``). The real
 /// words are never read while it is on. Because the testing words skip the

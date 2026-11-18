@@ -2,11 +2,11 @@
 id: d54db476-c847-4ac0-827e-eae336109f38
 title: "Privacy Words Vault"
 type: ingredient
-version: 1.0.2
+version: 1.0.3
 status: review
 language: en
 created: 2026-11-14
-modified: 2026-11-14
+modified: 2026-11-18
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -66,6 +66,7 @@ approved-date: ""
 - **plain-memory**: The vault MUST hold the words only in memory and in the keychain through the store; it MUST NOT write them elsewhere.
 - **concurrency**: Synchronous steps (`load`, the write inside `save`, a reload) MUST NOT interleave with each other; steps separated by `await` (the authentication in `authenticate`, `save` and the upgrade) MAY interleave with other main-actor calls, and two overlapping `save` calls MUST apply in the order their writes run, the later write winning.
 - **no-timeout-no-retry**: The vault MUST NOT retry a failed store call or time out an authentication.
+- **filter-for-terminal**: `filter(forTerminalAt:)` MUST return the filter of the loaded words that apply in a private terminal started in that directory, or nil while the words are not loaded.
 
 ## Appearance
 
@@ -165,17 +166,19 @@ Not applicable: the vault calls no logging API; the words are never written to a
 - **SwiftUI**: Source is `Core/Privacy/PrivacyWordsVault.swift`, importing `Combine` and `Foundation`. It is a `@MainActor` `ObservableObject` with a `@Published` filter, usable from SwiftUI with `@StateObject` or `@ObservedObject`. `changeObserver` is `nonisolated(unsafe)` so `deinit` can remove it. The store and filter types are in `Core/Privacy/PrivacyWordStore.swift` and `Core/TextSubstitutionFilter.swift`.
 - **Compose**: A `ViewModel` exposing a `StateFlow` of the filter, with suspend functions for `authenticate`, `save` and `loadUpgradingIfNeeded`, mutated on the main dispatcher; a `Mutex` or a shared `Deferred` replaces the shared upgrade task. Cross-app announcements need an Android `BroadcastReceiver` (package-scoped) or a `ContentObserver`.
 - **React/Web**: A store (for example a `useSyncExternalStore` source) holding the filter; use a shared promise for the one-prompt upgrade. Cross-tab announcements use `BroadcastChannel` with a per-tab identifier in place of the process id; the web has no keychain, so the backing store is the server.
-- **AppKit / UIKit**: The same file serves both; the macOS private terminal and the privacy words editor take the vault by injection. `DistributedNotificationCenter` is macOS only; an iOS port has no cross-app notification for the same items and would reload on foreground.
+- **AppKit / UIKit**: The same file serves both; the macOS private terminal and the Secrets window take the vault by injection. `DistributedNotificationCenter` is macOS only; an iOS port has no cross-app notification for the same items and would reload on foreground.
 - **WinUI 3**: A class implementing `INotifyPropertyChanged` raising for `Filter`, marshalled with `DispatcherQueue.TryEnqueue`; `async Task` methods for `AuthenticateAsync`, `SaveAsync` and `LoadUpgradingIfNeededAsync`, with a stored `Task` field for the shared upgrade (cleared in `finally`) and `SemaphoreSlim` if overlapping saves must be ordered. For cross-app announcements use a named `EventWaitHandle`, a `Windows.ApplicationModel.AppService`, or a `FileSystemWatcher` on a shared file; there is no distributed notification equivalent, so the process id tag becomes an instance or process id carried in the signal. Owner proof comes from `UserConsentVerifier`, as in the store.
 
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Privacy/PrivacyWordsVault.swift` | confirmed (1.0.2) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Privacy/PrivacyWordsVault.swift` | confirmed (1.0.3) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
+| macos | `packages/apple/AgenticDeveloperHubSDK/Core/Privacy/PrivacyTestingWords.swift` | confirmed (1.0.3) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/Core/Privacy/SystemAuthenticationPrompt.swift` | confirmed (1.0.3) |
 
 ## Design Decisions
 
@@ -219,5 +222,6 @@ Separation of concerns passes: the vault holds the in-memory words, the authenti
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.3 | 2026-11-18 | Mike Fullerton | filter(forTerminalAt:) for private terminals; the Secrets window replaces the privacy words editor; the testing-words store and the system prompt are claimed here. |
 | 1.0.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (PrivacyWordsVaultConformanceTests.swift, 3 of 22 vectors tested, 19 skipped: need a real entitled keychain or owner authentication); unit-test-coverage now partial. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Added authenticate-store-error and a pending reload-failure Design Decision, reworded concurrency and load-upgrading, stated which inputs are not injectable, added six vectors and an observable vector 013, depends-on the store and filter specs, and fixed Compliance categories. |

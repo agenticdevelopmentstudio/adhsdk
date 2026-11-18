@@ -33,6 +33,8 @@ approved-date: ""
 
 `AIFeature` is a string-backed enumeration with two cases, `summarize` and `oversight`. Its own doc comment states its purpose: "Which daemon feature asked for a completion — the `ai_interactions` log discriminator." A daemon caller passes one value to the logged completion overload of the daemon AI chat component, which uses it for two things: the `feature` column of the `ai_interactions` log row (the case's raw string), and the choice of which provider settings reader resolves the provider for that completion. The type carries no behavior of its own; it is a closed set of names shared between the caller, the provider settings lookup and the log writer. It performs no I/O.
 
+Two more features summarize sessions: `summarizeConversations` (`summarize_conversations`) for AI Conversations and `summarizeProjects` (`summarize_projects`) for Coding Projects. `AIFeature.summary(for:)` maps a `SummaryFeature` to its case, so the AI log and the guard tell the three apart.
+
 ## Behavioral Requirements
 
 - **case-set**: The type MUST declare exactly two cases, `summarize` and `oversight`, and no others.
@@ -128,7 +130,7 @@ Not applicable: the type contains no logging call; it is the discriminator that 
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/AIFeature.swift` | confirmed (1.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/AIFeature.swift` | confirmed (1.0.1) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -151,10 +153,6 @@ Not applicable: the type contains no logging call; it is the discriminator that 
 | [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
 
 `separation-of-concerns` passes because the type only names two features; the logging, the settings lookup and the completion all live in other components. `unit-test-coverage` is partial because no test sits beside the enumeration itself; its raw values are exercised indirectly by the interaction log tests (`AIInteractionLogTests`), and the oversight provider reader tests (`OversightProviderReaderTests`) exercise `oversightAIProviderSettings` directly, not the equality test that selects it, and nothing asserts the raw values on their own, the selection by feature, or the raw-value initializer's failure on unknown text.
-
-## Per-Feature Summaries
-
-Two more features summarize sessions: `summarizeConversations` (`summarize_conversations`) for AI Conversations and `summarizeProjects` (`summarize_projects`) for Coding Projects. `AIFeature.summary(for:)` maps a `SummaryFeature` to its case, so the AI log and the guard tell the three apart.
 
 ## Change History
 

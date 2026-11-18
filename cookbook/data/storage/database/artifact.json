@@ -4,11 +4,11 @@
     "id": "ea580796-8b16-4832-b11d-ad3cae991ecd",
     "title": "Database",
     "type": "ingredient",
-    "version": "1.2.0",
+    "version": "1.2.1",
     "status": "review",
     "language": "en",
     "created": "2026-09-24",
-    "modified": "2026-10-04",
+    "modified": "2026-11-18",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -39,7 +39,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "7cc87e1eb4971588",
+  "synced": "e62b8c9294912a4e",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

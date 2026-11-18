@@ -9,7 +9,7 @@ import Foundation
 /// caller that asks for authentication brackets the request with ``begin()``
 /// and ``end()``; an app-modal session (`AppModalWindowSession`) steps aside
 /// while ``isShowing`` and comes back when it is not. Whoever asked — the
-/// settings window's Edit Privacy Words, a private terminal being shown, the
+/// Secrets window unlocking, a private terminal being shown, the
 /// one-off upgrade of the words' storage — need not know a modal window is
 /// up.
 @MainActor

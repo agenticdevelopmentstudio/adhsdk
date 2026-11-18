@@ -18,3 +18,5 @@ ground as the sidebar and the window: the cards are what stand out here,
 and a panel-shaped patch of a second near-identical colour behind them
 only reads as a misprint."
 
+`addTabs(_:identifier:)` puts a centred segmented control at the top of the panel and adds every `Tab`'s groups below it, hiding all but the selected tab's. The stack detaches hidden views, so a hidden tab takes no room. `showTab(_:)` selects a tab by index; `tabControl` is the control, for automation.
+

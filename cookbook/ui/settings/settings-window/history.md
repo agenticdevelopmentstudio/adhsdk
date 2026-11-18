@@ -1,6 +1,7 @@
 
 | Version | Date | Author | Summary |
 |---|---|---|---|
+| 1.3.3 | 2026-11-18 | Mike Fullerton | The panel-title item is padded 12pt inside its toolbar pill. |
 | 1.3.2 | 2026-10-04 | Mike Fullerton | Inverted prohibitions (none/neither/no X MUST) restated as MUST NOT. |
 | 1.3.1 | 2026-10-04 | Mike Fullerton | UI-thread confinement restated as the shared confines-to-ui-thread requirement, with a test vector; the @MainActor mechanism is in Platform Notes. |
 | 1.3.0 | 2026-10-04 | Mike Fullerton | Resolved the minimum-contrast-ratio marker as current behavior (theme palette roles, no contrast check in SettingsWindow) with a pending Design Decision; added separation-of-concerns (passed) and unit-test-coverage (failed, no SettingsWindow tests) compliance rows. |

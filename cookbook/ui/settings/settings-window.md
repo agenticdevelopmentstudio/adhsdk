@@ -2,11 +2,11 @@
 id: 7cac2263-94fe-47ec-ab1d-6cf5a12baf14
 title: "Settings Window"
 type: ingredient
-version: 1.3.2
+version: 1.3.3
 status: review
 language: en
 created: 2026-09-23
-modified: 2026-10-04
+modified: 2026-11-18
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -167,9 +167,11 @@ way.
 
 - **Corner radius**: Not applicable — a standard system window; this file
   draws no custom-cornered chrome.
-- **Padding**: Not decided in this file — header-bar item spacing follows
-  the platform's standard header-bar layout, and a panel's own content
-  padding is decided by that panel's own ingredient, a separate concept.
+- **Padding**: The panel-title item's view pads its symbol and title by
+  12pt on the leading and trailing sides, because macOS 26 draws a toolbar
+  view inside a glass pill and an unpadded title sat hard against its ends.
+  Other header-bar item spacing follows the platform's standard layout, and
+  a panel's own content padding is decided by that panel's own ingredient.
 - **Font**: The panel-title item's font is the active theme palette's
   heading text-role font, not a literal point size chosen in this file. The
   help control's icon is rendered at 15pt, regular weight.
@@ -519,7 +521,7 @@ Not applicable: no logging call appears anywhere in this file.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/SettingsWindow.swift` | confirmed (1.3.2) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/SettingsWindow.swift` | confirmed (1.3.3) |
 
 ## Design Decisions
 
@@ -626,6 +628,7 @@ localization key (see Localization).
 
 | Version | Date | Author | Summary |
 |---|---|---|---|
+| 1.3.3 | 2026-11-18 | Mike Fullerton | The panel-title item is padded 12pt inside its toolbar pill. |
 | 1.3.2 | 2026-10-04 | Mike Fullerton | Inverted prohibitions (none/neither/no X MUST) restated as MUST NOT. |
 | 1.3.1 | 2026-10-04 | Mike Fullerton | UI-thread confinement restated as the shared confines-to-ui-thread requirement, with a test vector; the @MainActor mechanism is in Platform Notes. |
 | 1.3.0 | 2026-10-04 | Mike Fullerton | Resolved the minimum-contrast-ratio marker as current behavior (theme palette roles, no contrast check in SettingsWindow) with a pending Design Decision; added separation-of-concerns (passed) and unit-test-coverage (failed, no SettingsWindow tests) compliance rows. |

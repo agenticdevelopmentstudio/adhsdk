@@ -12,8 +12,9 @@ import LocalAuthentication
 /// which does not ask again — the editor was opened by whoever proved they
 /// may see the words.
 ///
-/// Private terminals read ``filter``: the enabled words whose sites are `*`.
-/// A web browser pane reads ``filter(for:)`` with its page's address: the
+/// A private terminal reads ``filter(forTerminalAt:)`` with the directory it
+/// started in: the enabled words whose terminals match it. ``filter`` is the
+/// enabled words whose sites are `*`. A web browser pane reads ``filter(for:)`` with its page's address: the
 /// enabled words whose sites match it (``PrivacyWord``).
 ///
 /// Where the words live and who is asked before they are shown are both
@@ -53,6 +54,12 @@ public final class PrivacyWordsVault: ObservableObject {
     /// not been read. `nil` for `url` gives ``filter``.
     public func filter(for url: URL?) -> TextSubstitutionFilter? {
         words?.filter(for: url)
+    }
+
+    /// The words for a private terminal started in `directory`
+    /// (``PrivacyWord/terminals``), or `nil` while the words have not been read.
+    public func filter(forTerminalAt directory: String?) -> TextSubstitutionFilter? {
+        words?.filter(forTerminalAt: directory)
     }
 
     /// Every enabled word whatever its sites, or nil while the words have not

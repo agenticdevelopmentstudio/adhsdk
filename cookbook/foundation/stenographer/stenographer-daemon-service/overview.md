@@ -5,3 +5,5 @@ The records the operations carry are specified by the session DTOs ([adhsdk.ingr
 
 The protocol is the contract that matters: what each operation asks, what it answers, and what "the daemon could not be reached" looks like to a caller. The routes, query spelling, timeouts and reconnect polling belong to the implementation and are described under Platform Notes and Edge Cases only where a conforming port must match them.
 
+`summaryPreferences(feature:)` reads one feature's summary preferences; the protocol extension's default answers Sessions' for conformers that predate it.
+

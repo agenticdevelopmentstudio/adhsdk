@@ -2,7 +2,7 @@
 id: 8bd94d87-6096-4fb1-82a7-d5f712c2958f
 title: "Agent Page Builder (Agent Gatekeeper)"
 type: ingredient
-version: 0.1.5
+version: 0.1.6
 status: draft
 language: en
 created: 2026-11-15
@@ -75,6 +75,8 @@ walker error, a timeout, a malformed payload or an unreadable privacy-word
 vault yields an empty page carrying a reason. The component always runs —
 there is no branch on privacy settings choosing whether to use it; settings
 only change what it filters.
+
+The Agent view's rendering collapses every run of blank or whitespace-only lines to a single break, so empty elements, spacer divs and pre-formatted padding never draw as a column of empty lines (`AgentHTMLRenderer`).
 
 ## Behavioral Requirements
 
@@ -578,19 +580,19 @@ model can read would be a route around the gatekeeper.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Automation/AgentPage/AgentPage.swift` | planned |
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Automation/AgentPage/AgentPageAllowlist.swift` | planned |
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Automation/AgentPage/AgentPageBuilder.swift` | planned |
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Automation/AgentPage/AgentPageWalker.js` | planned |
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Automation/AgentPage/AgentPageSource.swift` | planned |
-| macos | `packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/BrowserPane/AgentPageWalkerWebViewTests.swift` | unverified |
-| macos | `packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/BrowserPane/AgentGatekeeperRoutingTests.swift` | unverified |
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Automation/BrowserAgentPrivacy.swift` | unverified |
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Automation/BrowserAutomation.swift` | unverified |
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Automation/BrowserSnapshot.js` | unverified |
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Automation/BrowserSnapshot.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Privacy/PrivacyWordStore.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Privacy/PrivacyWordsVault.swift` | unverified |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Automation/AgentPage/AgentPage.swift` | confirmed (0.1.6) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Automation/AgentPage/AgentPageAllowlist.swift` | confirmed (0.1.6) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Automation/AgentPage/AgentPageBuilder.swift` | confirmed (0.1.6) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Automation/AgentPage/AgentPageWalker.js` | confirmed (0.1.6) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Automation/AgentPage/AgentPageSource.swift` | confirmed (0.1.6) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/BrowserPane/AgentPageWalkerWebViewTests.swift` | confirmed (0.1.6) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/BrowserPane/AgentGatekeeperRoutingTests.swift` | confirmed (0.1.6) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Automation/BrowserAgentPrivacy.swift` | confirmed (0.1.6) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Automation/BrowserAutomation.swift` | confirmed (0.1.6) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Automation/BrowserSnapshot.js` | confirmed (0.1.6) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Automation/BrowserSnapshot.swift` | confirmed (0.1.6) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Privacy/PrivacyWordStore.swift` | confirmed (0.1.6) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Privacy/PrivacyWordsVault.swift` | confirmed (0.1.6) |
 
 ## Design Decisions
 
@@ -722,14 +724,11 @@ plan's tests are `AgentPageBuilderTests` (builder, pure),
 `AgentPageWalkerWebViewTests` (an offscreen web view with fixed HTML) and
 `AgentGatekeeperRoutingTests` (stub engine and privacy).
 
-## Blank Lines
-
-The Agent view's rendering collapses every run of blank or whitespace-only lines to a single break, so empty elements, spacer divs and pre-formatted padding never draw as a column of empty lines (`AgentHTMLRenderer`).
-
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 0.1.6 | 2026-11-18 | Mike Fullerton | Words now carry terminals too; the browser still reads only sites (no behavior change). |
 | 0.1.5 | 2026-11-18 | Mike Fullerton | The Agent view draws no blank lines: runs of empty lines collapse to one. |
 | 0.1.4 | 2026-11-16 | Mike Fullerton | Review fixes: the page root is refused, the structural path is stable across injected styles, sibling indexes are linear, a withheld option does not leak, and text keeps its line breaks. |
 | 0.1.3 | 2026-11-16 | Mike Fullerton | Scope refs only; withheld scope and invalid agent-list selectors fail closed; grid kinds; walker v6, snapshot v4; work off the main actor; refs stale on withheld or hidden-item changes; claims the privacy word files. |

@@ -89,8 +89,9 @@ extension WebBrowserPaneViewController {
         }
     }
 
-    /// Asks for the vault first, as the settings' Edit Privacy Words… does,
-    /// so the words are never shown to someone who could not unlock them.
+    /// Opens the Secrets window on the clicked word: its row, or a new one on
+    /// this page's site. The window shows hidden and asks for authentication
+    /// itself, so nothing is shown to someone who could not unlock it.
     private func replaceWordFromContextMenu(at point: NSPoint, in webView: WKWebView) {
         Task { [weak self] in
             guard let self, let vault = self.privacyVault else { return }
@@ -99,16 +100,8 @@ extension WebBrowserPaneViewController {
                 NSSound.beep()
                 return
             }
-            do {
-                try await vault.authenticate(reason: "edit the privacy words")
-            } catch {
-                Self.contextLogger.error(
-                    "replace private word: no access: \(error.localizedDescription, privacy: .public)")
-                return
-            }
-            guard let window = self.view.window else { return }
-            PrivacyWordsEditor.present(
-                vault: vault, on: window,
+            SecretsWindowController.show(
+                vault: vault,
                 newWordSite: PrivacySitePattern.defaultPattern(for: self.privacyWordsURL),
                 startingWord: word)
         }

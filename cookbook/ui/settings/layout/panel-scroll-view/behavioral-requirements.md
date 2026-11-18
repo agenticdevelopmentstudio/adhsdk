@@ -7,9 +7,13 @@
   the top and leading edges of the scroll view's own visible content area
   (viewport).
 - **content-width-matches-viewport**: Content installed via the
-  set-content operation MUST have its width constrained equal to the
-  scroll view's viewport width, so the content's own fitting width never
-  drives the size of the panel or its containing window.
+  set-content operation MUST be at least the viewport's width and SHOULD
+  equal it, at a strength wrapping text yields to. The width MUST be fed
+  in as a value taken from the viewport whenever it is laid out, never as
+  a constraint tied to the viewport itself: content that needs more width
+  than the viewport has MUST scroll horizontally rather than widen the
+  viewport, so the content's own fitting width never drives the size of
+  the panel, its split view's divider, or its containing window.
 - **content-min-height-viewport**: Content installed via the set-content
   operation MUST have its height constrained to be greater than or equal
   to the scroll view's viewport height, so short content fills the

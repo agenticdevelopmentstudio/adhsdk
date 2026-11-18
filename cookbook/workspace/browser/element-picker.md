@@ -89,6 +89,8 @@ the hide-from-agent recipe's, and they reuse this component with the list
 set to agent. The first time the picker is used, a one-time notice says
 that items which load again, such as ads, can reappear.
 
+The candidate logic (selectors, labels, refs) lives in `BrowserPickCandidates.js`, installed with the finder before the picker, so the page's context menu can ask for the element drawn at the click point without starting the picker: `BrowserElementPicker.contextTarget(at:in:)` returns its candidate and the text the click selected. A context-menu pick goes straight to the hide dialog (`BrowserSelectingMode.pickOnce`); Cancel ends the mode rather than resuming a picker that never ran.
+
 ## Behavioral Requirements
 
 - **address-bar-button**: Every browser pane MUST show a button at the
@@ -486,13 +488,14 @@ labels are not logged.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/HiddenItems/BrowserElementPicker.swift` | planned |
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/HiddenItems/BrowserElementPicker.js` | planned |
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/HiddenItems/vendor/finder.js` | planned |
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/HiddenItems/BrowserSelectingMode.swift` | unverified |
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/HiddenItems/BrowserPickDialogController.swift` | unverified |
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/HiddenItems/BrowserHiddenItemsPopover.swift` | unverified |
-| macos | `packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/BrowserPane/BrowserSelectingModeTests.swift` | unverified |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/HiddenItems/BrowserElementPicker.swift` | confirmed (0.1.4) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/HiddenItems/BrowserElementPicker.js` | confirmed (0.1.4) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/HiddenItems/vendor/finder.js` | confirmed (0.1.4) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/HiddenItems/BrowserSelectingMode.swift` | confirmed (0.1.4) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/HiddenItems/BrowserPickDialogController.swift` | confirmed (0.1.4) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/HiddenItems/BrowserHiddenItemsPopover.swift` | confirmed (0.1.4) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/BrowserPane/BrowserSelectingModeTests.swift` | confirmed (0.1.4) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/HiddenItems/BrowserPickCandidates.js` | confirmed (0.1.4) |
 
 ## Design Decisions
 
@@ -547,10 +550,6 @@ saved entries are fully manageable from the keyboard in the popover.
 |-------|--------|----------|
 
 Notes: no compliance checks have been run against the code yet.
-
-## Context Menu Targets
-
-The candidate logic (selectors, labels, refs) lives in `BrowserPickCandidates.js`, installed with the finder before the picker, so the page's context menu can ask for the element drawn at the click point without starting the picker: `BrowserElementPicker.contextTarget(at:in:)` returns its candidate and the text the click selected. A context-menu pick goes straight to the hide dialog (`BrowserSelectingMode.pickOnce`); Cancel ends the mode rather than resuming a picker that never ran.
 
 ## Change History
 

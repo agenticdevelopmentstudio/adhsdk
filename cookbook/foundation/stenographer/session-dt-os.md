@@ -37,6 +37,8 @@ Four serializable records transferred over XPC and HTTP between the Stenographer
 
 All four are immutable values with `let` fields. Their wire spelling is the stenographer-wide snake_case strategy. Most fields are Strings; timestamps travel as strings in the daemon's SQLite `datetime` form and are never parsed here. `SessionDTO` has a hand-written decoder that tolerates payloads from an older daemon. The types hold no behavior: how a session is enriched, how activity is derived and how health figures are measured belong to the daemon. The wire coders are specified by the stenographer wire spec ([adhsdk.ingredient.foundation.stenographer.stenographer-wire](cookbook:e8286557-84ee-4f45-b78c-f1d184c51a37)), the routes that serve these records by the daemon service ([adhsdk.ingredient.foundation.stenographer.stenographer-daemon-service](cookbook:96f73261-cf32-42cc-92f3-f8b58542382a)), and the client that decodes them by the HTTP client ([adhsdk.ingredient.foundation.stenographer.stenographer-http-client](cookbook:9c7c78d3-23ca-4ca6-a519-9968b440b8c6)).
 
+`SessionDTO` carries one summary per `SummaryFeature`: `summary` (Sessions), `conversationSummary` (AI Conversations) and `projectSummary` (Coding Projects), each decoding to "" when absent so an older daemon still decodes. `summary(for:)` picks one by feature.
+
 ## Behavioral Requirements
 
 **Common**
@@ -184,7 +186,7 @@ Not applicable: this code makes no log calls.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Stenographer/SessionDTOs.swift` | confirmed (1.0.2) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Stenographer/SessionDTOs.swift` | confirmed (1.0.3) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -224,10 +226,6 @@ Not applicable: this code makes no log calls.
 | [adc.check.reliability.graceful-degradation](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9a57e6ff-2e53-5163-8cce-6783d44f6b9f) | passed | Reliability |
 
 separation-of-concerns passes: the file declares four shapes and the tolerant decoder; enrichment, activity derivation, health measurement, routes and transport live in the daemon and the HTTP client. unit-test-coverage passes: every vector has a test, in `SessionDTOsConformanceTests.swift` (decode defaults, required keys, `Mb` casing, strict event decode and the rest), beside the constructions in `DaemonSessionSummarizerTests` and `DaemonProviderPickerViewTests`. graceful-degradation passes because the session decoder defaults the later-added keys instead of failing on an older daemon's payload.
-
-## Per-Feature Summaries
-
-`SessionDTO` carries one summary per `SummaryFeature`: `summary` (Sessions), `conversationSummary` (AI Conversations) and `projectSummary` (Coding Projects), each decoding to "" when absent so an older daemon still decodes. `summary(for:)` picks one by feature.
 
 ## Change History
 

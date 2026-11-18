@@ -1,0 +1,21 @@
+
+- **single-window**: `SecretsWindowController.show(vault:newWordSite:startingWord:)` MUST open the one Secrets window, or bring the open one forward, never a second.
+- **non-modal**: The window MUST be an ordinary resizable window titled "Secrets" with no OK or Cancel buttons.
+- **opens-locked**: A newly opened window MUST be locked: the table empty, the contents covered by the overlay, and the overlay's button titled "Unlock".
+- **show-prompts**: `show` MUST put the window on screen locked first and then, while it is locked, ask for authentication at once, so the prompt never appears before the window.
+- **unlock-authenticates**: Unlock (the overlay button or the toolbar lock) MUST ask the vault to authenticate with the reason "show your secrets" and MUST read the words into the table only after it succeeds.
+- **unlock-no-stack**: Pressing Unlock while an authentication is on screen MUST do nothing.
+- **unlock-reveals**: A successful unlock MUST clear any hide the owner set before the lock, so the words show at once.
+- **revealed-rule**: The contents MUST show exactly while the window is unlocked, not hidden by the owner, key, and the app active; otherwise the overlay MUST cover them.
+- **overlay-not-toolbar**: The overlay MUST cover the contents only, never the toolbar.
+- **toolbar**: The toolbar MUST hold an eye toggle that hides or shows the contents, a lock button that locks or unlocks, and, right-justified, a gear that shows a transient popover holding the Secrets settings.
+- **lock-empties**: Locking MUST stop the lock policy, unload the table, close the gear popover and need authentication again.
+- **close-locks**: Closing the window MUST lock it.
+- **autosave**: Every committed edit MUST save the enabled, non-empty words through the vault, and MUST NOT save a list identical to the last one saved.
+- **terminal-column**: The Terminal column MUST read and write a word's `terminals` as comma-separated patterns.
+- **open-on-word**: `show` with `startingWord` MUST, once unlocked, select that word's row, or add one for it on `newWordSite` when it has none.
+- **lock-app-inactive**: While unlocked and `secretsLockWhenAppInactive` is on (default on), the app resigning active MUST lock the window.
+- **lock-sleep**: While unlocked and `secretsLockOnSleep` is on (default on), the Mac sleeping, its screens sleeping, the session resigning active or the screen locking MUST lock the window.
+- **lock-idle**: While unlocked and `secretsLockAfterIdleMinutes` is above zero (default 5), going that many minutes without a key or mouse event in the app MUST lock the window; 0 never locks.
+- **settings-panel**: `SecretsSettingsPanel` MUST show a Private Words group with Open Secrets… (omitted in the gear popover), a Locking group with the three settings, and, in a Debug build that composed testing words, a Testing Words group.
+

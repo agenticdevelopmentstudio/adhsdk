@@ -29,3 +29,5 @@ vault yields an empty page carrying a reason. The component always runs —
 there is no branch on privacy settings choosing whether to use it; settings
 only change what it filters.
 
+The Agent view's rendering collapses every run of blank or whitespace-only lines to a single break, so empty elements, spacer divs and pre-formatted padding never draw as a column of empty lines (`AgentHTMLRenderer`).
+

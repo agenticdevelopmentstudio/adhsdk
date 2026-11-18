@@ -33,6 +33,8 @@ approved-date: ""
 
 A conversation is a live terminal session in which a person is talking to an agent. These types present the daemon's `SessionDTO` (see Session DTOs ([adhsdk.ingredient.foundation.stenographer.session-dt-os](cookbook:25b6559b-69c1-450f-85b3-fc026d55f469))) in the shape a conversation reader needs: `ConversationAgent` (the agent name), `ConversationStatus` (busy, idle, waiting, ended), `ConversationSummaryDTO` (one row of `steno conversations list`), `ConversationInfoDTO` (the row plus the rest of what the daemon knows, for `steno conversation info`) and `ConversationSendability` (the one answer `steno conversation send` acts on and `info`'s `canSend` reports). The session is the conversation; these types add no storage. Every session the daemon records is a Claude Code session, so the agent is stated as a field (`claude`) so that a second agent is a new value and not a new shape.
 
+`ConversationInfoDTO.summary` carries the session's AI Conversations summary (`conversationSummary`), or its Sessions summary while that is empty.
+
 ## Behavioral Requirements
 
 - **agent-constant**: `ConversationAgent.claude` MUST be the string `claude`.
@@ -206,7 +208,7 @@ Not applicable: this code makes no log calls.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Stenographer/ConversationSummaryDTO.swift` | confirmed (1.0.2) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Stenographer/ConversationSummaryDTO.swift` | confirmed (1.0.3) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -246,10 +248,6 @@ Not applicable: this code makes no log calls.
 | [adc.check.user-safety.safe-defaults](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/dd43bec7-e292-559a-81e3-c0cf59156abe) | partial | User Safety |
 
 separation-of-concerns passes: the file maps a session to a conversation reading and decides send eligibility; storage, transport and the terminal injection itself are other types. unit-test-coverage passes: `ConversationSummaryDTOTests` (`Tests/AgenticDeveloperHubSDKCoreTests/Stenographer/ConversationSummaryDTOTests.swift`) covers every vector, 001 to 031. safe-defaults is partial: an ended, waiting, unsupported-terminal, detached or pane-sharing session refuses a send, and a sharer whose process cannot be read blocks, but a session whose own process cannot be read (the probe returns nil) is not refused for that reason.
-
-## Per-Feature Summaries
-
-`ConversationInfoDTO.summary` carries the session's AI Conversations summary (`conversationSummary`), or its Sessions summary while that is empty.
 
 ## Change History
 

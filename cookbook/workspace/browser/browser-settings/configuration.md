@@ -16,7 +16,7 @@ The control table. Keys never change when a control moves
 | Appearance | Page | Minimum font size | `browser.minimum_font_size` |
 | Appearance | Tabs | Tab position (pane override) | `browser.tabs.positions` (new) |
 | Privacy and Security | General | Pause all events (pane sheet only) | none — the pane's own state |
-| Privacy and Security | General | Show privacy toolbar | `browser.privacy.show_toolbar` |
+| Browser menu | — | Show / Hide Privacy Toolbar | `browser.privacy.show_toolbar` |
 | Privacy and Security | Input | Disable keyboard events | `browser.privacy.keyboard` |
 | Privacy and Security | Input | Disable mouse and scrolling events | `browser.privacy.mouse` |
 | Privacy and Security | Input | Disable pointer tracking | `browser.privacy.pointer_tracking` |
@@ -26,6 +26,8 @@ The control table. Keys never change when a control moves
 | Privacy and Security | Coding Partner | Agent while paused | `browser.privacy.agent_while_paused` |
 | Privacy and Security | Agent Privacy | Conceal privacy words from agents | `browser.agent_privacy.enabled` |
 | Privacy and Security | Agent Privacy | Hide Images | `browser.privacy.hide_images` |
+| Privacy and Security | Agent Privacy | Let models drive browser panes (global only) | `browser.automation.enabled` |
+| Privacy and Security | Agent Privacy | Allow browser_evaluate (global only) | `browser.automation.evaluate` |
 | Privacy and Security | Storage | Cookie and storage jar | `browser.privacy.storage_jar` |
 | Privacy and Security | Scripts | Third-party content | `browser.privacy.third_party_content` |
 | Privacy and Security | Scripts | Capture page console | `browser.privacy.console_capture` |

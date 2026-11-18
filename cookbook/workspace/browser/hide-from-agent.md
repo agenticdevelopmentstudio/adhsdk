@@ -2,7 +2,7 @@
 id: 6cb13be9-e38c-496b-8326-5d1fdccfe778
 title: "Hide From Agent"
 type: ingredient
-version: 0.1.5
+version: 0.1.6
 status: draft
 language: en
 created: 2026-11-15
@@ -75,6 +75,10 @@ The user still sees the item on the page.
 The preview keeps page JavaScript off. The picker world must still run
 there; whether WebKit runs isolated-world scripts with content JavaScript
 disabled is checked in the verification run and recorded below.
+
+Hide from Agent is the last button in the privacy toolbar's Agents group, styled like the group's items: "Hide from Agent ▾", and "Hide from Agent: Selecting" in red while its selecting mode runs.
+
+Right-clicking a page adds, below WebKit's items: Hide Distracting Item (live page only), Hide Item from Agents (live page and Agent preview, while the agent can see the browser), and on text Replace Private Word…, which opens the Secrets window on that word's row, made if it has none, once the window is unlocked, or brings the open window forward with it (`BrowserMenuWebView`, `WebBrowserPaneViewController+ContextMenu`).
 
 ## Behavioral Requirements
 
@@ -344,9 +348,12 @@ content and labels are not logged.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/BrowserAddressBarControls.swift` | unverified |
-| macos | `packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/BrowserPane/BrowserHideFromAgentTests.swift` | unverified |
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/HiddenItems/BrowserHideFromAgentButton.swift` | unverified |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/BrowserAddressBarControls.swift` | confirmed (0.1.6) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/BrowserPane/BrowserHideFromAgentTests.swift` | confirmed (0.1.6) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/HiddenItems/BrowserHideFromAgentButton.swift` | confirmed (0.1.6) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/BrowserMenuWebView.swift` | confirmed (0.1.6) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/WebBrowserPaneViewController+ContextMenu.swift` | confirmed (0.1.6) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/BrowserWebView.swift` | confirmed (0.1.6) |
 
 ## Design Decisions
 
@@ -390,18 +397,11 @@ the picker world, never page scripts.
 
 Notes: no compliance checks have been run.
 
-## Toolbar Placement
-
-Hide from Agent is the last button in the privacy toolbar's Agents group, styled like the group's items: "Hide from Agent ▾", and "Hide from Agent: Selecting" in red while its selecting mode runs.
-
-## Context Menu
-
-Right-clicking a page adds, below WebKit's items: Hide Distracting Item (live page only), Hide Item from Agents (live page and Agent preview, while the agent can see the browser), and on text Replace Private Word…, which unlocks the vault and opens the privacy words editor on that word's row, made if it has none, or brings the open editor forward with it (`BrowserMenuWebView`, `WebBrowserPaneViewController+ContextMenu`).
-
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 0.1.6 | 2026-11-18 | Mike Fullerton | Replace Private Word… opens the Secrets window on the word. |
 | 0.1.5 | 2026-11-18 | Mike Fullerton | Context menu: Hide Distracting Item, Hide Item from Agents, Replace Private Word. |
 | 0.1.4 | 2026-11-18 | Mike Fullerton | Hide from Agent sits in the privacy toolbar's Agents group, styled like its items. |
 | 0.1.3 | 2026-11-16 | Mike Fullerton | Review fix: a body or html entry withholds the whole page. |

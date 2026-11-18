@@ -4,11 +4,11 @@
     "id": "8bd94d87-6096-4fb1-82a7-d5f712c2958f",
     "title": "Agent Page Builder (Agent Gatekeeper)",
     "type": "ingredient",
-    "version": "0.1.4",
+    "version": "0.1.6",
     "status": "draft",
     "language": "en",
     "created": "2026-11-15",
-    "modified": "2026-11-16",
+    "modified": "2026-11-18",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -46,7 +46,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "60fc4cbe4a6c8735",
+  "synced": "9e762748dafc5e97",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

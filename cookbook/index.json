@@ -1053,9 +1053,9 @@
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:6cd855f35c5c7a598eb427819ee9ab3493160da734881812d419976d854ca7e6",
+            "hash": "sha256:c46f0f30fb2c082065cd0a02bca2f4bed76c207debce778f661aac71ece3fe24",
             "state": "confirmed",
-            "version": "1.0.0"
+            "version": "1.0.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/TerminalSession/PrivateTerminalViewController.swift",
           "platform": "macos"
@@ -3696,9 +3696,9 @@
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:c8394cd244a0f3f34abee5f61ff02be23aaea6778cfaae140e01abc716180c09",
+            "hash": "sha256:e47d9ee5d5c98b163788d66f2659efb9b66d20e73c56ccd466734b815f702dc1",
             "state": "confirmed",
-            "version": "1.0.2"
+            "version": "1.0.3"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Stenographer/SessionDTOs.swift",
           "platform": "apple"
@@ -4287,6 +4287,58 @@
       "path": "agentic-developer-hub-sdk/sdk/sources-ui/macos/chat/three-pane-chat-view",
       "rdid": "adhsdk.ingredient.agentic-developer-hub-sdk.sdk.sources-ui.macos.chat.three-pane-chat-view"
     },
+    "2d3b1d4b-2293-4dcd-8271-c2081acc88ef": {
+      "implementations": [
+        {
+          "conformance": {
+            "hash": "sha256:de34562bc9a8320349411cccf7f8f706ea84698fb3b03d05d7cee79c3f48ecd0",
+            "state": "confirmed",
+            "version": "1.0.0"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Secrets/SecretsWindowController.swift",
+          "platform": "macos"
+        },
+        {
+          "conformance": {
+            "hash": "sha256:753c3aeeea88b6334aa5bcfe1e1abdec73188f3957965f255c4efb5f64bb1a11",
+            "state": "confirmed",
+            "version": "1.0.0"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Secrets/SecretsLockPolicy.swift",
+          "platform": "macos"
+        },
+        {
+          "conformance": {
+            "hash": "sha256:901238974c8ab8b3f0c4bf1e86ff191bf7ff3bceec30d126775ffe1f2bf977c6",
+            "state": "confirmed",
+            "version": "1.0.0"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Secrets/PrivateWordsTopicViewController.swift",
+          "platform": "macos"
+        },
+        {
+          "conformance": {
+            "hash": "sha256:fd9309671e50bdc2b325fcf360df879603d9787d8d1e8168a045bf1c0a417ef3",
+            "state": "confirmed",
+            "version": "1.0.0"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Secrets/SecretsSettingsPanel.swift",
+          "platform": "macos"
+        },
+        {
+          "conformance": {
+            "hash": "sha256:69084785f6c41ceae2a5b01b7011d6c72fe84b6d8f67425bc22ed5db92f73358",
+            "state": "confirmed",
+            "version": "1.0.0"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/Core/Privacy/SecretsSettings.swift",
+          "platform": "macos"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "workspace/secrets/secrets-window",
+      "rdid": "adhsdk.ingredient.workspace.secrets.secrets-window"
+    },
     "2d763e2e-ef33-4d49-957e-6b8ced23218e": {
       "implementations": [
         {
@@ -4380,9 +4432,9 @@
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:91c747e5f0e2ecd1b2ddc4ee8ea485a225080c8392c73baa272a1b4746b6dcc0",
+            "hash": "sha256:f099ff6769b2f78a56c835ed437790194acce433064678aa56fa97df292b176d",
             "state": "confirmed",
-            "version": "1.0.0"
+            "version": "1.0.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/AIPluginKit/AIFeature.swift",
           "platform": "apple"
@@ -6065,9 +6117,9 @@
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:70d2b712c7dab4588fadd6a805c6216607f04654d3607cf3c1f41be055d5006a",
+            "hash": "sha256:d7c99373a037e3347f7812414ababcf33e45eb6c9a6094e58d5dedd2a17f6bff",
             "state": "confirmed",
-            "version": "1.2.2"
+            "version": "1.3.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/PanelScrollView.swift",
           "platform": "apple"
@@ -6542,9 +6594,9 @@
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:a5dcda6478fa098713bfd3492ebf16b994fe8fe641b7dcf14859f5e8120b7ada",
+            "hash": "sha256:506f24f2a260e15bb32e7037b2992334eb3f16106d5af61eeaafb4a241f57116",
             "state": "confirmed",
-            "version": "1.2.2"
+            "version": "1.2.3"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/PanelView.swift",
           "platform": "apple"
@@ -7756,58 +7808,83 @@
       "implementations": [
         {
           "conformance": {
-            "state": "planned"
+            "hash": "sha256:e5dcc2617b88277fbd3810c58923d5c47fb89411d64b8d053bfeee5c3f75044e",
+            "state": "confirmed",
+            "version": "0.1.11"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Settings/BrowserBehaviorPanel.swift",
           "platform": "macos"
         },
         {
           "conformance": {
-            "state": "planned"
+            "hash": "sha256:291593a165980f8f60fdb85cc9985883277e64c4d6f95eb610b9c04609469795",
+            "state": "confirmed",
+            "version": "0.1.11"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Settings/BrowserAppearancePanel.swift",
           "platform": "macos"
         },
         {
           "conformance": {
-            "state": "planned"
+            "hash": "sha256:6b07ad1039894279f24560579c921f12935c5f282c5f0c94cb3980a0ee67691e",
+            "state": "confirmed",
+            "version": "0.1.11"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Settings/BrowserSiteDataWindowController.swift",
           "platform": "macos"
         },
         {
           "conformance": {
-            "state": "planned"
+            "hash": "sha256:8144b2ee3182989782cd4defd28d108e50d02abf40ad1c5026dd9cd506c0e0a6",
+            "state": "confirmed",
+            "version": "0.1.11"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Settings/BrowserSettingsPanelViewController.swift",
           "platform": "macos"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:85c9638c8db25d3bc7c982dc2c14e02ff12cc9b9e8585ae39ec47f026f32b604",
+            "state": "confirmed",
+            "version": "0.1.11"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Settings/SessionPrivacySettingsPanel.swift",
           "platform": "macos"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:ac0faf7ac08b618baf13caf6f6b22fbd79d88919b62f6a4f37eabe3ed87f1b30",
+            "state": "confirmed",
+            "version": "0.1.11"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Settings/",
           "platform": "macos"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:a9f59bc8ad2bebc3148cc599435e24637ab23eb1f0c4fc4bdac4ccfb0465a398",
+            "state": "confirmed",
+            "version": "0.1.11"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/WebBrowserPaneViewController.swift",
           "platform": "macos"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:01ba8360f11c8cf6ea801fad615092e895b89bd353bd53e13f78753b2cf84778",
+            "state": "confirmed",
+            "version": "0.1.11"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/SafariExtensions/SafariExtensionToolbar.swift",
+          "platform": "macos"
+        },
+        {
+          "conformance": {
+            "hash": "sha256:957ef593625378d2c06c3aa00c1fd60dd991561bf63c0ba5264fe5c4e897bbad",
+            "state": "confirmed",
+            "version": "0.1.11"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/BrowserPrivacyStrip.swift",
           "platform": "macos"
         }
       ],
@@ -9241,42 +9318,54 @@
       "implementations": [
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:6c4e4a6dd3f49ac3937716c97c604b47bf6268a351fa00baec5153a200444388",
+            "state": "confirmed",
+            "version": "0.1.6"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/BrowserAddressBarControls.swift",
           "platform": "macos"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:a0de1f24a812e44eddd7ab2107f669d9c780c0451991dad49ade0fc5b68f1089",
+            "state": "confirmed",
+            "version": "0.1.6"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/BrowserPane/BrowserHideFromAgentTests.swift",
           "platform": "macos"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:dbe6e7260ec6537cc1100b9a3fcfe2c608056df7ea655203f2cb5c3f38392442",
+            "state": "confirmed",
+            "version": "0.1.6"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/HiddenItems/BrowserHideFromAgentButton.swift",
           "platform": "macos"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:33dc99f8fe32824cdc3331bf6b3d093023a88f92fe2b3edd27e2c85a5bb0f444",
+            "state": "confirmed",
+            "version": "0.1.6"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/BrowserMenuWebView.swift",
           "platform": "macos"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:4a67e7c21a556f10317487c8a8bde01085e120811b1680a01015bc91cd3ffa24",
+            "state": "confirmed",
+            "version": "0.1.6"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/WebBrowserPaneViewController+ContextMenu.swift",
           "platform": "macos"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:152a592edc7ad5ab93b486a0f5268910b38a20726cbac00accef1c01284b6339",
+            "state": "confirmed",
+            "version": "0.1.6"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/BrowserWebView.swift",
           "platform": "macos"
@@ -10757,9 +10846,9 @@
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:3096cede1462de9f6f3896f14c5e238c31c6c47533effeb5e67239fab70185c5",
+            "hash": "sha256:2114525d8b615c6d48f85d2eeb65eaa48927219944dc4faa06ec446f6f53f178",
             "state": "confirmed",
-            "version": "1.3.2"
+            "version": "1.3.3"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/SettingsWindow.swift",
           "platform": "apple"
@@ -11647,9 +11736,9 @@
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:bc422eb88e4352d9e4b6cfa1c26e2cabff38ed0144c0d11d95bc85fe3679fa67",
+            "hash": "sha256:a81da863bfa810fae676e01041e696d2bb795acb04371496d7d8299c54bbee81",
             "state": "confirmed",
-            "version": "1.0.2"
+            "version": "1.0.3"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Stenographer/SummaryPreferenceDTOs.swift",
           "platform": "apple"
@@ -12444,9 +12533,9 @@
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:ee0fd1ada0312149daeacfaa8e1cd902c6baea126e9e237f7425c264e8551a8c",
+            "hash": "sha256:ae8866f622a66b417b6fef0c452717a0868f56f13c8acfb6e5839e53d62d5fb4",
             "state": "confirmed",
-            "version": "1.0.2"
+            "version": "1.0.3"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Privacy/PrivacyWordStore.swift",
           "platform": "apple"
@@ -12468,6 +12557,15 @@
             "state": "planned"
           },
           "platform": "windows"
+        },
+        {
+          "conformance": {
+            "hash": "sha256:8f11f4eb17103216138b56ebb0f391682f0318723cb67b7b160e9f0a81d2ee82",
+            "state": "confirmed",
+            "version": "1.0.3"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/Core/Privacy/PrivacyTerminalPattern.swift",
+          "platform": "macos"
         }
       ],
       "kind": "ingredient",
@@ -12494,56 +12592,72 @@
       "implementations": [
         {
           "conformance": {
-            "state": "planned"
+            "hash": "sha256:2750915ec17577d0d01a4f28b3669b53bcecec445d33256b8265821bdaaedbe2",
+            "state": "confirmed",
+            "version": "0.1.4"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/HiddenItems/BrowserElementPicker.swift",
           "platform": "macos"
         },
         {
           "conformance": {
-            "state": "planned"
+            "hash": "sha256:a6db78a0cfd3ffd06e8d18af3511eb8bd85da4275b4f1383acb1c155f3c30979",
+            "state": "confirmed",
+            "version": "0.1.4"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/HiddenItems/BrowserElementPicker.js",
           "platform": "macos"
         },
         {
           "conformance": {
-            "state": "planned"
+            "hash": "sha256:8d72ef2bb32fbe1d66375f188851496a0e63a35578f88a2fa0bfc2f167902c9f",
+            "state": "confirmed",
+            "version": "0.1.4"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/HiddenItems/vendor/finder.js",
           "platform": "macos"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:0a82fd83e6cbc62d47525f7937168b897be926a00691cc9ee8ce1b992732b5c5",
+            "state": "confirmed",
+            "version": "0.1.4"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/HiddenItems/BrowserSelectingMode.swift",
           "platform": "macos"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:322c9a15f45303a4c3d3bd06b774998905e12533908dc1801512dafe1a740adf",
+            "state": "confirmed",
+            "version": "0.1.4"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/HiddenItems/BrowserPickDialogController.swift",
           "platform": "macos"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:71d748b8914ad4830fe2d79e2c9b39a4c1f71dc5a8bdccc708373c62e50231e1",
+            "state": "confirmed",
+            "version": "0.1.4"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/HiddenItems/BrowserHiddenItemsPopover.swift",
           "platform": "macos"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:79dd68440c45e884881d305cba681e3792b71779fda6db2b156f60a8b1055132",
+            "state": "confirmed",
+            "version": "0.1.4"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/BrowserPane/BrowserSelectingModeTests.swift",
           "platform": "macos"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:a9445837f37025f36b0cd9efdf693627f1f966dde1bfd2d1a9e529225c22b879",
+            "state": "confirmed",
+            "version": "0.1.4"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/HiddenItems/BrowserPickCandidates.js",
           "platform": "macos"
@@ -12563,91 +12677,117 @@
       "implementations": [
         {
           "conformance": {
-            "state": "planned"
+            "hash": "sha256:cf0b2ca4e158498ffa46fa8fefe7c104c86452e762c19bb75b8c0503aa94c0bb",
+            "state": "confirmed",
+            "version": "0.1.6"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Automation/AgentPage/AgentPage.swift",
           "platform": "macos"
         },
         {
           "conformance": {
-            "state": "planned"
+            "hash": "sha256:6dc8399b680ed1249534e95d3752210f2f90ae1285a48d0797557fced80e0bc6",
+            "state": "confirmed",
+            "version": "0.1.6"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Automation/AgentPage/AgentPageAllowlist.swift",
           "platform": "macos"
         },
         {
           "conformance": {
-            "state": "planned"
+            "hash": "sha256:c66cea799934e0aff212bc648b59975c939a231ffb9d1f2374f930c141b79996",
+            "state": "confirmed",
+            "version": "0.1.6"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Automation/AgentPage/AgentPageBuilder.swift",
           "platform": "macos"
         },
         {
           "conformance": {
-            "state": "planned"
+            "hash": "sha256:2c9d7a0ea362af06283e04a339c296bea439b96b25347681b68009065aa718e9",
+            "state": "confirmed",
+            "version": "0.1.6"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Automation/AgentPage/AgentPageWalker.js",
           "platform": "macos"
         },
         {
           "conformance": {
-            "state": "planned"
+            "hash": "sha256:71ece3402faeaed11dc0a21eaffcd6c169266449f3476cd5e8822f7886d2e34d",
+            "state": "confirmed",
+            "version": "0.1.6"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Automation/AgentPage/AgentPageSource.swift",
           "platform": "macos"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:72a1d9ddc0612bf6ddd71e73a054e0752a9c077b232c90744dc3b1d498cc145f",
+            "state": "confirmed",
+            "version": "0.1.6"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/BrowserPane/AgentPageWalkerWebViewTests.swift",
           "platform": "macos"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:b09385c1b0053dc4732c3e82fabe653224cc583bdb82b6cde308db7bfff5e689",
+            "state": "confirmed",
+            "version": "0.1.6"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/BrowserPane/AgentGatekeeperRoutingTests.swift",
           "platform": "macos"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:ab27fc1f292fbd0aebf72cb43f5a81670fcc45305a142c4714be7f7ef9de3346",
+            "state": "confirmed",
+            "version": "0.1.6"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Automation/BrowserAgentPrivacy.swift",
           "platform": "macos"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:819f42a154e42de5252d35135966f4130c9328c3eabe145e87619fc670d781f2",
+            "state": "confirmed",
+            "version": "0.1.6"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Automation/BrowserAutomation.swift",
           "platform": "macos"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:dc7158df8759bf47fe88da6231ca271d527e802c729507979f0d7f90b74990d4",
+            "state": "confirmed",
+            "version": "0.1.6"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Automation/BrowserSnapshot.js",
           "platform": "macos"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:eb543c9799cdf6e6a57ca3d75c2965c73db2313c92d4f3c0b48607f403c3789e",
+            "state": "confirmed",
+            "version": "0.1.6"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Automation/BrowserSnapshot.swift",
           "platform": "macos"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:ae8866f622a66b417b6fef0c452717a0868f56f13c8acfb6e5839e53d62d5fb4",
+            "state": "confirmed",
+            "version": "0.1.6"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Privacy/PrivacyWordStore.swift",
           "platform": "apple"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:1c0823642a819696e64167564cc9576c5146c93ffac801c024b8e6cfc38305cd",
+            "state": "confirmed",
+            "version": "0.1.6"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Privacy/PrivacyWordsVault.swift",
           "platform": "apple"
@@ -13743,9 +13883,9 @@
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:c6b87a25886f80f0cb38eb43b7c238f4dab8952f79d2d29d30b044a7502b2d35",
+            "hash": "sha256:ade21c743cb00af29346ee6dcd9526d46941e6a2310050d42eb5e230f44b2bd4",
             "state": "confirmed",
-            "version": "1.0.2"
+            "version": "1.0.3"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Stenographer/StenographerDaemonService.swift",
           "platform": "apple"
@@ -14179,9 +14319,9 @@
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:c9f5c45a69abcb74f1b437bf8a6f6f7bc18e6be2789bd8eb1893a2a3d65e578f",
+            "hash": "sha256:0f3c48b14d69261949ff5ea81c093d875d88b227c36062f0fcf59695925f11cd",
             "state": "confirmed",
-            "version": "1.0.3"
+            "version": "1.0.4"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Stenographer/StenographerHTTPClient.swift",
           "platform": "apple"
@@ -14692,9 +14832,9 @@
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:8db684efedb35adcb6859b95d1c1a9b366e058009266aaead5352fc0b5ac1f58",
+            "hash": "sha256:d700a9e4ab6a46f4d6d2bc0407dcd2221d1a9ae1b18fe877c28057b2ded6c76a",
             "state": "confirmed",
-            "version": "1.3.0"
+            "version": "1.4.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/SplitViewController/SplitViewController.swift",
           "platform": "apple"
@@ -18329,35 +18469,45 @@
       "implementations": [
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:5934b824c62e31efd508351cbc108ad45fcde889c72ddfccf9e7c7086492a1e4",
+            "state": "confirmed",
+            "version": "0.1.3"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/BrowserContentRules.swift",
           "platform": "macos"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:3c2885e84c5622a4758f3ebf2425f3d0b2677e4d69cbb30bc06eb7ae218de999",
+            "state": "confirmed",
+            "version": "0.1.3"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/BrowserPane/BrowserAgentViewsTests.swift",
           "platform": "macos"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:0af4fef6862d9352554655dde761f83aca2f20e3634ddc1a62c80e11b68a1574",
+            "state": "confirmed",
+            "version": "0.1.3"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/AgentViews/BrowserAgentViewMode.swift",
           "platform": "macos"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:abc4e3c3ba6b104c512b3908fb67ca36ce9606221027ffb2552fb50c7711068a",
+            "state": "confirmed",
+            "version": "0.1.3"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/AgentViews/BrowserAgentPreviewViewController.swift",
           "platform": "macos"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:7363971c7f8aaa62bbbee9477f5942a06f185e12c7b62ae235cf75f5a3ad6bd0",
+            "state": "confirmed",
+            "version": "0.1.3"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/AgentViews/BrowserAgentSourceViewController.swift",
           "platform": "macos"
@@ -19241,9 +19391,9 @@
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:baf5181faf6ae6150d2dec6e35ecd298d7f32fba47d78e36acacd19efaf1c91e",
+            "hash": "sha256:1c0823642a819696e64167564cc9576c5146c93ffac801c024b8e6cfc38305cd",
             "state": "confirmed",
-            "version": "1.0.2"
+            "version": "1.0.3"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Privacy/PrivacyWordsVault.swift",
           "platform": "apple"
@@ -19265,6 +19415,24 @@
             "state": "planned"
           },
           "platform": "windows"
+        },
+        {
+          "conformance": {
+            "hash": "sha256:e6f7d57e27592f02fc4f5fd08727f9d03fad696cb364fc6fc660465a741d073d",
+            "state": "confirmed",
+            "version": "1.0.3"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/Core/Privacy/PrivacyTestingWords.swift",
+          "platform": "macos"
+        },
+        {
+          "conformance": {
+            "hash": "sha256:1cee07dd012ab91653cd1b18482aee386d631fb5321fd2954bdc82aabc2143b0",
+            "state": "confirmed",
+            "version": "1.0.3"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/Core/Privacy/SystemAuthenticationPrompt.swift",
+          "platform": "macos"
         }
       ],
       "kind": "ingredient",
@@ -20585,9 +20753,9 @@
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:2bf865429f640540129431bf64185b226c781db29bd09549170d1132a7bee4d7",
+            "hash": "sha256:9db0afee86a3ea13d8ee9e52bc3a75f2b2cc9534e12d8e8125c5034b8b97a4e1",
             "state": "confirmed",
-            "version": "1.0.2"
+            "version": "1.0.3"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Stenographer/ConversationSummaryDTO.swift",
           "platform": "apple"
@@ -20991,7 +21159,9 @@
       "implementations": [
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:f82bf8fd8dbff4135104030f0d09719e2da80ef703474ac1086a66519790d555",
+            "state": "confirmed",
+            "version": "1.2.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Database/",
           "platform": "apple"
@@ -21039,9 +21209,9 @@
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:f2252363c3c9bccdbd0759b6a9c1c08b363a9ab6cdea132d384c5b3397fa2cb4",
+            "hash": "sha256:c9f80a9e48e11711f80e4a720603464ac259e47c0c4d6bbe46baba7218a8ccb4",
             "state": "confirmed",
-            "version": "1.0.3"
+            "version": "1.0.4"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Stenographer/StenographerPreferenceDTOs.swift",
           "platform": "apple"

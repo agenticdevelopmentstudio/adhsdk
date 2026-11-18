@@ -30,4 +30,5 @@
 - **plain-memory**: The vault MUST hold the words only in memory and in the keychain through the store; it MUST NOT write them elsewhere.
 - **concurrency**: Synchronous steps (`load`, the write inside `save`, a reload) MUST NOT interleave with each other; steps separated by `await` (the authentication in `authenticate`, `save` and the upgrade) MAY interleave with other main-actor calls, and two overlapping `save` calls MUST apply in the order their writes run, the later write winning.
 - **no-timeout-no-retry**: The vault MUST NOT retry a failed store call or time out an authentication.
+- **filter-for-terminal**: `filter(forTerminalAt:)` MUST return the filter of the loaded words that apply in a private terminal started in that directory, or nil while the words are not loaded.
 

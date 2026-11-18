@@ -4,11 +4,11 @@
     "id": "5a246e6c-2125-4427-a8ab-2f43f2fecba5",
     "title": "Web Browser Settings Topics",
     "type": "ingredient",
-    "version": "0.1.7",
+    "version": "0.1.11",
     "status": "draft",
     "language": "en",
     "created": "2026-11-15",
-    "modified": "2026-11-16",
+    "modified": "2026-11-18",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -45,7 +45,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "2dc3473eab7f83b8",
+  "synced": "37298d5cf8d7a5e1",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

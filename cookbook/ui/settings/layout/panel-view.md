@@ -50,6 +50,8 @@ ground as the sidebar and the window: the cards are what stand out here,
 and a panel-shaped patch of a second near-identical colour behind them
 only reads as a misprint."
 
+`addTabs(_:identifier:)` puts a centred segmented control at the top of the panel and adds every `Tab`'s groups below it, hiding all but the selected tab's. The stack detaches hidden views, so a hidden tab takes no room. `showTab(_:)` selects a tab by index; `tabControl` is the control, for automation.
+
 ## Behavioral Requirements
 
 - **confines-to-ui-thread**: The component MUST be usable only on the UI thread.
@@ -397,7 +399,7 @@ Not applicable: the source contains no logging call.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/PanelView.swift` | confirmed (1.2.2) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/PanelView.swift` | confirmed (1.2.3) |
 
 ## Design Decisions
 
@@ -467,10 +469,6 @@ label or control of its own for a screen reader to need; each hosted
 child manages its own accessibility per its own recipe.
 
 Separation-of-concerns is passed: `PanelView` only stacks `GroupView` cards vertically with the group-spacing and panel-inset layout tokens and observes the theme for its own paint, with no knowledge of what the cards contain. Unit-test-coverage is failed: no test in the repository's test targets references `PanelView`.
-
-## Tabs
-
-`addTabs(_:identifier:)` puts a centred segmented control at the top of the panel and adds every `Tab`'s groups below it, hiding all but the selected tab's. The stack detaches hidden views, so a hidden tab takes no room. `showTab(_:)` selects a tab by index; `tabControl` is the control, for automation.
 
 ## Change History
 

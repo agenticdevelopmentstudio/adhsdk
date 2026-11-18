@@ -4,11 +4,11 @@
     "id": "d54db476-c847-4ac0-827e-eae336109f38",
     "title": "Privacy Words Vault",
     "type": "ingredient",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
-    "modified": "2026-11-14",
+    "modified": "2026-11-18",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -31,7 +31,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "0a538a928a9a4108",
+  "synced": "686a39ffefe55303",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

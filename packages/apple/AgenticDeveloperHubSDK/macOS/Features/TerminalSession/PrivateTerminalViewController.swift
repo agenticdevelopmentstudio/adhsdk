@@ -23,13 +23,17 @@ import AgenticDeveloperHubSDKCoreUI
 ///   revealed the window is excluded from screen capture. There is no
 ///   AppleScript object for it and no URL that opens it.
 ///
-/// The words are edited from the pane's options: Edit Privacy Words… asks for
-/// authentication and opens ``PrivacyWordsEditor``.
+/// The words are edited in the Secrets window, which the pane's options
+/// open (``SecretsWindowController``); a word's Terminal column says which
+/// private terminals it applies in, by the directory each starts in.
 @MainActor
 public final class PrivateTerminalViewController: NSViewController {
 
     public let session: TerminalSession
     private let vault: PrivacyWordsVault
+    /// The directory the shell starts in (the session's own default when none
+    /// is given): what the words' Terminal patterns are matched against.
+    private let startDirectory: String
 
     private let concealed = ConcealedContainerView()
     private let privacyScreen = ThemedBackgroundView(role: .windowBackground)
@@ -55,6 +59,7 @@ public final class PrivateTerminalViewController: NSViewController {
 
     public init(vault: PrivacyWordsVault, workingDirectory: String?, environment: [String: String] = [:]) {
         self.vault = vault
+        startDirectory = workingDirectory ?? FileManager.default.homeDirectoryForCurrentUser.path
         session = TerminalSession(
             name: "Private Terminal", workingDirectory: workingDirectory, isPrivate: true, environment: environment)
         super.init(nibName: nil, bundle: nil)
@@ -134,10 +139,11 @@ public final class PrivateTerminalViewController: NSViewController {
         // Another private terminal can load the words, and the editor can
         // change them: a shell already running takes the new words from the
         // next byte. One that has not appeared yet waits until it does.
-        vault.$filter
+        vault.$words
             .receive(on: RunLoop.main)
-            .sink { [weak self] filter in
-                guard let self, let filter, self.session.isStarted || self.hasAskedToStart else { return }
+            .sink { [weak self] _ in
+                guard let self, let filter = self.terminalFilter,
+                      self.session.isStarted || self.hasAskedToStart else { return }
                 self.startOrUpdate(filter: filter)
             }
             .store(in: &cancellables)
@@ -160,6 +166,12 @@ public final class PrivateTerminalViewController: NSViewController {
 
     // MARK: - Starting
 
+    /// The words for this terminal: those whose Terminal patterns match the
+    /// directory it started in (``PrivacyWord/terminals``).
+    private var terminalFilter: TextSubstitutionFilter? {
+        vault.filter(forTerminalAt: startDirectory)
+    }
+
     /// Starts the shell the first time the pane is on screen, with the words
     /// read without a prompt. Words the keychain will not hand over silently
     /// leave the pane waiting for its eye.
@@ -167,7 +179,7 @@ public final class PrivateTerminalViewController: NSViewController {
         guard !session.isStarted, !hasAskedToStart else { return }
         hasAskedToStart = true
         do {
-            if try vault.load(), let filter = vault.filter { startOrUpdate(filter: filter) }
+            if try vault.load(), let filter = terminalFilter { startOrUpdate(filter: filter) }
         } catch {
             screenMessage.stringValue = error.localizedDescription
         }
@@ -203,7 +215,7 @@ public final class PrivateTerminalViewController: NSViewController {
             defer { self.isAuthenticating = false }
             do {
                 try await self.vault.authenticate(reason: "show the private terminal")
-                if let filter = self.vault.filter { self.startOrUpdate(filter: filter) }
+                if let filter = self.terminalFilter { self.startOrUpdate(filter: filter) }
                 self.isRevealed = true
             } catch {
                 self.screenMessage.stringValue = error.localizedDescription
@@ -242,23 +254,7 @@ public final class PrivateTerminalViewController: NSViewController {
 
     @objc private func editWordsPressed(_ sender: Any?) {
         (parent as? PaneViewController)?.dismissOptionsDialog()
-        guard !isAuthenticating else { return }
-        isAuthenticating = true
-        Task { [weak self] in
-            guard let self else { return }
-            defer { self.isAuthenticating = false }
-            do {
-                try await self.vault.authenticate(reason: "edit the privacy words")
-                guard let window = self.view.window else { return }
-                PrivacyWordsEditor.present(vault: self.vault, on: window)
-            } catch {
-                guard let window = self.view.window else { return }
-                let alert = NSAlert()
-                alert.messageText = "The privacy words could not be opened."
-                alert.informativeText = error.localizedDescription
-                alert.beginSheetModal(for: window, completionHandler: nil)
-            }
-        }
+        SecretsWindowController.show(vault: vault)
     }
 
     // MARK: - Appearance
@@ -313,21 +309,10 @@ extension PrivateTerminalViewController: PaneAccessoryProviding {
 extension PrivateTerminalViewController: PaneOptionsProviding {
 
     public func makePaneOptionRows() -> [NSView] {
-        let edit = NSButton(title: "Edit Privacy Words…", target: self, action: #selector(editWordsPressed(_:)))
+        let edit = NSButton(title: "Open Secrets…", target: self, action: #selector(editWordsPressed(_:)))
         edit.bezelStyle = .rounded
         edit.accessibilityID("privateTerminal.options.editWords")
-
-        let note = NSTextField(wrappingLabelWithString:
-            "The words this terminal shows in place of the real ones. Kept in the "
-            + "keychain; opening them asks you to authenticate.")
-        note.textColor = .secondaryLabelColor
-        note.widthAnchor.constraint(lessThanOrEqualToConstant: 300).isActive = true
-
-        let stack = NSStackView(views: [edit, note])
-        stack.orientation = .vertical
-        stack.alignment = .leading
-        stack.spacing = 6
-        return [stack]
+        return [edit]
     }
 }
 
@@ -344,7 +329,7 @@ extension PrivateTerminalViewController: TerminalPaneConnectable {
         if session.isStarted { return connectableTerminal }
         hasAskedToStart = true
         try await vault.loadUpgradingIfNeeded()
-        if let filter = vault.filter { startOrUpdate(filter: filter) }
+        if let filter = terminalFilter { startOrUpdate(filter: filter) }
         return connectableTerminal
     }
 }

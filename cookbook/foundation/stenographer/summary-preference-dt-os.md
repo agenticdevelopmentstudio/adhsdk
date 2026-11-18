@@ -33,6 +33,8 @@ approved-date: ""
 
 This file holds the numbers and names both sides of the AI-summaries feature read, so the app's settings panel and the daemon's summarizer cannot drift. `SummaryDefaults` carries the prompt template, the `{maxWords}` placeholder and the default value of each knob, plus the one derived function `characterCap(maxWords:)`. `SummaryLimits` carries the accepted range of each numeric knob and `clamp(_:to:)`. `SummarySettingsKeys` names the daemon settings-table keys the values persist under. The app owns the values (they live in `UserSettings` and are pushed to the daemon over HTTP: `StenographerHTTPClient.setSummaryPreferences` is the current push path, and the "over XPC" wording in the source's doc comment is stale); the daemon persists them and falls back to these defaults for anything never pushed, so the panel's "Reset to Defaults" lands where a never-configured daemon already sits. The code holds constants and two pure functions; reading the settings table, pushing the values and cleaning a reply live in `SummaryPrefs`, `StenographerSummaryPrefsPush` and `DaemonSessionSummarizer`, outside these sources.
 
+`SummaryFeature` (`sessions`, `conversations`, `projects`) names who a summary is for. `key(_:)` keeps Sessions' keys as they were and prefixes the others with `<raw>.`; `enabledKey`, `selectedConfigKey`, `summaryColumn` and `summaryAtColumn` follow from it, so the daemon stores and schedules each feature's summaries independently.
+
 ## Behavioral Requirements
 
 - **placeholder-token**: `SummaryDefaults.maxWordsPlaceholder` MUST be the literal text `{maxWords}`.
@@ -173,7 +175,7 @@ Not applicable: this code makes no log calls.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Stenographer/SummaryPreferenceDTOs.swift` | confirmed (1.0.2) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Stenographer/SummaryPreferenceDTOs.swift` | confirmed (1.0.3) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -213,10 +215,6 @@ Not applicable: this code makes no log calls.
 | [adc.check.privacy-and-data.data-minimization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/991d2adb-3f9a-524d-8218-529592614159) | passed | privacy-and-data |
 
 separation-of-concerns passes: the file holds constants, the range bounds, one clamp and one cap function; reading the settings table, the XPC push and the reply cleaning live in `SummaryPrefs`, `StenographerSummaryPrefsPush` and `DaemonSessionSummarizer`. unit-test-coverage passes: `SummaryPreferenceDTOsConformanceTests` calls `clamp` and `characterCap` directly and asserts the range bounds, key string, default prompt and defaults (vectors 001 to 003 and 010 to 015); vectors 004 to 009 are covered by the daemon tests named in the vectors file. data-minimization passes: `detailChars` caps how much of each event's detail leaves the session for the prompt, and the source names that cap as data minimization.
-
-## Per-Feature Summaries
-
-`SummaryFeature` (`sessions`, `conversations`, `projects`) names who a summary is for. `key(_:)` keeps Sessions' keys as they were and prefixes the others with `<raw>.`; `enabledKey`, `selectedConfigKey`, `summaryColumn` and `summaryAtColumn` follow from it, so the daemon stores and schedules each feature's summaries independently.
 
 ## Change History
 

@@ -2,11 +2,11 @@
 id: 0ca47bff-576f-4e2a-b3f0-5fc0c73ff859
 title: "Private Terminal View Controller"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-14
-modified: 2026-11-14
+modified: 2026-11-18
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -33,7 +33,7 @@ approved-date: ""
 
 The privacy words are the vault's. The shell starts the first time the pane appears, as any terminal does, using words read from the keychain without a prompt, because those words are what conceal its output and the shell cannot start without them. Starting shows nothing: the screen stays up. Only words still saved under the old user-presence guard make the pane wait for the eye. The shell's output and input are filtered inside the session's terminal view, a private terminal view; the controller reaches the filter only through `TerminalSession.privacyFilter`.
 
-Nothing outside the app can read the terminal. The terminal sits inside a concealed container, so accessibility clients and screen readers find no element there, a scripted view dump stops at it, and while the pane is revealed the hosting window is excluded from screen capture. The class also supplies the pane's eye toggle beside the gear, an Edit Privacy Words option row, the terminal-connectable offer for a chat, the teardown and removal confirmation, and the pane spacing hook. The class is public, `@MainActor` and `final`.
+Nothing outside the app can read the terminal. The terminal sits inside a concealed container, so accessibility clients and screen readers find no element there, a scripted view dump stops at it, and while the pane is revealed the hosting window is excluded from screen capture. The class also supplies the pane's eye toggle beside the gear, an Open Secrets option row, the terminal-connectable offer for a chat, the teardown and removal confirmation, and the pane spacing hook. The class is public, `@MainActor` and `final`.
 
 ## Behavioral Requirements
 
@@ -59,10 +59,8 @@ Nothing outside the app can read the terminal. The terminal sits inside a concea
 - **no-notify-on-update**: Handing a filter to a shell already started MUST NOT post that notification.
 - **accessory-toggle**: The controller MUST offer one pane accessory button, an eye beside the gear, titled "Hide the private terminal" with the open-eye symbol when revealed and "Show the private terminal" with the crossed-out symbol when not, that reveals or hides on press.
 - **accessory-refresh**: Whenever the reveal state changes, the controller MUST ask its parent pane to refresh its accessories.
-- **options-edit-words**: The controller MUST offer one option row holding an Edit Privacy Words button and a note that the words are kept in the keychain and opening them asks for authentication.
-- **edit-words-authenticates**: Pressing Edit Privacy Words MUST dismiss the options dialog and then ask the vault to authenticate with the reason "edit the privacy words" before presenting the editor on the window.
-- **edit-words-no-stack**: Pressing Edit Privacy Words while an authentication is on screen MUST do nothing beyond dismissing the options dialog.
-- **edit-words-failure-alert**: When that authentication fails and the pane has a window, the controller MUST show a sheet titled "The privacy words could not be opened." with the error's localized description.
+- **options-edit-words**: The controller MUST offer one option row holding an Open Secrets… button and nothing else.
+- **edit-words-authenticates**: Pressing Open Secrets… MUST dismiss the options dialog and open the Secrets window (`SecretsWindowController.show(vault:)`), which asks for authentication itself; the controller MUST NOT authenticate first.
 - **connectable-while-running**: The connectable terminal MUST be the session while it is running and nil otherwise.
 - **connect-starts-shell**: Starting the connectable terminal MUST mark the pane as asked to start, load the words through the vault's upgrade-if-needed load, give the session the filter if one exists, and return the connectable terminal, without revealing the screen.
 - **connect-already-started**: When the shell has already started, starting the connectable terminal MUST return the connectable terminal without loading words.
@@ -79,6 +77,7 @@ Nothing outside the app can read the terminal. The terminal sits inside a concea
 - **no-coder-init**: The coder initializer MUST be unavailable.
 - **main-actor**: The controller MUST be used only from the main actor.
 - **auto-hide**: NEEDS REVIEW: Not implemented in source. Nothing puts the privacy screen back up on its own when the window loses focus, goes to the background, the Mac sleeps or a time passes; evidence that settles it is a product decision on whether an idle or lock event should lower the screen.
+- **terminal-words**: The words handed to the session MUST be the vault's `filter(forTerminalAt:)` for the directory the terminal started in (its working directory, or the home folder when it has none), so a word applies only in the terminals its Terminal column names.
 
 ## Appearance
 
@@ -137,8 +136,6 @@ The repository has no test that names `PrivateTerminalViewController`. The vecto
 | private-terminal-view-controller-013 | words-wait-until-asked | Vault publishes a filter before the pane appears | The shell is not started. |
 | private-terminal-view-controller-014 | words-follow-vault, no-notify-on-update | Started shell; the vault publishes a new filter | The session's filter is replaced; no second notification posts. |
 | private-terminal-view-controller-015 | accessory-toggle, accessory-refresh | Reveal with the pane as parent | One accessory button titled "Hide the private terminal"; the parent was asked to refresh accessories. |
-| private-terminal-view-controller-016 | options-edit-words, edit-words-authenticates | Press Edit Privacy Words | The options dialog is dismissed; the vault is asked with "edit the privacy words"; the editor is presented on the window. |
-| private-terminal-view-controller-017 | edit-words-failure-alert | `authenticate` throws "Denied" while pressing Edit | A sheet reads "The privacy words could not be opened." with "Denied". |
 | private-terminal-view-controller-018 | connectable-while-running | Session not started, then running, then exited | Nil, the session, nil. |
 | private-terminal-view-controller-019 | connect-starts-shell, connect-error-propagates | `startConnectableTerminal()` with the upgrading load succeeding, then throwing | Success returns the running session with the screen still up; the throw propagates to the caller. |
 | private-terminal-view-controller-020 | connect-already-started | Shell already started; `startConnectableTerminal()` | Returns the connectable terminal; the vault load is not called. |
@@ -184,10 +181,8 @@ All user-facing text is a literal string in the source; none goes through a loca
 | (literal) | Hide the private terminal | Accessory title when revealed |
 | (literal) | Click the eye to show this terminal. | Screen message, shell started |
 | (literal) | Click the eye to start this private terminal. | Screen message, shell not started |
-| (literal) | Edit Privacy Words… | Options button |
-| (literal) | The words this terminal shows in place of the real ones. Kept in the keychain; opening them asks you to authenticate. | Options note |
-| (literal) | The privacy words could not be opened. | Alert title |
-| (literal) | show the private terminal / edit the privacy words | Authentication reasons |
+| (literal) | Open Secrets… | Options button |
+| (literal) | show the private terminal | Authentication reason |
 | (literal) | This pane has a running private terminal session. Removing the pane ends it. | Removal confirmation |
 
 - **string-externalization**: Every string above is a hard-coded English literal; the source does no localization lookup and has no localization table.
@@ -227,7 +222,7 @@ Not applicable: the controller calls no logging API, so words and stream content
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/TerminalSession/PrivateTerminalViewController.swift` | confirmed (1.0.0) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/TerminalSession/PrivateTerminalViewController.swift` | confirmed (1.0.1) |
 | apple | (planned) | planned |
 | web | (planned) | planned |
 | android | (planned) | planned |
@@ -279,3 +274,4 @@ Separation of concerns is partial: authentication and word storage live in the v
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-18 | Mike Fullerton | Open Secrets… replaces Edit Privacy Words (no authentication or alert of its own); words come from filter(forTerminalAt:) for the start directory. Vectors 016 and 017 removed. |

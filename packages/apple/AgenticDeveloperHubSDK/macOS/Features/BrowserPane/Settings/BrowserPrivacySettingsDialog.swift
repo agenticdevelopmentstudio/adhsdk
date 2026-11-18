@@ -14,9 +14,8 @@ import AppKit
 /// (`BrowserPaneSettingsWindowController`): the pane's
 /// `makePaneSettingsController()` records the construction-time values when
 /// it opens, and the popover's closing finishes that controller, which
-/// rebuilds the pane if one of them changed. Edit Privacy Words… closes the popover and
-/// opens its editor over the pane's window, since a popover is no window to
-/// put a sheet on. One per pane.
+/// rebuilds the pane if one of them changed. Open Secrets… opens the Secrets
+/// window, which the transient popover gives way to. One per pane.
 @MainActor
 final class BrowserPrivacySettingsDialog: NSObject, NSPopoverDelegate {
 

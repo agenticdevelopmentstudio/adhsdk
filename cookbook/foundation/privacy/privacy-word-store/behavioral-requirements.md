@@ -26,4 +26,8 @@
 - **no-in-process-gate**: The store itself MUST NOT require authentication for `load` or `save`; showing, opening and saving the words are guarded by the caller taking `authenticate(reason:)` first. `PrivacyWordsVault` is the caller that does this.
 - **blocking-calls**: `load` and `save` MUST be synchronous and MUST NOT dispatch to another queue or actor; they run on the calling thread.
 - **no-retry**: The store MUST NOT retry a failed keychain call.
+- **word-terminals**: A `PrivacyWord` MUST carry `terminals`, the private terminals it applies in, as `.gitignore`-style patterns matched against the directory the terminal started in (`PrivacyTerminalPattern`): `*` is every terminal, a bare name matches a directory of that name and everything inside it, `~` is the home folder, `**` reaches everything below and `!` takes a directory back out, the last match deciding.
+- **word-terminals-default**: A word decoded without `terminals` MUST take `["*"]` when its sites include `*` and no terminals otherwise, so a word saved before the field kept applying exactly where it applied before.
+- **word-terminals-disabled**: A disabled word MUST apply in no terminal.
+- **filter-for-terminal**: `[PrivacyWord].filter(forTerminalAt:)` MUST build a filter from the enabled words whose terminals match the directory; a nil directory matches only `*`.
 

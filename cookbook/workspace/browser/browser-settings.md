@@ -2,7 +2,7 @@
 id: 5a246e6c-2125-4427-a8ab-2f43f2fecba5
 title: "Web Browser Settings Topics"
 type: ingredient
-version: 0.1.10
+version: 0.1.11
 status: draft
 language: en
 created: 2026-11-15
@@ -63,6 +63,10 @@ and overridable per pane, which gates the agent's `browser_history` tool.
 History recording also gains a rule: nothing is recorded while private
 browsing is on for the pane. Sidebar search keeps finding every control
 because each topic's search keywords move with its controls.
+
+Privacy and Security shows three tabs, matching the privacy toolbar's groups: General (storage, scripts, cookies, camera and microphone, protection, site data, history), Events (Pause all events, input, focus and visibility) and Agents (Agent Access, Agent Privacy). Show privacy toolbar is no longer a row; the View menu toggles it. Agent access is two checkboxes over the one three-way setting: Agent access (anything but hidden; turning it on gives full control) and Read only (enabled only while access is on).
+
+The privacy toolbar is three groups, General (Third-Party, Cookies, Hide Images), Events (All Events, Keyboard, Mouse, Tracking, Drag and Drop, Activation) and Agents (Agent, Read Only, Privacy Words, Hide from Agent), spaced evenly across the row, with the Agent view control in a bordered box at the end (`BrowserPrivacyStatus`, `BrowserPrivacyStripButton`, `BrowserPrivacyStripGroupView`). Each item is a button reading "Title: State" ("Mouse: Off"). A two-valued item toggles its setting in the pane's own settings; Tracking and Third-Party, which have three values, pop up a menu of them, marked with a trailing triangle. An item is red while its privacy protection is in force (Hide Images on, Mouse off, Privacy Words on) and plain otherwise. All Events: Enabled / Disabled is the pane's pause: disabled, every event item shows Off and is disabled, and enabling it again brings back the toggles as they were, since pausing never touches them. Agent is On while access is anything but hidden, and Read Only, enabled only while Agent is on, switches between read only and full control. Cookies is disabled where the pane shares the global data store.
 
 ## Behavioral Requirements
 
@@ -169,6 +173,7 @@ because each topic's search keywords move with its controls.
   that nothing is recorded whatever "Record history" says (the History group
   MUST NOT say it under the checkbox); "Agent can see history" MUST have a
   help topic of its own.
+- **agent-privacy-open-secrets**: The agent privacy group MUST offer an Open Secrets… button that opens the Secrets window, and MUST NOT itself authenticate or show the testing words, which belong to Settings > Features > Secrets.
 
 ## Appearance
 
@@ -434,14 +439,15 @@ Not applicable: the design asks for no log line of the topics' own.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Settings/BrowserBehaviorPanel.swift` | planned |
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Settings/BrowserAppearancePanel.swift` | planned |
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Settings/BrowserSiteDataWindowController.swift` | planned |
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Settings/BrowserSettingsPanelViewController.swift` | planned |
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Settings/SessionPrivacySettingsPanel.swift` | unverified |
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Settings/` | unverified |
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/WebBrowserPaneViewController.swift` | unverified |
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/SafariExtensions/SafariExtensionToolbar.swift` | unverified |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Settings/BrowserBehaviorPanel.swift` | confirmed (0.1.11) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Settings/BrowserAppearancePanel.swift` | confirmed (0.1.11) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Settings/BrowserSiteDataWindowController.swift` | confirmed (0.1.11) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Settings/BrowserSettingsPanelViewController.swift` | confirmed (0.1.11) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Settings/SessionPrivacySettingsPanel.swift` | confirmed (0.1.11) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Settings/` | confirmed (0.1.11) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/WebBrowserPaneViewController.swift` | confirmed (0.1.11) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/SafariExtensions/SafariExtensionToolbar.swift` | confirmed (0.1.11) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/BrowserPrivacyStrip.swift` | confirmed (0.1.11) |
 
 ## Design Decisions
 
@@ -491,18 +497,11 @@ silenced.
 
 Notes: no compliance checks have been run against the code yet.
 
-## Privacy Tabs
-
-Privacy and Security shows three tabs, matching the privacy toolbar's groups: General (storage, scripts, cookies, camera and microphone, protection, site data, history), Events (Pause all events, input, focus and visibility) and Agents (Agent Access, Agent Privacy). Show privacy toolbar is no longer a row; the View menu toggles it. Agent access is two checkboxes over the one three-way setting: Agent access (anything but hidden; turning it on gives full control) and Read only (enabled only while access is on).
-
-## Privacy Toolbar
-
-The privacy toolbar is three groups, General (Third-Party, Cookies, Hide Images), Events (All Events, Keyboard, Mouse, Tracking, Drag and Drop, Activation) and Agents (Agent, Read Only, Privacy Words, Hide from Agent), spaced evenly across the row, with the Agent view control in a bordered box at the end (`BrowserPrivacyStatus`, `BrowserPrivacyStripButton`, `BrowserPrivacyStripGroupView`). Each item is a button reading "Title: State" ("Mouse: Off"). A two-valued item toggles its setting in the pane's own settings; Tracking and Third-Party, which have three values, pop up a menu of them, marked with a trailing triangle. An item is red while its privacy protection is in force (Hide Images on, Mouse off, Privacy Words on) and plain otherwise. All Events: Enabled / Disabled is the pane's pause: disabled, every event item shows Off and is disabled, and enabling it again brings back the toggles as they were, since pausing never touches them. Agent is On while access is anything but hidden, and Read Only, enabled only while Agent is on, switches between read only and full control. Cookies is disabled where the pane shares the global data store.
-
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 0.1.11 | 2026-11-18 | Mike Fullerton | Agent privacy: Open Secrets… opens the Secrets window; its testing-words rows moved to Settings > Features > Secrets; the privacy toolbar's strip is claimed here. |
 | 0.1.10 | 2026-11-18 | Mike Fullerton | Privacy toolbar: General / Events / Agents groups of toggle buttons, red while protecting, labels state their state. |
 | 0.1.9 | 2026-11-18 | Mike Fullerton | Privacy and Security in General / Events / Agents tabs; Show privacy toolbar removed; Agent access as On/Off plus Read only. |
 | 0.1.8 | 2026-11-18 | Mike Fullerton | Agent Privacy gains the two model-automation switches (Settings window only), moved from the retired Automation panel |
