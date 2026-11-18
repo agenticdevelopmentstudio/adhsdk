@@ -64,7 +64,7 @@ top of it.
 ### Concurrency and isolation
 
 - **concurrency-safe-store**: The store MUST be safe to use concurrently from multiple callers; its internal state MUST NOT change after construction, and concurrent access MUST be serialized by the underlying connection pool.
-- **serialized-operations**: Every store-mutating operation (`prepare`, `cursor`, `apply`, `stage`, `pendingOps`, `complete`, `resetForResync`, `registrations`, `purgeResources`, `purgeForIdentityChange`) MUST run through a single internal serialization point, so two such operations on the same store never execute at the same time.
+- **serialized-operations**: Every store-mutating operation (`prepare`, `cursor`, `apply`, `stage`, `pendingOps`, `complete`, `resetForResync`, `registrations`, `purgeResources`, `boundAccount`, `bind(account:)`, `migrateProvenanceColumns`) MUST run through a single internal serialization point, so two such operations on the same store never execute at the same time.
 - **single-transaction-operations**: Every such operation MUST perform all of its database work inside exactly one write transaction, so a failure anywhere in the operation leaves no partial effect.
 - **concurrent-read-helpers**: `liveRows`, `liveRow`, `registeredResources` and `status` MUST be synchronous reads that bypass the serialization point, reading from a reader connection (or the writer connection when called during a write), so they MAY run concurrently with each other and with a mutating operation.
 - **per-call-codecs**: The store MUST NOT share a JSON encoder or decoder between calls; each call that encodes or decodes builds its own, because a read may run on several pool connections at once.
@@ -151,9 +151,9 @@ top of it.
 - **purge-resources-effect**: For each named resource, `purgeResources` MUST empty its mirror, set its `pending` and `inflight` outbox ops to `quarantined`, and delete its `_sync_resources` row.
 - **purge-resources-keeps**: `purgeResources` MUST leave the cursor, already-`quarantined` ops and other resources untouched.
 - **purge-resources-unregistered**: `purgeResources` MUST skip the mirror truncation of an unregistered resource silently, without raising an error.
-- **purge-identity-effect**: `purgeForIdentityChange` MUST empty every registered mirror, delete the `_sync_state` row, and delete every `_sync_outbox` row whatever its status.
-- **purge-identity-projection**: `purgeForIdentityChange` MUST call the projection's identity-purge operation in the same transaction.
-- **purge-identity-keeps**: `purgeForIdentityChange` MUST leave `_sync_resources` and `_sync_conflicts` untouched, so `stage` works for the next identity without a new `prepare`.
+- **identity-change-keeps-data**: The store MUST offer no operation that deletes mirror rows, outbox ops or the cursor because the signed-in identity changed; an identity change is the host's to handle by pausing the engine, never by purging.
+- **account-binding**: `_sync_state.bound_account` MUST record the account the mirror belongs to; `boundAccount()` MUST return it (nothing when unbound) and `bind(account:)` MUST set it. `resetForResync` MUST clear the cursor and keep the binding.
+- **provenance-columns**: `migrateProvenanceColumns()` MUST add the nullable columns `origin` and `reached_accounts` to every generic mirror table that lacks them, and MUST be idempotent.
 - **truncate-batched**: Every mirror truncation MUST filter the resources against `_sync_resources` first, then hand all claimed resources to the projection's truncate operation in one call, then delete rows from each unclaimed resource's table.
 - **rows-only**: Store operations MUST NOT drop a table or delete the database file; recovery only deletes rows.
 
@@ -172,7 +172,7 @@ top of it.
 
 - **durable-state**: The cursor, registrations, mirror rows, outbox ops and conflict audit MUST persist in the database file across process restarts; the store keeps no in-memory copy.
 - **crash-replay**: Ops marked `inflight` when the process dies MUST be returned again by the first `pendingOps` after restart.
-- **quarantine-retained**: Quarantined ops MUST remain in `_sync_outbox` until `purgeForIdentityChange`; the store offers no operation that retries or deletes one individually.
+- **quarantine-retained**: Quarantined ops MUST remain in `_sync_outbox`; the store offers no operation that retries or deletes one individually.
 - **conflicts-retained**: `_sync_conflicts` rows MUST never be deleted by any store operation.
 
 ### Projection contract
@@ -220,7 +220,7 @@ All vectors use a fresh file-backed database and a `personal.notes` resource at 
 | sync-grdb-015 | live-rows-unknown | `liveRows("unknown.resource")`; `liveRow("unknown.resource", "r1")` | Each raises an `unknownResource` error naming "unknown.resource" |
 | sync-grdb-016 | table-name-charset, table-name-mapping | Mirror-table-name mapping applied to "personal.notes; DROP TABLE _sync_state;--", "Personal.Notes", "", "personal.notes_v2" | First three raise an error; the fourth returns "personal_notes_v2" |
 | sync-grdb-017 | apply-delete-mirror, reset-mirrors, reset-preserves-outbox | Apply s1 v3 at c3; apply s1 delete v4 at c4; stage "mine"; `resetForResync` | Live rows 0 before reset; after reset `cursor` returns nothing and `pendingOps` returns 1 op |
-| sync-grdb-018 | purge-identity-effect, purge-identity-keeps | Apply s1 at c1; stage r1, r2; `pendingOps`; reject r2; `purgeForIdentityChange`; stage r3 | Before purge outboxDepth 1, quarantinedDepth 1; after: both 0, `cursor` returns nothing, 0 live rows, `registeredResources` = {personal.notes}; `pendingOps` returns only r3 |
+| sync-grdb-018 | account-binding | `bind(account: "A")`; apply s1 at c1; `resetForResync` | `boundAccount` = A before and after; `cursor` returns nothing after |
 | sync-grdb-019 | stage-pull-only-first | Store with pull-only resources ["social.follows"], prepared; stage social.follows r1 | Raises a `pullOnlyResource` error naming "social.follows" |
 | sync-grdb-020 | registrations-map, purge-resources-effect, purge-resources-keeps | Prepare a.x@1, b.y@2; apply a row each at c1; stage a.x row 1; `purgeResources(["a.x"])` | Before: registrations {a.x:1, b.y:2}. After: b.y has 1 live row; `liveRows("a.x")` raises an error; `pendingOps` empty; quarantinedDepth 1; registrations {b.y}; cursor "c1" |
 | sync-grdb-021 | purge-resources-unregistered | Prepare a.x@1; apply a.x row at c1; `purgeResources(["never.prepared"])` | No error; a.x has 1 live row; registrations {a.x:1}; cursor "c1" |
@@ -299,7 +299,7 @@ Not applicable: the store emits no analytics; `status` is a local snapshot for t
 - **Data collected**: The store persists whatever row data the host syncs (JSON object payloads), the pull cursor, and conflict reasons; it adds nothing of its own.
 - **Storage**: Everything lives unencrypted in the SQLite file at its configured path; the store applies no encryption and relies on the file's location and OS file protection.
 - **Transmission**: The store performs no network I/O; outbox ops leave the device only when the caller pushes them.
-- **Retention**: Mirror rows stay until a newer pull, `resetForResync`, `purgeResources` or `purgeForIdentityChange` removes them; tombstones stay indefinitely; quarantined ops stay until `purgeForIdentityChange`; `_sync_conflicts` rows (op id, resource, row id, reason) are never deleted, even across an identity change.
+- **Retention**: Mirror rows stay until a newer pull, `resetForResync` or `purgeResources` removes them, and survive an identity change (the host pauses sync instead); tombstones and quarantined ops stay indefinitely; `_sync_conflicts` rows (op id, resource, row id, reason) are never deleted.
 
 ## Logging
 
@@ -345,11 +345,11 @@ Not applicable: the sources make no log call; every failure is raised to the cal
 
 **Approved**: pending
 
-### Identity change clears the outbox; resync does not
+### An identity change keeps the data; the store is bound to one account
 
-**Decision**: `resetForResync` keeps every outbox op; `purgeForIdentityChange` deletes all of them, including quarantined ones, and asks the projection to drop its local-only state.
+**Decision**: The store has no identity-change purge. It records the account it belongs to (`_sync_state.bound_account`), and `resetForResync` keeps both the outbox and the binding.
 
-**Rationale**: The `purgeForIdentityChange` doc comment explains that a resync keeps the same identity, which still owes the server its queued edits, while pushing a departing identity's ops under new credentials would misattribute them; `MarkdownProjection`'s sidecar outbox is the cited case for `purgeIdentityState`.
+**Rationale**: Signing out used to destroy un-pushed work. The apps-suite design keeps it: the host pauses sync while nobody, or a different account, is signed in, and resumes from the kept cursor when the bound account returns, so no op is ever pushed under the wrong credentials and nothing is lost.
 
 **Approved**: pending
 
@@ -379,7 +379,7 @@ Not applicable: the sources make no log call; every failure is raised to the cal
 
 ### SyncMirrorProjection
 
-**Decision**: Typed storage is opt-in per resource through a projection, and the `isFullRow:` and `purgeIdentityState` requirements have defaults.
+**Decision**: Typed storage is opt-in per resource through a projection, and the `isFullRow:` requirement has a default.
 
 **Rationale**: The protocol doc says the JSON mirror survives schema evolution without migrations and is the right default, while indexed or foreign-keyed local storage needs real columns; the defaults keep projections written before those requirements existed source-compatible.
 

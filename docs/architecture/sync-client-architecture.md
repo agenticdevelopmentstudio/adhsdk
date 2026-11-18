@@ -405,34 +405,22 @@ All local mutations go through `store.stage(_:)` and nothing else. Hosts wrap it
 original `baseVersion` — so two edits never race each other into a stale
 self-conflict on push.
 
-### Identity-change purge: `pause()` → `purgeForIdentityChange()` → `resume()`
+### Identity change: pause, never purge
 
-An ordinary resync preserves the outbox; an **identity change** (sign-out,
-switch account) must not — every queued op belongs to the departing identity and
-pushing it under the new identity's credentials would misattribute it. That is
-what `GRDBSyncStore.purgeForIdentityChange()` exists for: in one transaction it
-empties every mirror table, clears the cursor (`_sync_state`), and deletes
-**every** outbox row regardless of status (`pending`, `inflight`, _and_
-`quarantined`), while leaving `_sync_resources` (the registrations) and
-`_sync_conflicts` (the audit) untouched. Like every recovery path it only
-deletes rows — never the database file.
-
-Hosts must **bracket** that purge with the engine paused (BitBag's `signOut`):
+An identity change (sign-out, a different account) never deletes local data.
+The store records the account it belongs to in `_sync_state.bound_account`
+(`boundAccount()`, `bind(account:)`); the first sign-in binds it. Hosts pause
+the engine while nobody is signed in, or while a different account is, and
+resume it when the bound account returns — the kept cursor and outbox pick up
+where they stopped. A paused engine pushes and pulls nothing, so no op is ever
+sent under another identity's credentials. `resetForResync` clears the cursor
+and keeps both the outbox and the binding.
 
 ```swift
-await engine.pause()                        // suspends until any in-flight cycle
-                                            //   finishes; kick/syncNow no-op while paused
-try? await store.purgeForIdentityChange()   // credentials still valid here
-credentials.clear()
-await engine.resume()                       // does NOT itself kick; the next
-                                            //   credential save kicks on its own
+await engine.pause()      // suspends until any in-flight cycle finishes
+credentials.clear()       // rows, outbox and cursor are kept
+await engine.resume()     // does NOT itself kick; the next sign-in does
 ```
-
-The ordering is a correctness requirement, not a nicety: without the pause a
-cycle already mid-flight could `apply()` a pull or `complete()` a push against
-the store after the purge clears it, leaving stale rows from the outgoing
-identity behind. Purge **before** clearing credentials, because
-`purgeForIdentityChange()` still needs an authenticated, usable store.
 
 ### Bumping the toolkit across a `SyncEvent` case addition
 

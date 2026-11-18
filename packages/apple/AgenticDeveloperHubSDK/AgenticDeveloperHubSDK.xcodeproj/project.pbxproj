@@ -3141,6 +3141,7 @@
 		B1283746DC29BDF9ADDFEBAF /* AIProviderConfigKeysTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 644840BAD4D184B2F686E803 /* AIProviderConfigKeysTests.swift */; };
 		B12BD18ABEE9B6A06907485A /* DaemonAIChatGuardTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A54BDCD2C951B4977B5D8644 /* DaemonAIChatGuardTests.swift */; };
 		B133F57E9445C09F900208B5 /* ConversationExtractCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = 997367BA2FDC4C8A018AC832 /* ConversationExtractCache.swift */; };
+		B1405F6E92360E04029F2255 /* ProvenanceColumnsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B61D45434CD134DCB1F6D205 /* ProvenanceColumnsTests.swift */; };
 		B15928BE4C019C73A6F0C6CC /* TerminalChatSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 238A224BF3A2B86A633B753E /* TerminalChatSession.swift */; };
 		B16213C3C5A247546A029D4B /* IntegrationsSettingsPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36E2874360BA8F34C0892763 /* IntegrationsSettingsPanel.swift */; };
 		B16CB93BBCC7287516CCE55F /* AgenticDeveloperHubSDKCoreUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D6CA84EE811DF56FF84BAB0E /* AgenticDeveloperHubSDKCoreUI.framework */; };
@@ -10166,6 +10167,7 @@
 		B602D130BD216929B462E374 /* ChromiumExtensionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChromiumExtensionManager.swift; sourceTree = "<group>"; };
 		B6036854DA366C350B67F138 /* GitWindowToolbar+Undo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "GitWindowToolbar+Undo.swift"; sourceTree = "<group>"; };
 		B61909BB2A606303DD7C8700 /* AISummariesSettingsPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AISummariesSettingsPanel.swift; sourceTree = "<group>"; };
+		B61D45434CD134DCB1F6D205 /* ProvenanceColumnsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProvenanceColumnsTests.swift; sourceTree = "<group>"; };
 		B65451F31533F92C3756FB31 /* ProjectPaneStateStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectPaneStateStoreTests.swift; sourceTree = "<group>"; };
 		B668626D4B4A3E0795558446 /* ProjectFilter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectFilter.swift; sourceTree = "<group>"; };
 		B6691EEEDDE4320D2DE070CF /* GitWindowFeature+Undo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "GitWindowFeature+Undo.swift"; sourceTree = "<group>"; };
@@ -18266,6 +18268,7 @@
 			children = (
 				A2FD0F72BB0E6AB91FC30400 /* GRDBSyncStoreTests.swift */,
 				52BCF7E52C0016E7F051F9A8 /* MultipleProjectionsTests.swift */,
+				B61D45434CD134DCB1F6D205 /* ProvenanceColumnsTests.swift */,
 				E6912F12152418CE4F029448 /* SyncEngineGRDBIntegrationTests.swift */,
 				4EB3E4D07DFBFF07669A6C95 /* SyncGRDBSmokeTests.swift */,
 				610B66FBEFD92AAD694413B3 /* SyncMirrorProjectionTests.swift */,
@@ -24175,6 +24178,7 @@
 			files = (
 				8D08CBC34898D9DA1FC2A03A /* GRDBSyncStoreTests.swift in Sources */,
 				C95B053F5FD4EF0C441587B5 /* MultipleProjectionsTests.swift in Sources */,
+				B1405F6E92360E04029F2255 /* ProvenanceColumnsTests.swift in Sources */,
 				2931884C31031F054AF96E2E /* SyncEngineGRDBIntegrationTests.swift in Sources */,
 				711AC03B97341B0F4AD5876A /* SyncGRDBSmokeTests.swift in Sources */,
 				F1527FB1DEFB0BDCBF778FBA /* SyncMirrorProjectionTests.swift in Sources */,

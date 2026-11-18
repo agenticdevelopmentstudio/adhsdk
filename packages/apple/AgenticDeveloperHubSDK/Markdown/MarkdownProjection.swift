@@ -674,38 +674,6 @@ public struct MarkdownProjection: SyncMirrorProjection {
         }
     }
 
-    /// The local-only tables `MarkdownStore` keeps beside this projection, in
-    /// the same database file, and which no `resources` entry names.
-    ///
-    /// Each one is a statement about the *account that wrote it*, which is
-    /// exactly what an identity change invalidates:
-    ///
-    ///   * `_markdown_outbox` — note bodies typed offline and not yet pushed.
-    ///     Drained under the next identity, they POST the previous user's
-    ///     text into the new user's account.
-    ///   * `_markdown_remote_id` — "this local id is that document upstream",
-    ///     true only in the account that created it. Kept, an update is
-    ///     addressed to another tenant's document id.
-    ///   * `_markdown_frontmatter_owner` — which frontmatter keys the app
-    ///     wrote, keyed by document id. The documents are gone with the
-    ///     mirror rows, so the claims are about rows that no longer exist,
-    ///     and an id the next identity happens to reuse would inherit them.
-    ///
-    /// Guarded by `tableExists` for the same reason `applyOwnedFrontmatter`
-    /// is: these tables come from `MarkdownStore`'s migrations, and a host
-    /// that builds a bare `GRDBSyncStore` on this projection has the mirror
-    /// tables and none of them.
-    private static let identityScopedTables = [
-        "_markdown_outbox", "_markdown_remote_id", "_markdown_frontmatter_owner"
-    ]
-
-    public func purgeIdentityState(in conn: Database) throws {
-        for table in Self.identityScopedTables {
-            guard try conn.tableExists(table) else { continue }
-            try conn.execute(sql: "DELETE FROM \(table)")
-        }
-    }
-
     /// Which of this projection's resources hold rows referencing each
     /// foreign-key parent among them. `category_items`/`keyword_items` name
     /// their *target* polymorphically (`target_kind`, `target_id`) with no
