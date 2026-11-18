@@ -19,9 +19,9 @@ vi.mock('next/link', () => ({ default: ({ children, href }: { children: ReactNod
 // The card's whole job is to resolve ONE target and post the central steps against
 // it, so the target resolver is the seam these tests drive: a stub standing in for
 // both the relayed and the synthesized answer (sso.test.ts owns which is which).
-// Which clients get the password form is sso.ts's rule, so the real one is used.
+// Which failures are the AS refusing the client is sso.ts's rule, so the real one is used.
 vi.mock('../sso', async () => ({
-  offersCredentialLogin: (await vi.importActual<typeof import('../sso')>('../sso')).offersCredentialLogin,
+  isCentralClientRefusal: (await vi.importActual<typeof import('../sso')>('../sso')).isCentralClientRefusal,
   readCentralParams: () => relayed,
   centralLoginTarget: (opts: { clientId: string; callbackPath?: string; authApiBase?: string; returnTo?: string }) =>
     relayed
@@ -43,6 +43,14 @@ vi.mock('../sso', async () => ({
 vi.mock('../context', () => ({ useOptionalAuth: () => null }))
 
 import { LoginCard } from '../ui/LoginCard'
+import { AuthHttpError } from '../client'
+import { renderToString } from 'react-dom/server'
+
+/** The AS's answer at the central password route for a customer client. */
+const refusal = (): AuthHttpError =>
+  new AuthHttpError(400, 'this client does not use the central sign-in', undefined, {
+    error: { message: 'this client does not use the central sign-in' },
+  })
 
 function fillAndSubmit(): void {
   fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'a@b.com' } })
@@ -140,25 +148,82 @@ describe('LoginCard for a relayed client', () => {
     )
   })
 
-  // A customer (ecosystem) client signs in with a social provider only; the AS answers
-  // 400 to the central password and passkey routes for it, so the card offers neither.
-  it('offers only the social providers to a customer client', () => {
-    relayed = { clientId: 'acme-shop', returnUrl: 'https://acme.example/auth/callback' }
+  // Which clients sign in with a password is the AS's call (it goes by the client's ecosystem
+  // tag, and a site's own registration in the hub ecosystem looks like any other slug), so a
+  // relayed login always starts with the form.
+  it('offers the password form to any relayed client until the AS refuses it', () => {
+    relayed = { clientId: 'hub-site-registration', returnUrl: 'https://site.example/auth/callback' }
     render(
       <LoginCard clientId="adh" postLoginRedirect="/home" showPasskey showGithub={false} oauthProviders={google} />,
     )
-    expect(screen.getByRole('button', { name: /continue with google/i })).toBeTruthy()
-    expect(screen.queryByLabelText(/email/i)).toBeNull()
-    expect(screen.queryByLabelText(/password/i)).toBeNull()
-    expect(screen.queryByRole('button', { name: /log in with email/i })).toBeNull()
-    expect(screen.queryByRole('button', { name: /sign in with a passkey/i })).toBeNull()
-    expect(screen.queryByText('or')).toBeNull()
+    expect(screen.getByLabelText(/email/i)).toBeTruthy()
+    expect(screen.getByRole('button', { name: /sign in with a passkey/i })).toBeTruthy()
   })
 
-  // The hub's sign-up makes a hub account, which a customer client cannot sign in with:
-  // it gets no credential login, so the link would lead somewhere that does not help.
-  it('hides the hub sign-up link from a customer client', () => {
+  // A customer (ecosystem) client signs in with a social provider only. The AS's 400 is not a
+  // wrong password: the form goes, and the card says why rather than inviting another try.
+  it('drops the form and says why when the AS refuses the client', async () => {
     relayed = { clientId: 'acme-shop', returnUrl: 'https://acme.example/auth/callback' }
+    centralEmailLogin.mockRejectedValue(refusal())
+    render(
+      <LoginCard clientId="adh" postLoginRedirect="/home" showPasskey showGithub={false} oauthProviders={google} />,
+    )
+    fillAndSubmit()
+    expect(await screen.findByRole('alert')).toHaveProperty(
+      'textContent',
+      "This site doesn't sign in with a password or a passkey. Use one of the options above.",
+    )
+    expect(screen.queryByLabelText(/password/i)).toBeNull()
+    expect(screen.queryByRole('button', { name: /sign in with a passkey/i })).toBeNull()
+    expect(screen.queryByText('or')).toBeNull()
+    expect(screen.getByRole('button', { name: /continue with google/i })).toBeTruthy()
+  })
+
+  // The passwordless passkey's options route refuses a customer client as `client not found`.
+  it('treats the passkey options refusal the same way', async () => {
+    relayed = { clientId: 'acme-shop', returnUrl: 'https://acme.example/auth/callback' }
+    centralPasswordlessPasskey.mockRejectedValue(new AuthHttpError(400, 'client not found'))
+    render(<LoginCard clientId="adh" postLoginRedirect="/home" showPasskey oauthProviders={google} />)
+    fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'a@b.com' } })
+    fireEvent.click(screen.getByRole('button', { name: /sign in with a passkey/i }))
+    await screen.findByRole('alert')
+    expect(screen.queryByLabelText(/email/i)).toBeNull()
+  })
+
+  // With no provider buttons either, the card never goes blank.
+  it('says there is no way in when the AS refuses and no provider is shown', async () => {
+    relayed = { clientId: 'acme-shop', returnUrl: 'https://acme.example/auth/callback' }
+    centralEmailLogin.mockRejectedValue(refusal())
+    render(<LoginCard clientId="adh" postLoginRedirect="/home" showGithub={false} oauthProviders={[]} />)
+    fillAndSubmit()
+    expect(await screen.findByRole('alert')).toHaveProperty(
+      'textContent',
+      "There's no way to sign in to this site from here. Go back to the site you came from and try again.",
+    )
+  })
+
+  // A wrong password is still a wrong password: the form stays.
+  it('keeps the form for any other 400', async () => {
+    centralEmailLogin.mockRejectedValue(new AuthHttpError(400, 'Invalid email or password'))
+    render(<LoginCard clientId="adh" postLoginRedirect="/home" />)
+    fillAndSubmit()
+    await screen.findByText('Invalid email or password')
+    expect(screen.getByLabelText(/password/i)).toBeTruthy()
+  })
+
+  // The hub's sign-up makes a hub account and drops the relay, so it is offered only on a
+  // login for the card's own client.
+  it('hides the hub sign-up link from a relayed customer client', () => {
+    relayed = { clientId: 'acme-shop', returnUrl: 'https://acme.example/auth/callback' }
+    render(
+      <LoginCard clientId="adh" postLoginRedirect="/home" showSignup showGithub={false} oauthProviders={google} />,
+    )
+    expect(screen.queryByRole('link', { name: 'Sign up' })).toBeNull()
+  })
+
+  // A hub account can never be an operator, so the console's login gets no hub sign-up.
+  it('hides the hub sign-up link from the relayed admin client', () => {
+    relayed = { clientId: 'admin', returnUrl: 'https://admin.example/auth/callback' }
     render(
       <LoginCard clientId="adh" postLoginRedirect="/home" showSignup showGithub={false} oauthProviders={google} />,
     )
@@ -170,6 +235,21 @@ describe('LoginCard for a relayed client', () => {
       <LoginCard clientId="adh" postLoginRedirect="/home" showSignup showGithub={false} oauthProviders={google} />,
     )
     expect(screen.getByRole('link', { name: 'Sign up' })).toBeTruthy()
+  })
+
+  // The server cannot see the query, so it must not guess "direct visit": a link in the HTML of
+  // a relayed login would vanish from under the reader on hydration.
+  it('leaves the sign-up link out of the server render', () => {
+    relayed = { clientId: 'acme-shop', returnUrl: 'https://acme.example/auth/callback' }
+    const html = renderToString(
+      <LoginCard clientId="adh" postLoginRedirect="/home" showSignup showGithub={false} oauthProviders={google} />,
+    )
+    expect(html).not.toContain('Sign up')
+  })
+
+  it('holds the sign-up link back while the methods are pending', () => {
+    render(<LoginCard clientId="adh" postLoginRedirect="/home" showSignup methodsPending />)
+    expect(screen.queryByRole('link', { name: 'Sign up' })).toBeNull()
   })
 
   it('keeps the password form and the passkey for the relayed admin client', () => {

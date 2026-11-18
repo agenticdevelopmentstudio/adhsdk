@@ -1,7 +1,7 @@
 'use client'
 
 import { asEndpoint, authApiBaseOrEnv } from './asBase'
-import { responseError } from './client'
+import { AuthHttpError, responseError } from './client'
 import {
   assertPasswordlessPasskey,
   assertSecondFactor,
@@ -604,7 +604,10 @@ export function takeReturnTo(): string | null {
 
 /** The clientId + return the AS appended to CENTRAL_LOGIN_URL. */
 export interface CentralParams {
-  /** OAuth client the brand site began login against ('adh' or 'admin'). */
+  /** OAuth client the brand site began login against: the hub's `adh`, the admin console's
+   *  `admin`, a site's or app's own registration, or a customer ecosystem's client. Which of
+   *  those may sign in with a password is the AS's answer, not this field's
+   *  (see {@link isCentralClientRefusal}). */
   clientId: string
   /** The brand-site callback URL the AS must bounce the exchange code back to. */
   returnUrl: string
@@ -625,17 +628,32 @@ export function readCentralParams(search?: string): CentralParams | null {
 }
 
 /**
- * The OAuth clients that sign in with a password or a passkey: the hub (`adh`) and the
- * admin console (`admin`). They are the backend's built-in clients (BUILT_IN_CLIENT_SLUGS
- * in the AS's clients.ts), the only ones whose login realm is the hub's or the operators'.
- * Every other client belongs to a customer ecosystem, signs in with a social provider only,
- * and the AS answers 400 at the central password and passkey routes for it.
+ * Whether a central login step failed because the AS will not sign THIS CLIENT in with a
+ * password or a passkey at all, as opposed to a wrong password or a missing passkey.
+ *
+ * The browser cannot know this ahead of time. The AS decides a client's login realm from the
+ * ecosystem it is tagged with (realmForEcosystemTag in adh's auth/oauth/realm.ts), not from
+ * its slug: the hub and the admin console are built in, but a native app's or a site's own
+ * registration in the hub ecosystem signs in with every method too, and a customer client's
+ * slug looks just like one of those. No route answers the question by slug. So a central
+ * login offers the credentials and lets the AS refuse, and these are its two refusals:
+ *
+ *  - 400 `this client does not use the central sign-in`, from the central password and
+ *    passkey routes for a customer client (centralLoginRealm in adh's oauthRedirect.ts);
+ *  - 400 `client not found`, from the passwordless passkey options for a customer client or
+ *    an unknown one (clientLoginRealm in adh's routes/auth.ts), and from the central routes
+ *    for an unknown one.
+ *
+ * A copy of the AS's client list here used to decide instead, and it hid the password form
+ * from every first-party registration the list did not name.
  */
-export const CREDENTIAL_LOGIN_CLIENT_IDS: readonly string[] = ['adh', 'admin']
-
-/** Whether a central login for this client may offer the password form and the passkey. */
-export function offersCredentialLogin(clientId: string): boolean {
-  return CREDENTIAL_LOGIN_CLIENT_IDS.includes(clientId)
+export function isCentralClientRefusal(err: unknown): boolean {
+  return (
+    err instanceof AuthHttpError &&
+    err.status === 400 &&
+    (err.message === 'this client does not use the central sign-in' ||
+      err.message === 'client not found')
+  )
 }
 
 /** Which brand site a central login step owes its exchange code to, and where to
