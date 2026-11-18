@@ -11,7 +11,7 @@ import {
   centralLoginTarget,
   centralPasswordlessPasskey,
   centralSendMfaSms,
-  offersCredentialLogin,
+  isCentralClientRefusal,
   providerSigninUrl,
   readCentralParams,
   type CentralLoginTarget,
@@ -21,11 +21,14 @@ import { MfaStep, type MfaOperations } from './MfaStep'
 import { GithubIcon } from './GithubIcon'
 
 // The relayed query never changes while the login page is open, so there is nothing to
-// subscribe to; the store exists so the server render and hydration read "not relayed"
-// and the browser then reads the real query, without a hydration mismatch.
+// subscribe to. The store exists for its server snapshot: the server render and the
+// hydration pass cannot see the query, so they read UNKNOWN (undefined) rather than "not
+// relayed", and anything that depends on the relay stays out of the HTML until the browser
+// has read the real query. Reading "not relayed" instead put a hub sign-up link in the HTML
+// of every relayed login, which then vanished from under the reader on hydration.
 const subscribeNever = (): (() => void) => () => {}
 const readRelayedClientId = (): string | null => readCentralParams()?.clientId ?? null
-const readNoRelayedClientId = (): string | null => null
+const readRelayUnknown = (): string | null | undefined => undefined
 
 /** A login result that is a pending second-factor challenge rather than a session. */
 function isMfaChallenge(v: unknown): v is MfaChallenge {
@@ -166,6 +169,13 @@ export interface LoginCardProps {
   passkeyEmailRequiredLabel?: string
   /** Error shown when passkey sign-in fails. Default: "Passkey sign-in failed." */
   passkeyFailedLabel?: string
+  /** Shown in place of the password form once the authorization server has said this
+   *  login's client does not sign in with a password or a passkey, when the card still has
+   *  provider buttons to offer. */
+  credentialsRefusedLabel?: string
+  /** The same, when the card has no provider buttons either, so nothing is left to sign in
+   *  with here: the card says so rather than going blank. */
+  noMethodsLabel?: string
 }
 
 export function LoginCard({
@@ -202,6 +212,8 @@ export function LoginCard({
   methodsPendingLabel = 'Loading sign-in options…',
   passkeyEmailRequiredLabel,
   passkeyFailedLabel = 'Passkey sign-in failed.',
+  credentialsRefusedLabel = "This site doesn't sign in with a password or a passkey. Use one of the options above.",
+  noMethodsLabel = "There's no way to sign in to this site from here. Go back to the site you came from and try again.",
 }: LoginCardProps): ReactElement {
   // In identifier mode the field also accepts a user id (slug) or phone, so it must
   // be type=text (native email validation would block those) and carry a broader
@@ -240,15 +252,31 @@ export function LoginCard({
   // In in-site mode the handler IS the passkey button's reason to exist; in central
   // mode there is no handler to infer from, so the host says (a site gating passkeys
   // behind a feature flag passes the flag's answer).
-  // The client this central login is FOR: the relayed one when the AS sent another
-  // site's login here, else this card's own. Only the hub and the admin console sign in
-  // with a password or a passkey; a customer (ecosystem) client signs in through its
-  // social providers alone, and the AS refuses the credential routes for it, so the
-  // form is not offered. In-site mode is its own authorization server and is not gated.
-  const relayedClientId = useSyncExternalStore(subscribeNever, readRelayedClientId, readNoRelayedClientId)
-  const credentialsOffered = !isCentral || offersCredentialLogin(relayedClientId ?? clientId)
-  const emailVisible = showEmail && credentialsOffered
-  const passkeyVisible = (showPasskey ?? Boolean(onPasskeyLogin)) && credentialsOffered
+  // Whether the AS has refused this login's CLIENT the password and passkey routes (a
+  // customer ecosystem's client signs in through its providers alone). The card cannot know
+  // that ahead of time: the AS decides a client's realm from its ecosystem tag, and no route
+  // answers it by slug, so a client-side list of "credential clients" was a copy that hid the
+  // form from every first-party registration it did not name. The form is offered, and the
+  // AS's refusal (isCentralClientRefusal) is what takes it away. In-site mode is its own
+  // authorization server and never sees that refusal.
+  const [credentialsRefused, setCredentialsRefused] = useState(false)
+  const emailVisible = showEmail && !credentialsRefused
+  // The passkey button sits inside the form, so the form's gate already covers it.
+  const passkeyVisible = showPasskey ?? Boolean(onPasskeyLogin)
+  const hasProviders = Boolean(oauthProviders && oauthProviders.length > 0) || showGithub
+  // undefined until the browser has read the query (see readRelayUnknown); null when the
+  // visitor came here directly.
+  const relayedClientId = useSyncExternalStore(subscribeNever, readRelayedClientId, readRelayUnknown)
+  // The sign-up makes a HUB account and drops any relay (it carries no clientId or return), so
+  // it belongs only on a login for this card's own client: never on one relayed for another
+  // client (a customer's, whose login it would abandon, or the admin console's, whose
+  // operators a hub account can never be), and never before the relay is known.
+  const signupVisible =
+    showSignup &&
+    !methodsPending &&
+    !credentialsRefused &&
+    relayedClientId !== undefined &&
+    (relayedClientId === null || relayedClientId === clientId)
 
   /** The brand site this login owes its exchange code to — the AS's own parameters
    *  when it relayed another site's login here, otherwise the ones it would have
@@ -320,6 +348,13 @@ export function LoginCard({
       // skipped. Both the in-site (postCredentials) and central (centralLoginStep)
       // paths throw AuthHttpError, so the gate can tell them apart.
       reportUnexpectedAuthError(err, { feature: 'auth', step: 'login' })
+      if (target && isCentralClientRefusal(err)) {
+        // Not a wrong password: no password or passkey will ever work for this client, so the
+        // form goes and the card says why instead of inviting another try.
+        setCredentialsRefused(true)
+        setError(null)
+        return
+      }
       setError(err instanceof Error ? err.message : failureLabel)
     } finally {
       setIsSubmitting(false)
@@ -446,7 +481,7 @@ export function LoginCard({
         </div>
       ) : null)}
 
-      {!methodsPending && ((oauthProviders && oauthProviders.length > 0) || showGithub) && emailVisible && (
+      {!methodsPending && hasProviders && emailVisible && (
         <div className="auth-card__divider">
           <span className="auth-card__divider-line" />
           <span className="auth-card__divider-text">{dividerLabel}</span>
@@ -505,9 +540,13 @@ export function LoginCard({
         </form>
       )}
 
-      {/* The sign-up makes an account this client could sign in with by credentials; a
-          relayed customer client gets no credential login, so the link is not offered. */}
-      {showSignup && credentialsOffered && (
+      {!methodsPending && credentialsRefused && (
+        <div className="auth-card__error" role="alert">
+          {hasProviders ? credentialsRefusedLabel : noMethodsLabel}
+        </div>
+      )}
+
+      {signupVisible && (
         <p className="auth-card__signup">
           {signupPromptLabel}{' '}
           <Link href={signupHref} className="auth-card__signup-link">{signupLinkLabel}</Link>
