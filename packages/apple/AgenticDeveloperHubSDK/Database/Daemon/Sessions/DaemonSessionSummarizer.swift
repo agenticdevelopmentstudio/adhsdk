@@ -35,8 +35,8 @@ public struct DaemonSessionSummarizer: Sendable {
 
     /// The title instructions, read live from the settings table with `{maxWords}`
     /// resolved — the user edits them in Settings → AI Summaries.
-    public static func systemPrompt(_ database: DaemonDatabase) -> String {
-        SummaryPrefs.resolvedPrompt(database)
+    public static func systemPrompt(_ database: DaemonDatabase, feature: SummaryFeature = .sessions) -> String {
+        SummaryPrefs.resolvedPrompt(database, feature: feature)
     }
 
     public enum SummarizeError: Error, LocalizedError {
@@ -69,10 +69,19 @@ public struct DaemonSessionSummarizer: Sendable {
         }
     }
 
-    /// Whether autonomous AI summaries are on. With no stored `ai_summaries_enabled`
-    /// row the answer is `defaultEnabled`; a stored value always wins.
-    public func isEnabled(_ database: DaemonDatabase) -> Bool {
-        RawSetting.bool((try? database.setting(for: "ai_summaries_enabled")) ?? nil, default: defaultEnabled)
+    /// Whether autonomous AI summaries are on for `feature`. With no stored
+    /// row the answer is `defaultEnabled` for sessions and off for every other
+    /// feature, which a daemon only summarizes for once it has been asked to;
+    /// a stored value always wins.
+    public func isEnabled(_ database: DaemonDatabase, feature: SummaryFeature = .sessions) -> Bool {
+        RawSetting.bool(
+            (try? database.setting(for: feature.enabledKey)) ?? nil,
+            default: feature == .sessions ? defaultEnabled : false)
+    }
+
+    /// The features whose summaries are on.
+    public func enabledFeatures(_ database: DaemonDatabase) -> [SummaryFeature] {
+        SummaryFeature.allCases.filter { isEnabled(database, feature: $0) }
     }
 
     /// Directories scanned for `.aiplugin` bundles, re-exported from `DaemonAIChat`.
@@ -84,6 +93,7 @@ public struct DaemonSessionSummarizer: Sendable {
     @discardableResult
     public static func summarizeAndStore(
         sessionId: String,
+        feature: SummaryFeature = .sessions,
         database: DaemonDatabase,
         settings: SummaryPrefs.Snapshot? = nil,
         runtime: PluginRuntime = .live,
@@ -91,16 +101,18 @@ public struct DaemonSessionSummarizer: Sendable {
         secretStore: any SecretStoring = KeychainSecretStore()
     ) async throws -> String {
         let summary = try await summarize(
-            sessionId: sessionId, database: database, settings: settings,
+            sessionId: sessionId, feature: feature, database: database, settings: settings,
             runtime: runtime, cliRunner: cliRunner, secretStore: secretStore
         )
         // An empty title must never be *stored*: `summary = ''` is the sentinel for
         // "never summarized", so writing it would blank a session the model already
         // titled and re-queue it on every pass forever. `summarize` throws instead.
-        database.updateSessionSummary(summary, sessionId: sessionId)
+        database.updateSessionSummary(summary, sessionId: sessionId, feature: feature)
         // Session id stays public (useful for tracing); the summary can reflect the
         // user's project/work, so keep its content private in the unified log.
-        logger.info("Stored AI summary for \(sessionId, privacy: .public): \(summary.prefix(80), privacy: .private)")
+        let kind = feature.rawValue, id = sessionId, preview = String(summary.prefix(80))
+        logger.info(
+            "Stored \(kind, privacy: .public) summary for \(id, privacy: .public): \(preview, privacy: .private)")
         return summary
     }
 
@@ -109,6 +121,7 @@ public struct DaemonSessionSummarizer: Sendable {
     ///   wrong inside a loop, where every session must see the same numbers.
     public static func summarize(
         sessionId: String,
+        feature: SummaryFeature = .sessions,
         database: DaemonDatabase,
         settings: SummaryPrefs.Snapshot? = nil,
         runtime: PluginRuntime = .live,
@@ -121,14 +134,14 @@ public struct DaemonSessionSummarizer: Sendable {
         let events = try database.fetchRecentEvents(sessionId: sessionId, limit: 500)
         guard !events.isEmpty else { throw SummarizeError.noEvents }
 
-        let settings = settings ?? SummaryPrefs.snapshot(database)
+        let settings = settings ?? SummaryPrefs.snapshot(database, feature: feature)
         let prompt = buildPrompt(
             session: session, events: events,
             maxEvents: settings.activityLines, detailChars: settings.detailChars
         )
         do {
             let reply = try await DaemonAIChat.complete(
-                feature: .summarize, sessionId: sessionId,
+                feature: .summary(for: feature), sessionId: sessionId,
                 systemPrompt: settings.systemPrompt, userPrompt: prompt,
                 maxTokens: settings.maxTokens,
                 cliModel: "haiku", timeout: settings.timeout, database: database,

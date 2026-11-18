@@ -4286,6 +4286,7 @@
 		FBBFA726C5B5E06F5352B9B9 /* ScriptedBackend.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB4AEB120A066889CCBFC3CF /* ScriptedBackend.swift */; };
 		FBD1EE527057E79E094721BC /* TopicListViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DACB69E5655285DE7A4F095 /* TopicListViewController.swift */; };
 		FBD304CC7AFAFA0D6233BF79 /* SessionFeatureRoutes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5BBA59509D094466A83348F4 /* SessionFeatureRoutes.swift */; };
+		FBD664F372FFD161124B8A2F /* SummaryFeatureSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0F89DEBE97B3C21513C645B /* SummaryFeatureSettings.swift */; };
 		FBDA60CA580D330DB6D552AD /* LSPCompletionEntryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F3485E7B8A39530C7C19B97 /* LSPCompletionEntryTests.swift */; };
 		FBE0DFD8286A5EEF80B61E2F /* UniqueNameTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5193540D6844D976B6C0CF89 /* UniqueNameTests.swift */; };
 		FBE91E55BF23AC835BCE742C /* AgenticDeveloperHubAuth.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 6AB5ADC411A6E4F89369D8BB /* AgenticDeveloperHubAuth.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -10654,6 +10655,7 @@
 		E0DB3C33DF07C8AD91AE250B /* SettingsPanelAutomationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsPanelAutomationTests.swift; sourceTree = "<group>"; };
 		E0DF5A7B82CF68CF37C98E2A /* MobileChatViewControllerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileChatViewControllerTests.swift; sourceTree = "<group>"; };
 		E0E36A73358BAF4350AFD42E /* AgenticDeveloperHubSDKLanguage.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = AgenticDeveloperHubSDKLanguage.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		E0F89DEBE97B3C21513C645B /* SummaryFeatureSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SummaryFeatureSettings.swift; sourceTree = "<group>"; };
 		E0FB160019669DD0D82BD31C /* ContributionRegistrationsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContributionRegistrationsTests.swift; sourceTree = "<group>"; };
 		E10ED5950FCC0D01E5B2287A /* PreferenceRoutes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreferenceRoutes.swift; sourceTree = "<group>"; };
 		E1132BFABA2892CD47704C2E /* pull-response.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "pull-response.json"; sourceTree = "<group>"; };
@@ -13038,6 +13040,7 @@
 				993F4E5A109E3F770A4F8DE8 /* AISummariesPluginControls.swift */,
 				B61909BB2A606303DD7C8700 /* AISummariesSettingsPanel.swift */,
 				BB918E2895A36DA741EA4564 /* StenographerSummaryPrefsPush.swift */,
+				E0F89DEBE97B3C21513C645B /* SummaryFeatureSettings.swift */,
 				DB4EE6725A46AC5DBAFE0A81 /* SummaryFeatureSettingsPanel.swift */,
 			);
 			path = Summaries;
@@ -25693,6 +25696,7 @@
 				18B21A3F339CB723142E4779 /* StenographerWindowKeyCommands.swift in Sources */,
 				412B949CF87A127ED6E796BE /* StepperView.swift in Sources */,
 				D65D8A12274093847A984696 /* StringRenderedWidth.swift in Sources */,
+				FBD664F372FFD161124B8A2F /* SummaryFeatureSettings.swift in Sources */,
 				68D12B3944A33151028B7A74 /* SummaryFeatureSettingsPanel.swift in Sources */,
 				EE09ED747BE4BE303011C111 /* SwatchGridView.swift in Sources */,
 				F6C02106067432590C8D8D15 /* SystemWindowContextNotifications.swift in Sources */,

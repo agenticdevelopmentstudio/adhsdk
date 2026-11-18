@@ -34,6 +34,8 @@ public protocol StenographerDaemonService: Sendable {
     /// Providers pane pushed), for the pickers in the moved panes.
     func aiProviderConfigs() async -> [DaemonProviderConfig]?
     func summaryPreferences() async -> SummaryPreferenceResponse?
+    /// One feature's summaries preferences (``SummaryFeature``).
+    func summaryPreferences(feature: SummaryFeature) async -> SummaryPreferenceResponse?
     func oversightPreferences() async -> OversightPreferenceResponse?
     func setSummaryPreferences(_ request: SummaryPreferenceRequest) async -> Bool
     func setOversightPreferences(_ request: OversightPreferenceRequest) async -> Bool
@@ -81,5 +83,13 @@ public struct DaemonProviderConfig: Codable, Sendable, Equatable, Identifiable {
         self.name = name
         self.pluginIdentifier = pluginIdentifier
         self.templateId = templateId
+    }
+}
+
+extension StenographerDaemonService {
+    /// Sessions' preferences through the original call, and nothing for the
+    /// others: a service that predates per-feature summaries has none.
+    public func summaryPreferences(feature: SummaryFeature) async -> SummaryPreferenceResponse? {
+        feature == .sessions ? await summaryPreferences() : nil
     }
 }

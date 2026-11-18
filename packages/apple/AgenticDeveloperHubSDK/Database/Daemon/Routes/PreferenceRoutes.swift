@@ -38,8 +38,8 @@ enum PreferenceRoutes {
             RouteTable.route("POST", where: { $0 == ["preferences", "oversight"] }) { request, _ in
                 setOversight(request, preferences)
             },
-            RouteTable.route("GET", where: { $0 == ["preferences", "summaries"] }) { _, _ in
-                .json(preferences.currentSummary())
+            RouteTable.route("GET", where: { $0 == ["preferences", "summaries"] }) { request, _ in
+                .json(preferences.currentSummary(feature: SummaryFeature.named(request.query("feature"))))
             },
             RouteTable.route("POST", where: { $0 == ["preferences", "summaries"] }) { request, _ in
                 setSummary(request, preferences)

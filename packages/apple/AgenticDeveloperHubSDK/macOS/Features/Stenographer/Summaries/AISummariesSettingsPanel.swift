@@ -3,8 +3,10 @@ import AgenticDeveloperHubSDKCore
 import AgenticDeveloperHubSDKCoreUI
 import AgenticDeveloperHubSDKCoreMacOS
 
-/// "AI Summaries" settings: whether the daemon titles sessions with a model,
-/// which model, what it is told, and how often it is asked.
+/// One feature's "AI Summaries" settings (``SummaryFeature``): whether the daemon
+/// summarizes for it with a model, which model, what it is told, and how often
+/// it is asked. Sessions, AI Conversations and Coding Projects each have one,
+/// editing their own ``SummaryFeatureSettings``.
 ///
 /// Everything below the provider picker is a knob the daemon reads at request
 /// time — `StenographerSummaryPrefsPush` mirrors them into the daemon's settings
@@ -13,14 +15,16 @@ import AgenticDeveloperHubSDKCoreMacOS
 public final class AISummariesSettingsPanel: ComposableSettings.SettingsPanelViewController {
 
     private let service: any StenographerDaemonService
+    private let settings: SummaryFeatureSettings
 
     /// Retained: the picker owns the setting observers that keep the provider list
     /// and model row live. (Pushing to the daemon is owned centrally by
     /// `StenographerSummaryPrefsPush`, not by this panel.)
     private var picker: DaemonProviderPickerView?
 
-    public init(service: any StenographerDaemonService) {
+    public init(service: any StenographerDaemonService, feature: SummaryFeature = .sessions) {
         self.service = service
+        self.settings = SummaryFeatureSettings.for(feature)
         super.init(with: ComposableSettings.SettingsPanelDescriptor(
             title: "AI Summaries",
             icon: NSImage(systemSymbolName: "text.quote", accessibilityDescription: nil)
@@ -30,16 +34,21 @@ public final class AISummariesSettingsPanel: ComposableSettings.SettingsPanelVie
     @available(*, unavailable)
     required init?(coder: NSCoder) { fatalError() }
 
+    public override var searchKeywords: [String] {
+        [settings.feature.displayName.lowercased(), "summary", "summaries", "ai", "prompt", "provider"]
+    }
+
     public override var helpContent: ComposableSettings.PanelHelp? {
         ComposableSettings.PanelHelp(topics: [
             .init(
                 title: "AI Summaries",
-                body: "When enabled, the always-on daemon summarizes sessions with the "
-                    + "selected provider and model, so a running history accrues even when "
-                    + "this app isn't open. The Default (Claude CLI) provider needs no "
-                    + "setup. Other providers are configured in Stenographer's LLM "
-                    + "Providers settings pane — an API key entered there is stored in "
-                    + "your login Keychain (never in the database)."
+                body: "When enabled, the always-on daemon summarizes each Claude Code session "
+                    + "for \(settings.feature.displayName) with the selected provider and "
+                    + "model, so a running history accrues even when this app isn't open. "
+                    + "Each feature keeps its own summaries, provider, prompt and schedule. "
+                    + "The Default (Claude CLI) provider needs no setup. Other providers are "
+                    + "configured under System › AI Providers — an API key entered there is "
+                    + "stored in your login Keychain (never in the database)."
             ),
             .init(
                 title: "Prompt",
@@ -89,17 +98,17 @@ public final class AISummariesSettingsPanel: ComposableSettings.SettingsPanelVie
         group.addSettingSubview(ComposableSettings.CheckboxView(
             with: ComposableSettings.ViewModel<Bool>(
                 title: AISummariesPluginControls.enableToggleTitle,
-                setting: UserSettings.stenographerAISummariesEnabled
+                setting: settings.enabled
             )
         ))
 
-        let picker = AISummariesPluginControls.makePicker(service: service)
+        let picker = AISummariesPluginControls.makePicker(service: service, settings: settings)
         self.picker = picker
         group.addSettingSubview(picker)
 
         let model = ComposableSettings.TextEditView(with: ComposableSettings.ViewModel<String>(
             title: "Model",
-            setting: UserSettings.stenographerAISummariesModel
+            setting: settings.model
         ))
         model.textField.placeholderString = "Provider default"
         group.addSettingSubview(model)
@@ -113,7 +122,7 @@ public final class AISummariesSettingsPanel: ComposableSettings.SettingsPanelVie
         group.addSettingSubview(ComposableSettings.TextAreaEditView(
             with: ComposableSettings.ViewModel<String>(
                 title: "Instructions sent to the model",
-                setting: UserSettings.stenographerAISummaryPrompt
+                setting: settings.prompt
             ),
             visibleLines: 8,
             monospaced: true
@@ -122,7 +131,7 @@ public final class AISummariesSettingsPanel: ComposableSettings.SettingsPanelVie
         group.addSettingSubview(ComposableSettings.PopupMenuChoiceView(
             viewModel: ComposableSettings.ChoiceViewModel<Int>(
                 title: "Word limit",
-                setting: UserSettings.stenographerAISummaryMaxWords,
+                setting: settings.maxWords,
                 choices: SummaryLimits.maxWords.map {
                     .init(label: "\($0) words", value: $0)
                 }
@@ -138,7 +147,7 @@ public final class AISummariesSettingsPanel: ComposableSettings.SettingsPanelVie
         group.addSettingSubview(ComposableSettings.PopupMenuChoiceView(
             viewModel: ComposableSettings.ChoiceViewModel<Int>(
                 title: "Activity lines",
-                setting: UserSettings.stenographerAISummaryActivityLines,
+                setting: settings.activityLines,
                 choices: [20, 40, 60, 80, 120, 160, 200, 300, 400].map {
                     .init(label: "\($0) events", value: $0)
                 }
@@ -148,7 +157,7 @@ public final class AISummariesSettingsPanel: ComposableSettings.SettingsPanelVie
         group.addSettingSubview(ComposableSettings.PopupMenuChoiceView(
             viewModel: ComposableSettings.ChoiceViewModel<Int>(
                 title: "Detail per line",
-                setting: UserSettings.stenographerAISummaryDetailChars,
+                setting: settings.detailChars,
                 choices: [40, 80, 120, 200, 300, 500].map {
                     .init(label: "\($0) characters", value: $0)
                 }
@@ -164,7 +173,7 @@ public final class AISummariesSettingsPanel: ComposableSettings.SettingsPanelVie
         group.addSettingSubview(ComposableSettings.PopupMenuChoiceView(
             viewModel: ComposableSettings.ChoiceViewModel<Int>(
                 title: "Look for work every",
-                setting: UserSettings.stenographerAISummaryIntervalMinutes,
+                setting: settings.intervalMinutes,
                 choices: [1, 2, 5, 10, 15, 30, 60, 120, 240].map {
                     .init(label: Self.minutesLabel($0), value: $0)
                 }
@@ -174,7 +183,7 @@ public final class AISummariesSettingsPanel: ComposableSettings.SettingsPanelVie
         group.addSettingSubview(ComposableSettings.StepperView(
             viewModel: ComposableSettings.RangeViewModel<Int>(
                 title: "Sessions per pass",
-                setting: UserSettings.stenographerAISummaryMaxPerRun,
+                setting: settings.maxPerRun,
                 minValue: SummaryLimits.maxPerRun.lowerBound,
                 maxValue: SummaryLimits.maxPerRun.upperBound
             )
@@ -183,7 +192,7 @@ public final class AISummariesSettingsPanel: ComposableSettings.SettingsPanelVie
         group.addSettingSubview(ComposableSettings.PopupMenuChoiceView(
             viewModel: ComposableSettings.ChoiceViewModel<Int>(
                 title: "Give up after",
-                setting: UserSettings.stenographerAISummaryTimeoutSeconds,
+                setting: settings.timeoutSeconds,
                 choices: [10, 15, 30, 60, 120, 300, 600].map {
                     .init(label: "\($0) seconds", value: $0)
                 }
@@ -199,7 +208,7 @@ public final class AISummariesSettingsPanel: ComposableSettings.SettingsPanelVie
         group.addSettingSubview(ComposableSettings.ButtonView(
             viewModel: ComposableSettings.ButtonViewModel(
                 title: "Reset to Defaults",
-                wasPressedCallback: { UserSettings.resetAISummaryTuning() }
+                wasPressedCallback: { [settings] in settings.resetTuning() }
             )
         ))
 

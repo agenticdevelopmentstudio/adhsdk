@@ -58,6 +58,20 @@ public struct SessionDTO: Codable, Sendable {
     /// `Notification`, a background `SubagentStop`) also advance. Empty from a
     /// daemon that predates the field.
     public let turnStateAt: String
+    /// The AI Conversations feature's summary (``SummaryFeature/conversations``),
+    /// "" until it writes one or from a daemon that predates it.
+    public var conversationSummary: String
+    /// The Coding Projects feature's summary (``SummaryFeature/projects``).
+    public var projectSummary: String
+
+    /// The summary `feature` keeps for this session.
+    public func summary(for feature: SummaryFeature) -> String {
+        switch feature {
+        case .sessions: summary
+        case .conversations: conversationSummary
+        case .projects: projectSummary
+        }
+    }
 
     public init(
         sessionId: String,
@@ -79,8 +93,12 @@ public struct SessionDTO: Codable, Sendable {
         summaryAt: String = "",
         eventCount: Int,
         subagentWorking: Bool = false,
-        turnStateAt: String = ""
+        turnStateAt: String = "",
+        conversationSummary: String = "",
+        projectSummary: String = ""
     ) {
+        self.conversationSummary = conversationSummary
+        self.projectSummary = projectSummary
         self.sessionId = sessionId
         self.cwd = cwd
         self.model = model
@@ -130,6 +148,8 @@ public struct SessionDTO: Codable, Sendable {
         eventCount = try container.decode(Int.self, forKey: .eventCount)
         subagentWorking = try container.decodeIfPresent(Bool.self, forKey: .subagentWorking) ?? false
         turnStateAt = try container.decodeIfPresent(String.self, forKey: .turnStateAt) ?? ""
+        conversationSummary = try container.decodeIfPresent(String.self, forKey: .conversationSummary) ?? ""
+        projectSummary = try container.decodeIfPresent(String.self, forKey: .projectSummary) ?? ""
     }
 }
 

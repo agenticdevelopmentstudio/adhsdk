@@ -134,7 +134,8 @@ public struct ConversationInfoDTO: Codable, Sendable, Equatable {
     /// The last hook event of the main agent's turn, which ``status`` reads.
     public let lastEvent: String
     public let lastTool: String
-    /// The summarizer's line about what the session is doing ("" when none).
+    /// The summarizer's line about what the session is doing: AI Conversations'
+    /// own summary, or Sessions' when it has none yet ("" when neither).
     public let summary: String
     public let pid: Int
     /// Whether `steno conversation send` may type into this session's pane
@@ -166,7 +167,7 @@ public struct ConversationInfoDTO: Codable, Sendable, Equatable {
         status = summary.status
         lastEvent = session.lastEventType
         lastTool = session.lastTool
-        self.summary = session.summary
+        self.summary = session.conversationSummary.isEmpty ? session.summary : session.conversationSummary
         pid = session.pid
         let refusal = ConversationSendability.refusal(
             for: session, liveSessions: liveSessions, attachment: attachment)

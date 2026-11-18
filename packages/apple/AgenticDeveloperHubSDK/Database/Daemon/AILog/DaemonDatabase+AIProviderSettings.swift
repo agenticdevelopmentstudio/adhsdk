@@ -12,18 +12,39 @@ extension DaemonDatabase {
 
     /// The reader a feature's completions resolve providers through.
     public func aiProviderSettings(for feature: AIFeature) -> ProviderSettingsReader {
-        feature == .oversight ? oversightAIProviderSettings : summaryAIProviderSettings
+        switch feature {
+        case .oversight: oversightAIProviderSettings
+        case .summarize: summaryAIProviderSettings(for: .sessions)
+        case .summarizeConversations: summaryAIProviderSettings(for: .conversations)
+        case .summarizeProjects: summaryAIProviderSettings(for: .projects)
+        }
     }
 
     /// The provider-registry reader for **summary** completions: the plain registry,
     /// except that `ai_summary_model` (when set) overrides the selected
     /// configuration's model, and only that configuration's.
-    public var summaryAIProviderSettings: ProviderSettingsReader {
+    public var summaryAIProviderSettings: ProviderSettingsReader { summaryAIProviderSettings(for: .sessions) }
+
+    /// The reader for one feature's summaries. Sessions asks the providers'
+    /// own selection. Every other feature has a selection of its own
+    /// (``SummaryFeature/selectedConfigKey``): never written, it inherits the
+    /// providers' selection; "" asks no configuration, which is the Claude CLI;
+    /// a configuration id asks that one. Each feature's model key overrides
+    /// the model of the configuration it resolved to, and no other.
+    public func summaryAIProviderSettings(for feature: SummaryFeature) -> ProviderSettingsReader {
         let base = aiProviderSettings
+        let globalKey = AIProviderConfigKeys.selectedConfigIdKey
+        let ownKey: String? = feature == .sessions ? nil : feature.selectedConfigKey
+        let modelKey = feature.key(SummarySettingsKeys.model)
         return { key in
-            if let uuid = UUID(uuidString: base(AIProviderConfigKeys.selectedConfigIdKey) ?? ""),
+            let effective: String = {
+                if let ownKey, let own = base(ownKey) { return own }
+                return base(globalKey) ?? ""
+            }()
+            if key == globalKey { return effective }
+            if let uuid = UUID(uuidString: effective),
                key == AIProviderConfigKeys.modelKey(config: uuid),
-               let override = base(SummarySettingsKeys.model), !override.isEmpty {
+               let override = base(modelKey), !override.isEmpty {
                 return override
             }
             return base(key)
@@ -64,6 +85,19 @@ extension DaemonDatabase {
                 return override
             }
             return base(key)
+        }
+    }
+}
+#endif
+
+#if canImport(AgenticDeveloperHubSDKCore)
+extension AIFeature {
+    /// The completion log's name for `feature`'s summaries.
+    public static func summary(for feature: SummaryFeature) -> AIFeature {
+        switch feature {
+        case .sessions: .summarize
+        case .conversations: .summarizeConversations
+        case .projects: .summarizeProjects
         }
     }
 }

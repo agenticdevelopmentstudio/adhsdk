@@ -347,23 +347,29 @@ public final class PreferencesService: @unchecked Sendable {
         intervalMinutes: Int? = nil,
         maxPerRun: Int? = nil,
         timeoutSeconds: Int? = nil,
-        model: String? = nil
+        model: String? = nil,
+        feature: SummaryFeature = .sessions
     ) -> SummaryPreferenceResponse {
+        // Sessions owns the original keys (and with them the providers' own
+        // selection); every other feature writes its own, so one feature's
+        // provider or prompt never changes another's.
         if let model {
-            persistSetting(SummarySettingsKeys.model, model)
+            persistSetting(feature.key(SummarySettingsKeys.model), model)
         }
         if let enabled {
-            persistSetting(AIProviderConfigKeys.enabledKey, enabled ? "true" : "false")
+            persistSetting(feature.enabledKey, enabled ? "true" : "false")
         }
         if let selectedConfigId {
-            persistSetting(AIProviderConfigKeys.selectedConfigIdKey, selectedConfigId)
+            persistSetting(
+                feature == .sessions ? AIProviderConfigKeys.selectedConfigIdKey : feature.selectedConfigKey,
+                selectedConfigId)
         }
         if let prompt {
-            persistSetting(SummarySettingsKeys.prompt, prompt)
+            persistSetting(feature.key(SummarySettingsKeys.prompt), prompt)
         }
-        func persistClamped(_ key: String, _ value: Int?, _ range: ClosedRange<Int>) {
+        func persistClamped(_ base: String, _ value: Int?, _ range: ClosedRange<Int>) {
             guard let value else { return }
-            persistSetting(key, String(SummaryLimits.clamp(value, to: range)))
+            persistSetting(feature.key(base), String(SummaryLimits.clamp(value, to: range)))
         }
         persistClamped(SummarySettingsKeys.maxWords, maxWords, SummaryLimits.maxWords)
         persistClamped(SummarySettingsKeys.activityLines, activityLines, SummaryLimits.activityLines)
@@ -371,7 +377,7 @@ public final class PreferencesService: @unchecked Sendable {
         persistClamped(SummarySettingsKeys.intervalMinutes, intervalMinutes, SummaryLimits.intervalMinutes)
         persistClamped(SummarySettingsKeys.maxPerRun, maxPerRun, SummaryLimits.maxPerRun)
         persistClamped(SummarySettingsKeys.timeoutSeconds, timeoutSeconds, SummaryLimits.timeoutSeconds)
-        return currentSummary()
+        return currentSummary(feature: feature)
     }
 
     /// Applies a decoded summaries-preference request (the shared HTTP/XPC body).
@@ -386,24 +392,29 @@ public final class PreferencesService: @unchecked Sendable {
             intervalMinutes: request.intervalMinutes,
             maxPerRun: request.maxPerRun,
             timeoutSeconds: request.timeoutSeconds,
-            model: request.model
+            model: request.model,
+            feature: SummaryFeature.named(request.feature)
         )
     }
 
     /// The effective tuning — what the summarizer would use right now, defaults
     /// filled in, not the raw stored strings.
-    public func currentSummary() -> SummaryPreferenceResponse {
-        SummaryPreferenceResponse(
-            enabled: summarizer.isEnabled(database),
-            selectedConfigId: (try? database.setting(for: AIProviderConfigKeys.selectedConfigIdKey)) ?? "",
-            prompt: SummaryPrefs.prompt(database),
-            maxWords: SummaryPrefs.maxWords(database),
-            activityLines: SummaryPrefs.activityLines(database),
-            detailChars: SummaryPrefs.detailChars(database),
-            intervalMinutes: SummaryPrefs.intervalMinutes(database),
-            maxPerRun: SummaryPrefs.maxPerRun(database),
-            timeoutSeconds: Int(SummaryPrefs.timeoutSeconds(database)),
-            model: ((try? database.setting(for: SummarySettingsKeys.model)) ?? nil) ?? ""
+    /// A feature other than Sessions answers its own selection, which is nil
+    /// (it inherits the providers') until written.
+    public func currentSummary(feature: SummaryFeature = .sessions) -> SummaryPreferenceResponse {
+        let selectedKey = feature == .sessions ? AIProviderConfigKeys.selectedConfigIdKey : feature.selectedConfigKey
+        let selected: String?? = try? database.setting(for: selectedKey)
+        return SummaryPreferenceResponse(
+            enabled: summarizer.isEnabled(database, feature: feature),
+            selectedConfigId: feature == .sessions ? ((selected ?? nil) ?? "") : (selected ?? nil),
+            prompt: SummaryPrefs.prompt(database, feature: feature),
+            maxWords: SummaryPrefs.maxWords(database, feature: feature),
+            activityLines: SummaryPrefs.activityLines(database, feature: feature),
+            detailChars: SummaryPrefs.detailChars(database, feature: feature),
+            intervalMinutes: SummaryPrefs.intervalMinutes(database, feature: feature),
+            maxPerRun: SummaryPrefs.maxPerRun(database, feature: feature),
+            timeoutSeconds: Int(SummaryPrefs.timeoutSeconds(database, feature: feature)),
+            model: ((try? database.setting(for: feature.key(SummarySettingsKeys.model))) ?? nil) ?? ""
         )
     }
 

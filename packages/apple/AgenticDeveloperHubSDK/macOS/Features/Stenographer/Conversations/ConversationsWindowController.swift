@@ -114,7 +114,8 @@ public final class ConversationsWindowController: SingleWindowController {
         // slice because it is a list of sessions; this is answering "what is
         // *that* row doing", and a session old enough to fall outside the slice
         // would read as idle rather than as unknown.
-        let activitySource = StenographerSessionListSource(service: service, sinceHours: 0)
+        let activitySource = StenographerSessionListSource(
+            service: service, sinceHours: 0, summaryFeature: .conversations)
         self.activitySource = activitySource
         split.shelf.activitySource = activitySource
 

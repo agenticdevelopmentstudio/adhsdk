@@ -138,6 +138,9 @@ public final class StenographerHTTPClient: StenographerDaemonService, @unchecked
 
     public func aiProviderConfigs() async -> [DaemonProviderConfig]? { await get("/preferences/ai/configs") }
     public func summaryPreferences() async -> SummaryPreferenceResponse? { await get("/preferences/summaries") }
+    public func summaryPreferences(feature: SummaryFeature) async -> SummaryPreferenceResponse? {
+        await get("/preferences/summaries", query: [URLQueryItem(name: "feature", value: feature.rawValue)])
+    }
     public func oversightPreferences() async -> OversightPreferenceResponse? { await get("/preferences/oversight") }
 
     public func setSummaryPreferences(_ request: SummaryPreferenceRequest) async -> Bool {

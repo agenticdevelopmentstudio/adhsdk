@@ -84,3 +84,57 @@ public enum SummarySettingsKeys {
     /// blank keeps the configuration's model.
     public static let model = "ai_summary_model"
 }
+
+/// The features that each keep an AI summary of a session, with a configuration
+/// of their own: provider, model, prompt and tuning, and the summary itself in a
+/// column of its own, so one feature's prompt never overwrites another's line.
+///
+/// Sessions is the original and keeps the original keys and columns, which is
+/// what lets a daemon and settings written before the split carry on unchanged;
+/// the others prefix every key with their raw value.
+public enum SummaryFeature: String, CaseIterable, Codable, Sendable {
+    /// The Sessions window's line under each session.
+    case sessions
+    /// The line under each session in the Conversations window's shelf.
+    case conversations
+    /// The line on a coding project's branch.
+    case projects
+
+    /// `base` for sessions, `<feature>.<base>` for the others.
+    public func key(_ base: String) -> String {
+        self == .sessions ? base : "\(rawValue).\(base)"
+    }
+
+    /// Whether the daemon summarizes for this feature.
+    public var enabledKey: String { key("ai_summaries_enabled") }
+
+    /// The provider configuration this feature asks; "" inherits the AI
+    /// providers' own selection. Sessions uses the providers' selection itself.
+    public var selectedConfigKey: String { key("ai_summary_selected_config_id") }
+
+    /// The `sessions` column holding this feature's summary.
+    public var summaryColumn: String {
+        switch self {
+        case .sessions: "summary"
+        case .conversations: "conversation_summary"
+        case .projects: "project_summary"
+        }
+    }
+
+    /// The `sessions` column holding when this feature's summary was written.
+    public var summaryAtColumn: String { summaryColumn + "_at" }
+
+    /// What the settings call it.
+    public var displayName: String {
+        switch self {
+        case .sessions: "Sessions"
+        case .conversations: "AI Conversations"
+        case .projects: "Coding Projects"
+        }
+    }
+
+    /// The feature a request's `feature` names; sessions when absent or unknown.
+    public static func named(_ raw: String?) -> SummaryFeature {
+        raw.flatMap(SummaryFeature.init(rawValue:)) ?? .sessions
+    }
+}

@@ -63,7 +63,8 @@ public enum SessionSchema {
         DaemonMigration(version: 42, run: migration042),
         DaemonMigration(version: 43, run: migration043),
         DaemonMigration(version: 44, run: migration044),
-        DaemonMigration(version: 45, run: migration045)
+        DaemonMigration(version: 45, run: migration045),
+        DaemonMigration(version: 46, run: migration046)
     ]
 
     /// Ensure steps run after every migration pass, outside the version gate (see
@@ -1695,6 +1696,21 @@ public enum SessionSchema {
     /// compared above '' and re-stamped a finished subagent as live for the whole
     /// freshness window. A re-stamp now has to be newer than this too. No
     /// backfill: '' sorts below every real time, which is exactly the old rule.
+    /// A summary column and its clock for each feature that summarizes beside
+    /// Sessions (``SummaryFeature``): AI Conversations and Coding Projects keep
+    /// lines of their own, written by their own prompt, rather than sharing
+    /// `summary`, which would let one feature's prompt overwrite another's.
+    private static func migration046(_ db: DaemonDatabase) throws {
+        guard try db.tableHasColumn("sessions", "summary_at") else { return }
+        for feature in SummaryFeature.allCases where feature != .sessions {
+            for column in [feature.summaryColumn, feature.summaryAtColumn]
+            where try !db.tableHasColumn("sessions", column) {
+                try db.migrationExecute("ALTER TABLE sessions ADD COLUMN \(column) TEXT NOT NULL DEFAULT ''")
+            }
+        }
+        logger.info("migration046: per-feature summary columns ready")
+    }
+
     private static func migration045(_ db: DaemonDatabase) throws {
         guard try db.tableHasColumn("sessions", "subagent_activity_at") else { return }
         if try !db.tableHasColumn("sessions", "subagent_stopped_at") {

@@ -34,10 +34,15 @@ public final class StenographerSessionListSource: SessionWatcher.SessionListSour
     typealias Fetcher = @Sendable (Int) async -> [SessionWatcher.SessionWatcherSession]?
     private let fetcher: Fetcher
 
+    /// `summaryFeature` picks which feature's AI summary each session carries:
+    /// the Sessions window shows Sessions' own, a Coding Project window its own.
     public convenience init(
-        service: any StenographerDaemonService, pollInterval: TimeInterval = 3, sinceHours: Int = 24
+        service: any StenographerDaemonService, pollInterval: TimeInterval = 3, sinceHours: Int = 24,
+        summaryFeature: SummaryFeature = .sessions
     ) {
-        self.init(pollInterval: pollInterval, sinceHours: sinceHours, fetcher: Self.fetcher(service: service))
+        self.init(
+            pollInterval: pollInterval, sinceHours: sinceHours,
+            fetcher: Self.fetcher(service: service, summaryFeature: summaryFeature))
     }
 
     init(pollInterval: TimeInterval = 3, sinceHours: Int = 24, fetcher: @escaping Fetcher) {
@@ -117,7 +122,9 @@ public final class StenographerSessionListSource: SessionWatcher.SessionListSour
     }
 
     /// The live fetch: the time-filtered slice from the daemon, or nil on failure.
-    private static func fetcher(service: any StenographerDaemonService) -> Fetcher {
+    private static func fetcher(
+        service: any StenographerDaemonService, summaryFeature: SummaryFeature
+    ) -> Fetcher {
         { sinceHours in
             // The window doesn't render event counts; skip the daemon's COUNT join.
             guard let dtos = await service.sessions(
@@ -125,7 +132,7 @@ public final class StenographerSessionListSource: SessionWatcher.SessionListSour
             ) else {
                 return nil
             }
-            return dtos.map(StenographerSessionListSource.session(from:))
+            return dtos.map { StenographerSessionListSource.session(from: $0, summaryFeature: summaryFeature) }
         }
     }
 
@@ -133,7 +140,9 @@ public final class StenographerSessionListSource: SessionWatcher.SessionListSour
     /// Not private because the Conversations window resolves a clicked row's
     /// session the same way, and two spellings of this mapping would let the two
     /// windows disagree about which terminal a session is in.
-    static func session(from dto: SessionDTO) -> SessionWatcher.SessionWatcherSession {
+    static func session(
+        from dto: SessionDTO, summaryFeature: SummaryFeature = .sessions
+    ) -> SessionWatcher.SessionWatcherSession {
         SessionWatcher.SessionWatcherSession(
             sessionId: dto.sessionId,
             cwd: dto.cwd,
@@ -143,7 +152,7 @@ public final class StenographerSessionListSource: SessionWatcher.SessionListSour
             lastTool: dto.lastTool,
             status: SessionWatcher.SessionWatcherStatus(rawValue: dto.status) ?? .active,
             gitBranch: dto.gitBranch,
-            summary: dto.summary,
+            summary: dto.summary(for: summaryFeature),
             pid: Int32(truncatingIfNeeded: dto.pid),
             termProgram: dto.termProgram,
             projectRoot: dto.projectRoot,
