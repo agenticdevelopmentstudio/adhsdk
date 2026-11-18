@@ -372,17 +372,19 @@ open class WebBrowserPaneViewController: NSViewController {
     let privacyButton = NSButton()
     /// The browser menu at the row's trailing end (`makePaneMenuItems`).
     let menuButton = NSButton()
-    /// The privacy status under the address row, while shown: one icon and
-    /// label per item (`BrowserPrivacyStatus.items`).
+    /// The privacy toolbar under the address row, while shown: the General,
+    /// Events and Agents groups (`BrowserPrivacyStripGroupView`), each a row
+    /// of item buttons (`BrowserPrivacyStatus.items`), with equal gaps
+    /// between them and before the Agent view control.
     let privacyStrip: NSStackView = {
         let stack = NSStackView()
         stack.orientation = .horizontal
         stack.alignment = .centerY
-        stack.spacing = 10
+        stack.spacing = 0
         stack.detachesHiddenViews = true
         stack.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
-        // As wide as its items, so they sit together after the privacy button.
-        stack.setHuggingPriority(.required, for: .horizontal)
+        // Takes the row's spare width, which its spacers share out.
+        stack.setHuggingPriority(.init(1), for: .horizontal)
         stack.distribution = .fill
         stack.setAccessibilityIdentifier("browser.privacy-strip")
         return stack
@@ -1019,12 +1021,8 @@ open class WebBrowserPaneViewController: NSViewController {
                 MainActor.assumeIsolated { self?.refreshBarInsets() }
             }
         }
-        // The spacer takes the row's spare width, so the items stay packed
-        // after the privacy button instead of one of them stretching.
-        let spacer = NSView()
-        spacer.setContentHuggingPriority(.init(1), for: .horizontal)
-        let strip = NSStackView(views: [privacyStrip, spacer, hideFromAgentButton, agentViewControl])
-        strip.spacing = 10
+        let strip = NSStackView(views: [privacyStrip, agentViewBox])
+        strip.spacing = 0
         strip.edgeInsets = NSEdgeInsets(top: 0, left: 8, bottom: 0, right: 12)
         strip.alignment = .centerY
         strip.setAccessibilityIdentifier("browser.privacy-strip-row")
@@ -1053,6 +1051,30 @@ open class WebBrowserPaneViewController: NSViewController {
     /// in the strip's row: the front tab's mode.
     private(set) lazy var agentViewControl = NSSegmentedControl.browserAgentViewControl(
         target: self, action: #selector(agentViewControlChanged(_:)))
+    /// The Agent view control in a bordered box of its own, padded, so it
+    /// reads as the one control that changes what the pane shows rather than
+    /// one more privacy item.
+    private(set) lazy var agentViewBox: NSView = {
+        let box = NSView()
+        box.translatesAutoresizingMaskIntoConstraints = false
+        box.wantsLayer = true
+        box.layer?.cornerRadius = 8
+        box.layer?.borderWidth = 1
+        box.layer?.borderColor = NSColor.separatorColor.cgColor
+        let control = agentViewControl
+        control.translatesAutoresizingMaskIntoConstraints = false
+        box.addSubview(control)
+        NSLayoutConstraint.activate([
+            control.topAnchor.constraint(equalTo: box.topAnchor, constant: 3),
+            control.bottomAnchor.constraint(equalTo: box.bottomAnchor, constant: -3),
+            control.leadingAnchor.constraint(equalTo: box.leadingAnchor, constant: 8),
+            control.trailingAnchor.constraint(equalTo: box.trailingAnchor, constant: -8)
+        ])
+        box.setContentHuggingPriority(.required, for: .horizontal)
+        box.setContentCompressionResistancePriority(.required, for: .horizontal)
+        box.setAccessibilityIdentifier("browser.agent-view-box")
+        return box
+    }()
     /// The items `privacyStrip` last drew, so a refresh that changes none of
     /// them leaves its views alone.
     private var itemsInStrip: [BrowserPrivacyStatus.Item] = []
@@ -1095,37 +1117,58 @@ open class WebBrowserPaneViewController: NSViewController {
         placePrivacyButton()
         guard settings.get(UserSettings.browserPrivacyShowToolbar) else { return }
         let items = BrowserPrivacyStatus.items(
-            settings: settings, isPaused: isEventsPaused, agentPrivacy: agentPrivacy())
+            settings: settings, isPaused: isEventsPaused, agentPrivacy: agentPrivacy(),
+            cookiesLocked: !wouldOwnDataStore(under: settings))
         guard items != itemsInStrip else { return }
         itemsInStrip = items
-        for view in privacyStrip.arrangedSubviews { privacyStrip.removeView(view) }
-        for view in items.map(Self.stripItemView) { privacyStrip.addArrangedSubview(view) }
+        rebuildPrivacyStrip(items)
     }
 
-    /// One strip item: its symbol and title, green while the thing it names
-    /// is on and red while it is off (`BrowserPrivacyStatus.Item.isOn`), with
-    /// its state in the tooltip and to accessibility.
-    private static func stripItemView(_ item: BrowserPrivacyStatus.Item) -> NSView {
-        let color: NSColor = item.isOn ? .systemGreen : .systemRed
-        let icon = NSImageView(image: NSImage(systemSymbolName: item.symbol, accessibilityDescription: nil)
-            ?? NSImage())
-        icon.symbolConfiguration = NSImage.SymbolConfiguration(pointSize: 13, weight: .regular)
-        icon.contentTintColor = color
-        let label = NSTextField(labelWithString: item.state.map { "\(item.title): \($0)" } ?? item.title)
-        label.textColor = color
-        label.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
-        label.lineBreakMode = .byTruncatingTail
-        let view = NSStackView(views: [icon, label])
-        view.spacing = 3
-        view.alignment = .centerY
-        view.setHuggingPriority(.required, for: .horizontal)
-        view.toolTip = item.text
-        view.setAccessibilityElement(true)
-        view.setAccessibilityRole(.staticText)
-        view.setAccessibilityLabel(item.text)
-        view.setAccessibilityValue(item.isOn ? "on" : "off")
-        view.setAccessibilityIdentifier("browser.privacy-strip.\(item.title.lowercased())")
-        return view
+    /// The three groups, each with its buttons, Hide from Agent last in
+    /// Agents, and an equal gap after each group (the last one before the
+    /// Agent view control), so the groups spread evenly across the row.
+    private func rebuildPrivacyStrip(_ items: [BrowserPrivacyStatus.Item]) {
+        for view in privacyStrip.arrangedSubviews { privacyStrip.removeView(view) }
+        hideFromAgentButton.removeFromSuperview()
+        var spacers: [NSView] = []
+        for group in BrowserPrivacyStatus.Group.allCases {
+            let groupView = BrowserPrivacyStripGroupView(group: group)
+            for item in items where item.group == group {
+                groupView.addArrangedSubview(BrowserPrivacyStripButton(
+                    item: item, target: self, action: #selector(privacyStripItemClicked(_:))))
+            }
+            if group == .agents { groupView.addArrangedSubview(hideFromAgentButton) }
+            privacyStrip.addArrangedSubview(groupView)
+            let spacer = NSView()
+            spacer.translatesAutoresizingMaskIntoConstraints = false
+            spacer.setContentHuggingPriority(.init(1), for: .horizontal)
+            spacer.widthAnchor.constraint(greaterThanOrEqualToConstant: 8).isActive = true
+            privacyStrip.addArrangedSubview(spacer)
+            spacers.append(spacer)
+        }
+        for spacer in spacers.dropFirst() {
+            spacer.widthAnchor.constraint(equalTo: spacers[0].widthAnchor).isActive = true
+        }
+    }
+
+    /// A privacy toolbar item: All Events pauses or resumes every event, a
+    /// multi-value item pops up its choices, and the rest toggle their
+    /// setting in this pane's settings.
+    @objc func privacyStripItemClicked(_ sender: BrowserPrivacyStripButton) {
+        let item = sender.item
+        if item.kind == .allEvents {
+            setEventsPaused(!isEventsPaused)
+        } else if !item.choices.isEmpty {
+            sender.popUp(sender.choicesMenu(target: self, action: #selector(privacyStripChoiceSelected(_:))))
+        } else {
+            BrowserPrivacyStatus.toggle(item.kind, in: settings)
+        }
+    }
+
+    /// A choice from a multi-value item's menu.
+    @objc func privacyStripChoiceSelected(_ sender: NSMenuItem) {
+        guard let tag = sender.representedObject as? BrowserPrivacyStripButton.ChoiceTag else { return }
+        BrowserPrivacyStatus.choose(tag.value, for: tag.kind, in: settings)
     }
 
     /// The privacy button sits at the toolbar's leading edge while the

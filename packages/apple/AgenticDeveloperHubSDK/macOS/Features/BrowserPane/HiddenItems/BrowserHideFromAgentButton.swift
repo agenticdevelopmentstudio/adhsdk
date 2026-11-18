@@ -28,6 +28,20 @@ final class BrowserHideFromAgentButton: BrowserHideItemsButton {
     @available(*, unavailable)
     required init?(coder: NSCoder) { fatalError("init(coder:) is not used") }
 
+    /// The label the button shows in the privacy toolbar's Agents group.
+    static let title = "Hide from Agent"
+
+    /// Drawn as the other privacy toolbar items are (`BrowserPrivacyStripStyle`):
+    /// "Hide from Agent ▾" while idle, "Hide from Agent: Selecting" in red,
+    /// with the stop symbol, while items are being picked.
+    override func showSelecting(_ selecting: Bool) {
+        super.showSelecting(selecting)
+        BrowserPrivacyStripStyle.apply(
+            to: self, symbol: symbolName,
+            text: selecting ? "\(Self.title): Selecting" : Self.title,
+            isProtecting: selecting, hasMenu: !selecting)
+    }
+
     /// The menu the button shows: "Select Items to Hide from the Agent",
     /// then "Hidden from the Agent…", each sending its action to `target`.
     static func makeMenu(target: AnyObject, select: Selector, list: Selector) -> NSMenu {

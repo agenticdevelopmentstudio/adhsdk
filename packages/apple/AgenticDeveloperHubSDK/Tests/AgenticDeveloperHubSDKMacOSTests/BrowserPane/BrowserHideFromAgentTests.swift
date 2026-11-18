@@ -134,7 +134,9 @@ final class BrowserHideFromAgentTests: XCTestCase {
             homeURL: WebBrowserPaneViewController.blankPage)
         _ = pane.view
         defer { pane.paneContentWillBeDiscarded() }
-        XCTAssertEqual(pane.hideFromAgentButton.superview?.accessibilityIdentifier(), "browser.privacy-strip-row")
+        pane.settings.set(true, for: UserSettings.browserPrivacyShowToolbar)
+        pane.refreshAddressRowControls()
+        XCTAssertEqual(pane.hideFromAgentButton.superview?.accessibilityIdentifier(), "browser.privacy-strip.agents")
         XCTAssertTrue(pane.hideFromAgentButton.target === pane)
         XCTAssertEqual(pane.hideFromAgentButton.action, #selector(pane.hideFromAgentButtonClicked(_:)))
         try await pane.loadForTesting(page, html: Self.html)

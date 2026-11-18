@@ -2,11 +2,11 @@
 id: cd862ce2-d93d-4094-be20-0abab33e2fa7
 title: "Agent Preview and Agent Source Views"
 type: ingredient
-version: 0.1.2
+version: 0.1.3
 status: draft
 language: en
 created: 2026-11-15
-modified: 2026-11-16
+modified: 2026-11-18
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -409,10 +409,15 @@ snapshot.
 Notes: design-first; every check is pending until the code exists. The
 plan's tests are in `BrowserAgentViewsTests`.
 
+## Control Labels
+
+The Agent view control's segments carry text as well as symbols, Browser, Agent View and Agent Source, in a regular-size rounded control whose selected segment takes the accent colour, inside a bordered box padded off the privacy toolbar's groups.
+
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 0.1.3 | 2026-11-18 | Mike Fullerton | Segments labelled Browser / Agent View / Agent Source, in a bordered box. |
 | 0.1.2 | 2026-11-16 | Mike Fullerton | Entering from Website blanks the view; source highlighted asynchronously; preview credit give-back; awaits the hidden-items store. |
 | 0.1.1 | 2026-11-16 | Mike Fullerton | Preview navigation allows one load per credit, zeroed when the latest own load ends; rebuilds in quick succession; reading(hideImages:) and agentPageSource(engine:). |
 | 0.1.0 | 2026-11-15 | Mike Fullerton | Initial creation (design-first, from the more privacy features design) |
