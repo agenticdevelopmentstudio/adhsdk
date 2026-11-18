@@ -108,4 +108,32 @@ final class ProvenanceColumnsTests: XCTestCase {
         let cursor = try await store.cursor()
         XCTAssertEqual(cursor?.rawValue, "c2", "binding keeps the cursor")
     }
+
+    func testAnOldSchemaTableGainsLocalVersionAndAPullIsLogged() async throws {
+        let database = try BoundedDatabase(path: path)
+        try database.write { conn in
+            try conn.execute(sql: """
+                CREATE TABLE _sync_resources (resource TEXT PRIMARY KEY, schema_version INTEGER NOT NULL);
+                CREATE TABLE personal_notes (
+                    id TEXT PRIMARY KEY NOT NULL, sync_version INTEGER NOT NULL DEFAULT 0,
+                    deleted_at TEXT, data TEXT NOT NULL DEFAULT '{}');
+                INSERT INTO _sync_resources (resource, schema_version) VALUES ('personal.notes', 1);
+                INSERT INTO personal_notes (id, sync_version, data) VALUES ('n1', 3, '{"title":"kept"}');
+                """)
+        }
+        let store = GRDBSyncStore(database: database)
+        try await store.prepare(resources: [notes])
+
+        XCTAssertEqual(try store.localRecord(resource: "personal.notes", id: "n1")?.version, 0)
+
+        try await store.apply(
+            [SyncChange(resource: "personal.notes", id: "n1", op: .upsert, syncVersion: "4",
+                        data: ["title": .string("pulled")])],
+            advancingTo: nil)
+
+        XCTAssertEqual(try store.localRecord(resource: "personal.notes", id: "n1")?.version, 1)
+        XCTAssertEqual(try store.changes(since: 0, limit: 10),
+                       [RecordChange(seq: 1, resource: "personal.notes", id: "n1", kind: .upsert, version: 1)])
+        XCTAssertEqual(try store.changeHead(), 1)
+    }
 }

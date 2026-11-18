@@ -735,6 +735,7 @@
 		1F07F322B38ED1B78FF8CA7A /* TextSubstitutionFilter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D9A0C780702308217D57A33 /* TextSubstitutionFilter.swift */; };
 		1F0BEDCA796EA67C71D53925 /* AgenticDeveloperHubSDKScripting.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6D1E3EE3BC1EDECAC2C5B417 /* AgenticDeveloperHubSDKScripting.framework */; };
 		1F1290CC7202A756CE8327FE /* AgenticDeveloperHubSDK-macOS.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 74A8C8CA2D090E5DA642E5A4 /* AgenticDeveloperHubSDK-macOS.framework */; };
+		1F15510D4D8D313462678F84 /* RecordChange.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9346E2A53F8EF4691547F555 /* RecordChange.swift */; };
 		1F32959FC0B51DDD2F79A7F1 /* LSPHoverController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5BF3A5AF7F03B6DA72A1903A /* LSPHoverController.swift */; };
 		1F384040AEE60D84ED0A5F3A /* HubMailSyncTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 240B5AC3F72033C8ACB66069 /* HubMailSyncTests.swift */; };
 		1F3A08B95B3C2B5181D25FB2 /* UsageTypesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3200E5E633951736AB3D5E45 /* UsageTypesTests.swift */; };
@@ -9712,6 +9713,7 @@
 		930EF44A40D7DC3C3889F4FB /* TranscriptStore+Titles.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TranscriptStore+Titles.swift"; sourceTree = "<group>"; };
 		93268DF20B0C9F9AE2945159 /* ParsedEventEnvelope.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParsedEventEnvelope.swift; sourceTree = "<group>"; };
 		93441AF223D0CF8F9368C3CB /* MailToolSourceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MailToolSourceTests.swift; sourceTree = "<group>"; };
+		9346E2A53F8EF4691547F555 /* RecordChange.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordChange.swift; sourceTree = "<group>"; };
 		934E6ECD7B69B13B03309323 /* CodeTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodeTheme.swift; sourceTree = "<group>"; };
 		93616F9A2929BE2539F9870B /* AgenticDeveloperHubSDKHTDV-macOS.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = "AgenticDeveloperHubSDKHTDV-macOS.framework"; sourceTree = BUILT_PRODUCTS_DIR; };
 		93783CB43D754915C131FAF8 /* AgenticDeveloperHubSDKHTDV-iOS.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = "AgenticDeveloperHubSDKHTDV-iOS.framework"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -13691,6 +13693,7 @@
 			isa = PBXGroup;
 			children = (
 				F417A22231FCEB85BB8E5D66 /* GRDBSyncStore.swift */,
+				9346E2A53F8EF4691547F555 /* RecordChange.swift */,
 				9CF8BB9E7F5E60CBAD0B5F9A /* SyncMirrorProjection.swift */,
 			);
 			path = SyncGRDB;
@@ -24043,6 +24046,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				A7A29EC2BD711F353626FB96 /* GRDBSyncStore.swift in Sources */,
+				1F15510D4D8D313462678F84 /* RecordChange.swift in Sources */,
 				1A1471EF5F4281F0FE05DFD1 /* SyncMirrorProjection.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

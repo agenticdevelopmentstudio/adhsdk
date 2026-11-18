@@ -51,6 +51,8 @@ public final class GRDBSyncStore: SyncStore, @unchecked Sendable {
     /// `SyncMirrorProjection` with an extension default as that default, so the
     /// new call would silently never reach the projections behind it.
     private let mirrorProjections: [any SyncMirrorProjection]
+    /// Told after a commit that may have appended to `_change_log`.
+    private let changeSignal = ChangeCommitSignal()
 
     public init(
         database: BoundedDatabase,
@@ -161,6 +163,10 @@ public final class GRDBSyncStore: SyncStore, @unchecked Sendable {
         CREATE TABLE IF NOT EXISTS _sync_conflicts (
             id INTEGER PRIMARY KEY AUTOINCREMENT, op_id TEXT, resource TEXT,
             row_id TEXT, reason TEXT, resolved_at TEXT NOT NULL);
+        CREATE TABLE IF NOT EXISTS _change_log (
+            seq INTEGER PRIMARY KEY AUTOINCREMENT, resource TEXT NOT NULL,
+            row_id TEXT NOT NULL, kind TEXT NOT NULL, version INTEGER NOT NULL,
+            at TEXT NOT NULL);
         """
 
     public func prepare(resources: [SyncResource]) async throws {
@@ -189,7 +195,8 @@ public final class GRDBSyncStore: SyncStore, @unchecked Sendable {
                         deleted_at TEXT,
                         data TEXT NOT NULL DEFAULT '{}',
                         origin TEXT NOT NULL DEFAULT 'local',
-                        reached_accounts TEXT NOT NULL DEFAULT '[]');
+                        reached_accounts TEXT NOT NULL DEFAULT '[]',
+                        local_version INTEGER NOT NULL DEFAULT 0);
                     """)
             }
             try conn.execute(
@@ -245,7 +252,112 @@ public final class GRDBSyncStore: SyncStore, @unchecked Sendable {
                 "origin", definition: "TEXT NOT NULL DEFAULT 'local'", to: table, in: conn)
             try Self.addColumnIfMissing(
                 "reached_accounts", definition: "TEXT NOT NULL DEFAULT '[]'", to: table, in: conn)
+            try Self.addColumnIfMissing(
+                "local_version", definition: "INTEGER NOT NULL DEFAULT 0", to: table, in: conn)
         }
+    }
+
+    // MARK: - Local versions and the change feed
+
+    /// Called after every committed transaction that may have appended to
+    /// `_change_log` (a pull, a staged write, a `writeLocal` body). Observers
+    /// read the feed from their own last-seen `seq`; the call carries nothing.
+    public func observeCommittedChanges(_ observer: @escaping @Sendable () -> Void) {
+        changeSignal.add(observer)
+    }
+
+    /// Runs `body` in one write transaction and, once it has committed, tells
+    /// the change observers. For a host composing its own local write
+    /// (a version check, then `stage(_:in:)`) that must land atomically.
+    public func writeLocal<T>(_ body: (Database) throws -> T) throws -> T {
+        let result = try boundedDatabase.write(body)
+        changeSignal.fire()
+        return result
+    }
+
+    /// The row's `local_version` and whether it is a tombstone, or `nil` when
+    /// no row with that id was ever written. Throws
+    /// `SyncStoreFailure.unknownResource` for an unregistered resource and for
+    /// a projection-owned one (projections keep no local version).
+    public func localVersion(
+        resource: String, id: String, in conn: Database
+    ) throws -> (version: Int64, isDeleted: Bool)? {
+        let table = try genericTable(for: resource, in: conn)
+        return try Row.fetchOne(
+            conn, sql: "SELECT local_version, deleted_at FROM \"\(table)\" WHERE id = ?",
+            arguments: [id]
+        ).map { row in (row["local_version"], (row["deleted_at"] as String?) != nil) }
+    }
+
+    /// A live row's stored JSON object and `local_version`; `nil` for a
+    /// missing or deleted row. Same resource contract as `localVersion`.
+    public func localRecord(resource: String, id: String) throws -> (data: Data, version: Int64)? {
+        try boundedDatabase.read { conn in
+            let table = try self.genericTable(for: resource, in: conn)
+            return try Row.fetchOne(
+                conn,
+                sql: "SELECT data, local_version FROM \"\(table)\" WHERE id = ? AND deleted_at IS NULL",
+                arguments: [id]
+            ).map { row in (Data((row["data"] as String).utf8), row["local_version"]) }
+        }
+    }
+
+    /// Feed entries with `seq > since`, oldest first, at most `limit`. Empty
+    /// — never an error — for `since` at or above the head and on a store
+    /// that has never logged anything.
+    public func changes(since: Int64, limit: Int) throws -> [RecordChange] {
+        guard limit > 0 else { return [] }
+        return try boundedDatabase.read { conn in
+            guard try conn.tableExists("_change_log") else { return [] }
+            return try Row.fetchAll(
+                conn,
+                sql: """
+                    SELECT seq, resource, row_id, kind, version FROM _change_log
+                    WHERE seq > ? ORDER BY seq LIMIT ?
+                    """,
+                arguments: [since, limit]
+            ).compactMap { row in
+                guard let kind = RecordChange.Kind(rawValue: row["kind"]) else { return nil }
+                return RecordChange(
+                    seq: row["seq"], resource: row["resource"], id: row["row_id"],
+                    kind: kind, version: row["version"])
+            }
+        }
+    }
+
+    /// The highest `seq` in the feed, `0` when it is empty.
+    public func changeHead() throws -> Int64 {
+        try boundedDatabase.read { conn in
+            guard try conn.tableExists("_change_log") else { return 0 }
+            return try Int64.fetchOne(conn, sql: "SELECT MAX(seq) FROM _change_log") ?? 0
+        }
+    }
+
+    private func genericTable(for resource: String, in conn: Database) throws -> String {
+        let isKnown = try Bool.fetchOne(
+            conn, sql: "SELECT EXISTS(SELECT 1 FROM _sync_resources WHERE resource = ?)",
+            arguments: [resource]
+        ) ?? false
+        guard isKnown, projection(for: resource) == nil else {
+            throw SyncStoreFailure.unknownResource(resource)
+        }
+        return try Self.mirrorTableName(for: resource)
+    }
+
+    /// Appends the row's current `local_version` to the feed. Inside the
+    /// caller's transaction, so the feed and the row cannot disagree.
+    private static func logChange(
+        resource: String, table: String, id: String, kind: RecordChange.Kind, in conn: Database
+    ) throws {
+        guard let version = try Int64.fetchOne(
+            conn, sql: "SELECT local_version FROM \"\(table)\" WHERE id = ?", arguments: [id])
+        else { return }
+        try conn.execute(
+            sql: """
+                INSERT INTO _change_log (resource, row_id, kind, version, at)
+                VALUES (?, ?, ?, ?, datetime('now'))
+                """,
+            arguments: [resource, id, kind.rawValue, version])
     }
 
     // MARK: - Account binding
@@ -378,21 +490,27 @@ public final class GRDBSyncStore: SyncStore, @unchecked Sendable {
                     if change.op == .delete {
                         try conn.execute(
                             sql: """
-                                INSERT INTO "\(table)" (id, sync_version, deleted_at, data, origin, reached_accounts)
-                                VALUES (?, ?, datetime('now'), '{}', ?, ?)
+                                INSERT INTO "\(table)"
+                                    (id, sync_version, deleted_at, data, origin, reached_accounts, local_version)
+                                VALUES (?, ?, datetime('now'), '{}', ?, ?, 1)
                                 ON CONFLICT(id) DO UPDATE SET
-                                    sync_version = excluded.sync_version, deleted_at = excluded.deleted_at, data = '{}'
+                                    sync_version = excluded.sync_version, deleted_at = excluded.deleted_at, data = '{}',
+                                    local_version = local_version + 1
                                 """,
                             arguments: [change.id, version, origin, Self.reachedJSON(for: bound)]
                         )
+                        try Self.logChange(
+                            resource: change.resource, table: table, id: change.id, kind: .delete, in: conn)
                     } else {
                         let payload = String(data: try encoder.encode(change.data ?? [:]), encoding: .utf8) ?? "{}"
                         try conn.execute(
                             sql: """
-                                INSERT INTO "\(table)" (id, sync_version, deleted_at, data, origin, reached_accounts)
-                                VALUES (?, ?, NULL, ?, ?, ?)
+                                INSERT INTO "\(table)"
+                                    (id, sync_version, deleted_at, data, origin, reached_accounts, local_version)
+                                VALUES (?, ?, NULL, ?, ?, ?, 1)
                                 ON CONFLICT(id) DO UPDATE SET
-                                    sync_version = excluded.sync_version, deleted_at = NULL, data = excluded.data
+                                    sync_version = excluded.sync_version, deleted_at = NULL, data = excluded.data,
+                                    local_version = local_version + 1
                                 """,
                             arguments: [change.id, version, payload, origin, Self.reachedJSON(for: bound)]
                         )
@@ -402,6 +520,8 @@ public final class GRDBSyncStore: SyncStore, @unchecked Sendable {
                         if let bound {
                             try Self.markReached(bound, table: table, id: change.id, in: conn)
                         }
+                        try Self.logChange(
+                            resource: change.resource, table: table, id: change.id, kind: .upsert, in: conn)
                     }
                 }
                 // Every projection, not only those the batch reached: one may
@@ -418,6 +538,7 @@ public final class GRDBSyncStore: SyncStore, @unchecked Sendable {
                     )
                 }
             }
+            store.changeSignal.fire()
         }
     }
 
@@ -448,6 +569,7 @@ public final class GRDBSyncStore: SyncStore, @unchecked Sendable {
             try store.boundedDatabase.write { conn in
                 try store.stage(mutation, in: conn)
             }
+            store.changeSignal.fire()
         }
     }
 
@@ -496,18 +618,29 @@ public final class GRDBSyncStore: SyncStore, @unchecked Sendable {
             )
             if mutation.type == .delete {
                 try conn.execute(
-                    sql: "UPDATE \"\(table)\" SET deleted_at = datetime('now') WHERE id = ?",
+                    sql: """
+                        UPDATE "\(table)" SET deleted_at = datetime('now'), local_version = local_version + 1
+                        WHERE id = ?
+                        """,
                     arguments: [mutation.rowId]
                 )
+                if conn.changesCount > 0 {
+                    try Self.logChange(
+                        resource: mutation.resource, table: table, id: mutation.rowId, kind: .delete, in: conn)
+                }
             } else {
                 let payload = String(data: try encoder.encode(mutation.data ?? [:]), encoding: .utf8) ?? "{}"
                 try conn.execute(
                     sql: """
-                        INSERT INTO "\(table)" (id, sync_version, deleted_at, data) VALUES (?, ?, NULL, ?)
-                        ON CONFLICT(id) DO UPDATE SET deleted_at = NULL, data = excluded.data
+                        INSERT INTO "\(table)" (id, sync_version, deleted_at, data, local_version)
+                        VALUES (?, ?, NULL, ?, 1)
+                        ON CONFLICT(id) DO UPDATE SET
+                            deleted_at = NULL, data = excluded.data, local_version = local_version + 1
                         """,
                     arguments: [mutation.rowId, base ?? 0, payload]
                 )
+                try Self.logChange(
+                    resource: mutation.resource, table: table, id: mutation.rowId, kind: .upsert, in: conn)
             }
         }
 
