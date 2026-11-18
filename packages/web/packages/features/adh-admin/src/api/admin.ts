@@ -1,7 +1,13 @@
 "use client";
 
 import { useMemo } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  useQuery,
+  useMutation,
+  useQueryClient,
+  type UseMutationResult,
+  type UseQueryResult,
+} from "@tanstack/react-query";
 import type { RequestBody, SuccessBody } from "@adh-sdk/adh-api-types";
 import {
   authedJson,
@@ -302,7 +308,7 @@ export function listOperators(): Promise<Operator[]> {
   );
 }
 
-export function useOperators() {
+export function useOperators(): UseQueryResult<Operator[]> {
   return useQuery({ queryKey: OPERATORS_KEY, queryFn: listOperators });
 }
 
@@ -317,10 +323,17 @@ function invalidateRoleHolders(qc: ReturnType<typeof useQueryClient>): Promise<v
   ]).then(() => undefined);
 }
 
-export function useGrantRole() {
+/** What a grant names: the user, and the capability (`role` is the older spelling of it). */
+export interface GrantRoleVars {
+  userId: string;
+  role?: string;
+  capability?: string;
+}
+
+export function useGrantRole(): UseMutationResult<unknown, Error, GrantRoleVars> {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (data: { userId: string; role?: string; capability?: string }) => {
+    mutationFn: (data: GrantRoleVars) => {
       const capability = data.capability ?? data.role;
       if (!capability) throw new Error("grant requires a capability or role");
       const body: RequestBody<"/v1/auth/capabilities/grant", "post"> = {
@@ -336,10 +349,16 @@ export function useGrantRole() {
   });
 }
 
-export function useRevokeRole() {
+/** What a revoke names: the user, and the capability to take away. */
+export interface RevokeRoleVars {
+  userId: string;
+  role: string;
+}
+
+export function useRevokeRole(): UseMutationResult<unknown, Error, RevokeRoleVars> {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ userId, role }: { userId: string; role: string }) => {
+    mutationFn: ({ userId, role }: RevokeRoleVars) => {
       const body: RequestBody<"/v1/auth/capabilities/revoke", "post"> = {
         user_id: userId,
         capability: role,
