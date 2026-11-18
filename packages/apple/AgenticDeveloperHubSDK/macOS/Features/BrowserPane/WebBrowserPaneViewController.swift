@@ -369,7 +369,16 @@ open class WebBrowserPaneViewController: NSViewController {
     /// the pane's own privacy button first (while the strip is hidden),
     /// then whatever `addToolbarAccessory` adds (a Safari pane's extensions).
     let installedBar = NSStackView()
+    /// The privacy eye: green while any privacy setting is in force. It
+    /// opens the privacy settings from the address bar, where it sits while
+    /// the toolbar is hidden; in the toolbar it only shows the state, and
+    /// `privacySettingsButton` opens them.
     let privacyButton = NSButton()
+    /// The gear at the privacy toolbar's trailing end: the privacy settings.
+    let privacySettingsButton = NSButton()
+    /// Secrets in the privacy toolbar: the Secrets window, for the pane's
+    /// privacy vault. Hidden while the pane has no vault.
+    let secretsButton = NSButton()
     /// The browser menu at the row's trailing end (`makePaneMenuItems`).
     let menuButton = NSButton()
     /// The privacy toolbar under the address row, while shown: the General,
@@ -1027,8 +1036,11 @@ open class WebBrowserPaneViewController: NSViewController {
                 MainActor.assumeIsolated { self?.refreshBarInsets() }
             }
         }
-        let strip = NSStackView(views: [privacyStrip, agentViewBox])
+        let strip = NSStackView(views: [privacyStrip, agentViewBox, secretsButton, privacySettingsButton])
         strip.spacing = 0
+        strip.detachesHiddenViews = true
+        strip.setCustomSpacing(12, after: agentViewBox)
+        strip.setCustomSpacing(8, after: secretsButton)
         strip.edgeInsets = NSEdgeInsets(top: 0, left: 8, bottom: 0, right: 12)
         strip.alignment = .centerY
         strip.setAccessibilityIdentifier("browser.privacy-strip-row")
@@ -1091,6 +1103,18 @@ open class WebBrowserPaneViewController: NSViewController {
             action: #selector(showPrivacyDialog))
         privacyButton.setAccessibilityIdentifier("browser.privacy")
         configureButton(
+            privacySettingsButton, symbol: "gearshape", label: "Privacy Settings",
+            toolTip: "Show This Tab's Privacy Settings", action: #selector(showPrivacyDialog))
+        privacySettingsButton.setAccessibilityIdentifier("browser.privacy-settings")
+        configureButton(
+            secretsButton, symbol: "key", label: "Secrets", toolTip: "Show the Secrets Window",
+            action: #selector(showSecretsWindow))
+        secretsButton.setAccessibilityIdentifier("browser.privacy-strip.secrets")
+        for button in [privacySettingsButton, secretsButton] {
+            button.symbolConfiguration = NSImage.SymbolConfiguration(pointSize: 13, weight: .regular)
+            button.setContentCompressionResistancePriority(.required, for: .horizontal)
+        }
+        configureButton(
             menuButton, symbol: "line.3.horizontal", label: "Browser Menu", toolTip: "Show Browser Menu",
             action: #selector(showBrowserMenu(_:)))
         menuButton.setAccessibilityIdentifier("browser.menu")
@@ -1117,14 +1141,17 @@ open class WebBrowserPaneViewController: NSViewController {
     /// moment it is shown again, since `itemsInStrip` still holds what it
     /// last drew.
     func refreshAddressRowControls() {
-        // Red while every event is held back, so a paused page is plain to see.
-        privacyButton.contentTintColor = isEventsPaused ? .systemRed : nil
-        privacyButton.setAccessibilityValue(isEventsPaused ? "paused" : "active")
-        placePrivacyButton()
-        guard settings.get(UserSettings.browserPrivacyShowToolbar) else { return }
         let items = BrowserPrivacyStatus.items(
             settings: settings, isPaused: isEventsPaused, agentPrivacy: agentPrivacy(),
             cookiesLocked: !wouldOwnDataStore(under: settings))
+        // Green while any privacy setting is in force, the same green as the
+        // toolbar items that are, so the state shows with the toolbar hidden.
+        privacyButton.contentTintColor = BrowserPrivacyStatus.isAnyProtecting(items)
+            ? BrowserPrivacyStripStyle.protectingColor : nil
+        privacyButton.setAccessibilityValue(isEventsPaused ? "paused" : "active")
+        secretsButton.isHidden = privacyVault == nil
+        placePrivacyButton()
+        guard settings.get(UserSettings.browserPrivacyShowToolbar) else { return }
         guard items != itemsInStrip else { return }
         itemsInStrip = items
         rebuildPrivacyStrip(items)
@@ -1162,7 +1189,9 @@ open class WebBrowserPaneViewController: NSViewController {
     /// setting in this pane's settings.
     @objc func privacyStripItemClicked(_ sender: BrowserPrivacyStripButton) {
         let item = sender.item
-        if item.kind == .allEvents {
+        if item.lockedReason != nil {
+            showPrivacyDialog()
+        } else if item.kind == .allEvents {
             setEventsPaused(!isEventsPaused)
         } else if !item.choices.isEmpty {
             sender.popUp(sender.choicesMenu(target: self, action: #selector(privacyStripChoiceSelected(_:))))
@@ -1183,6 +1212,10 @@ open class WebBrowserPaneViewController: NSViewController {
         guard let row = privacyStripRow as? NSStackView else { return }
         let shown = settings.get(UserSettings.browserPrivacyShowToolbar)
         row.isHidden = !shown
+        // In the toolbar the eye only shows the state; the gear opens the
+        // settings. In the address bar it is the way to them.
+        privacyButton.action = shown ? nil : #selector(showPrivacyDialog)
+        privacyButton.toolTip = shown ? "This Tab's Privacy" : "Show This Tab's Privacy Settings"
         if shown {
             guard privacyButton.superview !== row else { return }
             installedBar.removeView(privacyButton)
@@ -1196,7 +1229,14 @@ open class WebBrowserPaneViewController: NSViewController {
     }
 
     @objc func showPrivacyDialog() {
-        BrowserPrivacySettingsDialog.present(for: self, from: privacyButton)
+        let fromToolbar = settings.get(UserSettings.browserPrivacyShowToolbar)
+        BrowserPrivacySettingsDialog.present(
+            for: self, from: fromToolbar ? privacySettingsButton : privacyButton)
+    }
+
+    @objc func showSecretsWindow() {
+        guard let privacyVault else { return }
+        SecretsWindowController.show(vault: privacyVault)
     }
 
     /// The address box's "Hide distracting items": stops user-list selecting

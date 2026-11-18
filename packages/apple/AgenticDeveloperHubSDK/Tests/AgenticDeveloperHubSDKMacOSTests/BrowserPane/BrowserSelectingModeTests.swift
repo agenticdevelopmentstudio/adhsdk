@@ -355,11 +355,11 @@ final class BrowserSelectingModeTests: XCTestCase {
             PrivacyWord(alias: "Acme", real: "Globex", sites: ["*"]),
             PrivacyWord(alias: "", real: "Initech", sites: ["*"])
         ]
-        XCTAssertEqual(PrivacyWordsEditor.row(for: "globex", in: words), 0)
-        XCTAssertEqual(PrivacyWordsEditor.row(for: "ACME", in: words), 0)
-        XCTAssertEqual(PrivacyWordsEditor.row(for: "Initech", in: words), 1)
-        XCTAssertNil(PrivacyWordsEditor.row(for: "Hooli", in: words))
-        XCTAssertNil(PrivacyWordsEditor.row(for: "", in: words))
+        XCTAssertEqual(PrivateWordsTopicViewController.row(for: "globex", in: words), 0)
+        XCTAssertEqual(PrivateWordsTopicViewController.row(for: "ACME", in: words), 0)
+        XCTAssertEqual(PrivateWordsTopicViewController.row(for: "Initech", in: words), 1)
+        XCTAssertNil(PrivateWordsTopicViewController.row(for: "Hooli", in: words))
+        XCTAssertNil(PrivateWordsTopicViewController.row(for: "", in: words))
     }
 }
 

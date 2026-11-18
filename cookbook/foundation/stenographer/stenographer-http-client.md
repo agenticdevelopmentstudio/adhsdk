@@ -46,6 +46,8 @@ The client is built for callers that must keep working when the daemon is down. 
 
 The daemon has no push channel to a client that is not an XPC subscriber, so the client also offers `onReconnect`: it polls `/health` and treats an `uptime` that went down as a daemon restart.
 
+`summaryPreferences(feature:)` sends `GET /preferences/summaries?feature=<raw>` for AI Conversations and Coding Projects, and no query for Sessions.
+
 ## Behavioral Requirements
 
 - **default-base-url**: `StenographerHTTPClient.defaultBaseURL` MUST be the URL parsed from the `STENOGRAPHER_URL` environment variable when it is set and parses as a URL, and otherwise `StenographerIdentifiers.httpBaseURL` (`http://127.0.0.1:22847`).
@@ -190,7 +192,7 @@ Not applicable: the client calls no logging API; every failure is returned as `n
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Stenographer/StenographerHTTPClient.swift` | confirmed (1.0.3) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Stenographer/StenographerHTTPClient.swift` | confirmed (1.0.4) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -233,10 +235,6 @@ Not applicable: the client calls no logging API; every failure is returned as `n
 | [adc.check.security.secure-transport](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0a75f61f-9508-506e-b92e-0f5b29a91c95) | partial | Security |
 
 `separation-of-concerns` passes because the client only moves requests and replies; the wire spelling, identifiers and DTOs live in their own types. `unit-test-coverage` passes because every vector has a test in `StenographerHTTPClientTests` (`Tests/AgenticDeveloperHubSDKCoreTests/Stenographer/StenographerHTTPClientTests.swift`): the failure mapping, query building, the 404, the summarize and action failures, both preference encoders, the reconnect trigger and its first-poll and failed-poll cases, `timeout(method:path:)`, URL construction, the content type and the default base URL. `timeout-configuration` passes because every request carries one of three explicit timeouts. `error-response-handling` is partial because the daemon's `error` text is surfaced only for summarize and finding actions; every other failure collapses to `nil` or `false` by design. `retry-with-backoff` is marked failed because the client never retries; that is deliberate (see the Design Decision "The client does not retry or back off"), since the caller decides and the daemon is on loopback, so the check is a known and accepted failure rather than a defect. `secure-transport` is partial because traffic is plain HTTP, which is acceptable only on the loopback address, and the base URL can be overridden to any address through `STENOGRAPHER_URL`.
-
-## Per-Feature Summaries
-
-`summaryPreferences(feature:)` sends `GET /preferences/summaries?feature=<raw>` for AI Conversations and Coding Projects, and no query for Sessions.
 
 ## Change History
 

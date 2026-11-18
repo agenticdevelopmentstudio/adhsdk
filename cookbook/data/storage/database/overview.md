@@ -24,3 +24,5 @@ and the project database (see
 Project Database ([adhsdk.ingredient.workspace.projects.project-database](cookbook:c212ea39-10e7-4146-89dd-36edb3b3455a))),
 which names its file inside the storage-location helper's directory.
 
+`summaryAIProviderSettings(for:)` resolves a `SummaryFeature`'s provider. Sessions reads the global selection. AI Conversations and Coding Projects read their own selection key: absent inherits the global one, an empty string means the Claude CLI, and an id picks that configuration.
+

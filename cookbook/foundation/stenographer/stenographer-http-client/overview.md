@@ -7,3 +7,5 @@ The client is built for callers that must keep working when the daemon is down. 
 
 The daemon has no push channel to a client that is not an XPC subscriber, so the client also offers `onReconnect`: it polls `/health` and treats an `uptime` that went down as a daemon restart.
 
+`summaryPreferences(feature:)` sends `GET /preferences/summaries?feature=<raw>` for AI Conversations and Coding Projects, and no query for Sessions.
+

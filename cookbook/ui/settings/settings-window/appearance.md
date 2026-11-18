@@ -1,9 +1,11 @@
 
 - **Corner radius**: Not applicable — a standard system window; this file
   draws no custom-cornered chrome.
-- **Padding**: Not decided in this file — header-bar item spacing follows
-  the platform's standard header-bar layout, and a panel's own content
-  padding is decided by that panel's own ingredient, a separate concept.
+- **Padding**: The panel-title item's view pads its symbol and title by
+  12pt on the leading and trailing sides, because macOS 26 draws a toolbar
+  view inside a glass pill and an unpadded title sat hard against its ends.
+  Other header-bar item spacing follows the platform's standard layout, and
+  a panel's own content padding is decided by that panel's own ingredient.
 - **Font**: The panel-title item's font is the active theme palette's
   heading text-role font, not a literal point size chosen in this file. The
   help control's icon is rendered at 15pt, regular weight.

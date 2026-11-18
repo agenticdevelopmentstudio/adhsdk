@@ -7,6 +7,7 @@
 - **reveal-failure-message**: When authentication fails, the screen MUST stay up and the screen message MUST show the error's localized description.
 - **reveal-starts-shell**: A successful reveal MUST give the session the vault's filter if one exists, which starts the shell the first time, before setting `isRevealed` true.
 - **hide-no-auth**: `hide()` MUST put the privacy screen back up without asking for authentication.
+- **hide-on-revoke**: When the vault's `grantGeneration` changes (the store was replaced), the controller MUST hide, so a terminal revealed under the old store's authentication does not stay revealed.
 - **reveal-state-views**: When `isRevealed` changes, the privacy screen MUST be hidden exactly when revealed, the terminal view MUST be hidden exactly when not revealed, and the concealed container's reveal flag MUST equal `isRevealed`.
 - **reveal-focus**: On reveal the controller MUST make the terminal view the window's first responder on the next main-queue turn.
 - **hide-resigns-focus**: On hide, when the window's first responder is a view inside the concealed container, the controller MUST clear the first responder so keystrokes do not go into a terminal nobody can see.
@@ -21,10 +22,8 @@
 - **no-notify-on-update**: Handing a filter to a shell already started MUST NOT post that notification.
 - **accessory-toggle**: The controller MUST offer one pane accessory button, an eye beside the gear, titled "Hide the private terminal" with the open-eye symbol when revealed and "Show the private terminal" with the crossed-out symbol when not, that reveals or hides on press.
 - **accessory-refresh**: Whenever the reveal state changes, the controller MUST ask its parent pane to refresh its accessories.
-- **options-edit-words**: The controller MUST offer one option row holding an Edit Privacy Words button and a note that the words are kept in the keychain and opening them asks for authentication.
-- **edit-words-authenticates**: Pressing Edit Privacy Words MUST dismiss the options dialog and then ask the vault to authenticate with the reason "edit the privacy words" before presenting the editor on the window.
-- **edit-words-no-stack**: Pressing Edit Privacy Words while an authentication is on screen MUST do nothing beyond dismissing the options dialog.
-- **edit-words-failure-alert**: When that authentication fails and the pane has a window, the controller MUST show a sheet titled "The privacy words could not be opened." with the error's localized description.
+- **options-edit-words**: The controller MUST offer one option row holding an Open Secrets… button and nothing else.
+- **edit-words-authenticates**: Pressing Open Secrets… MUST dismiss the options dialog and open the Secrets window (`SecretsWindowController.show(vault:)`), which asks for authentication itself; the controller MUST NOT authenticate first.
 - **connectable-while-running**: The connectable terminal MUST be the session while it is running and nil otherwise.
 - **connect-starts-shell**: Starting the connectable terminal MUST mark the pane as asked to start, load the words through the vault's upgrade-if-needed load, give the session the filter if one exists, and return the connectable terminal, without revealing the screen.
 - **connect-already-started**: When the shell has already started, starting the connectable terminal MUST return the connectable terminal without loading words.
@@ -41,4 +40,5 @@
 - **no-coder-init**: The coder initializer MUST be unavailable.
 - **main-actor**: The controller MUST be used only from the main actor.
 - **auto-hide**: NEEDS REVIEW: Not implemented in source. Nothing puts the privacy screen back up on its own when the window loses focus, goes to the background, the Mac sleeps or a time passes; evidence that settles it is a product decision on whether an idle or lock event should lower the screen.
+- **terminal-words**: The words handed to the session MUST be the vault's `filter(forTerminalAt:)` for the directory the terminal started in (its working directory, or the home folder when it has none), so a word applies only in the terminals its Terminal column names.
 

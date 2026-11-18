@@ -21,3 +21,5 @@ rebuild.
 
 The mode is per tab and is not saved.
 
+The Agent view control's segments carry text as well as symbols, Browser, Agent View and Agent Source, in a regular-size rounded control whose selected segment takes the accent colour, inside a bordered box padded off the privacy toolbar's groups.
+

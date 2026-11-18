@@ -4,11 +4,11 @@
     "id": "8a51a893-a170-4cfc-a620-37939ae6b27b",
     "title": "Privacy Word Store",
     "type": "ingredient",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
-    "modified": "2026-11-14",
+    "modified": "2026-11-18",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -33,7 +33,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "a40156ac43aedca7",
+  "synced": "8ade08a5bb69bd78",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

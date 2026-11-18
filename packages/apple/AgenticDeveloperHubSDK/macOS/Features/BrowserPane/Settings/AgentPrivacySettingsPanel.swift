@@ -14,10 +14,10 @@ import AgenticDeveloperHubSDKCore
 ///
 /// Shown in both scopes. In the Settings window the switch is the global
 /// value every browser follows; in a pane's sheet the switch is the pane's own
-/// override, with the usual marker. The editor shows every word either way,
-/// each with the sites it applies on (`PrivacyWord`).
-/// The words are the private terminals' list, edited through the same editor
-/// behind the same authentication (`dry`).
+/// override, with the usual marker. Open Secrets… opens the Secrets window,
+/// where the words are kept, each with the sites and terminals it applies in
+/// (`PrivacyWord`): the private terminals' list, behind the window's own
+/// authentication (`dry`).
 @MainActor
 final class AgentPrivacySettingsGroup {
 
@@ -76,20 +76,6 @@ final class AgentPrivacySettingsGroup {
                 + "and draws the page as it is, until they are changed."
         ),
         .init(
-            title: "Privacy Words",
-            body: "The words are one list, kept in the keychain and shared with the "
-                + "private terminals. Each word can be turned off without deleting it. "
-                + "Each word's Sites says where it applies, as comma-separated patterns: "
-                + "* is everywhere, every web page and every private terminal; "
-                + "google.com/* is every page on google.com; foo.com/hi/* the pages "
-                + "under foo.com/hi; *.google.com any host ending in .google.com. A "
-                + "pattern with no path covers its whole site, and only * applies in a "
-                + "private terminal. A word added from a pane's own settings starts on "
-                + "that page's site; one added from the Settings window, on *. Opening "
-                + "the list asks you to authenticate; "
-                + "saving it does not ask again."
-        ),
-        .init(
             title: "What It Does Not Hide",
             body: "The pane draws its page, address and tab names with the stand-ins "
                 + "too, each tab with the words for its own site, so the screen shows "
@@ -112,18 +98,13 @@ final class AgentPrivacySettingsGroup {
         "privacy words", "conceal", "stand-in", "substitution", "model", "agent",
         "private", "sites", "global",
         "automation", "drive", "evaluate", "javascript", "mcp",
-        "Let models drive browser panes", "Allow browser_evaluate"
+        "Let models drive browser panes", "Allow browser_evaluate", "secrets"
     ]
 
     private let binding: BrowserSettingsBinding
-    /// The window the editor opens over: the panel's, asked for when the
-    /// button is pressed.
-    private let window: () -> NSWindow?
-    private var isAuthenticating = false
 
-    init(binding: BrowserSettingsBinding, window: @escaping () -> NSWindow?) {
+    init(binding: BrowserSettingsBinding) {
         self.binding = binding
-        self.window = window
     }
 
     func makeGroup() -> ComposableSettings.GroupView {
@@ -145,7 +126,7 @@ final class AgentPrivacySettingsGroup {
         if !binding.isPaneScope { addAutomationRows(to: group) }
 
         if binding.privacyVault != nil {
-            let edit = ComposableSettings.ButtonViewModel(title: "Edit Privacy Words…") { [weak self] in
+            let edit = ComposableSettings.ButtonViewModel(title: "Open Secrets…") { [weak self] in
                 self?.editWords()
             }
             let editView = ComposableSettings.ButtonView(viewModel: edit, placement: .leading)
@@ -153,7 +134,6 @@ final class AgentPrivacySettingsGroup {
             binding.register(edit, as: Self.editWordsIdentifier)
             group.addSettingSubview(editView)
         }
-        if !binding.isPaneScope, PrivacyTestingWords.isAvailable { addTestingWordsRows(to: group) }
         return group
     }
 
@@ -171,57 +151,14 @@ final class AgentPrivacySettingsGroup {
         binding.add(evaluateView, model: evaluate, key: evaluateKey, to: group)
     }
 
-    static let testingWordsIdentifier = "settings.browser.agent-privacy.testing-words"
-    static let testingWordsPathIdentifier = "settings.browser.agent-privacy.testing-words-path"
-
-    /// Debug builds: the switch onto a JSON file of testing words and the
-    /// file's path (``PrivacyTestingWords``). Global settings only, so the
-    /// Settings window alone shows them.
-    private func addTestingWordsRows(to group: ComposableSettings.GroupView) {
-        let enabledKey = UserSettings.privacyTestingWordsEnabled
-        let enabled = binding.model("Use testing words", enabledKey)
-        let enabledView = ComposableSettings.CheckboxView(with: enabled)
-        _ = enabledView.toggle.accessibilityID(Self.testingWordsIdentifier)
-        binding.add(enabledView, model: enabled, key: enabledKey, to: group)
-
-        let pathKey = UserSettings.privacyTestingWordsPath
-        let path = binding.model("Testing words file", pathKey)
-        let pathView = ComposableSettings.TextEditView(with: path)
-        pathView.textField.placeholderString = "~/privacy-testing-words.json"
-        _ = pathView.textField.accessibilityID(Self.testingWordsPathIdentifier)
-        binding.add(pathView, model: path, key: pathKey, to: group)
-    }
-
-    /// Authenticates, then opens the privacy words editor over the panel's
-    /// window — the private terminal's Edit Privacy Words, over the same
-    /// vault. The only prompt: the editor's Save does not ask again. Every
-    /// word is shown either way; a word added from a pane's settings starts on
+    /// Opens the Secrets window, which shows hidden and asks for
+    /// authentication itself. A word added from a pane's settings starts on
     /// the pane's site (`google.com/*`), one added from the Settings window
     /// on `*`.
-    ///
-    /// A pane's settings window is app-modal, and the authentication prompt
-    /// cannot come in front of an app-modal window; the vault announces its
-    /// prompt and the modal session steps aside while it is up
-    /// (`SystemAuthenticationPrompt`, `AppModalWindowSession`).
     private func editWords() {
-        guard !isAuthenticating, let vault = binding.privacyVault else { return }
+        guard let vault = binding.privacyVault else { return }
         let newWordSite = binding.pane.map { PrivacySitePattern.defaultPattern(for: $0.privacyWordsURL) }
             ?? PrivacySitePattern.everywhere
-        isAuthenticating = true
-        Task { [weak self] in
-            guard let self else { return }
-            defer { self.isAuthenticating = false }
-            do {
-                try await vault.authenticate(reason: "edit the privacy words")
-                guard let window = self.window() else { return }
-                PrivacyWordsEditor.present(vault: vault, on: window, newWordSite: newWordSite)
-            } catch {
-                guard let window = self.window() else { return }
-                let alert = NSAlert()
-                alert.messageText = "The privacy words could not be opened."
-                alert.informativeText = error.localizedDescription
-                alert.beginSheetModal(for: window, completionHandler: nil)
-            }
-        }
+        SecretsWindowController.show(vault: vault, newWordSite: newWordSite)
     }
 }

@@ -4,11 +4,11 @@
     "id": "4b1a3eb0-0a8a-4059-b2ac-824013072bd5",
     "title": "Panel View",
     "type": "ingredient",
-    "version": "1.2.2",
+    "version": "1.2.3",
     "status": "review",
     "language": "en",
     "created": "2026-09-23",
-    "modified": "2026-10-04",
+    "modified": "2026-11-18",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -32,7 +32,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "b3e8da2d605cdae7",
+  "synced": "54a38c2858918f39",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

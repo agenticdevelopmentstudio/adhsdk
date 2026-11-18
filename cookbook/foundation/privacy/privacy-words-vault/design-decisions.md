@@ -7,6 +7,10 @@
 **Rationale**: The source says this is the barrier against another person at the keyboard; re-reading also protects an editor opened here from writing back a list that predates another app's save.
 **Approved**: pending
 
+**Decision**: Seeing the words is enforced by the vault with a grant, not by each window remembering that it authenticated.
+**Rationale**: A window's own "unlocked" flag survived the testing-words switch: unlocking on the testing words (whose authenticator never prompts) and then switching them off showed the real words without a password. A grant names the store it was issued for and is revoked by `replaceStore`, so the owner authenticates again for the new words.
+**Alternatives considered**: Re-prompting inside `replaceStore` (a settings toggle would raise a password prompt from nowhere); clearing the words on a swap (breaks the browser panes' silent filtering).
+
 **Decision**: Words still saved under the old `userPresence` guard are upgraded by one prompt, shared by terminals starting together.
 **Rationale**: Reading and saving again without the guard means no later start asks; the shared upgrade task stops several terminals stacking prompts, and the prompt text says it is asked once.
 **Approved**: pending

@@ -46,7 +46,7 @@ final class BrowserPaneToolbarTests: XCTestCase {
     /// Chrome's toolbar replaces the navigation controls, so the bar shows
     /// the installed buttons and the menu, and the driven badge only while
     /// it is up. A pause adds nothing to the bar: the privacy button turns
-    /// red instead.
+    /// green instead, as it does for any protection in force.
     func test_ownToolbarBarShowsOnlyShownBadges() throws {
         let pane = makePane(ownToolbar: true)
         let bar = try XCTUnwrap(pane.addressBar)
@@ -55,7 +55,7 @@ final class BrowserPaneToolbarTests: XCTestCase {
 
         pane.setEventsPaused(true)
         XCTAssertEqual(shown(in: bar), [pane.installedBar, pane.menuButton])
-        XCTAssertEqual(pane.privacyButton.contentTintColor, .systemRed)
+        XCTAssertEqual(pane.privacyButton.contentTintColor, .systemGreen)
         XCTAssertEqual(pane.privacyButton.accessibilityValue() as? String, "paused")
         pane.setEventsPaused(false)
         XCTAssertNil(pane.privacyButton.contentTintColor)

@@ -63,6 +63,8 @@ and the project database (see
 Project Database ([adhsdk.ingredient.workspace.projects.project-database](cookbook:c212ea39-10e7-4146-89dd-36edb3b3455a))),
 which names its file inside the storage-location helper's directory.
 
+`summaryAIProviderSettings(for:)` resolves a `SummaryFeature`'s provider. Sessions reads the global selection. AI Conversations and Coding Projects read their own selection key: absent inherits the global one, an empty string means the Claude CLI, and an id picks that configuration.
+
 ## Behavioral Requirements
 
 ### Storage Location
@@ -277,7 +279,7 @@ Not applicable: neither component performs its own logging; ejections surface as
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Database/` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Database/` | confirmed (1.2.1) |
 
 ## Design Decisions
 
@@ -367,10 +369,6 @@ Not applicable: neither component performs its own logging; ejections surface as
 | [adc.check.reliability.health-observability](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d4ece88d-eeff-5e3f-8823-d8c2929a35e0) | passed | Reliability |
 
 The module keeps storage mechanics (pool, deadlines, metrics) and storage naming apart from every schema that uses it, and `BoundedDatabaseTests` and `AppStorageLocationTests` cover the cross-lane read, read-your-writes, ejection, in-memory, stats and poisoned-pool paths plus every token and directory rule. Every read and write carries a monotonic deadline and locked writes a busy timeout, and the reader pool keeps reads from queuing behind the writer. `stats` exposes in-flight, completed, evicted and p50/p99 per lane, so a wedge is visible. Explicit error handling is partial because the safety-net `ROLLBACK` discards its own failure, and errors other than an eviction go uncounted in `stats`. Data integrity is partial because the per-thread connection slot is shared across instances, so a call on one database nested inside an op on another runs against the wrong connection.
-
-## Per-Feature Summaries
-
-`summaryAIProviderSettings(for:)` resolves a `SummaryFeature`'s provider. Sessions reads the global selection. AI Conversations and Coding Projects read their own selection key: absent inherits the global one, an empty string means the Claude CLI, and an id picks that configuration.
 
 ## Change History
 

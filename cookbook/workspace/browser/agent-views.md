@@ -63,6 +63,8 @@ rebuild.
 
 The mode is per tab and is not saved.
 
+The Agent view control's segments carry text as well as symbols, Browser, Agent View and Agent Source, in a regular-size rounded control whose selected segment takes the accent colour, inside a bordered box padded off the privacy toolbar's groups.
+
 ## Behavioral Requirements
 
 - **three-segment-control**: The view switch MUST be a single-selection
@@ -353,11 +355,11 @@ MUST NOT carry page content.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/BrowserContentRules.swift` | unverified |
-| macos | `packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/BrowserPane/BrowserAgentViewsTests.swift` | unverified |
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/AgentViews/BrowserAgentViewMode.swift` | unverified |
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/AgentViews/BrowserAgentPreviewViewController.swift` | unverified |
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/AgentViews/BrowserAgentSourceViewController.swift` | unverified |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/BrowserContentRules.swift` | confirmed (0.1.3) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/BrowserPane/BrowserAgentViewsTests.swift` | confirmed (0.1.3) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/AgentViews/BrowserAgentViewMode.swift` | confirmed (0.1.3) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/AgentViews/BrowserAgentPreviewViewController.swift` | confirmed (0.1.3) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/AgentViews/BrowserAgentSourceViewController.swift` | confirmed (0.1.3) |
 
 ## Design Decisions
 
@@ -408,10 +410,6 @@ snapshot.
 
 Notes: design-first; every check is pending until the code exists. The
 plan's tests are in `BrowserAgentViewsTests`.
-
-## Control Labels
-
-The Agent view control's segments carry text as well as symbols, Browser, Agent View and Agent Source, in a regular-size rounded control whose selected segment takes the accent colour, inside a bordered box padded off the privacy toolbar's groups.
 
 ## Change History
 

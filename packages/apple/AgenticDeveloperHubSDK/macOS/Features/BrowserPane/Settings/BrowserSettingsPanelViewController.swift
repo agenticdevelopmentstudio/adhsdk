@@ -68,7 +68,7 @@ public final class BrowserSettingsPanelViewController: ComposableSettings.Settin
     ///     Chrome pane's sheet lists the topic either way, without the
     ///     version row when there is none.
     ///   - privacyVault: the app's one privacy words vault, which Privacy's
-    ///     Edit Privacy Words… opens in global scope; `nil` leaves the button
+    ///     Open Secrets… opens in global scope; `nil` leaves the button
     ///     out there. Pane scope uses the pane's own vault, so it need not be
     ///     passed. It must be the instance the panes and private terminals
     ///     share: a vault ignores its own process's change notification.
@@ -384,7 +384,7 @@ final class BrowserSettingsBinding {
 
     /// The privacy words the Agent Privacy group edits: the pane's vault in
     /// pane scope (falling back to the one handed in), the one handed in
-    /// globally. `nil` hides Edit Privacy Words….
+    /// globally. `nil` hides Open Secrets….
     var privacyVault: PrivacyWordsVault? { pane?.privacyVault ?? globalPrivacyVault }
 
     var layered: LayeredSettingsStore? {

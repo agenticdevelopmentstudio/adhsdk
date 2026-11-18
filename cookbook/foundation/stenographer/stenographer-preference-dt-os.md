@@ -38,6 +38,9 @@ The source is `packages/apple/AgenticDeveloperHubSDK/Core/Stenographer/Stenograp
 A request is a partial update: every field is optional, and the daemon reads an omitted field as "leave the stored value alone" (that is the daemon's rule, the HTTP client recipe, [adhsdk.ingredient.foundation.stenographer.stenographer-http-client](cookbook:9c7c78d3-23ca-4ca6-a519-9968b440b8c6), covers the routes that carry it; the snapshot push always sends all of them). A response is the full state the daemon runs with. They are encoded and decoded in the `StenographerWire` spelling ([adhsdk.ingredient.foundation.stenographer.stenographer-wire](cookbook:e8286557-84ee-4f45-b78c-f1d184c51a37): snake_case keys), so Swift's `maxWords` travels as `max_words`.
 
 `SummaryPreferenceRequest.enabled` and `selectedConfigId` are the summaries switch and provider choice, owned by the app that hosts the summaries pane; the remaining fields are tuning knobs whose accepted ranges are `SummaryLimits` ([adhsdk.ingredient.foundation.stenographer.summary-preference-dt-os](cookbook:844fde57-2231-4516-bcc9-a93c56d74a2d)).
+
+`SummaryPreferenceRequest.feature` names which feature's summary preferences the request sets. It is omitted for Sessions, which every daemon, old or new, reads as Sessions.
+
 ## Behavioral Requirements
 
 - **codable-sendable**: All four types MUST conform to `Codable` and `Sendable`, and the two responses MUST also conform to `Equatable`; the requests are not `Equatable`.
@@ -139,7 +142,7 @@ Not applicable: the types call no logging API.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Stenographer/StenographerPreferenceDTOs.swift` | confirmed (1.0.3) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Stenographer/StenographerPreferenceDTOs.swift` | confirmed (1.0.4) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -170,10 +173,6 @@ Not applicable: the types call no logging API.
 | [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
 
 `separation-of-concerns` passes because the types only hold values; routes, coding strategy and clamping belong to the HTTP client, `StenographerWire` and the daemon. `unit-test-coverage` is partial because `StenographerPreferenceDTOsTests` (`Tests/AgenticDeveloperHubSDKCoreTests/Stenographer/StenographerPreferenceDTOsTests.swift`) covers every vector except stenographer-preference-dt-os-012 (public initializers used from another module), which is skipped: the test target imports the module with `@testable`, so a unit test cannot show that the initializers are public.
-
-## Per-Feature Summaries
-
-`SummaryPreferenceRequest.feature` names which feature's summary preferences the request sets. It is omitted for Sessions, which every daemon, old or new, reads as Sessions.
 
 ## Change History
 

@@ -2,11 +2,11 @@
 id: 8a51a893-a170-4cfc-a620-37939ae6b27b
 title: "Privacy Word Store"
 type: ingredient
-version: 1.0.2
+version: 1.0.3
 status: review
 language: en
 created: 2026-11-14
-modified: 2026-11-14
+modified: 2026-11-18
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -63,6 +63,10 @@ approved-date: ""
 - **no-in-process-gate**: The store itself MUST NOT require authentication for `load` or `save`; showing, opening and saving the words are guarded by the caller taking `authenticate(reason:)` first. `PrivacyWordsVault` is the caller that does this.
 - **blocking-calls**: `load` and `save` MUST be synchronous and MUST NOT dispatch to another queue or actor; they run on the calling thread.
 - **no-retry**: The store MUST NOT retry a failed keychain call.
+- **word-terminals**: A `PrivacyWord` MUST carry `terminals`, the private terminals it applies in, as `.gitignore`-style patterns matched against the directory the terminal started in (`PrivacyTerminalPattern`): `*` is every terminal, a bare name matches a directory of that name and everything inside it, `~` is the home folder, `**` reaches everything below and `!` takes a directory back out, the last match deciding.
+- **word-terminals-default**: A word decoded without `terminals` MUST take `["*"]` when its sites include `*` and no terminals otherwise, so a word saved before the field kept applying exactly where it applied before.
+- **word-terminals-disabled**: A disabled word MUST apply in no terminal.
+- **filter-for-terminal**: `[PrivacyWord].filter(forTerminalAt:)` MUST build a filter from the enabled words whose terminals match the directory; a nil directory matches only `*`.
 
 ## Appearance
 
@@ -163,10 +167,11 @@ Not applicable: the store calls no logging API; failures are thrown, and the wor
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Privacy/PrivacyWordStore.swift` | confirmed (1.0.2) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Privacy/PrivacyWordStore.swift` | confirmed (1.0.3) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
+| macos | `packages/apple/AgenticDeveloperHubSDK/Core/Privacy/PrivacyTerminalPattern.swift` | confirmed (1.0.3) |
 
 ## Design Decisions
 
@@ -207,5 +212,6 @@ Separation of concerns passes: the store holds persistence and the owner-proof h
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.3 | 2026-11-18 | Mike Fullerton | Words carry the private terminals they apply in (terminals, gitignore patterns over the terminal's start directory; PrivacyTerminalPattern). |
 | 1.0.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (PrivacyWordStoreConformanceTests.swift, 2 of 15 vectors tested, 13 skipped: need a real entitled keychain or owner authentication); unit-test-coverage now partial. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Restated blocking-calls and no-retry as checkable, folded save-rewrites-unguarded into vector 009, fixed vectors 007, 009 and 014 and added 015, named the locked-read status mapping, moved the entitlement row and file details into platform notes, added ios, depends-on and related, and shortened the summary. |

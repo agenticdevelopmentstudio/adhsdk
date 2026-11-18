@@ -11,6 +11,9 @@ import Security
 ///   sites would be concealed nowhere while it still reads as enabled, so no
 ///   sites at all (an emptied editor cell, a stored `[]`) becomes `*`
 ///   (``PrivacySitePattern/normalized(_:)``).
+/// - `terminals`: the private terminals it applies in, as `.gitignore`
+///   patterns over the directory each started in (``PrivacyTerminalPattern``);
+///   `*` is every one, and none is none.
 ///
 /// **The JSON is load-bearing**: it is what the keychain item already holds,
 /// and other apps signed by the team read it. Words saved before `sites`
@@ -31,6 +34,11 @@ import Security
 /// concealed on every page instead of on none. Nothing this build writes can
 /// stop an older writer dropping a key, so both directions widen and neither
 /// narrows.
+///
+/// `terminals` came later still. A word saved without it — by any older build
+/// — decodes with `*` when its sites hold `*` and with none otherwise, which
+/// is exactly where that build applied it. The one narrowing: a site-only
+/// word given terminals here loses them if an older build saves the list.
 public struct PrivacyWord: Sendable, Equatable, Hashable, Codable {
     /// What the user writes and reads.
     public var alias: String
@@ -40,31 +48,47 @@ public struct PrivacyWord: Sendable, Equatable, Hashable, Codable {
     public var sites: [String] {
         didSet { sites = PrivacySitePattern.normalized(sites) }
     }
+    public var terminals: [String]
 
+    /// - Parameter terminals: `nil` takes what a word saved before the field
+    ///   existed takes: `*` when `sites` holds `*`, none otherwise.
     public init(
-        alias: String, real: String, isEnabled: Bool = true, sites: [String] = [PrivacySitePattern.everywhere]
+        alias: String, real: String, isEnabled: Bool = true, sites: [String] = [PrivacySitePattern.everywhere],
+        terminals: [String]? = nil
     ) {
         self.alias = alias
         self.real = real
         self.isEnabled = isEnabled
-        self.sites = PrivacySitePattern.normalized(sites)
+        let sites = PrivacySitePattern.normalized(sites)
+        self.sites = sites
+        self.terminals = terminals ?? Self.defaultTerminals(for: sites)
+    }
+
+    /// The terminals of a word with no `terminals` of its own.
+    public static func defaultTerminals(for sites: [String]) -> [String] {
+        sites.contains(PrivacySitePattern.everywhere) ? [PrivacyTerminalPattern.everywhere] : []
     }
 
     /// The word as a substitution pair.
     public var pair: TextSubstitutionFilter.Pair { .init(alias: alias, real: real) }
 
-    /// Whether the word applies everywhere, private terminals included.
+    /// Whether the word applies on every site.
     public var isEverywhere: Bool { sites.contains(PrivacySitePattern.everywhere) }
 
     /// Whether the word applies at `url`; `nil` asks for a place with no
-    /// address (a private terminal), where only `*` words apply.
+    /// address, where only `*` words apply.
     public func applies(at url: URL?) -> Bool {
         guard isEnabled else { return false }
         return sites.contains { PrivacySitePattern.matches($0, url: url) }
     }
 
+    /// Whether the word applies in a private terminal started in `directory`.
+    public func appliesInTerminal(at directory: String?) -> Bool {
+        isEnabled && PrivacyTerminalPattern.matches(terminals, directory: directory)
+    }
+
     private enum CodingKeys: String, CodingKey {
-        case alias, real, sites
+        case alias, real, sites, terminals
         case isEnabled = "enabled"
         case isGlobal = "global"
     }
@@ -76,8 +100,11 @@ public struct PrivacyWord: Sendable, Equatable, Hashable, Codable {
         isEnabled = try container.decodeIfPresent(Bool.self, forKey: .isEnabled) ?? true
         // Before `sites`, global and pane words alike become `*`; so does a
         // stored `[]`, which an earlier editor could save.
-        sites = PrivacySitePattern.normalized(
+        let sites = PrivacySitePattern.normalized(
             try container.decodeIfPresent([String].self, forKey: .sites) ?? [PrivacySitePattern.everywhere])
+        self.sites = sites
+        terminals = try container.decodeIfPresent([String].self, forKey: .terminals)
+            ?? Self.defaultTerminals(for: sites)
     }
 
     public func encode(to encoder: Encoder) throws {
@@ -88,15 +115,22 @@ public struct PrivacyWord: Sendable, Equatable, Hashable, Codable {
         // Always true, for older builds (see the type's doc); never read here.
         try container.encode(true, forKey: .isGlobal)
         try container.encode(sites, forKey: .sites)
+        try container.encode(terminals, forKey: .terminals)
     }
 }
 
 extension Array where Element == PrivacyWord {
 
     /// The enabled words that apply at `url`, as one filter. `nil` gives the
-    /// enabled `*` words alone: what a private terminal uses.
+    /// enabled `*` words alone.
     public func filter(for url: URL?) -> TextSubstitutionFilter {
         TextSubstitutionFilter(pairs: self.filter { $0.applies(at: url) }.map(\.pair))
+    }
+
+    /// The enabled words that apply in a private terminal started in
+    /// `directory`, as one filter.
+    public func filter(forTerminalAt directory: String?) -> TextSubstitutionFilter {
+        TextSubstitutionFilter(pairs: self.filter { $0.appliesInTerminal(at: directory) }.map(\.pair))
     }
 
     /// Every enabled word whatever its sites, as one filter: what conceals a

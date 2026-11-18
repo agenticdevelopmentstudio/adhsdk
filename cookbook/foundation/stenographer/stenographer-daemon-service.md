@@ -47,6 +47,8 @@ The records the operations carry are specified by the session DTOs ([adhsdk.ingr
 
 The protocol is the contract that matters: what each operation asks, what it answers, and what "the daemon could not be reached" looks like to a caller. The routes, query spelling, timeouts and reconnect polling belong to the implementation and are described under Platform Notes and Edge Cases only where a conforming port must match them.
 
+`summaryPreferences(feature:)` reads one feature's summary preferences; the protocol extension's default answers Sessions' for conformers that predate it.
+
 ## Behavioral Requirements
 
 **Protocol shape**
@@ -220,7 +222,7 @@ Not applicable: neither the protocol nor the HTTP implementation makes log calls
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Stenographer/StenographerDaemonService.swift` | confirmed (1.0.2) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Stenographer/StenographerDaemonService.swift` | confirmed (1.0.3) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -266,10 +268,6 @@ Not applicable: neither the protocol nor the HTTP implementation makes log calls
 | [adc.check.security.secure-authentication](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/1d5c23d5-9a26-57fb-a23d-358271e4204a) | failed | Security |
 
 separation-of-concerns passes: the protocol is the seam, the HTTP client is one implementation, and the windows depend only on the protocol. unit-test-coverage passes: `StenographerHTTPClientTests` and `DaemonServiceConformanceTests.swift` between them cover every vector, including the default-argument overloads, `DaemonProviderConfig` decoding, the timeout table and the summarize and unreachable paths. timeout-configuration passes because each request class has a stated limit (10, 15 and 605 seconds). offline-behavior passes because an unreachable daemon yields nil or false and callers keep their current data, though there is no retry. secure-transport is partial because traffic is plain HTTP, acceptable only on the loopback address, and `STENOGRAPHER_URL` can point the client at any address. secure-authentication is marked failed because the client sends no authentication header and `setAIPreferences` replaces the daemon's provider registry over that unauthenticated loopback endpoint, so any local process can call it; that is a known and accepted limit of the loopback design (see impl-no-retry), not a defect in the protocol contract.
-## Per-Feature Summaries
-
-`summaryPreferences(feature:)` reads one feature's summary preferences; the protocol extension's default answers Sessions' for conformers that predate it.
-
 ## Change History
 
 | Version | Date | Author | Summary |

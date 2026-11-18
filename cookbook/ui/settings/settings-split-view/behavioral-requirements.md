@@ -84,10 +84,14 @@
   component MUST set every one of their minimum-sidebar-width overrides
   to the same value: the widest of their own preferred widths, capped at
   `480` points.
-- **raises-detail-floor-for-nested-siblings**: Whenever
-  **unifies-nested-sidebar-widths** applies, the component MUST raise its
-  own nested-detail floor to the largest of `widest + nested's own
-  detail-minimum-thickness` across those nested siblings.
+- **raises-detail-floor-for-nested-siblings**: Whenever any hosted
+  panel is itself a settings split view (one or several, sidebar shown or
+  hidden), the component MUST raise its own nested-detail floor to the
+  largest minimum layout width among them, where a split's minimum layout
+  width is its sidebar width plus divider plus the larger of its own
+  detail-minimum-thickness and its own nested splits' minimum layout
+  widths, at every depth. When a nested split's layout changes, it MUST
+  have its enclosing split re-floor.
 - **floors-detail-pane-thickness**: The detail item's minimum thickness
   MUST always equal the larger of the detail-minimum-thickness floor and
   the nested-detail floor.

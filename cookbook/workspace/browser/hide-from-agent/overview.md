@@ -34,3 +34,7 @@ The preview keeps page JavaScript off. The picker world must still run
 there; whether WebKit runs isolated-world scripts with content JavaScript
 disabled is checked in the verification run and recorded below.
 
+Hide from Agent is the last button in the privacy toolbar's Agents group, styled like the group's items: "Hide from Agent ▾", and "Hide from Agent: Selecting" in green while its selecting mode runs.
+
+Right-clicking a page adds, below WebKit's items: Hide Distracting Item (live page only), Hide Item from Agents (live page and Agent preview, while the agent can see the browser), and on text Replace Private Word…, which opens the Secrets window on that word's row, made if it has none, once the window is unlocked, or brings the open window forward with it (`BrowserMenuWebView`, `WebBrowserPaneViewController+ContextMenu`).
+

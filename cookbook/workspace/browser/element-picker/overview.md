@@ -44,3 +44,5 @@ the hide-from-agent recipe's, and they reuse this component with the list
 set to agent. The first time the picker is used, a one-time notice says
 that items which load again, such as ads, can reappear.
 
+The candidate logic (selectors, labels, refs) lives in `BrowserPickCandidates.js`, installed with the finder before the picker, so the page's context menu can ask for the element drawn at the click point without starting the picker: `BrowserElementPicker.contextTarget(at:in:)` returns its candidate and the text the click selected. A context-menu pick goes straight to the hide dialog (`BrowserSelectingMode.pickOnce`); Cancel ends the mode rather than resuming a picker that never ran.
+

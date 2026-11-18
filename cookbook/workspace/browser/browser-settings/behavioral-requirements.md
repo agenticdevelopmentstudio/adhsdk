@@ -102,4 +102,5 @@
   that nothing is recorded whatever "Record history" says (the History group
   MUST NOT say it under the checkbox); "Agent can see history" MUST have a
   help topic of its own.
+- **agent-privacy-open-secrets**: The agent privacy group MUST offer an Open Secrets… button that opens the Secrets window, and MUST NOT itself authenticate or show the testing words, which belong to Settings > Features > Secrets.
 

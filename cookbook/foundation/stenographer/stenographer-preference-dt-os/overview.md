@@ -4,3 +4,6 @@ The source is `packages/apple/AgenticDeveloperHubSDK/Core/Stenographer/Stenograp
 A request is a partial update: every field is optional, and the daemon reads an omitted field as "leave the stored value alone" (that is the daemon's rule, the HTTP client recipe, [adhsdk.ingredient.foundation.stenographer.stenographer-http-client](cookbook:9c7c78d3-23ca-4ca6-a519-9968b440b8c6), covers the routes that carry it; the snapshot push always sends all of them). A response is the full state the daemon runs with. They are encoded and decoded in the `StenographerWire` spelling ([adhsdk.ingredient.foundation.stenographer.stenographer-wire](cookbook:e8286557-84ee-4f45-b78c-f1d184c51a37): snake_case keys), so Swift's `maxWords` travels as `max_words`.
 
 `SummaryPreferenceRequest.enabled` and `selectedConfigId` are the summaries switch and provider choice, owned by the app that hosts the summaries pane; the remaining fields are tuning knobs whose accepted ranges are `SummaryLimits` ([adhsdk.ingredient.foundation.stenographer.summary-preference-dt-os](cookbook:844fde57-2231-4516-bcc9-a93c56d74a2d)).
+
+`SummaryPreferenceRequest.feature` names which feature's summary preferences the request sets. It is omitted for Sessions, which every daemon, old or new, reads as Sessions.
+

@@ -4,11 +4,11 @@
     "id": "96f73261-cf32-42cc-92f3-f8b58542382a",
     "title": "Stenographer Daemon Service",
     "type": "ingredient",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
-    "modified": "2026-11-14",
+    "modified": "2026-11-18",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -42,7 +42,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "ff35f4d7d180eb94",
+  "synced": "7e666a0292f06472",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

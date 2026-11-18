@@ -12,11 +12,11 @@ import AgenticDeveloperHubSDKCore
 /// setting a page or the agent is subject to, in the three groups of the
 /// Privacy and Security tabs (General, Events, Agents).
 ///
-/// Each item's label says its state ("Mouse: On"). An item is red while its
-/// protection is on: Mouse is red while the page is kept from the mouse, Hide
-/// Images while the images are hidden, Privacy Words while the words are
-/// concealed. So red always means "something is being kept back", whichever
-/// way the setting is phrased.
+/// Each item's label says its state ("Mouse: On"). An item is green while its
+/// protection is on: Mouse is green while the page is kept from the mouse,
+/// Hide Images while the images are hidden, Privacy Words while the words are
+/// concealed. So green always means "this privacy setting is in force",
+/// whichever way the setting is phrased.
 @MainActor
 enum BrowserPrivacyStatus {
 
@@ -63,7 +63,7 @@ enum BrowserPrivacyStatus {
         /// Whether the thing `title` names is on: the page's keyboard, the
         /// agent's access, the concealing of the privacy words.
         let isOn: Bool
-        /// Whether the item's protection is on, so it draws red.
+        /// Whether the item's protection is on, so it draws green.
         let isProtecting: Bool
         /// What the item says after its title: "On", "Off", or a choice's name.
         let state: String
@@ -71,6 +71,12 @@ enum BrowserPrivacyStatus {
         var isEnabled = true
         /// The values a click offers in a menu; empty for a plain toggle.
         var choices: [Choice] = []
+        /// Why another setting decides this one now, for an item that is
+        /// fixed by it rather than off limits: it draws at full strength,
+        /// says why in its tooltip, and a click opens the privacy settings
+        /// where that other setting is. A disabled button would draw its
+        /// state too faintly to read.
+        var lockedReason: String?
 
         var group: Group { kind.group }
         var text: String { "\(title): \(state)" }
@@ -124,7 +130,10 @@ enum BrowserPrivacyStatus {
             Choice(title: thirdPartyState($0), value: $0.rawValue, isSelected: $0 == thirdParty)
         }
         var cookiesItem = toggle(.cookies, "circle.hexagongrid", "Cookies", isOn: cookies, protectsWhenOn: false)
-        cookiesItem.isEnabled = !cookiesLocked
+        if cookiesLocked {
+            cookiesItem.lockedReason = "This tab shares its cookie jar, so the jar's cookie setting applies. "
+                + "Set Storage to This Tab in the privacy settings to give it its own."
+        }
         let agentOn = !agentPaused && access != .hidden
         var readOnly = toggle(.readOnly, "text.magnifyingglass", "Read Only",
                               isOn: access == .readOnly, protectsWhenOn: true)
@@ -164,7 +173,12 @@ enum BrowserPrivacyStatus {
         }
     }
 
-    /// Red while the words are concealed, and also while the switch is on
+    /// Whether any item's protection is on, which colours the privacy eye.
+    static func isAnyProtecting(_ items: [Item]) -> Bool {
+        items.contains(where: \.isProtecting)
+    }
+
+    /// Green while the words are concealed, and also while the switch is on
     /// but the words cannot be applied, since that is a protection asked for
     /// and not given, which the state names.
     private static func privacyWordsItem(_ privacy: BrowserAgentPrivacy, isSwitchedOn: Bool) -> Item {
@@ -264,18 +278,23 @@ extension BrowserAgentAccess {
 }
 
 /// The look every privacy toolbar button shares, the item buttons and Hide
-/// from Agent alike: a symbol and a "Title: State" label, red while the
-/// protection is on, with a hover-lit accessory-bar bezel.
+/// from Agent alike: a symbol and a "Title: State" label, green while the
+/// protection is on, on a bezel that always shows, so the row reads as a
+/// toolbar of buttons rather than a line of text.
 @MainActor
 enum BrowserPrivacyStripStyle {
 
     static let font = NSFont.systemFont(ofSize: NSFont.smallSystemFontSize)
 
+    /// The colour of a protection that is on: the items, Hide from Agent
+    /// while it selects, and the privacy eye while any protection is on.
+    static let protectingColor: NSColor = .systemGreen
+
     static func apply(to button: NSButton, symbol: String, text: String, isProtecting: Bool, hasMenu: Bool) {
-        let color: NSColor = isProtecting ? .systemRed : .labelColor
+        let color: NSColor = isProtecting ? protectingColor : .labelColor
         button.bezelStyle = .accessoryBarAction
         button.isBordered = true
-        button.showsBorderOnlyWhileMouseInside = true
+        button.showsBorderOnlyWhileMouseInside = false
         button.controlSize = .small
         button.imagePosition = .imageLeading
         button.imageHugsTitle = true
@@ -306,10 +325,11 @@ final class BrowserPrivacyStripButton: NSButton {
             to: self, symbol: item.symbol, text: item.text, isProtecting: item.isProtecting,
             hasMenu: !item.choices.isEmpty)
         isEnabled = item.isEnabled
-        toolTip = item.text
+        toolTip = item.lockedReason.map { "\(item.text). \($0)" } ?? item.text
         self.target = target
         self.action = action
         setAccessibilityLabel(item.text)
+        if let reason = item.lockedReason { setAccessibilityHelp(reason) }
         setAccessibilityValue(item.isOn ? "on" : "off")
         setAccessibilityIdentifier(item.identifier)
     }
@@ -351,7 +371,7 @@ final class BrowserPrivacyStripButton: NSButton {
 }
 
 /// One group of the privacy toolbar: its buttons in a row on a faint rounded
-/// ground, so the three groups read as three.
+/// ground inside a border, so the three groups read as three.
 @MainActor
 final class BrowserPrivacyStripGroupView: NSStackView {
 
@@ -366,6 +386,7 @@ final class BrowserPrivacyStripGroupView: NSStackView {
         edgeInsets = NSEdgeInsets(top: 2, left: 4, bottom: 2, right: 4)
         wantsLayer = true
         layer?.cornerRadius = 6
+        layer?.borderWidth = 1
         setHuggingPriority(.required, for: .horizontal)
         toolTip = group.title
         setAccessibilityElement(true)
@@ -390,6 +411,7 @@ final class BrowserPrivacyStripGroupView: NSStackView {
     private func updateGround() {
         effectiveAppearance.performAsCurrentDrawingAppearance {
             layer?.backgroundColor = NSColor.quaternaryLabelColor.withAlphaComponent(0.08).cgColor
+            layer?.borderColor = NSColor.separatorColor.cgColor
         }
     }
 }

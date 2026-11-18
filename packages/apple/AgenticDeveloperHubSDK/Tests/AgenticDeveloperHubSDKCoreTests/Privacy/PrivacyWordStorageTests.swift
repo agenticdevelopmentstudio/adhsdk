@@ -181,10 +181,10 @@ import Testing
         let vault = PrivacyWordsVault(store: real, authenticator: owner)
         PrivacyTestingWords(vault: vault, settings: store).start()
 
-        try await vault.authenticate(reason: "edit the privacy words")
+        let grant = try await vault.authenticate(reason: "edit the privacy words")
         #expect(owner.promptCount == 0)
         let added = PrivacyWord(alias: "Tulip", real: "Quuxcorp", sites: ["example.com/*"])
-        try vault.save([fake, added])
+        try vault.save([fake, added], with: grant)
         #expect(try JSONFilePrivacyWordStore(fileURL: url).load() == [fake, added])
         #expect(real.words == [PrivacyWord(alias: "RealAlias", real: "RealSecret")])
     }
@@ -196,5 +196,25 @@ import Testing
         store.set("~/words.json", for: UserSettings.privacyTestingWordsPath)
         #expect(PrivacyTestingWords.fileURL(in: store)?.path
                 == (NSHomeDirectory() as NSString).appendingPathComponent("words.json"))
+    }
+
+    @Test("T7: a grant from the testing words' no-prompt answer does not show the real words")
+    func testT7_turningOffRevokes() async throws {
+        let store = settings()
+        store.set(true, for: UserSettings.privacyTestingWordsEnabled)
+        store.set(try testingFile([fake]).path, for: UserSettings.privacyTestingWordsPath)
+        let owner = ScriptedOwnerAuthenticator(.fail)
+        let vault = PrivacyWordsVault(store: real, authenticator: owner)
+        PrivacyTestingWords(vault: vault, settings: store).start()
+        let grant = try await vault.authenticate(reason: "show your secrets")
+        #expect(try vault.words(with: grant) == [fake])
+
+        store.set(false, for: UserSettings.privacyTestingWordsEnabled)
+        await settleNotifications(100_000_000)
+        #expect(throws: PrivacyWordsGrant.Revoked.self) { try vault.words(with: grant) }
+        await #expect(throws: PrivacyWordStore.StoreError.self) {
+            try await vault.authenticate(reason: "show your secrets")
+        }
+        #expect(owner.promptCount == 1)
     }
 }
