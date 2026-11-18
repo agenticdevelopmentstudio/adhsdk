@@ -2,9 +2,9 @@
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
 | automation-status-001 | initial-values, line-starting | `AutomationServerStatus()` | `port` nil, `token` nil, `isRegistered` false, `failureReason` nil, `line` is `Starting.`, `url` nil |
-| automation-status-002 | line-listening-unregistered, line-port-unformatted | `port = 51477`, `isRegistered = false` | `line` is `Listening on port 51477. Not registered with Claude Code.` (`AutomationSettingsPanelTests.testStatusLineNamesThePortAndRegistration`) |
+| automation-status-002 | line-listening-unregistered, line-port-unformatted | `port = 51477`, `isRegistered = false` | `line` is `Listening on port 51477. Not registered with Claude Code.` (`CLISettingsPanelTests.testStatusLineNamesThePortAndRegistration`) |
 | automation-status-003 | line-listening-registered | Same instance, then `isRegistered = true` | `line` is `Listening on port 51477. Registered with Claude Code.` (same test) |
-| automation-status-004 | line-failure-first | `failureReason = "could not write /x/mcp-token: Permission denied"` with `port` nil | `line` is `Not running: could not write /x/mcp-token: Permission denied` (`AutomationSettingsPanelTests.testFailureReasonIsTheStatusLine`) |
+| automation-status-004 | line-failure-first | `failureReason = "could not write /x/mcp-token: Permission denied"` with `port` nil | `line` is `Not running: could not write /x/mcp-token: Permission denied` (`CLISettingsPanelTests.testFailureReasonIsTheStatusLine`) |
 | automation-status-005 | line-failure-first | `port = 51477`, `isRegistered = true`, `failureReason = "x"` | `line` is `Not running: x` |
 | automation-status-006 | url-format | `port = 51477` | `url` is `http://127.0.0.1:51477/mcp` |
 | automation-status-007 | url-nil-without-port | `port = nil` | `url` is nil |

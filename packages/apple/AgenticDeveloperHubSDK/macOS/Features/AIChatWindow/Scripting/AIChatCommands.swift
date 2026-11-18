@@ -41,7 +41,7 @@ public final class SendChatMessageCommand: MainActorScriptCommand, @unchecked Se
         // Say what the fix is rather than build a chat that has nothing to talk to.
         guard !UserSettings.aiProviderConfigurations.value.isEmpty else {
             scriptErrorNumber = errOSACantAssign
-            scriptErrorString = "No AI connection is configured. Add one in Settings > AI Connections."
+            scriptErrorString = "No AI connection is configured. Add one in Settings, under AI Providers."
             return nil
         }
         let createdChat = aiChat.windows.isEmpty

@@ -8,7 +8,7 @@
 **Approved**: pending
 
 **Decision**: The model holds values and derives text; it does not start the endpoint, read the Claude Code config or validate anything.
-**Rationale**: Per the doc comment the host's automation feature fills it and the panel reads it. Keeping it passive lets the panel be tested with any combination of values, as `AutomationSettingsPanelTests` does.
+**Rationale**: Per the doc comment the host's automation feature fills it and the panel reads it. Keeping it passive lets the panel be tested with any combination of values, as `CLISettingsPanelTests` does.
 **Approved**: pending
 
 **Decision**: The model is `@MainActor` and publishes the bearer token as a plain `String?`.

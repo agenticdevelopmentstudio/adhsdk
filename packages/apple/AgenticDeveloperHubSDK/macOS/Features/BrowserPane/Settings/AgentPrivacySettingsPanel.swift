@@ -51,6 +51,18 @@ final class AgentPrivacySettingsGroup {
                 + "until you turn it on."
         ),
         .init(
+            title: "Let models drive browser panes",
+            body: "A model — Claude Code in a terminal pane, or the app's own chat — can drive "
+                + "the browser panes: read the page, click, type, and take screenshots. Off, a "
+                + "model can still list the browser panes but cannot read or act on them. Set "
+                + "in the Settings window only; it applies to every browser pane."
+        ),
+        .init(
+            title: "Allow browser_evaluate",
+            body: "Lets a model run JavaScript it wrote in a page. Off by default: every other "
+                + "tool is bounded by what the page offers; this one is not."
+        ),
+        .init(
             title: "Refused Tools",
             body: "Three tools cannot be concealed, so a pane with Agent Privacy on "
                 + "refuses them: a screenshot, which is the page's pixels; a click at a "
@@ -90,11 +102,17 @@ final class AgentPrivacySettingsGroup {
     ]
 
     static let hideImagesIdentifier = "settings.browser.agent-privacy.hide-images"
+    /// The automation switches keep the identifiers they had in the
+    /// Automation panel they came from.
+    static let automationEnabledIdentifier = "settings.automation.enabled"
+    static let automationEvaluateIdentifier = "settings.automation.evaluate"
 
     static let keywords: [String] = [
         "images", "hide images", "agent privacy",
         "privacy words", "conceal", "stand-in", "substitution", "model", "agent",
-        "private", "sites", "global"
+        "private", "sites", "global",
+        "automation", "drive", "evaluate", "javascript", "mcp",
+        "Let models drive browser panes", "Allow browser_evaluate"
     ]
 
     private let binding: BrowserSettingsBinding
@@ -122,6 +140,10 @@ final class AgentPrivacySettingsGroup {
         _ = imagesView.toggle.accessibilityID(Self.hideImagesIdentifier)
         binding.add(imagesView, model: images, key: imagesKey, to: group)
 
+        // Whether models may drive a browser at all: one global switch pair,
+        // so the Settings window shows it and a pane's sheet does not.
+        if !binding.isPaneScope { addAutomationRows(to: group) }
+
         if binding.privacyVault != nil {
             let edit = ComposableSettings.ButtonViewModel(title: "Edit Privacy Words…") { [weak self] in
                 self?.editWords()
@@ -133,6 +155,20 @@ final class AgentPrivacySettingsGroup {
         }
         if !binding.isPaneScope, PrivacyTestingWords.isAvailable { addTestingWordsRows(to: group) }
         return group
+    }
+
+    private func addAutomationRows(to group: ComposableSettings.GroupView) {
+        let enabledKey = UserSettings.browserAutomationEnabled
+        let enabled = binding.model("Let models drive browser panes", enabledKey)
+        let enabledView = ComposableSettings.CheckboxView(with: enabled)
+        _ = enabledView.toggle.accessibilityID(Self.automationEnabledIdentifier)
+        binding.add(enabledView, model: enabled, key: enabledKey, to: group)
+
+        let evaluateKey = UserSettings.browserAutomationEvaluate
+        let evaluate = binding.model("Allow browser_evaluate", evaluateKey)
+        let evaluateView = ComposableSettings.CheckboxView(with: evaluate)
+        _ = evaluateView.toggle.accessibilityID(Self.automationEvaluateIdentifier)
+        binding.add(evaluateView, model: evaluate, key: evaluateKey, to: group)
     }
 
     static let testingWordsIdentifier = "settings.browser.agent-privacy.testing-words"

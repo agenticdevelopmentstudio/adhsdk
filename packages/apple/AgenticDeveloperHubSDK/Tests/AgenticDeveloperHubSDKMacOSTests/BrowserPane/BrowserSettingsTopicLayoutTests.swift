@@ -143,6 +143,11 @@ final class BrowserSettingsTopicLayoutTests: XCTestCase {
             UserSettings.browserAgentHistoryAccess.name
         ])
 
+        // The automation switches came from the removed Automation panel into
+        // Agent Privacy, keeping their keys and identifiers.
+        for key in [UserSettings.browserAutomationEnabled.name, UserSettings.browserAutomationEvaluate.name] {
+            XCTAssertEqual(panel.binding.rows(named: key).map(\.group), ["Agent Privacy"], "\(key) is in Agent Privacy")
+        }
         XCTAssertNotNil(panel.binding.buttons["settings.browser.site-data.manage"])
         func tables(in view: NSView) -> Int {
             view.subviews.reduce(view is ComposableSettings.EditableTableCard ? 1 : 0) { $0 + tables(in: $1) }
