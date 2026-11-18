@@ -4,7 +4,7 @@ import AgenticDeveloperHubSDKCore
 @testable import AgenticDeveloperHubSDKMacOS
 
 @MainActor
-final class AutomationSettingsPanelTests: XCTestCase {
+final class CLISettingsPanelTests: XCTestCase {
 
     private func field(_ id: String, in view: NSView) -> NSTextField? {
         if let field = view as? NSTextField, field.accessibilityIdentifier() == id { return field }
@@ -18,23 +18,10 @@ final class AutomationSettingsPanelTests: XCTestCase {
         return nil
     }
 
-    private func control(_ id: String, in view: NSView) -> NSControl? {
-        if let control = view as? NSControl, control.accessibilityIdentifier() == id { return control }
-        for sub in view.subviews { if let found = control(id, in: sub) { return found } }
-        return nil
-    }
-
-    /// Only the selected topic is in the view tree, and a split selects its
-    /// first topic when it appears in a window, which these tests have none
-    /// of — so the topic is chosen here: 0 is Browser, 1 is Endpoint.
     private func makePanel(status: AutomationServerStatus,
-                           topic: Int,
-                           pasteboard: NSPasteboard = .general) -> AutomationSettingsPanelViewController {
-        let settings = UserSettings(with: InMemorySettingsStorageProvider(),
-                                    secureSettingsProvider: InMemorySecureSettingsStorageProvider())
-        let panel = AutomationSettingsPanelViewController(status: status, settings: settings, pasteboard: pasteboard)
+                           pasteboard: NSPasteboard = .general) -> CLISettingsPanelViewController {
+        let panel = CLISettingsPanelViewController(status: status, pasteboard: pasteboard)
         _ = panel.view
-        panel.selectPanel(at: topic)
         return panel
     }
 
@@ -42,7 +29,7 @@ final class AutomationSettingsPanelTests: XCTestCase {
         let status = AutomationServerStatus()
         status.port = 51477
         status.isRegistered = false
-        let panel = makePanel(status: status, topic: 1)
+        let panel = makePanel(status: status)
         let line = field("settings.automation.status", in: panel.view)
         XCTAssertEqual(line?.stringValue, "Listening on port 51477. Not registered with Claude Code.")
         status.isRegistered = true
@@ -52,7 +39,7 @@ final class AutomationSettingsPanelTests: XCTestCase {
     func testFailureReasonIsTheStatusLine() {
         let status = AutomationServerStatus()
         status.failureReason = "could not write /x/mcp-token: Permission denied"
-        let panel = makePanel(status: status, topic: 1)
+        let panel = makePanel(status: status)
         XCTAssertEqual(field("settings.automation.status", in: panel.view)?.stringValue,
                        "Not running: could not write /x/mcp-token: Permission denied")
     }
@@ -63,17 +50,11 @@ final class AutomationSettingsPanelTests: XCTestCase {
         status.token = "tok"
         let pasteboard = NSPasteboard(name: NSPasteboard.Name("adkitchen.tests." + UUID().uuidString))
         addTeardownBlock { pasteboard.releaseGlobally() }
-        let panel = makePanel(status: status, topic: 1, pasteboard: pasteboard)
+        let panel = makePanel(status: status, pasteboard: pasteboard)
         let copy = button("settings.automation.copy-command", in: panel.view)
         XCTAssertNotNil(copy)
         copy?.performClick(nil)
         XCTAssertEqual(pasteboard.string(forType: .string),
                        MCPRegistration.claudeCommand(port: 51477, token: "tok"))
-    }
-
-    func testCheckboxesCarryTheirIdentifiers() {
-        let panel = makePanel(status: AutomationServerStatus(), topic: 0)
-        XCTAssertNotNil(control("settings.automation.enabled", in: panel.view))
-        XCTAssertNotNil(control("settings.automation.evaluate", in: panel.view))
     }
 }

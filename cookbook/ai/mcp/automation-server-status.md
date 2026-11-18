@@ -2,11 +2,11 @@
 id: 456bc5f5-b955-4844-906d-007506405d3d
 title: "Automation Server Status"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-14
-modified: 2026-11-14
+modified: 2026-11-18
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -29,7 +29,7 @@ approved-date: ""
 
 ## Overview
 
-`AutomationServerStatus` is an `ObservableObject` that holds what the Automation settings panel shows about the host's MCP endpoint. Its doc comment gives the division of labor: it is "filled by the host's automation feature when it starts, read by the panel." The host writes four published values (`port`, `token`, `isRegistered`, `failureReason`); the model derives the endpoint `url` and a one-sentence status `line` from them. It starts and stops nothing, performs no registration, and owns no I/O.
+`AutomationServerStatus` is an `ObservableObject` that holds what the CLI settings panel shows about the host's MCP endpoint. Its doc comment gives the division of labor: it is "filled by the host's automation feature when it starts, read by the panel." The host writes four published values (`port`, `token`, `isRegistered`, `failureReason`); the model derives the endpoint `url` and a one-sentence status `line` from them. It starts and stops nothing, performs no registration, and owns no I/O.
 
 ## Behavioral Requirements
 
@@ -55,7 +55,7 @@ approved-date: ""
 
 ## Appearance
 
-Not applicable — this is an observable status model for a settings panel, not a visual component. The panel that renders `line` is `AutomationEndpointPanel` (in `AutomationSettingsPanelViewController.swift`), a separate type.
+Not applicable — this is an observable status model for a settings panel, not a visual component. The panel that renders `line` is `CLISettingsPanelViewController`, a separate type.
 
 ## States
 
@@ -70,9 +70,9 @@ Not applicable — this is an observable status model, not a visual component.
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
 | automation-status-001 | initial-values, line-starting | `AutomationServerStatus()` | `port` nil, `token` nil, `isRegistered` false, `failureReason` nil, `line` is `Starting.`, `url` nil |
-| automation-status-002 | line-listening-unregistered, line-port-unformatted | `port = 51477`, `isRegistered = false` | `line` is `Listening on port 51477. Not registered with Claude Code.` (`AutomationSettingsPanelTests.testStatusLineNamesThePortAndRegistration`) |
+| automation-status-002 | line-listening-unregistered, line-port-unformatted | `port = 51477`, `isRegistered = false` | `line` is `Listening on port 51477. Not registered with Claude Code.` (`CLISettingsPanelTests.testStatusLineNamesThePortAndRegistration`) |
 | automation-status-003 | line-listening-registered | Same instance, then `isRegistered = true` | `line` is `Listening on port 51477. Registered with Claude Code.` (same test) |
-| automation-status-004 | line-failure-first | `failureReason = "could not write /x/mcp-token: Permission denied"` with `port` nil | `line` is `Not running: could not write /x/mcp-token: Permission denied` (`AutomationSettingsPanelTests.testFailureReasonIsTheStatusLine`) |
+| automation-status-004 | line-failure-first | `failureReason = "could not write /x/mcp-token: Permission denied"` with `port` nil | `line` is `Not running: could not write /x/mcp-token: Permission denied` (`CLISettingsPanelTests.testFailureReasonIsTheStatusLine`) |
 | automation-status-005 | line-failure-first | `port = 51477`, `isRegistered = true`, `failureReason = "x"` | `line` is `Not running: x` |
 | automation-status-006 | url-format | `port = 51477` | `url` is `http://127.0.0.1:51477/mcp` |
 | automation-status-007 | url-nil-without-port | `port = nil` | `url` is nil |
@@ -101,7 +101,7 @@ Not applicable — this is an observable status model, not a visual component.
 | `isRegistered` | `Bool` | `false` | Whether `~/.claude.json` lists this server on this port. |
 | `failureReason` | `String?` | `nil` | Why the endpoint is not running. |
 
-The component defines no environment variable and no settings key. It reads `MCPHTTPEndpoint.path` (`/mcp`) to build `url`, and is injected into the Automation settings panel and `PartnerCoordinator`.
+The component defines no environment variable and no settings key. It reads `MCPHTTPEndpoint.path` (`/mcp`) to build `url`, and is injected into the CLI settings panel and `PartnerCoordinator`.
 
 ## Deep Linking
 
@@ -139,7 +139,7 @@ Not applicable: the component contains no logging call.
 - **SwiftUI**: The source is `packages/apple/AgenticDeveloperHubSDK/macOS/Features/MCP/AutomationServerStatus.swift`. It is already an `ObservableObject`, so a SwiftUI view holds it as `@ObservedObject` or `@StateObject` and reads `line` and `url` directly; the static `line` is needed only for Combine sinks, which receive values before the property changes.
 - **Compose**: Model it as a `ViewModel` exposing a `StateFlow<AutomationStatus>` data class of `port: Int?`, `token: String?`, `isRegistered: Boolean`, `failureReason: String?`. Compute `line` and `url` as pure functions of the data class, so the Swift pre-change publication problem does not arise (a collected value is always the new one). Update the flow from the main dispatcher. Validate port range 0 to 65535 yourself, as Swift gets it from `UInt16`.
 - **React/Web**: Hold the four values in a store (a React context, Zustand or `useReducer` state) and derive `line` and `url` with pure selector functions of the state. Rendering from the new state removes the need for a separate static helper. A web port has no `~/.claude.json`; `isRegistered` would come from a service call.
-- **AppKit / UIKit**: The reference is `macOS/Features/MCP/AutomationServerStatus.swift`, `@MainActor public final class` conforming to `ObservableObject` with `Foundation` and `Combine`. `AutomationEndpointPanel` (the Endpoint topic panel, declared in `AutomationSettingsPanelViewController.swift`) subscribes to the published values with `Publishers.CombineLatest4` and calls `AutomationServerStatus.line(port:isRegistered:failureReason:)` with the received values because of the willSet-time publication noted in the source. The tests are in `Tests/AgenticDeveloperHubSDKMacOSTests/MCP/AutomationSettingsPanelTests.swift`.
+- **AppKit / UIKit**: The reference is `macOS/Features/MCP/AutomationServerStatus.swift`, `@MainActor public final class` conforming to `ObservableObject` with `Foundation` and `Combine`. `CLISettingsPanelViewController` (the CLI settings panel) subscribes to the published values with `Publishers.CombineLatest4` and calls `AutomationServerStatus.line(port:isRegistered:failureReason:)` with the received values because of the willSet-time publication noted in the source. The tests are in `Tests/AgenticDeveloperHubSDKMacOSTests/MCP/CLISettingsPanelTests.swift`.
 - **WinUI 3**: Implement a class that implements `INotifyPropertyChanged` with `Port` (`ushort?`), `Token`, `IsRegistered`, `FailureReason`, and computed `Url` and `Line` properties. Raise `PropertyChanged` for `Url` and `Line` whenever one of the four inputs changes. Unlike Swift's `@Published`, `PropertyChanged` fires after the field is set, so `Line` can be read off the instance and the static helper is not needed (keep it for parity if tests call it). Update from the UI thread via `DispatcherQueue.TryEnqueue` to mirror `@MainActor`, and bind in XAML with `{x:Bind ViewModel.Line, Mode=OneWay}` to a `TextBlock`. Build the URL with `$"http://127.0.0.1:{Port}{McpHttpEndpoint.Path}"`.
 
 ## Reference Implementations
@@ -163,7 +163,7 @@ Not applicable: the component contains no logging call.
 **Approved**: pending
 
 **Decision**: The model holds values and derives text; it does not start the endpoint, read the Claude Code config or validate anything.
-**Rationale**: Per the doc comment the host's automation feature fills it and the panel reads it. Keeping it passive lets the panel be tested with any combination of values, as `AutomationSettingsPanelTests` does.
+**Rationale**: Per the doc comment the host's automation feature fills it and the panel reads it. Keeping it passive lets the panel be tested with any combination of values, as `CLISettingsPanelTests` does.
 **Approved**: pending
 
 **Decision**: The model is `@MainActor` and publishes the bearer token as a plain `String?`.
@@ -185,3 +185,5 @@ The model keeps state apart from the host feature that fills it and the panel th
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-18 | Mike Fullerton | The panel that reads it is now the CLI settings panel (`CLISettingsPanelViewController`); the Automation panel is gone, its browser switches moved to the browser's Agent Privacy group. |
+| 1.0.0 | 2026-11-14 | Mike Fullerton | Initial creation |

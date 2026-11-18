@@ -6,5 +6,5 @@
 | `isRegistered` | `Bool` | `false` | Whether `~/.claude.json` lists this server on this port. |
 | `failureReason` | `String?` | `nil` | Why the endpoint is not running. |
 
-The component defines no environment variable and no settings key. It reads `MCPHTTPEndpoint.path` (`/mcp`) to build `url`, and is injected into the Automation settings panel and `PartnerCoordinator`.
+The component defines no environment variable and no settings key. It reads `MCPHTTPEndpoint.path` (`/mcp`) to build `url`, and is injected into the CLI settings panel and `PartnerCoordinator`.
 
