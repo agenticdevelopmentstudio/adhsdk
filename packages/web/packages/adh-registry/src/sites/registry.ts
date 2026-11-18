@@ -1244,9 +1244,8 @@ export const HUB_ROUTE_SEGMENTS = new Set<string>([
   'integrations',
   'old-landing',
   'settings',
-  // The Admin workspace (`app/admin/`) — the operations console for a viewer holding `admin`,
-  // listed among the workspaces but backed by no workspace, so it carries no slug.
-  'admin',
+  // Not `admin`: the hub's Admin workspace is gone, and `/admin/*` is a redirect to the admin
+  // site (the hub's site.json), which the route map does not list.
 ])
 
 /** The workspace slug `pathname` names on `site`, or null when it names none — the
