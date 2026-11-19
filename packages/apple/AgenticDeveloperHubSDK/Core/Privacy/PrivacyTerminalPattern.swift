@@ -39,13 +39,18 @@ public enum PrivacyTerminalPattern {
         let path = (expandingHome(directory) as NSString).standardizingPath
         let components = path.split(separator: "/").map(String.init)
         guard !components.isEmpty else { return patterns.contains(everywhere) }
-        // A directory a pattern matches covers everything under it, as an
-        // excluded directory does in git: test each ancestor, outermost first.
+        // A directory a pattern matches covers everything under it, unless a
+        // deeper directory has its own match: walk the ancestors outermost
+        // first and keep the innermost decision, so `!~/work/public/**` takes
+        // `~/work/public/site` back out of `~/work/**`.
+        var covered = false
         for end in 1...components.count {
             let prefix = components[0..<end].joined(separator: "/")
-            if matcher.isExcluded(relativePath: prefix, isDirectory: true) { return true }
+            if let decision = matcher.decision(relativePath: prefix, isDirectory: true) {
+                covered = decision
+            }
         }
-        return false
+        return covered
     }
 
     /// `~` and `~/…` (after any `!`) with the home folder spelled out.

@@ -22,8 +22,8 @@ The control table. Keys never change when a control moves
 | Privacy and Security | Input | Disable pointer tracking | `browser.privacy.pointer_tracking` |
 | Privacy and Security | Input | Disable drag and drop | `browser.privacy.drag_and_drop` |
 | Privacy and Security | Focus and visibility | Disable activation events | `browser.privacy.hide_activation` |
-| Privacy and Security | Coding Partner | Agent access | `browser.privacy.agent_access` |
-| Privacy and Security | Coding Partner | Agent while paused | `browser.privacy.agent_while_paused` |
+| Privacy and Security | Agents tab, Agent Access | Agent access, Read only | `browser.privacy.agent_access` |
+| Privacy and Security | Agents tab, Agent Access | Agent while paused | `browser.privacy.agent_while_paused` |
 | Privacy and Security | Agent Privacy | Conceal privacy words from agents | `browser.agent_privacy.enabled` |
 | Privacy and Security | Agent Privacy | Hide Images | `browser.privacy.hide_images` |
 | Privacy and Security | Agent Privacy | Let models drive browser panes (global only) | `browser.automation.enabled` |

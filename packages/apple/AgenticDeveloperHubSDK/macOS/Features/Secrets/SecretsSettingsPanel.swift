@@ -107,7 +107,8 @@ public final class SecretsSettingsPanel: ComposableSettings.SettingsPanelViewCon
         return group
     }
 
-    static func idleLabel(_ minutes: Int) -> String {
+    /// Pure, so callable off the main actor (the lock-policy tests are).
+    nonisolated static func idleLabel(_ minutes: Int) -> String {
         switch minutes {
         case 0: "Never"
         case 1: "1 minute"

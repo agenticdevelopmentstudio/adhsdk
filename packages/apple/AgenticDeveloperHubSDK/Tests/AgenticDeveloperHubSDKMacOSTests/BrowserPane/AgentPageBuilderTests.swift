@@ -258,7 +258,9 @@ final class AgentPageBuilderTests: XCTestCase {
         ]), title: "T")
         let html = page.html()
         XCTAssertTrue(html.contains("<p data-adk-ref=\"g1\">One<br data-adk-ref=\"g1\">Two</p>"), html)
-        XCTAssertTrue(html.contains("<p data-adk-ref=\"g2\">Three<br data-adk-ref=\"t1\">Four</p>"), html)
+        // g2's children are all text, a text run written whole under g2's ref
+        // (so a privacy word across them is concealed once), break included.
+        XCTAssertTrue(html.contains("<p data-adk-ref=\"g2\">Three<br data-adk-ref=\"g2\">Four</p>"), html)
         XCTAssertTrue(html.contains("<p data-adk-ref=\"g3\">Five</p>"), html)
         XCTAssertFalse(html.contains("g4"), "an empty paragraph is left out: \(html)")
         XCTAssertFalse(html.contains("g5"), "a list of empty items is left out: \(html)")

@@ -14,8 +14,8 @@ import OSLog
 /// apart from reaching the database through the `db` parameter.
 public enum SessionSchema {
 
-    /// Every shared migration, in the order it runs. 1-45 exist now; a new shared one is
-    /// numbered from 1001 upward (never 46-1000, which are each daemon's own), then added
+    /// Every shared migration, in the order it runs. 1-45 and 1001 exist now; a new shared one is
+    /// numbered after the highest above 1000 (never 46-1000, which are each daemon's own), then added
     /// here. A daemon's database runs every version it has not recorded, so a shared step
     /// added later runs on databases that already applied the daemon's own. Never renumber.
     public static let migrations: [DaemonMigration] = [
@@ -64,7 +64,7 @@ public enum SessionSchema {
         DaemonMigration(version: 43, run: migration043),
         DaemonMigration(version: 44, run: migration044),
         DaemonMigration(version: 45, run: migration045),
-        DaemonMigration(version: 46, run: migration046)
+        DaemonMigration(version: 1001, run: migration1001)
     ]
 
     /// Ensure steps run after every migration pass, outside the version gate (see
@@ -1700,7 +1700,7 @@ public enum SessionSchema {
     /// Sessions (``SummaryFeature``): AI Conversations and Coding Projects keep
     /// lines of their own, written by their own prompt, rather than sharing
     /// `summary`, which would let one feature's prompt overwrite another's.
-    private static func migration046(_ db: DaemonDatabase) throws {
+    private static func migration1001(_ db: DaemonDatabase) throws {
         guard try db.tableHasColumn("sessions", "summary_at") else { return }
         for feature in SummaryFeature.allCases where feature != .sessions {
             for column in [feature.summaryColumn, feature.summaryAtColumn]
@@ -1708,7 +1708,7 @@ public enum SessionSchema {
                 try db.migrationExecute("ALTER TABLE sessions ADD COLUMN \(column) TEXT NOT NULL DEFAULT ''")
             }
         }
-        logger.info("migration046: per-feature summary columns ready")
+        logger.info("migration1001: per-feature summary columns ready")
     }
 
     private static func migration045(_ db: DaemonDatabase) throws {

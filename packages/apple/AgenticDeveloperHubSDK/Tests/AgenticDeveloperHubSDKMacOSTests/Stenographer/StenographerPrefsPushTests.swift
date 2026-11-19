@@ -18,6 +18,15 @@ final class StenographerPrefsPushTests: XCTestCase {
         UserSettings.stenographerAIOversightModel.remove()
         UserSettings.stenographerAISummariesSeededFromDaemon.remove()
         UserSettings.stenographerAIOversightSeededFromDaemon.remove()
+        UserSettings.stenographerAISummariesModel.remove()
+        // The other features' sets, which their own seeds fill from Sessions'.
+        for settings in SummaryFeatureSettings.all where settings.feature != .sessions {
+            settings.enabled.remove()
+            settings.providerConfigId.remove()
+            settings.model.remove()
+            settings.resetTuning()
+            settings.seeded.remove()
+        }
     }
 
     private static let configId = UUID(uuidString: "0A1B2C3D-0000-4000-8000-000000000001")!
@@ -46,8 +55,11 @@ final class StenographerPrefsPushTests: XCTestCase {
         XCTAssertEqual(UserSettings.stenographerAISummaryTimeoutSeconds.value, 44)
         XCTAssertTrue(UserSettings.stenographerAISummariesSeededFromDaemon.value)
         await settleSummary()
-        XCTAssertEqual(daemon.summaryRequests.count, 1, "seeding must not itself trigger a push")
-        let body = daemon.summaryRequests.first
+        XCTAssertEqual(daemon.sessionSummaryRequests.count, 1, "seeding must not itself trigger a push")
+        XCTAssertEqual(daemon.summaryRequests.count, SummaryFeature.allCases.count,
+                       "one first push per feature, none from seeding")
+        XCTAssertEqual(daemon.summaryGets, 1, "the features share one daemon read")
+        let body = daemon.sessionSummaryRequests.first
         XCTAssertEqual(body?.enabled, false)
         XCTAssertEqual(body?.selectedConfigId, "claude-cli")
         XCTAssertEqual(body?.prompt, "Custom prompt")
@@ -63,8 +75,8 @@ final class StenographerPrefsPushTests: XCTestCase {
         StenographerSummaryPrefsPush.startObserving(service: daemon)
         await StenographerSummaryPrefsPush.awaitPendingPush()
         XCTAssertEqual(UserSettings.stenographerAISummaryPrompt.value, SummaryDefaults.prompt)
-        XCTAssertEqual(daemon.summaryRequests.first?.prompt, "")
-        XCTAssertEqual(daemon.summaryRequests.first?.maxWords, 5)
+        XCTAssertEqual(daemon.sessionSummaryRequests.first?.prompt, "")
+        XCTAssertEqual(daemon.sessionSummaryRequests.first?.maxWords, 5)
     }
 
     func testOversightFreshStoreSeedsFromDaemonBeforeFirstPush() async {
@@ -118,8 +130,8 @@ final class StenographerPrefsPushTests: XCTestCase {
         await StenographerOversightPrefsPush.awaitPendingPush()
         XCTAssertEqual(daemon.summaryGets, 0)
         XCTAssertEqual(daemon.oversightGets, 0)
-        XCTAssertEqual(daemon.summaryRequests.count, 1)
-        XCTAssertEqual(daemon.summaryRequests.first?.maxWords, SummaryDefaults.maxWords)
+        XCTAssertEqual(daemon.sessionSummaryRequests.count, 1)
+        XCTAssertEqual(daemon.sessionSummaryRequests.first?.maxWords, SummaryDefaults.maxWords)
         XCTAssertEqual(daemon.oversightRequests.count, 1)
     }
 
@@ -131,7 +143,7 @@ final class StenographerPrefsPushTests: XCTestCase {
         StenographerOversightPrefsPush.startObserving(service: daemon)
         await StenographerSummaryPrefsPush.awaitPendingPush()
         await StenographerOversightPrefsPush.awaitPendingPush()
-        XCTAssertTrue(daemon.summaryRequests.isEmpty)
+        XCTAssertTrue(daemon.sessionSummaryRequests.isEmpty)
         XCTAssertTrue(daemon.oversightRequests.isEmpty)
         XCTAssertFalse(UserSettings.stenographerAISummariesSeededFromDaemon.value)
         // Observers are not installed: a change pushes nothing.
@@ -139,7 +151,7 @@ final class StenographerPrefsPushTests: XCTestCase {
         UserSettings.stenographerAIOversightEnabled.value = true
         await settleSummary()
         await settle()
-        XCTAssertTrue(daemon.summaryRequests.isEmpty)
+        XCTAssertTrue(daemon.sessionSummaryRequests.isEmpty)
         XCTAssertTrue(daemon.oversightRequests.isEmpty)
 
         daemon.summaryReply = nonDefaultSummaries()
@@ -148,8 +160,8 @@ final class StenographerPrefsPushTests: XCTestCase {
         daemon.fireReconnect()
         await settleSummary()
         await settle()
-        XCTAssertEqual(daemon.summaryRequests.count, 1)
-        XCTAssertEqual(daemon.summaryRequests.first?.maxWords, 7)
+        XCTAssertEqual(daemon.sessionSummaryRequests.count, 1)
+        XCTAssertEqual(daemon.sessionSummaryRequests.first?.maxWords, 7)
         XCTAssertEqual(daemon.oversightRequests.count, 1)
         XCTAssertEqual(daemon.oversightRequests.first?.selectedConfigId, "claude-cli")
         XCTAssertTrue(UserSettings.stenographerAISummariesSeededFromDaemon.value)
@@ -187,9 +199,9 @@ final class StenographerPrefsPushTests: XCTestCase {
         let daemon = StubDaemonService()
         StenographerSummaryPrefsPush.startObserving(service: daemon)
         await StenographerSummaryPrefsPush.awaitPendingPush()
-        XCTAssertEqual(daemon.summaryRequests.count, 1)
-        XCTAssertEqual(daemon.summaryRequests.first?.prompt, "")
-        XCTAssertEqual(daemon.summaryRequests.first?.maxWords, SummaryDefaults.maxWords)
+        XCTAssertEqual(daemon.sessionSummaryRequests.count, 1)
+        XCTAssertEqual(daemon.sessionSummaryRequests.first?.prompt, "")
+        XCTAssertEqual(daemon.sessionSummaryRequests.first?.maxWords, SummaryDefaults.maxWords)
     }
 
     func testSummaryChangeAndReconnectPush() async {
@@ -199,12 +211,12 @@ final class StenographerPrefsPushTests: XCTestCase {
         UserSettings.stenographerAISummariesEnabled.value = true
         UserSettings.stenographerAISummariesProviderConfigId.value = "claude-cli"
         await settleSummary()
-        XCTAssertEqual(daemon.summaryRequests.last?.enabled, true)
-        XCTAssertEqual(daemon.summaryRequests.last?.selectedConfigId, "claude-cli")
-        let before = daemon.summaryRequests.count
+        XCTAssertEqual(daemon.sessionSummaryRequests.last?.enabled, true)
+        XCTAssertEqual(daemon.sessionSummaryRequests.last?.selectedConfigId, "claude-cli")
+        let before = daemon.sessionSummaryRequests.count
         daemon.fireReconnect()
         await settleSummary()
-        XCTAssertEqual(daemon.summaryRequests.count, before + 1)
+        XCTAssertEqual(daemon.sessionSummaryRequests.count, before + 1)
     }
 
     private func settleSummary() async {
@@ -217,6 +229,14 @@ final class StenographerPrefsPushTests: XCTestCase {
     private func settle() async {
         try? await Task.sleep(for: .milliseconds(50))
         await StenographerOversightPrefsPush.awaitPendingPush()
+    }
+}
+
+private extension StubDaemonService {
+    /// Sessions' pushes alone: every summarizing feature pushes its own
+    /// snapshot, and Sessions' travels without a feature.
+    var sessionSummaryRequests: [SummaryPreferenceRequest] {
+        summaryRequests.filter { $0.feature == nil }
     }
 }
 

@@ -169,6 +169,7 @@ import Testing
         await settleNotifications(100_000_000)
         #expect(vault.words == real.words)
         #expect(vault.authenticator as? ScriptedOwnerAuthenticator === owner)
+        withExtendedLifetime(subject) {}
     }
 
     @Test("T5: authenticating on testing words never prompts, and saving writes the file")
@@ -205,7 +206,10 @@ import Testing
         store.set(try testingFile([fake]).path, for: UserSettings.privacyTestingWordsPath)
         let owner = ScriptedOwnerAuthenticator(.fail)
         let vault = PrivacyWordsVault(store: real, authenticator: owner)
-        PrivacyTestingWords(vault: vault, settings: store).start()
+        // Kept for the whole test: its settings sink holds it weakly, and the
+        // switch back to the real words is that sink's to make.
+        let subject = PrivacyTestingWords(vault: vault, settings: store)
+        subject.start()
         let grant = try await vault.authenticate(reason: "show your secrets")
         #expect(try vault.words(with: grant) == [fake])
 
@@ -216,5 +220,6 @@ import Testing
             try await vault.authenticate(reason: "show your secrets")
         }
         #expect(owner.promptCount == 1)
+        withExtendedLifetime(subject) {}
     }
 }
