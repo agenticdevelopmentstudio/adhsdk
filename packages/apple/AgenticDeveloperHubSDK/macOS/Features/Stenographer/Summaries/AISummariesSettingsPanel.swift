@@ -2,6 +2,7 @@ import AppKit
 import AgenticDeveloperHubSDKCore
 import AgenticDeveloperHubSDKCoreUI
 import AgenticDeveloperHubSDKCoreMacOS
+import AIPluginKit
 
 /// One feature's "AI Summaries" settings (``SummaryFeature``): whether the daemon
 /// summarizes for it with a model, which model, what it is told, and how often
@@ -20,10 +21,15 @@ public final class AISummariesSettingsPanel: ComposableSettings.SettingsPanelVie
     /// Retained: the picker owns the setting observers that keep the provider list
     /// and model row live. (Pushing to the daemon is owned centrally by
     /// `StenographerSummaryPrefsPush`, not by this panel.)
-    private var picker: DaemonProviderPickerView?
+    private var picker: ProviderModelPickerView?
+    /// Resolves the daemon's provider templates, for the model list and default
+    /// name; nil (Stenographer) shows the stored model only.
+    private let pluginManager: AIPluginManager?
 
-    public init(service: any StenographerDaemonService, feature: SummaryFeature = .sessions) {
+    public init(service: any StenographerDaemonService, feature: SummaryFeature = .sessions,
+                pluginManager: AIPluginManager? = nil) {
         self.service = service
+        self.pluginManager = pluginManager
         self.settings = SummaryFeatureSettings.for(feature)
         super.init(with: ComposableSettings.SettingsPanelDescriptor(
             title: "AI Summaries",
@@ -102,16 +108,10 @@ public final class AISummariesSettingsPanel: ComposableSettings.SettingsPanelVie
             )
         ))
 
-        let picker = AISummariesPluginControls.makePicker(service: service, settings: settings)
+        let picker = AISummariesPluginControls.makePicker(
+            service: service, pluginManager: pluginManager, settings: settings)
         self.picker = picker
         group.addSettingSubview(picker)
-
-        let model = ComposableSettings.TextEditView(with: ComposableSettings.ViewModel<String>(
-            title: "Model",
-            setting: settings.model
-        ))
-        model.textField.placeholderString = "Provider default"
-        group.addSettingSubview(model)
 
         return group
     }

@@ -2,6 +2,7 @@ import AppKit
 import KeyboardShortcuts
 import OSLog
 import AgenticDeveloperHubSDKCore
+import AIPluginKit
 
 /// The AI Oversight window as an app feature: a Window-menu item and a
 /// status-item entry that open the findings and scripts of stenographerd's
@@ -27,9 +28,14 @@ public final class OversightCoordinator: AppFeature {
     }
 
     private let service: any StenographerDaemonService
+    /// Resolves the daemon's provider templates for the provider-and-model
+    /// pickers; nil (Stenographer) shows the stored model only.
+    private let pluginManager: AIPluginManager?
 
-    public init(service: any StenographerDaemonService, commandRegistry: CommandRegistry) {
+    public init(service: any StenographerDaemonService, commandRegistry: CommandRegistry,
+                pluginManager: AIPluginManager? = nil) {
         self.service = service
+        self.pluginManager = pluginManager
         super.init()
         featureName = "AI Oversight"
         commandRegistry.register(AppCommand(
@@ -45,25 +51,25 @@ public final class OversightCoordinator: AppFeature {
 
     public override func start() throws {
         // Registered unopened so the toolkit's restore-on-launch can reopen it.
-        OversightFindingsWindowController.ensureCurrent(service: service)
+        OversightFindingsWindowController.ensureCurrent(service: service, pluginManager: pluginManager)
         StenographerOversightPrefsPush.startObserving(service: service)
     }
 
     public func showWindow() {
-        OversightFindingsWindowController.present(service: service)
+        OversightFindingsWindowController.present(service: service, pluginManager: pluginManager)
     }
 
     /// The AI Oversight settings pane, every setting on one row, for a host
     /// with one row per feature.
     public func settingsPanel() -> AIOversightSettingsPanel {
-        AIOversightSettingsPanel(service: service)
+        AIOversightSettingsPanel(service: service, pluginManager: pluginManager)
     }
 
     /// The AI Oversight settings as two rows, General and AI Config, for a host
     /// that lists several panels under a feature.
     public func settingsPanels() -> [AIOversightSettingsPanel] {
-        [AIOversightSettingsPanel(service: service, part: .general),
-         AIOversightSettingsPanel(service: service, part: .aiConfig)]
+        [AIOversightSettingsPanel(service: service, part: .general, pluginManager: pluginManager),
+         AIOversightSettingsPanel(service: service, part: .aiConfig, pluginManager: pluginManager)]
     }
 }
 

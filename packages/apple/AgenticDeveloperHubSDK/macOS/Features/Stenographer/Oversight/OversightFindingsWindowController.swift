@@ -1,4 +1,5 @@
 import AgenticDeveloperHubSDKCore
+import AIPluginKit
 import AgenticDeveloperHubSDKCoreUI
 import AgenticDeveloperHubSDKCoreMacOS
 
@@ -9,17 +10,18 @@ import AppKit
 public final class OversightFindingsWindowController: SingleWindowController {
     public private(set) static var current: OversightFindingsWindowController?
 
-    public static func present(service: any StenographerDaemonService) {
-        ensureCurrent(service: service)
+    public static func present(service: any StenographerDaemonService, pluginManager: AIPluginManager? = nil) {
+        ensureCurrent(service: service, pluginManager: pluginManager)
         current?.showWindow()
     }
 
     /// Constructs the singleton (registering it with `WindowManager.registry`)
     /// without showing it. `main.swift` registers this with `WindowManager`, which
     /// reopens the window at launch if its spec says so and it was open at quit.
-    public static func ensureCurrent(service: any StenographerDaemonService) {
+    public static func ensureCurrent(service: any StenographerDaemonService,
+                                     pluginManager: AIPluginManager? = nil) {
         if current == nil {
-            current = OversightFindingsWindowController(service: service)
+            current = OversightFindingsWindowController(service: service, pluginManager: pluginManager)
         }
     }
 
@@ -35,9 +37,10 @@ public final class OversightFindingsWindowController: SingleWindowController {
         }
     }
 
-    private init(service: any StenographerDaemonService) {
+    private init(service: any StenographerDaemonService, pluginManager: AIPluginManager?) {
         super.init(windowID: "oversight-findings",
-                   contentViewController: OversightHostViewController(service: service))
+                   contentViewController: OversightHostViewController(
+                       service: service, pluginManager: pluginManager))
         self.windowTitle = "Stenographer — AI Oversight"
         self.windowTitleSymbolName = "eye"
         self.windowStyleMask = [.titled, .closable, .resizable, .miniaturizable]

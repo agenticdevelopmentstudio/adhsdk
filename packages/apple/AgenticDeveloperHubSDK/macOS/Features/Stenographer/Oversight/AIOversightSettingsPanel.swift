@@ -2,6 +2,7 @@ import AppKit
 import AgenticDeveloperHubSDKCore
 import AgenticDeveloperHubSDKCoreUI
 import AgenticDeveloperHubSDKCoreMacOS
+import AIPluginKit
 
 /// "AI Oversight" settings: whether the daemon watches live sessions, whether it
 /// asks a model for judgment, and which provider and model it asks.
@@ -39,10 +40,15 @@ public final class AIOversightSettingsPanel: ComposableSettings.SettingsPanelVie
     /// Retained: the picker owns the setting observers that keep the provider list
     /// live. (Pushing to the daemon is owned centrally by
     /// `StenographerOversightPrefsPush`, not by this panel.)
-    private var picker: DaemonProviderPickerView?
+    private var picker: ProviderModelPickerView?
+    /// Resolves the daemon's provider templates, for the model list and default
+    /// name; nil (Stenographer) shows the stored model only.
+    private let pluginManager: AIPluginManager?
 
-    public init(service: any StenographerDaemonService, part: Part = .all) {
+    public init(service: any StenographerDaemonService, part: Part = .all,
+                pluginManager: AIPluginManager? = nil) {
         self.service = service
+        self.pluginManager = pluginManager
         self.part = part
         super.init(with: ComposableSettings.SettingsPanelDescriptor(
             title: part.title,
@@ -115,10 +121,9 @@ public final class AIOversightSettingsPanel: ComposableSettings.SettingsPanelVie
             )
         ))
 
-        let picker = AIOversightProviderControls.makePicker(service: service)
+        let picker = AIOversightProviderControls.makePicker(service: service, pluginManager: pluginManager)
         self.picker = picker
         group.addSettingSubview(picker)
-        group.addSettingSubview(AIOversightProviderControls.makeModelField())
 
         return group
     }

@@ -26,14 +26,17 @@ public struct ModelChooserContext {
     }
 }
 
-/// App-modal, resizable master/detail picker for one provider's model. Mirrors
+/// Master/detail picker for one provider's model, shown in a popover by
+/// ``ModelChooser/present(relativeTo:context:onChoose:)``. Mirrors
 /// `ProviderPickerViewController` (filterable table master + details pane) but the
 /// detail is per-model capability/spec/description, sourced live from Ollama's
 /// `/api/show` for loopback providers and from curated `modelDetails` otherwise.
+///
+/// There is no OK or Cancel: clicking a row chooses it at once and the popover
+/// stays open, so the detail pane and the choice can be compared; Return or a
+/// double-click chooses and closes; Escape or a click outside closes.
 @MainActor
 public final class ModelChooserViewController: NSViewController {
-
-    static let windowID = "model-chooser"
 
     private let context: ModelChooserContext
     /// Where this provider's model list comes from, and its last loaded copy.
@@ -77,19 +80,22 @@ public final class ModelChooserViewController: NSViewController {
     /// the viewport so rebuilt detail content can never tug the split divider.
     private let detailScroll = ComposableSettings.PanelScrollView()
     private let splitView = ThemedSplitView()
-    private let cancelButton = NSButton()
-    private let okButton = NSButton()
     private let keyboard = PickerKeyboardController()
     private var themeObserver: ThemePaletteObserver?
 
     private static let nameColumnID = NSUserInterfaceItemIdentifier("model.name")
 
-    /// Fires once with the chosen model (OK) or nil (Cancel/close).
-    var completion: ((String?) -> Void)?
+    /// Fires with every model chosen (a row click, Return, a double-click). May
+    /// fire more than once while the chooser is open.
+    var onChoose: ((String) -> Void)?
+    /// Asks the presenter to close the chooser (Return, double-click, Escape).
+    var onClose: (() -> Void)?
+    /// Runs `body` with the presenter's transient dismissal suspended, so a
+    /// confirmation alert does not count as a click outside.
+    var whileConfirming: (() -> Bool) -> Bool = { $0() }
 
-    /// Taller than the pre-filter-bar 460 by exactly the bar it gained, so the
-    /// detail pane opens at the height it always did.
-    var initialContentSize: NSSize { NSSize(width: 720, height: 494) }
+    /// The popover's content size: the old window's size less its button row.
+    static let contentSize = NSSize(width: 720, height: 450)
 
     public init(context: ModelChooserContext) {
         self.context = context
@@ -133,7 +139,6 @@ public final class ModelChooserViewController: NSViewController {
         configureFilterBar()
         configureTable()
         configureSplit()
-        configureButtons()
 
         let container = NSView()
         container.translatesAutoresizingMaskIntoConstraints = false
@@ -159,7 +164,7 @@ public final class ModelChooserViewController: NSViewController {
         splitView.setHoldingPriority(NSLayoutConstraint.Priority(261), forSubviewAt: 0)
         splitView.setHoldingPriority(NSLayoutConstraint.Priority(260), forSubviewAt: 1)
 
-        [useFilter, fitCheckbox, allVersionsCheckbox, splitView, cancelButton, okButton].forEach {
+        [useFilter, fitCheckbox, allVersionsCheckbox, splitView].forEach {
             $0.translatesAutoresizingMaskIntoConstraints = false
             root.addSubview($0)
         }
@@ -171,13 +176,10 @@ public final class ModelChooserViewController: NSViewController {
             // the control that says what is filtered.
             //
             // Each control is constrained directly rather than arranged in an
-            // NSStackView. This window is opened from a SwiftUI button action
-            // (`LLMProvidersView.presentChooser`) and enters `runModal` from inside
-            // it; a control nested in a stack view here never gets its first
-            // display pass — it is in the accessibility tree, at the right frame,
-            // hit-testable, and blank until something else forces it to redraw,
-            // while its stack view's own layer paints fine. Direct subviews of the
-            // content view draw normally (as Cancel/OK next door always have).
+            // NSStackView: when this chooser ran in a modal session opened from a
+            // SwiftUI button action, a control nested in a stack view never got its
+            // first display pass, while direct subviews of the content view drew
+            // normally. Constrained directly, it draws wherever it is hosted.
             useFilter.topAnchor.constraint(equalTo: root.topAnchor, constant: 16),
             useFilter.leadingAnchor.constraint(equalTo: root.leadingAnchor, constant: 16),
             fitCheckbox.leadingAnchor.constraint(equalTo: useFilter.trailingAnchor, constant: 12),
@@ -189,17 +191,8 @@ public final class ModelChooserViewController: NSViewController {
             splitView.topAnchor.constraint(equalTo: useFilter.bottomAnchor, constant: 8),
             splitView.leadingAnchor.constraint(equalTo: root.leadingAnchor, constant: 16),
             splitView.trailingAnchor.constraint(equalTo: root.trailingAnchor, constant: -16),
-            splitView.bottomAnchor.constraint(equalTo: cancelButton.topAnchor, constant: -10),
+            splitView.bottomAnchor.constraint(equalTo: root.bottomAnchor, constant: -16)
 
-            okButton.trailingAnchor.constraint(equalTo: root.trailingAnchor, constant: -16),
-            okButton.bottomAnchor.constraint(equalTo: root.bottomAnchor, constant: -16),
-            cancelButton.trailingAnchor.constraint(equalTo: okButton.leadingAnchor, constant: -10),
-            cancelButton.centerYAnchor.constraint(equalTo: okButton.centerYAnchor),
-            // Cancel is drawn by the theme rather than by a stock bezel (see
-            // `applySecondaryActionTheme`), so its size is stated here — matching
-            // the default button beside it — instead of coming from the bezel.
-            cancelButton.heightAnchor.constraint(equalTo: okButton.heightAnchor),
-            cancelButton.widthAnchor.constraint(greaterThanOrEqualToConstant: 72)
         ])
 
         self.view = root
@@ -259,7 +252,9 @@ public final class ModelChooserViewController: NSViewController {
         tableView.dataSource = self
         tableView.delegate = self
         tableView.target = self
-        tableView.doubleAction = #selector(chooseTapped)
+        // A click chooses and stays open; a double-click chooses and closes.
+        tableView.action = #selector(rowClicked)
+        tableView.doubleAction = #selector(rowDoubleClicked)
         tableView.columnAutoresizingStyle = .firstColumnOnlyAutoresizingStyle
 
         let nameColumn = NSTableColumn(identifier: Self.nameColumnID)
@@ -283,31 +278,14 @@ public final class ModelChooserViewController: NSViewController {
         splitView.autosaveName = "model-chooser.split"   // divider position persists
     }
 
-    private func configureButtons() {
-        cancelButton.title = "Cancel"
-        cancelButton.bezelStyle = .rounded
-        cancelButton.setButtonType(.momentaryPushIn)
-        // Escape is handled once, via PickerKeyboardController's window monitor
-        // (see `viewDidAppear`) — mirroring ProviderPicker, so no key equivalent here.
-        cancelButton.target = self
-        cancelButton.action = #selector(cancelTapped)
-
-        okButton.title = "OK"
-        okButton.bezelStyle = .rounded
-        okButton.setButtonType(.momentaryPushIn)
-        okButton.keyEquivalent = "\r"                  // Return
-        okButton.target = self
-        okButton.action = #selector(chooseTapped)
-    }
-
     public override func viewDidLoad() {
         super.viewDidLoad()
         themeObserver = ThemePaletteObserver(host: view) { [weak self] palette in self?.applyTheme(palette) }
         keyboard.onMoveSelection = { [weak self] delta in self?.moveSelection(by: delta) }
-        keyboard.onChoose = { [weak self] in self?.chooseTapped() }
-        keyboard.onCancel = { [weak self] in self?.cancelTapped() }
+        keyboard.onChoose = { [weak self] in self?.commit(thenClose: true) }
+        keyboard.onCancel = { [weak self] in self?.onClose?() }
         // Seed last-known sizes and metadata SYNCHRONOUSLY so the first render
-        // (and OK/Return/double-click during the live-fetch window) sees them;
+        // (and a click, Return or a double-click during the live-fetch window) sees them;
         // the fetches below overwrite (stale-while-revalidate).
         sizesByModel = LocalProviderModelStore.cachedSizes(baseURL: context.baseURL)
         metadataByModel = LocalProviderModelStore.cachedMetadata(baseURL: context.baseURL)
@@ -405,9 +383,6 @@ public final class ModelChooserViewController: NSViewController {
     }
 
     private func selectRow(_ index: Int) {
-        // OK commits only a row the user can see: a query that leaves the list
-        // empty must not commit whatever an earlier keystroke selected.
-        okButton.isEnabled = filtered.indices.contains(index)
         guard filtered.indices.contains(index) else { renderDetail(); return }
         selectedModel = filtered[index].id
         tableView.selectRowIndexes([index], byExtendingSelection: false)
@@ -521,9 +496,6 @@ public final class ModelChooserViewController: NSViewController {
         // The table is a `ThemedTableView` and paints its own `.surface`; only
         // its scroll host needs matching here.
         tableScroll.backgroundColor = palette.surfaceColor
-        // Cancel is painted explicitly: AppKit's stock bezel composites away to
-        // nothing in this window (see `applySecondaryActionTheme`).
-        cancelButton.applySecondaryActionTheme(palette)
         // A checkbox's title takes the system label color, not the theme's.
         let checkboxTitle: [NSAttributedString.Key: Any] = [
             .foregroundColor: palette.primaryTextColor,
@@ -534,32 +506,41 @@ public final class ModelChooserViewController: NSViewController {
         reloadTable(keeping: selectedModel)   // re-renders the detail too
     }
 
-    @objc private func chooseTapped() {
-        guard !selectedModel.isEmpty else { finish(with: nil); return }
-        guard filtered.contains(where: { $0.id == selectedModel }) else { return }
+    @objc private func rowClicked() {
+        // A click below the last row selects nothing new.
+        guard tableView.clickedRow >= 0 else { return }
+        commit(thenClose: false)
+    }
+
+    @objc private func rowDoubleClicked() {
+        guard tableView.clickedRow >= 0 else { return }
+        commit(thenClose: true)
+    }
+
+    /// Chooses the selected row (after the large-model confirmation, when the
+    /// rule asks for one) and, for Return or a double-click, closes.
+    private func commit(thenClose close: Bool) {
+        // Only a row the user can see is chosen: a query that empties the list
+        // must not choose whatever an earlier keystroke selected.
+        guard !selectedModel.isEmpty,
+              filtered.contains(where: { $0.id == selectedModel }) else {
+            if close { onClose?() }
+            return
+        }
         let size = LocalModelServer.size(of: selectedModel, in: sizesByModel)
         if let prompt = ModelChooserContent.warnPrompt(
             model: selectedModel, sizeBytes: size, physicalRAM: physicalRAM,
             warnPct: context.warnPct, blockPct: context.blockPct),
-           !confirmLargeModel(prompt) {
-            return   // Cancel: stay in the chooser, selection unchanged.
+           !whileConfirming({ self.confirmLargeModel(prompt) }) {
+            return   // Cancel: stay in the chooser, nothing chosen.
         }
         // A stored alias (`sonnet`) opens on the model it runs today. Choosing
         // that same row keeps the alias, so the connection goes on following the
         // newest of the family instead of being pinned to today's release.
         let unchanged = aliasTargets.contains(selectedModel)
             || selectedModel == modelManager.resolve(context.currentModel)
-        finish(with: unchanged ? context.currentModel : selectedModel)
-    }
-
-    @objc private func cancelTapped() {
-        finish(with: nil)
-    }
-
-    private func finish(with model: String?) {
-        let done = completion
-        completion = nil
-        done?(model)
+        onChoose?(unchanged ? context.currentModel : selectedModel)
+        if close { onClose?() }
     }
 
     /// One confirmation before accepting a warn-tier selection. Block-tier models
@@ -649,53 +630,55 @@ extension ModelChooserViewController: NSSplitViewDelegate {
     }
 }
 
-// MARK: - Window delegate (close = cancel, persist frame)
+// MARK: - Presentation
 
-extension ModelChooserViewController: NSWindowDelegate {
-    public func windowShouldClose(_ sender: NSWindow) -> Bool {
-        cancelTapped()   // routes through completion → dismiss; don't let AppKit also close
-        return false
-    }
-
-    // Persist size + location through the shared frame manager (like every other
-    // window), rather than AppKit's raw frame autosave.
-    public func windowDidMove(_ notification: Notification) { persistFrame(notification) }
-    public func windowDidResize(_ notification: Notification) { persistFrame(notification) }
-
-    private func persistFrame(_ notification: Notification) {
-        guard let window = notification.object as? NSWindow else { return }
-        WindowManager.shared.frames.saveFrame(for: window, id: Self.windowID)
-    }
-}
-
-/// Presents `ModelChooserViewController` app-modally in a resizable window and
-/// reports the chosen model. Mirrors `ProviderPicker.present`.
+/// Presents ``ModelChooserViewController`` in a transient popover pointing at a
+/// view, and reports each model chosen in it.
 @MainActor
 public enum ModelChooser {
-    public static func present(over parent: NSWindow, context: ModelChooserContext,
+
+    /// The open chooser's popover: one at a time, held until it closes.
+    private static var shown: NSPopover?
+    private static let closer = PopoverCloser()
+
+    /// Opens the chooser in a popover anchored to `view` (a control's caret or
+    /// button). `onChoose` fires for every model chosen while it is open.
+    public static func present(relativeTo view: NSView, context: ModelChooserContext,
                                onChoose: @escaping (String) -> Void) {
+        shown?.close()
         let controller = ModelChooserViewController(context: context)
-        let window = NSWindow(contentViewController: controller)
-        window.styleMask = [.titled, .closable, .resizable]
-        window.title = "Choose Model"
-        window.appearance = ThemePaletteObserver.currentPalette.standardAppearance
-        window.backgroundColor = ThemePaletteObserver.currentPalette.windowBackgroundColor
-        window.contentMinSize = NSSize(width: 560, height: 340)
-        window.contentMaxSize = NSSize(width: 4000, height: 4000)
-        window.setContentSize(controller.initialContentSize)
-        if !WindowManager.shared.frames.restoreFrame(for: window, id: ModelChooserViewController.windowID) {
-            let size = window.frame.size
-            window.setFrameOrigin(NSPoint(x: parent.frame.midX - size.width / 2,
-                                          y: parent.frame.midY - size.height / 2))
+        let popover = NSPopover()
+        popover.behavior = .transient
+        popover.animates = true
+        popover.appearance = ThemePaletteObserver.currentPalette.standardAppearance
+        popover.contentSize = ModelChooserViewController.contentSize
+        popover.contentViewController = controller
+        popover.delegate = closer
+        controller.onChoose = onChoose
+        controller.onClose = { [weak popover] in popover?.performClose(nil) }
+        controller.whileConfirming = { [weak popover] body in
+            // A modal alert takes the key window, which a transient popover
+            // reads as a click outside; hold it open until the answer is in.
+            let behavior = popover?.behavior ?? .transient
+            popover?.behavior = .applicationDefined
+            defer { popover?.behavior = behavior }
+            return body()
         }
-        window.delegate = controller
-        var chosen: String?
-        controller.completion = { [weak window] result in
-            chosen = result
-            window?.orderOut(nil)
-            NSApp.stopModal()
+        shown = popover
+        // Below the anchor, whichever way its coordinates run.
+        popover.show(relativeTo: view.bounds, of: view,
+                     preferredEdge: view.isFlipped ? .maxY : .minY)
+    }
+
+    fileprivate static func didClose(_ popover: NSPopover) {
+        if shown === popover { shown = nil }
+    }
+
+    @MainActor
+    private final class PopoverCloser: NSObject, NSPopoverDelegate {
+        func popoverDidClose(_ notification: Notification) {
+            guard let popover = notification.object as? NSPopover else { return }
+            ModelChooser.didClose(popover)
         }
-        NSApp.runModal(for: window)
-        if let chosen { onChoose(chosen) }
     }
 }

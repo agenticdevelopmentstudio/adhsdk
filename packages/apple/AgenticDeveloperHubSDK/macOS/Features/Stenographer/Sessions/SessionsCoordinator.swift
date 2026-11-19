@@ -2,6 +2,7 @@ import AppKit
 import KeyboardShortcuts
 import OSLog
 import AgenticDeveloperHubSDKCore
+import AIPluginKit
 
 /// The Sessions window as an app feature: a Window-menu item and a status-item
 /// entry that open the live list of Claude Code sessions stenographerd knows.
@@ -26,9 +27,14 @@ public final class SessionsCoordinator: AppFeature {
     }
 
     private let service: any StenographerDaemonService
+    /// Resolves the daemon's provider templates for the provider-and-model
+    /// pickers; nil (Stenographer) shows the stored model only.
+    private let pluginManager: AIPluginManager?
 
-    public init(service: any StenographerDaemonService, commandRegistry: CommandRegistry) {
+    public init(service: any StenographerDaemonService, commandRegistry: CommandRegistry,
+                pluginManager: AIPluginManager? = nil) {
         self.service = service
+        self.pluginManager = pluginManager
         super.init()
         featureName = "Sessions"
         commandRegistry.register(AppCommand(
@@ -44,7 +50,7 @@ public final class SessionsCoordinator: AppFeature {
 
     public override func start() throws {
         // Registered unopened so the toolkit's restore-on-launch can reopen it.
-        SessionsWindowController.ensureCurrent(service: service)
+        SessionsWindowController.ensureCurrent(service: service, pluginManager: pluginManager)
         StenographerSummaryPrefsPush.startObserving(service: service)
         // Coding Project windows show Coding Projects' own summaries, under its switch.
         ProjectSessionMonitor.shared.attach(
@@ -54,11 +60,11 @@ public final class SessionsCoordinator: AppFeature {
 
     /// One feature's AI Summaries settings pane, for the host's settings window.
     public func settingsPanel(feature: SummaryFeature = .sessions) -> AISummariesSettingsPanel {
-        AISummariesSettingsPanel(service: service, feature: feature)
+        AISummariesSettingsPanel(service: service, feature: feature, pluginManager: pluginManager)
     }
 
     public func showWindow() {
-        SessionsWindowController.present(service: service)
+        SessionsWindowController.present(service: service, pluginManager: pluginManager)
     }
 }
 

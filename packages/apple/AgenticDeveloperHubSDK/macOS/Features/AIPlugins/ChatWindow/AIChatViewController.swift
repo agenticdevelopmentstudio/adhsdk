@@ -546,18 +546,17 @@ public final class AIChatViewController: NSViewController, Themeable {
     // MARK: - Actions
 
     @objc private func chooseModelAction() {
-        guard let window = view.window,
-              let config = selectedConfiguration,
+        guard let config = selectedConfiguration,
               let template = selectedTemplate else { return }
         let values = connectionValues(config: config, template: template)
         let context = ModelChooserContext(
             pluginIdentifier: config.pluginIdentifier, template: template,
             baseURL: values["baseURL"] ?? "", apiKey: values["apiKey"],
             currentModel: currentModel.isEmpty ? template.resolvedDefaultModel : currentModel)
-        ModelChooser.present(over: window, context: context) { [weak self] model in
+        ModelChooser.present(relativeTo: chooseModelButton, context: context) { [weak self] model in
             guard let self else { return }
-            // The chooser runs its own modal session, and the view it sits over can
-            // be pointed somewhere else while it is up — a scripted `send test
+            // The chooser stays open while models are chosen in it, and the view it
+            // points at can be pointed somewhere else meanwhile — a scripted `send test
             // message` on another provider, or a `refresh` from Settings. Persisting
             // then would write this model against the provider that was showing when
             // the chooser opened, while the label and the transcript describe the one

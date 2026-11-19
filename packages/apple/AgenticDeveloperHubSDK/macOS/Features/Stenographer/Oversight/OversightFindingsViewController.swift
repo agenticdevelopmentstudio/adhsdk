@@ -1,6 +1,7 @@
 import AppKit
 import AgenticDeveloperHubSDKCore
 import AgenticDeveloperHubSDKCoreMacOS
+import AIPluginKit
 
 /// Lists the AI-oversight findings the daemon's observers recorded. The data and row
 /// mapping live in `OversightFindingsListSource`; this class is the AppKit chrome (table
@@ -25,21 +26,21 @@ final class OversightFindingsViewController: NSViewController {
     private let configDialog: WindowOptionsDialog
     /// Retained because it owns the selection observer and reloads the daemon's
     /// configurations when its menu opens; the dialog builds its rows afresh on every open.
-    private let oversightPicker: DaemonProviderPickerView
+    private let oversightPicker: ProviderModelPickerView
     /// Guards against overlapping reloads.
     private var isBusy = false
 
     private var themeObserver: ThemePaletteObserver?
 
-    init(service: any StenographerDaemonService) {
+    init(service: any StenographerDaemonService, pluginManager: AIPluginManager? = nil) {
         self.service = service
         self.source = OversightFindingsListSource(service: service)
         // Built once and held in a property: the picker owns the observers that
         // rebuild it live, so it must outlive dialog opens.
-        let picker = AIOversightProviderControls.makePicker(service: service)
+        let picker = AIOversightProviderControls.makePicker(service: service, pluginManager: pluginManager)
         self.oversightPicker = picker
-        // Wider than the default: the provider picker's row is a popup, a model
-        // name and a trailing Choose button, which a checkbox-width dialog crams.
+        // Wider than the default: the provider row is a label and a popup, which
+        // a checkbox-width dialog crams.
         self.configDialog = WindowOptionsDialog(title: "AI Oversight", width: 380) {
             [
                 ComposableSettings.CheckboxView(
@@ -55,7 +56,6 @@ final class OversightFindingsViewController: NSViewController {
                     )
                 ),
                 picker,
-                AIOversightProviderControls.makeModelField(),
                 ComposableSettings.ExplanationView(
                     withText: "The daemon watches live sessions and records findings here. "
                         + "AI judgment asks the selected provider whether now is a good "

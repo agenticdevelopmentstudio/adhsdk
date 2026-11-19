@@ -2,41 +2,63 @@ import XCTest
 import AgenticDeveloperHubSDKCore
 @testable import AgenticDeveloperHubSDKMacOS
 
-final class DaemonProviderPickerViewTests: XCTestCase {
+final class ProviderModelPickerViewTests: XCTestCase {
 
     func testEmptyRegistryShowsLeadingChoicesOnly() {
-        let choices = DaemonProviderPickerView.menuChoices(
-            leading: [.init(label: "Default (Claude CLI)", value: "")], configs: [])
+        let choices = ProviderModelPickerView.menuChoices(
+            leading: [.init(label: "Default (Claude CLI)", value: "")], providers: [])
         XCTAssertEqual(choices.map(\.label), ["Default (Claude CLI)"])
         XCTAssertEqual(choices.map(\.value), [""])
     }
 
-    func testConfigsFollowLeadingChoicesByName() {
+    func testDaemonConfigsFollowLeadingChoicesByName() {
         let ollama = DaemonProviderConfig(id: UUID(), name: "Ollama", pluginIdentifier: "p", templateId: "t")
         let anthropic = DaemonProviderConfig(id: UUID(), name: "Anthropic", pluginIdentifier: "p", templateId: "t")
-        let choices = DaemonProviderPickerView.menuChoices(
+        let choices = ProviderModelPickerView.menuChoices(
             leading: [
                 .init(label: "Same as AI Summaries", value: ""),
                 .init(label: "Default (Claude CLI)", value: "claude-cli")
             ],
-            configs: [ollama, anthropic])
+            providers: DaemonProviderRegistrySource.entries(from: [ollama, anthropic]))
         XCTAssertEqual(choices.map(\.label), ["Same as AI Summaries", "Default (Claude CLI)", "Anthropic", "Ollama"])
         XCTAssertEqual(choices[2].value, anthropic.id.uuidString)
     }
 
     @MainActor
-    func testSelectionWritesSetting() async {
-        let setting = UserSetting<String>("test.daemonPicker.\(UUID().uuidString)", default: "")
-        defer { setting.remove() }
+    func testSelectionWritesSettingAndClearsModel() async {
+        let setting = UserSetting<String>("test.providerPicker.\(UUID().uuidString)", default: "")
+        let model = UserSetting<String>("test.providerPicker.model.\(UUID().uuidString)", default: "")
+        defer { setting.remove(); model.remove() }
+        model.value = "stale-model"
         let config = DaemonProviderConfig(id: UUID(), name: "Ollama", pluginIdentifier: "p", templateId: "t")
-        let picker = DaemonProviderPickerView(
-            service: StubDaemonService(configs: [config]),
+        let source = DaemonProviderRegistrySource(service: StubDaemonService(configs: [config]))
+        await source.load()
+        let picker = ProviderModelPickerView(
+            source: source,
             selectedSetting: setting,
-            leadingChoices: [.init(label: "Default (Claude CLI)", value: "")])
-        await picker.reload()
+            leadingChoices: [.init(label: "Default (Claude CLI)", value: "")],
+            modelSetting: { _ in model })
         XCTAssertEqual(picker.choices.count, 2)
         picker.selectChoice(at: 1)
         XCTAssertEqual(setting.value, config.id.uuidString)
+        XCTAssertEqual(model.value, "", "changing the provider starts the new one on its default model")
+    }
+
+    @MainActor
+    func testModelRowShowsStoredModelThenChooseText() async {
+        let config = DaemonProviderConfig(id: UUID(), name: "Ollama", pluginIdentifier: "p", templateId: "t")
+        let setting = UserSetting<String>("test.providerPicker.\(UUID().uuidString)", default: config.id.uuidString)
+        let model = UserSetting<String>("test.providerPicker.model.\(UUID().uuidString)", default: "")
+        defer { setting.remove(); model.remove() }
+        let source = DaemonProviderRegistrySource(service: StubDaemonService(configs: [config]))
+        await source.load()
+        let picker = ProviderModelPickerView(
+            source: source, selectedSetting: setting, modelSetting: { _ in model })
+        // No plugin manager, so no default is known.
+        XCTAssertNil(picker.displayedModel)
+        XCTAssertEqual(picker.modelPicker.nameText, AIModelPickerControl.chooseModelText)
+        model.value = "llama3.2:3b"
+        XCTAssertEqual(picker.displayedModel, "llama3.2:3b")
     }
 }
 
