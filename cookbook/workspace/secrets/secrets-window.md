@@ -126,6 +126,16 @@ One info line when an unlock is refused, carrying the error's description and ne
 
 - **AppKit**: `NSWindow.sharingType = .none` while revealed (from the concealed container) keeps the words out of screenshots, recording and screen sharing. `com.apple.screenIsLocked` on the distributed notification center is the public signal for a locked screen.
 
+## Reference Implementations
+
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Secrets/SecretsWindowController.swift` | confirmed (1.0.1) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Secrets/SecretsLockPolicy.swift` | confirmed (1.0.1) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Secrets/PrivateWordsTopicViewController.swift` | confirmed (1.0.1) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Secrets/SecretsSettingsPanel.swift` | confirmed (1.0.1) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/Core/Privacy/SecretsSettings.swift` | confirmed (1.0.1) |
+
 ## Design Decisions
 
 **Decision**: Obscure the words whenever the window is not key or the app is not active, not only when locked.

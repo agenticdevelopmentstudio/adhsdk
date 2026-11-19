@@ -219,6 +219,16 @@ Not applicable: the controller calls no logging API, so words and stream content
 - **AppKit / UIKit**: The source uses `NSViewController` with `ThemedBackgroundView`, `ThemedLabel`, `ConcealedContainerView`, `FrameHoldingView`, `NSStackView` and Combine subscriptions for the vault and settings, and conforms to the pane protocols for accessories, options, connecting, teardown, removal confirmation and spacing. On UIKit use `LAContext` for authentication, `accessibilityElementsHidden` for the terminal, and hide the content with a blur view; excluding capture needs `UIScreen.isCaptured` observation.
 - **WinUI 3**: Use a `UserControl` with a `Grid` holding the terminal control and an overlay `Grid` whose `Visibility` is bound to `IsRevealed`, containing a `Button` with a `FontIcon` (glyph for a hidden eye) and a `TextBlock` with `TextWrapping="Wrap"` and `MaxWidth="320"`. Authenticate each reveal with `Windows.Security.Credentials.UI.UserConsentVerifier.RequestVerificationAsync`, mapping a non-verified result to the message text. Keep the terminal out of UI Automation by returning null from `OnCreateAutomationPeer` or setting `AutomationProperties.AccessibilityView="Raw"` on its container while leaving the eye `Content` with an `AutomationProperties.Name`. Exclude the window from capture with `SetWindowDisplayAffinity` and `WDA_EXCLUDEFROMCAPTURE` while revealed. Move focus to the terminal with `Focus(FocusState.Programmatic)` on the next dispatcher turn (`DispatcherQueue.TryEnqueue`) and clear focus on hide with `FocusManager`.
 
+## Reference Implementations
+
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/TerminalSession/PrivateTerminalViewController.swift` | confirmed (2.0.0) |
+| apple | (planned) | planned |
+| web | (planned) | planned |
+| android | (planned) | planned |
+| windows | (planned) | planned |
+
 ## Design Decisions
 
 **Decision**: Authenticate on every reveal and never on hide.

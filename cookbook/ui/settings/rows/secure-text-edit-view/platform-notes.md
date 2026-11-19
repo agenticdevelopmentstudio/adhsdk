@@ -1,6 +1,12 @@
 
 - **SwiftUI**: Replace with an `HStack` pairing `Text(viewModel.title)`
-  leading and a trailing `SecureField("", text: $value)`, writing the
+  leading and a trailing `SecureField("", text: $value)` swapped for a
+  `TextField` on the same binding while a `@State var isShown` is true, then
+  two `.borderless` image buttons (`doc.on.doc` writing
+  `NSPasteboard.general`, and `eye` / `eye.slash` toggling `isShown`).
+  Reset `isShown` in `.onChange(of: scenePhase)`, on
+  `NSWindow.didResignKeyNotification` via `.onReceive`, in `.onDisappear`
+  and when the value changes from outside. The binding's setter writes writing the
   binding's setter back into the underlying setting with an equality guard
   before assigning, mirroring **skips-redundant-commits**. Give the field an
   explicit `.accessibilityLabel(viewModel.title)` — the fix this recipe's
@@ -10,9 +16,13 @@
   documented for `TextEditView`.
 - **Compose**: Use a `Row` with `Text(title)` leading and a trailing
   `OutlinedTextField(value = value, onValueChange = { ... },
-  visualTransformation = PasswordVisualTransformation(), singleLine = true)`
-  — `PasswordVisualTransformation` is Compose's dot-masking analog of
-  `NSSecureTextField`. Commit to the backing state/view model on focus loss
+  visualTransformation = if (shown) VisualTransformation.None else
+  PasswordVisualTransformation(), singleLine = true)` with a `trailingIcon`
+  row of two `IconButton`s (copy through `LocalClipboardManager`, and the
+  visibility toggle); hold `shown` in `remember`, never `rememberSaveable`,
+  and reset it on `Lifecycle.Event.ON_PAUSE` and when the value changes from
+  outside — `PasswordVisualTransformation` is Compose's dot-masking analog
+  of `NSSecureTextField`. Commit to the backing state/view model on focus loss
   or `ImeAction.Done` (`KeyboardOptions(imeAction = ImeAction.Done)` with a
   `KeyboardActions.onDone`, or a `Modifier.onFocusChanged` check), not on
   every `onValueChange` call — `onValueChange` fires per keystroke, which
@@ -22,7 +32,11 @@
   accessibility link's Compose analog).
 - **React/Web**: A flex row (`display: flex; align-items: center;
   justify-content: space-between`) containing a `<label>` for the title and
-  an `<input type="password">` whose `aria-labelledby` points at the title
+  an `<input>` whose `type` is `password` or, while shown, `text`, followed
+  by two `<button type="button">`s (copy through
+  `navigator.clipboard.writeText`, and the eye with `aria-pressed`); reset
+  the shown state on `window` `blur`, `visibilitychange` and unmount. The
+  input's `aria-labelledby` points at the title
   `<label>`'s `id` — the web analog of the accessibility link this recipe
   flags as missing from the source. Commit the new value on the input's
   `blur` handler (or Enter via `onKeyDown`), not on every `onChange` call —
@@ -35,9 +49,19 @@
 - **AppKit/UIKit** (source platform): Source file
   `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/SecureTextEditView.swift`
   — a macOS-only, `@MainActor`, `final` subclass of `TextEditView` inside the
-  `ComposableSettings` namespace, overriding only
-  `makeTextField(initialValue:)` to return `NSSecureTextField(string:
-  initialValue)`. `final` is what forecloses further specialization (the
+  `ComposableSettings` namespace. It overrides
+  `makeTextField(initialValue:)` to return the masking field, and adds the
+  two trailing `NSButton`s (borderless, SF Symbols `doc.on.doc`, `eye`,
+  `eye.slash`). AppKit has no reveal mode on `NSSecureTextField`, so
+  showing swaps in a plain `NSTextField` holding the same string, keeping
+  first responder. Copy writes `NSPasteboard.general` with `.string`.
+  Re-obscuring observes `NSWindow.didResignKeyNotification` for its window
+  (re-registered in `viewDidMoveToWindow`, which also obscures when the
+  window becomes nil) and `NSApplication.didResignActiveNotification`, and
+  the inherited `viewModel.onChange` sync obscures before it sets the new
+  value. The AI Providers editor is SwiftUI, so it hosts this view through
+  `NSViewRepresentable` or moves its field rows to the ComposableSettings
+  views. `final` is what forecloses further specialization (the
   requirement this recipe's Behavioral Requirements section defers to this
   entry): it makes `SecureTextEditView` the terminal specialization of
   `TextEditView` for masked entry, so the compiler rejects any attempt to
@@ -58,7 +82,8 @@
   and a `PasswordBox` — WinUI's own dot-masking control and the direct
   analog of `NSSecureTextField` — in column 1, `HorizontalAlignment="Stretch"`
   so the `*` column's leftover width goes to the field rather than the
-  title, the WinUI analog of `expands-text-field-to-fill-row`. Set
+  title (add an `Auto` column holding a copy `Button` with a `SymbolIcon`
+  `Copy` writing `Clipboard.SetContent`), the WinUI analog of `expands-text-field-to-fill-row`. Set
   `AutomationProperties.LabeledBy` on the `PasswordBox` to the `TextBlock` —
   the WinUI analog of the `setAccessibilityTitleUIElement` link this recipe
   flags as missing from the AppKit source; add it in the port even though
@@ -71,9 +96,11 @@
   current one, mirroring **skips-redundant-commits**. Bind
   `PasswordBox.Foreground`/`PlaceholderForeground` to theme resource
   brushes equivalent to `primaryText`/`placeholderText`, mirroring the
-  theme styling documented for `TextEditView`. Note `PasswordBox` ships its
-  own built-in reveal-password toggle button, an affordance neither
-  `NSSecureTextField` nor this source provides; carrying it over in the port
-  is a platform enhancement, not something to gate on parity with the
-  AppKit source.
+  theme styling documented for `TextEditView`. For the eye, set
+  `PasswordRevealMode="Hidden"` and drive `PasswordRevealMode` between
+  `Hidden` and `Visible` from a `ToggleButton` with `SymbolIcon` `View`,
+  since the built-in `Peek` mode only shows while pressed. Reset it to
+  `Hidden` on `Window.Activated` with `WindowActivationState.Deactivated`,
+  on `Unloaded`, and when the bound value changes from outside; keep the
+  toggle out of the view model's persisted state.
 

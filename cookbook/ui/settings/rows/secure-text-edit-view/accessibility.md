@@ -11,6 +11,10 @@
   platform gives a bare switch no name). Without that link, a screen
   reader announces the field as an unnamed secure text field rather than
   by the row's title.
+- **Accessory buttons**: The copy button's accessibility label MUST be
+  "Copy" and the eye's MUST be "Show" while obscured and "Hide" while
+  shown, since image-only buttons otherwise announce the symbol name. Both
+  are in the key-view loop after the field.
 - **Announce state changes**: Inherited unmodified from the text edit row
   — the component has no loading state and never disables itself in
   source; masked characters being typed or deleted are announced through

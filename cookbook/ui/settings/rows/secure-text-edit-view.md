@@ -2,11 +2,11 @@
 id: 2e0bf51e-905d-476d-9c0c-48465174ba59
 title: "Secure Text Edit View"
 type: ingredient
-version: 1.3.2
+version: 1.4.0
 status: review
 language: en
 created: 2026-09-23
-modified: 2026-10-04
+modified: 2026-11-19
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -40,12 +40,21 @@ storage provider.
 
 It specializes the text edit row
 ([adhsdk.ingredient.ui.settings.rows.text-edit-view](cookbook:c1787e74-2485-4d7b-a219-feb4c07cf97c)), overriding
-exactly one thing — it constructs a masking (dot-obscured) secure field in
-place of the plain field its base row would otherwise construct — so the
-entry is dot-masked. The text edit row's own row layout, theme-driven
-font/color styling, commit path, and view-model sync are out of this
-recipe's scope; only the delta this specialization adds — the masked field
-type and the ban on further specialization — is documented here. See
+its field construction to make a masking (dot-obscured) secure field, so
+a stored secret shows as one dot per character, and adding two
+right-aligned buttons after the field: copy, which puts the secret on the
+pasteboard, and an eye, which toggles showing the secret in plain text. A
+shown secret is hidden again as soon as the person could look away from it:
+when the window resigns key, the app resigns active, the view leaves its
+window, or the setting changes from outside. Shown is a transient state and
+is never persisted. The AI Providers editor's secret fields
+([adhsdk.ingredient.ai.plugins.plugin-runtime](cookbook:e886e448-6aa5-4359-979d-49fba713ab2a)) use it.
+
+The text edit row's own row layout, theme-driven font/color styling,
+commit path, and view-model sync are out of this recipe's scope; only the
+delta this specialization adds — the masked field, the copy and reveal
+buttons, the re-obscure rules and the ban on further specialization — is
+documented here. See
 [adhsdk.ingredient.ui.settings.rows.text-edit-view](cookbook:c1787e74-2485-4d7b-a219-feb4c07cf97c) for everything a
 caller instantiating this component also gets.
 
@@ -55,6 +64,36 @@ caller instantiating this component also gets.
   a masking (dot-obscured) secure text field, so the field is a secure,
   masking field rather than the plain field its base row would otherwise
   construct.
+- **stored-secret-shows-as-dots**: A stored, non-empty secret MUST show as one
+  dot glyph per character while the field is obscured, without the person
+  having to focus or edit the field.
+- **trailing-accessory-buttons**: The row MUST place two buttons after the
+  field, right-aligned in the row: copy, then the eye.
+- **copy-puts-secret-on-pasteboard**: The copy button MUST replace the
+  general pasteboard's contents with the field's current value, as plain
+  text, whether the secret is obscured or shown.
+- **copy-disabled-when-empty**: The copy button MUST be disabled while the
+  field's value is empty.
+- **eye-toggles-reveal**: The eye button MUST toggle the field between
+  obscured (dots) and shown (plain text), keeping the value, first
+  responder and the commit path unchanged.
+- **eye-icon-tracks-state**: The eye button MUST show the `eye` symbol while
+  obscured and `eye.slash` while shown.
+- **reobscure-on-window-resign-key**: A shown secret MUST return to obscured
+  when the view's window resigns key.
+- **reobscure-on-app-resign-active**: A shown secret MUST return to obscured
+  when the app resigns active.
+- **reobscure-on-leave-window**: A shown secret MUST return to obscured when
+  the view is removed from its window, so a row that comes back is obscured.
+- **reobscure-on-external-change**: A shown secret MUST return to obscured
+  when the field's setting changes from outside the row (the view-model sync
+  path), and the new value MUST show as dots.
+- **reveal-state-not-persisted**: The shown state MUST be held only in the
+  view and MUST NOT be written to any setting or store; every new row starts
+  obscured.
+- **edits-commit-in-either-state**: An edit made while shown MUST commit
+  through the same commit path, with the same redundant-commit guard, as an
+  edit made while obscured.
 
 All other behavior — row layout, expanding the field to fill the row,
 wiring the field's action, initializing from and syncing with the view
@@ -81,17 +120,29 @@ Inherited unmodified from the text edit row — corner radius, padding,
 font, background, foreground/text, border, shadow, and min/max size are
 all as documented at
 appearance ([adhsdk.ingredient.ui.settings.rows.text-edit-view](cookbook:c1787e74-2485-4d7b-a219-feb4c07cf97c)); this
-component sets no font, color, or layout property of its own. The one
-appearance difference this specialization introduces is that the field's
-typed characters render as the platform's built-in dot-mask glyphs rather
-than plain text — see **masks-entry-with-secure-field** and the Default
-row under States below.
+component sets no font or color of its own. The differences this
+specialization introduces:
+
+- **Masking**: while obscured, the field's characters render as the
+  platform's built-in dot-mask glyphs rather than plain text (see
+  **masks-entry-with-secure-field** and **stored-secret-shows-as-dots**).
+- **Accessory buttons**: two borderless, image-only buttons after the field,
+  right-aligned: copy (`doc.on.doc`) and the eye (`eye` obscured,
+  `eye.slash` shown), each sized to the field's height and separated from
+  the field and from each other by the row's standard spacing. Their tint is
+  the theme's secondary text role; a disabled copy button is dimmed by the
+  platform.
+- **Min/Max size**: the field still fills the row's leftover width; the two
+  buttons keep their intrinsic size and never compress.
 
 ## States
 
 | State | Appearance change |
 |-------|------------------|
 | Default | Label shows the view model's title; the field's underlying value equals the view model's value, rendered as one dot-mask glyph per character — the platform's own built-in masked rendering, per the source's doc comment ("so the entry is dot-masked") — see **masks-entry-with-secure-field**. |
+| Obscured | The default for every new row: dots, eye button shows `eye`. |
+| Shown | The field shows the value in plain text; eye button shows `eye.slash`. Left for Obscured on window resign key, app resign active, leaving the window or an external change. |
+| Empty | Copy button disabled; the eye still toggles. |
 | All other states | Editing, Committed, Placeholder shown, Disabled, Pressed, and Loading are inherited unmodified from the text edit row; see states ([adhsdk.ingredient.ui.settings.rows.text-edit-view](cookbook:c1787e74-2485-4d7b-a219-feb4c07cf97c)). |
 
 ## Accessibility
@@ -108,6 +159,10 @@ row under States below.
   platform gives a bare switch no name). Without that link, a screen
   reader announces the field as an unnamed secure text field rather than
   by the row's title.
+- **Accessory buttons**: The copy button's accessibility label MUST be
+  "Copy" and the eye's MUST be "Show" while obscured and "Hide" while
+  shown, since image-only buttons otherwise announce the symbol name. Both
+  are in the key-view loop after the field.
 - **Announce state changes**: Inherited unmodified from the text edit row
   — the component has no loading state and never disables itself in
   source; masked characters being typed or deleted are announced through
@@ -136,6 +191,16 @@ row under States below.
 | secure-text-edit-view-005 | syncs-on-external-change | The view model's value changes externally and its change callback fires | The secure field's string value shows the new value |
 | secure-text-edit-view-006 | exposes-constituent-views | Read the row's label and text field after construction | The label shows the view model's title and the text field is the secure, masking field |
 | secure-text-edit-view-007 | confines-to-ui-thread | Use the component from a thread other than the UI thread | The use is rejected, at build time or by a runtime check; the component's state is unchanged |
+| secure-text-edit-view-008 | stored-secret-shows-as-dots, reveal-state-not-persisted | Construct with a stored value "sk-123" | The field shows six dots; the eye shows `eye` |
+| secure-text-edit-view-009 | eye-toggles-reveal, eye-icon-tracks-state | Value "sk-123"; press the eye | The field shows "sk-123" in plain text; the eye shows `eye.slash`; the setting is not written |
+| secure-text-edit-view-010 | eye-toggles-reveal | Shown; press the eye again | The field shows six dots; the eye shows `eye` |
+| secure-text-edit-view-011 | copy-puts-secret-on-pasteboard | Obscured, value "sk-123"; press copy | The general pasteboard's string is "sk-123" |
+| secure-text-edit-view-012 | copy-disabled-when-empty | Value "" | The copy button is disabled |
+| secure-text-edit-view-013 | reobscure-on-window-resign-key | Shown; the window resigns key | The field is obscured |
+| secure-text-edit-view-014 | reobscure-on-app-resign-active | Shown; the app resigns active | The field is obscured |
+| secure-text-edit-view-015 | reobscure-on-leave-window | Shown; remove the row from its window and add it back | The field is obscured |
+| secure-text-edit-view-016 | reobscure-on-external-change | Shown; the setting changes elsewhere to "sk-999" | The field is obscured and holds "sk-999" |
+| secure-text-edit-view-017 | edits-commit-in-either-state | Shown; type "sk-777" and the field's action fires | The setting is "sk-777" |
 
 All other conformance test vectors — row layout, content-hugging, action
 wiring, view-model sync, theme styling, placeholder restyling,
@@ -153,8 +218,19 @@ observer is constructed against the same view model — is inherited
 unmodified from the text edit row, whose initializer this component
 reuses without change; see
 edge-cases ([adhsdk.ingredient.ui.settings.rows.text-edit-view](cookbook:c1787e74-2485-4d7b-a219-feb4c07cf97c)).
-This component's own source contributes no code beyond constructing its
-field as a secure field, so it introduces no edge case of its own.
+This component's own edge cases:
+
+- Reveal while editing: switching between obscured and shown keeps the
+  typed, uncommitted text and keeps the field first responder.
+- Copy while editing: copies the field's current text, which may not be
+  committed yet.
+- An empty value: copy is disabled; the eye still toggles, so a person can
+  see what they type.
+- The window resigns key because the person opened a sheet or popover from
+  the same window: the secret is obscured anyway; it is the person's to show
+  again.
+- Two rows bound to the same setting: each has its own shown state; an
+  external change made by the other row obscures this one.
 
 ## Configuration
 
@@ -216,16 +292,21 @@ behavior it inherits contains an analytics or telemetry call.
   one, by default) — this is the reason the source recommends this view
   for secrets, but none of it is code in this component's own source
   itself.
-- **Transmission**: Not applicable — no networking call appears anywhere
-  in this component's own source or the text edit row behavior it
-  inherits.
+- **Transmission**: No networking. The copy button writes the secret to
+  the general pasteboard, where any app and Universal Clipboard can read it;
+  that is the person's explicit act and the component writes it nowhere
+  else.
+- **Exposure on screen**: The secret is shown in plain text only after the
+  person presses the eye, and only until the window resigns key, the app
+  resigns active, the view leaves its window or the setting changes from
+  outside; the shown state is never persisted.
 - **Retention**: Inherited unmodified from the text edit row — the value
   lives only in the field and the view model's value for as long as the
   row is on screen and its view model is retained; see
   privacy ([adhsdk.ingredient.ui.settings.rows.text-edit-view](cookbook:c1787e74-2485-4d7b-a219-feb4c07cf97c)).
 - **Security-violation handling**: Not applicable — this component has no
   detection surface of its own (no validation, rate-limiting, or
-  authentication logic); it only masks on-screen glyphs. Any
+  authentication logic); it only masks, reveals and copies. Any
   violation-handling behavior belongs to whatever storage/auth layer the
   caller's setting is wired to, outside these two files.
 
@@ -238,7 +319,13 @@ reference anywhere in source).
 ## Platform Notes
 
 - **SwiftUI**: Replace with an `HStack` pairing `Text(viewModel.title)`
-  leading and a trailing `SecureField("", text: $value)`, writing the
+  leading and a trailing `SecureField("", text: $value)` swapped for a
+  `TextField` on the same binding while a `@State var isShown` is true, then
+  two `.borderless` image buttons (`doc.on.doc` writing
+  `NSPasteboard.general`, and `eye` / `eye.slash` toggling `isShown`).
+  Reset `isShown` in `.onChange(of: scenePhase)`, on
+  `NSWindow.didResignKeyNotification` via `.onReceive`, in `.onDisappear`
+  and when the value changes from outside. The binding's setter writes writing the
   binding's setter back into the underlying setting with an equality guard
   before assigning, mirroring **skips-redundant-commits**. Give the field an
   explicit `.accessibilityLabel(viewModel.title)` — the fix this recipe's
@@ -248,9 +335,13 @@ reference anywhere in source).
   documented for `TextEditView`.
 - **Compose**: Use a `Row` with `Text(title)` leading and a trailing
   `OutlinedTextField(value = value, onValueChange = { ... },
-  visualTransformation = PasswordVisualTransformation(), singleLine = true)`
-  — `PasswordVisualTransformation` is Compose's dot-masking analog of
-  `NSSecureTextField`. Commit to the backing state/view model on focus loss
+  visualTransformation = if (shown) VisualTransformation.None else
+  PasswordVisualTransformation(), singleLine = true)` with a `trailingIcon`
+  row of two `IconButton`s (copy through `LocalClipboardManager`, and the
+  visibility toggle); hold `shown` in `remember`, never `rememberSaveable`,
+  and reset it on `Lifecycle.Event.ON_PAUSE` and when the value changes from
+  outside — `PasswordVisualTransformation` is Compose's dot-masking analog
+  of `NSSecureTextField`. Commit to the backing state/view model on focus loss
   or `ImeAction.Done` (`KeyboardOptions(imeAction = ImeAction.Done)` with a
   `KeyboardActions.onDone`, or a `Modifier.onFocusChanged` check), not on
   every `onValueChange` call — `onValueChange` fires per keystroke, which
@@ -260,7 +351,11 @@ reference anywhere in source).
   accessibility link's Compose analog).
 - **React/Web**: A flex row (`display: flex; align-items: center;
   justify-content: space-between`) containing a `<label>` for the title and
-  an `<input type="password">` whose `aria-labelledby` points at the title
+  an `<input>` whose `type` is `password` or, while shown, `text`, followed
+  by two `<button type="button">`s (copy through
+  `navigator.clipboard.writeText`, and the eye with `aria-pressed`); reset
+  the shown state on `window` `blur`, `visibilitychange` and unmount. The
+  input's `aria-labelledby` points at the title
   `<label>`'s `id` — the web analog of the accessibility link this recipe
   flags as missing from the source. Commit the new value on the input's
   `blur` handler (or Enter via `onKeyDown`), not on every `onChange` call —
@@ -273,9 +368,19 @@ reference anywhere in source).
 - **AppKit/UIKit** (source platform): Source file
   `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/SecureTextEditView.swift`
   — a macOS-only, `@MainActor`, `final` subclass of `TextEditView` inside the
-  `ComposableSettings` namespace, overriding only
-  `makeTextField(initialValue:)` to return `NSSecureTextField(string:
-  initialValue)`. `final` is what forecloses further specialization (the
+  `ComposableSettings` namespace. It overrides
+  `makeTextField(initialValue:)` to return the masking field, and adds the
+  two trailing `NSButton`s (borderless, SF Symbols `doc.on.doc`, `eye`,
+  `eye.slash`). AppKit has no reveal mode on `NSSecureTextField`, so
+  showing swaps in a plain `NSTextField` holding the same string, keeping
+  first responder. Copy writes `NSPasteboard.general` with `.string`.
+  Re-obscuring observes `NSWindow.didResignKeyNotification` for its window
+  (re-registered in `viewDidMoveToWindow`, which also obscures when the
+  window becomes nil) and `NSApplication.didResignActiveNotification`, and
+  the inherited `viewModel.onChange` sync obscures before it sets the new
+  value. The AI Providers editor is SwiftUI, so it hosts this view through
+  `NSViewRepresentable` or moves its field rows to the ComposableSettings
+  views. `final` is what forecloses further specialization (the
   requirement this recipe's Behavioral Requirements section defers to this
   entry): it makes `SecureTextEditView` the terminal specialization of
   `TextEditView` for masked entry, so the compiler rejects any attempt to
@@ -296,7 +401,8 @@ reference anywhere in source).
   and a `PasswordBox` — WinUI's own dot-masking control and the direct
   analog of `NSSecureTextField` — in column 1, `HorizontalAlignment="Stretch"`
   so the `*` column's leftover width goes to the field rather than the
-  title, the WinUI analog of `expands-text-field-to-fill-row`. Set
+  title (add an `Auto` column holding a copy `Button` with a `SymbolIcon`
+  `Copy` writing `Clipboard.SetContent`), the WinUI analog of `expands-text-field-to-fill-row`. Set
   `AutomationProperties.LabeledBy` on the `PasswordBox` to the `TextBlock` —
   the WinUI analog of the `setAccessibilityTitleUIElement` link this recipe
   flags as missing from the AppKit source; add it in the port even though
@@ -309,11 +415,13 @@ reference anywhere in source).
   current one, mirroring **skips-redundant-commits**. Bind
   `PasswordBox.Foreground`/`PlaceholderForeground` to theme resource
   brushes equivalent to `primaryText`/`placeholderText`, mirroring the
-  theme styling documented for `TextEditView`. Note `PasswordBox` ships its
-  own built-in reveal-password toggle button, an affordance neither
-  `NSSecureTextField` nor this source provides; carrying it over in the port
-  is a platform enhancement, not something to gate on parity with the
-  AppKit source.
+  theme styling documented for `TextEditView`. For the eye, set
+  `PasswordRevealMode="Hidden"` and drive `PasswordRevealMode` between
+  `Hidden` and `Visible` from a `ToggleButton` with `SymbolIcon` `View`,
+  since the built-in `Peek` mode only shows while pressed. Reset it to
+  `Hidden` on `Window.Activated` with `WindowActivationState.Deactivated`,
+  on `Unloaded`, and when the bound value changes from outside; keep the
+  toggle out of the view model's persisted state.
 
 ## Reference Implementations
 
@@ -331,12 +439,19 @@ design-decisions ([adhsdk.ingredient.ui.settings.rows.text-edit-view](cookbook:c
 and are not repeated here.
 
 - **Decision**: Implement this component as a specialization of the text
-  edit row overriding only its field-construction step, rather than
-  composing a new view from scratch.
-  **Rationale**: Per the source's own doc comment, this reuses all of the
-  text edit row's row layout, theme styling, and commit wiring; the only
-  difference between a plain and a secure text row is the underlying field
-  type.
+  edit row that overrides its field construction and adds the accessory
+  buttons, rather than composing a new view from scratch.
+  **Rationale**: This reuses all of the text edit row's row layout, theme
+  styling, and commit wiring; a secure row differs only in its field and
+  its two buttons.
+  **Approved**: pending
+- **Decision**: Re-obscure a shown secret on window resign key, app resign
+  active, leaving the window and an external change, and never persist the
+  shown state.
+  **Rationale**: Each of those is a moment the person may stop watching the
+  screen or the value is no longer the one they chose to see; a secret left
+  in plain text in a background window is visible to anyone at the screen or
+  in a screen share. A new row always starts obscured.
   **Approved**: pending
 - **Decision**: Foreclose further specialization of this component
   (AppKit/UIKit source: declared `final`).
@@ -379,7 +494,8 @@ and are not repeated here.
 
 `native-controls-preference` and `platform-design-language` rest on
 `textField` being an unmodified `NSSecureTextField` with AppKit's default
-bezel styling (**masks-entry-with-secure-field**); `keyboard-navigable`,
+bezel styling (**masks-entry-with-secure-field**) and the accessory buttons
+being standard borderless `NSButton`s with SF Symbols; `keyboard-navigable`,
 `idempotent-operations`, and `separation-of-concerns` rest on behavior that
 is `TextEditView`'s concern and out of this recipe's scope (the field's
 inherited, unmodified `NSControl` tab order, **skips-redundant-commits**,
@@ -391,7 +507,7 @@ Accessibility above; `contrast-ratio` is
 floor against WCAG's 4.5:1 threshold (see
 design-decisions ([adhsdk.ingredient.ui.settings.rows.text-edit-view](cookbook:c1787e74-2485-4d7b-a219-feb4c07cf97c))).
 
-No test in the repository's test targets constructs `SecureTextEditView`, so `unit-test-coverage` is `failed`: a search of `AgenticDeveloperHubSDKMacOSTests` and the other test targets for the type name finds nothing. Its only behavior, masking, is not asserted; the inherited text-row paths are covered by `RecordFieldRefreshTests.swift` for `TextEditView` only.
+No test in the repository's test targets constructs `SecureTextEditView`, so `unit-test-coverage` is `failed`: a search of `AgenticDeveloperHubSDKMacOSTests` and the other test targets for the type name finds nothing. Its behavior (masking, copy, reveal and the re-obscure rules) is not asserted; the inherited text-row paths are covered by `RecordFieldRefreshTests.swift` for `TextEditView` only.
 
 ## Change History
 
@@ -405,3 +521,4 @@ No test in the repository's test targets constructs `SecureTextEditView`, so `un
 | 1.3.0 | 2026-10-04 | Mike Fullerton | Added 4 conformance test vectors (inherited text-row behavior applied to the secure field) and the unit-test-coverage Compliance row. |
 | 1.3.1 | 2026-10-04 | Mike Fullerton | UI-thread confinement restated as the shared confines-to-ui-thread requirement, with a test vector; the @MainActor mechanism is in Platform Notes. |
 | 1.3.2 | 2026-10-04 | Mike Fullerton | Swift-only constructs in normative sections restated as platform-neutral behavior; the Apple mechanism is in Platform Notes. |
+| 1.4.0 | 2026-11-19 | Mike Fullerton | Copy and eye buttons, dots for a stored secret, and re-obscure rules for a shown secret |

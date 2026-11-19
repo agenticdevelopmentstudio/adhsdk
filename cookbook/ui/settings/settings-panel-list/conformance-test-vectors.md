@@ -18,4 +18,8 @@
 | cts-panel-list-015 | visible-index-report | Set the panel list to `[p0, p1, p2]`, search query set to a term matching only `p0` and `p2` | The visible-index query returns `[0, 2]` |
 | cts-panel-list-016 | row-id-panel-resolution | Select a row whose underlying id is `"1"` for a panel list of `[panelA, panelB]` | The selection callback receives `panelB`; simulating a stale/malformed id (e.g. `"not-a-number"` or `"9"`) resolves to no panel |
 | cts-panel-list-017 | confines-to-ui-thread | Use the component from a thread other than the UI thread | The use is rejected, at build time or by a runtime check; the component's state is unchanged |
+| cts-panel-list-018 | descriptor-row-mapping | Panels `A` (subtitle "OpenAI - GPT - API key") and `B` (no subtitle) | `A`'s row carries that subtitle; `B`'s row has none |
+| cts-panel-list-019 | descriptor-change-rebuild | Set `A`'s descriptor subtitle to "Ollama - Qwen - Local" after the list is built | The sections rebuild and `A`'s row carries the new subtitle |
+| cts-panel-list-020 | descriptor-change-rebuild | Set `A`'s descriptor title to "Work" after the list is built | The sections rebuild and `A`'s row reads "Work" |
+| cts-panel-list-021 | descriptor-change-rebuild | Replace the panel list with `[B]`, then change `A`'s subtitle | No rebuild is triggered |
 

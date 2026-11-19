@@ -12,7 +12,9 @@
   label, 4pt trailing inset to the cell's trailing edge.
 - **Font**: Item labels use the theme's body font (its bold variant for an
   emphasized item); badges use the theme's caption font; group header labels use
-  the theme's caption font; the title label uses the theme's button font.
+  the theme's caption font; an item's subtitle, drawn under its label,
+  uses the theme's caption font; the title label uses the theme's button
+  font.
   All three read the live theme palette rather than a fixed point size,
   and are reapplied on every cell reuse rather than baked in once at cell
   creation.
@@ -23,6 +25,8 @@
   the tertiary text color when disabled. Item icon tint: the accent color
   when enabled, the tertiary text color when disabled. Group header
   label: the secondary text color. Badge label: the secondary text color.
+  Item subtitle: the secondary text color (the tertiary text color when the
+  item is disabled).
   Title label: the secondary text color.
 - **Border**: Not set explicitly anywhere in this component; the scroll
   view's border keeps its platform default, no border - no border is

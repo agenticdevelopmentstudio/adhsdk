@@ -11,3 +11,4 @@
 | 1.3.0 | 2026-11-13 | Mike Fullerton | Items can carry a trailing badge and be emphasized (bold); the preferred width measures both. Item and section header context menus from client providers, and a double-click callback for item rows (vectors 032-035). |
 | 1.4.0 | 2026-11-15 | Mike Fullerton | Drag and drop: items drag a client payload of the item pasteboard type, drops onto an item row are validated and delivered to the client (vectors 036-038). |
 | 1.4.1 | 2026-11-16 | Mike Fullerton | Sections carry an optional accessibility identifier |
+| 1.5.0 | 2026-11-19 | Mike Fullerton | Item subtitle drawn under the title in the caption font and secondary color |

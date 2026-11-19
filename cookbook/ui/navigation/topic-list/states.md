@@ -1,6 +1,7 @@
 
 | State | Appearance change |
 |-------|------------------|
+| With subtitle | A two-line row: the title, and under it the subtitle in the caption font and secondary text color. Rows without a subtitle are single-line. |
 | Default (unselected, enabled item row) | Item font, primary text color label, accent-color-tinted icon; row background follows the window-background color. |
 | Disabled item row | Item font, tertiary text color label, tertiary-text-color-tinted icon; identical selection/press behavior to an enabled row (see **disabled-item-selectability**). |
 | Selected row | A 4pt-corner-radius rect, inset 2pt horizontally / 1pt vertically, filled with the theme's selection color, drawn behind the row. |

@@ -7,12 +7,19 @@ design-decisions ([adhsdk.ingredient.ui.settings.rows.text-edit-view](cookbook:c
 and are not repeated here.
 
 - **Decision**: Implement this component as a specialization of the text
-  edit row overriding only its field-construction step, rather than
-  composing a new view from scratch.
-  **Rationale**: Per the source's own doc comment, this reuses all of the
-  text edit row's row layout, theme styling, and commit wiring; the only
-  difference between a plain and a secure text row is the underlying field
-  type.
+  edit row that overrides its field construction and adds the accessory
+  buttons, rather than composing a new view from scratch.
+  **Rationale**: This reuses all of the text edit row's row layout, theme
+  styling, and commit wiring; a secure row differs only in its field and
+  its two buttons.
+  **Approved**: pending
+- **Decision**: Re-obscure a shown secret on window resign key, app resign
+  active, leaving the window and an external change, and never persist the
+  shown state.
+  **Rationale**: Each of those is a moment the person may stop watching the
+  screen or the value is no longer the one they chose to see; a secret left
+  in plain text in a background window is visible to anyone at the screen or
+  in a screen share. A new row always starts obscured.
   **Approved**: pending
 - **Decision**: Foreclose further specialization of this component
   (AppKit/UIKit source: declared `final`).
