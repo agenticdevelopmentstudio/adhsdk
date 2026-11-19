@@ -26,24 +26,33 @@ public enum StenographerSummaryPrefsPush {
     private static var pushes: [SettingsSnapshotPush] = []
 
     /// Installs the observers and reconciles the daemon now and on every
-    /// reconnect. Call once at startup.
-    public static func startObserving(service: any StenographerDaemonService) {
+    /// reconnect. Call once at startup. `backoffs` and `reconnectDelay` are the
+    /// engine's retry timing (see `SettingsSnapshotPush`); tests shorten them.
+    public static func startObserving(
+        service: any StenographerDaemonService,
+        backoffs: [UInt64] = BoundedPush.defaultBackoffs,
+        reconnectDelay: @escaping SettingsSnapshotPush.ReconnectDelay = SettingsSnapshotPush.defaultReconnectDelay
+    ) {
         guard pushes.isEmpty else {
             logger.warning("startObserving called more than once; ignoring the repeat call")
             return
         }
         for settings in SummaryFeatureSettings.all {
-            pushes.append(startPush(settings, service: service))
+            pushes.append(startPush(
+                settings, service: service, backoffs: backoffs, reconnectDelay: reconnectDelay))
         }
     }
 
     private static func startPush(
-        _ settings: SummaryFeatureSettings, service: any StenographerDaemonService
+        _ settings: SummaryFeatureSettings, service: any StenographerDaemonService,
+        backoffs: [UInt64], reconnectDelay: @escaping SettingsSnapshotPush.ReconnectDelay
     ) -> SettingsSnapshotPush {
         let sessions = SummaryFeatureSettings.for(.sessions)
         let engine = SettingsSnapshotPush(
             label: "Summary prefs (\(settings.feature.rawValue))",
             logger: logger,
+            backoffs: backoffs,
+            reconnectDelay: reconnectDelay,
             snapshot: { currentBody(settings) },
             send: { body in
                 guard let request = try? StenographerWire.decoder().decode(
