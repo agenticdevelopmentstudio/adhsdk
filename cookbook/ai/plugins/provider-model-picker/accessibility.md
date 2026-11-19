@@ -11,6 +11,8 @@
 - **Contrast**: Colors come from theme roles; the theme decides whether they
   clear 4.5:1.
 
-Keyboard: Tab moves from the popup to the model row's caret and name; Space
-opens the popup.
+Keyboard: with the platform's full keyboard navigation turned on, Tab moves
+from the popup to the model row's caret and name, and Space opens the popup;
+with it off, macOS gives the pop-up button and the borderless buttons no Tab
+focus.
 

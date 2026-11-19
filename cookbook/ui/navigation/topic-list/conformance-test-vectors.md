@@ -8,7 +8,7 @@
 | topic-list-005 | hide-outline-column-header | Inspect the list after it loads | The list's built-in column header bar is disabled and never drawn |
 | topic-list-006 | header-rows-not-selectable | Click, or send an accessibility press action to, a group header row | The selection-gating check fails; the row does not become selected |
 | topic-list-007 | disabled-item-selectability | An item marked disabled; select it by click | The row becomes selected and the selection callback is invoked with that item, identically to an enabled item |
-| topic-list-008 | mute-disabled-item-appearance | Two items, one marked disabled, one not | The disabled row's label/icon use the tertiary text color; the enabled row's use the primary text color/accent color |
+| topic-list-008 | mute-disabled-item-appearance | Two items, each with a subtitle, one marked disabled, one not | The disabled row's label, icon tint and subtitle use the tertiary text color; the enabled row's use the primary text color, the accent color and the secondary text color |
 | topic-list-009 | render-item-without-icon-when-nil | An item constructed with no icon | Its row's image view holds no image; no placeholder or broken image appears |
 | topic-list-010 | user-selection-callback | User clicks an unselected item row | The selection callback is invoked exactly once with that item |
 | topic-list-011 | suppress-onselect-on-programmatic-selection | Select an item by id for an unselected, present id | The row becomes selected but the selection callback is NOT invoked |
@@ -40,6 +40,8 @@
 | topic-list-036 | item-drag-payload | Sections `Branches` (`main`, `dev`); a payload provider returning the item's id for `dev` only; ask each row for its drag writer | `dev` writes `dev` as the item type; the header and `main` write nothing; with no provider nothing writes |
 | topic-list-037 | item-drop-validation, item-drop-delivery | The same list, a validator accepting only `dev` onto `main`; drop `dev` and then `x` onto `main`, `dev` onto the header and row 9 | Only `dev` onto `main` is valid, and the callback receives (`dev`, `main`) once |
 | topic-list-038 | item-drop-validation | Inspect the outline after it loads | It is registered for the item pasteboard type |
-| topic-list-039 | item-subtitle | Items `a` (subtitle "OpenAI - GPT - API key") and `b` (no subtitle) | `a`'s row shows the subtitle under its title in the caption font and secondary color; `b`'s row is a single title line at the standard height |
-| topic-list-040 | item-subtitle | An item whose subtitle is "" | The row renders as one with no subtitle |
+| topic-list-039 | item-subtitle | Items `a` (subtitle "Service - API key") and `b` (no subtitle) | `a`'s row shows the subtitle under its title in the caption font and secondary color, truncating at the tail, and is taller than the standard row height; `b`'s row is a single title line at the list's standard row height with its subtitle label hidden |
+| topic-list-040 | item-subtitle | An item whose subtitle is "" | The row is a single title line at the list's standard row height with its subtitle label hidden |
 | topic-list-041 | preferred-width-subtitle | One item, title "A", subtitle wider than the title | The preferred width is computed from the subtitle's width |
+| topic-list-042 | section-accessibility-id | Sections `Branches` (accessibility identifier `refs.branches`) and `Tags` (none), each with one item; render both header rows, then re-render the reused header cell for `Tags` | The `Branches` header label's accessibility identifier is `refs.branches`; the `Tags` header label has no accessibility identifier |
+

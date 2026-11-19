@@ -1,11 +1,15 @@
 
-- **descriptor**: Component MUST expose a public, immutable descriptor,
-  set once at construction, supplying the sidebar's title/icon/isDisabled/
-  section metadata for this panel.
-- **descriptor-subtitle**: The descriptor MUST carry an observable,
-  optional subtitle, none by default, beside its observable title, icon,
-  disabled flag, section and heading; a panel MAY set or change it at any
-  time, and observers of the descriptor MUST be told when it changes.
+- **descriptor**: Component MUST expose a public descriptor, set once at
+  construction and never replaced, supplying the sidebar's metadata for
+  this panel: title, subtitle, icon, disabled flag, section and heading.
+  Each of those fields is observable and settable after construction;
+  only the descriptor reference itself is fixed.
+- **descriptor-subtitle-default**: The descriptor's subtitle MUST be
+  optional and MUST be none when no subtitle is supplied.
+- **descriptor-subtitle-observable**: A panel MAY set or change the
+  descriptor's subtitle at any time, and observers of the descriptor MUST
+  be told when it changes. (How the sidebar draws the subtitle belongs to
+  the settings panel list, not to this component.)
 - **default-descriptor**: Component MUST construct a default descriptor
   when constructed with no descriptor supplied (or an explicit absence of
   one).

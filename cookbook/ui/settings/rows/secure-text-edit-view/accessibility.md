@@ -3,18 +3,18 @@
   explicit accessibility role override appears in either file; the
   platform's secure text field carries its own built-in secure-text-field
   accessibility role.
-- **Label requirements**: Neither the text edit row's construction (which
-  this component inherits unmodified) nor this component's own source
-  links the field's accessible name to the label — unlike the sibling
-  checkbox row ([adhsdk.ingredient.ui.settings.rows.checkbox-view](cookbook:e9c10ff7-4e13-4007-a963-d2a9e4006745)),
-  which links its switch to its label for exactly this reason (the
-  platform gives a bare switch no name). Without that link, a screen
-  reader announces the field as an unnamed secure text field rather than
-  by the row's title.
-- **Accessory buttons**: The copy button's accessibility label MUST be
-  "Copy" and the eye's MUST be "Show" while obscured and "Hide" while
-  shown, since image-only buttons otherwise announce the symbol name. Both
-  are in the key-view loop after the field.
+- **Label requirements**: Both fields the row edits — the masked field and
+  the plain field shown while revealed — take their accessible title from
+  the row's label (**titles-fields-with-label**), as the sibling checkbox row
+  ([adhsdk.ingredient.ui.settings.rows.checkbox-view](cookbook:e9c10ff7-4e13-4007-a963-d2a9e4006745))
+  links its switch to its label, so a screen reader announces either field
+  by the row's title rather than as an unnamed text field. The text edit
+  row's construction sets the link for every field it edits; this
+  component's only part is listing both fields as edited.
+- **Accessory buttons**: The buttons are image-only, so their names come
+  from **labels-accessory-buttons** ("Copy"; "Show" or "Hide"), which also
+  serve as their tooltips; their place in the key-view loop after the field
+  is **accessory-buttons-follow-field-in-key-order**.
 - **Announce state changes**: Inherited unmodified from the text edit row
   — the component has no loading state and never disables itself in
   source; masked characters being typed or deleted are announced through

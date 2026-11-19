@@ -61,4 +61,22 @@
   row is inserted above it. The title is what the row is called on screen,
   which is what someone driving the list actually knows about it.
   **Approved**: pending
+- **Decision**: (AppKit) Offer a drop only onto an item row
+  (`NSOutlineViewDropOnItemIndex`), never between rows or onto a section
+  header, and answer an accepted proposal with `.generic`.
+  **Rationale**: Per the `dropValidator` doc comment, only a drop onto an
+  item row is ever offered; the list attaches no meaning to a payload and
+  has no row reordering, so whether a drop is allowed and what it does are
+  the validator's and the drop callback's, and `.generic` names no copy or
+  move the list would itself perform.
+  **Approved**: pending
+- **Decision**: (AppKit) Declare the class and its setters `open`, so a
+  consumer may subclass it, while every behavior a caller needs is reachable
+  through closures, providers and setters on an instance.
+  **Rationale**: The settings panel list subclasses it to map its own panel
+  model onto sections and translate row selection back to a panel, and is
+  itself `open` so client apps can customize row presentation or add
+  secondary actions; other consumers (the Git refs sidebar) hold an
+  instance and configure it through those seams.
+  **Approved**: pending
 

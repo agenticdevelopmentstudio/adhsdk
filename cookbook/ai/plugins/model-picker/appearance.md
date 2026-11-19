@@ -20,7 +20,6 @@
   tier.
 - **Border**: None on the control's buttons (both borderless).
 - **Shadow**: The popover's own; none of the component's.
-- **Min/Max size**: The popover has a fixed content size large enough for the
-  list and a readable detail pane; the list keeps its width and the detail
-  pane takes the rest.
+- **Min/Max size**: The popover has a fixed content size of 720×450 points;
+  the list keeps its width and the detail pane takes the rest.
 

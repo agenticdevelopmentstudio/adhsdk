@@ -24,19 +24,17 @@ and are not repeated here.
 - **Decision**: Foreclose further specialization of this component
   (AppKit/UIKit source: declared `final`).
   **Rationale**: Traceable to `public final class SecureTextEditView:
-  TextEditView` in source — forecloses further subclassing since it is the
+  TextEditView, NSTextFieldDelegate` in source — forecloses further subclassing since it is the
   one masking variant the text edit row needs (see Platform Notes).
   **Approved**: pending
-- **Decision**: Suppress a lint rule (AppKit/UIKit source: `//
-  swiftlint:disable:next static_over_final_class`) on the
-  field-construction override.
-  **Rationale**: Overriding the text edit row's open factory method
-  requires a non-static override even though this component itself
-  forecloses further specialization, which trips a lint rule that
-  otherwise prefers a static method — this is an intentional, documented
-  suppression traceable to the source comment, not an accidental disable,
-  and is recorded here per the source-fidelity requirement to document
-  known workarounds.
+- **Decision**: Copy writes the secret to the general pasteboard as plain
+  text only, without the concealed or transient pasteboard markers and
+  without an expiry.
+  **Rationale**: Copy is the person's explicit act to move the secret into
+  another app. The cost is recorded rather than hidden: clipboard managers
+  and cross-device clipboard sync can keep the value, and marking it
+  concealed and transient (local-only where the platform offers it) is the
+  open alternative this decision is pending on.
   **Approved**: pending
 - **Decision**: Treat storage and persistence of the masked value as
   entirely out of scope of this component's own source.

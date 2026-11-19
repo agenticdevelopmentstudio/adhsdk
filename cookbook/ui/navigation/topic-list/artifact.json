@@ -12,7 +12,7 @@
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
-    "summary": "Domain-agnostic sidebar list: sectioned rows, single selection, optional title/footer/header-accessory, theme-driven repaint, and an accessibility-reachable row label",
+    "summary": "Domain-agnostic sectioned sidebar list: single selection, badges, subtitles, emphasis, row menus, double-click, drag and drop",
     "platforms": [
       "swift",
       "macos"
@@ -21,7 +21,7 @@
       "sidebar",
       "list",
       "selection",
-      "view-controller"
+      "navigation"
     ],
     "depends-on": [],
     "related": [
@@ -33,7 +33,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "caa79697abe49b9f",
+  "synced": "be747605e53af408",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

@@ -16,8 +16,8 @@
 - **eye-toggles-reveal**: The eye button MUST toggle the field between
   obscured (dots) and shown (plain text), keeping the value, first
   responder and the commit path unchanged.
-- **eye-icon-tracks-state**: The eye button MUST show the `eye` symbol while
-  obscured and `eye.slash` while shown.
+- **eye-icon-tracks-state**: The eye button MUST show a reveal (open-eye)
+  glyph while obscured and a conceal (struck-through eye) glyph while shown.
 - **reobscure-on-window-resign-key**: A shown secret MUST return to obscured
   when the view's window resigns key.
 - **reobscure-on-app-resign-active**: A shown secret MUST return to obscured
@@ -27,12 +27,25 @@
 - **reobscure-on-external-change**: A shown secret MUST return to obscured
   when the field's setting changes from outside the row (the view-model sync
   path), and the new value MUST show as dots.
+- **own-commit-keeps-shown**: The row's own commit MUST NOT re-obscure a shown
+  secret: a stored value equal to the text the row is showing is not an
+  external change, so the row stays shown.
 - **reveal-state-not-persisted**: The shown state MUST be held only in the
   view and MUST NOT be written to any setting or store; every new row starts
   obscured.
 - **edits-commit-in-either-state**: An edit made while shown MUST commit
   through the same commit path, with the same redundant-commit guard, as an
   edit made while obscured.
+- **titles-fields-with-label**: Every field the row edits — the masked
+  field and the plain field shown while revealed — MUST take its accessible
+  title from the row's label, so a screen reader names either field by the
+  row's title.
+- **labels-accessory-buttons**: The copy button's accessibility label MUST be
+  "Copy", and the eye button's MUST be "Show" while obscured and "Hide" while
+  shown.
+- **accessory-buttons-follow-field-in-key-order**: The key-view order MUST go
+  from the field (obscured or shown) to the copy button, then to the eye
+  button.
 
 All other behavior — row layout, expanding the field to fill the row,
 wiring the field's action, initializing from and syncing with the view
@@ -50,6 +63,4 @@ rejects-frame-only-initialization, confines-to-ui-thread). Foreclosing
 further specialization of this component is a platform-specific
 construction detail, recorded in Platform Notes rather than as a
 normative requirement here (see Platform Notes).
-
-- **confines-to-ui-thread**: The component MUST be usable only on the UI thread.
 

@@ -18,10 +18,9 @@ is never persisted. The AI Providers editor's secret fields
 ([adhsdk.ingredient.ai.plugins.plugin-runtime](cookbook:e886e448-6aa5-4359-979d-49fba713ab2a)) use it.
 
 The text edit row's own row layout, theme-driven font/color styling,
-commit path, and view-model sync are out of this recipe's scope; only the
-delta this specialization adds — the masked field, the copy and reveal
-buttons, the re-obscure rules and the ban on further specialization — is
-documented here. See
+commit path, and view-model sync are out of this ingredient's scope; only
+the delta this specialization adds — the masked field, the copy and reveal
+buttons and the re-obscure rules — is documented here. See
 [adhsdk.ingredient.ui.settings.rows.text-edit-view](cookbook:c1787e74-2485-4d7b-a219-feb4c07cf97c) for everything a
 caller instantiating this component also gets.
 

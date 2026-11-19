@@ -1,0 +1,61 @@
+{
+  "format": 2,
+  "meta": {
+    "id": "d3863175-a089-426d-982c-d489965593ac",
+    "title": "AI Providers Panel",
+    "type": "ingredient",
+    "version": "1.0.0",
+    "status": "review",
+    "language": "en",
+    "created": "2026-11-19",
+    "modified": "2026-11-19",
+    "author": "Mike Fullerton",
+    "copyright": "2026 Mike Fullerton",
+    "license": "MIT",
+    "summary": "The settings panel where a person adds, edits and removes AI provider configurations: one sidebar row per configuration, its editor, and a Test Chat pinned to it.",
+    "platforms": [
+      "swift",
+      "macos"
+    ],
+    "tags": [
+      "ai-plugins",
+      "settings",
+      "provider-configuration"
+    ],
+    "depends-on": [
+      "b3059939-21f5-414b-82e4-edd11b192ae8",
+      "2e0bf51e-905d-476d-9c0c-48465174ba59",
+      "e886e448-6aa5-4359-979d-49fba713ab2a"
+    ],
+    "related": [
+      "e886e448-6aa5-4359-979d-49fba713ab2a",
+      "c9385bf6-3abc-486b-82b5-d57a62d86735"
+    ],
+    "references": [],
+    "approved-by": "",
+    "approved-date": ""
+  },
+  "synced": "44d51eb2ff99929b",
+  "parts": [
+    {"part": "intro"},
+    {"part": "overview", "heading": "Overview"},
+    {"part": "behavioral-requirements", "heading": "Behavioral Requirements"},
+    {"part": "appearance", "heading": "Appearance"},
+    {"part": "states", "heading": "States"},
+    {"part": "accessibility", "heading": "Accessibility"},
+    {"part": "conformance-test-vectors", "heading": "Conformance Test Vectors"},
+    {"part": "edge-cases", "heading": "Edge Cases"},
+    {"part": "configuration", "heading": "Configuration"},
+    {"part": "deep-linking", "heading": "Deep Linking"},
+    {"part": "localization", "heading": "Localization"},
+    {"part": "accessibility-options", "heading": "Accessibility Options"},
+    {"part": "feature-flags", "heading": "Feature Flags"},
+    {"part": "analytics", "heading": "Analytics"},
+    {"part": "privacy", "heading": "Privacy"},
+    {"part": "logging", "heading": "Logging"},
+    {"part": "platform-notes", "heading": "Platform Notes"},
+    {"part": "design-decisions", "heading": "Design Decisions"},
+    {"part": "compliance", "heading": "Compliance"},
+    {"part": "history", "heading": "Change History"}
+  ]
+}

@@ -34,7 +34,7 @@ approved-date: ""
 
 ## Overview
 
-The Panel List is the sidebar of a settings split view: a domain-agnostic,
+The Panel List is the sidebar of a settings split view: a
 sectioned list component specialized for settings panels. Its ancestor
 topic list component is a domain-agnostic sectioned list that knows nothing
 about settings; this component maps an ordered array of panels onto that
@@ -64,11 +64,15 @@ panels by index no matter what the search field currently hides.
   whitespace/newline characters, MUST include every stored panel among the
   visible rows.
 - **all-terms-match**: A non-empty, non-whitespace search query MUST
-  include a panel only if every one of its space-separated terms is found,
+  include a panel only if every one of its terms is found,
   case-insensitively, as a substring of that panel's searchable text
   (harvested from the descriptor's title, section, search keywords, help
   content's topic titles and bodies, and — once the panel's own view has
-  loaded — the visible titles of its own non-editable controls).
+  loaded — the visible titles of its own non-editable controls). The terms
+  are the non-empty pieces left by trimming leading and trailing whitespace
+  and newlines from the query and then splitting it on the space character
+  only; a tab or newline inside the query is part of a term, not a
+  separator.
 - **panel-order-preservation**: Visible rows MUST appear in the same
   relative order as their panels in the array most recently set.
 - **contiguous-section-grouping**: Panels MUST be grouped into sidebar
@@ -89,7 +93,8 @@ panels by index no matter what the search field currently hides.
   of its panel's zero-based index in the full array most recently set,
   independent of that row's position under the current filter.
 - **selection-callback-bridge**: Once constructed through its normal
-  construction path, the component MUST invoke its selection callback with
+  construction path (the archive-decoding path does not wire this bridge;
+  that gap is recorded as an open Design Decision), the component MUST invoke its selection callback with
   the panel resolved from the newly selected row's identifier whenever the
   underlying selection changes, and MUST invoke that callback with no panel
   when the selection is cleared.
@@ -145,9 +150,9 @@ panels by index no matter what the search field currently hides.
 
 | State | Appearance change |
 |-------|------------------|
-| Default | Row shows the panel's title/icon with the primary-text/accent color roles, unselected. |
+| Default | Row shows the panel's title/icon with the primary-text/accent color roles, unselected; a panel whose descriptor has a non-empty subtitle shows it as a second line under the title, in the caption font and the secondary-text color role. |
 | Selected | Row highlight comes entirely from the ancestor's native selection rendering; this component restyles nothing further on selection. |
-| Disabled (panel) | The descriptor's disabled flag set: text and icon tint switch to the tertiary-text color role (inherited from the ancestor); the row remains selectable — selection is not gated on the disabled flag, so this component (and its ancestor) let a disabled row be clicked and selected like any other. |
+| Disabled (panel) | The descriptor's disabled flag set: title, subtitle and icon tint switch to the tertiary-text color role (inherited from the ancestor); the row remains selectable — selection is not gated on the disabled flag, so this component (and its ancestor) let a disabled row be clicked and selected like any other. |
 | Filtered out | A panel the search query excludes contributes no row at all — it is absent from the sidebar entirely, not shown greyed out or struck through. |
 | Pressed | Not applicable: a list row has no separate pressed/hover visual distinct from selection; this component adds no press styling of its own. |
 | Focused | Not customized: standard list keyboard-focus ring, unchanged by this component or its ancestor. |
@@ -168,8 +173,11 @@ panels by index no matter what the search field currently hides.
   are posted through the ancestor's own native accessibility notifications
   (inherited, unmodified); this component issues no accessibility
   announcement of its own for a section rebuild, a search filter change, a
-  panel's disabled flag flipping, or a descriptor mutated after the
-  sidebar has already been populated (see Edge Cases).
+  panel's disabled flag flipping, or a descriptor change after the sidebar
+  has already been populated — a title or subtitle change rebuilds the
+  rows without an announcement, and an icon, disabled-flag, or section
+  change leaves the row stale (see Edge Cases, "Descriptor mutated after
+  the panel list is set").
 - **Minimum tap target**: Not applicable — this is a pointer/keyboard-
   driven list row (no touch input path in this component or its
   ancestor); the 44×44pt minimum is touch guidance, not a pointer-
@@ -194,12 +202,12 @@ panels by index no matter what the search field currently hides.
 | cts-panel-list-013 | out-of-range-select-guard | Set the panel list to `[panelA]`, select the panel at index 5 by index | No row's selection changes; no crash |
 | cts-panel-list-014 | panel-visibility-report | Set the panel list to `[panelA, panelB]`, search query set to a term matching only `panelB` | Visibility for index 0 is false, for index 1 is true |
 | cts-panel-list-015 | visible-index-report | Set the panel list to `[p0, p1, p2]`, search query set to a term matching only `p0` and `p2` | The visible-index query returns `[0, 2]` |
-| cts-panel-list-016 | row-id-panel-resolution | Select a row whose underlying id is `"1"` for a panel list of `[panelA, panelB]` | The selection callback receives `panelB`; simulating a stale/malformed id (e.g. `"not-a-number"` or `"9"`) resolves to no panel |
+| cts-panel-list-016 | row-id-panel-resolution | Construct the component normally and set the panel list to `[panelA, panelB]`; invoke the ancestor's row-selection hook (the one this component installs at construction) directly with a row item whose id is `"1"`, then with one whose id is `"not-a-number"`, then `"9"` | The selection callback receives `panelB` for `"1"`, and no panel for `"not-a-number"` and for `"9"` |
 | cts-panel-list-017 | confines-to-ui-thread | Use the component from a thread other than the UI thread | The use is rejected, at build time or by a runtime check; the component's state is unchanged |
-| cts-panel-list-018 | descriptor-row-mapping | Panels `A` (subtitle "OpenAI - GPT - API key") and `B` (no subtitle) | `A`'s row carries that subtitle; `B`'s row has none |
-| cts-panel-list-019 | descriptor-change-rebuild | Set `A`'s descriptor subtitle to "Ollama - Qwen - Local" after the list is built | The sections rebuild and `A`'s row carries the new subtitle |
-| cts-panel-list-020 | descriptor-change-rebuild | Set `A`'s descriptor title to "Work" after the list is built | The sections rebuild and `A`'s row reads "Work" |
-| cts-panel-list-021 | descriptor-change-rebuild | Replace the panel list with `[B]`, then change `A`'s subtitle | No rebuild is triggered |
+| cts-panel-list-018 | descriptor-row-mapping | Panels `A` (subtitle "Provider - Model - Key") and `B` (no subtitle) | `A`'s row carries that subtitle; `B`'s row has none |
+| cts-panel-list-019 | descriptor-change-rebuild | Same counter subclass as cts-panel-list-003; set the panel list to `[A, B]`; record the counter; set `A`'s descriptor subtitle to "Other provider - Other model" and let the UI thread's queued work run | The counter is one greater than recorded, and `A`'s row carries the new subtitle |
+| cts-panel-list-020 | descriptor-change-rebuild | Same counter subclass as cts-panel-list-003; set the panel list to `[A, B]`; record the counter; set `A`'s descriptor title to "Work" and let the UI thread's queued work run | The counter is one greater than recorded, and `A`'s row reads "Work" |
+| cts-panel-list-021 | descriptor-change-rebuild | Same counter subclass as cts-panel-list-003; set the panel list to `[A, B]`, then to `[B]`; record the counter; change `A`'s descriptor subtitle and let the UI thread's queued work run | The counter equals the recorded value — no rebuild was triggered |
 
 ## Edge Cases
 
@@ -210,7 +218,8 @@ panels by index no matter what the search field currently hides.
   internal row-id resolver MUST behave correctly at the first (`0`) and
   last (`count - 1`) valid indices, and MUST silently no-op (rather than
   trap) for any index outside that range, since each guards against
-  out-of-bounds access before acting.
+  out-of-bounds access before acting. The no-op emits no log line and no
+  assertion; that silence is recorded as an open Design Decision.
 - **Concurrent access**: Not a runtime race condition to defend against —
   the component's state is confined to a single, serialized execution
   context by construction, so simultaneous mutation of the panel list,
@@ -225,21 +234,23 @@ panels by index no matter what the search field currently hides.
   kind appears anywhere in this component.
 - **Query with repeated whitespace**: A search query containing multiple
   consecutive spaces (e.g. `"a  b"`) MUST narrow the same way a
-  single-spaced query does — splitting on whitespace omits empty
-  subsequences by default, so extra spacing does not introduce a term that
-  trivially matches everything.
+  single-spaced query does — splitting on the space character omits empty
+  pieces, so extra spacing does not introduce a term that trivially matches
+  everything. Only the space character separates terms (see
+  **all-terms-match**): a tab or newline inside the query stays part of a
+  term.
 - **Panel with a blank title**: A panel whose descriptor title is `""`
   renders a row with an empty label; this component performs no
   validation or fallback text for a blank title.
-- **Descriptor mutated after the panel list is set**: A descriptor's
-  title, icon, disabled flag, and section fields are all individually
-  observable, but this component subscribes to none of them — rows are
-  built once, when the panel list or a search-query change triggers a
-  rebuild. A panel's descriptor mutated after the sidebar has already been
-  populated leaves that row showing stale text/icon/disabled-state until
-  some later panel-list or search-query change triggers a rebuild; this
-  component does not subscribe to the descriptor's own change
-  notifications or otherwise refresh a row automatically.
+- **Descriptor mutated after the panel list is set**: A change to the
+  title or subtitle of a listed panel's descriptor rebuilds the sections
+  (see **descriptor-change-rebuild**); the rebuild runs on the UI thread's
+  next turn, and several such changes in one turn rebuild once. A
+  descriptor's icon, disabled flag, section, and heading are observable
+  too, but this component does not subscribe to them, so a change to any
+  of those leaves the row (or its section header) stale until some later
+  panel-list, search-query, title, or subtitle change triggers a
+  rebuild.
 
 ## Configuration
 
@@ -356,7 +367,7 @@ Not applicable: this component contains no logging call.
   `NSOutlineView`'s row/section model with a `UITableView`/
   `UICollectionView` compositional layout, since neither has a direct
   outline-view equivalent for this content-driven, run-based grouping.
-- **WinUI 3** (the reason this recipe exists): Build the sidebar as a
+- **WinUI 3**: Build the sidebar as a
   `NavigationView` (`PaneDisplayMode="Left"`) or a `ListView` with
   `CollectionViewSource.IsSourceGrouped="True"`. Do NOT let
   `CollectionViewSource`'s built-in grouping key the whole list by section
@@ -373,7 +384,7 @@ Not applicable: this component contains no logging call.
   style it with a muted `Foreground`/`SymbolIcon` brush plus, per the
   Differentiate Without Color gap, a non-color cue (a secondary "Coming
   soon" `TextBlock`, not `Opacity` alone, which repeats the same
-  color-only gap this recipe flags). Bind an `AutoSuggestBox`/`TextBox` to
+  color-only gap this ingredient flags). Bind an `AutoSuggestBox`/`TextBox` to
   a `searchQuery` property on the view model, re-filtering and re-grouping
   the `ObservableCollection` on every `TextChanged` with the same
   case-insensitive, all-terms-must-match rule. Raise the
@@ -427,12 +438,11 @@ Not applicable: this component contains no logging call.
   **Approved**: pending
 - **Decision**: Selecting a panel by index never invokes the selection
   callback.
-  **Rationale**: Per the source's own doc comment, "programmatic selection
-  flows through the hosting split view's own selection method" (the
-  comment predates a rename and still names an older type, but the
-  hosting split view is the only caller in source that drives index-based
-  selection), so the callback exists only to report a user-driven row
-  pick, not to echo back a selection the caller itself just made.
+  **Rationale**: Programmatic selection flows through the hosting split
+  view's own selection method, which is the caller in source that drives
+  index-based selection, so the callback exists only to report a
+  user-driven row pick, not to echo back a selection the caller itself
+  just made.
   **Approved**: pending
 - **Decision**: Declare the component `open`, letting a host app subclass
   it to customize row presentation or add secondary actions, rather than
@@ -440,7 +450,31 @@ Not applicable: this component contains no logging call.
   **Rationale**: Per the source's own doc comment, "Open so client apps can
   customize row presentation or add secondary actions."
   **Approved**: pending
-
+- **Decision**: Observe only the title and the subtitle of each listed
+  panel's descriptor; leave its icon, disabled flag, section, and heading
+  unobserved, so a change to one of those waits for the next rebuild.
+  **Rationale**: The source documents no reason for observing only these
+  two fields — its comment says only that the rows rebuild when a listed
+  panel's title or subtitle changes. Recorded so the choice is explicit
+  and can be confirmed or widened.
+  **Approved**: pending
+- **Decision**: An out-of-range index (index-based selection, visibility
+  querying) and a row id that is not an integer or is out of range
+  (row-id resolution) fail silently: no log line and no debug assertion.
+  **Rationale**: Each operation guards and returns without logging, and
+  the ancestor's select-by-id documents a no-op for an id it does not
+  hold; the hosting split view also relies on a filtered-out row being a
+  quiet no-op (it asks for visibility first). Whether a debug assertion or
+  log line is wanted is not settled in source.
+  **Approved**: pending
+- **Decision**: The selection-callback bridge is wired only on the normal
+  construction path; an instance decoded from an archive gets no bridge,
+  so its selection callback never fires.
+  **Rationale**: Open issue, not intended behavior: the archive-decoding
+  initializer calls only its superclass and performs no further setup.
+  Either wire the bridge on that path too or document that the component
+  must not be decoded from an archive.
+  **Approved**: pending
 ## Compliance
 
 | Check | Status | Category |

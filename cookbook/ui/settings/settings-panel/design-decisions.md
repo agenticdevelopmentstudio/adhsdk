@@ -28,3 +28,14 @@ Appearance › Min/Max size and Edge Cases › Oversized hosted content
 entries, which point back here rather than repeating this rationale.)
 **Approved**: pending
 
+**Decision**: Carry the sidebar subtitle as an observable optional field on
+the descriptor, beside its title, rather than as a computed property on the
+panel.
+**Rationale**: The descriptor is already where the sidebar reads each row's
+metadata, and the settings panel list already observes it, so a subtitle
+there reaches the row the same way a title change does: the list rebuilds
+its rows when either changes. A computed property on the panel would give
+the list nothing to observe, so a changed subtitle would not show until
+something else rebuilt the rows. Making it optional and none by default keeps
+every existing panel drawing its row as the title alone.
+**Approved**: pending

@@ -37,8 +37,10 @@ a different control type while inheriting everything else — the row layout,
 the theme-driven font/color styling, the edit-completion commit path, and
 the view-model sync. The Secure Text Edit View (documented separately at
 [adhsdk.ingredient.ui.settings.rows.secure-text-edit-view](cookbook:2e0bf51e-905d-476d-9c0c-48465174ba59)) is the
-one variant that exists today, overriding only that construction point to
-return a secure text-entry control. This recipe documents the Text Edit View
+one variant that exists today: it overrides that construction point to
+return a secure text-entry control, and the control-view, editable-fields,
+stored-value-changed and reload hooks to add its revealed field and its copy
+and reveal buttons. This ingredient documents the Text Edit View
 itself: the behavior every row built from it — plain or secure — inherits.
 
 ## Behavioral Requirements
@@ -51,9 +53,9 @@ itself: the behavior every row built from it — plain or secure — inherits.
   construction point as overridable, so a variant (such as a secure
   text-entry row) can substitute a different control type while reusing
   every other behavior unmodified.
-- **arranges-row-layout**: Component MUST arrange the label and its control
-  view in a single horizontal row (label, then control view), and MUST pin
-  that row to the edges of the component. The control view is the text
+- **arranges-row-layout**: Component MUST arrange the label, a flexible
+  spacer and its control view in a single horizontal row (label, spacer,
+  then control view), and MUST pin that row to the edges of the component. The control view is the text
   field unless a variant overrides the overridable control-view point to
   wrap the field with more controls (a secure row adds copy and reveal
   buttons beside it).
@@ -64,20 +66,28 @@ itself: the behavior every row built from it — plain or secure — inherits.
   and refresh on each.
 - **routes-changes-through-hooks**: Component MUST deliver the view model's
   change notification to an overridable stored-value-changed point (whose
-  default sets the text field's value) and a refresh to an overridable
-  reload point (whose default loads every editable field, discarding an
-  edit in progress only when the refresh is forced), so a variant can react
-  to a change of the setting from outside.
+  default sets the text field's value only, not any other editable field a
+  variant adds, so a variant with more fields sets them in its override) and
+  a refresh to an overridable reload point (whose default loads every
+  editable field, discarding an edit in progress only when the refresh is
+  forced), so a variant can react to a change of the setting from outside.
 - **applies-placeholder-to-every-field**: Component MUST, when its
   placeholder is set, put that text on every editable field and style it in
-  the theme's body-role font and placeholder-text color.
+  the theme's body-role font and placeholder-text color at that moment, and
+  again on every later theme change.
 - **expands-text-field-to-fill-row**: Component MUST size the text field so
   it — not the gap between it and the label — takes the width left over
   after the label (see Design Decisions for the specific mechanism and
-  value).
-- **wires-text-field-action**: Component MUST route each editable field's
-  edit-completion signal to its one commit path, so a committed edit reaches the view
+  value). The component sets this sizing on the text field only; a variant
+  whose control view wraps the field gives its wrapping views the same
+  sizing itself.
+- **wires-text-field-action**: Component MUST route the edit-completion
+  signal of every editable field — the text field and any other field a
+  variant adds — to its one commit path, so a committed edit reaches the view
   model's committed value (see Platform Notes for the specific mechanism).
+- **titles-every-field-by-label**: Component MUST, during initialization,
+  set the label as the accessible title of every editable field, so a
+  screen reader announces each field by the row's title.
 - **initializes-from-view-model**: Component MUST, during initialization,
   set the label's text to the view model's title and construct the text
   field with the view model's value as its initial value.
@@ -89,8 +99,10 @@ itself: the behavior every row built from it — plain or secure — inherits.
   committed value when the field's value equals the current committed
   value.
 - **syncs-on-external-change**: Component MUST re-set the label's text to
-  the view model's title and the field's string value to the view model's
-  value whenever the view model's change notification fires.
+  the view model's title whenever the view model's change notification
+  fires, and pass the view model's value to the stored-value-changed point,
+  whose default sets the text field's string value (see
+  routes-changes-through-hooks for the other editable fields).
 - **applies-theme-styling**: Component MUST set the text field's font to the
   theme's body-role font and its text color to the theme's primary-text
   color, both immediately upon construction and again on every subsequent
@@ -100,7 +112,9 @@ itself: the behavior every row built from it — plain or secure — inherits.
   restyle the placeholder in the theme's body-role font and
   placeholder-text color.
 - **exposes-constituent-views**: Component MUST expose its label and its
-  text field as public, directly-accessible, immutable sub-components.
+  text field as public, directly-accessible, immutable sub-components. The
+  editable-fields list and the control view are variant hooks visible only
+  within the component's own module, not part of its public surface.
 - **claims-sole-onchange-observer**: Component MUST assign its own handler
   to the view model's change notification during initialization,
   superseding any handler already registered on that view model instance
@@ -112,11 +126,12 @@ itself: the behavior every row built from it — plain or secure — inherits.
 - **Corner radius**: Not applicable — no custom layer or drawn shape is
   added; the text field keeps whatever corner rendering its default bezel
   style draws, which is the platform's own rendering, not this component's.
-- **Padding**: The row layout inserts a flexible spacer between the label
-  and the text field and uses 8pt of spacing for the label-to-spacer gap;
-  the spacer-to-field gap is explicitly zeroed, so the spacer's own width is
-  the only thing between the label and the field. The text field is sized
-  to absorb the row's leftover width instead of the spacer (see
+- **Padding**: The row is label, flexible spacer, then control view (the
+  text field in the plain row), with 8pt of spacing for the label-to-spacer
+  gap; the spacer-to-control-view gap is explicitly zeroed, so the spacer's
+  own width is the only thing between the label and the control view. The
+  text field carries the low horizontal hugging priority that makes it
+  absorb the row's leftover width instead of the spacer (see
   expands-text-field-to-fill-row). The row is pinned to the component's own
   edges with no additional constant, so the component contributes 0pt of
   outer padding beyond that internal 8pt/0pt spacing.
@@ -148,7 +163,7 @@ itself: the behavior every row built from it — plain or secure — inherits.
 | Default | Label shows the view model's title; the text field's value equals the view model's value, rendered as plain typed characters. |
 | Editing | Not styled by the component — no focus-ring customization is applied; the platform's own default focus indicator applies when the field becomes focused. |
 | Committed | After the field's edit-completion signal fires (on Return and on the field losing focus, per the platform's own default semantics) and the new value differs from the committed value, the new value is written into the committed value. |
-| Placeholder shown | Not applicable unless a caller sets the field's placeholder text directly through the component's exposed text field — the view model carries no placeholder value of its own. When one is set and a later theme change fires, its styling is restyled per restyles-existing-placeholder (see Design Decisions for why the very first, construction-time apply never restyles it). |
+| Placeholder shown | Shown while an editable field is empty, once the caller sets the component's `placeholder` option (the view model carries no placeholder value of its own). Setting it puts the text on every editable field and styles it at once in the theme's placeholder-text color and body-role font; every later theme change restyles it per restyles-existing-placeholder. It is never styled by the construction-time theme apply, which runs before the option can be set (see Design Decisions). |
 | Disabled | Not implemented: the enabled state is never read or set on the label or the text field. A caller may set the text field's enabled state directly through the exposed property, at which point the platform's native disabled dimming applies. |
 | Pressed | Not applicable: a text field has no discrete pressed state distinct from becoming focused and placing the caret; no such state is drawn. |
 | Loading | Not applicable: the component has no asynchronous operation and no loading indicator. |
@@ -158,12 +173,13 @@ itself: the behavior every row built from it — plain or secure — inherits.
 - **Role/trait**: Not customized — no explicit accessibility role is set;
   the text field carries the platform's own built-in text-field
   accessibility role.
-- **Label requirements**: The component never links the text field's
-  accessible name to the label — unlike the sibling checkbox row, which
-  links its switch to its label for exactly this reason ("a bare switch has
-  no name"). Without that link, a screen reader announces the text field as
-  an unnamed text field rather than by the row's title. Because the secure
-  variant inherits this initializer unmodified, the same gap applies there.
+- **Label requirements**: The component sets the label as the accessible
+  title of every editable field (see titles-every-field-by-label), the way
+  the sibling checkbox row links its switch to its label, so a screen
+  reader announces each field by the row's title rather than as an unnamed
+  text field. Because the link is made for every field in the
+  editable-fields list, a variant's added fields (the secure row's revealed
+  field) are titled by the label too.
 - **Announce state changes**: Not applicable — the component has no loading
   state and never disables itself in source (see States); typed characters
   being entered or deleted are announced through the text field's own
@@ -173,7 +189,7 @@ itself: the behavior every row built from it — plain or secure — inherits.
   guidance, not a pointer-interface requirement. No explicit control size is
   set on the text field, so it keeps the platform's regular system
   click-target metrics.
-- **minimum-contrast-ratio**: The component performs no contrast check of its own. The label and the field's typed text both take the theme's primary-text role, and a placeholder takes the theme's placeholder-text role, which the theme layer derives with only a 1.6 minimum contrast (see Design Decisions); contrast is whatever the active theme resolves for those roles.
+- **minimum-contrast-ratio**: The label and the field's typed text take the theme's primary-text role and a placeholder takes the placeholder-text role; the component checks neither, and the placeholder role's contrast floor is recorded in Design Decisions.
 
 ## Conformance Test Vectors
 
@@ -181,7 +197,7 @@ itself: the behavior every row built from it — plain or secure — inherits.
 |----|-------------|-------|----------|
 | text-edit-view-001 | constructs-plain-text-field | Construct with any view model | The text field is constructed with the view model's value as its string value |
 | text-edit-view-002 | supports-text-field-substitution | Define a variant overriding the control-construction extension point to return a secure text-entry control | The variant compiles and constructing it produces a text field of the overridden type, with the row layout, theming, and commit wiring unchanged |
-| text-edit-view-003 | arranges-row-layout | Construct with any view model | The label and the text field are both part of a single row that is pinned to the component's edges; no other layout container appears |
+| text-edit-view-003 | arranges-row-layout | Construct the plain row with any view model | The row's arranged views are the label, a flexible spacer and the text field (the plain row's control view), in that order, in a single row pinned to the component's edges; no other layout container appears |
 | text-edit-view-004 | expands-text-field-to-fill-row | Inspect the text field's sizing behavior relative to the row's spacer after construction | The text field is configured to absorb the row's leftover width, not the spacer (see Design Decisions for the exact mechanism and value) |
 | text-edit-view-005 | wires-text-field-action | Any initialized component | The text field's edit-completion signal is routed to the component itself; invoking it reaches the component's edit-commit handler, which can write to the committed value (see Platform Notes for the specific mechanism) |
 | text-edit-view-006 | initializes-from-view-model | View model's title is "Server Name", value is "prod-1" | After construction, the label's text is "Server Name" and the text field's value is "prod-1" |
@@ -191,8 +207,13 @@ itself: the behavior every row built from it — plain or secure — inherits.
 | text-edit-view-010 | applies-theme-styling | Construct the component, then trigger a theme change | The text field's font equals the theme's body-role font and its text color equals the theme's primary-text color, both immediately after construction and again after the theme change |
 | text-edit-view-011 | restyles-existing-placeholder | After construction, set the field's placeholder text to "Enter value", then trigger a theme change | The placeholder's color equals the theme's placeholder-text color and its font equals the theme's body-role font |
 | text-edit-view-012 | exposes-constituent-views | Construct the component, then access its label and its text field from outside the component | Both properties are accessible and return the same instances built during construction |
+| text-edit-view-013 | edits-through-every-field, wires-text-field-action | Define a variant whose editable-fields list returns two fields; construct it, then trigger each field's edit-completion signal with a new value, and trigger a refresh after changing the stored value | Each field's signal reaches the commit handler and writes its value to the committed value; each field takes the theme's body-role font and primary-text color; the refresh loads the new value into both fields |
+| text-edit-view-014 | routes-changes-through-hooks | Stored value is "Acme"; make the text field first responder and set its value to "Refused name"; change the stored value, then trigger an unforced refresh | The text field still shows "Refused name" (the edit in progress is kept); without an edit in progress, the same refresh shows the new stored value |
+| text-edit-view-015 | routes-changes-through-hooks | Stored value is "Acme"; make the text field first responder and set its value to "Refused name"; trigger a forced refresh (a revert) | The text field shows "Acme" and is no longer being edited |
+| text-edit-view-016 | applies-placeholder-to-every-field | Construct a variant with two editable fields, then set the component's placeholder to "Enter value" | Both fields' placeholder text is "Enter value", styled in the theme's placeholder-text color and body-role font immediately, without a theme change |
 | text-edit-view-017 | claims-sole-onchange-observer | Register an observer callback on the view model's change notification, then construct a component against that same view model | The view model's change notification now points at the component's own handler; invoking it no longer calls the previously registered callback |
 | text-edit-view-018 | confines-to-ui-thread | Use the component from a thread other than the UI thread | The use is rejected, at build time or by a runtime check; the component's state is unchanged |
+| text-edit-view-019 | titles-every-field-by-label | Construct the plain row, and a variant whose editable-fields list returns two fields | Each editable field's accessible title element is the component's label |
 
 ## Edge Cases
 
@@ -224,7 +245,8 @@ itself: the behavior every row built from it — plain or secure — inherits.
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `viewModel` | View model | — (required) | Supplies the row's title and current string value; receives committed edits. The initializer also overwrites this view model's change-notification callback with the component's own sync handler (see Edge Cases). An explanation field the view model may carry is accepted but never read or displayed by this component. |
-| `placeholder` | Optional string | none | Grey hint text shown in every editable field while it is empty, styled in the theme's placeholder color. |
+| `placeholder` | Optional string | none | Hint text shown in every editable field while it is empty, styled in the theme's placeholder-text color. |
+
 ## Deep Linking
 
 Not applicable: the component is a row inside a settings panel, not a
@@ -242,7 +264,7 @@ itself.
 | Option | Behavior |
 |--------|----------|
 | Reduce Motion | Not applicable: the component performs no animation or transition; every state change is an instantaneous property assignment (the label's text, the field's value, the field's font/color). |
-| Increase Contrast | Not applicable to this component directly: it sets no literal color; text/label color comes from the theme's primary-text/placeholder-text roles, whose actual resolved contrast (including the placeholder role's 1.6:1 floor — see Design Decisions and the Accessibility section's Contrast note) is the theme layer's responsibility, not this component's; the text field's bezel/border follow the platform's own default rendering. |
+| Increase Contrast | Not applicable to this component directly: it sets no literal color; text/label color comes from the theme's primary-text/placeholder-text roles, whose actual resolved contrast (including the placeholder role's contrast floor — see Design Decisions) is the theme layer's responsibility, not this component's; the text field's bezel/border follow the platform's own default rendering. |
 | Differentiate Without Color | Not applicable: the field's content is the plain typed text itself; no state in this component is communicated by color alone. |
 
 ## Feature Flags
@@ -289,11 +311,15 @@ Not applicable: the component performs no logging.
   keystroke via the binding setter — with an equality guard before
   assigning, mirroring skips-redundant-commits and the platform's own
   commit points. Give the field an explicit
-  `.accessibilityLabel(viewModel.title)` — the fix this recipe's
-  Accessibility section flags as missing from the AppKit source — and
+  `.accessibilityLabel(viewModel.title)` — the SwiftUI analog of the
+  source's label-to-field title link (titles-every-field-by-label) — and
   drive its font/color from the same semantic theme tokens (`.body`,
   `primaryText`, `placeholderText`) rather than fixed literals, mirroring
-  applies-theme-styling/restyles-existing-placeholder.
+  applies-theme-styling/restyles-existing-placeholder. The subclass hooks
+  (control view, editable-fields list, stored-value-changed and reload)
+  have no SwiftUI counterpart: compose a variant instead, taking the
+  trailing control as a `@ViewBuilder` parameter and reacting to a change
+  of the setting from outside with `.onChange(of:)`.
 - **Compose**: Use a `Row` with `Text(title)` leading and a trailing
   `OutlinedTextField(value = value, onValueChange = { value = it },
   singleLine = true)` backed by local text state. Commit to the backing
@@ -302,12 +328,15 @@ Not applicable: the component performs no logging.
   fires per keystroke — comparing against the previous value before
   writing, mirroring skips-redundant-commits and the platform's own commit
   points. Give it `Modifier.semantics { contentDescription = title }` (the
-  missing accessibility link's Compose analog).
+  Compose analog of titles-every-field-by-label). Compose variants by
+  composition rather than the subclass hooks: take the trailing control as
+  a `@Composable` slot parameter, and react to a change of the setting from
+  outside with `LaunchedEffect(value)`.
 - **React/Web**: A flex row (`display: flex; align-items: center;
   justify-content: space-between`) containing a `<label>` for the title
   and an `<input type="text">` whose `aria-labelledby` points at the
-  title `<label>`'s `id` — the web analog of the accessibility link this
-  recipe flags as missing from the source. Track the typed value locally
+  title `<label>`'s `id` — the web analog of the source's label-to-field
+  title link (titles-every-field-by-label). Track the typed value locally
   and commit the new value to the parent's setter only on the input's
   `blur` handler or Enter via `onKeyDown`, not on every `onChange` call —
   an `<input>` fires `onChange` per keystroke — comparing against the
@@ -315,16 +344,22 @@ Not applicable: the component performs no logging.
   skips-redundant-commits and the platform's own commit points; style the
   input's font/color and any placeholder from theme tokens equivalent to
   `.body`/`primaryText`/`placeholderText`, mirroring applies-theme-styling.
+  Build variants by composition rather than the subclass hooks: pass the
+  trailing control as a `children` or render prop, and react to a change
+  of the setting from outside in a `useEffect` keyed on the value.
 - **AppKit/UIKit** (source platform): Source file
   `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/TextEditView.swift`:
   a macOS-only, `@MainActor` `NSView` subclass inside the
   `ComposableSettings` namespace, `open` to subclassing through its
   `makeTextField(initialValue:)` factory — the mechanism
   `SecureTextEditView.swift` (in the same directory) uses to substitute
-  `NSSecureTextField`. `textField.target` is set to the view itself and
-  `textField.action` to `Selector("textFieldChanged:")`, its private
-  `@objc` handler that performs the commit (see wires-text-field-action).
-  The component is constructed only via `init(viewModel:)`: the
+  `NSSecureTextField`. For every field in `editableFields`, the
+  initializer sets `target` to the view itself and `action` to
+  `#selector(textFieldChanged(_:))`, its module-internal `@objc` handler
+  that performs the commit (see wires-text-field-action), and calls
+  `setAccessibilityTitleUIElement(label)` (see
+  titles-every-field-by-label).
+  The component is constructed only via `init(with:)`: the
   fatal-erroring `init?(coder:)` and the frame-only `init(frame:)` are
   overridden to trap, so a caller cannot construct one without a view
   model. `@MainActor` confines construction and mutation to the main actor
@@ -335,11 +370,9 @@ Not applicable: the component performs no logging.
   `NSView` conformance. The file is macOS-only (`import AppKit`); there is
   no UIKit code path in source. A UIKit port would replace `NSTextField`
   with a `UITextField` and the target/action pattern with
-  `.addTarget(_:action:for: .editingDidEndOnExit)`. Known source bug: the
-  frame-only initializer's fatal-error message string is malformed
-  (`fatalError("init(frame frameRect: NSRect")`, missing its closing
-  parenthesis) — the trap still fires correctly; only the printed message
-  text is wrong.
+  `.addTarget(_:action:for: .editingDidEndOnExit)`. The frame-only and
+  coder initializers trap with "has not been implemented"; the row is built
+  only through `init(with:)`.
 - **WinUI 3**: Build the row as a `Grid` with column definitions `Auto,*`:
   a `TextBlock` for the title in column 0 (`Auto`, sized to its content,
   the WinUI analog of the row's label), and a `TextBox` — the direct
@@ -348,9 +381,8 @@ Not applicable: the component performs no logging.
   `HorizontalAlignment="Stretch"` so the field, not the title, takes the
   leftover width the way expands-text-field-to-fill-row does. Set
   `AutomationProperties.LabeledBy` on the `TextBox` to the `TextBlock` —
-  the WinUI analog of the accessibility link this recipe flags as missing
-  from the AppKit source; add it in the port even though the source itself
-  omits it. Commit on the `TextBox.LostFocus` event (or `KeyDown` on
+  the WinUI analog of the source's label-to-field title link
+  (titles-every-field-by-label). Commit on the `TextBox.LostFocus` event (or `KeyDown` on
   Enter, mirroring the platform's own commit-firing points), writing
   through a property setter that skips the assignment (and so skips
   raising `INotifyPropertyChanged`) when the incoming value already equals
@@ -360,7 +392,10 @@ Not applicable: the component performs no logging.
   rather than hardcoded colors, mirroring
   applies-theme-styling/restyles-existing-placeholder. For a secure
   variant, a `PasswordBox` is the WinUI analog to build against instead,
-  the way the Secure Text Edit View overrides this class's factory.
+  the way the Secure Text Edit View overrides this class's factory. The
+  other subclass hooks map to composition: a `ContentPresenter` in column 1
+  for the control view, and a handler on the view model's
+  `PropertyChanged` event for a change of the setting from outside.
 
 ## Reference Implementations
 
@@ -370,9 +405,10 @@ Not applicable: the component performs no logging.
 
 ## Design Decisions
 
-- **Decision**: Give the text field a horizontal content-hugging priority
-  (AppKit: `NSLayoutConstraint.Priority(1)`) one step below the row
-  spacer's, rather than leaving it at its default hugging.
+- **Decision**: Give the text field itself — not a control view a variant
+  wraps it in — a horizontal content-hugging priority (AppKit:
+  `NSLayoutConstraint.Priority(1)`) below the row spacer's, rather than
+  leaving it at its default hugging.
   **Rationale**: per the source's own inline comment, this is "below the
   row spacer's hugging, so the field — not the gap — takes the width left
   over after the label. An empty field sized to its own content is a few
@@ -398,37 +434,43 @@ Not applicable: the component performs no logging.
   one place regardless of which control type the construction point
   returns. (AppKit source.)
   **Approved**: pending
-- **Decision**: Restyle an existing placeholder only on a theme change that
-  occurs *after* construction, never on the initial apply.
+- **Decision**: Style a placeholder when the `placeholder` option is set
+  and on every later theme change, never on the construction-time apply.
   **Rationale**: the theme-observation mechanism (AppKit:
   `ThemePaletteObserver.init`) applies its closure immediately upon
   registration, which happens inside the initializer before any caller can
-  reach the newly-created text field to set a placeholder — so that first,
-  construction-time apply always finds no placeholder set, and the
-  restyling guard skips it. The placeholder is only ever styled by a later,
-  caller-triggered theme change. This is a non-obvious consequence of
-  initialization order, not a bug being idealized away.
+  set the `placeholder` option — so that first, construction-time apply
+  always finds no placeholder set, and the restyling guard skips it.
+  Setting the option therefore applies the theme to every editable field
+  itself, at once, so the placeholder does not wait for a theme change to
+  be styled.
   **Approved**: pending
-- **Decision**: Accept that placeholder text is guaranteed only a 1.6:1
-  contrast floor against the background.
+- **Decision**: Perform no contrast check in the component, and accept that
+  placeholder text is guaranteed only a 1.6:1 contrast floor against the
+  background; the label and typed text (primary-text role) and the
+  placeholder (placeholder-text role) take whatever the active theme
+  resolves.
   **Rationale**: the theme layer's derivation for the placeholder-text role
   dims the theme's foreground toward its background with `minContrast:
   1.6` — below WCAG 2.1 SC 1.4.3's 4.5:1 floor for normal text. This is a
   theme-layer choice inherited by every themed field, including this one;
-  the component neither sets nor can override it. Recorded here as
-  technical debt affecting accessibility correctness, per source-fidelity's
-  requirement to document such debt rather than idealize it away.
+  the component neither sets nor can override it. Whether a given theme's
+  resolved pairs reach 4.5:1 is not established by this component: closing
+  the gap would take a theme-level audit (or an enforced minimum in the
+  theme layer) of those roles against the backgrounds a settings row sits
+  on, which no source or test does today. Recorded here as technical debt
+  affecting accessibility correctness, per source-fidelity's requirement to
+  document such debt rather than idealize it away.
   **Approved**: pending
-- **Decision**: Whether the component should link the text field's
-  accessible title to the label for a screen reader, the way the sibling
-  checkbox row links its switch's accessibility title (AppKit:
-  `setAccessibilityTitleUIElement(label)`).
-  **Rationale**: Not implemented in source (see Accessibility's Label
-  requirements gap) — the component never links the text field to the
-  label, so a screen reader announces the text field as an unnamed text
-  field rather than by the row's title. Recording the proposal here lets a
-  port choose to copy the gap or fix it, since the Platform Notes already
-  direct every port besides the AppKit source to add the link.
+- **Decision**: Link every editable field's accessible title to the label
+  (AppKit: `setAccessibilityTitleUIElement(label)`), in the same loop that
+  wires each field's commit path, the way the sibling checkbox row links
+  its switch's accessibility title.
+  **Rationale**: a bare text field has no name of its own, so without the
+  link a screen reader announces it as an unnamed text field rather than by
+  the row's title. Making the link per editable field, rather than on the
+  text field alone, titles a variant's added fields (the secure row's
+  revealed field) without the variant repeating it.
   **Approved**: pending
 - **Decision**: Unconditionally overwrite the view model's change
   notification with the component's own handler during initialization,
@@ -440,9 +482,6 @@ Not applicable: the component performs no logging.
   other observer, including the secure variant) per view model instance is
   the supported usage (see **claims-sole-onchange-observer**).
   **Approved**: pending
-- **Decision**: The component performs no contrast check of its own: the label and typed-text colors (primary-text role) and the placeholder color (placeholder-text role, derived with only a 1.6 minimum contrast, below the 4.5:1 body-text threshold) resolve from the active theme at runtime, so whether a given theme's resolved pair reaches the 4.5:1 text threshold is not established by this component.
-  **Rationale**: Contrast is a property of the theme's resolved color pairs, which live outside this component; closing the gap would take a theme-level audit (or an enforced minimum in the theme layer) of those roles against the backgrounds a settings row sits on, which no source or test does today.
-  **Approved**: pending
 
 ## Compliance
 
@@ -451,21 +490,22 @@ Not applicable: the component performs no logging.
 | [adc.check.platform-compliance.native-controls-preference](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d49de883-3811-54ed-b227-c2d807cac551) | passed | Platform Compliance |
 | [adc.check.platform-compliance.platform-design-language](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/cbd07fee-ca18-58a8-bb2f-0f8a6b83ac1c) | passed | Platform Compliance |
 | [adc.check.accessibility.keyboard-navigable](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/56755f54-b31f-59aa-a77d-eeb0cd87731a) | passed | Accessibility |
-| [adc.check.accessibility.screen-reader-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0720ed85-3747-546a-b2ed-6a909f44dd43) | partial | Accessibility |
+| [adc.check.accessibility.screen-reader-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0720ed85-3747-546a-b2ed-6a909f44dd43) | passed | Accessibility |
 | [adc.check.reliability.idempotent-operations](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/b476dbc7-de81-5f6b-8d9e-de6d319e631b) | passed | Reliability |
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
 | [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
 
-`native-controls-preference` and `platform-design-language` rest on
-`textField` being an unmodified `NSTextField` with AppKit's default bezel
-styling; `keyboard-navigable` rests on the field's inherited, unmodified
-`NSControl` tab order (no custom key handling in source); `screen-reader-
-support` is `partial` because the accessibility title link to `label` is
-missing (see Accessibility's Label requirements above); `idempotent-
-operations` rests on skips-redundant-commits's equality check before
-writing to `settingObserver.value`; `separation-of-concerns` rests on the
-view holding no persistence or business logic of its own — commits pass
-straight through to the caller-supplied `settingObserver`.
+`native-controls-preference` and `platform-design-language` rest on the
+text field being the platform's unmodified native text field with its
+default bezel styling; `keyboard-navigable` rests on the field's inherited,
+unmodified native tab order (no custom key handling in source); `screen-
+reader-support` rests on every editable field taking the label as its
+accessible title (see Accessibility's Label requirements above);
+`idempotent-operations` rests on skips-redundant-commits's equality check
+before writing to the view model's committed value; `separation-of-concerns`
+rests on the view holding no persistence or business logic of its own —
+commits pass straight through to the caller-supplied view model's committed
+value.
 
 `unit-test-coverage` is `partial` because `RecordFieldRefreshTests.swift` constructs `TextEditView` rows and asserts that a refresh shows a changed stored value, that a refresh leaves an in-progress edit alone and that a revert discards it, and `ConfigurationContributionPointTests.swift` counts it in the hierarchy; there is no dedicated test file and theming, placeholder restyling and the commit path are not asserted directly.
 

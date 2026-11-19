@@ -24,9 +24,10 @@
   branch only on whether a row is a header or an item, never on whether
   the item is disabled.
 - **mute-disabled-item-appearance**: Component MUST render an item marked
-  disabled using the tertiary text color for both its label text and its
-  icon tint, instead of the primary text color (label) and the accent
-  color (icon tint) used for an enabled item.
+  disabled using the tertiary text color for its label text, its icon
+  tint and its subtitle, instead of the primary text color (label), the
+  accent color (icon tint) and the secondary text color (subtitle) used
+  for an enabled item.
 - **render-item-without-icon-when-nil**: Component MUST render an item row
   whose icon is unset with no image in its image view.
 - **user-selection-callback**: Component MUST invoke the selection
@@ -116,9 +117,11 @@
 - **item-subtitle**: Component MUST draw an item's subtitle, when it has a
   non-empty one, on a second line directly under the item's title, in the
   theme's caption font and the secondary text color, truncating at the
-  tail; an item with no subtitle (none or empty) MUST render exactly as it
-  did before subtitles existed, as a single title line at the standard row
-  height.
+  tail, in a row whose height is the larger of the list's standard row
+  height and the title font's line height plus the caption font's line
+  height plus 4pt above and 4pt below. An item with no subtitle (none or
+  empty) MUST render as a single title line vertically centered in the
+  row, with the subtitle label hidden, at the list's standard row height.
 - **preferred-width-subtitle**: The preferred width MUST count an item's
   subtitle's rendered width in the caption font as a candidate width for
   that item, beside its title's.
@@ -149,5 +152,9 @@
   and every drop while no validator is set MUST be refused.
 - **item-drop-delivery**: An accepted drop MUST call the drop callback once with the
   payload and the target row's item; a refused drop MUST NOT call it.
+- **section-accessibility-id**: Component MUST set a group header row's
+  label accessibility identifier to the identifier its section supplies,
+  and MUST clear it when the section supplies none, on every use of the
+  header row.
 - **confines-to-ui-thread**: The component MUST be usable only on the UI thread.
 

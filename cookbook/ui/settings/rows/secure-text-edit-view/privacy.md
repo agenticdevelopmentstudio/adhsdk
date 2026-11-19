@@ -1,8 +1,11 @@
 
 - **Data collected**: The field's typed value — per the source's own doc
-  comment, typically a secret such as an API key or password — which the
-  platform's secure field masks on screen as it is typed. The component
-  does not otherwise classify or redact this value; it holds it in the
+  comment, typically a secret such as an API key or password. On screen the
+  component masks it as dots, and shows it in plain text only after the
+  person presses the eye, and only until the window resigns key, the app
+  resigns active, the view leaves its window or the setting changes from
+  outside; the shown state is never persisted. Beyond that on-screen
+  masking the component does not classify or redact the value; it holds it in the
   view model's value and passes it through unchanged (see
   privacy ([adhsdk.ingredient.ui.settings.rows.text-edit-view](cookbook:c1787e74-2485-4d7b-a219-feb4c07cf97c)) for
   the storage, transmission, and retention behavior this shares with the
@@ -16,13 +19,10 @@
   for secrets, but none of it is code in this component's own source
   itself.
 - **Transmission**: No networking. The copy button writes the secret to
-  the general pasteboard, where any app and Universal Clipboard can read it;
-  that is the person's explicit act and the component writes it nowhere
-  else.
-- **Exposure on screen**: The secret is shown in plain text only after the
-  person presses the eye, and only until the window resigns key, the app
-  resigns active, the view leaves its window or the setting changes from
-  outside; the shown state is never persisted.
+  the general pasteboard as plain text only, with no concealed or transient
+  marking and no expiry, so any app, clipboard managers and Universal
+  Clipboard can read and keep it (see Design Decisions); that is the
+  person's explicit act and the component writes it nowhere else.
 - **Retention**: Inherited unmodified from the text edit row — the value
   lives only in the field and the view model's value for as long as the
   row is on screen and its view model is retained; see

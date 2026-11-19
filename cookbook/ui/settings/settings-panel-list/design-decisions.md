@@ -35,12 +35,11 @@
   **Approved**: pending
 - **Decision**: Selecting a panel by index never invokes the selection
   callback.
-  **Rationale**: Per the source's own doc comment, "programmatic selection
-  flows through the hosting split view's own selection method" (the
-  comment predates a rename and still names an older type, but the
-  hosting split view is the only caller in source that drives index-based
-  selection), so the callback exists only to report a user-driven row
-  pick, not to echo back a selection the caller itself just made.
+  **Rationale**: Programmatic selection flows through the hosting split
+  view's own selection method, which is the caller in source that drives
+  index-based selection, so the callback exists only to report a
+  user-driven row pick, not to echo back a selection the caller itself
+  just made.
   **Approved**: pending
 - **Decision**: Declare the component `open`, letting a host app subclass
   it to customize row presentation or add secondary actions, rather than
@@ -48,4 +47,28 @@
   **Rationale**: Per the source's own doc comment, "Open so client apps can
   customize row presentation or add secondary actions."
   **Approved**: pending
-
+- **Decision**: Observe only the title and the subtitle of each listed
+  panel's descriptor; leave its icon, disabled flag, section, and heading
+  unobserved, so a change to one of those waits for the next rebuild.
+  **Rationale**: The source documents no reason for observing only these
+  two fields — its comment says only that the rows rebuild when a listed
+  panel's title or subtitle changes. Recorded so the choice is explicit
+  and can be confirmed or widened.
+  **Approved**: pending
+- **Decision**: An out-of-range index (index-based selection, visibility
+  querying) and a row id that is not an integer or is out of range
+  (row-id resolution) fail silently: no log line and no debug assertion.
+  **Rationale**: Each operation guards and returns without logging, and
+  the ancestor's select-by-id documents a no-op for an id it does not
+  hold; the hosting split view also relies on a filtered-out row being a
+  quiet no-op (it asks for visibility first). Whether a debug assertion or
+  log line is wanted is not settled in source.
+  **Approved**: pending
+- **Decision**: The selection-callback bridge is wired only on the normal
+  construction path; an instance decoded from an archive gets no bridge,
+  so its selection callback never fires.
+  **Rationale**: Open issue, not intended behavior: the archive-decoding
+  initializer calls only its superclass and performs no further setup.
+  Either wire the bridge on that path too or document that the component
+  must not be decoded from an archive.
+  **Approved**: pending

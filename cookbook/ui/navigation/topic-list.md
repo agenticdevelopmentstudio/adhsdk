@@ -10,7 +10,7 @@ modified: 2026-11-19
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
-summary: "Domain-agnostic sidebar list: sectioned rows, single selection, optional title/footer/header-accessory, theme-driven repaint, and an accessibility-reachable row label"
+summary: "Domain-agnostic sectioned sidebar list: single selection, badges, subtitles, emphasis, row menus, double-click, drag and drop"
 platforms:
   - swift
   - macos
@@ -18,7 +18,7 @@ tags:
   - sidebar
   - list
   - selection
-  - view-controller
+  - navigation
 depends-on: []
 related:
   - a41760b2-4ffd-413b-970f-c0373c9bd3b6
@@ -38,8 +38,17 @@ section headers, icon-friendly rows, and closure-based selection," and it
 knows nothing about settings, the host app, or any specific data domain. A
 caller supplies rows through a flat-list setter (no section headers) or a
 grouped setter (sections, each optionally titled) and observes the user's
-selection through a selection callback. One concrete consumer subclasses
-this component to back the sidebar of a split view (see `related`).
+selection through a selection callback.
+
+A caller extends the component through closure and provider seams rather
+than by subclassing it: the selection callback, the item-menu and
+header-menu providers, the double-click callback, the drag-payload
+provider, the drop validator and the drop callback, plus the title,
+header accessory and footer setters. A caller that holds an instance and
+sets these gets every behavior here. The component is also open to
+subclassing, and one consumer subclasses it to back the sidebar of a split
+view ([adhsdk.ingredient.ui.settings.settings-panel-list](cookbook:a41760b2-4ffd-413b-970f-c0373c9bd3b6));
+see Design Decisions.
 
 Beyond the list itself, the component owns an optional title header (shown
 above the list, with an optional client accessory view such as a search
@@ -47,7 +56,7 @@ field beneath the title) and an optional client footer view pinned below
 the list - both collapse to zero height when unset. The whole view
 repaints itself on every theme change.
 
-Two distinct "header" concepts are kept separate throughout this recipe:
+Two distinct "header" concepts are kept separate throughout this ingredient:
 the component's own title header (the custom title + accessory area above
 the list) and the list's own built-in column header row, which this
 component always disables. A section's optional title renders as a
@@ -81,9 +90,10 @@ component always disables. A section's optional title renders as a
   branch only on whether a row is a header or an item, never on whether
   the item is disabled.
 - **mute-disabled-item-appearance**: Component MUST render an item marked
-  disabled using the tertiary text color for both its label text and its
-  icon tint, instead of the primary text color (label) and the accent
-  color (icon tint) used for an enabled item.
+  disabled using the tertiary text color for its label text, its icon
+  tint and its subtitle, instead of the primary text color (label), the
+  accent color (icon tint) and the secondary text color (subtitle) used
+  for an enabled item.
 - **render-item-without-icon-when-nil**: Component MUST render an item row
   whose icon is unset with no image in its image view.
 - **user-selection-callback**: Component MUST invoke the selection
@@ -173,9 +183,11 @@ component always disables. A section's optional title renders as a
 - **item-subtitle**: Component MUST draw an item's subtitle, when it has a
   non-empty one, on a second line directly under the item's title, in the
   theme's caption font and the secondary text color, truncating at the
-  tail; an item with no subtitle (none or empty) MUST render exactly as it
-  did before subtitles existed, as a single title line at the standard row
-  height.
+  tail, in a row whose height is the larger of the list's standard row
+  height and the title font's line height plus the caption font's line
+  height plus 4pt above and 4pt below. An item with no subtitle (none or
+  empty) MUST render as a single title line vertically centered in the
+  row, with the subtitle label hidden, at the list's standard row height.
 - **preferred-width-subtitle**: The preferred width MUST count an item's
   subtitle's rendered width in the caption font as a candidate width for
   that item, beside its title's.
@@ -206,6 +218,10 @@ component always disables. A section's optional title renders as a
   and every drop while no validator is set MUST be refused.
 - **item-drop-delivery**: An accepted drop MUST call the drop callback once with the
   payload and the target row's item; a refused drop MUST NOT call it.
+- **section-accessibility-id**: Component MUST set a group header row's
+  label accessibility identifier to the identifier its section supplies,
+  and MUST clear it when the section supplies none, on every use of the
+  header row.
 - **confines-to-ui-thread**: The component MUST be usable only on the UI thread.
 
 ## Appearance
@@ -213,6 +229,12 @@ component always disables. A section's optional title renders as a
 - **Corner radius**: 4pt on the selection-highlight rounded rect drawn
   behind a selected row. No other corner radius appears in this
   component.
+- **Selection highlight**: The rounded rect is the row's bounds inset 2pt
+  horizontally and 1pt vertically, filled with the theme's elevated
+  surface color and stroked with a 1pt line in the theme's outline color,
+  in a key or non-key window alike; a theme that sets a selection-edge
+  color adds a 2pt bar in that color down the rect's leading edge,
+  clipped to its rounded corners.
 - **Padding**: Title header: 10pt top / 6pt bottom inset from the header
   area's edges to its content; 14pt leading and 14pt trailing inset from
   the header area's edges to its content; 8pt vertical gap between the
@@ -220,13 +242,20 @@ component always disables. A section's optional title renders as a
   from the cell to the icon; 6pt gap between icon and label; 4pt trailing
   inset from the label to the cell's trailing edge. Header (group) cell:
   2pt leading inset, vertically centered. Badge: 6pt gap after the item
-  label, 4pt trailing inset to the cell's trailing edge.
+  label, 4pt trailing inset to the cell's trailing edge. Subtitle: no gap
+  between the title's bottom and the subtitle's top; in a subtitled row
+  the title's bottom sits on the row's vertical center line, and the
+  subtitle shares the title's leading edge and 4pt trailing inset.
+- **Row height**: A row without a subtitle uses the list's standard row
+  height. A subtitled row's height is the larger of that standard height
+  and the rounded-up sum of the title font's line height, the caption
+  font's line height, and 4pt of padding above and 4pt below.
 - **Font**: Item labels use the theme's body font (its bold variant for an
   emphasized item); badges use the theme's caption font; group header labels use
   the theme's caption font; an item's subtitle, drawn under its label,
   uses the theme's caption font; the title label uses the theme's button
   font.
-  All three read the live theme palette rather than a fixed point size,
+  All five read the live theme palette rather than a fixed point size,
   and are reapplied on every cell reuse rather than baked in once at cell
   creation.
 - **Background**: The root view, content stack, header view, and footer
@@ -241,7 +270,8 @@ component always disables. A section's optional title renders as a
   Title label: the secondary text color.
 - **Border**: Not set explicitly anywhere in this component; the scroll
   view's border keeps its platform default, no border - no border is
-  drawn around the scroll view.
+  drawn around the scroll view. The only stroke is the selection
+  highlight's 1pt outline.
 - **Shadow**: Not applicable - no shadow is drawn, and no shadow property
   is configured, anywhere in this component.
 - **Min/Max size**: No explicit min/max width or height constraint is
@@ -254,13 +284,16 @@ component always disables. A section's optional title renders as a
 
 | State | Appearance change |
 |-------|------------------|
-| With subtitle | A two-line row: the title, and under it the subtitle in the caption font and secondary text color. Rows without a subtitle are single-line. |
 | Default (unselected, enabled item row) | Item font, primary text color label, accent-color-tinted icon; row background follows the window-background color. |
-| Disabled item row | Item font, tertiary text color label, tertiary-text-color-tinted icon; identical selection/press behavior to an enabled row (see **disabled-item-selectability**). |
-| Selected row | A 4pt-corner-radius rect, inset 2pt horizontally / 1pt vertically, filled with the theme's selection color, drawn behind the row. |
+| Disabled item row | Item font, tertiary text color label, tertiary-text-color-tinted icon, tertiary text color subtitle; identical selection/press behavior to an enabled row (see **disabled-item-selectability**). |
+| Emphasized item row | The label is drawn in the bold variant of the body font; colors are unchanged. |
+| With badge | A trailing label in the caption font and secondary text color, 6pt after the item label and 4pt from the cell's trailing edge; the badge keeps its full width and the item label truncates first. |
+| With subtitle | A two-line row: the title, and under it the subtitle in the caption font and secondary text color. Rows without a subtitle are single-line. |
+| Selected row | A 4pt-corner-radius rect, inset 2pt horizontally / 1pt vertically, filled with the theme's elevated surface color and stroked 1pt in its outline color, drawn behind the row, in a key or non-key window alike. |
 | Group header row | Header font, secondary text color, marked as a group row; not selectable; no disclosure control. |
+| Drop target | The component draws no drop highlight of its own: an item row a drop is offered onto shows the platform list's default drop-on-row feedback. |
 | Pressed | Not applicable: this component defines no visual state distinct from Selected for a row's press - a click or an accessibility press both resolve directly to the same selection action, with no separate transient "pressed" appearance. |
-| Focused | Not applicable beyond the platform's own default keyboard-focus-ring behavior on the list; source sets no custom focus-ring color, width, or override. |
+| Focused | The list's focus ring is turned off, because the platform ring vanishes in a non-key window; the selected row's outline is the focus indication. |
 | Loading | Not applicable: the flat and grouped setters apply their row model synchronously; source defines no async load and no loading/pending indicator. |
 
 ## Accessibility
@@ -273,9 +306,9 @@ component always disables. A section's optional title renders as a
   prefixed for this component - see **item-accessibility-id-from-title**),
   and its accessible name is its own displayed text (the item's title) -
   no separate accessibility-label override is set. A group header's
-  label carries the identifier its section supplies
-  (`TopicListSection.accessibilityIdentifier`), set on every use of the
-  pooled cell and cleared when the section supplies none; title and
+  label carries the identifier its section supplies (see
+  **section-accessibility-id**), set on every use of the pooled cell and
+  cleared when the section supplies none; title and
   footer/accessory views carry no accessibility identifier in this
   component.
 - **Announce state changes**: Not implemented. When the grouped setter
@@ -283,6 +316,17 @@ component always disables. A section's optional title renders as a
   notification informs assistive technology that the visible row set
   changed; a screen-reader user hears nothing until navigating back into
   the list.
+- **Keyboard and assistive-technology paths**: Arrow-key row navigation
+  and keyboard selection are the list's platform defaults, gated by the
+  same selection-gating check as a click; an item row's label answers an
+  accessibility press by selecting its row. Drag and drop has no keyboard
+  or assistive-technology alternative: the component adds no key command
+  or accessibility action that moves a payload onto a row. The row
+  context menu has no keyboard path of its own either: the component adds
+  no key command or accessibility action for it, and because the menu is
+  built for the list's clicked row, opening it with no clicked row yields
+  an empty menu, which is not shown. The double-click callback likewise
+  has no keyboard equivalent.
 - **Minimum tap target**: The list uses its platform's default row-sizing
   style rather than a custom row height, so the row's actual height is
   derived from that default style rather than a literal value this
@@ -307,7 +351,7 @@ component always disables. A section's optional title renders as a
 | topic-list-005 | hide-outline-column-header | Inspect the list after it loads | The list's built-in column header bar is disabled and never drawn |
 | topic-list-006 | header-rows-not-selectable | Click, or send an accessibility press action to, a group header row | The selection-gating check fails; the row does not become selected |
 | topic-list-007 | disabled-item-selectability | An item marked disabled; select it by click | The row becomes selected and the selection callback is invoked with that item, identically to an enabled item |
-| topic-list-008 | mute-disabled-item-appearance | Two items, one marked disabled, one not | The disabled row's label/icon use the tertiary text color; the enabled row's use the primary text color/accent color |
+| topic-list-008 | mute-disabled-item-appearance | Two items, each with a subtitle, one marked disabled, one not | The disabled row's label, icon tint and subtitle use the tertiary text color; the enabled row's use the primary text color, the accent color and the secondary text color |
 | topic-list-009 | render-item-without-icon-when-nil | An item constructed with no icon | Its row's image view holds no image; no placeholder or broken image appears |
 | topic-list-010 | user-selection-callback | User clicks an unselected item row | The selection callback is invoked exactly once with that item |
 | topic-list-011 | suppress-onselect-on-programmatic-selection | Select an item by id for an unselected, present id | The row becomes selected but the selection callback is NOT invoked |
@@ -339,9 +383,11 @@ component always disables. A section's optional title renders as a
 | topic-list-036 | item-drag-payload | Sections `Branches` (`main`, `dev`); a payload provider returning the item's id for `dev` only; ask each row for its drag writer | `dev` writes `dev` as the item type; the header and `main` write nothing; with no provider nothing writes |
 | topic-list-037 | item-drop-validation, item-drop-delivery | The same list, a validator accepting only `dev` onto `main`; drop `dev` and then `x` onto `main`, `dev` onto the header and row 9 | Only `dev` onto `main` is valid, and the callback receives (`dev`, `main`) once |
 | topic-list-038 | item-drop-validation | Inspect the outline after it loads | It is registered for the item pasteboard type |
-| topic-list-039 | item-subtitle | Items `a` (subtitle "OpenAI - GPT - API key") and `b` (no subtitle) | `a`'s row shows the subtitle under its title in the caption font and secondary color; `b`'s row is a single title line at the standard height |
-| topic-list-040 | item-subtitle | An item whose subtitle is "" | The row renders as one with no subtitle |
+| topic-list-039 | item-subtitle | Items `a` (subtitle "Service - API key") and `b` (no subtitle) | `a`'s row shows the subtitle under its title in the caption font and secondary color, truncating at the tail, and is taller than the standard row height; `b`'s row is a single title line at the list's standard row height with its subtitle label hidden |
+| topic-list-040 | item-subtitle | An item whose subtitle is "" | The row is a single title line at the list's standard row height with its subtitle label hidden |
 | topic-list-041 | preferred-width-subtitle | One item, title "A", subtitle wider than the title | The preferred width is computed from the subtitle's width |
+| topic-list-042 | section-accessibility-id | Sections `Branches` (accessibility identifier `refs.branches`) and `Tags` (none), each with one item; render both header rows, then re-render the reused header cell for `Tags` | The `Branches` header label's accessibility identifier is `refs.branches`; the `Tags` header label has no accessibility identifier |
+
 ## Edge Cases
 
 - Null/empty input (MUST): An empty grouped setter call yields an empty
@@ -359,13 +405,7 @@ component always disables. A section's optional title renders as a
   lookup; if two items across sections share an id, only the row for the
   first match in list order is ever selected by this operation - source
   performs no uniqueness validation. Callers SHOULD supply unique ids
-  across all sections passed to one grouped-setter call; this is
-  undocumented in source and left to caller discipline. This SHOULD needs
-  no separate test vector: the behavior described here is a direct,
-  deterministic consequence of the same first-match lookup
-  **select-item-by-id**'s vector (topic-list-012) already exercises, and
-  a second, near-identical vector for the duplicate-id case would not
-  exercise any additional code path.
+  across all sections passed to one grouped-setter call.
 - Concurrent access: Not applicable - the component confines all reads
   and writes of its section list, row cache, and selection-suppression
   counter to a single execution context (see Platform Notes for the exact
@@ -405,6 +445,17 @@ component always disables. A section's optional title renders as a
 | Header menu provider | A function from a section title to an optional menu | none | Builds the context menu for a secondary-clicked section header row; none shows no menu. |
 | Double-click callback | A callback receiving the double-clicked item | none | Invoked with an item row's item when the row is double-clicked; never for a header row. |
 | Header accessory view | An optional view | none | Client view shown directly beneath the title and above the list via the accessory setter, spanning the header's width; unset collapses to nothing. |
+| Drag-payload provider | A function from an item to an optional string | none | Gives the string an item row is dragged with; none, or an unset provider, makes the row not draggable. Header rows never drag. |
+| Drop validator | A function from a payload string and a target item to a yes/no answer | none | Decides whether a dragged payload may be dropped onto an item row; unset, nothing can be dropped. |
+| Drop callback | A callback receiving the dropped payload string and the target item | none | Invoked once for each drop the validator accepted. |
+| Section accessibility identifier | An optional string, per section | none | The accessibility identifier set on the section's group header row label; none leaves the header without one. |
+| Item id | A string, per item | required | The caller's key, matched by selecting an item by id and by restoring the selection after a grouped-setter call. |
+| Item title | A string, per item | required | The row's label text and the source of its accessibility identifier. |
+| Item icon | An optional image, per item | none | Drawn at 16x16pt before the label; none leaves the image view empty. |
+| Item disabled | A yes/no flag, per item | no | Mutes the row's label, icon and subtitle; does not affect selection. |
+| Item badge | An optional string, per item | none | Short trailing text after the label; none or empty shows no badge. |
+| Item emphasized | A yes/no flag, per item | no | Draws the label in the bold variant of the body font. |
+| Item subtitle | An optional string, per item | none | A second line under the title; none or empty draws a single-line row. |
 
 ## Deep Linking
 
@@ -459,10 +510,16 @@ its own selection changes.
 - **Data collected**: None by the component itself - it only renders
   caller-supplied item/section values for display.
 - **Storage**: In-memory only, for the component's lifetime; nothing is
-  written to disk, a settings store, or any other store by this
-  component.
-- **Transmission**: Not applicable - no networking call appears anywhere
-  in source.
+  written to disk or a settings store by this component. The one exception
+  is a drag: dragging an item row writes the string the caller's
+  drag-payload provider returned to the system drag pasteboard, under the
+  component's item pasteboard type. The payload is entirely caller-chosen;
+  with no provider set nothing is written.
+- **Transmission**: No networking call appears anywhere in source. A
+  dragged payload sits on the system drag pasteboard, which is shared
+  across processes rather than private to this component; the component
+  sets drag operations only for drops within the same application and
+  leaves the operations for other applications at the platform default.
 - **Retention**: None beyond the component's lifetime; state is discarded
   when the component is deallocated.
 
@@ -488,7 +545,18 @@ component.
   space), mirroring the zero-height collapse behavior of `isHidden` on a
   `NSStackView` arranged subview. Read the row's rendered text width with
   `(text as NSString).size(withAttributes:)` if a content-driven sidebar
-  width equivalent to **preferred-width** is needed.
+  width equivalent to **preferred-width** is needed. Draw a badge as a
+  trailing `Text` in `.secondary` style after the title (**item-badge**),
+  an emphasized title with `.bold()` (**item-emphasis**), and a subtitle as
+  a second `Text` in `.caption` font and `.secondary` style under the title
+  in a `VStack`, with `.lineLimit(1)` and `.truncationMode(.tail)`
+  (**item-subtitle**). Attach `.contextMenu` to each item row and to each
+  section header (**row-context-menu**), a double-tap gesture or
+  `.onTapGesture(count: 2)` to item rows only (**item-double-click**), and
+  `.draggable` with the caller's payload string to item rows the provider
+  gives one, plus `.dropDestination(for: String.self)` on item rows that
+  asks the validator before calling the drop callback
+  (**item-drag-payload**, **item-drop-validation**, **item-drop-delivery**).
 - **Compose**: Build the outline as a `LazyColumn` with `stickyHeader` items
   for each section whose title is non-nil, and plain items otherwise. Style
   a disabled item's `Text`/`Icon` with `MaterialTheme.colorScheme.onSurfaceVariant`
@@ -503,7 +571,16 @@ component.
   **repaint-on-theme-change**. Compose an optional title/accessory header
   and footer as sibling composables that emit nothing (`if (condition) { … }`)
   when unset, rather than an `AnimatedVisibility` that would animate a
-  collapse this component never animates.
+  collapse this component never animates. Put a badge in a trailing
+  `Text` with `onSurfaceVariant` color, an emphasized title in
+  `FontWeight.Bold`, and a subtitle in a second `Text` styled
+  `MaterialTheme.typography.labelSmall` with `maxLines = 1` and
+  `overflow = TextOverflow.Ellipsis`. Use `Modifier.combinedClickable`
+  with `onLongClick` (or a `DropdownMenu` opened from a secondary-click
+  pointer event) for the item and header menus and `onDoubleClick` for
+  item rows only, and `Modifier.dragAndDropSource` /
+  `Modifier.dragAndDropTarget` on item rows for the drag payload, the drop
+  validator and the drop callback.
 - **React/Web**: Render the sidebar as a `<nav>` containing a single
   `<ul role="listbox">` for the whole list, mirroring **flat-row-hierarchy**'s
   single-outline model - never one `listbox` per section, which would split
@@ -522,10 +599,17 @@ component.
   switch repaints them, mirroring **repaint-on-theme-change**. Collapse an
   unset header/footer with `display: none` (which removes layout space, like
   AppKit's `isHidden` on a stack view's arranged subview) rather than
-  `visibility: hidden`.
-- **AppKit/UIKit** (source platform): Implemented in
-  `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/TopicListViewController.swift`
-  as a `@MainActor`, `open` `NSViewController` that builds its entire view
+  `visibility: hidden`. Render a badge as a trailing `<span>` in the
+  secondary text color, an emphasized title with `font-weight: bold`, and
+  a subtitle as a second line in the caption size with
+  `text-overflow: ellipsis`. Handle `contextmenu` on item and header rows
+  (calling `preventDefault()` and showing the provider's menu, or none),
+  `dblclick` on item rows only, and HTML5 drag and drop: `draggable="true"`
+  with `dataTransfer.setData` on item rows the provider gives a payload,
+  and `dragover`/`drop` handlers on item rows that call `preventDefault()`
+  only when the validator accepts.
+- **AppKit/UIKit** (source platform): Implemented as
+  `TopicListViewController`, a `@MainActor`, `open` `NSViewController` that builds its entire view
   hierarchy by hand in `loadView()` - a single-column `NSOutlineView`
   (`ColumnFillingOutlineView`) inside an `NSScrollView`, stacked with an
   optional title/accessory header and an optional client footer in a
@@ -540,7 +624,17 @@ component.
   to grow the AppKit `.default` row height - well under 44pt - to at least a
   44pt touch target, since UIKit has no keyboard-first,
   `NSOutlineView`-style default row navigation to fall back on for
-  pointer-free selection.
+  pointer-free selection. Drag and drop: the item pasteboard type is
+  `TopicListViewController.itemPasteboardType`
+  (`com.agenticdeveloperhub.topic-list.item`), a string. The outline
+  registers it in `loadView` and allows `.generic` and `.copy` for local
+  drags. A drop is retargeted only by the validator's answer:
+  `validateDrop` takes `NSOutlineViewDropOnItemIndex` drops alone and
+  returns `.generic`. The providers are `dragPayloadProvider`,
+  `dropValidator` and `onDrop`; the list knows nothing of what a payload
+  means. The row menu is the outline's own `menu`, refilled from the
+  item-menu or header-menu provider for the clicked row each time it
+  opens, and a double-click arrives through the outline's `doubleAction`.
 - **WinUI 3**: Build the sidebar as a
   `NavigationView` in `Left`/`LeftCompact` display mode, or - if
   `NavigationView`'s chrome (back button, pane toggle) is unwanted - a plain
@@ -549,8 +643,9 @@ component.
   = true` and a `GroupStyle` whose `HeaderTemplate` renders the section
   title only when it is non-empty (mirroring
   **header-row-for-titled-section**/**omit-header-for-untitled-section** -
-  WinUI's `CollectionViewSource` grouping is the direct analog of
-  `buildRootNodes(from:)`'s header/item interleaving). Bind each
+  WinUI's `CollectionViewSource` grouping is the direct analog of the
+  component's interleaving of header rows and item rows into one flat
+  list). Bind each
   `ListViewItem`'s `IsEnabled` to nothing (leave it `true`) and instead bind
   its `Foreground`/icon `Fill` to a converter that returns a muted
   `SolidColorBrush` when the item's `IsDisabled` is set, mirroring
@@ -576,16 +671,16 @@ component.
   carries the plain title as the item's accessible name, since WinUI's UI
   Automation tree, like AppKit's, exposes the item's own element rather than
   a synthesized row wrapper as the natural place to attach an identifier and
-  a name.
+  a name. Template a badge as a trailing `TextBlock` with the secondary text
+  brush, an emphasized title with `FontWeight="Bold"`, and a subtitle as a
+  second `TextBlock` in the caption style with
+  `TextTrimming="CharacterEllipsis"`. Attach a `ContextFlyout` to item rows
+  and to the group header template, handle `DoubleTapped` on item rows
+  only, and set `CanDragItems="True"` with a `DragItemsStarting` handler
+  that writes the provider's payload (cancelling for an item it declines),
+  plus `AllowDrop` with `DragOver`/`Drop` handlers on item rows that ask the
+  validator before calling the drop callback.
 
-### Drag and drop (macOS)
-
-The item pasteboard type is `TopicListViewController.itemPasteboardType`
-(`com.agenticdeveloperhub.topic-list.item`), a string. The outline registers it in
-`loadView` and allows `.generic` and `.copy` for local drags. A drop is retargeted
-only by the validator's answer: `validateDrop` takes `NSOutlineViewDropOnItemIndex`
-drops alone and returns `.generic`. The providers are `dragPayloadProvider`,
-`dropValidator` and `onDrop`; the list knows nothing of what a payload means.
 ## Reference Implementations
 
 | Platform | Location | Conformance |
@@ -656,6 +751,24 @@ drops alone and returns `.generic`. The providers are `dragPayloadProvider`,
   row is inserted above it. The title is what the row is called on screen,
   which is what someone driving the list actually knows about it.
   **Approved**: pending
+- **Decision**: (AppKit) Offer a drop only onto an item row
+  (`NSOutlineViewDropOnItemIndex`), never between rows or onto a section
+  header, and answer an accepted proposal with `.generic`.
+  **Rationale**: Per the `dropValidator` doc comment, only a drop onto an
+  item row is ever offered; the list attaches no meaning to a payload and
+  has no row reordering, so whether a drop is allowed and what it does are
+  the validator's and the drop callback's, and `.generic` names no copy or
+  move the list would itself perform.
+  **Approved**: pending
+- **Decision**: (AppKit) Declare the class and its setters `open`, so a
+  consumer may subclass it, while every behavior a caller needs is reachable
+  through closures, providers and setters on an instance.
+  **Rationale**: The settings panel list subclasses it to map its own panel
+  model onto sections and translate row selection back to a panel, and is
+  itself `open` so client apps can customize row presentation or add
+  secondary actions; other consumers (the Git refs sidebar) hold an
+  instance and configure it through those seams.
+  **Approved**: pending
 
 ## Compliance
 
@@ -663,18 +776,20 @@ drops alone and returns `.generic`. The providers are `dragPayloadProvider`,
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
 | [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
-| [adc.check.accessibility.keyboard-navigable](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/56755f54-b31f-59aa-a77d-eeb0cd87731a) | passed | Accessibility |
+| [adc.check.accessibility.keyboard-navigable](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/56755f54-b31f-59aa-a77d-eeb0cd87731a) | partial | Accessibility |
 | [adc.check.accessibility.screen-reader-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0720ed85-3747-546a-b2ed-6a909f44dd43) | partial | Accessibility |
 | [adc.check.accessibility.dynamic-type-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f3dbcab7-ac3d-5043-9379-0da07ceaa32b) | partial | Accessibility |
 | [adc.check.accessibility.contrast-ratio](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/a344a531-d87a-5c07-9e1d-747f8105bafa) | partial | Accessibility |
 | [adc.check.platform-compliance.platform-theming](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d2b685fd-b481-5d38-bd70-403bd202b5c6) | passed | Platform Compliance |
 | [adc.check.internationalization.string-externalization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/79990a17-72ea-581d-b216-c50d6419e978) | passed | Internationalization |
 
-Keyboard-navigable passes because `NSOutlineView`'s default arrow-key row
+Keyboard-navigable is partial: `NSOutlineView`'s default arrow-key row
 navigation is never disabled or overridden, and `shouldSelectItem` gates
 keyboard-driven selection the same way it gates a click; every item row's
 accessible name is also its own title text, with a stable, title-derived
-accessibility identifier alongside it. Screen-reader-support is partial:
+accessibility identifier alongside it. But drag and drop, the row context
+menu and the double-click callback have no keyboard path (see **Keyboard
+and assistive-technology paths** under Accessibility). Screen-reader-support is partial:
 labels and an `AXPress` path exist, but no announcement is posted when
 `setSections(_:)` changes the visible row set, and a disabled item is
 distinguished from an enabled one by color alone with no secondary cue (see
@@ -698,7 +813,7 @@ macOS list - not a defect, and not an applicable check for this control (the
 44×44pt/48×48dp threshold does apply to the touch-platform translations
 described in Platform Notes).
 
-Separation-of-concerns is passed: `TopicListViewController` renders sections and rows from `TopicListItemProtocol` values handed to it and reports selection outward, with no domain knowledge of what a topic is or what selecting it does. Unit-test-coverage is partial: `TopicListViewControllerTests.swift` covers preferred-width measurement, badges and emphasis, selection applied before the view loads, the item and header context menus and the double-click callback, but disabled rows, selection gating, accessibility and single-click behavior have no tests.
+Separation-of-concerns is passed: `TopicListViewController` renders sections and rows from `TopicListItemProtocol` values handed to it and reports selection outward, with no domain knowledge of what a topic is or what selecting it does. Unit-test-coverage is partial. `TopicListViewControllerTests.swift` covers preferred-width measurement, badges and emphasis (030, 031), selection applied before the view loads, the item and header context menus and the double-click callback (032-035), and drag payloads, drop validation and delivery, and the outline's pasteboard registration (036-038). `TopicListSubtitleTests.swift` covers the subtitle's drawing, its tertiary color on a disabled item, the single-line row without one, the taller subtitled row, a reused cell dropping its subtitle, and the subtitle's share of the preferred width (039-041). `TopicListSelectionTests.swift` covers the turned-off focus ring and the outlined selection row. Disabled rows' label and icon colors, selection gating, the accessibility press, user-driven selection callbacks, selection restore across a grouped-setter call on a loaded list or across a theme change, theme repaint, and the section accessibility identifier (042) have no tests in these files.
 
 ## Change History
 

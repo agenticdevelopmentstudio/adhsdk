@@ -2,6 +2,12 @@
 - **Corner radius**: 4pt on the selection-highlight rounded rect drawn
   behind a selected row. No other corner radius appears in this
   component.
+- **Selection highlight**: The rounded rect is the row's bounds inset 2pt
+  horizontally and 1pt vertically, filled with the theme's elevated
+  surface color and stroked with a 1pt line in the theme's outline color,
+  in a key or non-key window alike; a theme that sets a selection-edge
+  color adds a 2pt bar in that color down the rect's leading edge,
+  clipped to its rounded corners.
 - **Padding**: Title header: 10pt top / 6pt bottom inset from the header
   area's edges to its content; 14pt leading and 14pt trailing inset from
   the header area's edges to its content; 8pt vertical gap between the
@@ -9,13 +15,20 @@
   from the cell to the icon; 6pt gap between icon and label; 4pt trailing
   inset from the label to the cell's trailing edge. Header (group) cell:
   2pt leading inset, vertically centered. Badge: 6pt gap after the item
-  label, 4pt trailing inset to the cell's trailing edge.
+  label, 4pt trailing inset to the cell's trailing edge. Subtitle: no gap
+  between the title's bottom and the subtitle's top; in a subtitled row
+  the title's bottom sits on the row's vertical center line, and the
+  subtitle shares the title's leading edge and 4pt trailing inset.
+- **Row height**: A row without a subtitle uses the list's standard row
+  height. A subtitled row's height is the larger of that standard height
+  and the rounded-up sum of the title font's line height, the caption
+  font's line height, and 4pt of padding above and 4pt below.
 - **Font**: Item labels use the theme's body font (its bold variant for an
   emphasized item); badges use the theme's caption font; group header labels use
   the theme's caption font; an item's subtitle, drawn under its label,
   uses the theme's caption font; the title label uses the theme's button
   font.
-  All three read the live theme palette rather than a fixed point size,
+  All five read the live theme palette rather than a fixed point size,
   and are reapplied on every cell reuse rather than baked in once at cell
   creation.
 - **Background**: The root view, content stack, header view, and footer
@@ -30,7 +43,8 @@
   Title label: the secondary text color.
 - **Border**: Not set explicitly anywhere in this component; the scroll
   view's border keeps its platform default, no border - no border is
-  drawn around the scroll view.
+  drawn around the scroll view. The only stroke is the selection
+  highlight's 1pt outline.
 - **Shadow**: Not applicable - no shadow is drawn, and no shadow property
   is configured, anywhere in this component.
 - **Min/Max size**: No explicit min/max width or height constraint is

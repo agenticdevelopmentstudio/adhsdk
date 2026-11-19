@@ -6,11 +6,11 @@
   `NSPasteboard.general`, and `eye` / `eye.slash` toggling `isShown`).
   Reset `isShown` in `.onChange(of: scenePhase)`, on
   `NSWindow.didResignKeyNotification` via `.onReceive`, in `.onDisappear`
-  and when the value changes from outside. The binding's setter writes writing the
-  binding's setter back into the underlying setting with an equality guard
-  before assigning, mirroring **skips-redundant-commits**. Give the field an
-  explicit `.accessibilityLabel(viewModel.title)` — the fix this recipe's
-  Accessibility section flags as missing from the AppKit source — and drive
+  and when the value changes from outside. The binding's setter writes back
+  to the setting behind an equality guard before assigning, mirroring
+  **skips-redundant-commits**. Give the field an
+  explicit `.accessibilityLabel(viewModel.title)` — the SwiftUI analog of
+  **titles-fields-with-label** — and drive
   its font/color from the same semantic theme tokens (`.body`, `primaryText`,
   `placeholderText`) rather than fixed literals, mirroring the theme styling
   documented for `TextEditView`.
@@ -28,8 +28,8 @@
   every `onValueChange` call — `onValueChange` fires per keystroke, which
   would otherwise write partial secrets to storage — comparing against the
   previous value before writing, mirroring **skips-redundant-commits**. Give
-  it `Modifier.semantics { contentDescription = title }` (the missing
-  accessibility link's Compose analog).
+  it `Modifier.semantics { contentDescription = title }` (the Compose analog
+  of **titles-fields-with-label**).
 - **React/Web**: A flex row (`display: flex; align-items: center;
   justify-content: space-between`) containing a `<label>` for the title and
   an `<input>` whose `type` is `password` or, while shown, `text`, followed
@@ -37,8 +37,7 @@
   `navigator.clipboard.writeText`, and the eye with `aria-pressed`); reset
   the shown state on `window` `blur`, `visibilitychange` and unmount. The
   input's `aria-labelledby` points at the title
-  `<label>`'s `id` — the web analog of the accessibility link this recipe
-  flags as missing from the source. Commit the new value on the input's
+  `<label>`'s `id` — the web analog of **titles-fields-with-label**. Commit the new value on the input's
   `blur` handler (or Enter via `onKeyDown`), not on every `onChange` call —
   an `<input>` fires `onChange` per keystroke, which would otherwise write
   partial secrets to storage — comparing against the previous value before
@@ -51,43 +50,51 @@
   — a macOS-only, `@MainActor`, `final` subclass of `TextEditView` inside the
   `ComposableSettings` namespace. It overrides
   `makeTextField(initialValue:)` to return the masking field, and adds the
-  two trailing `NSButton`s (borderless, SF Symbols `doc.on.doc`, `eye`,
-  `eye.slash`). AppKit has no reveal mode on `NSSecureTextField`, so
+  two trailing `NSButton`s (borderless, SF Symbols `doc.on.doc` for copy,
+  and `eye` while obscured and `eye.slash` while shown for the reveal and
+  conceal glyphs). AppKit has no reveal mode on `NSSecureTextField`, so
   showing swaps in a plain `NSTextField` holding the same string, keeping
-  first responder. Copy writes `NSPasteboard.general` with `.string`.
+  first responder. Copy writes the view's `pasteboard` property, which
+  defaults to `NSPasteboard.general` (tests inject a private one), with
+  `.string` only. `TextEditView.init` calls
+  `setAccessibilityTitleUIElement(label)` on every field in
+  `editableFields`, which this view overrides to `[textField, revealField]`,
+  so both the secure field and the reveal field are titled by the label.
   Re-obscuring observes `NSWindow.didResignKeyNotification` for its window
   (re-registered in `viewDidMoveToWindow`, which also obscures when the
   window becomes nil) and `NSApplication.didResignActiveNotification`, and
   the inherited `viewModel.onChange` sync obscures before it sets the new
-  value. The AI Providers editor is SwiftUI, so it hosts this view through
-  `NSViewRepresentable` or moves its field rows to the ComposableSettings
-  views. `final` is what forecloses further specialization (the
-  requirement this recipe's Behavioral Requirements section defers to this
+  value only when that value differs from the text the row shows, so the
+  row's own commit leaves it shown. The AI Providers editor is AppKit and
+  built from the ComposableSettings row views: it constructs a
+  `SecureTextEditView` directly for each secret field. `final` is what
+  forecloses further specialization (the
+  requirement this ingredient's Behavioral Requirements section defers to this
   entry): it makes `SecureTextEditView` the terminal specialization of
   `TextEditView` for masked entry, so the compiler rejects any attempt to
-  declare a further subclass of it. The override requires `class func` (not
-  `static`) because it overrides `TextEditView`'s `open class func
-  makeTextField`, which trips SwiftLint's `static_over_final_class` rule
-  (see Design Decisions). `TextEditView.swift`
+  declare a further subclass of it. Because the class is `final`, the
+  override of `TextEditView`'s `open class func makeTextField` is declared
+  `override static func`. `TextEditView.swift`
   ([adhsdk.ingredient.ui.settings.rows.text-edit-view](cookbook:c1787e74-2485-4d7b-a219-feb4c07cf97c)) supplies everything else — row
   layout, content-hugging, the `textFieldChanged(_:)` target/action commit
   path, `observeTheme` styling, and `viewModel.onChange` sync — and is out of
-  this recipe's scope. There is no UIKit code path in source; a UIKit port
+  this ingredient's scope. There is no UIKit code path in source; a UIKit port
   would replace `NSSecureTextField` with a `UITextField` configured
   `isSecureTextEntry = true`, and would enforce "no further subclassing" (if
   desired) with a `final` class declaration, UIKit's own equivalent
   mechanism.
-- **WinUI 3** (the reason this recipe exists): Build the row as a `Grid`
-  with column definitions `Auto,*`: a `TextBlock` for the title in column 0
-  and a `PasswordBox` — WinUI's own dot-masking control and the direct
-  analog of `NSSecureTextField` — in column 1, `HorizontalAlignment="Stretch"`
-  so the `*` column's leftover width goes to the field rather than the
-  title (add an `Auto` column holding a copy `Button` with a `SymbolIcon`
-  `Copy` writing `Clipboard.SetContent`), the WinUI analog of `expands-text-field-to-fill-row`. Set
+- **WinUI 3** (the reason this ingredient exists): Build the row as a `Grid`
+  with column definitions `Auto,*,Auto,Auto`, one column each: a `TextBlock`
+  for the title in column 0; a `PasswordBox` — WinUI's own dot-masking
+  control and the direct analog of `NSSecureTextField` — in column 1,
+  `HorizontalAlignment="Stretch"` so the `*` column's leftover width goes to
+  the field rather than the title, the WinUI analog of
+  `expands-text-field-to-fill-row`; a copy `Button` with a `SymbolIcon`
+  `Copy` writing `Clipboard.SetContent` in column 2; and the eye
+  `ToggleButton` (below) in column 3. Set
   `AutomationProperties.LabeledBy` on the `PasswordBox` to the `TextBlock` —
-  the WinUI analog of the `setAccessibilityTitleUIElement` link this recipe
-  flags as missing from the AppKit source; add it in the port even though
-  the source itself omits it. Commit on the `PasswordBox`'s `LostFocus`
+  the WinUI analog of the AppKit source's `setAccessibilityTitleUIElement`
+  link (**titles-fields-with-label**). Commit on the `PasswordBox`'s `LostFocus`
   event (or Enter), not on every `PasswordChanged` event — `PasswordChanged`
   fires per keystroke, which would otherwise write partial secrets to
   storage (the keychain, in the typical setup) — writing through a property

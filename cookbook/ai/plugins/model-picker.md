@@ -2,7 +2,7 @@
 id: b3059939-21f5-414b-82e4-edd11b192ae8
 title: "Model Picker"
 type: ingredient
-version: 1.0.1
+version: 1.1.0
 status: review
 language: en
 created: 2026-11-19
@@ -25,6 +25,7 @@ depends-on:
   - 5069f11f-e0c6-40c3-92ca-6152b8df3bc2
 related:
   - e886e448-6aa5-4359-979d-49fba713ab2a
+  - c9385bf6-3abc-486b-82b5-d57a62d86735
 references: []
 approved-by: ""
 approved-date: ""
@@ -35,7 +36,7 @@ approved-date: ""
 ## Overview
 
 The model picker is how a person chooses one provider configuration's model
-anywhere the Kitchen or Stenographer configures AI: the AI Providers panel's
+anywhere a host app configures AI: the AI Providers panel's
 default model, the Coding Partner, AI Summaries, AI Oversight, the Sessions
 window and the AI chat window. It is one component in two parts:
 
@@ -63,7 +64,7 @@ catalog's and the facets' business
 [adhsdk.ingredient.ai.models.model-use-facet](cookbook:f628f7f9-9c7b-4820-a4bf-231312a74839)); the
 large-model tiers are the fit policy's
 ([adhsdk.ingredient.ai.models.local.model-fit-policy](cookbook:5069f11f-e0c6-40c3-92ca-6152b8df3bc2)). This
-recipe covers the presentation, the choosing rules and the control.
+ingredient covers the presentation, the choosing rules and the control.
 
 ## Behavioral Requirements
 
@@ -74,13 +75,10 @@ recipe covers the presentation, the choosing rules and the control.
   choice callback. It MUST NOT be presented in a window of its own, and it
   MUST have no OK or Cancel button.
 - **transient-popover**: The entry point MUST show the chooser in a transient
-  popover pointing at the given anchor view, opening above the anchor
-  (preferring the anchor's top edge) or below it when there is no room above.
+  popover pointing at the given anchor view, on the anchor's bottom edge
+  (below the anchor, whichever way its coordinates run).
 - **fixed-content-size**: The popover MUST open at the chooser's fixed
-  content size (720 by 450 points), set on the chooser's root view and its
-  preferred content size and on the popover after its content is assigned;
-  nothing inside the chooser pins a height, so a popover left to the view's
-  fitting size would show only the filter row.
+  content size, 720 by 450 points, not at the chooser's fitting size.
 - **one-chooser-at-a-time**: Presenting the chooser while one is already shown
   MUST close the shown one first, so at most one chooser is open.
 - **search-field-focus**: When the popover opens, the chooser's search field
@@ -92,10 +90,12 @@ recipe covers the presentation, the choosing rules and the control.
 
 ### Choosing
 
-- **select-chooses-and-stays-open**: A selection the person makes (a click on
-  a row, or an arrow key moving the selection from the search field) MUST
-  choose that row's model at once, calling the choice callback, and MUST leave
-  the popover open, so the detail pane and the choice can be compared.
+- **select-chooses-and-stays-open**: A click on a row MUST choose that row's
+  model at once, calling the choice callback, and MUST leave the popover
+  open, so the detail pane and the choice can be compared.
+- **arrow-moves-only**: An arrow key in the search field MUST move the
+  selection (and the detail pane with it) without choosing; Return then
+  chooses the selected row.
 - **return-chooses-and-closes**: Return in the search field, or a double-click
   on a row, MUST choose the selected row's model and close the popover.
 - **escape-or-outside-closes**: Escape, or a click outside the popover, MUST
@@ -104,15 +104,17 @@ recipe covers the presentation, the choosing rules and the control.
 - **chooses-only-visible-rows**: Return MUST choose nothing when the current
   filter leaves no row visible; it MUST NOT choose a row an earlier keystroke
   selected and the filter has since hidden.
-- **no-repeat-choice**: Selecting the row already chosen MUST NOT call the
-  choice callback again.
+- **repeat-choice-reported**: A click, Return or double-click on the row
+  already chosen MUST call the choice callback again with the same value;
+  the chooser does not filter repeats.
 - **alias-kept-when-unchanged**: Choosing the row the context's stored model
   resolves to (a stored alias such as `fast` opens on the model it runs
   today) MUST report the stored value, not the resolved model, so the alias
   keeps following the newest model of its family.
 - **large-model-confirmation**: Choosing a model whose memory fit is in the
-  warn tier MUST first show one confirmation (a sheet on the popover's window,
-  or an inline confirmation in the popover) and MUST call the choice callback
+  warn tier MUST first show one app-modal confirmation alert, with the
+  popover's dismissal on outside clicks suspended until it is answered, and
+  MUST call the choice callback
   only when the person confirms. Declining MUST leave the previously chosen
   model chosen and the popover open. A block-tier model MUST stay choosable
   with no confirmation; its fit line already says it will not run.
@@ -129,10 +131,12 @@ recipe covers the presentation, the choosing rules and the control.
   settable by the caller.
 - **control-name-text**: The name button MUST show the name the display-name
   closure returns, and "Choose a Model" when that closure returns none or an
-  empty string. A model id the context's provider model manager knows MUST be
-  shown by its display name (an alias resolved to its id, then given the
-  manager's display name for it); an id the manager does not know is shown
-  unchanged.
+  empty string. When the context closure returns a context, the name MUST be
+  passed through that context's display-name lookup (the context resolves an
+  alias to its id and returns the display name it has for it, or the id
+  unchanged when it has none); the control does no lookup of its own.
+- **control-name-truncates-middle**: A name too long for the row MUST be
+  truncated in the middle, so its start and end stay readable.
 - **control-opens-chooser**: Clicking the caret or the name button MUST
   present the chooser through its one entry point, anchored to the caret,
   with the context the context closure returns at that moment.
@@ -171,9 +175,8 @@ recipe covers the presentation, the choosing rules and the control.
   tier.
 - **Border**: None on the control's buttons (both borderless).
 - **Shadow**: The popover's own; none of the component's.
-- **Min/Max size**: The popover has a fixed content size large enough for the
-  list and a readable detail pane; the list keeps its width and the detail
-  pane takes the rest.
+- **Min/Max size**: The popover has a fixed content size of 720×450 points;
+  the list keeps its width and the detail pane takes the rest.
 
 ## States
 
@@ -192,16 +195,18 @@ recipe covers the presentation, the choosing rules and the control.
 
 - **Role/trait**: The caret and the name are buttons; the label is static text.
   The chooser's list is a table and its search field a search field.
-- **Label requirements**: The caret button's accessibility label MUST be the
-  control's label followed by "model chooser" (it shows only a symbol), and
-  the name button's MUST be the label and the shown name, so a screen reader
-  announces "AI Model, acme-fast-2" rather than a bare model id.
+- **Label requirements**: The caret button's symbol MUST carry the
+  accessibility description "Choose a model" (it shows only a symbol), and
+  the name button MUST use the control's label as its accessibility title
+  element, so a screen reader reads the shown name with the label as its
+  title rather than a bare model id.
 - **Announce state changes**: Opening the popover moves focus to the search
   field, which the platform announces; a chosen model updates the name
-  button's label, which the platform reports as a value change.
+  button's title, which the platform reports.
 - **Minimum tap target**: Pointer-driven controls on macOS; the 44×44pt
-  minimum is touch guidance. The caret button is at least the size of a
-  small borderless symbol button.
+  minimum is touch guidance. The caret is a borderless, inline-bezel symbol
+  button at the platform's regular control size (the control sets no smaller
+  size).
 - **Contrast**: Colors come from theme roles (primary and secondary text,
   accent, warning, danger); whether a theme's resolved values clear 4.5:1 is
   the theme's property, not this component's.
@@ -218,7 +223,7 @@ from the search field, Return chooses and closes, and Escape closes.
 | model-picker-002 | search-field-focus | Present the chooser | The search field is first responder |
 | model-picker-003 | opens-on-current-model | Context current model `fast`, which resolves to `acme-fast-2` | The `acme-fast-2` row is selected; the choice callback has not been called |
 | model-picker-004 | select-chooses-and-stays-open | Open with `m1` current; click the `m2` row | The choice callback is called once with `m2`; the popover is still shown |
-| model-picker-005 | return-chooses-and-closes | Open; arrow down to `m3`; press Return | The callback receives `m3` (once for the arrow move, not again for Return); the popover is closed |
+| model-picker-005 | arrow-moves-only, return-chooses-and-closes | Open; arrow down to `m3`; press Return | The arrow move calls nothing; the callback receives `m3` once, for Return; the popover is closed |
 | model-picker-006 | escape-or-outside-closes | Open with `m1` current; press Escape | The popover is closed; the callback was never called |
 | model-picker-007 | chooses-only-visible-rows | Type a query matching no model; press Return | The callback is not called |
 | model-picker-008 | alias-kept-when-unchanged | Context current model `fast`; select another row, then double-click the `acme-fast-2` row | The last value the callback receives is `fast` |
@@ -230,6 +235,15 @@ from the search field, Return chooses and closes, and Escape closes.
 | model-picker-014 | control-disabled-without-context | Context closure returns none; click the caret | Both buttons are disabled; nothing is presented |
 | model-picker-015 | one-chooser-at-a-time | Present for control A, then present for control B | Only B's popover is shown |
 | model-picker-016 | confines-to-ui-thread | Use the component from a thread other than the UI thread | The use is rejected, at build time or by a runtime check; the component's state is unchanged |
+| model-picker-017 | fixed-content-size | Present the chooser | The popover's content size is 720×450 points |
+| model-picker-018 | live-list-refresh | Open with `m1` selected; the live list arrives with `m1` and a new `m4` | The `m4` row is listed; `m1` stays selected; the callback is not called |
+| model-picker-019 | live-list-refresh | Context current model `fast`; the live list arrives in which `fast` resolves to `acme-fast-3` | The `acme-fast-3` row is selected; the callback is not called |
+| model-picker-020 | control-refresh | The display-name closure starts returning "Model Two" and the context closure starts returning none; refresh the control | The name button reads "Model Two"; both buttons are disabled |
+| model-picker-021 | control-no-globals | Build the control from a display-name closure, a context closure over a stub context and a recording choice closure, with no settings or plugin manager supplied; choose `m2` | The control shows the stub's name, opens on the stub context and reports `m2` to the recording closure |
+| model-picker-022 | escape-or-outside-closes | Open with `m1` current; click outside the popover | The popover is closed; the callback was never called |
+| model-picker-023 | return-chooses-and-closes | Open; double-click the `m3` row | The callback receives `m3`; the popover is closed |
+| model-picker-024 | control-name-truncates-middle | The display-name closure returns a name wider than the row | The name button shows the name's start and end with an ellipsis between them |
+| model-picker-025 | repeat-choice-reported | Open; click the `m2` row, then click the `m2` row again | The callback is called twice, each time with `m2` |
 
 ## Edge Cases
 
@@ -241,10 +255,12 @@ from the search field, Return chooses and closes, and Escape closes.
   stays selected, and the arrival does not call the choice callback.
 - The anchor view leaves its window while the popover is open (its settings
   panel is switched away): the popover closes.
-- The person closes the popover while the large-model confirmation is up:
-  the confirmation is dismissed as declined.
-- A very long model name: the name button truncates in the middle and keeps
-  the full name in its tooltip and accessibility label.
+- The person clicks outside the popover while the large-model confirmation
+  is up: the confirmation is app-modal and the popover's outside-click
+  dismissal is suspended, so the popover stays open until the confirmation
+  is answered.
+- A very long model name: the name button truncates in the middle
+  (**control-name-truncates-middle**).
 
 ## Configuration
 
@@ -269,11 +285,14 @@ a navigable screen, and has no route of its own.
 |-----------|-------------|---------|
 | (none — hardcoded literal) | `AI Model` | The control's default label |
 | (none — hardcoded literal) | `Choose a Model` | The control's name when no model is shown |
+| (none — hardcoded literal) | `Choose a model` | The caret symbol's accessibility description |
+| (none — hardcoded literal) | `Good for` | The use filter's label |
 | (none — hardcoded literal) | `Filter models` | The search field's placeholder |
 | (none — hardcoded literal) | `Fits this Mac` | The fit filter's title |
 | (none — hardcoded literal) | `All versions` | The all-versions toggle's title |
 | (none — hardcoded literal) | `Large model` | The large-model confirmation's title |
 | (none — hardcoded literal) | `Use Model` | The large-model confirmation's accept button |
+| (none — hardcoded literal) | `Cancel` | The large-model confirmation's decline button |
 
 ## Accessibility Options
 
@@ -316,20 +335,22 @@ calls own their logging.
 
 - **SwiftUI**: A `Button` with a `chevron.down` `Image` and a `.link`-styled
   name button in an `HStack`, with `.popover(isPresented:arrowEdge:)` attached
-  to the caret. The popover's content is a `NavigationSplitView`-free `HStack`
+  to the caret. The popover's content is an `HStack` (not a
+  `NavigationSplitView`)
   of a `List(selection:)` with `.searchable` and a detail `ScrollView`;
-  `.onChange(of: selection)` calls the choice closure for user changes,
-  `.onSubmit` chooses and dismisses, and `@FocusState` gives the search
-  field focus on appear. Guard against the initial selection firing the
-  closure.
+  a row's tap gesture calls the choice closure, `.onChange(of: selection)`
+  only updates the detail (so arrow moves never choose), `.onSubmit`
+  chooses and dismisses, and `@FocusState` gives the search field focus on
+  appear.
 - **Compose**: A `Row` of a `Text` label, an `IconButton` with
   `Icons.Default.KeyboardArrowDown` and a `TextButton` name; the chooser in a
   `Popup` (or `DropdownMenu` for a narrow one) anchored to the icon button,
   holding a `TextField` with a `FocusRequester` requested on open and a
   `LazyColumn` whose row `clickable` chooses. `onDismissRequest` handles
   Escape and outside taps; Enter is an `onKeyEvent` on the field.
-- **React/Web**: A `<span>` label, a `<button aria-label="AI Model model
-  chooser">` caret and a link-styled `<button>` name; the chooser is a
+- **React/Web**: A `<span>` label, a `<button aria-label="Choose a
+  model">` caret and a link-styled `<button>` name whose `aria-labelledby`
+  names the label and itself; the chooser is a
   popover (`popover` attribute or a positioned dialog) anchored to the caret,
   with an `<input type="search" autofocus>` and a `role="listbox"` list whose
   `onClick` chooses. Escape and outside clicks close it (`popover="auto"`
@@ -339,12 +360,18 @@ calls own their logging.
   `ModelChooserViewController.swift` holds `ModelChooserContext`, the
   `NSViewController` and the `ModelChooser.present(relativeTo:context:onChoose:)`
   entry point, which shows it in an `NSPopover` with `behavior = .transient`
-  and `preferredEdge` `.maxY` (falling back to `.minY`); the old app-modal
-  window, its frame persistence and the OK/Cancel buttons are removed.
+  and `preferredEdge` `view.isFlipped ? .maxY : .minY`, the anchor's bottom
+  edge either way (below the anchor). The 720×450 content
+  size is set three times: as the root view's frame in `loadView` and as
+  `preferredContentSize` (nothing inside pins a height, so the fitting size
+  would be just the filter row), and as the popover's `contentSize` after
+  `contentViewController` is assigned, since assigning it resizes the popover.
   `PickerKeyboardController` maps the search field's `moveUp:`/`moveDown:`,
   `insertNewline:` and `cancelOperation:` commands. The large-model
-  confirmation is an `NSAlert` begun as a sheet on the popover's window
-  (`beginSheetModal(for:)`), never `runModal()`. `AIModelPickerControl.swift`
+  confirmation is an `NSAlert` run with `runModal()` while the presenter
+  switches the popover's `behavior` to `.applicationDefined`, so the alert
+  taking the key window does not close the transient popover; the behavior
+  is restored when the alert returns. `AIModelPickerControl.swift`
   is the `NSView` row: an `NSTextField` label, a borderless `NSButton` with
   `NSImage(systemSymbolName: "chevron.down")`, a colon label and a
   borderless name button styled as a link; its inputs are
@@ -353,27 +380,28 @@ calls own their logging.
   Choose Model… opens the same popover. A UIKit port would use
   `UIPopoverPresentationController` with `sourceView` set to the caret.
 - **WinUI 3**: The control is a horizontal `StackPanel` of a `TextBlock`, a
-  `Button` styled `{StaticResource AlternateCloseButtonStyle}`-like with a
+  `Button` with a transparent background and no border (a subtle button
+  style) holding a
   `FontIcon Glyph="&#xE70D;"` (ChevronDown) and a `HyperlinkButton` for the
-  name. The chooser is a `Flyout` (`Placement="Top"`, falling back to
-  `Bottom` through `FlyoutPlacementMode.Auto`) attached to the caret
+  name. The chooser is a `Flyout` (`Placement="Bottom"`, below the anchor)
+  attached to the caret
   (`FlyoutBase.ShowAttachedFlyout`), holding a `Grid` with an
   `AutoSuggestBox` or `TextBox` over a `ListView`
-  (`SelectionMode="Single"`, `SelectionChanged` choosing only when
-  `e.AddedItems` came from user input) beside a `ScrollViewer` detail. Focus
+  (`SelectionMode="Single"`, `IsItemClickEnabled="True"`, `ItemClick`
+  choosing and `SelectionChanged` only updating the detail) beside a `ScrollViewer` detail. Focus
   the box in the flyout's `Opened` handler with `Focus(FocusState.Programmatic)`;
   `KeyDown` Enter chooses and calls `Hide()`; light dismiss handles Escape and
   outside clicks. The large-model confirmation is a `ContentDialog` with
   `XamlRoot` set to the flyout's. Set
-  `AutomationProperties.Name` on the chevron button to "<label> model
-  chooser".
+  `AutomationProperties.Name` on the chevron button to "Choose a model",
+  and `AutomationProperties.LabeledBy` on the name button to the label.
 
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIPlugins/Settings/ModelChooserViewController.swift` | confirmed (1.0.1) |
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIPlugins/Settings/AIModelPickerControl.swift` | confirmed (1.0.1) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIPlugins/Settings/ModelChooserViewController.swift` | confirmed (1.1.0) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIPlugins/Settings/AIModelPickerControl.swift` | confirmed (1.1.0) |
 
 ## Design Decisions
 
@@ -382,7 +410,8 @@ calls own their logging.
   window.
   **Rationale**: A modal window took the whole app for a one-field choice and
   hid the setting it changed; a popover keeps the row in view and closes on
-  Escape or a click outside, the platform's own way to dismiss a picker.
+  Escape or a click outside, the platform's own way to dismiss a picker. The
+  modal window's frame persistence and its OK and Cancel buttons went with it.
   **Approved**: pending
 - **Decision**: A click on a row chooses at once and the popover stays open;
   Return or a double-click chooses and closes.
@@ -408,24 +437,25 @@ calls own their logging.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [adc.check.platform-compliance.native-controls-preference](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d49de883-3811-54ed-b227-c2d807cac551) | passed | platform-compliance |
-| [adc.check.accessibility.keyboard-navigable](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/56755f54-b31f-59aa-a77d-eeb0cd87731a) | passed | accessibility |
-| [adc.check.accessibility.screen-reader-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0720ed85-3747-546a-b2ed-6a909f44dd43) | passed | accessibility |
-| [adc.check.accessibility.focus-management](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/eec52703-a32a-5dee-b763-59a3bac826ea) | passed | accessibility |
-| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | failed | best-practices |
-| [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | failed | internationalization |
+| [adc.check.platform-compliance.native-controls-preference](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d49de883-3811-54ed-b227-c2d807cac551) | passed | Platform Compliance |
+| [adc.check.accessibility.keyboard-navigable](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/56755f54-b31f-59aa-a77d-eeb0cd87731a) | passed | Accessibility |
+| [adc.check.accessibility.screen-reader-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0720ed85-3747-546a-b2ed-6a909f44dd43) | passed | Accessibility |
+| [adc.check.accessibility.focus-management](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/eec52703-a32a-5dee-b763-59a3bac826ea) | passed | Accessibility |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | failed | Best Practices |
+| [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | failed | Internationalization |
 
 `native-controls-preference` rests on `NSPopover`, `NSSearchField`,
 `NSTableView` and borderless `NSButton`s; `keyboard-navigable` and
 `focus-management` on **search-field-focus**, the arrow, Return and Escape
 paths and the control's two tab stops; `screen-reader-support` on the
-caret's and the name's accessibility labels. `separation-of-concerns`
+caret's accessibility description and the name's title element. `separation-of-concerns`
 passes because the control holds no storage (**control-no-globals**) and the
 chooser reports choices through a callback. `unit-test-coverage` is `failed`
 until the choosing rules (**select-chooses-and-stays-open**,
 **alias-kept-when-unchanged**, **large-model-confirmation**) and the
-control's name and enabled rules have tests; the code is planned.
+control's name and enabled rules have tests; the code exists, and those
+tests are what is missing.
 `no-hardcoded-strings` fails because the strings under Localization are
 English literals.
 
@@ -433,5 +463,6 @@ English literals.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.0 | 2026-11-19 | Mike Fullerton | Lint pass: arrow keys move without choosing, repeat choices are reported, popover opens below the caret, accessibility names match the code, more vectors |
 | 1.0.1 | 2026-11-19 | Mike Fullerton | Fixed popover content size; the name shows a known id by its display name |
 | 1.0.0 | 2026-11-19 | Mike Fullerton | Initial creation, ahead of the code: the popover chooser and the AI model picker control |

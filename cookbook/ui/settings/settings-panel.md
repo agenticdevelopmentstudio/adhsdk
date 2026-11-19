@@ -34,8 +34,10 @@ approved-date: ""
 
 The Settings Panel is the base type every settings panel is built from. One
 instance is hosted in the right-hand detail pane of a settings split view,
-and the sidebar's list-item metadata lives on the panel itself, via its
-descriptor — "the panel *is* the list item — no wrapper struct." Its content
+and the sidebar's list-item metadata (title, an optional subtitle shown as a
+second line, icon, disabled flag, section and heading) lives on the panel
+itself, via its descriptor: the panel is the list item, with no separate
+wrapper type. Its content
 view is a panel view instance this type owns and constructs, exposed as its
 own view. It conforms to a settings-panel role, redeclaring that role's
 help-content, effective-help-content, hosts-own-scroll, and search-keywords
@@ -49,13 +51,17 @@ in.
 
 ## Behavioral Requirements
 
-- **descriptor**: Component MUST expose a public, immutable descriptor,
-  set once at construction, supplying the sidebar's title/icon/isDisabled/
-  section metadata for this panel.
-- **descriptor-subtitle**: The descriptor MUST carry an observable,
-  optional subtitle, none by default, beside its observable title, icon,
-  disabled flag, section and heading; a panel MAY set or change it at any
-  time, and observers of the descriptor MUST be told when it changes.
+- **descriptor**: Component MUST expose a public descriptor, set once at
+  construction and never replaced, supplying the sidebar's metadata for
+  this panel: title, subtitle, icon, disabled flag, section and heading.
+  Each of those fields is observable and settable after construction;
+  only the descriptor reference itself is fixed.
+- **descriptor-subtitle-default**: The descriptor's subtitle MUST be
+  optional and MUST be none when no subtitle is supplied.
+- **descriptor-subtitle-observable**: A panel MAY set or change the
+  descriptor's subtitle at any time, and observers of the descriptor MUST
+  be told when it changes. (How the sidebar draws the subtitle belongs to
+  the settings panel list, not to this component.)
 - **default-descriptor**: Component MUST construct a default descriptor
   when constructed with no descriptor supplied (or an explicit absence of
   one).
@@ -170,7 +176,8 @@ in.
 | spvc-014 | hosting-view-helper | Call the component's hosting helper with some content | Returns a wrapper view containing the given content |
 | spvc-015 | hosting-view-sizing-options | Call the hosting helper with some content, inspect the returned wrapper's sizing behavior | The wrapper advertises the content's size as a preference, not a required min/max constraint |
 | spvc-016 | confines-to-ui-thread | Use the component from a thread other than the UI thread | The use is rejected, at build time or by a runtime check; the component's state is unchanged |
-| spvc-017 | descriptor-subtitle | Construct a descriptor with a title only; then set its subtitle to "OpenAI - GPT - API key" | Its subtitle starts as none; an observer of the descriptor is told of the change and reads the new subtitle |
+| spvc-017 | descriptor-subtitle-default | Construct a descriptor with a title only | Its subtitle is none |
+| spvc-018 | descriptor-subtitle-observable | Observe a descriptor, then set its subtitle to "Provider - API key set" | The observer is told of the change and reads the new subtitle |
 
 ## Edge Cases
 
@@ -204,8 +211,8 @@ in.
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `descriptor.subtitle` | Text (optional, observable) | none | A second line the settings list shows under the panel's title (see **descriptor-subtitle**). |
 | `descriptor` | Descriptor (optional) | none | Passed at construction. When supplied, retained as-is (see **descriptor-retention**); when omitted, a default descriptor (empty title) is constructed instead (see **default-descriptor**). |
+| `descriptor.subtitle` | Text (optional, observable) | none | A field of the descriptor, not a construction option of the panel: a second line of row metadata, settable at any time (see **descriptor-subtitle-default** and **descriptor-subtitle-observable**); the settings panel list draws it. |
 
 ## Deep Linking
 
@@ -242,8 +249,12 @@ Not applicable: this component contains no analytics or telemetry call.
 ## Privacy
 
 - **Data collected**: None of its own. The component holds only the
-  caller-supplied or default-constructed descriptor (title/icon/
-  isDisabled/section) and its own content view.
+  caller-supplied or default-constructed descriptor (title, subtitle,
+  icon, disabled flag, section and heading) and its own content view.
+  The descriptor's text fields are shown in the sidebar exactly as set;
+  nothing filters them, so a caller MUST NOT put a secret value (a key,
+  token or password) in a title or subtitle, only a label such as
+  "API key set".
 - **Storage**: Not applicable — this component performs no read/write to
   disk or any other store.
 - **Transmission**: Not applicable — no networking call appears anywhere
@@ -261,9 +272,10 @@ Not applicable: this component contains no logging call.
 - **SwiftUI**: There is no `NSHostingView` bridging concern to solve — a
   SwiftUI settings panel is itself a `View`. Model the base class as a
   protocol (e.g. `SettingsPanel: Identifiable, View`) with associated
-  `descriptor` (title/icon/isDisabled/section, mirroring
-  `SettingsPanelDescriptor`'s published fields as `@Published` on an
-  `ObservableObject` or as plain properties on a `struct`), plus
+  `descriptor` (`title`, `subtitle: String?`, `icon`, `isDisabled`,
+  `section`, `heading`, mirroring `SettingsPanelDescriptor`'s published
+  fields as `@Published` on an `ObservableObject`, so a subtitle change
+  reaches the sidebar), plus
   `helpContent`/`effectiveHelpContent`/`searchKeywords` given default
   implementations in a protocol extension — Swift's normal protocol-witness
   dispatch resolves these correctly for a `View`-conforming type, so the
@@ -272,8 +284,10 @@ Not applicable: this component contains no logging call.
   content from a `ScrollView { LazyVStack { ... } }` unless the panel
   declares it hosts its own scrolling, mirroring `hostsOwnScroll`.
 - **Compose**: Define an interface (e.g. `SettingsPanel`) exposing a
-  `descriptor` data class (`title: String`, `icon: Painter?`,
-  `isDisabled: Boolean`, `section: String?`), a `@Composable fun Content()`,
+  `descriptor` state holder (`title: String`, `subtitle: String?`,
+  `icon: Painter?`, `isDisabled: Boolean`, `section: String?`,
+  `heading: String?`, each backed by `mutableStateOf` so a change
+  recomposes the sidebar), a `@Composable fun Content()`,
   and `helpContent`/`effectiveHelpContent`/`searchKeywords` with default
   (empty/null) implementations via a Kotlin interface default method or an
   abstract base class. The hosting `NavigationDrawer`/two-pane `Scaffold`
@@ -281,8 +295,10 @@ Not applicable: this component contains no logging call.
   unless the panel's `hostsOwnScroll` is `true`, mirroring
   `SplitViewController`'s `PanelScrollView`-wrapping branch.
 - **React/Web**: Define a component contract (a TypeScript interface or an
-  abstract base class) with a `descriptor` object (`title`, `icon`,
-  `isDisabled`, `section`) and a `render()`/functional component for
+  abstract base class) with a `descriptor` object (`title`,
+  `subtitle?: string`, `icon`, `isDisabled`, `section`, `heading`) whose
+  changes are observable (for example a store the sidebar subscribes to)
+  and a `render()`/functional component for
   content, plus `helpContent`/`effectiveHelpContent`/`searchKeywords`
   defaulting to `null`/`null`/`[]`. The hosting layout wraps rendered
   content in a `<div style="overflow-y: auto">` unless the panel opts out
@@ -301,7 +317,11 @@ Not applicable: this component contains no logging call.
   is overridden to trigger a fatal error, so a caller cannot construct one
   through that path. It composes `PanelView`, `SettingsPanelDescriptor`,
   and `GroupView` — all defined elsewhere in `AgenticDeveloperHubSDK` — rather than
-  reimplementing their layout. Its `loadView()` sets `self.view` to
+  reimplementing their layout. `SettingsPanelDescriptor`
+  (`SettingsPanelDescriptor.swift`, beside this file) is an
+  `ObservableObject` whose `title`, `subtitle`, `icon`, `isDisabled`,
+  `section` and `heading` are `@Published`; `subtitle` defaults to `nil`.
+  Its `loadView()` sets `self.view` to
   `settingsView`, the `PanelView` instance the class owns. The hosting
   helper's `NSHostingView` also sets
   `translatesAutoresizingMaskIntoConstraints = false`, opting the returned
@@ -314,8 +334,10 @@ Not applicable: this component contains no logging call.
 - **WinUI 3**: Build the base class as an abstract `Page` (or
   `UserControl`), e.g. `SettingsPanelBase : Page`.
   - Descriptor: Expose a `Descriptor` object implementing
-    `INotifyPropertyChanged` with `Title` (`string`), `Icon` (`IconSource?`),
-    `IsDisabled` (`bool`, default `false`), and `Section` (`string?`) — the
+    `INotifyPropertyChanged` with `Title` (`string`), `Subtitle`
+    (`string?`, default `null`), `Icon` (`IconSource?`), `IsDisabled`
+    (`bool`, default `false`), `Section` (`string?`) and `Heading`
+    (`string?`), each raising `PropertyChanged` when set — the
     direct analog of `SettingsPanelDescriptor`'s `@Published` fields —
     constructed in the base class's constructor from an optional parameter,
     defaulting to a descriptor with an empty `Title` exactly as
@@ -353,7 +375,7 @@ Not applicable: this component contains no logging call.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/SettingsPanel/SettingsPanelViewController.swift` | confirmed (1.2.3) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/SettingsPanel/SettingsPanelViewController.swift` | confirmed (1.3.0) |
 
 ## Design Decisions
 
@@ -386,23 +408,33 @@ Appearance › Min/Max size and Edge Cases › Oversized hosted content
 entries, which point back here rather than repeating this rationale.)
 **Approved**: pending
 
+**Decision**: Carry the sidebar subtitle as an observable optional field on
+the descriptor, beside its title, rather than as a computed property on the
+panel.
+**Rationale**: The descriptor is already where the sidebar reads each row's
+metadata, and the settings panel list already observes it, so a subtitle
+there reaches the row the same way a title change does: the list rebuilds
+its rows when either changes. A computed property on the panel would give
+the list nothing to observe, so a changed subtitle would not show until
+something else rebuilt the rows. Making it optional and none by default keeps
+every existing panel drawing its row as the title alone.
+**Approved**: pending
 ## Compliance
 
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.platform-compliance.native-controls-preference](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d49de883-3811-54ed-b227-c2d807cac551) | passed | Platform Compliance |
-| [adc.check.accessibility.screen-reader-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0720ed85-3747-546a-b2ed-6a909f44dd43) | partial | Accessibility |
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
 | [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
 
 Statuses rest on `SettingsPanelViewController.swift` itself: it composes
 only native `NSViewController`/`NSHostingView` APIs, never reimplementing
-their layout (`native-controls-preference`: passed), but it sets no
+their layout (`native-controls-preference`: passed), and it sets no
 accessibility role or label of its own — that responsibility belongs to the
 `GroupView`s and SwiftUI content a subclass hosts — so `screen-reader-support`
-is only `partial` here, not exercised or violated by this file.
+does not apply to this file and is omitted.
 
-`separation-of-concerns` passes because `SettingsPanelViewController` only holds a descriptor, exposes its panel-view content, forwards groups to it, and offers overridable help/search/scroll defaults; layout, scrolling and help chrome live in the panel view, panel host and split view. `unit-test-coverage` is partial because there is no test file for `SettingsPanelViewController` itself: its `searchKeywords` and help-content overrides are exercised through the `TestPanel` subclass in `SettingsSearchIndexTests.swift`, and `SettingsCardViewsTests.swift` calls its `hostingView(for:)` helper, but the descriptor-immutability, default-descriptor, add-group and hosts-own-scroll defaults have no test.
+`separation-of-concerns` passes because `SettingsPanelViewController` only holds a descriptor, exposes its panel-view content, forwards groups to it, and offers overridable help/search/scroll defaults; layout, scrolling and help chrome live in the panel view, panel host and split view. `unit-test-coverage` is partial because there is no test file for `SettingsPanelViewController` itself: its `searchKeywords` and help-content overrides are exercised through the `TestPanel` subclass in `SettingsSearchIndexTests.swift`, and `SettingsCardViewsTests.swift` calls its `hostingView(for:)` helper, but the descriptor-immutability, default-descriptor, add-group and hosts-own-scroll defaults have no test. For the subtitle, `PanelListSubtitleTests.swift` covers spvc-017 (`testADescriptorHasNoSubtitleByDefault`); subtitle observation (spvc-018) is exercised only through the settings panel list's rebuild (`testChangingTheSubtitleRebuildsTheRows`), with no test that observes the descriptor directly.
 
 ## Change History
 

@@ -12,11 +12,15 @@
   whitespace/newline characters, MUST include every stored panel among the
   visible rows.
 - **all-terms-match**: A non-empty, non-whitespace search query MUST
-  include a panel only if every one of its space-separated terms is found,
+  include a panel only if every one of its terms is found,
   case-insensitively, as a substring of that panel's searchable text
   (harvested from the descriptor's title, section, search keywords, help
   content's topic titles and bodies, and — once the panel's own view has
-  loaded — the visible titles of its own non-editable controls).
+  loaded — the visible titles of its own non-editable controls). The terms
+  are the non-empty pieces left by trimming leading and trailing whitespace
+  and newlines from the query and then splitting it on the space character
+  only; a tab or newline inside the query is part of a term, not a
+  separator.
 - **panel-order-preservation**: Visible rows MUST appear in the same
   relative order as their panels in the array most recently set.
 - **contiguous-section-grouping**: Panels MUST be grouped into sidebar
@@ -37,7 +41,8 @@
   of its panel's zero-based index in the full array most recently set,
   independent of that row's position under the current filter.
 - **selection-callback-bridge**: Once constructed through its normal
-  construction path, the component MUST invoke its selection callback with
+  construction path (the archive-decoding path does not wire this bridge;
+  that gap is recorded as an open Design Decision), the component MUST invoke its selection callback with
   the panel resolved from the newly selected row's identifier whenever the
   underlying selection changes, and MUST invoke that callback with no panel
   when the selection is cleared.

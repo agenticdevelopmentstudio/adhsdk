@@ -14,7 +14,18 @@
   space), mirroring the zero-height collapse behavior of `isHidden` on a
   `NSStackView` arranged subview. Read the row's rendered text width with
   `(text as NSString).size(withAttributes:)` if a content-driven sidebar
-  width equivalent to **preferred-width** is needed.
+  width equivalent to **preferred-width** is needed. Draw a badge as a
+  trailing `Text` in `.secondary` style after the title (**item-badge**),
+  an emphasized title with `.bold()` (**item-emphasis**), and a subtitle as
+  a second `Text` in `.caption` font and `.secondary` style under the title
+  in a `VStack`, with `.lineLimit(1)` and `.truncationMode(.tail)`
+  (**item-subtitle**). Attach `.contextMenu` to each item row and to each
+  section header (**row-context-menu**), a double-tap gesture or
+  `.onTapGesture(count: 2)` to item rows only (**item-double-click**), and
+  `.draggable` with the caller's payload string to item rows the provider
+  gives one, plus `.dropDestination(for: String.self)` on item rows that
+  asks the validator before calling the drop callback
+  (**item-drag-payload**, **item-drop-validation**, **item-drop-delivery**).
 - **Compose**: Build the outline as a `LazyColumn` with `stickyHeader` items
   for each section whose title is non-nil, and plain items otherwise. Style
   a disabled item's `Text`/`Icon` with `MaterialTheme.colorScheme.onSurfaceVariant`
@@ -29,7 +40,16 @@
   **repaint-on-theme-change**. Compose an optional title/accessory header
   and footer as sibling composables that emit nothing (`if (condition) { … }`)
   when unset, rather than an `AnimatedVisibility` that would animate a
-  collapse this component never animates.
+  collapse this component never animates. Put a badge in a trailing
+  `Text` with `onSurfaceVariant` color, an emphasized title in
+  `FontWeight.Bold`, and a subtitle in a second `Text` styled
+  `MaterialTheme.typography.labelSmall` with `maxLines = 1` and
+  `overflow = TextOverflow.Ellipsis`. Use `Modifier.combinedClickable`
+  with `onLongClick` (or a `DropdownMenu` opened from a secondary-click
+  pointer event) for the item and header menus and `onDoubleClick` for
+  item rows only, and `Modifier.dragAndDropSource` /
+  `Modifier.dragAndDropTarget` on item rows for the drag payload, the drop
+  validator and the drop callback.
 - **React/Web**: Render the sidebar as a `<nav>` containing a single
   `<ul role="listbox">` for the whole list, mirroring **flat-row-hierarchy**'s
   single-outline model - never one `listbox` per section, which would split
@@ -48,10 +68,17 @@
   switch repaints them, mirroring **repaint-on-theme-change**. Collapse an
   unset header/footer with `display: none` (which removes layout space, like
   AppKit's `isHidden` on a stack view's arranged subview) rather than
-  `visibility: hidden`.
-- **AppKit/UIKit** (source platform): Implemented in
-  `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/TopicListViewController.swift`
-  as a `@MainActor`, `open` `NSViewController` that builds its entire view
+  `visibility: hidden`. Render a badge as a trailing `<span>` in the
+  secondary text color, an emphasized title with `font-weight: bold`, and
+  a subtitle as a second line in the caption size with
+  `text-overflow: ellipsis`. Handle `contextmenu` on item and header rows
+  (calling `preventDefault()` and showing the provider's menu, or none),
+  `dblclick` on item rows only, and HTML5 drag and drop: `draggable="true"`
+  with `dataTransfer.setData` on item rows the provider gives a payload,
+  and `dragover`/`drop` handlers on item rows that call `preventDefault()`
+  only when the validator accepts.
+- **AppKit/UIKit** (source platform): Implemented as
+  `TopicListViewController`, a `@MainActor`, `open` `NSViewController` that builds its entire view
   hierarchy by hand in `loadView()` - a single-column `NSOutlineView`
   (`ColumnFillingOutlineView`) inside an `NSScrollView`, stacked with an
   optional title/accessory header and an optional client footer in a
@@ -66,7 +93,17 @@
   to grow the AppKit `.default` row height - well under 44pt - to at least a
   44pt touch target, since UIKit has no keyboard-first,
   `NSOutlineView`-style default row navigation to fall back on for
-  pointer-free selection.
+  pointer-free selection. Drag and drop: the item pasteboard type is
+  `TopicListViewController.itemPasteboardType`
+  (`com.agenticdeveloperhub.topic-list.item`), a string. The outline
+  registers it in `loadView` and allows `.generic` and `.copy` for local
+  drags. A drop is retargeted only by the validator's answer:
+  `validateDrop` takes `NSOutlineViewDropOnItemIndex` drops alone and
+  returns `.generic`. The providers are `dragPayloadProvider`,
+  `dropValidator` and `onDrop`; the list knows nothing of what a payload
+  means. The row menu is the outline's own `menu`, refilled from the
+  item-menu or header-menu provider for the clicked row each time it
+  opens, and a double-click arrives through the outline's `doubleAction`.
 - **WinUI 3**: Build the sidebar as a
   `NavigationView` in `Left`/`LeftCompact` display mode, or - if
   `NavigationView`'s chrome (back button, pane toggle) is unwanted - a plain
@@ -75,8 +112,9 @@
   = true` and a `GroupStyle` whose `HeaderTemplate` renders the section
   title only when it is non-empty (mirroring
   **header-row-for-titled-section**/**omit-header-for-untitled-section** -
-  WinUI's `CollectionViewSource` grouping is the direct analog of
-  `buildRootNodes(from:)`'s header/item interleaving). Bind each
+  WinUI's `CollectionViewSource` grouping is the direct analog of the
+  component's interleaving of header rows and item rows into one flat
+  list). Bind each
   `ListViewItem`'s `IsEnabled` to nothing (leave it `true`) and instead bind
   its `Foreground`/icon `Fill` to a converter that returns a muted
   `SolidColorBrush` when the item's `IsDisabled` is set, mirroring
@@ -102,13 +140,13 @@
   carries the plain title as the item's accessible name, since WinUI's UI
   Automation tree, like AppKit's, exposes the item's own element rather than
   a synthesized row wrapper as the natural place to attach an identifier and
-  a name.
+  a name. Template a badge as a trailing `TextBlock` with the secondary text
+  brush, an emphasized title with `FontWeight="Bold"`, and a subtitle as a
+  second `TextBlock` in the caption style with
+  `TextTrimming="CharacterEllipsis"`. Attach a `ContextFlyout` to item rows
+  and to the group header template, handle `DoubleTapped` on item rows
+  only, and set `CanDragItems="True"` with a `DragItemsStarting` handler
+  that writes the provider's payload (cancelling for an item it declines),
+  plus `AllowDrop` with `DragOver`/`Drop` handlers on item rows that ask the
+  validator before calling the drop callback.
 
-### Drag and drop (macOS)
-
-The item pasteboard type is `TopicListViewController.itemPasteboardType`
-(`com.agenticdeveloperhub.topic-list.item`), a string. The outline registers it in
-`loadView` and allows `.generic` and `.copy` for local drags. A drop is retargeted
-only by the validator's answer: `validateDrop` takes `NSOutlineViewDropOnItemIndex`
-drops alone and returns `.generic`. The providers are `dragPayloadProvider`,
-`dropValidator` and `onDrop`; the list knows nothing of what a payload means.

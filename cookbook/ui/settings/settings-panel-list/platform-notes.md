@@ -55,7 +55,7 @@
   `NSOutlineView`'s row/section model with a `UITableView`/
   `UICollectionView` compositional layout, since neither has a direct
   outline-view equivalent for this content-driven, run-based grouping.
-- **WinUI 3** (the reason this recipe exists): Build the sidebar as a
+- **WinUI 3**: Build the sidebar as a
   `NavigationView` (`PaneDisplayMode="Left"`) or a `ListView` with
   `CollectionViewSource.IsSourceGrouped="True"`. Do NOT let
   `CollectionViewSource`'s built-in grouping key the whole list by section
@@ -72,7 +72,7 @@
   style it with a muted `Foreground`/`SymbolIcon` brush plus, per the
   Differentiate Without Color gap, a non-color cue (a secondary "Coming
   soon" `TextBlock`, not `Opacity` alone, which repeats the same
-  color-only gap this recipe flags). Bind an `AutoSuggestBox`/`TextBox` to
+  color-only gap this ingredient flags). Bind an `AutoSuggestBox`/`TextBox` to
   a `searchQuery` property on the view model, re-filtering and re-grouping
   the `ObservableCollection` on every `TextChanged` with the same
   case-insensitive, all-terms-must-match rule. Raise the

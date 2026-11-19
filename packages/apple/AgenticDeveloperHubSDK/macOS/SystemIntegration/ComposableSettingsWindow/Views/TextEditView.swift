@@ -46,10 +46,12 @@ extension ComposableSettings {
             // Every field the row edits commits through `textFieldChanged`, and
             // takes the theme here rather than by returning a `ThemedTextField`
             // from the factory, since subclasses substitute their own field
-            // (`SecureTextEditView` returns an `NSSecureTextField`).
+            // (`SecureTextEditView` returns an `NSSecureTextField`). Each is
+            // titled by the row's label, so a screen reader names the field.
             for field in editableFields {
                 field.target = self
                 field.action = #selector(textFieldChanged(_:))
+                field.setAccessibilityTitleUIElement(label)
                 field.observeTheme { field, palette in Self.applyTheme(to: field, palette: palette) }
             }
 
@@ -110,7 +112,7 @@ extension ComposableSettings {
         }
 
         public override init(frame frameRect: NSRect) {
-            fatalError("init(frame frameRect: NSRect")
+            fatalError("init(frame:) has not been implemented")
         }
 
         required init?(coder: NSCoder) {

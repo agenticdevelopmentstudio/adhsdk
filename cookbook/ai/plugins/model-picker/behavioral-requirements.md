@@ -6,13 +6,10 @@
   choice callback. It MUST NOT be presented in a window of its own, and it
   MUST have no OK or Cancel button.
 - **transient-popover**: The entry point MUST show the chooser in a transient
-  popover pointing at the given anchor view, opening above the anchor
-  (preferring the anchor's top edge) or below it when there is no room above.
+  popover pointing at the given anchor view, on the anchor's bottom edge
+  (below the anchor, whichever way its coordinates run).
 - **fixed-content-size**: The popover MUST open at the chooser's fixed
-  content size (720 by 450 points), set on the chooser's root view and its
-  preferred content size and on the popover after its content is assigned;
-  nothing inside the chooser pins a height, so a popover left to the view's
-  fitting size would show only the filter row.
+  content size, 720 by 450 points, not at the chooser's fitting size.
 - **one-chooser-at-a-time**: Presenting the chooser while one is already shown
   MUST close the shown one first, so at most one chooser is open.
 - **search-field-focus**: When the popover opens, the chooser's search field
@@ -24,10 +21,12 @@
 
 ### Choosing
 
-- **select-chooses-and-stays-open**: A selection the person makes (a click on
-  a row, or an arrow key moving the selection from the search field) MUST
-  choose that row's model at once, calling the choice callback, and MUST leave
-  the popover open, so the detail pane and the choice can be compared.
+- **select-chooses-and-stays-open**: A click on a row MUST choose that row's
+  model at once, calling the choice callback, and MUST leave the popover
+  open, so the detail pane and the choice can be compared.
+- **arrow-moves-only**: An arrow key in the search field MUST move the
+  selection (and the detail pane with it) without choosing; Return then
+  chooses the selected row.
 - **return-chooses-and-closes**: Return in the search field, or a double-click
   on a row, MUST choose the selected row's model and close the popover.
 - **escape-or-outside-closes**: Escape, or a click outside the popover, MUST
@@ -36,15 +35,17 @@
 - **chooses-only-visible-rows**: Return MUST choose nothing when the current
   filter leaves no row visible; it MUST NOT choose a row an earlier keystroke
   selected and the filter has since hidden.
-- **no-repeat-choice**: Selecting the row already chosen MUST NOT call the
-  choice callback again.
+- **repeat-choice-reported**: A click, Return or double-click on the row
+  already chosen MUST call the choice callback again with the same value;
+  the chooser does not filter repeats.
 - **alias-kept-when-unchanged**: Choosing the row the context's stored model
   resolves to (a stored alias such as `fast` opens on the model it runs
   today) MUST report the stored value, not the resolved model, so the alias
   keeps following the newest model of its family.
 - **large-model-confirmation**: Choosing a model whose memory fit is in the
-  warn tier MUST first show one confirmation (a sheet on the popover's window,
-  or an inline confirmation in the popover) and MUST call the choice callback
+  warn tier MUST first show one app-modal confirmation alert, with the
+  popover's dismissal on outside clicks suspended until it is answered, and
+  MUST call the choice callback
   only when the person confirms. Declining MUST leave the previously chosen
   model chosen and the popover open. A block-tier model MUST stay choosable
   with no confirmation; its fit line already says it will not run.
@@ -61,10 +62,12 @@
   settable by the caller.
 - **control-name-text**: The name button MUST show the name the display-name
   closure returns, and "Choose a Model" when that closure returns none or an
-  empty string. A model id the context's provider model manager knows MUST be
-  shown by its display name (an alias resolved to its id, then given the
-  manager's display name for it); an id the manager does not know is shown
-  unchanged.
+  empty string. When the context closure returns a context, the name MUST be
+  passed through that context's display-name lookup (the context resolves an
+  alias to its id and returns the display name it has for it, or the id
+  unchanged when it has none); the control does no lookup of its own.
+- **control-name-truncates-middle**: A name too long for the row MUST be
+  truncated in the middle, so its start and end stay readable.
 - **control-opens-chooser**: Clicking the caret or the name button MUST
   present the chooser through its one entry point, anchored to the caret,
   with the context the context closure returns at that moment.
