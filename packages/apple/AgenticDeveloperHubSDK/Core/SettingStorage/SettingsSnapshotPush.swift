@@ -190,7 +190,7 @@ public final class SettingsSnapshotPush {
     private var receiverOwns: Bool { pull != nil }
 
     /// 1 s after one failed push, doubling per further failure, capped at 30 s.
-    public static let defaultReconnectDelay: ReconnectDelay = { failures in
+    public nonisolated static let defaultReconnectDelay: ReconnectDelay = { failures in
         let seconds = min(30, 1 << min(max(failures - 1, 0), 5))
         return UInt64(seconds) * 1_000_000_000
     }

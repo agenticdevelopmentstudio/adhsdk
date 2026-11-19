@@ -42,7 +42,7 @@ final class StenographerPrefsPushTests: XCTestCase {
     func testSummaryFreshStoreSeedsFromDaemonBeforeFirstPush() async {
         let daemon = StubDaemonService()
         daemon.summaryReply = nonDefaultSummaries()
-        StenographerSummaryPrefsPush.startObserving(service: daemon)
+        startSummary(daemon)
         await StenographerSummaryPrefsPush.awaitPendingPush()
         XCTAssertEqual(UserSettings.stenographerAISummariesEnabled.value, false)
         XCTAssertEqual(UserSettings.stenographerAISummariesProviderConfigId.value, "claude-cli")
@@ -72,7 +72,7 @@ final class StenographerPrefsPushTests: XCTestCase {
         daemon.summaryReply = SummaryPreferenceResponse(
             enabled: true, selectedConfigId: "", prompt: SummaryDefaults.prompt, maxWords: 5,
             activityLines: 11, detailChars: 222, intervalMinutes: 9, maxPerRun: 3, timeoutSeconds: 44)
-        StenographerSummaryPrefsPush.startObserving(service: daemon)
+        startSummary(daemon)
         await StenographerSummaryPrefsPush.awaitPendingPush()
         XCTAssertEqual(UserSettings.stenographerAISummaryPrompt.value, SummaryDefaults.prompt)
         XCTAssertEqual(daemon.sessionSummaryRequests.first?.prompt, "")
@@ -84,7 +84,7 @@ final class StenographerPrefsPushTests: XCTestCase {
         daemon.oversightReply = OversightPreferenceResponse(
             enabled: true, contextThresholdPct: 70, llmEnabled: true,
             selectedConfigId: Self.configId.uuidString, model: "big-model")
-        StenographerOversightPrefsPush.startObserving(service: daemon)
+        startOversight(daemon)
         await StenographerOversightPrefsPush.awaitPendingPush()
         XCTAssertEqual(UserSettings.stenographerAIOversightEnabled.value, true)
         XCTAssertEqual(UserSettings.stenographerAIOversightLLMEnabled.value, true)
@@ -105,7 +105,7 @@ final class StenographerPrefsPushTests: XCTestCase {
         UserSettings.stenographerAIOversightSeededFromDaemon.value = true
         UserSettings.stenographerAISummariesProviderConfigId.value = Self.configId.uuidString
         let daemon = StubDaemonService()
-        StenographerOversightPrefsPush.startObserving(service: daemon)
+        startOversight(daemon)
         await StenographerOversightPrefsPush.awaitPendingPush()
         XCTAssertEqual(UserSettings.stenographerAIOversightProviderConfigId.value, Self.configId.uuidString)
         XCTAssertEqual(daemon.oversightRequests.first?.selectedConfigId, Self.configId.uuidString)
@@ -114,7 +114,7 @@ final class StenographerPrefsPushTests: XCTestCase {
     func testOversightInheritOfTheCLIBecomesTheCLISentinel() async {
         UserSettings.stenographerAIOversightSeededFromDaemon.value = true
         let daemon = StubDaemonService()
-        StenographerOversightPrefsPush.startObserving(service: daemon)
+        startOversight(daemon)
         await StenographerOversightPrefsPush.awaitPendingPush()
         XCTAssertEqual(UserSettings.stenographerAIOversightProviderConfigId.value, "claude-cli")
     }
@@ -124,8 +124,8 @@ final class StenographerPrefsPushTests: XCTestCase {
         UserSettings.stenographerAIOversightSeededFromDaemon.value = true
         let daemon = StubDaemonService()
         daemon.summaryReply = nonDefaultSummaries()
-        StenographerSummaryPrefsPush.startObserving(service: daemon)
-        StenographerOversightPrefsPush.startObserving(service: daemon)
+        startSummary(daemon)
+        startOversight(daemon)
         await StenographerSummaryPrefsPush.awaitPendingPush()
         await StenographerOversightPrefsPush.awaitPendingPush()
         XCTAssertEqual(daemon.summaryGets, 0)
@@ -139,8 +139,8 @@ final class StenographerPrefsPushTests: XCTestCase {
         let daemon = StubDaemonService()
         daemon.summaryReply = nil
         daemon.oversightReply = nil
-        StenographerSummaryPrefsPush.startObserving(service: daemon)
-        StenographerOversightPrefsPush.startObserving(service: daemon)
+        startSummary(daemon)
+        startOversight(daemon)
         await StenographerSummaryPrefsPush.awaitPendingPush()
         await StenographerOversightPrefsPush.awaitPendingPush()
         XCTAssertTrue(daemon.sessionSummaryRequests.isEmpty)
@@ -178,7 +178,7 @@ final class StenographerPrefsPushTests: XCTestCase {
 
     func testOversightStartPushesAndRepushesOnReconnect() async {
         let daemon = StubDaemonService()
-        StenographerOversightPrefsPush.startObserving(service: daemon)
+        startOversight(daemon)
         await StenographerOversightPrefsPush.awaitPendingPush()
         XCTAssertEqual(daemon.oversightRequests.count, 1)
         daemon.fireReconnect()
@@ -188,7 +188,7 @@ final class StenographerPrefsPushTests: XCTestCase {
 
     func testOversightChangePushesNewValue() async {
         let daemon = StubDaemonService()
-        StenographerOversightPrefsPush.startObserving(service: daemon)
+        startOversight(daemon)
         await StenographerOversightPrefsPush.awaitPendingPush()
         UserSettings.stenographerAIOversightEnabled.value = true
         await settle()
@@ -197,7 +197,7 @@ final class StenographerPrefsPushTests: XCTestCase {
 
     func testSummaryUnmodifiedPromptTravelsBlank() async {
         let daemon = StubDaemonService()
-        StenographerSummaryPrefsPush.startObserving(service: daemon)
+        startSummary(daemon)
         await StenographerSummaryPrefsPush.awaitPendingPush()
         XCTAssertEqual(daemon.sessionSummaryRequests.count, 1)
         XCTAssertEqual(daemon.sessionSummaryRequests.first?.prompt, "")
@@ -206,7 +206,7 @@ final class StenographerPrefsPushTests: XCTestCase {
 
     func testSummaryChangeAndReconnectPush() async {
         let daemon = StubDaemonService()
-        StenographerSummaryPrefsPush.startObserving(service: daemon)
+        startSummary(daemon)
         await StenographerSummaryPrefsPush.awaitPendingPush()
         UserSettings.stenographerAISummariesEnabled.value = true
         UserSettings.stenographerAISummariesProviderConfigId.value = "claude-cli"
@@ -217,6 +217,23 @@ final class StenographerPrefsPushTests: XCTestCase {
         daemon.fireReconnect()
         await settleSummary()
         XCTAssertEqual(daemon.sessionSummaryRequests.count, before + 1)
+    }
+
+    /// The production retry timing, a thousand times shorter: the same shape
+    /// (a retry, a doubling reconnect delay) without seconds of real waiting.
+    private static let fastBackoffs: [UInt64] = BoundedPush.defaultBackoffs.map { $0 / 1000 }
+    private static let fastReconnectDelay: SettingsSnapshotPush.ReconnectDelay = { failures in
+        SettingsSnapshotPush.defaultReconnectDelay(failures) / 1000
+    }
+
+    private func startSummary(_ daemon: StubDaemonService) {
+        StenographerSummaryPrefsPush.startObserving(
+            service: daemon, backoffs: Self.fastBackoffs, reconnectDelay: Self.fastReconnectDelay)
+    }
+
+    private func startOversight(_ daemon: StubDaemonService) {
+        StenographerOversightPrefsPush.startObserving(
+            service: daemon, backoffs: Self.fastBackoffs, reconnectDelay: Self.fastReconnectDelay)
     }
 
     private func settleSummary() async {
