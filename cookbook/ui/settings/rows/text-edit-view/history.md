@@ -8,3 +8,4 @@
 | 1.2.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to ui/settings/rows/. |
 | 1.3.0 | 2026-10-04 | Mike Fullerton | Resolved the minimum-contrast-ratio NEEDS REVIEW marker against the source: restated as current behavior (no contrast check in the component) and recorded the gap as a pending Design Decision; added separation-of-concerns/unit-test-coverage Compliance rows. |
 | 1.3.1 | 2026-10-04 | Mike Fullerton | UI-thread confinement restated as the shared confines-to-ui-thread requirement, with a test vector; the @MainActor mechanism is in Platform Notes. |
+| 1.4.0 | 2026-11-19 | Mike Fullerton | Control-view, editable-fields and stored-value hooks for variants; a placeholder on every field |

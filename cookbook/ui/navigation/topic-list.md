@@ -590,7 +590,7 @@ drops alone and returns `.generic`. The providers are `dragPayloadProvider`,
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/TopicListViewController.swift` | confirmed (1.4.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/TopicListViewController.swift` | confirmed (1.5.0) |
 
 ## Design Decisions
 

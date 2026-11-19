@@ -316,8 +316,8 @@ through the daemon client's own logger; the control itself logs nothing.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIPlugins/Settings/ProviderModelPickerView.swift` | planned |
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIPlugins/Settings/ProviderRegistrySource.swift` | unverified |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIPlugins/Settings/ProviderModelPickerView.swift` | confirmed (1.0.0) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIPlugins/Settings/ProviderRegistrySource.swift` | confirmed (1.0.0) |
 
 ## Design Decisions
 
