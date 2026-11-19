@@ -22,8 +22,13 @@ public enum StenographerOversightPrefsPush {
     private static var push: SettingsSnapshotPush?
 
     /// Installs the observers and reconciles the daemon now and on every
-    /// reconnect. Call once at startup.
-    public static func startObserving(service: any StenographerDaemonService) {
+    /// reconnect. Call once at startup. `backoffs` and `reconnectDelay` are the
+    /// engine's retry timing (see `SettingsSnapshotPush`); tests shorten them.
+    public static func startObserving(
+        service: any StenographerDaemonService,
+        backoffs: [UInt64] = BoundedPush.defaultBackoffs,
+        reconnectDelay: @escaping SettingsSnapshotPush.ReconnectDelay = SettingsSnapshotPush.defaultReconnectDelay
+    ) {
         guard push == nil else {
             logger.warning("startObserving called more than once; ignoring the repeat call")
             return
@@ -31,6 +36,8 @@ public enum StenographerOversightPrefsPush {
         let engine = SettingsSnapshotPush(
             label: "Oversight prefs",
             logger: logger,
+            backoffs: backoffs,
+            reconnectDelay: reconnectDelay,
             snapshot: { currentBody() },
             send: { body in
                 guard let request = try? StenographerWire.decoder().decode(
