@@ -12,7 +12,8 @@
 
 `native-controls-preference` and `platform-design-language` rest on
 `textField` being an unmodified `NSSecureTextField` with AppKit's default
-bezel styling (**masks-entry-with-secure-field**); `keyboard-navigable`,
+bezel styling (**masks-entry-with-secure-field**) and the accessory buttons
+being standard borderless `NSButton`s with SF Symbols; `keyboard-navigable`,
 `idempotent-operations`, and `separation-of-concerns` rest on behavior that
 is `TextEditView`'s concern and out of this recipe's scope (the field's
 inherited, unmodified `NSControl` tab order, **skips-redundant-commits**,
@@ -24,5 +25,5 @@ Accessibility above; `contrast-ratio` is
 floor against WCAG's 4.5:1 threshold (see
 design-decisions ([adhsdk.ingredient.ui.settings.rows.text-edit-view](cookbook:c1787e74-2485-4d7b-a219-feb4c07cf97c))).
 
-No test in the repository's test targets constructs `SecureTextEditView`, so `unit-test-coverage` is `failed`: a search of `AgenticDeveloperHubSDKMacOSTests` and the other test targets for the type name finds nothing. Its only behavior, masking, is not asserted; the inherited text-row paths are covered by `RecordFieldRefreshTests.swift` for `TextEditView` only.
+No test in the repository's test targets constructs `SecureTextEditView`, so `unit-test-coverage` is `failed`: a search of `AgenticDeveloperHubSDKMacOSTests` and the other test targets for the type name finds nothing. Its behavior (masking, copy, reveal and the re-obscure rules) is not asserted; the inherited text-row paths are covered by `RecordFieldRefreshTests.swift` for `TextEditView` only.
 

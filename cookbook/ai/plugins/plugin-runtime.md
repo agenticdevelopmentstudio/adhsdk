@@ -2,11 +2,11 @@
 id: e886e448-6aa5-4359-979d-49fba713ab2a
 title: "Plugin Runtime"
 type: ingredient
-version: 1.2.1
+version: 1.3.0
 status: review
 language: en
 created: 2026-09-23
-modified: 2026-10-04
+modified: 2026-11-19
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -48,6 +48,17 @@ chat session and an MCP tool source) that also runs a bounded tool-calling
 loop. Every type in this component is confined to a single execution context,
 is declared safe for concurrent use through its own explicit synchronization,
 or is a plain immutable value safe to share — never left unspecified.
+
+The AI Providers settings panel, where a person edits these configurations,
+is described here too: each configuration's editor sets the configuration's
+default model through the model picker control
+([adhsdk.ingredient.ai.plugins.model-picker](cookbook:b3059939-21f5-414b-82e4-edd11b192ae8)), and its secret fields
+use the secure text row with reveal
+([adhsdk.ingredient.ui.settings.rows.secure-text-edit-view](cookbook:2e0bf51e-905d-476d-9c0c-48465174ba59)).
+Every other place that chooses a provider and a model uses the combined
+provider model picker
+([adhsdk.ingredient.ai.plugins.provider-model-picker](cookbook:c9385bf6-3abc-486b-82b5-d57a62d86735)), and an empty
+stored model there means this configuration's default model.
 
 ## Behavioral Requirements
 
@@ -466,6 +477,37 @@ or is a plain immutable value safe to share — never left unspecified.
   stored fields or model MUST be visible on the next access, since
   resolution is recomputed live rather than cached.
 
+### AI Providers Panel
+
+- **providers-panel-subtitle**: Each configuration's panel descriptor MUST
+  carry the subtitle "Provider - LLM - Config type", built from the
+  template's resolved provider, resolved LLM and resolved config type joined
+  by " - ", with empty parts dropped (no subtitle when all three are empty),
+  and MUST update it when the configuration's template changes.
+- **providers-editor-title**: The configuration editor's title MUST read
+  "Provider, LLM, Config type", built from the same three parts joined by
+  ", ", with empty parts dropped.
+- **providers-editor-default-model-row**: The editor MUST show a default
+  model row: a model picker control labelled "Default Model", bound to the
+  per-configuration model setting (`modelSetting(config:template:)`), whose
+  name is the stored model when non-empty, else the template's resolved
+  default model, and whose chosen model is written to that setting. This is
+  the model the configuration resolves to (**config-store-model-default**)
+  and the model a feature gets when it stores `""`.
+- **providers-editor-no-free-text-model**: The editor MUST NOT offer a
+  free-text model field; the default model row is the only way the editor
+  sets the model.
+- **providers-editor-untitled-connection-group**: The editor's connection
+  field group (base URL, key and the other template fields) MUST be shown
+  with no group title.
+- **providers-editor-secret-reveal**: Every secret field in the editor MUST
+  use the secure text row with reveal: dots for a stored secret, copy and
+  eye buttons, re-obscured on window resign key, app resign active, leaving
+  the window or an external change.
+- **providers-test-chat-model-only**: The editor's Test Chat MUST pin its
+  configuration: it MUST hide the provider choice and show only the model
+  row, whose Choose Model action opens the popover model chooser for that
+  configuration.
 ## Appearance
 
 Not applicable — this is the plugin runtime feature (plugin discovery,
@@ -505,6 +547,12 @@ settings panel view, never drawing anything itself).
 | aiplugins-012 | defaults-only-when-empty | The provider-configurations list already holds one entry; seed defaults when needed | The list is unchanged (still exactly the pre-existing entry); the default-seeded guard is now true |
 | aiplugins-013 | mcp-tool-source-unknown-tool | Call the tool named "fs__nonexistent" where no registered pair namespaces to that name | Returns a result of "Unknown tool: fs__nonexistent" marked as an error |
 | aiplugins-014 | mcp-tool-source-namespacing | The registry returns one pair (server name "fs", tool name "read") with an encodable input schema | Listing tool definitions returns exactly one tool definition named "fs__read" |
+| aiplugins-015 | providers-panel-subtitle | Template with provider "OpenAI", LLM "GPT", config type "API key" | The panel's descriptor subtitle is "OpenAI - GPT - API key" |
+| aiplugins-016 | providers-panel-subtitle, providers-editor-title | Template with provider "Ollama", empty LLM, config type "Local" | The subtitle is "Ollama - Local" and the editor title is "Ollama, Local" |
+| aiplugins-017 | providers-editor-default-model-row | Configuration with stored model ""; template default "gpt-5" | The "Default Model" row names "gpt-5"; choosing "gpt-5-mini" writes "gpt-5-mini" to `aiplugin.config.<id>.model` |
+| aiplugins-018 | providers-editor-no-free-text-model, providers-editor-untitled-connection-group | Open a configuration's editor | No free-text model field is present; the connection group has no title |
+| aiplugins-019 | providers-editor-secret-reveal | A configuration with a stored API key "sk-123" | The key field shows six dots with copy and eye buttons |
+| aiplugins-020 | providers-test-chat-model-only | Open the editor's Test Chat | Only the model row shows; its Choose Model action opens the popover chooser for this configuration |
 
 ## Edge Cases
 
@@ -606,6 +654,8 @@ facts rather than as a marker per source fidelity:
 | (none — hardcoded literal) | `No AI provider is configured.` | The tool-calling chat session's turn-failed message when no plugin can be resolved |
 | (none — hardcoded literal) | `Unknown tool: <name>` | The MCP tool source's error text when no pair matches the namespaced tool name |
 | (none — hardcoded literal) | `Tool error: <description>` | The MCP tool source's error text when the underlying MCP call throws |
+| (none — hardcoded literal) | `Default Model` | The AI Providers editor's default model row label |
+| (none — hardcoded literal) | `<provider> - <LLM> - <config type>` | A configuration panel's subtitle; the separator is a literal |
 
 ## Accessibility Options
 
@@ -712,7 +762,18 @@ but unused.
   loading of unsigned code is not permitted under App Store code-signing —
   in favor of statically linked or App Extension–hosted plugins. The
   Foundation-level pieces (`NSLock`, `UserDefaults`, Keychain Services)
-  need no change.
+  need no change. The AI Providers panel lives in
+  `Features/AIPlugins/Settings/` (`LLMProvidersView`,
+  `LLMProvidersListViewModel`, `AISettingsViewPanelController`): the default
+  model row is an `AIModelPickerControl` over
+  `AIProviderConfigStore.modelSetting(config:template:)`, the subtitle is set
+  on the panel's `SettingsPanelDescriptor.subtitle` from
+  `template.resolvedProvider`, `resolvedLLM` and `resolvedConfigType`, the
+  SwiftUI editor hosts `ComposableSettings.SecureTextEditView` through
+  `NSViewRepresentable` (or moves its field rows to the ComposableSettings
+  views), and the Test Chat is `AIChatViewController(pinsConfiguration:
+  true)`. `LLMPickerView` is replaced by the provider model picker and
+  deleted.
 - **WinUI 3**: `System.Net.Http.HttpClient` performs the HTTP half of what
   `PluginTransport` drives (the given sources hand it an `AIRequestSpec`,
   never touch `HttpClient` directly), and `System.Diagnostics.Process` /
@@ -848,3 +909,4 @@ under Localization are English literals with no localization mechanism.
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to ai/plugins/. |
 | 1.2.0 | 2026-10-04 | Mike Fullerton | Resolved the mcp-tool-source-argument-validation NEEDS REVIEW marker as current behavior plus a pending Design Decision. |
 | 1.2.1 | 2026-10-04 | Mike Fullerton | Inverted prohibitions (none/neither/no X MUST) restated as MUST NOT. |
+| 1.3.0 | 2026-11-19 | Mike Fullerton | AI Providers panel: Default Model row, editor title and subtitle, untitled connection group, secret reveal, model-only Test Chat |

@@ -9465,15 +9465,6 @@
         },
         {
           "conformance": {
-            "hash": "sha256:932162785f39ad3a906649327f01680bdd286c067fd8ea75fbc6cfcdecc07bda",
-            "state": "confirmed",
-            "version": "1.0.3"
-          },
-          "location": "packages/web/packages/themes/src/theme-data.ts",
-          "platform": "web"
-        },
-        {
-          "conformance": {
             "hash": "sha256:27eda41879bf4967f2f4c257a06483591428babdbcbb94e01c4392ca44bbd836",
             "state": "confirmed",
             "version": "1.0.3"
@@ -16328,6 +16319,27 @@
       "path": "workspace/extensions/host/extension-host",
       "rdid": "adhsdk.ingredient.workspace.extensions.host.extension-host"
     },
+    "b3059939-21f5-414b-82e4-edd11b192ae8": {
+      "implementations": [
+        {
+          "conformance": {
+            "state": "unverified"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIPlugins/Settings/ModelChooserViewController.swift",
+          "platform": "macos"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIPlugins/Settings/AIModelPickerControl.swift",
+          "platform": "macos"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "ai/plugins/model-picker",
+      "rdid": "adhsdk.ingredient.ai.plugins.model-picker"
+    },
     "b307116d-3ab8-422a-b031-885710e11e70": {
       "implementations": [
         {
@@ -18204,6 +18216,27 @@
       "kind": "ingredient",
       "path": "status/dashboard/lib/dashboard-format",
       "rdid": "adhsdk.ingredient.status.dashboard.lib.dashboard-format"
+    },
+    "c9385bf6-3abc-486b-82b5-d57a62d86735": {
+      "implementations": [
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIPlugins/Settings/ProviderModelPickerView.swift",
+          "platform": "macos"
+        },
+        {
+          "conformance": {
+            "state": "unverified"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIPlugins/Settings/ProviderRegistrySource.swift",
+          "platform": "macos"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "ai/plugins/provider-model-picker",
+      "rdid": "adhsdk.ingredient.ai.plugins.provider-model-picker"
     },
     "c97bebaf-9e6d-49a7-a4bb-90e8e0ea0181": {
       "implementations": [

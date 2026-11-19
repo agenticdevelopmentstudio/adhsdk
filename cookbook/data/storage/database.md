@@ -2,11 +2,11 @@
 id: ea580796-8b16-4832-b11d-ad3cae991ecd
 title: "Database"
 type: ingredient
-version: 1.2.1
+version: 1.2.2
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-11-18
+modified: 2026-11-19
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -63,7 +63,7 @@ and the project database (see
 Project Database ([adhsdk.ingredient.workspace.projects.project-database](cookbook:c212ea39-10e7-4146-89dd-36edb3b3455a))),
 which names its file inside the storage-location helper's directory.
 
-`summaryAIProviderSettings(for:)` resolves a `SummaryFeature`'s provider. Sessions reads the global selection. AI Conversations and Coding Projects read their own selection key: absent inherits the global one, an empty string means the Claude CLI, and an id picks that configuration.
+`summaryAIProviderSettings(for:)` resolves a `SummaryFeature`'s provider. Sessions reads the global selection. AI Conversations and Coding Projects read their own selection key: absent inherits the global one, an empty string means the command-line provider sentinel, and an id picks that configuration.
 
 ## Behavioral Requirements
 
@@ -374,6 +374,7 @@ The module keeps storage mechanics (pool, deadlines, metrics) and storage naming
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.2.2 | 2026-11-19 | Mike Fullerton | Name the CLI sentinel without the host's name |
 | 1.2.1 | 2026-11-18 | Mike Fullerton | Per-feature summary provider resolution (`summaryAIProviderSettings(for:)`). |
 | 1.2.0 | 2026-10-04 | Mike Fullerton | Restate rollback-failure and cross-instance-reentrancy as current behavior with pending decisions. |
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to data/storage/. |

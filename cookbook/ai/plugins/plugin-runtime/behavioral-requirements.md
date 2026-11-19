@@ -414,3 +414,34 @@
   stored fields or model MUST be visible on the next access, since
   resolution is recomputed live rather than cached.
 
+### AI Providers Panel
+
+- **providers-panel-subtitle**: Each configuration's panel descriptor MUST
+  carry the subtitle "Provider - LLM - Config type", built from the
+  template's resolved provider, resolved LLM and resolved config type joined
+  by " - ", with empty parts dropped (no subtitle when all three are empty),
+  and MUST update it when the configuration's template changes.
+- **providers-editor-title**: The configuration editor's title MUST read
+  "Provider, LLM, Config type", built from the same three parts joined by
+  ", ", with empty parts dropped.
+- **providers-editor-default-model-row**: The editor MUST show a default
+  model row: a model picker control labelled "Default Model", bound to the
+  per-configuration model setting (`modelSetting(config:template:)`), whose
+  name is the stored model when non-empty, else the template's resolved
+  default model, and whose chosen model is written to that setting. This is
+  the model the configuration resolves to (**config-store-model-default**)
+  and the model a feature gets when it stores `""`.
+- **providers-editor-no-free-text-model**: The editor MUST NOT offer a
+  free-text model field; the default model row is the only way the editor
+  sets the model.
+- **providers-editor-untitled-connection-group**: The editor's connection
+  field group (base URL, key and the other template fields) MUST be shown
+  with no group title.
+- **providers-editor-secret-reveal**: Every secret field in the editor MUST
+  use the secure text row with reveal: dots for a stored secret, copy and
+  eye buttons, re-obscured on window resign key, app resign active, leaving
+  the window or an external change.
+- **providers-test-chat-model-only**: The editor's Test Chat MUST pin its
+  configuration: it MUST hide the provider choice and show only the model
+  row, whose Choose Model action opens the popover model chooser for that
+  configuration.

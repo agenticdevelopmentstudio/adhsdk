@@ -1,6 +1,7 @@
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.2.2 | 2026-11-19 | Mike Fullerton | Name the CLI sentinel without the host's name |
 | 1.2.1 | 2026-11-18 | Mike Fullerton | Per-feature summary provider resolution (`summaryAIProviderSettings(for:)`). |
 | 1.2.0 | 2026-10-04 | Mike Fullerton | Restate rollback-failure and cross-instance-reentrancy as current behavior with pending decisions. |
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to data/storage/. |

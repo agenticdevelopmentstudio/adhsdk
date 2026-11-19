@@ -113,6 +113,15 @@
   trailing label in the secondary text color after the item's label, and
   MUST hide that label for an item without one. The badge label's
   accessibility identifier is the item label's with `.badge` appended.
+- **item-subtitle**: Component MUST draw an item's subtitle, when it has a
+  non-empty one, on a second line directly under the item's title, in the
+  theme's caption font and the secondary text color, truncating at the
+  tail; an item with no subtitle (none or empty) MUST render exactly as it
+  did before subtitles existed, as a single title line at the standard row
+  height.
+- **preferred-width-subtitle**: The preferred width MUST count an item's
+  subtitle's rendered width in the caption font as a candidate width for
+  that item, beside its title's.
 - **item-emphasis**: Component MUST render an emphasized item's label in
   the bold variant of the body font, and every other item's in the body
   font.

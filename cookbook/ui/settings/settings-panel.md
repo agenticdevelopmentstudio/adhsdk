@@ -2,11 +2,11 @@
 id: 432e8d4b-43c3-49fd-b481-036a759e7c55
 title: "Settings Panel"
 type: ingredient
-version: 1.2.3
+version: 1.3.0
 status: review
 language: en
 created: 2026-09-23
-modified: 2026-10-04
+modified: 2026-11-19
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -52,6 +52,10 @@ in.
 - **descriptor**: Component MUST expose a public, immutable descriptor,
   set once at construction, supplying the sidebar's title/icon/isDisabled/
   section metadata for this panel.
+- **descriptor-subtitle**: The descriptor MUST carry an observable,
+  optional subtitle, none by default, beside its observable title, icon,
+  disabled flag, section and heading; a panel MAY set or change it at any
+  time, and observers of the descriptor MUST be told when it changes.
 - **default-descriptor**: Component MUST construct a default descriptor
   when constructed with no descriptor supplied (or an explicit absence of
   one).
@@ -166,6 +170,7 @@ in.
 | spvc-014 | hosting-view-helper | Call the component's hosting helper with some content | Returns a wrapper view containing the given content |
 | spvc-015 | hosting-view-sizing-options | Call the hosting helper with some content, inspect the returned wrapper's sizing behavior | The wrapper advertises the content's size as a preference, not a required min/max constraint |
 | spvc-016 | confines-to-ui-thread | Use the component from a thread other than the UI thread | The use is rejected, at build time or by a runtime check; the component's state is unchanged |
+| spvc-017 | descriptor-subtitle | Construct a descriptor with a title only; then set its subtitle to "OpenAI - GPT - API key" | Its subtitle starts as none; an observer of the descriptor is told of the change and reads the new subtitle |
 
 ## Edge Cases
 
@@ -199,6 +204,7 @@ in.
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
+| `descriptor.subtitle` | Text (optional, observable) | none | A second line the settings list shows under the panel's title (see **descriptor-subtitle**). |
 | `descriptor` | Descriptor (optional) | none | Passed at construction. When supplied, retained as-is (see **descriptor-retention**); when omitted, a default descriptor (empty title) is constructed instead (see **default-descriptor**). |
 
 ## Deep Linking
@@ -409,3 +415,4 @@ is only `partial` here, not exercised or violated by this file.
 | 1.2.1 | 2026-10-04 | Mike Fullerton | Replaced stale spvc-NNN citations in Configuration with requirement names; added separation-of-concerns (passed) and unit-test-coverage (partial) compliance rows. |
 | 1.2.2 | 2026-10-04 | Mike Fullerton | UI-thread confinement restated as the shared confines-to-ui-thread requirement, with a test vector; the @MainActor mechanism is in Platform Notes. |
 | 1.2.3 | 2026-10-04 | Mike Fullerton | Swift-only constructs in normative sections restated as platform-neutral behavior; the Apple mechanism is in Platform Notes. |
+| 1.3.0 | 2026-11-19 | Mike Fullerton | Descriptor carries an observable optional subtitle |

@@ -15,4 +15,10 @@
 | aiplugins-012 | defaults-only-when-empty | The provider-configurations list already holds one entry; seed defaults when needed | The list is unchanged (still exactly the pre-existing entry); the default-seeded guard is now true |
 | aiplugins-013 | mcp-tool-source-unknown-tool | Call the tool named "fs__nonexistent" where no registered pair namespaces to that name | Returns a result of "Unknown tool: fs__nonexistent" marked as an error |
 | aiplugins-014 | mcp-tool-source-namespacing | The registry returns one pair (server name "fs", tool name "read") with an encodable input schema | Listing tool definitions returns exactly one tool definition named "fs__read" |
+| aiplugins-015 | providers-panel-subtitle | Template with provider "OpenAI", LLM "GPT", config type "API key" | The panel's descriptor subtitle is "OpenAI - GPT - API key" |
+| aiplugins-016 | providers-panel-subtitle, providers-editor-title | Template with provider "Ollama", empty LLM, config type "Local" | The subtitle is "Ollama - Local" and the editor title is "Ollama, Local" |
+| aiplugins-017 | providers-editor-default-model-row | Configuration with stored model ""; template default "gpt-5" | The "Default Model" row names "gpt-5"; choosing "gpt-5-mini" writes "gpt-5-mini" to `aiplugin.config.<id>.model` |
+| aiplugins-018 | providers-editor-no-free-text-model, providers-editor-untitled-connection-group | Open a configuration's editor | No free-text model field is present; the connection group has no title |
+| aiplugins-019 | providers-editor-secret-reveal | A configuration with a stored API key "sk-123" | The key field shows six dots with copy and eye buttons |
+| aiplugins-020 | providers-test-chat-model-only | Open the editor's Test Chat | Only the model row shows; its Choose Model action opens the popover chooser for this configuration |
 

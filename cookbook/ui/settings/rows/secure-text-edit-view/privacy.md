@@ -15,16 +15,21 @@
   one, by default) — this is the reason the source recommends this view
   for secrets, but none of it is code in this component's own source
   itself.
-- **Transmission**: Not applicable — no networking call appears anywhere
-  in this component's own source or the text edit row behavior it
-  inherits.
+- **Transmission**: No networking. The copy button writes the secret to
+  the general pasteboard, where any app and Universal Clipboard can read it;
+  that is the person's explicit act and the component writes it nowhere
+  else.
+- **Exposure on screen**: The secret is shown in plain text only after the
+  person presses the eye, and only until the window resigns key, the app
+  resigns active, the view leaves its window or the setting changes from
+  outside; the shown state is never persisted.
 - **Retention**: Inherited unmodified from the text edit row — the value
   lives only in the field and the view model's value for as long as the
   row is on screen and its view model is retained; see
   privacy ([adhsdk.ingredient.ui.settings.rows.text-edit-view](cookbook:c1787e74-2485-4d7b-a219-feb4c07cf97c)).
 - **Security-violation handling**: Not applicable — this component has no
   detection surface of its own (no validation, rate-limiting, or
-  authentication logic); it only masks on-screen glyphs. Any
+  authentication logic); it only masks, reveals and copies. Any
   violation-handling behavior belongs to whatever storage/auth layer the
   caller's setting is wired to, outside these two files.
 

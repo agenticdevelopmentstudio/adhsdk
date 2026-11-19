@@ -237,7 +237,7 @@ The privacy toolbar is three groups, General (Third-Party, Cookies, Hide Images)
 | browser-settings-006 | behavior-topic-contents | Open Behavior in the Settings window | Rows in order: Open sites in tabs, Enable JavaScript, Block pop-up windows, home page address, Autoplay |
 | browser-settings-007 | open-sites-in-tabs-app-only | Open Behavior in a pane's settings sheet | No "Open sites in tabs" row |
 | browser-settings-008 | appearance-topic-contents | Open Appearance | Rows: Zoom, Minimum font size, tab position override |
-| browser-settings-009 | privacy-security-title, privacy-security-existing-groups-first | Open Privacy and Security | Topic title "Privacy and Security"; first groups are General, Input, Focus and visibility, Coding Partner, Agent Privacy, Storage, Scripts |
+| browser-settings-009 | privacy-security-title, privacy-security-existing-groups-first | Open Privacy and Security | Topic title "Privacy and Security"; tabs are General (Storage, Scripts, Cookies, Camera and Microphone, Protection, Site Data, History), Events (Input, Focus and visibility) and Agents (Agent Access, Agent Privacy) |
 | browser-settings-010 | privacy-security-added-groups | Same topic | Groups after Scripts, in order: Cookies, Camera and Microphone, Protection, Site Data, History |
 | browser-settings-011 | manage-site-data-button | Open the Site Data group | One button "Manage Site Data…", id `settings.browser.site-data.manage`; no table in the topic |
 | browser-settings-012 | site-data-window | Press Manage Site Data… | A window titled "Site Data — <jar>" opens, naming the jar, app-modal, resizable, movable, with columns Site and Data and −, Remove All…, Refresh, Done |
@@ -315,8 +315,8 @@ The control table. Keys never change when a control moves
 | Privacy and Security | Input | Disable pointer tracking | `browser.privacy.pointer_tracking` |
 | Privacy and Security | Input | Disable drag and drop | `browser.privacy.drag_and_drop` |
 | Privacy and Security | Focus and visibility | Disable activation events | `browser.privacy.hide_activation` |
-| Privacy and Security | Coding Partner | Agent access | `browser.privacy.agent_access` |
-| Privacy and Security | Coding Partner | Agent while paused | `browser.privacy.agent_while_paused` |
+| Privacy and Security | Agents tab, Agent Access | Agent access, Read only | `browser.privacy.agent_access` |
+| Privacy and Security | Agents tab, Agent Access | Agent while paused | `browser.privacy.agent_while_paused` |
 | Privacy and Security | Agent Privacy | Conceal privacy words from agents | `browser.agent_privacy.enabled` |
 | Privacy and Security | Agent Privacy | Hide Images | `browser.privacy.hide_images` |
 | Privacy and Security | Agent Privacy | Let models drive browser panes (global only) | `browser.automation.enabled` |
@@ -434,6 +434,20 @@ Not applicable: the design asks for no log line of the topics' own.
 - **WinUI 3**: A `NavigationView` with one page per topic; the Site Data window
   a separate modal `AppWindow` with an `OverlappedPresenter` that is
   resizable; tooltips via `ToolTipService.ToolTip`.
+
+## Reference Implementations
+
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Settings/BrowserBehaviorPanel.swift` | confirmed (0.2.0) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Settings/BrowserAppearancePanel.swift` | confirmed (0.2.0) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Settings/BrowserSiteDataWindowController.swift` | confirmed (0.2.0) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Settings/BrowserSettingsPanelViewController.swift` | confirmed (0.2.0) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Settings/SessionPrivacySettingsPanel.swift` | confirmed (0.2.0) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Settings/` | confirmed (0.2.0) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/WebBrowserPaneViewController.swift` | confirmed (0.2.0) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/SafariExtensions/SafariExtensionToolbar.swift` | confirmed (0.2.0) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/BrowserPrivacyStrip.swift` | confirmed (0.2.0) |
 
 ## Design Decisions
 

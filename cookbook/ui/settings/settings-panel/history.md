@@ -8,3 +8,4 @@
 | 1.2.1 | 2026-10-04 | Mike Fullerton | Replaced stale spvc-NNN citations in Configuration with requirement names; added separation-of-concerns (passed) and unit-test-coverage (partial) compliance rows. |
 | 1.2.2 | 2026-10-04 | Mike Fullerton | UI-thread confinement restated as the shared confines-to-ui-thread requirement, with a test vector; the @MainActor mechanism is in Platform Notes. |
 | 1.2.3 | 2026-10-04 | Mike Fullerton | Swift-only constructs in normative sections restated as platform-neutral behavior; the Apple mechanism is in Platform Notes. |
+| 1.3.0 | 2026-11-19 | Mike Fullerton | Descriptor carries an observable optional subtitle |

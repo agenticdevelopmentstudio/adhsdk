@@ -196,7 +196,6 @@ Not applicable: the module logs nothing. The generator prints one completion lin
 | android | (planned) | planned |
 | windows | (planned) | planned |
 | web | `packages/web/packages/themes/scripts/build-theme-data.mjs` | confirmed (1.0.3) |
-| web | `packages/web/packages/themes/src/theme-data.ts` | confirmed (1.0.3) |
 | web | `packages/web/packages/themes/scripts/theme-data.mjs` | confirmed (1.0.3) |
 | web | `packages/web/packages/themes/scripts/inline-imports.mjs` | confirmed (1.0.3) |
 

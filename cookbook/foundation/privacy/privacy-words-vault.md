@@ -177,6 +177,17 @@ Not applicable: the vault calls no logging API; the words are never written to a
 - **AppKit / UIKit**: The same file serves both; the macOS private terminal and the Secrets window take the vault by injection. `DistributedNotificationCenter` is macOS only; an iOS port has no cross-app notification for the same items and would reload on foreground.
 - **WinUI 3**: A class implementing `INotifyPropertyChanged` raising for `Filter`, marshalled with `DispatcherQueue.TryEnqueue`; `async Task` methods for `AuthenticateAsync`, `SaveAsync` and `LoadUpgradingIfNeededAsync`, with a stored `Task` field for the shared upgrade (cleared in `finally`) and `SemaphoreSlim` if overlapping saves must be ordered. For cross-app announcements use a named `EventWaitHandle`, a `Windows.ApplicationModel.AppService`, or a `FileSystemWatcher` on a shared file; there is no distributed notification equivalent, so the process id tag becomes an instance or process id carried in the signal. Owner proof comes from `UserConsentVerifier`, as in the store.
 
+## Reference Implementations
+
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Privacy/PrivacyWordsVault.swift` | confirmed (2.0.0) |
+| web | (planned) | planned |
+| android | (planned) | planned |
+| windows | (planned) | planned |
+| macos | `packages/apple/AgenticDeveloperHubSDK/Core/Privacy/PrivacyTestingWords.swift` | confirmed (2.0.0) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/Core/Privacy/SystemAuthenticationPrompt.swift` | confirmed (2.0.0) |
+
 ## Design Decisions
 
 **Decision**: Reading the words to run a terminal never prompts, while seeing them does.

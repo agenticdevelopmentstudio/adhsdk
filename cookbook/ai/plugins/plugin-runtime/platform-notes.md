@@ -53,7 +53,18 @@
   loading of unsigned code is not permitted under App Store code-signing —
   in favor of statically linked or App Extension–hosted plugins. The
   Foundation-level pieces (`NSLock`, `UserDefaults`, Keychain Services)
-  need no change.
+  need no change. The AI Providers panel lives in
+  `Features/AIPlugins/Settings/` (`LLMProvidersView`,
+  `LLMProvidersListViewModel`, `AISettingsViewPanelController`): the default
+  model row is an `AIModelPickerControl` over
+  `AIProviderConfigStore.modelSetting(config:template:)`, the subtitle is set
+  on the panel's `SettingsPanelDescriptor.subtitle` from
+  `template.resolvedProvider`, `resolvedLLM` and `resolvedConfigType`, the
+  SwiftUI editor hosts `ComposableSettings.SecureTextEditView` through
+  `NSViewRepresentable` (or moves its field rows to the ComposableSettings
+  views), and the Test Chat is `AIChatViewController(pinsConfiguration:
+  true)`. `LLMPickerView` is replaced by the provider model picker and
+  deleted.
 - **WinUI 3**: `System.Net.Http.HttpClient` performs the HTTP half of what
   `PluginTransport` drives (the given sources hand it an `AIRequestSpec`,
   never touch `HttpClient` directly), and `System.Diagnostics.Process` /

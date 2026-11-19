@@ -25,10 +25,14 @@
   immediately preceding admitted panel's section MUST start a new section,
   even when an earlier, non-adjacent panel already used that same section
   title.
-- **descriptor-row-mapping**: Each row's title, icon, and
+- **descriptor-row-mapping**: Each row's title, subtitle, icon, and
   disabled-appearance flag MUST be read from that panel's descriptor
-  title, icon, and disabled flag, respectively, at the moment sections are
-  rebuilt.
+  title, subtitle, icon, and disabled flag, respectively, at the moment
+  sections are rebuilt; a descriptor with no subtitle gives a row with none.
+- **descriptor-change-rebuild**: A change to the title or the subtitle of
+  any panel's descriptor in the current panel list MUST trigger a section
+  rebuild, so the row shows the new text; observation of a panel MUST end
+  when it leaves the panel list.
 - **original-index-row-id**: Each row's identifier MUST be the string form
   of its panel's zero-based index in the full array most recently set,
   independent of that row's position under the current filter.

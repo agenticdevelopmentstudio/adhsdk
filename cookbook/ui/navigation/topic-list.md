@@ -2,11 +2,11 @@
 id: ce223be3-818a-4310-b136-9e1e84e9af54
 title: "Topic List"
 type: ingredient
-version: 1.4.1
+version: 1.5.0
 status: review
 language: en
 created: 2026-09-23
-modified: 2026-11-16
+modified: 2026-11-19
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -170,6 +170,15 @@ component always disables. A section's optional title renders as a
   trailing label in the secondary text color after the item's label, and
   MUST hide that label for an item without one. The badge label's
   accessibility identifier is the item label's with `.badge` appended.
+- **item-subtitle**: Component MUST draw an item's subtitle, when it has a
+  non-empty one, on a second line directly under the item's title, in the
+  theme's caption font and the secondary text color, truncating at the
+  tail; an item with no subtitle (none or empty) MUST render exactly as it
+  did before subtitles existed, as a single title line at the standard row
+  height.
+- **preferred-width-subtitle**: The preferred width MUST count an item's
+  subtitle's rendered width in the caption font as a candidate width for
+  that item, beside its title's.
 - **item-emphasis**: Component MUST render an emphasized item's label in
   the bold variant of the body font, and every other item's in the body
   font.
@@ -214,7 +223,9 @@ component always disables. A section's optional title renders as a
   label, 4pt trailing inset to the cell's trailing edge.
 - **Font**: Item labels use the theme's body font (its bold variant for an
   emphasized item); badges use the theme's caption font; group header labels use
-  the theme's caption font; the title label uses the theme's button font.
+  the theme's caption font; an item's subtitle, drawn under its label,
+  uses the theme's caption font; the title label uses the theme's button
+  font.
   All three read the live theme palette rather than a fixed point size,
   and are reapplied on every cell reuse rather than baked in once at cell
   creation.
@@ -225,6 +236,8 @@ component always disables. A section's optional title renders as a
   the tertiary text color when disabled. Item icon tint: the accent color
   when enabled, the tertiary text color when disabled. Group header
   label: the secondary text color. Badge label: the secondary text color.
+  Item subtitle: the secondary text color (the tertiary text color when the
+  item is disabled).
   Title label: the secondary text color.
 - **Border**: Not set explicitly anywhere in this component; the scroll
   view's border keeps its platform default, no border - no border is
@@ -241,6 +254,7 @@ component always disables. A section's optional title renders as a
 
 | State | Appearance change |
 |-------|------------------|
+| With subtitle | A two-line row: the title, and under it the subtitle in the caption font and secondary text color. Rows without a subtitle are single-line. |
 | Default (unselected, enabled item row) | Item font, primary text color label, accent-color-tinted icon; row background follows the window-background color. |
 | Disabled item row | Item font, tertiary text color label, tertiary-text-color-tinted icon; identical selection/press behavior to an enabled row (see **disabled-item-selectability**). |
 | Selected row | A 4pt-corner-radius rect, inset 2pt horizontally / 1pt vertically, filled with the theme's selection color, drawn behind the row. |
@@ -325,6 +339,9 @@ component always disables. A section's optional title renders as a
 | topic-list-036 | item-drag-payload | Sections `Branches` (`main`, `dev`); a payload provider returning the item's id for `dev` only; ask each row for its drag writer | `dev` writes `dev` as the item type; the header and `main` write nothing; with no provider nothing writes |
 | topic-list-037 | item-drop-validation, item-drop-delivery | The same list, a validator accepting only `dev` onto `main`; drop `dev` and then `x` onto `main`, `dev` onto the header and row 9 | Only `dev` onto `main` is valid, and the callback receives (`dev`, `main`) once |
 | topic-list-038 | item-drop-validation | Inspect the outline after it loads | It is registered for the item pasteboard type |
+| topic-list-039 | item-subtitle | Items `a` (subtitle "OpenAI - GPT - API key") and `b` (no subtitle) | `a`'s row shows the subtitle under its title in the caption font and secondary color; `b`'s row is a single title line at the standard height |
+| topic-list-040 | item-subtitle | An item whose subtitle is "" | The row renders as one with no subtitle |
+| topic-list-041 | preferred-width-subtitle | One item, title "A", subtitle wider than the title | The preferred width is computed from the subtitle's width |
 ## Edge Cases
 
 - Null/empty input (MUST): An empty grouped setter call yields an empty
@@ -697,3 +714,4 @@ Separation-of-concerns is passed: `TopicListViewController` renders sections and
 | 1.3.0 | 2026-11-13 | Mike Fullerton | Items can carry a trailing badge and be emphasized (bold); the preferred width measures both. Item and section header context menus from client providers, and a double-click callback for item rows (vectors 032-035). |
 | 1.4.0 | 2026-11-15 | Mike Fullerton | Drag and drop: items drag a client payload of the item pasteboard type, drops onto an item row are validated and delivered to the client (vectors 036-038). |
 | 1.4.1 | 2026-11-16 | Mike Fullerton | Sections carry an optional accessibility identifier |
+| 1.5.0 | 2026-11-19 | Mike Fullerton | Item subtitle drawn under the title in the caption font and secondary color |
