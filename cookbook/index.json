@@ -4400,9 +4400,9 @@
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:c30ff7c74e99ed738bfc38400dbf8b23d8f2ac4dd7b688673fab005be5eed4a0",
+            "hash": "sha256:2fc59c5d0bb70d118f9e7b6c5c91e1b83db871d728774e2140325e910d90d40f",
             "state": "confirmed",
-            "version": "1.3.2"
+            "version": "1.4.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/SecureTextEditView.swift",
           "platform": "apple"
@@ -15145,9 +15145,9 @@
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:741eb2b2f24c67295ab7c053341845b67c7f827f0daaed01112284dd961438dd",
+            "hash": "sha256:4e127cc155a13a08809fe8aef9aa92780b1f84f4881bf5db471cd898b89f5313",
             "state": "confirmed",
-            "version": "1.2.2"
+            "version": "1.3.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/SplitViewController/SettingsPanelListViewController.swift",
           "platform": "apple"
@@ -16380,14 +16380,18 @@
       "implementations": [
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:75bd5665db06971795639e19a0f968e67eb891a4e8415a7b333dfae349935e68",
+            "state": "confirmed",
+            "version": "1.0.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIPlugins/Settings/ModelChooserViewController.swift",
           "platform": "macos"
         },
         {
           "conformance": {
-            "state": "planned"
+            "hash": "sha256:5f4b6265f8dd42f0bc83670c5779dbe44c1d09f7cfd59c7cfc5b1d831838d8fe",
+            "state": "confirmed",
+            "version": "1.0.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIPlugins/Settings/AIModelPickerControl.swift",
           "platform": "macos"
@@ -17622,9 +17626,9 @@
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:411f4939b5cf82844fd840bbccb761700e26917c53e48ec5685ae88936a948cf",
+            "hash": "sha256:2414b672ffa3ab6e91a38c27fb04d909b8ab6d59ab438980d39494298a7e399e",
             "state": "confirmed",
-            "version": "1.3.1"
+            "version": "1.4.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/TextEditView.swift",
           "platform": "apple"
@@ -18278,14 +18282,18 @@
       "implementations": [
         {
           "conformance": {
-            "state": "planned"
+            "hash": "sha256:c8219960fe4ff728c6f3acc7eedfb959d384e788b3da66498be2cc63bc8ded86",
+            "state": "confirmed",
+            "version": "1.0.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIPlugins/Settings/ProviderModelPickerView.swift",
           "platform": "macos"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:09be1c99d37458afa57f2fdd9129e3c89198ddfeddfb5f5b98608a36a98a45e7",
+            "state": "confirmed",
+            "version": "1.0.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIPlugins/Settings/ProviderRegistrySource.swift",
           "platform": "macos"
@@ -18711,9 +18719,9 @@
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:640f8d1512edfaf0e34a093d3c0a96f2e5294677054683b4a5cd5101ac867240",
+            "hash": "sha256:061b72e4d11fc7b4c8c34e5f6fae42e98794fa60eb23f1b98a3658b60cfe7e19",
             "state": "confirmed",
-            "version": "1.4.1"
+            "version": "1.5.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/TopicListViewController.swift",
           "platform": "apple"

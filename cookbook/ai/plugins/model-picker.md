@@ -2,7 +2,7 @@
 id: b3059939-21f5-414b-82e4-edd11b192ae8
 title: "Model Picker"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-19
@@ -76,6 +76,11 @@ recipe covers the presentation, the choosing rules and the control.
 - **transient-popover**: The entry point MUST show the chooser in a transient
   popover pointing at the given anchor view, opening above the anchor
   (preferring the anchor's top edge) or below it when there is no room above.
+- **fixed-content-size**: The popover MUST open at the chooser's fixed
+  content size (720 by 450 points), set on the chooser's root view and its
+  preferred content size and on the popover after its content is assigned;
+  nothing inside the chooser pins a height, so a popover left to the view's
+  fitting size would show only the filter row.
 - **one-chooser-at-a-time**: Presenting the chooser while one is already shown
   MUST close the shown one first, so at most one chooser is open.
 - **search-field-focus**: When the popover opens, the chooser's search field
@@ -124,7 +129,10 @@ recipe covers the presentation, the choosing rules and the control.
   settable by the caller.
 - **control-name-text**: The name button MUST show the name the display-name
   closure returns, and "Choose a Model" when that closure returns none or an
-  empty string.
+  empty string. A model id the context's provider model manager knows MUST be
+  shown by its display name (an alias resolved to its id, then given the
+  manager's display name for it); an id the manager does not know is shown
+  unchanged.
 - **control-opens-chooser**: Clicking the caret or the name button MUST
   present the chooser through its one entry point, anchored to the caret,
   with the context the context closure returns at that moment.
@@ -364,8 +372,8 @@ calls own their logging.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIPlugins/Settings/ModelChooserViewController.swift` | unverified |
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIPlugins/Settings/AIModelPickerControl.swift` | planned |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIPlugins/Settings/ModelChooserViewController.swift` | confirmed (1.0.1) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIPlugins/Settings/AIModelPickerControl.swift` | confirmed (1.0.1) |
 
 ## Design Decisions
 
@@ -425,4 +433,5 @@ English literals.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-19 | Mike Fullerton | Fixed popover content size; the name shows a known id by its display name |
 | 1.0.0 | 2026-11-19 | Mike Fullerton | Initial creation, ahead of the code: the popover chooser and the AI model picker control |
