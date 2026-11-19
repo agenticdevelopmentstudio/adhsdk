@@ -11,11 +11,21 @@ public protocol TopicListItemProtocol: Sendable {
     var badge: String? { get }
     /// Draw the title in the bold variant of the body font (the current branch, the open document).
     var isEmphasized: Bool { get }
+    /// A second line under the title, in the caption font and the secondary text
+    /// color; nil or empty draws the row as a single title line.
+    var subtitle: String? { get }
 }
 
 extension TopicListItemProtocol {
     public var badge: String? { nil }
     public var isEmphasized: Bool { false }
+    public var subtitle: String? { nil }
+
+    /// The subtitle when there is one to draw: nil for none or empty.
+    var visibleSubtitle: String? {
+        guard let subtitle, !subtitle.isEmpty else { return nil }
+        return subtitle
+    }
 }
 
 /// One row in a `TopicListViewController`.
@@ -27,13 +37,15 @@ public struct TopicListItem: TopicListItemProtocol {
     public let isDisabled: Bool
     public let badge: String?
     public let isEmphasized: Bool
+    public let subtitle: String?
 
     public init(
-        id: String, title: String, icon: NSImage? = nil, isDisabled: Bool = false,
+        id: String, title: String, subtitle: String? = nil, icon: NSImage? = nil, isDisabled: Bool = false,
         badge: String? = nil, isEmphasized: Bool = false
     ) {
         self.id = id
         self.title = title
+        self.subtitle = subtitle
         self.icon = icon
         self.isDisabled = isDisabled
         self.badge = badge
@@ -444,7 +456,19 @@ open class TopicListViewController: NSViewController {
         if let badge = item.badge, !badge.isEmpty {
             width += CellMetrics.badgeGap + ceil(badge.renderedWidth(usingFont: CellMetrics.badgeFont))
         }
+        if let subtitle = item.visibleSubtitle {
+            width = max(width, CellMetrics.itemChromeWidth
+                + ceil(subtitle.renderedWidth(usingFont: CellMetrics.subtitleFont)))
+        }
         return width
+    }
+
+    /// The height of a row whose item has a subtitle: the title line and the
+    /// subtitle line, with the standard row's vertical padding, never shorter
+    /// than a standard row.
+    static func subtitledRowHeight(standard: CGFloat) -> CGFloat {
+        let lines = CellMetrics.lineHeight(CellMetrics.itemFont) + CellMetrics.lineHeight(CellMetrics.subtitleFont)
+        return max(standard, ceil(lines + 2 * CellMetrics.subtitleRowPadding))
     }
 
     /// The one source of truth for the row layout, shared by `preferredWidth`
@@ -460,6 +484,12 @@ open class TopicListViewController: NSViewController {
         static var titleFont: NSFont { ThemePaletteObserver.currentPalette.font(.button) }
         static var emphasizedItemFont: NSFont { NSFontManager.shared.convert(itemFont, toHaveTrait: .boldFontMask) }
         static var badgeFont: NSFont { ThemePaletteObserver.currentPalette.font(.caption) }
+        static var subtitleFont: NSFont { ThemePaletteObserver.currentPalette.font(.caption) }
+        /// Above the title and below the subtitle in a two-line row.
+        static let subtitleRowPadding: CGFloat = 4
+        static func lineHeight(_ font: NSFont) -> CGFloat {
+            ceil(font.ascender - font.descender + font.leading)
+        }
         static let badgeGap: CGFloat = 6
         static let titleLeadingInset: CGFloat = 14
         static let headerTrailingInset: CGFloat = 14
@@ -686,6 +716,26 @@ private final class TopicListItemLabel: NSTextField {
 /// An item row's cell: the standard image and label, plus a trailing badge.
 private final class TopicListItemCell: NSTableCellView {
     let badgeLabel = NSTextField(labelWithString: "")
+    let subtitleLabel = NSTextField(labelWithString: "")
+    /// Title centred in the row: active while there is no subtitle.
+    var titleCentered: NSLayoutConstraint?
+    /// Title bottom on the row's centre line, the subtitle under it: active
+    /// while a subtitle shows.
+    var titleAboveCenter: NSLayoutConstraint?
+
+    func setSubtitle(_ subtitle: String?) {
+        let text = subtitle ?? ""
+        subtitleLabel.stringValue = text
+        subtitleLabel.isHidden = text.isEmpty
+        // Deactivate before activating, so the two never conflict for a pass.
+        if text.isEmpty {
+            titleAboveCenter?.isActive = false
+            titleCentered?.isActive = true
+        } else {
+            titleCentered?.isActive = false
+            titleAboveCenter?.isActive = true
+        }
+    }
     /// Title trailing ≤ badge leading − gap. Active only while the badge shows,
     /// so a row without one lays out exactly as `preferredWidth` measures it.
     var titleToBadge: NSLayoutConstraint?
@@ -836,6 +886,11 @@ extension TopicListViewController: NSOutlineViewDelegate {
                 badgeLabel.font = CellMetrics.badgeFont
                 badgeLabel.textColor = palette.secondaryTextColor
                 badgeLabel.accessibilityID(labelID + ".badge")
+                itemCell.setSubtitle(item.visibleSubtitle)
+                itemCell.subtitleLabel.font = CellMetrics.subtitleFont
+                itemCell.subtitleLabel.textColor = item.isDisabled
+                    ? palette.tertiaryTextColor : palette.secondaryTextColor
+                itemCell.subtitleLabel.accessibilityID(labelID + ".subtitle")
             }
             cell.textField?.textColor = item.isDisabled ? palette.tertiaryTextColor : palette.primaryTextColor
             cell.textField?.alphaValue = 1.0
@@ -860,6 +915,15 @@ extension TopicListViewController: NSOutlineViewDelegate {
     public func outlineViewSelectionDidChange(_ notification: Notification) {
         if selectionSuppressionDepth > 0 { return }
         onSelect?(selectedItem)
+    }
+
+    /// A row whose item has a subtitle is two lines tall; every other row keeps
+    /// the outline's standard height.
+    public func outlineView(_ outlineView: NSOutlineView, heightOfRowByItem item: Any) -> CGFloat {
+        guard let node = item as? TopicListNode, case .item(let topic) = node.kind,
+              topic.visibleSubtitle != nil
+        else { return outlineView.rowHeight }
+        return Self.subtitledRowHeight(standard: outlineView.rowHeight)
     }
 
     public func outlineView(_ outlineView: NSOutlineView, shouldShowOutlineCellForItem item: Any) -> Bool {
@@ -904,9 +968,15 @@ extension TopicListViewController: NSOutlineViewDelegate {
         badgeLabel.setContentCompressionResistancePriority(.required, for: .horizontal)
         badgeLabel.setContentHuggingPriority(.required, for: .horizontal)
 
+        let subtitleLabel = cell.subtitleLabel
+        subtitleLabel.lineBreakMode = .byTruncatingTail
+        subtitleLabel.translatesAutoresizingMaskIntoConstraints = false
+        subtitleLabel.isHidden = true
+
         cell.addSubview(imageView)
         cell.addSubview(textField)
         cell.addSubview(badgeLabel)
+        cell.addSubview(subtitleLabel)
         cell.imageView = imageView
         cell.textField = textField
 
@@ -921,12 +991,21 @@ extension TopicListViewController: NSOutlineViewDelegate {
                 equalTo: imageView.trailingAnchor, constant: CellMetrics.iconToTextGap),
             textField.trailingAnchor.constraint(
                 lessThanOrEqualTo: cell.trailingAnchor, constant: -CellMetrics.textTrailingInset),
-            textField.centerYAnchor.constraint(equalTo: cell.centerYAnchor),
+
+            subtitleLabel.topAnchor.constraint(equalTo: textField.bottomAnchor),
+            subtitleLabel.leadingAnchor.constraint(equalTo: textField.leadingAnchor),
+            subtitleLabel.trailingAnchor.constraint(
+                lessThanOrEqualTo: cell.trailingAnchor, constant: -CellMetrics.textTrailingInset),
 
             badgeLabel.trailingAnchor.constraint(
                 equalTo: cell.trailingAnchor, constant: -CellMetrics.textTrailingInset),
             badgeLabel.firstBaselineAnchor.constraint(equalTo: textField.firstBaselineAnchor)
         ])
+        // One of these two is active, chosen by `setSubtitle`.
+        let centered = textField.centerYAnchor.constraint(equalTo: cell.centerYAnchor)
+        centered.isActive = true
+        cell.titleCentered = centered
+        cell.titleAboveCenter = textField.bottomAnchor.constraint(equalTo: cell.centerYAnchor)
         // Activated by `setBadge` only while a badge shows.
         cell.titleToBadge = textField.trailingAnchor.constraint(
             lessThanOrEqualTo: badgeLabel.leadingAnchor, constant: -CellMetrics.badgeGap)

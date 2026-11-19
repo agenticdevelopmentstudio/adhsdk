@@ -59,17 +59,22 @@ open class AIPanelViewController: ComposableSettings.SettingsPanelSplitViewContr
                 title: "Test Chat",
                 body: "The Test Chat card under a provider's connection talks to that "
                     + "provider directly, so you can confirm the key and the endpoint "
-                    + "work — and pick a model with Choose Model… — before anything "
-                    + "else depends on them. Choosing a model here saves it as the "
-                    + "provider's model. For a longer conversation, New AI Chat… in "
-                    + "the AI menu opens a chat window. A provider whose plugin failed "
-                    + "to load says so instead, and can't be used until that is resolved."
+                    + "work before anything else depends on them. For a longer "
+                    + "conversation, New AI Chat… in the AI menu opens a chat window. "
+                    + "A provider whose plugin failed to load says so instead, and "
+                    + "can't be used until that is resolved."
+            ),
+            .init(
+                title: "Default Model",
+                body: "Default Model is the model this provider uses wherever a model "
+                    + "is left at the provider's default. Click the model's name to "
+                    + "choose another from the provider's list. Choosing a model in "
+                    + "the Test Chat changes it too."
             )
         ])
     }
 
-    /// The provider editors are SwiftUI, so their controls cannot be read off
-    /// the view tree; this names what the whole panel is about.
+    /// Names what the whole panel is about, beyond the rows its editors show.
     open override var searchKeywords: [String] {
         ["llm", "provider", "api key", "model", "claude", "openai", "google", "endpoint"]
     }
@@ -235,19 +240,19 @@ open class AIPanelViewController: ComposableSettings.SettingsPanelSplitViewContr
 /// row label + detail-pane title. Its body is two cards:
 ///
 /// ```
-/// Anthropic API
-/// Anthropic · Claude · API Key
-/// Connection
+/// Anthropic, Claude, API Key
 /// ┌──────────────────────────────┐
-/// │ Name / key / endpoint fields │   ← LLMProviderEditorView (SwiftUI)
+/// │ Name / key / endpoint fields │   ← LLMProviderEditorView, an untitled
+/// │ Default Model ⌄ : model      │     group of ComposableSettings rows
 /// └──────────────────────────────┘
 /// Test Chat
 /// ┌──────────────────────────────┐
-/// │ Provider: name               │   ← AIChatViewController, pinned to this
-/// │ Model: …     [Choose Model…] │     configuration, filling the rest of
-/// │ transcript / entry           │     the pane
-/// └──────────────────────────────┘
+/// │ Model: …     [Choose Model…] │   ← AIChatViewController, pinned to this
+/// │ transcript / entry           │     configuration, filling the rest of
+/// └──────────────────────────────┘     the pane
 /// ```
+///
+/// The sidebar row reads the config name over "Provider - LLM - Config type".
 ///
 /// It hosts its own scrolling (`hostsOwnScroll`): the transcript scrolls inside
 /// its card, and a panel wrapped in the framework's scroll view would grow
@@ -259,6 +264,7 @@ private final class ProviderConfigPanelViewController: ComposableSettings.Settin
     private let viewModel: LLMProvidersListViewModel
     private let onRenamed: () -> Void
     private var nameObserver: AnyCancellable?
+    private var subtitleObserver: AnyCancellable?
     private let chat: AIChatViewController
 
     init(config: AIProviderConfiguration,
@@ -270,10 +276,24 @@ private final class ProviderConfigPanelViewController: ComposableSettings.Settin
         self.onRenamed = onRenamed
         self.chat = AIChatViewController(
             pluginManager: pluginManager, configuration: config, pinsConfiguration: true)
+        let subtitle: (AIProviderConfiguration) -> String? = { [weak pluginManager] config in
+            ProviderConfigTitles.subtitle(template: pluginManager?.template(
+                pluginIdentifier: config.pluginIdentifier, templateId: config.templateId))
+        }
         super.init(with: ComposableSettings.SettingsPanelDescriptor(
             title: config.name,
+            subtitle: subtitle(config),
             icon: NSImage(systemSymbolName: "cpu", accessibilityDescription: nil)
         ))
+        // The sidebar list follows the descriptor's subtitle itself.
+        subtitleObserver = viewModel.$configurations
+            .compactMap { configs in configs.first(where: { $0.id == config.id }) }
+            .map(subtitle)
+            .removeDuplicates()
+            .sink { [weak self] text in
+                guard let self, self.descriptor.subtitle != text else { return }
+                self.descriptor.subtitle = text
+            }
         // Keep the sidebar row title + detail title in sync when this config is
         // renamed in the editor.
         nameObserver = viewModel.$configurations
@@ -309,8 +329,7 @@ private final class ProviderConfigPanelViewController: ComposableSettings.Settin
         let inset = layout[.panelInset]
         let root = NSView()
 
-        let editor = Self.hostingView(
-            for: LLMProviderEditorView(configuration: config, viewModel: viewModel).themedRoot())
+        let editor = LLMProviderEditorView(configuration: config, viewModel: viewModel)
         let caption = ComposableSettings.HeaderView(title: "Test Chat")
         let card = ThemedBox(fill: .card, stroke: .outline, cornerRadius: layout[.cardCornerRadius])
         card.translatesAutoresizingMaskIntoConstraints = false

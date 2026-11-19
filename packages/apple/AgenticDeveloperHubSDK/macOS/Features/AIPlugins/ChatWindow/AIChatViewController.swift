@@ -20,8 +20,8 @@ import AgenticDeveloperHubSDKCoreMacOS
 /// - an app-modal picker (``LLMChatPicker``) that reports the provider + model the
 ///   user settled on (`showsChoiceButtons`);
 /// - the settings panel's Test Chat, **pinned** to the configuration being edited
-///   (`pinsConfiguration`): the provider is a label, not a popup, because that
-///   chat exists to test that one connection.
+///   (`pinsConfiguration`): there is no provider row, only the model row,
+///   because that chat exists to test that one connection.
 ///
 /// Choosing a model **persists** it to that configuration (the
 /// `AIProviderConfigStore` model setting), in every presentation. The chat is
@@ -69,8 +69,6 @@ public final class AIChatViewController: NSViewController, Themeable {
     private let providerLabel = NSTextField(labelWithString: "Provider:")
     private let modelLabel = NSTextField(labelWithString: "Model:")
     private let providerPopUp = NSPopUpButton()
-    /// Stands in for the popup when the configuration is pinned.
-    private let providerName = NSTextField(labelWithString: "")
     private let modelValue = NSTextField(labelWithString: "")
     private let chooseModelButton = NSButton()
     private let separator = ThemedSeparatorView(role: .border)
@@ -118,8 +116,8 @@ public final class AIChatViewController: NSViewController, Themeable {
     ///   - toolSource: tools every session built here may call; nil for a plain
     ///     chat.
     ///   - showsChoiceButtons: picker mode — add the Cancel / Choose bar.
-    ///   - pinsConfiguration: Test-Chat mode — `configuration` is fixed, and shown
-    ///     as a label instead of a popup.
+    ///   - pinsConfiguration: Test-Chat mode — `configuration` is fixed, and the
+    ///     provider row is not shown.
     public init(pluginManager: AIPluginManager,
                 configuration: AIProviderConfiguration? = nil,
                 model: String? = nil,
@@ -227,8 +225,11 @@ public final class AIChatViewController: NSViewController, Themeable {
         emptyLabel.maximumNumberOfLines = 0
         emptyLabel.isHidden = true
 
-        let header = pinsConfiguration ? providerName : providerPopUp
-        for subview in [providerLabel, modelLabel, header, modelValue, chooseModelButton, separator] {
+        // A pinned chat has one configuration and no choice of it, so it shows
+        // the model row alone; otherwise the provider row leads.
+        let header: NSView? = pinsConfiguration ? nil : providerPopUp
+        let providerRow: [NSView] = header.map { [providerLabel, $0] } ?? []
+        for subview in providerRow + [modelLabel, modelValue, chooseModelButton, separator] {
             subview.translatesAutoresizingMaskIntoConstraints = false
             configView.addSubview(subview)
         }
@@ -247,14 +248,6 @@ public final class AIChatViewController: NSViewController, Themeable {
             configView.leadingAnchor.constraint(equalTo: root.leadingAnchor),
             configView.trailingAnchor.constraint(equalTo: root.trailingAnchor),
 
-            providerLabel.leadingAnchor.constraint(equalTo: configView.leadingAnchor, constant: 16),
-            providerLabel.centerYAnchor.constraint(equalTo: header.centerYAnchor),
-            providerLabel.widthAnchor.constraint(equalTo: modelLabel.widthAnchor),
-
-            header.topAnchor.constraint(equalTo: configView.topAnchor, constant: 16),
-            header.leadingAnchor.constraint(equalTo: providerLabel.trailingAnchor, constant: 8),
-            header.trailingAnchor.constraint(lessThanOrEqualTo: configView.trailingAnchor, constant: -16),
-
             modelLabel.leadingAnchor.constraint(equalTo: configView.leadingAnchor, constant: 16),
             modelLabel.centerYAnchor.constraint(equalTo: chooseModelButton.centerYAnchor),
 
@@ -265,7 +258,8 @@ public final class AIChatViewController: NSViewController, Themeable {
             modelValue.trailingAnchor.constraint(
                 lessThanOrEqualTo: chooseModelButton.leadingAnchor, constant: -8),
 
-            chooseModelButton.topAnchor.constraint(equalTo: header.bottomAnchor, constant: 8),
+            header.map { chooseModelButton.topAnchor.constraint(equalTo: $0.bottomAnchor, constant: 8) }
+                ?? chooseModelButton.topAnchor.constraint(equalTo: configView.topAnchor, constant: 16),
             chooseModelButton.trailingAnchor.constraint(equalTo: configView.trailingAnchor, constant: -16),
 
             separator.topAnchor.constraint(equalTo: chooseModelButton.bottomAnchor, constant: 12),
@@ -280,6 +274,18 @@ public final class AIChatViewController: NSViewController, Themeable {
             emptyLabel.centerYAnchor.constraint(equalTo: chatContainer.centerYAnchor),
             emptyLabel.widthAnchor.constraint(lessThanOrEqualTo: chatContainer.widthAnchor, constant: -48)
         ]
+
+        if let header {
+            constraints += [
+                providerLabel.leadingAnchor.constraint(equalTo: configView.leadingAnchor, constant: 16),
+                providerLabel.centerYAnchor.constraint(equalTo: header.centerYAnchor),
+                providerLabel.widthAnchor.constraint(equalTo: modelLabel.widthAnchor),
+
+                header.topAnchor.constraint(equalTo: configView.topAnchor, constant: 16),
+                header.leadingAnchor.constraint(equalTo: providerLabel.trailingAnchor, constant: 8),
+                header.trailingAnchor.constraint(lessThanOrEqualTo: configView.trailingAnchor, constant: -16)
+            ]
+        }
 
         if !showsChoiceButtons {
             constraints.append(chatContainer.bottomAnchor.constraint(equalTo: root.bottomAnchor))
@@ -332,12 +338,10 @@ public final class AIChatViewController: NSViewController, Themeable {
     private func configureHeader() {
         providerLabel.alignment = .right
         modelLabel.alignment = .right
-        providerName.lineBreakMode = .byTruncatingTail
         modelValue.lineBreakMode = .byTruncatingMiddle
         // Let the value give up width before the label column or the button do.
         modelValue.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
         modelValue.setContentHuggingPriority(.defaultLow, for: .horizontal)
-        providerName.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
 
         providerPopUp.target = self
         providerPopUp.action = #selector(providerChanged)
@@ -404,7 +408,6 @@ public final class AIChatViewController: NSViewController, Themeable {
     /// Refreshes the provider's title(s) without disturbing the live chat — for a
     /// rename or a sibling provider added/removed while this view stayed open.
     private func syncPopUpTitles() {
-        providerName.stringValue = selectedConfiguration?.name ?? ""
         providerPopUp.removeAllItems()
         providerPopUp.addItems(withTitles: configurations.map(\.name))
         providerPopUp.isEnabled = !configurations.isEmpty
@@ -414,7 +417,6 @@ public final class AIChatViewController: NSViewController, Themeable {
     /// Repopulates the provider pop-up from the stored configurations and rebuilds
     /// the chat for whichever one is selected.
     private func reloadProviders() {
-        providerName.stringValue = selectedConfiguration?.name ?? ""
         providerPopUp.removeAllItems()
         if configurations.isEmpty {
             providerPopUp.addItem(withTitle: "No providers configured")
@@ -600,7 +602,6 @@ public final class AIChatViewController: NSViewController, Themeable {
             ? NSColor.clear.cgColor : palette.windowBackgroundColor.cgColor
         providerLabel.textColor = palette.secondaryTextColor
         modelLabel.textColor = palette.secondaryTextColor
-        providerName.textColor = palette.primaryTextColor
         emptyLabel.textColor = palette.secondaryTextColor
         // The same explicit Cancel styling the pickers use, so the dialogs agree —
         // AppKit's stock bezel does not (see `applySecondaryActionTheme`).
