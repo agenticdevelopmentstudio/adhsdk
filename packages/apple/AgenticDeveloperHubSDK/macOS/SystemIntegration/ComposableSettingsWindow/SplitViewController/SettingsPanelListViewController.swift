@@ -1,4 +1,5 @@
 import AppKit
+import Combine
 
 extension ComposableSettings {
 
@@ -38,6 +39,10 @@ extension ComposableSettings {
 
         private var panels: [any ComposableSettingsPanel] = []
         private let searchIndex = SettingsSearchIndex()
+        /// The listed panels' title and subtitle subscriptions, replaced by every
+        /// `setPanels`, so a panel that leaves the list is no longer observed.
+        private var descriptorObservers: Set<AnyCancellable> = []
+        private var rebuildPending = false
 
         public override init(nibName: NSNib.Name?, bundle: Bundle?) {
             super.init(nibName: nibName, bundle: bundle)
@@ -53,6 +58,7 @@ extension ComposableSettings {
 
         public func setPanels(_ panels: [any ComposableSettingsPanel]) {
             self.panels = panels
+            observeDescriptors()
             rebuildSections()
         }
 
@@ -88,6 +94,31 @@ extension ComposableSettings {
 
         // MARK: - Internals
 
+        /// Rebuilds the rows when a listed panel's title or subtitle changes.
+        /// `@Published` reports before it stores, so the rebuild runs on the
+        /// next main-queue turn, when the descriptor already holds the new
+        /// value, and a burst of changes in one turn rebuilds once.
+        private func observeDescriptors() {
+            descriptorObservers = []
+            for panel in panels {
+                let descriptor = panel.descriptor
+                descriptor.$title.dropFirst().map { _ in () }
+                    .merge(with: descriptor.$subtitle.dropFirst().map { _ in () })
+                    .sink { [weak self] in self?.scheduleRebuild() }
+                    .store(in: &descriptorObservers)
+            }
+        }
+
+        private func scheduleRebuild() {
+            guard !rebuildPending else { return }
+            rebuildPending = true
+            DispatchQueue.main.async { [weak self] in
+                guard let self else { return }
+                self.rebuildPending = false
+                self.rebuildSections()
+            }
+        }
+
         private func rebuildSections() {
             setSections(Self.buildSections(from: visiblePanels(), titled: showsSectionTitles))
         }
@@ -120,6 +151,7 @@ extension ComposableSettings {
                 let item = TopicListItem(
                     id: String(entry.index),
                     title: entry.panel.descriptor.title,
+                    subtitle: entry.panel.descriptor.subtitle,
                     icon: entry.panel.descriptor.icon,
                     isDisabled: entry.panel.descriptor.isDisabled
                 )
