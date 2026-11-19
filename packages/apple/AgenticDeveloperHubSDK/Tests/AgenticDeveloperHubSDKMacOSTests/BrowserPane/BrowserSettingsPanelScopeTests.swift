@@ -512,18 +512,20 @@ final class BrowserSettingsPanelScopeTests: XCTestCase {
             .filter { keys.contains($0.name) }
             .map { "\($0.group ?? "-") / \($0.model?.title ?? "-")" }
 
-        // Spec section 10, in order.
+        // The General / Events / Agents tabs, in order. Agent access is two
+        // checkboxes over its one three-way key.
         XCTAssertEqual(layout, [
+            "Storage / Cookie and storage jar",
+            "Scripts / Third-party content",
+            "Scripts / Capture page console",
             "Input / Disable keyboard events",
             "Input / Disable mouse and scrolling events",
             "Input / Disable pointer tracking",
             "Input / Disable drag and drop",
             "Focus and visibility / Disable activation events",
-            "Coding Partner / Agent access",
-            "Coding Partner / Agent while paused",
-            "Storage / Cookie and storage jar",
-            "Scripts / Third-party content",
-            "Scripts / Capture page console"
+            "Agent Access / Agent access",
+            "Agent Access / Read only",
+            "Agent Access / Agent while paused"
         ])
     }
 
@@ -579,7 +581,10 @@ final class BrowserSettingsPanelScopeTests: XCTestCase {
         let sheet = makePanel(settings: global, scope: .pane(layered, try makePane(settings: layered)))
 
         let shown = Set(window.binding.rows.map(\.name)).union(sheet.binding.rows.map(\.name))
-        for name in BrowserSettings.allKeyNames {
+        // The privacy toolbar's visibility lives in the View menu (Show / Hide
+        // Privacy Toolbar), not in a settings row.
+        let menuOnly: Set<String> = [UserSettings.browserPrivacyShowToolbar.name]
+        for name in BrowserSettings.allKeyNames where !menuOnly.contains(name) {
             XCTAssertTrue(shown.contains(name), "\(name) is a row in no topic")
         }
     }

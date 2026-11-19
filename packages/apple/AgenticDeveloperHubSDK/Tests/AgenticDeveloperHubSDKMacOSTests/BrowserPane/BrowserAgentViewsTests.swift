@@ -75,7 +75,8 @@ final class BrowserAgentViewsTests: XCTestCase {
             XCTAssertEqual(control.toolTip(forSegment: index), mode.toolTip)
             XCTAssertFalse(mode.toolTip.isEmpty)
             XCTAssertNotNil(control.image(forSegment: index), "segment \(index) has no image")
-            XCTAssertEqual(control.label(forSegment: index) ?? "", "", "segments carry images only")
+            XCTAssertEqual(control.label(forSegment: index), mode.accessibilityLabel,
+                           "segments carry text beside the symbol")
         }
         XCTAssertEqual(BrowserAgentViewMode.website.toolTip, "Website — the page as it is")
         XCTAssertEqual(BrowserAgentViewMode.agentPreview.toolTip,

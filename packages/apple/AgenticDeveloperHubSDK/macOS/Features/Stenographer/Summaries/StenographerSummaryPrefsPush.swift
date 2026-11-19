@@ -53,9 +53,9 @@ public enum StenographerSummaryPrefsPush {
             },
             registerReconnect: { service.onReconnect($0) },
             seed: {
-                if settings.feature == .sessions { return await seedFromDaemon(service: service) }
+                if settings.feature == .sessions { return await sharedDaemonSeed(service: service) }
                 // Sessions' own values come from the daemon first, so the copy is of them.
-                guard await seedFromDaemon(service: service) else { return false }
+                guard await sharedDaemonSeed(service: service) else { return false }
                 settings.seed(from: sessions)
                 return true
             }
@@ -71,6 +71,23 @@ public enum StenographerSummaryPrefsPush {
             return strings + bools + ints
         }
         return engine
+    }
+
+    /// The daemon read in flight, shared by every feature's seed.
+    private static var daemonSeed: Task<Bool, Never>?
+
+    /// One daemon read for every feature that starts together. Each feature's
+    /// seed needs Sessions' values from the daemon; were each to read and write
+    /// them itself, a late one would rewrite Sessions' settings after Sessions'
+    /// observers were installed, and that write would push.
+    private static func sharedDaemonSeed(service: any StenographerDaemonService) async -> Bool {
+        if let daemonSeed { return await daemonSeed.value }
+        let task = Task { @MainActor in await seedFromDaemon(service: service) }
+        daemonSeed = task
+        let seeded = await task.value
+        // A failed read is retried by each engine, so it is not kept.
+        if daemonSeed == task { daemonSeed = nil }
+        return seeded
     }
 
     /// Takes the daemon's stored values into the local settings once (marker
@@ -106,6 +123,8 @@ public enum StenographerSummaryPrefsPush {
     public static func stopObserving() {
         pushes.forEach { $0.stop() }
         pushes = []
+        daemonSeed?.cancel()
+        daemonSeed = nil
     }
 
     /// Awaits the most recent push of every feature (test-only determinism hook).

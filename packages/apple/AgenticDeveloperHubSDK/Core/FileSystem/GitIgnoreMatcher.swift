@@ -54,10 +54,17 @@ public struct GitIgnoreMatcher: Sendable, Equatable {
     /// Whether `relativePath` — `/`-separated, relative to the root the
     /// patterns are anchored at, with no leading `/` — is excluded.
     public func isExcluded(relativePath: String, isDirectory: Bool) -> Bool {
+        decision(relativePath: relativePath, isDirectory: isDirectory) ?? false
+    }
+
+    /// What the last pattern matching `relativePath` says — excluded (`true`)
+    /// or re-included by a `!` (`false`) — or nil when no pattern matches it,
+    /// which a caller walking ancestors needs to tell apart from a `!`.
+    func decision(relativePath: String, isDirectory: Bool) -> Bool? {
         let path = relativePath.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
-        guard !path.isEmpty else { return false }
+        guard !path.isEmpty else { return nil }
         let name = path.split(separator: "/").last.map(String.init) ?? path
-        var excluded = false
+        var excluded: Bool?
         for rule in rules {
             if rule.directoriesOnly && !isDirectory { continue }
             let subject = rule.isAnchored ? path : name

@@ -114,8 +114,12 @@ final class BrowserSettingsTopicLayoutTests: XCTestCase {
         let privacy = try XCTUnwrap(panel.panels.first { $0.descriptor.title == "Privacy and Security" })
 
         XCTAssertEqual(groupTitles(in: privacy.view), [
-            "General", "Input", "Focus and visibility", "Coding Partner", "Agent Privacy", "Storage", "Scripts",
-            "Cookies", "Camera and Microphone", "Protection", "Site Data", "History"
+            // General tab
+            "Storage", "Scripts", "Cookies", "Camera and Microphone", "Protection", "Site Data", "History",
+            // Events tab
+            "Input", "Focus and visibility",
+            // Agents tab
+            "Agent Access", "Agent Privacy"
         ])
 
         let moved: [(key: String, group: String)] = [

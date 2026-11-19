@@ -58,12 +58,21 @@ class StubDaemonService: StenographerDaemonService, @unchecked Sendable {
         timeoutSeconds: SummaryDefaults.timeoutSeconds)
     var oversightReply: OversightPreferenceResponse? = OversightPreferenceResponse(
         enabled: false, contextThresholdPct: 80, llmEnabled: false, selectedConfigId: "", model: "")
-    private(set) var summaryGets = 0
-    private(set) var oversightGets = 0
-    private(set) var summaryRequests: [SummaryPreferenceRequest] = []
-    private(set) var oversightRequests: [OversightPreferenceRequest] = []
+    // What the calls record. The protocol's methods are nonisolated, and every
+    // summarizing feature pushes at once, so concurrent calls append from
+    // several threads: the lock keeps those appends from tearing the arrays.
+    private let lock = NSLock()
+    private var recordedSummaryGets = 0
+    private var recordedOversightGets = 0
+    private var recordedSummaryRequests: [SummaryPreferenceRequest] = []
+    private var recordedOversightRequests: [OversightPreferenceRequest] = []
+    private var recordedAISyncs: [AIProviderConfigSync] = []
+    var summaryGets: Int { lock.withLock { recordedSummaryGets } }
+    var oversightGets: Int { lock.withLock { recordedOversightGets } }
+    var summaryRequests: [SummaryPreferenceRequest] { lock.withLock { recordedSummaryRequests } }
+    var oversightRequests: [OversightPreferenceRequest] { lock.withLock { recordedOversightRequests } }
     /// Every registry the AI config push sent, and whether the daemon takes it.
-    private(set) var aiSyncs: [AIProviderConfigSync] = []
+    var aiSyncs: [AIProviderConfigSync] { lock.withLock { recordedAISyncs } }
     var aiPushResult = true
     private var reconnectHandlers: [@Sendable () -> Void] = []
 
@@ -91,23 +100,23 @@ class StubDaemonService: StenographerDaemonService, @unchecked Sendable {
     func aiInteraction(id: Int) async -> AIInteractionDTO? { interactionsReply?.first { $0.id == id } }
     func aiProviderConfigs() async -> [DaemonProviderConfig]? { configs }
     func summaryPreferences() async -> SummaryPreferenceResponse? {
-        summaryGets += 1
+        lock.withLock { recordedSummaryGets += 1 }
         return summaryReply
     }
     func oversightPreferences() async -> OversightPreferenceResponse? {
-        oversightGets += 1
+        lock.withLock { recordedOversightGets += 1 }
         return oversightReply
     }
     func setSummaryPreferences(_ request: SummaryPreferenceRequest) async -> Bool {
-        summaryRequests.append(request)
+        lock.withLock { recordedSummaryRequests.append(request) }
         return true
     }
     func setOversightPreferences(_ request: OversightPreferenceRequest) async -> Bool {
-        oversightRequests.append(request)
+        lock.withLock { recordedOversightRequests.append(request) }
         return true
     }
     func setAIPreferences(_ sync: AIProviderConfigSync) async -> Bool {
-        aiSyncs.append(sync)
+        lock.withLock { recordedAISyncs.append(sync) }
         return aiPushResult
     }
     func onReconnect(_ handler: @escaping @Sendable () -> Void) { reconnectHandlers.append(handler) }

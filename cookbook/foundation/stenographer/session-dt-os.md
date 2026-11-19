@@ -107,7 +107,7 @@ Not applicable — these are non-visual data transfer objects, not visual compon
 |----|-------------|-------|----------|
 | session-dtos-001 | session-optional-keys | Decode a session body with only the twelve required keys | Succeeds; `projectRoot`, `termSessionId`, `transcriptTitle`, `lastOutput`, `lastEventType`, `summaryAt` and `turnStateAt` are `""` and `subagentWorking` is false |
 | session-dtos-002 | session-required-keys | Decode a session body with `event_count` removed, then another with `git_branch` removed | Each throws a key-not-found error for the removed key; both are required on `SessionDTO` |
-| session-dtos-004 | dto-wire-spelling, session-encode-synthesized | Encode a session with the wire encoder | All twenty keys appear, snake_case, including empty strings and `subagent_working` false |
+| session-dtos-004 | dto-wire-spelling, session-encode-synthesized | Encode a session with the wire encoder | All twenty-two keys appear (`conversation_summary` and `project_summary` included), snake_case, including empty strings and `subagent_working` false |
 | session-dtos-005 | session-null-optional | Decode a body with `"project_root": null` | Succeeds with `projectRoot` equal to `""` |
 | session-dtos-006 | session-init-defaults | Construct a session with only the twelve required arguments | Optional strings are `""` and `subagentWorking` is false |
 | session-dtos-007 | event-decode-strict | Decode an event body without `git_branch` | Throws, although the initializer defaults it |

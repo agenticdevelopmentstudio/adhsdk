@@ -9,7 +9,7 @@
 | browser-settings-006 | behavior-topic-contents | Open Behavior in the Settings window | Rows in order: Open sites in tabs, Enable JavaScript, Block pop-up windows, home page address, Autoplay |
 | browser-settings-007 | open-sites-in-tabs-app-only | Open Behavior in a pane's settings sheet | No "Open sites in tabs" row |
 | browser-settings-008 | appearance-topic-contents | Open Appearance | Rows: Zoom, Minimum font size, tab position override |
-| browser-settings-009 | privacy-security-title, privacy-security-existing-groups-first | Open Privacy and Security | Topic title "Privacy and Security"; first groups are General, Input, Focus and visibility, Coding Partner, Agent Privacy, Storage, Scripts |
+| browser-settings-009 | privacy-security-title, privacy-security-existing-groups-first | Open Privacy and Security | Topic title "Privacy and Security"; tabs are General (Storage, Scripts, Cookies, Camera and Microphone, Protection, Site Data, History), Events (Input, Focus and visibility) and Agents (Agent Access, Agent Privacy) |
 | browser-settings-010 | privacy-security-added-groups | Same topic | Groups after Scripts, in order: Cookies, Camera and Microphone, Protection, Site Data, History |
 | browser-settings-011 | manage-site-data-button | Open the Site Data group | One button "Manage Site Data…", id `settings.browser.site-data.manage`; no table in the topic |
 | browser-settings-012 | site-data-window | Press Manage Site Data… | A window titled "Site Data — <jar>" opens, naming the jar, app-modal, resizable, movable, with columns Site and Data and −, Remove All…, Refresh, Done |

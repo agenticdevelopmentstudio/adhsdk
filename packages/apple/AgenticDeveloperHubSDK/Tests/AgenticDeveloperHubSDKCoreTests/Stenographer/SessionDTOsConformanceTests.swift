@@ -51,16 +51,18 @@ final class SessionDTOsConformanceTests: XCTestCase {
         assertMissingKey(try body(removing: ["git_branch"]), "gitBranch")
     }
 
-    func testSessionDtos004_encodeWritesAllTwentyKeys() throws {
+    func testSessionDtos004_encodeWritesAllTwentyTwoKeys() throws {
         let data = try StenographerWire.encoder().encode(minimalSession())
         let object = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any])
         let expected: Set<String> = [
             "session_id", "cwd", "model", "started_at", "last_activity_at", "last_tool", "status", "git_branch",
             "summary", "pid", "term_program", "project_root", "term_session_id", "transcript_title",
-            "last_output", "last_event_type", "summary_at", "event_count", "subagent_working", "turn_state_at"
+            "last_output", "last_event_type", "summary_at", "event_count", "subagent_working", "turn_state_at",
+            // Each summarizing feature's own line (SummaryFeature).
+            "conversation_summary", "project_summary"
         ]
         XCTAssertEqual(Set(object.keys), expected)
-        XCTAssertEqual(expected.count, 20)
+        XCTAssertEqual(expected.count, 22)
         XCTAssertEqual(object["project_root"] as? String, "")
         XCTAssertEqual(object["subagent_working"] as? Bool, false)
     }
