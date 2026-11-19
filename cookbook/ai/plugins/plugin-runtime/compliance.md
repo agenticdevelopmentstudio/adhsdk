@@ -13,8 +13,8 @@ independent responsibilities — plugin lifecycle (`AIPluginsCoordinator`),
 configuration modeling and persistence (`AIProviderConfigStore`,
 `AIProviderResolver`, `AIProviderDefaults`, `AIProviderMigration`,
 `PluginConfigStore`), and conversation driving (the two
-`ChatConfigProvider` + chat-engine pairs) — and none reaches into another's
-storage. unit-test-coverage passes because the conformance vectors trace to
+`ChatConfigProvider` + chat-engine pairs) — and none reaches into
+another's storage. unit-test-coverage passes because the conformance vectors trace to
 `LocalChatSessionTests`, `AIProviderConfigStoreTests`,
 `AIProviderResolverTests`, `AIProviderMigrationTests`, and
 `AIProviderDefaultsTests`, which exercise streaming, seeding, resolution,
@@ -30,4 +30,3 @@ the other failure paths (no configured provider, unknown tool, a throwing
 MCP call) surface as explicit `ChatError` or tool-error text.
 no-hardcoded-strings fails because the user-facing error strings listed
 under Localization are English literals with no localization mechanism.
-

@@ -14,13 +14,7 @@
   lookup; if two items across sections share an id, only the row for the
   first match in list order is ever selected by this operation - source
   performs no uniqueness validation. Callers SHOULD supply unique ids
-  across all sections passed to one grouped-setter call; this is
-  undocumented in source and left to caller discipline. This SHOULD needs
-  no separate test vector: the behavior described here is a direct,
-  deterministic consequence of the same first-match lookup
-  **select-item-by-id**'s vector (topic-list-012) already exercises, and
-  a second, near-identical vector for the duplicate-id case would not
-  exercise any additional code path.
+  across all sections passed to one grouped-setter call.
 - Concurrent access: Not applicable - the component confines all reads
   and writes of its section list, row cache, and selection-suppression
   counter to a single execution context (see Platform Notes for the exact

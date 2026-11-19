@@ -63,7 +63,7 @@ extension ComposableSettings {
         }
 
         /// Selects the row at `index` without firing `onSelectPanel`, since
-        /// programmatic selection flows through `SettingsViewController.selectPanel`.
+        /// programmatic selection flows through `SplitViewController.selectPanel`.
         public func selectPanel(at index: Int) {
             guard panels.indices.contains(index) else { return }
             selectItem(withId: String(index))

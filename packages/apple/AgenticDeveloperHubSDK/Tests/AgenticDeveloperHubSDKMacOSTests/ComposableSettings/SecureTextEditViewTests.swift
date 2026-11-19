@@ -120,6 +120,14 @@ struct SecureTextEditViewTests {
         #expect(harness.row.copyButton.nextKeyView === harness.row.revealButton)
     }
 
+    /// secure-text-edit-view-024: both fields, obscured and shown, are titled
+    /// by the row's label.
+    @Test func bothFieldsAreTitledByTheLabel() {
+        let harness = Harness("sk-123")
+        #expect(harness.row.textField.accessibilityTitleUIElement() as AnyObject? === harness.row.label)
+        #expect(harness.row.revealField.accessibilityTitleUIElement() as AnyObject? === harness.row.label)
+    }
+
     // MARK: - Hiding again
 
     @Test func theWindowResigningKeyHidesTheSecret() {

@@ -6,14 +6,14 @@ import Testing
 @testable import AgenticDeveloperHubSDKMacOS
 
 /// The AI Providers panel's names for a configuration and its editor's rows
-/// (plugin-runtime vectors aiplugins-015 to 019).
+/// (ai-providers-panel vectors ai-providers-panel-001 to 005).
 @Suite("AI Providers editor", .serialized)
 @MainActor
 struct ProviderEditorTests {
 
     // MARK: - Titles
 
-    /// aiplugins-015
+    /// ai-providers-panel-001
     @Test func theSubtitleJoinsTheThreePartsWithDashes() {
         let template = AIPluginDescriptor.ProviderTemplate(
             id: "openai", displayName: "OpenAI API", provider: "OpenAI", llm: "GPT", configType: "API key")
@@ -21,7 +21,7 @@ struct ProviderEditorTests {
         #expect(ProviderConfigTitles.title(template: template) == "OpenAI, GPT, API key")
     }
 
-    /// aiplugins-016
+    /// ai-providers-panel-002
     @Test func anEmptyPartIsDropped() {
         let template = AIPluginDescriptor.ProviderTemplate(
             id: "ollama", displayName: "Ollama", provider: "Ollama", llm: "", configType: "Local")
@@ -73,7 +73,7 @@ struct ProviderEditorTests {
         }
     }
 
-    /// aiplugins-018
+    /// ai-providers-panel-004
     @Test func theConnectionGroupIsUntitledAndHasNoFreeTextModelField() throws {
         try withEditor { editor, _ in
             #expect(editor.group.title == nil)
@@ -82,7 +82,7 @@ struct ProviderEditorTests {
         }
     }
 
-    /// aiplugins-019: secret fields get the reveal row; the others stay plain.
+    /// ai-providers-panel-005: secret fields get the reveal row; the others stay plain.
     @Test func secretFieldsUseTheRevealRow() throws {
         try withEditor { editor, _ in
             let rows = Dictionary(uniqueKeysWithValues: editor.fieldRows.map { ($0.label.stringValue, $0) })
@@ -91,7 +91,7 @@ struct ProviderEditorTests {
         }
     }
 
-    /// aiplugins-017
+    /// ai-providers-panel-003
     @Test func theDefaultModelRowNamesTheTemplateDefaultAndWritesAChoice() throws {
         try withEditor { editor, config in
             let template = try #require(manager().template(

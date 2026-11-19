@@ -13,7 +13,7 @@
 - **Transmission**: This component never performs network I/O itself. It
   assembles the resolved value bag into a configuration bag inside a chat
   request context and hands that to the selected plugin's request-building
-  operation; the plugin (outside this component's given sources) decides
+  operation; the plugin (outside this component) decides
   which of those values, including any secret, become part of the outgoing
   request that the plugin transport then performs.
 - **Retention**: Stored field/model values persist indefinitely (secure

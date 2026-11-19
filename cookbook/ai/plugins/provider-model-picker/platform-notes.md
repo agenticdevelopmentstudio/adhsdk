@@ -23,18 +23,15 @@
   `isAuthoritative` saying whether the list is complete, and its two
   implementations, `LocalProviderRegistrySource` and
   `DaemonProviderRegistrySource`. Local reads `AIPluginManager` and
-  `UserSettings.aiProviderConfigurations` and resolves the default through
-  `AIProviderConfigStore.modelSetting(config:template:)`; daemon calls
-  `StenographerService.aiProviderConfigs()` and takes an optional
-  `AIPluginManager`. Settings are `UserSetting<String>` for the selection and
-  `modelSetting: (String) -> UserSetting<String>`. It replaces
-  `LLMPickerView` and `DaemonProviderPickerView`, which are deleted. Callers:
-  `PartnerGeneralSettingsViewController`, `AISummariesSettingsPanel`,
-  `AIOversightSettingsPanel`, `OversightFindingsViewController` and
-  `SessionsWindowController`; the Sessions, Conversations and Oversight
-  coordinators take `pluginManager: AIPluginManager? = nil`, which the Kitchen
-  passes and Stenographer does not. A UIKit port would use a `UIButton` with a
-  `UIMenu` for the popup.
+  `UserSettings.aiProviderConfigurations`; daemon calls
+  `StenographerDaemonService.aiProviderConfigs()` and takes an optional
+  `AIPluginManager`. Both resolve the default through
+  `AIProviderConfigStore.selectedModel(config:template:)`, and both need a
+  resolved template for it. Settings are `UserSetting<String>` for the selection and
+  `modelSetting: (UUID?) -> UserSetting<String>?`, called with nil for a
+  leading choice. A host with a plugin manager passes it to the daemon
+  source; a host without one passes nil. A UIKit port would use a `UIButton`
+  with a `UIMenu` for the popup.
 - **WinUI 3**: A `StackPanel` of two rows: a `ComboBox` (`ItemsSource` bound to
   an `ObservableCollection` of the leading choices then the configurations,
   `SelectedValuePath="Id"`, `SelectedValue` two-way bound to the selection) with

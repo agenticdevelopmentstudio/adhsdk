@@ -1,6 +1,6 @@
 
 The model picker is how a person chooses one provider configuration's model
-anywhere the Kitchen or Stenographer configures AI: the AI Providers panel's
+anywhere a host app configures AI: the AI Providers panel's
 default model, the Coding Partner, AI Summaries, AI Oversight, the Sessions
 window and the AI chat window. It is one component in two parts:
 
@@ -28,5 +28,5 @@ catalog's and the facets' business
 [adhsdk.ingredient.ai.models.model-use-facet](cookbook:f628f7f9-9c7b-4820-a4bf-231312a74839)); the
 large-model tiers are the fit policy's
 ([adhsdk.ingredient.ai.models.local.model-fit-policy](cookbook:5069f11f-e0c6-40c3-92ca-6152b8df3bc2)). This
-recipe covers the presentation, the choosing rules and the control.
+ingredient covers the presentation, the choosing rules and the control.
 

@@ -1,8 +1,10 @@
 
 The Settings Panel is the base type every settings panel is built from. One
 instance is hosted in the right-hand detail pane of a settings split view,
-and the sidebar's list-item metadata lives on the panel itself, via its
-descriptor — "the panel *is* the list item — no wrapper struct." Its content
+and the sidebar's list-item metadata (title, an optional subtitle shown as a
+second line, icon, disabled flag, section and heading) lives on the panel
+itself, via its descriptor: the panel is the list item, with no separate
+wrapper type. Its content
 view is a panel view instance this type owns and constructs, exposed as its
 own view. It conforms to a settings-panel role, redeclaring that role's
 help-content, effective-help-content, hosts-own-scroll, and search-keywords

@@ -20,7 +20,8 @@ tags:
   - configuration
   - runtime
 depends-on: []
-related: []
+related:
+  - d3863175-a089-426d-982c-d489965593ac
 references: []
 approved-by: ""
 approved-date: ""
@@ -49,17 +50,7 @@ loop. Every type in this component is confined to a single execution context,
 is declared safe for concurrent use through its own explicit synchronization,
 or is a plain immutable value safe to share — never left unspecified.
 
-The AI Providers settings panel, where a person edits these configurations,
-is described here too: each configuration's editor sets the configuration's
-default model through the model picker control
-([adhsdk.ingredient.ai.plugins.model-picker](cookbook:b3059939-21f5-414b-82e4-edd11b192ae8)), and its secret fields
-use the secure text row with reveal
-([adhsdk.ingredient.ui.settings.rows.secure-text-edit-view](cookbook:2e0bf51e-905d-476d-9c0c-48465174ba59)).
-Every other place that chooses a provider and a model uses the combined
-provider model picker
-([adhsdk.ingredient.ai.plugins.provider-model-picker](cookbook:c9385bf6-3abc-486b-82b5-d57a62d86735)), and an empty
-stored model there means this configuration's default model.
-
+Settings panel: [adhsdk.ingredient.ai.plugins.ai-providers-panel](cookbook:d3863175-a089-426d-982c-d489965593ac)
 ## Behavioral Requirements
 
 ### Plugins Coordinator
@@ -456,7 +447,11 @@ stored model there means this configuration's default model.
 - **mcp-tool-source-content-flatten**: Calling a tool MUST join only the
   text content items of a successful call's response with a newline, and
   MUST silently drop any non-text content item.
-- **mcp-tool-source-argument-validation**: Calling a tool decodes its arguments permissively and, on a decode failure, silently substitutes no arguments rather than surfacing a validation error: a malformed tool-call payload from the model is forwarded to the underlying call as though no arguments were supplied, instead of being reported back as a tool error the model or user could act on.
+- **mcp-tool-source-argument-validation**: Calling a tool MUST decode its
+  arguments permissively: when the arguments fail to decode, it MUST
+  substitute no arguments and forward the call to the underlying MCP call as
+  though none were supplied, surfacing no validation error to the model or
+  the user (known debt; see Design Decisions).
 
 ### Chat Configuration Providers (Plugin-Backed and Single-Configuration)
 
@@ -477,82 +472,37 @@ stored model there means this configuration's default model.
   stored fields or model MUST be visible on the next access, since
   resolution is recomputed live rather than cached.
 
-### AI Providers Panel
-
-- **providers-panel-subtitle**: Each configuration's panel descriptor MUST
-  carry the subtitle "Provider - LLM - Config type", built from the
-  template's resolved provider, resolved LLM and resolved config type joined
-  by " - ", with empty parts dropped (no subtitle when all three are empty),
-  and MUST update it when the configuration's template changes.
-- **providers-editor-title**: The configuration editor's title MUST read
-  "Provider, LLM, Config type", built from the same three parts joined by
-  ", ", with empty parts dropped.
-- **providers-editor-default-model-row**: The editor MUST show a default
-  model row: a model picker control labelled "Default Model", bound to the
-  per-configuration model setting (`modelSetting(config:template:)`), whose
-  name is the stored model when non-empty, else the template's resolved
-  default model, and whose chosen model is written to that setting. This is
-  the model the configuration resolves to (**config-store-model-default**)
-  and the model a feature gets when it stores `""`.
-- **providers-editor-no-free-text-model**: The editor MUST NOT offer a
-  free-text model field; the default model row is the only way the editor
-  sets the model.
-- **providers-editor-untitled-connection-group**: The editor's connection
-  field group (base URL, key and the other template fields) MUST be shown
-  with no group title.
-- **providers-editor-secret-reveal**: Every secret field in the editor MUST
-  use the secure text row with reveal: dots for a stored secret, copy and
-  eye buttons, re-obscured on window resign key, app resign active, leaving
-  the window or an external change.
-- **providers-test-chat-model-only**: The editor's Test Chat MUST pin its
-  configuration: it MUST hide the provider choice and show only the model
-  row, whose Choose Model action opens the popover model chooser for that
-  configuration.
 ## Appearance
 
-Not applicable — this is the plugin runtime feature (plugin discovery,
-configuration storage, and two chat-session/backend implementations), not a
-visual component.
-
+Not applicable: the runtime types (plugin discovery, configuration
+storage, and the two chat-session/backend implementations) draw nothing.
 ## States
 
-Not applicable — this is the plugin runtime feature, not a visual component.
 The runtime's own state machines (the chat session's ready/responding/closed
 transitions driven by the tool-calling chat session and the chat-backend
 session wrapper, and the chat-backend adapter's boolean readiness stream) are
 specified under Behavioral Requirements above, not here.
-
 ## Accessibility
 
-Not applicable — this is the plugin runtime feature, not a visual component;
-none of the given sources render UI (the plugins coordinator uses platform UI
-facilities only to construct menu/status-item contributions and hand back a
-settings panel view, never drawing anything itself).
-
+Not applicable: the runtime types render no UI.
 ## Conformance Test Vectors
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
-| aiplugins-001 | coordinator-startup-order | Construct a plugins coordinator with app name "Test" | Discovery on the plugin manager runs before migration-if-needed and default-seeding-if-needed, per the fixed startup order |
+| aiplugins-001 | coordinator-startup-order | Empty provider-configurations list, both one-time guards false, and an additional search path holding a plugin that advertises the `"claude-local"` template; construct a plugins coordinator with app name "Test" and that search path | After construction the provider-configurations list holds one configuration built from that template — observable only because discovery ran before default seeding, since the plugin manager advertises no templates until discovery has run |
 | aiplugins-002 | chat-backend-is-ready | The configuration provider's selected plugin identifier is "" | The adapter's readiness is false |
 | aiplugins-003 | chat-backend-is-ready | The configuration provider's selected plugin identifier is "com.x.plugin" | The adapter's readiness is true |
 | aiplugins-004 | chat-backend-no-plugin | The configuration provider's selected plugin identifier is ""; send messages | The returned stream throws a plugin-not-available error; zero text chunks are yielded |
 | aiplugins-005 | local-session-stream-mapping, local-session-turn-finish | Send "hi" with a fake event stream yielding a text-delta "Hel", a text-delta "lo", then an end event with stop reason "end_turn" | Events include a response-started event before the first response-delta event; the concatenated delta text is "Hello"; a terminal response-finished event fires; a state-changed event carrying the ready state follows |
 | aiplugins-006 | local-session-send-busy-guard | Send "first", then send "second" before the first turn completes | The second send produces no user-message/response-started pair in the event stream — it is dropped |
 | aiplugins-007 | local-session-no-plugin | No plugin can be resolved, then send "hi" | Events emit a turn-failed event carrying "No AI provider is configured." and marked not retryable, then a state-changed event carrying the ready state; no response-started event |
-| aiplugins-008 | config-store-seed, config-store-values-overlay | Seed a configuration from a template whose default values are `["baseURL": "https://api.groq.com/openai/v1"]` and a secret `apiKey` field, then read configuration values | `values["baseURL"] == "https://api.groq.com/openai/v1"`, `values["model"] == "m1"`, `values["apiKey"]` is empty; after setting the apiKey field's stored value to "sk-test", resolving configuration values returns `"apiKey" == "sk-test"` |
+| aiplugins-008 | config-store-seed, config-store-values-overlay | Seed a configuration from a template whose default values are `["baseURL": "https://api.groq.com/openai/v1"]`, whose default model is `m1`, and a secret `apiKey` field, then read configuration values | `values["baseURL"] == "https://api.groq.com/openai/v1"`, `values["model"] == "m1"`, `values["apiKey"]` is empty; after setting the apiKey field's stored value to "sk-test", resolving configuration values returns `"apiKey" == "sk-test"` |
 | aiplugins-009 | resolver-fails-closed-on-template | The configuration's template id is "renamed-away", a template the descriptor no longer advertises | Resolving the configuration against the plugin manager returns nothing |
 | aiplugins-010 | migration-inclusion-rule | One descriptor, an empty legacy selection, prior values returning `["apiKey": ""]` | The plan's configurations list is empty; the plan's selected id is "" |
 | aiplugins-011 | migration-inclusion-rule, migration-field-write-rule | A descriptor with a non-secret `baseURL` field, an empty legacy selection, prior values returning `baseURL == "http://localhost:1234"` (differs from the template default "") | The plan's configurations list has one entry; the plan's field writes contain an entry with field key "baseURL" and value "http://localhost:1234" |
 | aiplugins-012 | defaults-only-when-empty | The provider-configurations list already holds one entry; seed defaults when needed | The list is unchanged (still exactly the pre-existing entry); the default-seeded guard is now true |
 | aiplugins-013 | mcp-tool-source-unknown-tool | Call the tool named "fs__nonexistent" where no registered pair namespaces to that name | Returns a result of "Unknown tool: fs__nonexistent" marked as an error |
 | aiplugins-014 | mcp-tool-source-namespacing | The registry returns one pair (server name "fs", tool name "read") with an encodable input schema | Listing tool definitions returns exactly one tool definition named "fs__read" |
-| aiplugins-015 | providers-panel-subtitle | Template with provider "OpenAI", LLM "GPT", config type "API key" | The panel's descriptor subtitle is "OpenAI - GPT - API key" |
-| aiplugins-016 | providers-panel-subtitle, providers-editor-title | Template with provider "Ollama", empty LLM, config type "Local" | The subtitle is "Ollama - Local" and the editor title is "Ollama, Local" |
-| aiplugins-017 | providers-editor-default-model-row | Configuration with stored model ""; template default "gpt-5" | The "Default Model" row names "gpt-5"; choosing "gpt-5-mini" writes "gpt-5-mini" to `aiplugin.config.<id>.model` |
-| aiplugins-018 | providers-editor-no-free-text-model, providers-editor-untitled-connection-group | Open a configuration's editor | No free-text model field is present; the connection group has no title |
-| aiplugins-019 | providers-editor-secret-reveal | A configuration with a stored API key "sk-123" | The key field shows six dots with copy and eye buttons |
-| aiplugins-020 | providers-test-chat-model-only | Open the editor's Test Chat | Only the model row shows; its Choose Model action opens the popover chooser for this configuration |
 
 ## Edge Cases
 
@@ -603,7 +553,7 @@ settings panel view, never drawing anything itself).
   into a result of "Tool error: <description>" marked as an error, never
   propagating the original error type to the model
   (mcp-tool-source-error-mapping).
-- **Offline/disconnected state**: None of the given sources perform network
+- **Offline/disconnected state**: This component performs no network
   I/O directly — that is the plugin transport's responsibility. From this
   component's perspective, a network failure (unreachable host, timeout, a
   non-2xx response) MUST surface through the same generic error path as any
@@ -639,39 +589,35 @@ settings panel view, never drawing anything itself).
 
 ## Deep Linking
 
-Not applicable: none of the given sources register a URL scheme, handle a
-system activity/handoff mechanism, or parse an incoming URL — the plugin
+Not applicable: this component registers no URL scheme, handle a
+system activity/handoff mechanism, or parses an incoming URL — the plugin
 runtime has no externally-addressable destinations.
 
 ## Localization
 
-None of the given sources route their user-facing strings through a
-localization mechanism; they are hardcoded English literals, listed here as
-facts rather than as a marker per source fidelity:
+The implementation routes none of its user-facing strings through a
+localization mechanism; they are hardcoded English literals:
 
 | String Key | Default (en) | Context |
 |-----------|-------------|---------|
 | (none — hardcoded literal) | `No AI provider is configured.` | The tool-calling chat session's turn-failed message when no plugin can be resolved |
 | (none — hardcoded literal) | `Unknown tool: <name>` | The MCP tool source's error text when no pair matches the namespaced tool name |
 | (none — hardcoded literal) | `Tool error: <description>` | The MCP tool source's error text when the underlying MCP call throws |
-| (none — hardcoded literal) | `Default Model` | The AI Providers editor's default model row label |
-| (none — hardcoded literal) | `<provider> - <LLM> - <config type>` | A configuration panel's subtitle; the separator is a literal |
 
 ## Accessibility Options
 
 Not applicable: the plugin runtime has no UI and responds to no display
 accommodation (Reduce Motion, Increase Contrast, Differentiate Without
-Color) in any of the given sources.
-
+Color) in its own code.
 ## Feature Flags
 
-Not applicable: none of the given sources check a feature-flag value; every
+Not applicable: this component checks no feature-flag value; every
 behavioral branch (migration, default-seeding, the tool loop) is
 unconditional given its own stated preconditions, not gated by a flag.
 
 ## Analytics
 
-Not applicable: none of the given sources emit an analytics event; there is
+Not applicable: this component emits no analytics event; there is
 no call to any event-logging mechanism in this component.
 
 ## Privacy
@@ -690,7 +636,7 @@ no call to any event-logging mechanism in this component.
 - **Transmission**: This component never performs network I/O itself. It
   assembles the resolved value bag into a configuration bag inside a chat
   request context and hands that to the selected plugin's request-building
-  operation; the plugin (outside this component's given sources) decides
+  operation; the plugin (outside this component) decides
   which of those values, including any secret, become part of the outgoing
   request that the plugin transport then performs.
 - **Retention**: Stored field/model values persist indefinitely (secure
@@ -701,16 +647,16 @@ no call to any event-logging mechanism in this component.
 
 ## Logging
 
-Not applicable: none of the given sources call a logging operation at any
-level. The plugins coordinator declares the capability to build a logger but
-never invokes it anywhere in the given source — the capability is present,
+Not applicable: this component calls no logging operation at any level.
+The plugins coordinator declares the capability to build a logger but never
+invokes it — the capability is present,
 but unused.
 
 ## Platform Notes
 
-- **SwiftUI (source)**: This is a plain Foundation/AppKit runtime layer, not
-  a SwiftUI component, and it is the direct source for every role name used
-  above: the plugins coordinator is `AIPluginsCoordinator` (a `@MainActor`
+- **Apple implementation (Foundation/AppKit)**: This is a plain
+  Foundation/AppKit runtime layer, not a SwiftUI component, and it supplies
+  every role name used above: the plugins coordinator is `AIPluginsCoordinator` (a `@MainActor`
   subclass of the app's own `AppFeature` base, registering with
   `AppFeatureRegistry.shared`); the chat configuration provider interface is
   `ChatConfigProvider`; the chat-backend adapter is `AIPluginChatBackend`
@@ -755,27 +701,16 @@ but unused.
   secret); dynamic `import()` of a plugin module, driven by a fetched
   `descriptor.json`-equivalent manifest, replaces `Bundle` + `dlopen`
   discovery.
-- **AppKit / UIKit**: The given sources already target AppKit; a UIKit
+- **AppKit / UIKit**: The implementation already targets AppKit; a UIKit
   (iOS) port would replace `AIPluginsCoordinator`'s `AppFeature`/menu-bar
   lifecycle hooks with `UIApplicationDelegate` equivalents, and would need
   to drop the `dlopen`-based `.aiplugin` bundle loading entirely — dynamic
   loading of unsigned code is not permitted under App Store code-signing —
   in favor of statically linked or App Extension–hosted plugins. The
   Foundation-level pieces (`NSLock`, `UserDefaults`, Keychain Services)
-  need no change. The AI Providers panel lives in
-  `Features/AIPlugins/Settings/` (`LLMProvidersView`,
-  `LLMProvidersListViewModel`, `AISettingsViewPanelController`): the default
-  model row is an `AIModelPickerControl` over
-  `AIProviderConfigStore.modelSetting(config:template:)`, the subtitle is set
-  on the panel's `SettingsPanelDescriptor.subtitle` from
-  `template.resolvedProvider`, `resolvedLLM` and `resolvedConfigType`, the
-  SwiftUI editor hosts `ComposableSettings.SecureTextEditView` through
-  `NSViewRepresentable` (or moves its field rows to the ComposableSettings
-  views), and the Test Chat is `AIChatViewController(pinsConfiguration:
-  true)`. `LLMPickerView` is replaced by the provider model picker and
-  deleted.
+  need no change.
 - **WinUI 3**: `System.Net.Http.HttpClient` performs the HTTP half of what
-  `PluginTransport` drives (the given sources hand it an `AIRequestSpec`,
+  `PluginTransport` drives (the implementation hands it an `AIRequestSpec`,
   never touch `HttpClient` directly), and `System.Diagnostics.Process` /
   `ProcessStartInfo` covers the subprocess (`.command`) transport case;
   `System.Text.Json` replaces `Foundation.JSONEncoder`/`JSONDecoder` for
@@ -800,7 +735,7 @@ but unused.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIPlugins/` | confirmed (1.2.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIPlugins/` | confirmed (1.3.0) |
 
 ## Design Decisions
 
@@ -854,15 +789,21 @@ but unused.
 - **Decision**: `LocalChatSession.maxToolIterations` is fixed at `8` with no
   configuration point and no explicit UI signal when the cap is reached.
   **Rationale**: bounds the worst-case latency and cost of a runaway
-  tool-calling loop; the source gives no rationale for the specific value
+  tool-calling loop; the implementation gives no rationale for the specific value
   `8` beyond the constant itself, and a caller cannot distinguish "the model
   stopped on its own" from "the turn hit the iteration cap" from the emitted
   events alone. (Apple platform implementation.)
   **Approved**: pending.
 
-**Decision**: Malformed MCP tool-call arguments are replaced by no arguments instead of reported as a tool error.
-**Rationale**: The permissive decode swallows the failure, so the underlying call runs without the arguments the model meant to send; closing the gap takes returning a tool error for an undecodable argument payload so the model can correct itself.
-**Approved**: pending
+- **Decision**: Known debt, tracked: `MCPChatToolSource.callTool` replaces
+  malformed tool-call arguments with no arguments (`try?` decode) instead of
+  reporting a tool error.
+  **Rationale**: the permissive decode swallows the failure, so the
+  underlying call runs without the arguments the model meant to send. The
+  fix is to return a tool error (`isError: true`) for an undecodable
+  argument payload so the model can correct itself; until then
+  mcp-tool-source-argument-validation records the current behavior.
+  **Approved**: pending.
 
 ## Compliance
 
@@ -880,8 +821,8 @@ independent responsibilities — plugin lifecycle (`AIPluginsCoordinator`),
 configuration modeling and persistence (`AIProviderConfigStore`,
 `AIProviderResolver`, `AIProviderDefaults`, `AIProviderMigration`,
 `PluginConfigStore`), and conversation driving (the two
-`ChatConfigProvider` + chat-engine pairs) — and none reaches into another's
-storage. unit-test-coverage passes because the conformance vectors trace to
+`ChatConfigProvider` + chat-engine pairs) — and none reaches into
+another's storage. unit-test-coverage passes because the conformance vectors trace to
 `LocalChatSessionTests`, `AIProviderConfigStoreTests`,
 `AIProviderResolverTests`, `AIProviderMigrationTests`, and
 `AIProviderDefaultsTests`, which exercise streaming, seeding, resolution,
@@ -897,7 +838,6 @@ the other failure paths (no configured provider, unknown tool, a throwing
 MCP call) surface as explicit `ChatError` or tool-error text.
 no-hardcoded-strings fails because the user-facing error strings listed
 under Localization are English literals with no localization mechanism.
-
 ## Change History
 
 | Version | Date | Author | Summary |

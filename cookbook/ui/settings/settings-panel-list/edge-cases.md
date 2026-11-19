@@ -6,7 +6,8 @@
   internal row-id resolver MUST behave correctly at the first (`0`) and
   last (`count - 1`) valid indices, and MUST silently no-op (rather than
   trap) for any index outside that range, since each guards against
-  out-of-bounds access before acting.
+  out-of-bounds access before acting. The no-op emits no log line and no
+  assertion; that silence is recorded as an open Design Decision.
 - **Concurrent access**: Not a runtime race condition to defend against —
   the component's state is confined to a single, serialized execution
   context by construction, so simultaneous mutation of the panel list,
@@ -21,19 +22,21 @@
   kind appears anywhere in this component.
 - **Query with repeated whitespace**: A search query containing multiple
   consecutive spaces (e.g. `"a  b"`) MUST narrow the same way a
-  single-spaced query does — splitting on whitespace omits empty
-  subsequences by default, so extra spacing does not introduce a term that
-  trivially matches everything.
+  single-spaced query does — splitting on the space character omits empty
+  pieces, so extra spacing does not introduce a term that trivially matches
+  everything. Only the space character separates terms (see
+  **all-terms-match**): a tab or newline inside the query stays part of a
+  term.
 - **Panel with a blank title**: A panel whose descriptor title is `""`
   renders a row with an empty label; this component performs no
   validation or fallback text for a blank title.
-- **Descriptor mutated after the panel list is set**: A descriptor's
-  title, icon, disabled flag, and section fields are all individually
-  observable, but this component subscribes to none of them — rows are
-  built once, when the panel list or a search-query change triggers a
-  rebuild. A panel's descriptor mutated after the sidebar has already been
-  populated leaves that row showing stale text/icon/disabled-state until
-  some later panel-list or search-query change triggers a rebuild; this
-  component does not subscribe to the descriptor's own change
-  notifications or otherwise refresh a row automatically.
+- **Descriptor mutated after the panel list is set**: A change to the
+  title or subtitle of a listed panel's descriptor rebuilds the sections
+  (see **descriptor-change-rebuild**); the rebuild runs on the UI thread's
+  next turn, and several such changes in one turn rebuild once. A
+  descriptor's icon, disabled flag, section, and heading are observable
+  too, but this component does not subscribe to them, so a change to any
+  of those leaves the row (or its section header) stale until some later
+  panel-list, search-query, title, or subtitle change triggers a
+  rebuild.
 

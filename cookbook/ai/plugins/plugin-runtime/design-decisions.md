@@ -49,13 +49,19 @@
 - **Decision**: `LocalChatSession.maxToolIterations` is fixed at `8` with no
   configuration point and no explicit UI signal when the cap is reached.
   **Rationale**: bounds the worst-case latency and cost of a runaway
-  tool-calling loop; the source gives no rationale for the specific value
+  tool-calling loop; the implementation gives no rationale for the specific value
   `8` beyond the constant itself, and a caller cannot distinguish "the model
   stopped on its own" from "the turn hit the iteration cap" from the emitted
   events alone. (Apple platform implementation.)
   **Approved**: pending.
 
-**Decision**: Malformed MCP tool-call arguments are replaced by no arguments instead of reported as a tool error.
-**Rationale**: The permissive decode swallows the failure, so the underlying call runs without the arguments the model meant to send; closing the gap takes returning a tool error for an undecodable argument payload so the model can correct itself.
-**Approved**: pending
+- **Decision**: Known debt, tracked: `MCPChatToolSource.callTool` replaces
+  malformed tool-call arguments with no arguments (`try?` decode) instead of
+  reporting a tool error.
+  **Rationale**: the permissive decode swallows the failure, so the
+  underlying call runs without the arguments the model meant to send. The
+  fix is to return a tool error (`isError: true`) for an undecodable
+  argument payload so the model can correct itself; until then
+  mcp-tool-source-argument-validation records the current behavior.
+  **Approved**: pending.
 

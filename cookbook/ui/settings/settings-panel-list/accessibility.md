@@ -12,8 +12,11 @@
   are posted through the ancestor's own native accessibility notifications
   (inherited, unmodified); this component issues no accessibility
   announcement of its own for a section rebuild, a search filter change, a
-  panel's disabled flag flipping, or a descriptor mutated after the
-  sidebar has already been populated (see Edge Cases).
+  panel's disabled flag flipping, or a descriptor change after the sidebar
+  has already been populated — a title or subtitle change rebuilds the
+  rows without an announcement, and an icon, disabled-flag, or section
+  change leaves the row stale (see Edge Cases, "Descriptor mutated after
+  the panel list is set").
 - **Minimum tap target**: Not applicable — this is a pointer/keyboard-
   driven list row (no touch input path in this component or its
   ancestor); the 44×44pt minimum is touch guidance, not a pointer-

@@ -5990,7 +5990,7 @@
           "conformance": {
             "hash": "sha256:76978701ac07a14a1ccd7edf72fd673a8ddf6706dbc1deb069136d2f257953ea",
             "state": "confirmed",
-            "version": "1.2.3"
+            "version": "1.3.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/SettingsPanel/SettingsPanelViewController.swift",
           "platform": "apple"
@@ -15145,7 +15145,7 @@
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:4e127cc155a13a08809fe8aef9aa92780b1f84f4881bf5db471cd898b89f5313",
+            "hash": "sha256:b4791d509fb0063a25d4ea9833aef6dd5a64644e77a2d1a266c8985c4eda90de",
             "state": "confirmed",
             "version": "1.3.0"
           },
@@ -16382,7 +16382,7 @@
           "conformance": {
             "hash": "sha256:75bd5665db06971795639e19a0f968e67eb891a4e8415a7b333dfae349935e68",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.1.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIPlugins/Settings/ModelChooserViewController.swift",
           "platform": "macos"
@@ -16391,7 +16391,7 @@
           "conformance": {
             "hash": "sha256:5f4b6265f8dd42f0bc83670c5779dbe44c1d09f7cfd59c7cfc5b1d831838d8fe",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.1.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIPlugins/Settings/AIModelPickerControl.swift",
           "platform": "macos"
@@ -17626,7 +17626,7 @@
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:2414b672ffa3ab6e91a38c27fb04d909b8ab6d59ab438980d39494298a7e399e",
+            "hash": "sha256:24c42643a8e44dd6c1c3aa2842c8782e1f5d03e984d99a5a3e004b19134c3881",
             "state": "confirmed",
             "version": "1.4.0"
           },
@@ -18284,7 +18284,7 @@
           "conformance": {
             "hash": "sha256:c8219960fe4ff728c6f3acc7eedfb959d384e788b3da66498be2cc63bc8ded86",
             "state": "confirmed",
-            "version": "1.0.0"
+            "version": "1.1.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIPlugins/Settings/ProviderModelPickerView.swift",
           "platform": "macos"
@@ -18293,7 +18293,7 @@
           "conformance": {
             "hash": "sha256:09be1c99d37458afa57f2fdd9129e3c89198ddfeddfb5f5b98608a36a98a45e7",
             "state": "confirmed",
-            "version": "1.0.0"
+            "version": "1.1.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIPlugins/Settings/ProviderRegistrySource.swift",
           "platform": "macos"
@@ -19178,6 +19178,49 @@
       "kind": "ingredient",
       "path": "ai/plugins/secret-storing",
       "rdid": "adhsdk.ingredient.ai.plugins.secret-storing"
+    },
+    "d3863175-a089-426d-982c-d489965593ac": {
+      "implementations": [
+        {
+          "conformance": {
+            "hash": "sha256:f083fa5d7f023bf576b86c62c187cf4ed9034767935700495f0567b5fe9c0689",
+            "state": "confirmed",
+            "version": "1.0.0"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIPlugins/Settings/LLMProvidersView.swift",
+          "platform": "apple"
+        },
+        {
+          "conformance": {
+            "hash": "sha256:63cfbb725773e4622000fd5f89e729cefe5fd18c813be078ba192b983c4b6ae3",
+            "state": "confirmed",
+            "version": "1.0.0"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIPlugins/Settings/LLMProvidersListViewModel.swift",
+          "platform": "apple"
+        },
+        {
+          "conformance": {
+            "hash": "sha256:6405671293c44d6803b5611938d9108bcb4143cb0e087cb62bc320a926b97a53",
+            "state": "confirmed",
+            "version": "1.0.0"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIPlugins/Settings/AISettingsViewPanelController.swift",
+          "platform": "apple"
+        },
+        {
+          "conformance": {
+            "hash": "sha256:24d4c114d16f5a5377b777e79b0c42d2bbc554dcbe28000c0e63ef2c7f6c7490",
+            "state": "confirmed",
+            "version": "1.0.0"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIPlugins/Settings/PluginLoadFailuresPanel.swift",
+          "platform": "apple"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "ai/plugins/ai-providers-panel",
+      "rdid": "adhsdk.ingredient.ai.plugins.ai-providers-panel"
     },
     "d3a0b65f-92c0-43c1-b04c-77638eb72044": {
       "implementations": [
@@ -21035,9 +21078,9 @@
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:d17da8dd349c46dde4d686a8e41ff88feb35443351c59fef5732afa8c3445eb2",
+            "hash": "sha256:2ef0f4ccd9fd9f9feae3ecea4544358ce58ed0f2070a2214c53b4d6b2ffd31c6",
             "state": "confirmed",
-            "version": "1.2.1"
+            "version": "1.3.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIPlugins/",
           "platform": "apple"

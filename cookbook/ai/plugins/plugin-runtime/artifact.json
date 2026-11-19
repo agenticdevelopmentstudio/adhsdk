@@ -24,13 +24,15 @@
       "runtime"
     ],
     "depends-on": [],
-    "related": [],
+    "related": [
+      "d3863175-a089-426d-982c-d489965593ac"
+    ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
   "names_hosts": "`claude-local` is the literal id of the default plugin template the runtime seeds.",
-  "synced": "5a5a2c39aac482be",
+  "synced": "9869866dd5bd7565",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

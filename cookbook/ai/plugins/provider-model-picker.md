@@ -2,7 +2,7 @@
 id: c9385bf6-3abc-486b-82b5-d57a62d86735
 title: "Provider Model Picker"
 type: ingredient
-version: 1.0.0
+version: 1.1.0
 status: review
 language: en
 created: 2026-11-19
@@ -37,10 +37,8 @@ The provider model picker is the one control for choosing an AI provider
 configuration and its model together. It is two settings rows: a provider
 popup, and below it the model picker control
 ([adhsdk.ingredient.ai.plugins.model-picker](cookbook:b3059939-21f5-414b-82e4-edd11b192ae8)) that opens the popover
-model chooser. It replaces the provider popups, the "Choose…"/"Try…" rows
-and the free-text "Model" fields that the Coding Partner, AI Summaries, AI
-Oversight, the Oversight findings window and the Sessions window each built
-for themselves.
+model chooser. Every settings panel that picks a provider and a model uses
+it, rather than building its own popup and model field.
 
 It works over a provider source, an interface with two implementations:
 
@@ -48,13 +46,15 @@ It works over a provider source, an interface with two implementations:
   ([adhsdk.ingredient.ai.plugins.plugin-runtime](cookbook:e886e448-6aa5-4359-979d-49fba713ab2a)).
 - **Daemon**: the provider configurations the session daemon reports,
   resolving each one's template through an optional plugin manager so the
-  model list and the default model's name can be shown. Without a plugin
-  manager (Stenographer, which links the same code) the model row shows the
-  stored name and its chooser lists nothing, but still opens.
+  model list and the default model's name can be shown; the default model
+  comes from this app's own per-configuration model setting, since the
+  daemon's list carries no model. In a host without a plugin manager no
+  default is known, the model row shows the stored model, and its chooser
+  lists only that model, but still opens.
 
 The caller supplies the settings it binds to: the provider selection and a
 function from a provider id to that provider's model setting (one shared
-setting for summaries and oversight, one per configuration for the Partner).
+setting several features share, or one per configuration).
 
 Everywhere a model is stored, an empty string means the provider's default
 model. A provider configuration's default model is set in the AI Providers
@@ -66,9 +66,11 @@ feature that stores an empty model follows it.
 ### Provider Source
 
 - **source-interface**: A provider source MUST list the selectable provider
-  configurations (id and display name, in the source's order), and for a
-  given configuration id MUST return its default model id, the display name
-  for a model id, and a chooser context, each of which MAY be none.
+  configurations (id and display name, in the source's order), MUST say
+  whether that list is authoritative (complete), MUST tell the control when
+  the list changes, and for a given configuration id MUST return its default
+  model id and a chooser context (which also supplies model display names),
+  each of which MAY be none.
 - **local-source**: The local source MUST list the app's stored provider
   configurations, resolve each through the plugin manager, report a
   configuration's default model as its per-configuration model setting's
@@ -76,16 +78,23 @@ feature that stores an empty model follows it.
   the chooser context from the resolved plugin, template and the
   configuration's base URL and key.
 - **daemon-source**: The daemon source MUST list the configurations the
-  daemon reports, and report each one's default model as the model the
-  daemon holds for it. With a plugin manager it MUST resolve each
-  configuration's template through it to supply display names and a chooser
-  context; with none, or when the template does not resolve, it MUST return
-  the model id itself as the display name and a chooser context that lists
-  no models.
+  daemon reports (ids, names, plugins and templates; the daemon's reply
+  carries no model). With a plugin manager that resolves a configuration's
+  template, it MUST report that configuration's default model the way the
+  local source does, from this app's own per-configuration model setting
+  for that id (the stored model, else the template's default), and build the
+  chooser context, which supplies display names, from that template. With
+  no plugin manager, or when the template does not resolve, it MUST report
+  no default model and return a chooser context over a bare template that
+  lists only the current model (none when it is empty).
 - **daemon-source-async**: The daemon source MUST load the daemon's list off
   the UI thread and MUST tell the control when it has loaded, so the control
   rebuilds its popup and its model row; until then the popup lists only the
-  leading choices and the stored selection.
+  leading choices, and the source is not authoritative.
+- **daemon-not-running**: A failed or unanswered list request MUST leave the
+  daemon source's list as it was and the source not authoritative, with no
+  error shown; the control stays as in Loading, and the request is retried
+  each time the popup is about to open.
 
 ### The Control
 
@@ -100,14 +109,21 @@ feature that stores an empty model follows it.
 - **selection-binding**: The popup MUST select the entry whose id equals the
   provider selection setting's value, and choosing an entry MUST write its
   id to that setting.
-- **stale-selection-kept**: While the source's list is not yet complete (a
-  daemon that has not answered), a stored selection that the source does not
-  list MUST still appear in the popup, selected, and the setting MUST NOT be
-  rewritten, so loading the source late never silently changes it.
+- **stale-selection-kept**: While the source is not authoritative (a daemon
+  that has not answered), a stored selection that no popup entry matches MUST
+  NOT be rewritten, so loading the source late never silently changes it; the
+  popup shows its first entry meanwhile. Once the source is authoritative and
+  still lists no match, the control MUST select the first entry and write it
+  to the setting, under the provider-change rule
+  (**provider-change-resets-model**). With no entries at all, nothing is
+  selected or written.
 - **provider-change-resets-model**: Choosing a different provider MUST set
-  the newly selected provider's model setting to `""`, so the model becomes
-  that provider's default; for a leading choice no model setting is written.
-  Re-choosing the provider already selected MUST NOT write either setting.
+  the newly selected provider's model setting to `""` when it is not already
+  empty, so the model becomes that provider's default; for a leading choice
+  only the setting the caller returns for no provider is cleared, if it
+  returns one. The model write MUST land before the selection write, so an
+  observer of the selection reads the cleared model. Re-choosing the provider
+  already selected MUST NOT write either setting.
 - **sentinel-disables-model**: With a leading choice selected, the model row
   MUST be disabled and read "Choose a Model".
 - **model-display-rule**: The model row MUST show, in order of preference,
@@ -118,9 +134,11 @@ feature that stores an empty model follows it.
 - **external-change-refresh**: A change to the provider selection setting or
   to the selected provider's model setting made outside the control MUST
   update the popup and the model row.
-- **chooser-opens-without-catalog**: With no plugin manager, the model row
-  MUST stay enabled for a configuration (not a leading choice) and its
-  chooser MUST open, listing nothing but the stored model.
+- **chooser-opens-without-catalog**: With the daemon source and no plugin
+  manager, the model row MUST stay enabled for a configuration (not a
+  leading choice) and its chooser MUST open, listing nothing but the stored
+  model. With the local source and no plugin manager, the source returns no
+  chooser context, so the model row is disabled.
 - **confines-to-ui-thread**: The component MUST be usable only on the UI thread.
 
 ## Appearance
@@ -146,7 +164,7 @@ feature that stores an empty model follows it.
 | Default | Popup shows the selected configuration; model row shows the stored model, else the configuration's default. |
 | Leading choice selected | Popup shows the sentinel; model row disabled, reading "Choose a Model". |
 | No model known | Model row reads "Choose a Model"; enabled for a configuration. |
-| Loading (daemon) | Popup lists the leading choices and the stored selection; it fills in when the daemon's list arrives. |
+| Loading (daemon) | Popup lists the leading choices; the stored selection is kept unchanged; it fills in when the daemon's list arrives, and stays this way while the daemon does not answer. |
 | Disabled | The caller disabled the control: popup and model row both disabled. |
 | Pressed | The popup and model row show their platform pressed states. |
 | Focused | The platform focus ring on the popup or the model row's buttons. |
@@ -165,8 +183,10 @@ feature that stores an empty model follows it.
 - **Contrast**: Colors come from theme roles; the theme decides whether they
   clear 4.5:1.
 
-Keyboard: Tab moves from the popup to the model row's caret and name; Space
-opens the popup.
+Keyboard: with the platform's full keyboard navigation turned on, Tab moves
+from the popup to the model row's caret and name, and Space opens the popup;
+with it off, macOS gives the pop-up button and the borderless buttons no Tab
+focus.
 
 ## Conformance Test Vectors
 
@@ -176,29 +196,41 @@ opens the popup.
 | provider-model-picker-002 | leading-choices | Leading choice "Default (CLI)"; source lists configs `a`, `b` | The popup lists "Default (CLI)", `a`, `b` in that order |
 | provider-model-picker-003 | provider-change-resets-model | Selection `a`; `b`'s model setting is `m9`; choose `b` | The selection setting is `b`; `b`'s model setting is `""` |
 | provider-model-picker-004 | provider-change-resets-model | Selection `a`; choose `a` again | Neither setting is written |
-| provider-model-picker-005 | sentinel-disables-model, provider-change-resets-model | Selection `a`; choose the leading choice | The selection is the sentinel's id; no model setting is written; the model row is disabled and reads "Choose a Model" |
+| provider-model-picker-005 | sentinel-disables-model, provider-change-resets-model | Selection `a`; the model setting function returns none for a leading choice; choose the leading choice | The selection is the sentinel's id; no model setting is written; the model row is disabled and reads "Choose a Model" |
 | provider-model-picker-006 | model-display-rule | Selected `a`; its model setting is `m2` (display "Model Two"); default `m1` | The model row reads "Model Two" |
 | provider-model-picker-007 | model-display-rule | Selected `a`; its model setting is `""`; default `m1` (display "Model One") | The model row reads "Model One" |
 | provider-model-picker-008 | model-display-rule | Selected `a`; model setting `""`; no default | The model row reads "Choose a Model" |
 | provider-model-picker-009 | model-choice-binding | Selected `a`; the chooser reports `m3` | `a`'s model setting is `m3` |
-| provider-model-picker-010 | stale-selection-kept | Selection `gone`, which the source does not list | The popup shows `gone` selected; the setting is unchanged |
-| provider-model-picker-011 | daemon-source, chooser-opens-without-catalog | Daemon source with no plugin manager; config `d1` with model `qwen3` | The model row reads `qwen3`, is enabled, and its chooser opens listing only `qwen3` |
+| provider-model-picker-010 | stale-selection-kept | Daemon source that has not answered; selection `gone`; leading choice `x` | The popup shows `x`; the setting is still `gone` |
+| provider-model-picker-011 | daemon-source, chooser-opens-without-catalog | Daemon source with no plugin manager; config `d1` selected; `d1`'s model setting is `qwen3` | The model row names `qwen3`, is enabled, and its chooser opens listing only `qwen3`; the source reports no default model for `d1` |
 | provider-model-picker-012 | external-change-refresh | The selected provider's model setting changes to `m4` elsewhere | The model row shows `m4`'s display name |
 | provider-model-picker-013 | local-source | Local source; configuration `c1` with an empty stored model and a template default `m1` | Its default model is `m1` |
 | provider-model-picker-014 | confines-to-ui-thread | Use the component from a thread other than the UI thread | The use is rejected, at build time or by a runtime check; the component's state is unchanged |
-
+| provider-model-picker-015 | stale-selection-kept | Authoritative source listing `a`, `b`; no leading choices; selection `gone` | The selection setting becomes `a`; `a`'s model setting is `""` |
+| provider-model-picker-016 | two-rows | Construct the control | A provider popup row sits above a model picker control row |
+| provider-model-picker-017 | selection-binding | Source lists `a`, `b`; selection `b` | The popup selects `b`; choosing `a` writes `a` to the selection setting |
+| provider-model-picker-018 | daemon-source-async, stale-selection-kept | Daemon source not yet answered; selection `d1`; the daemon's list then arrives with `d1` | The popup rebuilds and selects `d1`; the selection setting is unchanged |
+| provider-model-picker-019 | source-interface | A source listing `a`, `b`; ask for an id it does not list | The list is `a`, `b` in the source's order; the default model and chooser context for the unlisted id are none |
+| provider-model-picker-020 | external-change-refresh | Selection `a`; the selection setting changes to `b` elsewhere | The popup selects `b` and the model row shows `b`'s model |
+| provider-model-picker-021 | daemon-not-running | Daemon source whose list request fails | The source is not authoritative, its list is unchanged, and the stored selection is not rewritten |
+| provider-model-picker-022 | configurable-labels | Construct with provider label "Summaries provider" | The popup's accessibility label is "Summaries provider" |
+| provider-model-picker-023 | daemon-source | Daemon source with a plugin manager that resolves `d1`'s template; this app's model setting for `d1` is empty; template default `m1` | Its default model is `m1` |
+| provider-model-picker-024 | chooser-opens-without-catalog | Local source with no plugin manager; configuration `c1` selected | The source returns no chooser context for `c1`; the model row is disabled |
 ## Edge Cases
 
-- The daemon is not running: the daemon source lists nothing; the popup keeps
-  the leading choices and the stored selection, and the model row shows the
-  stored model's id.
+- The daemon is not running: the daemon source lists nothing and never
+  becomes authoritative (**daemon-not-running**); the popup lists the leading
+  choices, the stored selection is left unchanged, and with no configuration
+  selected the model row is disabled and reads "Choose a Model".
 - A configuration whose template no longer resolves: it stays listed under
-  its name; its model row shows the stored id or "Choose a Model", and its
-  chooser lists nothing.
+  its name; its model row shows the stored id or "Choose a Model". With the
+  daemon source its chooser lists only the stored model; with the local
+  source there is no chooser context and the model row is disabled.
 - Two controls bound to the same settings (two windows open): each updates
   from the other's writes (**external-change-refresh**).
-- No leading choices and no configurations: the popup is empty and the model
-  row disabled.
+- No leading choices, no configurations and no stored selection: the popup
+  is empty and the model row disabled. With a stored selection the popup is
+  still empty and the setting is left unchanged (**stale-selection-kept**).
 - A model setting shared by several providers (summaries and oversight): a
   provider change still writes `""` to it, which is the new provider's
   default.
@@ -209,12 +241,15 @@ opens the popup.
 |--------|------|---------|-------------|
 | Provider source | provider source | — (required) | Local or daemon. |
 | Provider selection | text setting | — (required) | The selected provider id, or a leading choice's id. |
-| Model setting | function from provider id to text setting | — (required) | The model setting for a provider; `""` means the provider's default. |
+| Model setting | function from provider id (none for a leading choice) to optional text setting | — (required) | The model setting for a provider; `""` means the provider's default. |
 | Leading choices | list of (id, title) | empty | Sentinel entries listed first. |
 | Provider label | text | "Provider" | The provider row's label. |
 | Model label | text | "AI Model" | The model row's label. |
-| Plugin manager (daemon source) | optional plugin manager | none | Resolves templates for display names and the chooser's list. |
 
+The provider source is built before the control and takes its own
+parameters: the daemon source takes the daemon client and an optional plugin
+manager (default none), which resolves templates for display names and the
+chooser's list; the local source takes the plugin manager.
 ## Deep Linking
 
 Not applicable: the control is two settings rows, not a navigable screen.
@@ -223,11 +258,13 @@ Not applicable: the control is two settings rows, not a navigable screen.
 
 | String Key | Default (en) | Context |
 |-----------|-------------|---------|
-| (none — hardcoded literal) | `Provider` | The provider row's default label |
-| (none — hardcoded literal) | `AI Model` | The model row's default label |
-| (none — hardcoded literal) | `Choose a Model` | The model row with no model, or with a leading choice selected |
+| `providerModelPicker.providerLabel` | `Provider` | The provider row's default label |
+| `aiModelPicker.label` | `AI Model` | The model row's default label |
+| `aiModelPicker.chooseModel` | `Choose a Model` | The model row with no model, or with a leading choice selected |
 
-The leading choices' titles are the caller's.
+The leading choices' titles are the caller's. The keys are the recipe's;
+the source still uses the English literals, so `no-hardcoded-strings` fails
+until it looks them up.
 
 ## Accessibility Options
 
@@ -290,18 +327,15 @@ through the daemon client's own logger; the control itself logs nothing.
   `isAuthoritative` saying whether the list is complete, and its two
   implementations, `LocalProviderRegistrySource` and
   `DaemonProviderRegistrySource`. Local reads `AIPluginManager` and
-  `UserSettings.aiProviderConfigurations` and resolves the default through
-  `AIProviderConfigStore.modelSetting(config:template:)`; daemon calls
-  `StenographerService.aiProviderConfigs()` and takes an optional
-  `AIPluginManager`. Settings are `UserSetting<String>` for the selection and
-  `modelSetting: (String) -> UserSetting<String>`. It replaces
-  `LLMPickerView` and `DaemonProviderPickerView`, which are deleted. Callers:
-  `PartnerGeneralSettingsViewController`, `AISummariesSettingsPanel`,
-  `AIOversightSettingsPanel`, `OversightFindingsViewController` and
-  `SessionsWindowController`; the Sessions, Conversations and Oversight
-  coordinators take `pluginManager: AIPluginManager? = nil`, which the Kitchen
-  passes and Stenographer does not. A UIKit port would use a `UIButton` with a
-  `UIMenu` for the popup.
+  `UserSettings.aiProviderConfigurations`; daemon calls
+  `StenographerDaemonService.aiProviderConfigs()` and takes an optional
+  `AIPluginManager`. Both resolve the default through
+  `AIProviderConfigStore.selectedModel(config:template:)`, and both need a
+  resolved template for it. Settings are `UserSetting<String>` for the selection and
+  `modelSetting: (UUID?) -> UserSetting<String>?`, called with nil for a
+  leading choice. A host with a plugin manager passes it to the daemon
+  source; a host without one passes nil. A UIKit port would use a `UIButton`
+  with a `UIMenu` for the popup.
 - **WinUI 3**: A `StackPanel` of two rows: a `ComboBox` (`ItemsSource` bound to
   an `ObservableCollection` of the leading choices then the configurations,
   `SelectedValuePath="Id"`, `SelectedValue` two-way bound to the selection) with
@@ -316,8 +350,8 @@ through the daemon client's own logger; the control itself logs nothing.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIPlugins/Settings/ProviderModelPickerView.swift` | confirmed (1.0.0) |
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIPlugins/Settings/ProviderRegistrySource.swift` | confirmed (1.0.0) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIPlugins/Settings/ProviderModelPickerView.swift` | confirmed (1.1.0) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIPlugins/Settings/ProviderRegistrySource.swift` | confirmed (1.1.0) |
 
 ## Design Decisions
 
@@ -335,9 +369,32 @@ through the daemon client's own logger; the control itself logs nothing.
   interface keeps every panel's provider and model choice the same.
   **Approved**: pending
 - **Decision**: The daemon source takes an optional plugin manager.
-  **Rationale**: The Kitchen has one and can show model lists and names;
-  Stenographer links the same code without one, and its panels must still
-  show and set a provider and the stored model.
+  **Rationale**: A host with a plugin manager can show model lists and names;
+  a host that links the same code without one must still show and set a
+  provider and the stored model in its panels.
+  **Approved**: pending
+- **Decision**: The control replaces the per-panel provider pickers
+  (`LLMPickerView`, `DaemonProviderPickerView`, and the "Choose…"/"Try…"
+  rows and free-text model fields that panels built themselves), which are
+  deleted rather than kept beside it.
+  **Rationale**: Keeping the predecessors would let panels drift apart again;
+  one control is the only provider and model choice a panel can reach for.
+  **Approved**: pending
+- **Decision**: `unit-test-coverage` failing is accepted debt. The tests in
+  `ProviderModelPickerViewTests.swift` cover the popup order, the
+  provider-change reset and the stored-model display; re-choosing the same
+  provider, a leading choice disabling the model row, the stale-selection
+  rule, the local source's default model and external-change refresh have
+  none. Adding tests for those rules to that file clears it.
+  **Rationale**: The control replaced working pickers whose behavior it
+  matches; the untested rules are small and covered by the conformance
+  vectors until the tests land.
+  **Approved**: pending
+- **Decision**: `no-hardcoded-strings` failing is accepted debt: the default
+  labels and "Choose a Model" are English literals in the source. Looking
+  them up by the string keys in the Localization table clears it.
+  **Rationale**: Callers already pass their own labels, so only the defaults
+  are unlocalized.
   **Approved**: pending
 
 ## Compliance
@@ -345,7 +402,7 @@ through the daemon client's own logger; the control itself logs nothing.
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.platform-compliance.native-controls-preference](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d49de883-3811-54ed-b227-c2d807cac551) | passed | platform-compliance |
-| [adc.check.accessibility.keyboard-navigable](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/56755f54-b31f-59aa-a77d-eeb0cd87731a) | passed | accessibility |
+| [adc.check.accessibility.keyboard-navigable](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/56755f54-b31f-59aa-a77d-eeb0cd87731a) | partial | accessibility |
 | [adc.check.accessibility.screen-reader-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0720ed85-3747-546a-b2ed-6a909f44dd43) | passed | accessibility |
 | [adc.check.reliability.data-integrity](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d773e5db-bb22-5da8-a6f1-953c35a3798d) | passed | reliability |
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
@@ -353,19 +410,23 @@ through the daemon client's own logger; the control itself logs nothing.
 | [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | failed | internationalization |
 
 `native-controls-preference` rests on the platform pop-up button and the
-model picker control; `keyboard-navigable` and `screen-reader-support` on the
-popup's tab stop and its label (**configurable-labels**). `data-integrity`
-passes because a provider change never carries a model id to a provider that
-does not serve it (**provider-change-resets-model**) and a stored selection
-the source does not list is kept (**stale-selection-kept**).
+model picker control; `screen-reader-support` on the popup's label
+(**configurable-labels**). `keyboard-navigable` is `partial`: the popup and
+the model row take Tab focus only while the platform's full keyboard
+navigation is on. `data-integrity` passes because a provider change never
+carries a model id to a provider that does not serve it
+(**provider-change-resets-model**) and a stored selection is not rewritten
+before the source is authoritative (**stale-selection-kept**).
 `separation-of-concerns` passes because registries sit behind the provider
-source and settings are injected. `unit-test-coverage` is `failed` until the
-provider-change, display and source rules have tests; the code is planned.
-`no-hardcoded-strings` fails because the default labels are English
-literals.
+source and settings are injected. The code exists; `unit-test-coverage` is
+`failed` because its tests cover only the popup order, the provider-change
+reset and the stored-model display, and `no-hardcoded-strings` fails because
+the default labels are English literals. Both are recorded as accepted debt
+in the Design Decisions.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.0 | 2026-11-19 | Mike Fullerton | Lint pass: daemon source's default model comes from the app's per-config setting, stale and failed-load behavior as coded, more vectors, accepted debt recorded |
 | 1.0.0 | 2026-11-19 | Mike Fullerton | Initial creation, ahead of the code: the combined provider and model control and its local and daemon provider sources |

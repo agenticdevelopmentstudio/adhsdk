@@ -14,5 +14,6 @@
 | spvc-014 | hosting-view-helper | Call the component's hosting helper with some content | Returns a wrapper view containing the given content |
 | spvc-015 | hosting-view-sizing-options | Call the hosting helper with some content, inspect the returned wrapper's sizing behavior | The wrapper advertises the content's size as a preference, not a required min/max constraint |
 | spvc-016 | confines-to-ui-thread | Use the component from a thread other than the UI thread | The use is rejected, at build time or by a runtime check; the component's state is unchanged |
-| spvc-017 | descriptor-subtitle | Construct a descriptor with a title only; then set its subtitle to "OpenAI - GPT - API key" | Its subtitle starts as none; an observer of the descriptor is told of the change and reads the new subtitle |
+| spvc-017 | descriptor-subtitle-default | Construct a descriptor with a title only | Its subtitle is none |
+| spvc-018 | descriptor-subtitle-observable | Observe a descriptor, then set its subtitle to "Provider - API key set" | The observer is told of the change and reads the new subtitle |
 

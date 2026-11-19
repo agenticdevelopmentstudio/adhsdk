@@ -3,7 +3,7 @@ import AppKit
 @testable import AgenticDeveloperHubSDKMacOS
 
 /// The descriptor's subtitle and how the settings sidebar follows it
-/// (settings-panel spvc-017, settings-panel-list cts-panel-list-018–021).
+/// (settings-panel spvc-017–018, settings-panel-list cts-panel-list-018–021).
 @MainActor
 final class PanelListSubtitleTests: XCTestCase {
 
@@ -45,7 +45,7 @@ final class PanelListSubtitleTests: XCTestCase {
         XCTAssertEqual(list.lastItems.map(\.subtitle), ["Anthropic - API Key", nil])
     }
 
-    /// cts-panel-list-019
+    /// cts-panel-list-019, spvc-018
     func testChangingTheSubtitleRebuildsTheRows() {
         let list = makeList()
         let claude = panel("Claude", subtitle: "Anthropic")

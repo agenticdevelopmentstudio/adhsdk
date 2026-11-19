@@ -7,8 +7,10 @@
   stays selected, and the arrival does not call the choice callback.
 - The anchor view leaves its window while the popover is open (its settings
   panel is switched away): the popover closes.
-- The person closes the popover while the large-model confirmation is up:
-  the confirmation is dismissed as declined.
-- A very long model name: the name button truncates in the middle and keeps
-  the full name in its tooltip and accessibility label.
+- The person clicks outside the popover while the large-model confirmation
+  is up: the confirmation is app-modal and the popover's outside-click
+  dismissal is suspended, so the popover stays open until the confirmation
+  is answered.
+- A very long model name: the name button truncates in the middle
+  (**control-name-truncates-middle**).
 

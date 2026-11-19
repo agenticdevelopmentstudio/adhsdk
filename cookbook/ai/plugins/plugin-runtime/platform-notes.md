@@ -1,7 +1,7 @@
 
-- **SwiftUI (source)**: This is a plain Foundation/AppKit runtime layer, not
-  a SwiftUI component, and it is the direct source for every role name used
-  above: the plugins coordinator is `AIPluginsCoordinator` (a `@MainActor`
+- **Apple implementation (Foundation/AppKit)**: This is a plain
+  Foundation/AppKit runtime layer, not a SwiftUI component, and it supplies
+  every role name used above: the plugins coordinator is `AIPluginsCoordinator` (a `@MainActor`
   subclass of the app's own `AppFeature` base, registering with
   `AppFeatureRegistry.shared`); the chat configuration provider interface is
   `ChatConfigProvider`; the chat-backend adapter is `AIPluginChatBackend`
@@ -46,27 +46,16 @@
   secret); dynamic `import()` of a plugin module, driven by a fetched
   `descriptor.json`-equivalent manifest, replaces `Bundle` + `dlopen`
   discovery.
-- **AppKit / UIKit**: The given sources already target AppKit; a UIKit
+- **AppKit / UIKit**: The implementation already targets AppKit; a UIKit
   (iOS) port would replace `AIPluginsCoordinator`'s `AppFeature`/menu-bar
   lifecycle hooks with `UIApplicationDelegate` equivalents, and would need
   to drop the `dlopen`-based `.aiplugin` bundle loading entirely — dynamic
   loading of unsigned code is not permitted under App Store code-signing —
   in favor of statically linked or App Extension–hosted plugins. The
   Foundation-level pieces (`NSLock`, `UserDefaults`, Keychain Services)
-  need no change. The AI Providers panel lives in
-  `Features/AIPlugins/Settings/` (`LLMProvidersView`,
-  `LLMProvidersListViewModel`, `AISettingsViewPanelController`): the default
-  model row is an `AIModelPickerControl` over
-  `AIProviderConfigStore.modelSetting(config:template:)`, the subtitle is set
-  on the panel's `SettingsPanelDescriptor.subtitle` from
-  `template.resolvedProvider`, `resolvedLLM` and `resolvedConfigType`, the
-  SwiftUI editor hosts `ComposableSettings.SecureTextEditView` through
-  `NSViewRepresentable` (or moves its field rows to the ComposableSettings
-  views), and the Test Chat is `AIChatViewController(pinsConfiguration:
-  true)`. `LLMPickerView` is replaced by the provider model picker and
-  deleted.
+  need no change.
 - **WinUI 3**: `System.Net.Http.HttpClient` performs the HTTP half of what
-  `PluginTransport` drives (the given sources hand it an `AIRequestSpec`,
+  `PluginTransport` drives (the implementation hands it an `AIRequestSpec`,
   never touch `HttpClient` directly), and `System.Diagnostics.Process` /
   `ProcessStartInfo` covers the subprocess (`.command`) transport case;
   `System.Text.Json` replaces `Foundation.JSONEncoder`/`JSONDecoder` for

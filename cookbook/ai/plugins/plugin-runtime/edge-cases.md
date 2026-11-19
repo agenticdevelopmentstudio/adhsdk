@@ -46,7 +46,7 @@
   into a result of "Tool error: <description>" marked as an error, never
   propagating the original error type to the model
   (mcp-tool-source-error-mapping).
-- **Offline/disconnected state**: None of the given sources perform network
+- **Offline/disconnected state**: This component performs no network
   I/O directly — that is the plugin transport's responsibility. From this
   component's perspective, a network failure (unreachable host, timeout, a
   non-2xx response) MUST surface through the same generic error path as any

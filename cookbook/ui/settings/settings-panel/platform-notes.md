@@ -2,9 +2,10 @@
 - **SwiftUI**: There is no `NSHostingView` bridging concern to solve — a
   SwiftUI settings panel is itself a `View`. Model the base class as a
   protocol (e.g. `SettingsPanel: Identifiable, View`) with associated
-  `descriptor` (title/icon/isDisabled/section, mirroring
-  `SettingsPanelDescriptor`'s published fields as `@Published` on an
-  `ObservableObject` or as plain properties on a `struct`), plus
+  `descriptor` (`title`, `subtitle: String?`, `icon`, `isDisabled`,
+  `section`, `heading`, mirroring `SettingsPanelDescriptor`'s published
+  fields as `@Published` on an `ObservableObject`, so a subtitle change
+  reaches the sidebar), plus
   `helpContent`/`effectiveHelpContent`/`searchKeywords` given default
   implementations in a protocol extension — Swift's normal protocol-witness
   dispatch resolves these correctly for a `View`-conforming type, so the
@@ -13,8 +14,10 @@
   content from a `ScrollView { LazyVStack { ... } }` unless the panel
   declares it hosts its own scrolling, mirroring `hostsOwnScroll`.
 - **Compose**: Define an interface (e.g. `SettingsPanel`) exposing a
-  `descriptor` data class (`title: String`, `icon: Painter?`,
-  `isDisabled: Boolean`, `section: String?`), a `@Composable fun Content()`,
+  `descriptor` state holder (`title: String`, `subtitle: String?`,
+  `icon: Painter?`, `isDisabled: Boolean`, `section: String?`,
+  `heading: String?`, each backed by `mutableStateOf` so a change
+  recomposes the sidebar), a `@Composable fun Content()`,
   and `helpContent`/`effectiveHelpContent`/`searchKeywords` with default
   (empty/null) implementations via a Kotlin interface default method or an
   abstract base class. The hosting `NavigationDrawer`/two-pane `Scaffold`
@@ -22,8 +25,10 @@
   unless the panel's `hostsOwnScroll` is `true`, mirroring
   `SplitViewController`'s `PanelScrollView`-wrapping branch.
 - **React/Web**: Define a component contract (a TypeScript interface or an
-  abstract base class) with a `descriptor` object (`title`, `icon`,
-  `isDisabled`, `section`) and a `render()`/functional component for
+  abstract base class) with a `descriptor` object (`title`,
+  `subtitle?: string`, `icon`, `isDisabled`, `section`, `heading`) whose
+  changes are observable (for example a store the sidebar subscribes to)
+  and a `render()`/functional component for
   content, plus `helpContent`/`effectiveHelpContent`/`searchKeywords`
   defaulting to `null`/`null`/`[]`. The hosting layout wraps rendered
   content in a `<div style="overflow-y: auto">` unless the panel opts out
@@ -42,7 +47,11 @@
   is overridden to trigger a fatal error, so a caller cannot construct one
   through that path. It composes `PanelView`, `SettingsPanelDescriptor`,
   and `GroupView` — all defined elsewhere in `AgenticDeveloperHubSDK` — rather than
-  reimplementing their layout. Its `loadView()` sets `self.view` to
+  reimplementing their layout. `SettingsPanelDescriptor`
+  (`SettingsPanelDescriptor.swift`, beside this file) is an
+  `ObservableObject` whose `title`, `subtitle`, `icon`, `isDisabled`,
+  `section` and `heading` are `@Published`; `subtitle` defaults to `nil`.
+  Its `loadView()` sets `self.view` to
   `settingsView`, the `PanelView` instance the class owns. The hosting
   helper's `NSHostingView` also sets
   `translatesAutoresizingMaskIntoConstraints = false`, opting the returned
@@ -55,8 +64,10 @@
 - **WinUI 3**: Build the base class as an abstract `Page` (or
   `UserControl`), e.g. `SettingsPanelBase : Page`.
   - Descriptor: Expose a `Descriptor` object implementing
-    `INotifyPropertyChanged` with `Title` (`string`), `Icon` (`IconSource?`),
-    `IsDisabled` (`bool`, default `false`), and `Section` (`string?`) — the
+    `INotifyPropertyChanged` with `Title` (`string`), `Subtitle`
+    (`string?`, default `null`), `Icon` (`IconSource?`), `IsDisabled`
+    (`bool`, default `false`), `Section` (`string?`) and `Heading`
+    (`string?`), each raising `PropertyChanged` when set — the
     direct analog of `SettingsPanelDescriptor`'s `@Published` fields —
     constructed in the base class's constructor from an optional parameter,
     defaulting to a descriptor with an empty `Title` exactly as

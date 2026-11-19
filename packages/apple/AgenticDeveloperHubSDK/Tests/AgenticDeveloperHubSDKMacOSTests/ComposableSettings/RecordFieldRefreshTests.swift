@@ -63,6 +63,15 @@ struct RecordFieldRefreshTests {
         #expect(popup.indexOfSelectedItem == -1)
     }
 
+    // MARK: - Accessibility
+
+    /// text-edit-view-019: the field is titled by the row's label.
+    @Test func theFieldIsTitledByTheLabel() {
+        let model = ComposableSettings.ViewModel<String>(title: "Name", get: { "" }, set: { _ in })
+        let row = ComposableSettings.TextEditView(with: model)
+        #expect(row.textField.accessibilityTitleUIElement() as AnyObject? === row.label)
+    }
+
     // MARK: - ViewModel refresh / revert
 
     @Test func refreshShowsAStoredValueThatChangedUnderTheRow() {

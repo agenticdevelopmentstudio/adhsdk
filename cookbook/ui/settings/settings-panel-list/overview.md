@@ -1,5 +1,5 @@
 
-The Panel List is the sidebar of a settings split view: a domain-agnostic,
+The Panel List is the sidebar of a settings split view: a
 sectioned list component specialized for settings panels. Its ancestor
 topic list component is a domain-agnostic sectioned list that knows nothing
 about settings; this component maps an ordered array of panels onto that

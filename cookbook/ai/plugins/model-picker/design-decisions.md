@@ -4,7 +4,8 @@
   window.
   **Rationale**: A modal window took the whole app for a one-field choice and
   hid the setting it changed; a popover keeps the row in view and closes on
-  Escape or a click outside, the platform's own way to dismiss a picker.
+  Escape or a click outside, the platform's own way to dismiss a picker. The
+  modal window's frame persistence and its OK and Cancel buttons went with it.
   **Approved**: pending
 - **Decision**: A click on a row chooses at once and the popover stays open;
   Return or a double-click chooses and closes.

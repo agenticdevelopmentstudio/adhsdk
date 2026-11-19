@@ -4,7 +4,7 @@
     "id": "b3059939-21f5-414b-82e4-edd11b192ae8",
     "title": "Model Picker",
     "type": "ingredient",
-    "version": "1.0.1",
+    "version": "1.1.0",
     "status": "review",
     "language": "en",
     "created": "2026-11-19",
@@ -29,13 +29,14 @@
       "5069f11f-e0c6-40c3-92ca-6152b8df3bc2"
     ],
     "related": [
-      "e886e448-6aa5-4359-979d-49fba713ab2a"
+      "e886e448-6aa5-4359-979d-49fba713ab2a",
+      "c9385bf6-3abc-486b-82b5-d57a62d86735"
     ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "ec36980ed8cef395",
+  "synced": "17d00fd4372598a0",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
