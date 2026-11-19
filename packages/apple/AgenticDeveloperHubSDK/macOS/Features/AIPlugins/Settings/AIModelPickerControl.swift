@@ -77,9 +77,12 @@ public final class AIModelPickerControl: NSView, SettingsViewProtocol {
 
     /// Re-reads the name and whether there is anything to choose from.
     public func refresh() {
-        let name = displayName() ?? ""
+        let model = displayName() ?? ""
+        let context = context()
+        // Shown by its display name when the provider's manager knows it.
+        let name = context?.displayName(for: model) ?? model
         nameButton.title = name.isEmpty ? Self.chooseModelText : name
-        let enabled = isChoosingAllowed && context() != nil
+        let enabled = isChoosingAllowed && context != nil
         caretButton.isEnabled = enabled
         nameButton.isEnabled = enabled
         applyTheme(resolvedThemeScope.palette)
