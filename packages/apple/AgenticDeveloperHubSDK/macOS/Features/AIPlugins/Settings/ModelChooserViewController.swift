@@ -24,6 +24,18 @@ public struct ModelChooserContext {
         self.warnPct = warnPct
         self.blockPct = blockPct
     }
+
+    /// `model` as people read it ("Opus 5.5" for `claude-opus-5-5`): an alias
+    /// resolved and given its display name by the provider's model manager,
+    /// the same one the chooser lists from. An id the manager does not know
+    /// comes back unchanged.
+    @MainActor
+    public func displayName(for model: String) -> String {
+        guard !model.isEmpty else { return model }
+        let manager = ProviderModels.manager(
+            pluginIdentifier: pluginIdentifier, template: template, baseURL: baseURL, apiKey: apiKey)
+        return manager.displayName(for: manager.resolve(model))
+    }
 }
 
 /// Master/detail picker for one provider's model, shown in a popover by
@@ -132,8 +144,11 @@ public final class ModelChooserViewController: NSViewController {
     // MARK: - View tree
 
     public override func loadView() {
-        let root = NSView()
+        // Sized up front: nothing inside pins a height, so a root with no frame
+        // has a fitting size of just the filter row, and the popover takes it.
+        let root = NSView(frame: NSRect(origin: .zero, size: Self.contentSize))
         root.wantsLayer = true
+        preferredContentSize = Self.contentSize
 
         configureSearchField()
         configureFilterBar()
@@ -651,8 +666,9 @@ public enum ModelChooser {
         popover.behavior = .transient
         popover.animates = true
         popover.appearance = ThemePaletteObserver.currentPalette.standardAppearance
-        popover.contentSize = ModelChooserViewController.contentSize
         popover.contentViewController = controller
+        // After the controller: assigning it resizes the popover to the view.
+        popover.contentSize = ModelChooserViewController.contentSize
         popover.delegate = closer
         controller.onChoose = onChoose
         controller.onClose = { [weak popover] in popover?.performClose(nil) }
