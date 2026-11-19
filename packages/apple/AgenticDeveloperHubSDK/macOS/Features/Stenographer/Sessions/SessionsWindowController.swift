@@ -1,4 +1,5 @@
 import AgenticDeveloperHubSDKCore
+import AIPluginKit
 import AgenticDeveloperHubSDKCoreUI
 import AgenticDeveloperHubSDKCoreMacOS
 
@@ -34,11 +35,11 @@ public final class SessionsWindowController: SingleWindowController {
     /// configurations each time its menu opens (same story as the AI Summaries
     /// settings panel's picker). The dialog builds its content afresh on every
     /// open, so a property — not just the closure capture — keeps it alive.
-    private let aiSummariesPicker: DaemonProviderPickerView
+    private let aiSummariesPicker: ProviderModelPickerView
     private let listSource: StenographerSessionListSource
 
-    public static func present(service: any StenographerDaemonService) {
-        ensureCurrent(service: service)
+    public static func present(service: any StenographerDaemonService, pluginManager: AIPluginManager? = nil) {
+        ensureCurrent(service: service, pluginManager: pluginManager)
         current?.showWindow()
         // Fit once the window exists + has laid out; the observer handles later changes.
         DispatchQueue.main.async { current?.fitToContent() }
@@ -49,9 +50,10 @@ public final class SessionsWindowController: SingleWindowController {
     /// this at launch so the toolkit's `restoreOnLaunch()` can reopen the
     /// Sessions window if it was visible last session — no app-side visibility
     /// logic, matching the `UsageHUDWindowController.ensureCurrent()` pattern.
-    public static func ensureCurrent(service: any StenographerDaemonService) {
+    public static func ensureCurrent(service: any StenographerDaemonService,
+                                     pluginManager: AIPluginManager? = nil) {
         if current == nil {
-            current = SessionsWindowController(service: service)
+            current = SessionsWindowController(service: service, pluginManager: pluginManager)
         }
     }
 
@@ -82,7 +84,7 @@ public final class SessionsWindowController: SingleWindowController {
         window.addTitlebarAccessoryViewController(configDialog.makeTitlebarAccessory())
     }
 
-    private init(service: any StenographerDaemonService) {
+    private init(service: any StenographerDaemonService, pluginManager: AIPluginManager?) {
         let source = StenographerSessionListSource(
             service: service, sinceHours: UserSettings.stenographerSessionsFilterHours.value
         )
@@ -104,10 +106,10 @@ public final class SessionsWindowController: SingleWindowController {
         // provider/model picker as Settings → AI Summaries (both edit the same
         // prefs; `StenographerAIConfigPush` pushes them), then the appearance
         // controls.
-        let picker = AISummariesPluginControls.makePicker(service: service)
+        let picker = AISummariesPluginControls.makePicker(service: service, pluginManager: pluginManager)
         self.aiSummariesPicker = picker
-        // Wider than the default: the provider picker's row is a popup, a model
-        // name and a trailing Choose button, which a checkbox-width dialog crams.
+        // Wider than the default: the provider row is a label and a popup,
+        // which a checkbox-width dialog crams.
         let dialog = WindowOptionsDialog(title: "Sessions Window", width: 380) {
             [
                 ComposableSettings.CheckboxView(

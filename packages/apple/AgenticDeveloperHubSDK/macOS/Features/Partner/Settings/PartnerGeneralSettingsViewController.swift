@@ -14,6 +14,8 @@ public final class PartnerGeneralSettingsViewController: ComposableSettings.Sett
     private let modelNote = ComposableSettings.ExplanationView(withText: "")
     private var providerObserver: UserSettingObserver<String>?
     private var configurationsObserver: UserSettingObserver<[AIProviderConfiguration]>?
+    private var registrySource: LocalProviderRegistrySource?
+    private weak var tryButton: NSButton?
 
     public init(pluginManager: AIPluginManager?, settings: SettingsStore = UserSettings.shared) {
         self.pluginManager = pluginManager
@@ -92,11 +94,20 @@ public final class PartnerGeneralSettingsViewController: ComposableSettings.Sett
     /// Which provider and model the partner's Claude Code runs on.
     private func addModelGroup() {
         let group = ComposableSettings.GroupView(withTitle: "Model")
-        group.addSettingSubview(LLMPickerView(
-            pluginManager: pluginManager,
+        let source = LocalProviderRegistrySource(pluginManager: pluginManager)
+        registrySource = source
+        group.addSettingSubview(ProviderModelPickerView(
+            source: source,
             selectedSetting: UserSettings.partnerProvider,
             leadingChoices: [.init(label: "Default (Claude Code)", value: "")],
-            modelSetting: { id, _ in UserSettings.partnerModel(config: id) }))
+            modelSetting: { id in id.map { UserSettings.partnerModel(config: $0) } }))
+        let tryView = ComposableSettings.ButtonView(
+            viewModel: ComposableSettings.ButtonViewModel(title: "Try…") { [weak self] in self?.tryProvider() },
+            placement: .leading)
+        tryView.button.toolTip = "Chat with this provider, then pick the model that answered best"
+        _ = tryView.button.accessibilityID("settings.partner.model.try")
+        tryButton = tryView.button
+        group.addSettingSubview(tryView)
         _ = modelNote.accessibilityID("settings.partner.model.note")
         group.addSettingSubview(modelNote)
         addGroup(group)
@@ -108,6 +119,32 @@ public final class PartnerGeneralSettingsViewController: ComposableSettings.Sett
             self?.refreshModelNote()
         }
         refreshModelNote()
+    }
+
+    /// The configuration the partner's provider selection names, with its template.
+    private var selectedConfiguration:
+        (config: AIProviderConfiguration, template: AIPluginDescriptor.ProviderTemplate)? {
+        UUID(uuidString: settings.get(UserSettings.partnerProvider)).flatMap { registrySource?.resolved($0) }
+    }
+
+    /// Open a real conversation on the selected provider (``LLMChatPicker``) and
+    /// keep the provider and model that answered well. The chat can be steered to
+    /// another provider, so the model goes to the one settled on and the
+    /// selection follows it.
+    private func tryProvider() {
+        guard let window = view.window, let pluginManager, let (config, template) = selectedConfiguration
+        else { return }
+        let stored = settings.get(UserSettings.partnerModel(config: config.id))
+        LLMChatPicker.present(
+            over: window, pluginManager: pluginManager, configuration: config,
+            model: stored.isEmpty ? AIProviderConfigStore.selectedModel(config: config, template: template) : stored
+        ) { [settings] selection in
+            let chosen = selection.configuration
+            // The selection first: changing the provider clears its model, and
+            // the model chosen in the chat is what should remain.
+            settings.set(chosen.id.uuidString, for: UserSettings.partnerProvider)
+            settings.set(selection.model, for: UserSettings.partnerModel(config: chosen.id))
+        }
     }
 
     /// How long done items stay, and which kinds also post a system notification.
@@ -152,5 +189,7 @@ public final class PartnerGeneralSettingsViewController: ComposableSettings.Sett
         let text = modelNoteText
         modelNote.text = text ?? ""
         modelNote.isHidden = text == nil
+        // Chatting needs a configuration and a plugin host to build a backend.
+        tryButton?.isEnabled = pluginManager != nil && selectedConfiguration != nil
     }
 }

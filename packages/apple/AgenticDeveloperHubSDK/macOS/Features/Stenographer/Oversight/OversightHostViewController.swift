@@ -1,5 +1,6 @@
 import AppKit
 import AgenticDeveloperHubSDKCore
+import AIPluginKit
 import AgenticDeveloperHubSDKCoreMacOS
 
 /// The AI Oversight window's content: a Findings | Scripts switcher over the
@@ -17,8 +18,8 @@ final class OversightHostViewController: NSViewController {
 
     private var themeObserver: ThemePaletteObserver?
 
-    init(service: any StenographerDaemonService) {
-        self.findingsVC = OversightFindingsViewController(service: service)
+    init(service: any StenographerDaemonService, pluginManager: AIPluginManager? = nil) {
+        self.findingsVC = OversightFindingsViewController(service: service, pluginManager: pluginManager)
         self.scriptsVC = OversightScriptsViewController(service: service)
         super.init(nibName: nil, bundle: nil)
     }
