@@ -977,12 +977,24 @@ public final class GRDBSyncStore: SyncStore, @unchecked Sendable {
                                 }
                             }
                         }
-                        // An applied push has reached the bound account.
+                        // An applied push has reached the bound account —
+                        // but the row's *current* content has only if no
+                        // later edit is still queued for it (stage never
+                        // merges into an inflight op, so a newer edit sits in
+                        // a second op the account has not received).
                         if result.status == .applied,
                            let bound = try Self.boundAccount(in: conn),
                            let resource = meta?["resource"] as String?,
                            let rowId = meta?["row_id"] as String?,
-                           store.projection(for: resource) == nil {
+                           store.projection(for: resource) == nil,
+                           try Bool.fetchOne(
+                               conn,
+                               sql: """
+                                   SELECT NOT EXISTS(SELECT 1 FROM _sync_outbox
+                                   WHERE resource = ? AND row_id = ? AND op_id != ?
+                                     AND status IN ('pending', 'inflight'))
+                                   """,
+                               arguments: [resource, rowId, result.opId]) == true {
                             try Self.markReached(
                                 bound, table: try Self.mirrorTableName(for: resource), id: rowId, in: conn)
                         }

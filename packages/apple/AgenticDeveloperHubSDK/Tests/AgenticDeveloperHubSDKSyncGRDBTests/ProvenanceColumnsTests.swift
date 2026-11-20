@@ -189,6 +189,27 @@ final class ProvenanceColumnsTests: XCTestCase {
         XCTAssertEqual(ops.map(\.rowId), ["n1"])
     }
 
+    // MARK: f5 — reached only when nothing newer is queued
+
+    func testAnAppliedPushDoesNotMarkReachedWhileANewerEditIsQueued() async throws {
+        let store = GRDBSyncStore(database: try BoundedDatabase(path: path))
+        try await store.prepare(resources: [notes])
+        try await store.bind(account: "acct-a")
+        try await store.stage(LocalMutation(
+            resource: "personal.notes", rowId: "r1", type: .upsert, data: ["title": .string("one")]))
+        let first = try await store.pendingOps(limit: 10)
+        try await store.stage(LocalMutation(
+            resource: "personal.notes", rowId: "r1", type: .upsert, data: ["title": .string("two")]))
+
+        try await store.complete([SyncPushResult(opId: first[0].opId, status: .applied, newVersion: "2")])
+        XCTAssertEqual(try provenance(store, id: "r1")?.reached, [])
+
+        let second = try await store.pendingOps(limit: 10)
+        XCTAssertEqual(second.count, 1)
+        try await store.complete([SyncPushResult(opId: second[0].opId, status: .applied, newVersion: "3")])
+        XCTAssertEqual(try provenance(store, id: "r1")?.reached, ["acct-a"])
+    }
+
     // MARK: f7 — queries on a never-prepared store
 
     func testANeverPreparedStoreAnswersRatherThanThrowingSQL() throws {
