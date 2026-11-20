@@ -56,8 +56,22 @@ function dig(obj: unknown, ...keys: string[]): unknown {
   return node
 }
 
+/** A request body's properties, with `allOf` members merged in — the /v1 gateway folds
+ *  sub-resource writes into an update body as an `allOf` (POST /v1/applications/{id} is
+ *  the row update plus client_auth and schema_grants), so the row's fields sit one level
+ *  down. Same merge as gen_table_metadata.py's body_properties. */
+function mergedProps(schema: unknown): Record<string, unknown> | undefined {
+  if (schema == null || typeof schema !== 'object') return undefined
+  const own = dig(schema, 'properties') as Record<string, unknown> | undefined
+  const members = dig(schema, 'allOf')
+  if (!Array.isArray(members)) return own
+  const merged: Record<string, unknown> = { ...own }
+  for (const member of members) Object.assign(merged, mergedProps(member))
+  return merged
+}
+
 const bodyProps = (op: unknown): unknown =>
-  dig(op, 'requestBody', 'content', 'application/json', 'schema', 'properties')
+  mergedProps(dig(op, 'requestBody', 'content', 'application/json', 'schema'))
 
 /** The legacy `METHOD path` pairs a /v1 operation replays (`x-adh-replaces`). */
 function replaces(op: unknown): Array<[string, string]> {
