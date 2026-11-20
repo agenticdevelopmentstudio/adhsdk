@@ -699,11 +699,26 @@ describe('MAIN_SITE_IDS / MARKETING_SITE_IDS (the site-app roster)', () => {
   // the only thing that actually decides whether the path resolves. Same anchor + skip
   // as the family-folder guard above: absent marker ⇒ standalone toolkit checkout.
   //
-  // There is one shape on disk now — `app/[workspace]` — so the walk is a presence test
+  // There is one shape on disk now — `app/[workspace]`, possibly inside route groups
+  // (see `hasWorkspaceSegment`) — so the walk is a presence test
   // rather than a shape test. `'hub'` vs `'root'` is NOT visible here and must not be
   // guessed from the tree: both mount the same directory, and the value distinguishes
   // who can read a slug back out of a path (see the field's own doc). It is asserted
   // literally below.
+  // Next route groups — `(hub)`, `(sdk)` — add no URL segment, so `app/(hub)/[workspace]`
+  // serves `/<workspace>` exactly as `app/[workspace]` does. The hub and the SDK site mount
+  // theirs inside a group; a walk that looked only at `app/[workspace]` called both
+  // workspace-less. Groups are descended (they may nest); nothing else is.
+  const hasWorkspaceSegment = (dir: string): boolean => {
+    if (!existsSync(dir)) return false
+    if (existsSync(resolve(dir, '[workspace]'))) return true
+    return readdirSync(dir).some(
+      (name) =>
+        /^\(.+\)$/.test(name) &&
+        statSync(resolve(dir, name)).isDirectory() &&
+        hasWorkspaceSegment(resolve(dir, name)),
+    )
+  }
   it.skipIf(STANDALONE)('workspaceRoute matches the route tree for every site folder', () => {
     const root = websitesDir as string
     // Keyed by id, since that is what `siteFolders` returns — the folder it came from
@@ -716,7 +731,7 @@ describe('MAIN_SITE_IDS / MARKETING_SITE_IDS (the site-app roster)', () => {
         existsSync(resolve(root, g, dir, 'app')),
       )
       const base = inGroup ? resolve(root, inGroup, dir) : resolve(root, dir)
-      return existsSync(resolve(base, 'app', '[workspace]'))
+      return hasWorkspaceSegment(resolve(base, 'app'))
     }
     const folders = siteFolders()
     if (NO_SITES) {
