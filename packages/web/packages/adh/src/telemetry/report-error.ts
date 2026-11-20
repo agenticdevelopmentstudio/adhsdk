@@ -60,3 +60,21 @@ export function reportUnexpectedError(error: unknown, context?: ErrorContext): v
   if (typeof status === 'number' && status < 500) return
   captureException(error, context)
 }
+
+/**
+ * Report a HANDLED error UNLESS it is a 401 — a session that is gone. By the time a
+ * `@adh-sdk/auth/client` call throws a 401, `authedJson`/`authedRequest` has already tried
+ * the refresh and that 401'd too, so AuthProvider signs the user out: an expected end of a
+ * session, not a bug (GlitchTip #246 was every such expiry reported as
+ * `AuthHttpError: invalid or expired token`).
+ *
+ * Narrower than {@link reportUnexpectedError} on purpose: a 400/403/404/422 from a call
+ * the page makes on its own (not in answer to user input) means the request or the backend
+ * contract is wrong, which is exactly the regression the report exists to catch.
+ * Duck-types `status`, like the rest of this leaf.
+ */
+export function reportUnlessUnauthorized(error: unknown, context?: ErrorContext): void {
+  const status = (error as { status?: unknown } | null | undefined)?.status
+  if (status === 401) return
+  captureException(error, context)
+}

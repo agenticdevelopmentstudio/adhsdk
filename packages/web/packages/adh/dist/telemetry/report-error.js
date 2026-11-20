@@ -18,9 +18,15 @@ function reportUnexpectedError(error, context) {
   if (typeof status === "number" && status < 500) return;
   captureException(error, context);
 }
+function reportUnlessUnauthorized(error, context) {
+  const status = error?.status;
+  if (status === 401) return;
+  captureException(error, context);
+}
 export {
   captureException,
   reportUnexpectedError,
+  reportUnlessUnauthorized,
   setErrorReporter
 };
 //# sourceMappingURL=report-error.js.map

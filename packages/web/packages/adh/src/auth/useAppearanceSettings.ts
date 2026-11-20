@@ -9,7 +9,7 @@ import { APPEARANCE_WRITE_URL, appearanceToWire } from './appearanceWire'
 // package bundles with tsup `bundle: true, splitting: false`, and `src/auth/index.ts` is
 // its own tsup entry, so a relative '../telemetry/report-error' would inline a private,
 // permanently-null copy of the `reporter` state instead of the one TelemetryProvider wires.
-import { captureException } from '@adh-sdk/adh/telemetry/report-error'
+import { reportUnlessUnauthorized } from '@adh-sdk/adh/telemetry/report-error'
 
 export interface UseAppearanceSettings {
   prefs: AppearancePrefs
@@ -27,7 +27,7 @@ export interface UseAppearanceSettings {
  * origin's localStorage.
  *
  * Optimistic by design: the document updates on the click, and the save rides behind it. A failed
- * save is reported but not rolled back — yanking the theme back mid-interaction is worse than a
+ * save is reported (except a 401 — an expired session, not a bug: GlitchTip #246) but not rolled back — yanking the theme back mid-interaction is worse than a
  * setting that is right here and re-syncs on the next load.
  *
  * Signed out, it degrades to the local-only behaviour (there is no account to save to).
@@ -47,7 +47,7 @@ export function useAppearanceSettings(): UseAppearanceSettings {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ appearance: appearanceToWire(next) }),
-      }).catch(captureException)
+      }).catch((err) => reportUnlessUnauthorized(err, { feature: 'appearance', step: 'savePrefs' }))
     },
     [prefs, setLocal, isAuthenticated],
   )

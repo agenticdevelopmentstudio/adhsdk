@@ -15,12 +15,7 @@ import { APPEARANCE_STORAGE_KEY } from '@adh-sdk/themes'
 // --- fakes ------------------------------------------------------------------------------------
 
 let auth: { isAuthenticated: boolean; isLoading: boolean; user: { id: string } | null }
-// The REAL report gate (reportUnexpectedAuthError + setAuthErrorReporter), only useAuth faked: what
-// reaches the reporter is the thing under test in the failure cases below.
-vi.mock('@adh-sdk/auth', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@adh-sdk/auth')>()),
-  useAuth: () => auth,
-}))
+vi.mock('@adh-sdk/auth', () => ({ useAuth: () => auth }))
 
 const authedJson = vi.fn()
 vi.mock('@adh-sdk/auth/client', () => ({ authedJson: (...a: unknown[]) => authedJson(...a) }))
@@ -48,18 +43,15 @@ async function renderSync() {
   return render(<AppearanceSync />)
 }
 
-// The telemetry sink AppearanceSync used to call directly — mocked so a test can prove nothing
-// bypasses the auth gate into it. Mocks the PACKAGE PATH the SDK writes (see wired-provider.tsx).
-const captureException = vi.fn()
-vi.mock('@adh-sdk/adh/telemetry/report-error', () => ({
-  captureException: (...a: unknown[]) => captureException(...a),
-}))
-
-/** Wire a spy as the auth error reporter, in the same (reset) module graph AppearanceSync loads. */
+/**
+ * Wire a spy as THE telemetry reporter — the one TelemetryProvider wires to GlitchTip in
+ * production — in the same (reset) module graph AppearanceSync loads. The gate is real, so what
+ * reaches this spy is exactly what would reach GlitchTip.
+ */
 async function reporterSpy() {
   const spy = vi.fn()
-  const { setAuthErrorReporter } = await import('@adh-sdk/auth')
-  setAuthErrorReporter(spy)
+  const { setErrorReporter } = await import('@adh-sdk/adh/telemetry/report-error')
+  setErrorReporter(spy)
   return spy
 }
 
@@ -72,7 +64,6 @@ describe('AppearanceSync — whose theme is it?', () => {
   beforeEach(() => {
     vi.resetModules()
     authedJson.mockReset()
-    captureException.mockReset()
     localStorage.clear()
     html().className = ''
     delete html().dataset.colorMode
@@ -149,7 +140,17 @@ describe('AppearanceSync — whose theme is it?', () => {
     await waitFor(() => expect(authedJson).toHaveBeenCalled())
     await new Promise((r) => setTimeout(r, 0)) // let the rejection's .catch run
     expect(reported).not.toHaveBeenCalled()
-    expect(captureException).not.toHaveBeenCalled()
+  })
+
+  it('any other 4xx IS reported — a broken include, not a dead session', async () => {
+    const reported = await reporterSpy()
+    auth = { isAuthenticated: true, isLoading: false, user: { id: 'u1' } }
+    const err = httpError(400, 'unknown include')
+    authedJson.mockRejectedValue(err)
+    await renderSync()
+    await waitFor(() =>
+      expect(reported).toHaveBeenCalledWith(err, { feature: 'appearance', step: 'fetchPrefs' }),
+    )
   })
 
   it('a backend failure (5xx) IS reported', async () => {
