@@ -4,6 +4,8 @@
 | `database` | database handle | required | The pool (or in-memory queue) holding every table; exposed read-only |
 | `pullOnlyResources` | set of strings | `[]` | Resources that `stage` refuses with a `pullOnlyResource` error |
 | `projection` | optional projection | none | Typed storage for the resources it claims; absent keeps every resource in JSON mirrors |
+| `projections` | list of projections | `[]` | Several projections, each claiming a disjoint set of resources |
+| `changeLogCapacity` | positive integer | `100000` | Newest `_change_log` entries kept; older ones are pruned |
 | `liveRows` `limit` | integer | `100` | Page size per call |
 | `liveRows` `offset` | integer | `0` | Rows skipped per call |
 | Database deadlines | duration | read 10 s, write 60 s | Set on the injected database, not on the store |

@@ -35,12 +35,13 @@
       "packages/apple/AgenticDeveloperHubSDK/SyncGRDB/GRDBSyncStore.swift",
       "packages/apple/AgenticDeveloperHubSDK/SyncGRDB/SyncMirrorProjection.swift",
       "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKSyncGRDBTests/GRDBSyncStoreTests.swift",
-      "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKSyncGRDBTests/SyncMirrorProjectionTests.swift"
+      "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKSyncGRDBTests/SyncMirrorProjectionTests.swift",
+      "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKSyncGRDBTests/ProvenanceColumnsTests.swift"
     ],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "3668e3c9d20144ae",
+  "synced": "05b6d29c7635d4cc",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

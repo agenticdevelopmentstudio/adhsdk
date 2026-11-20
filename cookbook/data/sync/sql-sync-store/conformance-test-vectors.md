@@ -35,4 +35,14 @@ All vectors use a fresh file-backed database and a `personal.notes` resource at 
 | sync-grdb-030 | cursor-bootstrap, registrations-bootstrap | Never-prepared store; `cursor`; `registrations` | nothing; empty map; neither raises an error |
 | sync-grdb-031 | purge-resources-empty | `purgeResources([])` on a never-prepared store | Returns without error |
 | sync-grdb-032 | stage-mirror-patch | Stage an upsert on an unclaimed resource whose existing mirror row has fields `a` and `b`, with a patch carrying only `a` | `liveRow` returns data containing only `a`; `b` is absent until the next pull replaces the row |
+| sync-grdb-033 | provenance-columns, provenance-upgrade-origin, provenance-upgrade-version | A mirror table created without `origin`, `reached_accounts`, `local_version`, holding row n1; `migrateProvenanceColumns` twice | Columns exist; n1 `origin` = "remote", `reached_accounts` = [], `local_version` = 1 |
+| sync-grdb-034 | schema-on-every-entry | The old-schema database of 033 with no `prepare`; `apply` an upsert for n1 | No error; n1 `local_version` = 2; `changes(since: 0)` lists n1 |
+| sync-grdb-035 | sign-in, origin-values | Never-bound store; apply n1 while unbound; `signIn("A")` | Answers `unboundWithData`; `boundAccount` nothing; after `bind("A")` n1 `origin` = "account:A", reached [A] |
+| sync-grdb-036 | account-guard | `bind("A")`; stage r1; `signIn("B")`; `pendingOps(10)`; `cursor` | `signIn` answers `mismatch(A, B)`; both raise `accountMismatch(bound: A, signedIn: B)`; the op stays queued |
+| sync-grdb-037 | discard-account-state | Bound to A with r1 queued; `discardAccountState(rebindingTo: "B")` | `pendingOps` empty; `boundAccount` = B; `cursor` nothing; each projection's discard called once |
+| sync-grdb-038 | reached-after-push | Bound to A; stage r1; `pendingOps`; stage r1 again; complete the first op applied | r1 `reached_accounts` does not contain A |
+| sync-grdb-039 | version-floor | Apply n1 twice (version 2); `resetForResync`; apply n1 | Last feed entry before the re-pull is a delete of n1 at version 3; n1 then has `local_version` 4; observers notified |
+| sync-grdb-040 | change-log-cap, changes-read, change-head | Store with `changeLogCapacity` 3; apply n1–n5 | `changeHead` = 5; `changeLogFloor` = 2; `changes(since: 2)` = n3, n4, n5; `changes(since: 1)` raises `changeHistoryPruned(1, 2)` |
+| sync-grdb-041 | write-local, serialized-operations | `writeLocal` staging w1 | Body runs on the store's serialization point; w1 `local_version` = 1 |
+| sync-grdb-042 | local-queries, write-acceptance | Never-prepared store; `acceptsLocalWrites("personal.notes")`; `localRecord("personal.notes", "x")` | false; raises `unknownResource` |
 

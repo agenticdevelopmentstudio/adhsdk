@@ -19,6 +19,9 @@
 - **Nested use from inside the caller's write**: calling the ordinary `stage` from inside the caller's own write transaction would deadlock the writer; the caller MUST use the same-connection variant there, as its documentation states.
 - **Database deadline or lock timeout**: the underlying bounded database MUST eject an operation that exceeds its read or write deadline (10 s and 60 s by default) with a deadline-exceeded error, and fail a write that waits on a lock longer than its busy timeout (5 s by default); the store re-raises either error and its transaction rolls back.
 - **Disk full or I/O error**: the underlying database error MUST propagate to the caller and the transaction MUST roll back.
+- **`writeLocal` from the serialization point**: MUST be refused (a precondition failure), because it would wait on itself; a `writeLocal` body uses the same-connection variants instead.
+- **Reader behind the pruned history**: `changes(since:)` MUST raise `changeHistoryPruned`; the reader rescans the rows it follows and resumes from `changeHead()`.
+- **Re-enrolling a purged resource**: its `_sync_version_floor` row MUST survive the purge, so rows written after re-enrolment start above every earlier version.
 - **Cancellation**: a cancelled caller awaiting a mutating operation MUST still see the operation run to completion.
 - **Offline / unreachable server**: not applicable to this component; it performs no network I/O, and offline edits accumulate in the outbox until the engine pushes them.
 

@@ -2,7 +2,7 @@
 ### Concurrency and isolation
 
 - **concurrency-safe-store**: The store MUST be safe to use concurrently from multiple callers; its internal state MUST NOT change after construction, and concurrent access MUST be serialized by the underlying connection pool.
-- **serialized-operations**: Every store-mutating operation (`prepare`, `cursor`, `apply`, `stage`, `pendingOps`, `complete`, `resetForResync`, `registrations`, `purgeResources`, `boundAccount`, `bind(account:)`, `migrateProvenanceColumns`, `writeLocal`) MUST run through a single internal serialization point, so two such operations on the same store never execute at the same time. `writeLocal` keeps a synchronous signature: it blocks its caller until the serialization point reaches it, and MUST NOT be called from that serialization point.
+- **serialized-operations**: Every store-mutating operation (`prepare`, `cursor`, `apply`, `stage`, `pendingOps`, `complete`, `resetForResync`, `registrations`, `purgeResources`, `boundAccount`, `bind(account:)`, `migrateProvenanceColumns`, `writeLocal`) MUST run through a single internal serialization point, so two such operations on the same store never execute at the same time. `signIn` and `discardAccountState` also run through it; `signOut` and `checkAccountGuard` only touch the in-memory sign-in state (the guard reads the binding on a reader connection). `writeLocal` keeps a synchronous signature: it blocks its caller until the serialization point reaches it, and MUST NOT be called from that serialization point.
 - **single-transaction-operations**: Every such operation MUST perform all of its database work inside exactly one write transaction, so a failure anywhere in the operation leaves no partial effect.
 - **concurrent-read-helpers**: `liveRows`, `liveRow`, `registeredResources` and `status` MUST be synchronous reads that bypass the serialization point, reading from a reader connection (or the writer connection when called during a write), so they MAY run concurrently with each other and with a mutating operation.
 - **per-call-codecs**: The store MUST NOT share a JSON encoder or decoder between calls; each call that encodes or decodes builds its own, because a read may run on several pool connections at once.
@@ -18,9 +18,9 @@
 
 ### prepare
 
-- **prepare-bookkeeping**: `prepare` MUST create `_sync_state`, `_sync_resources`, `_sync_outbox` and `_sync_conflicts` if they do not exist.
+- **prepare-bookkeeping**: `prepare` MUST create `_sync_state` (with `cursor` and `bound_account`), `_sync_resources`, `_sync_outbox`, `_sync_conflicts`, `_change_log`, `_change_log_pruned` and `_sync_version_floor` if they do not exist, and add `bound_account` to an existing `_sync_state` that lacks it.
 - **prepare-projection-tables**: `prepare` MUST have the projection create its own tables on every call when a projection is supplied, even when the resource list is empty.
-- **prepare-mirror-table**: For each unclaimed resource, `prepare` MUST create its mirror table if absent with columns `id TEXT PRIMARY KEY NOT NULL`, `sync_version INTEGER NOT NULL DEFAULT 0`, `deleted_at TEXT`, `data TEXT NOT NULL DEFAULT '{}'`.
+- **prepare-mirror-table**: For each unclaimed resource, `prepare` MUST create its mirror table if absent with columns `id TEXT PRIMARY KEY NOT NULL`, `sync_version INTEGER NOT NULL DEFAULT 0`, `deleted_at TEXT`, `data TEXT NOT NULL DEFAULT '{}'`, `origin TEXT NOT NULL DEFAULT 'local'`, `reached_accounts TEXT NOT NULL DEFAULT '[]'` and `local_version INTEGER NOT NULL DEFAULT 0`.
 - **prepare-no-mirror-for-claimed**: For a resource the projection claims, `prepare` MUST NOT create a JSON mirror table.
 - **prepare-register**: For each resource, `prepare` MUST insert `(resource, schemaVersion)` into `_sync_resources`, or overwrite the stored `schema_version` if the resource is already registered.
 - **prepare-idempotent**: Calling `prepare` twice with the same resources MUST succeed and leave existing mirror rows intact.
@@ -83,15 +83,40 @@
 
 ### Recovery and purge paths
 
-- **reset-mirrors**: `resetForResync` MUST delete every row of every registered resource's mirror (through the projection's truncate operation for claimed resources) and delete the `_sync_state` row.
+- **reset-mirrors**: `resetForResync` MUST delete every row of every registered resource's mirror (through the projection's truncate operation for claimed resources) and clear the stored cursor, keeping the `_sync_state` row and its `bound_account`.
 - **reset-preserves-outbox**: `resetForResync` MUST leave `_sync_outbox`, `_sync_resources` and `_sync_conflicts` untouched.
 - **purge-resources-empty**: `purgeResources` given an empty list MUST return immediately without touching the database.
 - **purge-resources-effect**: For each named resource, `purgeResources` MUST empty its mirror, set its `pending` and `inflight` outbox ops to `quarantined`, and delete its `_sync_resources` row.
 - **purge-resources-keeps**: `purgeResources` MUST leave the cursor, already-`quarantined` ops and other resources untouched.
 - **purge-resources-unregistered**: `purgeResources` MUST skip the mirror truncation of an unregistered resource silently, without raising an error.
-- **identity-change-keeps-data**: The store MUST offer no operation that deletes mirror rows, outbox ops or the cursor because the signed-in identity changed; an identity change is the host's to handle by pausing the engine, never by purging.
+- **identity-change-keeps-data**: Signing in or out MUST NOT delete mirror rows, outbox ops or the cursor on its own. The only operation that drops the departing account's local state is `discardAccountState(rebindingTo:)`, which a host calls explicitly; an identity change is otherwise the host's to handle by pausing the engine.
 - **account-binding**: `_sync_state.bound_account` MUST record the account the mirror belongs to; `boundAccount()` MUST return it (nothing when unbound) and `bind(account:)` MUST set it. `resetForResync` MUST clear the cursor and keep the binding.
-- **provenance-columns**: `migrateProvenanceColumns()` MUST add the nullable columns `origin` and `reached_accounts` to every generic mirror table that lacks them, and MUST be idempotent.
+- **provenance-columns**: `migrateProvenanceColumns()` MUST add the columns `origin TEXT NOT NULL DEFAULT 'local'`, `reached_accounts TEXT NOT NULL DEFAULT '[]'` and `local_version INTEGER NOT NULL DEFAULT 0` to every generic mirror table that lacks them, and MUST be idempotent.
+- **provenance-upgrade-origin**: When it adds `origin` to a table that already holds rows, every row with no `pending` or `inflight` outbox op MUST get `origin = 'remote'` (pulled before any account was bound); a row with a queued op keeps `'local'`.
+- **provenance-upgrade-version**: When it adds `local_version` to a table that already holds rows, every row MUST get `local_version = 1`, so a create (expected version 0) over an existing row is refused as stale.
+- **schema-on-every-entry**: Every operation that reads or writes the bookkeeping tables or the provenance columns (`cursor`, `registrations`, `apply`, `stage`, `complete`, `resetForResync`, `purgeResources`, `bind`, `signIn`, `discardAccountState`) MUST first ensure the bookkeeping schema and run the provenance upgrade, because the engine skips `prepare` when its registrations already cover the manifest.
+- **origin-values**: `origin` MUST be `'local'` for a row this device wrote, `'account:<principalId>'` for a row pulled while bound to that account, and `'remote'` for a row pulled while unbound. The first `bind` of an unbound store MUST rewrite `'remote'` rows to `'account:<bound>'` with `reached_accounts` `[<bound>]`.
+- **reached-after-push**: An applied push MUST add the bound account to the row's `reached_accounts` only when no other `pending` or `inflight` op is queued for the same row.
+- **version-floor**: Emptying a generic mirror (`resetForResync`, `purgeResources`) MUST log a `delete` entry at `local_version + 1` for each live row and raise the resource's `_sync_version_floor` to above every version it handed out; a row inserted afterwards MUST start at that floor plus 1, so `local_version` never decreases for an id. Both operations MUST notify the change observers after commit.
+
+### Account guard
+
+- **sign-in**: `signIn(account:)` MUST declare the account signed in and answer how the store's binding relates to it: `bound` when the store is (or, being empty and unbound, now becomes) bound to it, `mismatch(bound:signedIn:)` when bound to another account, and `unboundWithData(signedIn:)` when unbound but holding rows or queued ops. It MUST NOT bind a store that holds data.
+- **sign-out**: `signOut()` MUST declare that nobody is signed in; it changes no stored data.
+- **account-guard**: Once the host has declared a sign-in state, `cursor`, `apply` and `pendingOps` MUST raise `accountMismatch(bound:signedIn:)` when nobody is signed in, when the signed-in account differs from the bound one, or when the store is unbound and holds data. A host that never declared a state MUST be unguarded. `checkAccountGuard()` MUST expose the same check to a host draining its own queue.
+- **discard-account-state**: `discardAccountState(rebindingTo:)` MUST, in one transaction, delete every `_sync_outbox` row, have each projection discard its local-only state, clear the cursor and bind the store to the given account.
+
+### Local writes, versions and the change feed
+
+- **local-version**: Every generic mirror row MUST carry `local_version`, raised by 1 on every write to the row's data or tombstone (pulled or staged, upsert or delete); a new row starts at 1 (or one past the resource's version floor). Adopting a pushed version in `complete` and updating `reached_accounts` or `origin` MUST NOT raise it or log to `_change_log`.
+- **change-log**: Every write that raises a row's `local_version` MUST append `(resource, row_id, kind, version)` to `_change_log` in the same transaction, `kind` being `upsert` or `delete` and `version` the row's new `local_version`.
+- **change-log-cap**: The store MUST keep only the newest `changeLogCapacity` entries (default 100,000; positive), deleting older ones in the transaction that logs past the cap and recording the highest pruned `seq` in `_change_log_pruned`.
+- **changes-read**: `changes(since:limit:)` MUST return entries with `seq > since`, oldest first, at most `limit`; empty for a non-positive limit, for `since` at or above the head and on a store that never logged. It MUST raise `changeHistoryPruned(since:floor:)` when `since` is below `changeLogFloor()`.
+- **change-head**: `changeHead()` MUST return the highest `seq` ever logged (at least the pruning floor), `0` when nothing was logged; `changeLogFloor()` MUST return the highest pruned `seq`, `0` before any pruning.
+- **observe-committed**: `observeCommittedChanges` MUST register an observer told after every commit that may have appended to `_change_log`; the call carries no data.
+- **write-local**: `writeLocal(body)` MUST run `body` in one write transaction through the serialization point and notify the observers once it commits.
+- **local-queries**: `localVersion(resource:id:in:)` MUST return a row's `local_version` and whether it is a tombstone, or nothing for an id never written; `localRecord(resource:id:)` MUST return a live row's data and `local_version`. Both MUST raise `unknownResource` for an unregistered or projection-claimed resource, including on a never-prepared store.
+- **write-acceptance**: `isPullOnly(resource)` MUST report membership in the pull-only set, and `acceptsLocalWrites(resource:)` MUST return true only for a registered, unclaimed, push-allowed resource, returning false (never an SQL error) on a never-prepared store.
 - **truncate-batched**: Every mirror truncation MUST filter the resources against `_sync_resources` first, then hand all claimed resources to the projection's truncate operation in one call, then delete rows from each unclaimed resource's table.
 - **rows-only**: Store operations MUST NOT drop a table or delete the database file; recovery only deletes rows.
 
@@ -108,7 +133,7 @@
 
 ### Persistence and durability
 
-- **durable-state**: The cursor, registrations, mirror rows, outbox ops and conflict audit MUST persist in the database file across process restarts; the store keeps no in-memory copy.
+- **durable-state**: The cursor, registrations, mirror rows, outbox ops and conflict audit MUST persist in the database file across process restarts; the store keeps no in-memory copy of them. The declared sign-in state (`signIn`/`signOut`) is the one exception: it is held in memory only, and a new store starts undeclared.
 - **crash-replay**: Ops marked `inflight` when the process dies MUST be returned again by the first `pendingOps` after restart.
 - **quarantine-retained**: Quarantined ops MUST remain in `_sync_outbox`; the store offers no operation that retries or deletes one individually.
 - **conflicts-retained**: `_sync_conflicts` rows MUST never be deleted by any store operation.
