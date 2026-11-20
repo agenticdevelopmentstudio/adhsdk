@@ -92,6 +92,12 @@ public final class PartnerGeneralSettingsViewController: ComposableSettings.Sett
     }
 
     /// Which provider and model the partner's Claude Code runs on.
+    ///
+    /// The whole group, Try… included, reads and writes the partner's provider
+    /// and model through their `UserSetting`s, which are bound to
+    /// `UserSettings.shared`, because that is the store the picker uses; going
+    /// through the injected `settings` here would let Try… act on another
+    /// provider than the one shown.
     private func addModelGroup() {
         let group = ComposableSettings.GroupView(withTitle: "Model")
         let source = LocalProviderRegistrySource(pluginManager: pluginManager)
@@ -124,7 +130,7 @@ public final class PartnerGeneralSettingsViewController: ComposableSettings.Sett
     /// The configuration the partner's provider selection names, with its template.
     private var selectedConfiguration:
         (config: AIProviderConfiguration, template: AIPluginDescriptor.ProviderTemplate)? {
-        UUID(uuidString: settings.get(UserSettings.partnerProvider)).flatMap { registrySource?.resolved($0) }
+        UUID(uuidString: UserSettings.partnerProvider.value).flatMap { registrySource?.resolved($0) }
     }
 
     /// Open a real conversation on the selected provider (``LLMChatPicker``) and
@@ -134,16 +140,14 @@ public final class PartnerGeneralSettingsViewController: ComposableSettings.Sett
     private func tryProvider() {
         guard let window = view.window, let pluginManager, let (config, template) = selectedConfiguration
         else { return }
-        let stored = settings.get(UserSettings.partnerModel(config: config.id))
+        let stored = UserSettings.partnerModel(config: config.id).value
         LLMChatPicker.present(
             over: window, pluginManager: pluginManager, configuration: config,
             model: stored.isEmpty ? AIProviderConfigStore.selectedModel(config: config, template: template) : stored
-        ) { [settings] selection in
+        ) { selection in
             let chosen = selection.configuration
-            // The selection first: changing the provider clears its model, and
-            // the model chosen in the chat is what should remain.
-            settings.set(chosen.id.uuidString, for: UserSettings.partnerProvider)
-            settings.set(selection.model, for: UserSettings.partnerModel(config: chosen.id))
+            UserSettings.partnerProvider.value = chosen.id.uuidString
+            UserSettings.partnerModel(config: chosen.id).value = selection.model
         }
     }
 
@@ -177,10 +181,12 @@ public final class PartnerGeneralSettingsViewController: ComposableSettings.Sett
     /// The reason the chosen model cannot run, or nothing (hidden) while it resolves.
     var modelNoteText: String? {
         let result = PartnerModelChoice.resolve(
-            provider: settings.get(UserSettings.partnerProvider),
-            configurations: settings.get(UserSettings.aiProviderConfigurations),
-            model: { [settings] in settings.get(UserSettings.partnerModel(config: $0)) },
-            legacyModel: settings.get(UserSettings.partnerModel))
+            // The picker's store, as in addModelGroup, so the note describes
+            // the provider and model the picker shows.
+            provider: UserSettings.partnerProvider.value,
+            configurations: UserSettings.aiProviderConfigurations.value,
+            model: { UserSettings.partnerModel(config: $0).value },
+            legacyModel: UserSettings.partnerModel.value)
         if case .failure(let failure) = result { return failure.message }
         return nil
     }
