@@ -3792,6 +3792,7 @@
 		D9774D059B49AFFB9A25B5A4 /* ProviderTypeFacetTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66D731F2D008B4F7DBEEC6EB /* ProviderTypeFacetTests.swift */; };
 		D9894CB7A12EE62AD2BA8C93 /* EditorOptionsOverride.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B46E101BDB209939761F8D6 /* EditorOptionsOverride.swift */; };
 		D99EDFD6E3763009166B98C1 /* ChatTranscriptReducerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B178C702346A4DBF76256200 /* ChatTranscriptReducerTests.swift */; };
+		D9A09D3B7E85B55091D11A41 /* ModelChooserViewControllerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 826BC149A13000BF9CE1F521 /* ModelChooserViewControllerTests.swift */; };
 		D9AB415A890318435E7FAC9F /* ProjectBrowserJarsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88FE8E9256C366E285ADFC9D /* ProjectBrowserJarsTests.swift */; };
 		D9B61268598524DB36D1A63D /* ComposableTabLayoutSpecTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F87EF19D7032C31A87A92423 /* ComposableTabLayoutSpecTests.swift */; };
 		D9C649CB97AE72037277ABC2 /* GitWordDiff.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAD8809FEB68713F10B7B767 /* GitWordDiff.swift */; };
@@ -9500,6 +9501,7 @@
 		82015199BE140F41ED98A083 /* BillingClock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BillingClock.swift; sourceTree = "<group>"; };
 		820E233D2EF843DC38D33BD1 /* BrowserHistoryPanelViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowserHistoryPanelViewController.swift; sourceTree = "<group>"; };
 		823551532C5C76983B67CFDA /* SessionWatcherActivityIconView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionWatcherActivityIconView.swift; sourceTree = "<group>"; };
+		826BC149A13000BF9CE1F521 /* ModelChooserViewControllerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelChooserViewControllerTests.swift; sourceTree = "<group>"; };
 		827CE8E367280F3483AB8FC3 /* UserSettings+Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UserSettings+Theme.swift"; sourceTree = "<group>"; };
 		82902999C8A3B09B63294739 /* ScriptableProjectTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScriptableProjectTab.swift; sourceTree = "<group>"; };
 		829329FC31A552E87811E559 /* PartnerPanesViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PartnerPanesViewController.swift; sourceTree = "<group>"; };
@@ -14034,6 +14036,7 @@
 				CA22DB5D8F1D22E5B9B854B7 /* AIRequestBuilderTests.swift */,
 				FAC42A153B79FC0DE494FE9F /* LLMProvidersListViewModelTests.swift */,
 				ECFF5246C1B68C617604D8CB /* ModelChooserContentTests.swift */,
+				826BC149A13000BF9CE1F521 /* ModelChooserViewControllerTests.swift */,
 				5C5F5E7D53C8A038C28D966C /* ModelPickerItemTests.swift */,
 				FE57BB8F27C536195C7237C4 /* PluginChatConfigProviderTests.swift */,
 				ECBD40D47AA5B6B35D00B08C /* PluginLoadFailuresPanelTests.swift */,
@@ -23244,6 +23247,7 @@
 				2A526D3FB190F809706EDF27 /* MockScreenSetStorage.swift in Sources */,
 				9907427969377D175B7DBD3F /* MockStorage.swift in Sources */,
 				B9C7866B594F45623B79C592 /* ModelChooserContentTests.swift in Sources */,
+				D9A09D3B7E85B55091D11A41 /* ModelChooserViewControllerTests.swift in Sources */,
 				9DD3D4BF5C1747264CC5A39B /* ModelPickerItemTests.swift in Sources */,
 				BCCCC9CE975007C2BCC8ABBA /* MoneyFieldViewTests.swift in Sources */,
 				2FF1A6A271BDE88B068D9367 /* MultiChoiceFilterButtonConformanceTests.swift in Sources */,

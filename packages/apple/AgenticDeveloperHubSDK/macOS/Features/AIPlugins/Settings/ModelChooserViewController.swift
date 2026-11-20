@@ -61,6 +61,10 @@ public final class ModelChooserViewController: NSViewController {
     /// the cached answer at init and the live one after a refresh. OK on any of
     /// them is "unchanged", and keeps the alias.
     private var aliasTargets: Set<String>
+    /// The model the last commit chose. A double-click sends the single-click
+    /// action first, so the same row arrives twice; the second is not a new
+    /// choice and asks no second confirmation.
+    private var lastChosen: String?
     private var metadataByModel: [String: OllamaModelMetadata] = [:]
     /// model id -> ollama.com page blurb, for models without a curated one.
     private var descriptionsByModel: [String: String] = [:]
@@ -75,7 +79,7 @@ public final class ModelChooserViewController: NSViewController {
     /// labels can never disagree with what the daemon enforces.
     private let physicalRAM = SystemMemoryMonitor.shared.physicalRAM
 
-    private let searchField = NSSearchField()
+    let searchField = NSSearchField()
     private let useFilter = MultiChoiceFilterButton(
         label: "Good for",
         choices: ModelUseFacet.allCases.map { .init(id: $0.rawValue, title: $0.title, detail: $0.detail) })
@@ -397,7 +401,7 @@ public final class ModelChooserViewController: NSViewController {
         selectRow(max(0, min(filtered.count - 1, idx)))
     }
 
-    private func selectRow(_ index: Int) {
+    func selectRow(_ index: Int) {
         guard filtered.indices.contains(index) else { renderDetail(); return }
         selectedModel = filtered[index].id
         tableView.selectRowIndexes([index], byExtendingSelection: false)
@@ -471,7 +475,7 @@ public final class ModelChooserViewController: NSViewController {
         return label
     }
 
-    private func applyFilter() {
+    func applyFilter() {
         // Captured first: the table allows no empty selection, so reloadData
         // selects a row itself and the delegate overwrites `selectedModel`.
         let keep = selectedModel
@@ -534,11 +538,15 @@ public final class ModelChooserViewController: NSViewController {
 
     /// Chooses the selected row (after the large-model confirmation, when the
     /// rule asks for one) and, for Return or a double-click, closes.
-    private func commit(thenClose close: Bool) {
+    func commit(thenClose close: Bool) {
         // Only a row the user can see is chosen: a query that empties the list
         // must not choose whatever an earlier keystroke selected.
         guard !selectedModel.isEmpty,
               filtered.contains(where: { $0.id == selectedModel }) else {
+            if close { onClose?() }
+            return
+        }
+        if selectedModel == lastChosen {
             if close { onClose?() }
             return
         }
@@ -554,6 +562,7 @@ public final class ModelChooserViewController: NSViewController {
         // newest of the family instead of being pinned to today's release.
         let unchanged = aliasTargets.contains(selectedModel)
             || selectedModel == modelManager.resolve(context.currentModel)
+        lastChosen = selectedModel
         onChoose?(unchanged ? context.currentModel : selectedModel)
         if close { onClose?() }
     }
