@@ -88,14 +88,10 @@ public final class ProviderModelPickerView: NSView, SettingsViewProtocol {
         NotificationCenter.default.addObserver(
             self, selector: #selector(menuWillOpen), name: NSPopUpButton.willPopUpNotification, object: providerPopup)
         source.onChange = { [weak self] in self?.rebuildMenu() }
-        selectionObserver = UserSettingObserver(selectedSetting) { [weak self] _ in
-            self?.syncSelection()
-            self?.observeModelSetting()
-            self?.modelControl.invalidateContext()
-            self?.modelControl.refresh()
-        }
+        // A rebuild, not just a re-select: a value written elsewhere may be one
+        // this list lacks, which needs its own entry.
+        selectionObserver = UserSettingObserver(selectedSetting) { [weak self] _ in self?.rebuildMenu() }
         rebuildMenu()
-        observeModelSetting()
     }
 
     deinit { NotificationCenter.default.removeObserver(self) }
@@ -119,6 +115,9 @@ public final class ProviderModelPickerView: NSView, SettingsViewProtocol {
     public var providerPopUpButton: NSPopUpButton { providerPopup }
     /// The model row.
     public var modelPicker: AIModelPickerControl { modelControl }
+
+    /// The entry for a stored provider the list does not hold.
+    public static let unavailableProviderText = "Unavailable Provider"
 
     /// Sentinels first, in the caller's order, then the source's providers in
     /// its order.
@@ -181,6 +180,14 @@ public final class ProviderModelPickerView: NSView, SettingsViewProtocol {
 
     private func rebuildMenu() {
         choices = Self.menuChoices(leading: leadingChoices, providers: source.providers)
+        // A stored selection the list does not hold stays stored and shows as
+        // its own entry once the source has answered: a daemon list can lack a
+        // config only for now (a restart, a push not landed yet), and another
+        // picker's stale list must never overwrite what the user chose.
+        let stored = selectedSetting.value
+        if source.isAuthoritative, !choices.contains(where: { $0.value == stored }) {
+            choices.append((Self.unavailableProviderText, stored))
+        }
         providerPopup.removeAllItems()
         for choice in choices { providerPopup.addItem(withTitle: choice.label) }
         syncSelection()
@@ -189,19 +196,16 @@ public final class ProviderModelPickerView: NSView, SettingsViewProtocol {
         modelControl.refresh()
     }
 
-    /// Points the popup at the stored selection. A stored value matching nothing
-    /// is rewritten to the first choice only when the source is authoritative
-    /// (a configuration deleted locally); a daemon that has not answered yet
-    /// leaves it alone.
+    /// Points the popup at the stored selection. It never writes the setting:
+    /// a value the list lacks is shown as ``unavailableProviderText`` once the
+    /// source has answered, and as the first choice before then, and only the
+    /// user's own pick changes it.
     private func syncSelection() {
         let value = selectedSetting.value
         if let index = choices.firstIndex(where: { $0.value == value }) {
             providerPopup.selectItem(at: index)
         } else if !choices.isEmpty {
             providerPopup.selectItem(at: 0)
-            if source.isAuthoritative, choices[0].value != value {
-                select(choices[0].value)
-            }
         }
     }
 
