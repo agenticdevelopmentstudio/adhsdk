@@ -24,6 +24,13 @@ final class TestProjection: SyncMirrorProjection, @unchecked Sendable {
     }
 
     var truncated: [[String]] { lock.withLock { truncations } }
+    private var discards = 0
+    /// How many times the store asked it to discard its local-only state.
+    var discardLocalStateCalls: Int { lock.withLock { discards } }
+
+    func discardLocalState(in conn: Database) throws {
+        lock.withLock { discards += 1 }
+    }
     /// The `isFullRow` of every upsert, in order. It stays empty if the store
     /// ever reaches only the requirement without the flag, which is what the
     /// protocol's forwarding default would make it do.

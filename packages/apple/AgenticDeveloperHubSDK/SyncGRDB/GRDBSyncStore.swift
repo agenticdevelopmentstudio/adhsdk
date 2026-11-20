@@ -17,8 +17,10 @@ public struct GRDBSyncStoreStatus: Codable, Sendable {
 /// it is NEVER deleted as a recovery path (resetForResync truncates tables,
 /// preserving the outbox and the file), and nothing in it is deleted when the
 /// signed-in identity changes: a store is *bound* to one account
-/// (`bind(account:)`), and a host that sees another account signed in stops
-/// syncing instead of purging.
+/// (`bind(account:)`), and once a host declares who is signed in
+/// (`signIn(account:)`, `signOut()`) the store itself refuses to push or pull
+/// for anyone else — the bound account's queued ops wait for it instead of
+/// being purged or sent under another account's credentials.
 ///
 /// Provenance: every generic mirror table carries `origin` (`'local'` for a
 /// row this device wrote, `'account:<principalId>'` for one pulled from an
@@ -409,24 +411,155 @@ public final class GRDBSyncStore: SyncStore, @unchecked Sendable {
         }
     }
 
-    /// Binds the store to `account` (a principal id). Keeps the cursor.
+    /// Binds the store to `account` (a principal id) and records it as the
+    /// signed-in account. Keeps the cursor. This is the explicit bind: it
+    /// overrides whatever the store was bound to, so a host calls it only
+    /// when it has decided the data belongs to `account`.
     public func bind(account: String) async throws {
-        let boundedDatabase = self.boundedDatabase
+        let store = self
         try await onQueue {
-            try boundedDatabase.write { conn in
-                try Self.ensureBookkeeping(in: conn)
-                try conn.execute(
-                    sql: """
-                        INSERT INTO _sync_state (id, bound_account) VALUES (1, ?)
-                        ON CONFLICT(id) DO UPDATE SET bound_account = excluded.bound_account
-                        """,
-                    arguments: [account])
+            try store.boundedDatabase.write { conn in
+                try store.ensureSchema(in: conn)
+                try store.writeBinding(account, in: conn)
             }
+            store.signedIn.set(.account(account))
         }
+    }
+
+    private func writeBinding(_ account: String, in conn: Database) throws {
+        try conn.execute(
+            sql: """
+                INSERT INTO _sync_state (id, bound_account) VALUES (1, ?)
+                ON CONFLICT(id) DO UPDATE SET bound_account = excluded.bound_account
+                """,
+            arguments: [account])
     }
 
     private static func boundAccount(in conn: Database) throws -> String? {
         try String.fetchOne(conn, sql: "SELECT bound_account FROM _sync_state WHERE id = 1")
+    }
+
+    /// Who the host says is signed in. In memory only: a host declares it
+    /// on every launch and every identity change.
+    public enum SignedInAccount: Sendable, Equatable {
+        /// The host never said. The store does not guard — the host owns
+        /// the decision (the behaviour of every host written before this).
+        case undeclared
+        case signedOut
+        case account(String)
+    }
+
+    /// What `signIn(account:)` decided.
+    public enum AccountBinding: Sendable, Equatable {
+        /// `account` is the bound account (it was already, or the store was
+        /// empty and unbound and is bound now). Push and pull run.
+        case bound(String)
+        /// The store belongs to another account. Push and pull refuse with
+        /// `SyncStoreFailure.accountMismatch` until that account signs back
+        /// in or the host explicitly calls `discardAccountState(rebindingTo:)`.
+        case mismatch(bound: String, signedIn: String)
+    }
+
+    private let signedIn = SignedInState()
+
+    /// Declares `account` signed in and enforces the binding from now on:
+    /// the same account (or an empty unbound store, which binds) syncs;
+    /// anyone else is refused at `cursor`, `apply` and `pendingOps`, so no
+    /// queued op of the bound account is ever pushed under another account's
+    /// credentials and nothing of another account is pulled over its rows.
+    /// Nothing is deleted either way.
+    public func signIn(account: String) async throws -> AccountBinding {
+        let store = self
+        return try await onQueue {
+            let outcome = try store.boundedDatabase.write { conn -> AccountBinding in
+                try store.ensureSchema(in: conn)
+                if let bound = try Self.boundAccount(in: conn) {
+                    return bound == account ? .bound(account) : .mismatch(bound: bound, signedIn: account)
+                }
+                try store.writeBinding(account, in: conn)
+                return .bound(account)
+            }
+            store.signedIn.set(.account(account))
+            return outcome
+        }
+    }
+
+    /// Declares that nobody is signed in: push and pull refuse until a
+    /// sign-in. Local data, the outbox and the cursor are all kept.
+    public func signOut() {
+        signedIn.set(.signedOut)
+    }
+
+    /// What the host last declared.
+    public var signedInAccount: SignedInAccount { signedIn.value }
+
+    /// Explicitly gives the store to `account`: discards the previous
+    /// account's queued work — every `_sync_outbox` op and each projection's
+    /// `discardLocalState` (e.g. Markdown's `_markdown_outbox`,
+    /// `_markdown_remote_id`, `_markdown_frontmatter_owner`) — clears the
+    /// cursor so `account` pulls from scratch, and binds. Mirror rows are
+    /// kept with their provenance. The only path that drops queued work;
+    /// a host calls it only on the user's explicit say-so.
+    public func discardAccountState(rebindingTo account: String) async throws {
+        let store = self
+        try await onQueue {
+            try store.boundedDatabase.write { conn in
+                try store.ensureSchema(in: conn)
+                try conn.execute(sql: "DELETE FROM _sync_outbox")
+                for projection in store.mirrorProjections { try projection.discardLocalState(in: conn) }
+                try conn.execute(sql: "UPDATE _sync_state SET cursor = NULL")
+                try store.writeBinding(account, in: conn)
+            }
+            store.signedIn.set(.account(account))
+        }
+    }
+
+    /// Throws `SyncStoreFailure.accountMismatch` when the declared signed-in
+    /// account may not sync this store. For work outside the store that acts
+    /// for the bound account (`MarkdownStore.drainRemoteQueue`).
+    public func checkAccountGuard() throws {
+        guard signedIn.value != .undeclared else { return }
+        try boundedDatabase.read { conn in try self.checkAccountGuard(in: conn) }
+    }
+
+    private func checkAccountGuard(in conn: Database) throws {
+        let bound = try Self.readableBoundAccount(in: conn)
+        switch signedIn.value {
+        case .undeclared:
+            return
+        case .signedOut:
+            throw SyncStoreFailure.accountMismatch(bound: bound, signedIn: nil)
+        case .account(let account):
+            if bound == account { return }
+            if bound == nil { return }
+            throw SyncStoreFailure.accountMismatch(bound: bound, signedIn: account)
+        }
+    }
+
+    /// `bound_account` on any schema, `nil` where the table or column does
+    /// not exist yet (a read transaction cannot add them).
+    private static func readableBoundAccount(in conn: Database) throws -> String? {
+        guard try conn.tableExists("_sync_state"),
+              try conn.columns(in: "_sync_state").contains(where: { $0.name == "bound_account" })
+        else { return nil }
+        return try boundAccount(in: conn)
+    }
+
+    /// Whether the store holds anything an account could own: a generic
+    /// mirror row or a queued op.
+    private func holdsData(in conn: Database) throws -> Bool {
+        if try conn.tableExists("_sync_outbox"),
+           try Bool.fetchOne(conn, sql: "SELECT EXISTS(SELECT 1 FROM _sync_outbox)") == true {
+            return true
+        }
+        guard try conn.tableExists("_sync_resources") else { return false }
+        for resource in try String.fetchAll(conn, sql: "SELECT resource FROM _sync_resources")
+        where projection(for: resource) == nil {
+            let table = try Self.mirrorTableName(for: resource)
+            guard try conn.tableExists(table) else { continue }
+            if try Bool.fetchOne(conn, sql: "SELECT EXISTS(SELECT 1 FROM \"\(table)\")") == true { return true }
+        }
+        return false
     }
 
     /// `'account:<principalId>'`, the `origin` of a row pulled from that
@@ -464,6 +597,9 @@ public final class GRDBSyncStore: SyncStore, @unchecked Sendable {
         return try await onQueue {
             try store.boundedDatabase.write { conn in
                 try store.ensureSchema(in: conn)
+                // The pull loop's first call: refusing here means no fetch
+                // is ever made under an account the store does not belong to.
+                try store.checkAccountGuard(in: conn)
                 return try String.fetchOne(conn, sql: "SELECT cursor FROM _sync_state WHERE id = 1")
             }.map(SyncCursor.init(rawValue:))
         }
@@ -476,6 +612,7 @@ public final class GRDBSyncStore: SyncStore, @unchecked Sendable {
         let encoder = JSONEncoder()
         try await onQueue {
             try store.boundedDatabase.write { conn in
+                try store.checkAccountGuard(in: conn)
                 let bound = try Self.boundAccount(in: conn)
                 let origin = Self.origin(forAccount: bound)
                 for change in batch {
@@ -724,12 +861,15 @@ public final class GRDBSyncStore: SyncStore, @unchecked Sendable {
     /// round-trip still outstanding) are included again: replaying the same
     /// opIds on retry is the server contract's idempotency guarantee.
     public func pendingOps(limit: Int) async throws -> [SyncPushOp] {
-        let boundedDatabase = self.boundedDatabase
+        let store = self
         // Built here, not held. See the note on this type's `@unchecked
         // Sendable` conformance.
         let decoder = JSONDecoder()
         return try await onQueue {
-            try boundedDatabase.write { conn in
+            try store.boundedDatabase.write { conn in
+                // Before anything is claimed: the bound account's queued ops
+                // are never handed out while another account is signed in.
+                try store.checkAccountGuard(in: conn)
                 let rows = try Row.fetchAll(
                     conn,
                     sql: """
@@ -1011,5 +1151,18 @@ public final class GRDBSyncStore: SyncStore, @unchecked Sendable {
                 conflictCount: try Int.fetchOne(conn, sql: "SELECT COUNT(*) FROM _sync_conflicts") ?? 0
             )
         }
+    }
+}
+
+/// The declared signed-in account, lock-protected so the store holding it
+/// stays honestly `Sendable` (its property is a `let`).
+final class SignedInState: @unchecked Sendable {
+    private let lock = NSLock()
+    private var current: GRDBSyncStore.SignedInAccount = .undeclared
+
+    var value: GRDBSyncStore.SignedInAccount { lock.withLock { current } }
+
+    func set(_ value: GRDBSyncStore.SignedInAccount) {
+        lock.withLock { current = value }
     }
 }

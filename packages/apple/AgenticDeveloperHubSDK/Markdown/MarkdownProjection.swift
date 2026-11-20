@@ -674,6 +674,24 @@ public struct MarkdownProjection: SyncMirrorProjection {
         }
     }
 
+    /// The local-only tables `MarkdownStore` keeps beside this projection,
+    /// each a statement about the account that wrote it:
+    /// `_markdown_outbox` (bodies not yet pushed — drained under another
+    /// account they would POST one user's text into another's account),
+    /// `_markdown_remote_id` (local id to that account's document id) and
+    /// `_markdown_frontmatter_owner`. Guarded by `tableExists`: a bare
+    /// `GRDBSyncStore` on this projection has none of them.
+    private static let accountScopedTables = [
+        "_markdown_outbox", "_markdown_remote_id", "_markdown_frontmatter_owner"
+    ]
+
+    public func discardLocalState(in conn: Database) throws {
+        for table in Self.accountScopedTables {
+            guard try conn.tableExists(table) else { continue }
+            try conn.execute(sql: "DELETE FROM \(table)")
+        }
+    }
+
     /// Which of this projection's resources hold rows referencing each
     /// foreign-key parent among them. `category_items`/`keyword_items` name
     /// their *target* polymorphically (`target_kind`, `target_id`) with no

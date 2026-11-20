@@ -273,4 +273,10 @@ public enum SyncStoreFailure: Error, Sendable, Equatable {
     /// (in the store's `pullOnlyResources`): the host may mirror pulled rows
     /// for it but must never originate a local mutation to push.
     case pullOnlyResource(String)
+    /// The store refuses to push or pull because the account the host says
+    /// is signed in (`nil`: nobody) is not the account the store is bound to
+    /// (`nil`: none yet, but the store holds data it will not hand to an
+    /// account nobody explicitly bound). Nothing is dropped; the bound
+    /// account signing back in, or an explicit rebind, lifts it.
+    case accountMismatch(bound: String?, signedIn: String?)
 }

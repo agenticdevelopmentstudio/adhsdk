@@ -188,4 +188,75 @@ final class ProvenanceColumnsTests: XCTestCase {
         let ops = try await store.pendingOps(limit: 10)
         XCTAssertEqual(ops.map(\.rowId), ["n1"])
     }
+
+    // MARK: f2 — another account never drains the bound account's queue
+
+    private func assertMismatch(
+        _ body: () async throws -> Void, file: StaticString = #filePath, line: UInt = #line
+    ) async {
+        do {
+            try await body()
+            XCTFail("expected accountMismatch", file: file, line: line)
+        } catch let failure as SyncStoreFailure {
+            guard case .accountMismatch = failure else {
+                return XCTFail("unexpected \(failure)", file: file, line: line)
+            }
+        } catch {
+            XCTFail("unexpected \(error)", file: file, line: line)
+        }
+    }
+
+    func testADifferentAccountIsRefusedPushAndPullAndTheQueueIsKept() async throws {
+        let store = GRDBSyncStore(database: try BoundedDatabase(path: path))
+        try await store.prepare(resources: [notes])
+        let first = try await store.signIn(account: "acct-a")
+        XCTAssertEqual(first, .bound("acct-a"))
+        try await store.stage(LocalMutation(
+            resource: "personal.notes", rowId: "a1", type: .upsert, data: ["title": .string("A's")]))
+
+        store.signOut()
+        await assertMismatch { _ = try await store.pendingOps(limit: 10) }
+
+        let second = try await store.signIn(account: "acct-b")
+        XCTAssertEqual(second, .mismatch(bound: "acct-a", signedIn: "acct-b"))
+        await assertMismatch { _ = try await store.pendingOps(limit: 10) }
+        await assertMismatch { _ = try await store.cursor() }
+        await assertMismatch { try await store.apply([], advancingTo: SyncCursor(rawValue: "b1")) }
+        XCTAssertThrowsError(try store.checkAccountGuard())
+
+        let back = try await store.signIn(account: "acct-a")
+        XCTAssertEqual(back, .bound("acct-a"))
+        let ops = try await store.pendingOps(limit: 10)
+        XCTAssertEqual(ops.map(\.rowId), ["a1"], "the bound account's queue waited for it")
+    }
+
+    func testAnUndeclaredHostIsNotGuarded() async throws {
+        let store = GRDBSyncStore(database: try BoundedDatabase(path: path))
+        try await store.prepare(resources: [notes])
+        try await store.bind(account: "acct-a")
+        try await store.stage(LocalMutation(resource: "personal.notes", rowId: "a1", type: .upsert, data: [:]))
+        let ops = try await store.pendingOps(limit: 10)
+        XCTAssertEqual(ops.count, 1)
+    }
+
+    func testDiscardingAccountStateDropsTheQueueAndProjectionSidecarsAndRebinds() async throws {
+        let projection = TestProjection(resources: ["personal.tasks"])
+        let store = GRDBSyncStore(database: try BoundedDatabase(path: path), projection: projection)
+        try await store.prepare(resources: [notes, SyncResource(resource: "personal.tasks", schemaVersion: 1)])
+        _ = try await store.signIn(account: "acct-a")
+        try await store.stage(LocalMutation(resource: "personal.notes", rowId: "a1", type: .upsert, data: [:]))
+        try await store.apply([], advancingTo: SyncCursor(rawValue: "a9"))
+
+        _ = try await store.signIn(account: "acct-b")
+        try await store.discardAccountState(rebindingTo: "acct-b")
+
+        let bound = try await store.boundAccount()
+        XCTAssertEqual(bound, "acct-b")
+        let ops = try await store.pendingOps(limit: 10)
+        XCTAssertTrue(ops.isEmpty)
+        let cursor = try await store.cursor()
+        XCTAssertNil(cursor)
+        XCTAssertEqual(projection.discardLocalStateCalls, 1)
+        XCTAssertNotNil(try store.liveRow(resource: "personal.notes", id: "a1"), "mirror rows are kept")
+    }
 }

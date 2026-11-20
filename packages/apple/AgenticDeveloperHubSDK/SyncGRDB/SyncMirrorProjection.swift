@@ -65,6 +65,15 @@ public protocol SyncMirrorProjection: Sendable {
     /// Empties the projection's storage for the given resources.
     func truncate(resources: [String], in conn: Database) throws
 
+    /// Discards the projection's *local-only* state that belongs to the
+    /// account the store was bound to — its own outbox, local-to-remote id
+    /// pairings, anything a different account must never act on. Called by
+    /// `GRDBSyncStore.discardAccountState(rebindingTo:)` inside its
+    /// transaction, alongside the store's own outbox delete, when a host
+    /// explicitly gives the store to another account. Never called on sign-out
+    /// or resync: those keep local data. Defaulted to a no-op below.
+    func discardLocalState(in conn: Database) throws
+
     /// Called once at the end of a write, inside its transaction, after its
     /// last row: for every projection at the end of each pulled batch in
     /// `apply` (whatever resources the batch held, since a projection may
@@ -105,4 +114,8 @@ public extension SyncMirrorProjection {
     /// Default for `finishBatch(in:)`: a projection that keeps nothing
     /// derived across rows has nothing to finish.
     func finishBatch(in conn: Database) throws {}
+
+    /// Default for `discardLocalState(in:)`: a projection whose only storage
+    /// is its mirror tables keeps nothing account-scoped of its own.
+    func discardLocalState(in conn: Database) throws {}
 }

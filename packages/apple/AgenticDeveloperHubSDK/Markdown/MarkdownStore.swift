@@ -772,6 +772,10 @@ public final class MarkdownStore: @unchecked Sendable {
     /// be a pass that was killed mid-send, and leaving it would make the op
     /// permanently invisible to the two callers above.
     public func drainRemoteQueue(into writer: any MarkdownRemoteWriter, limit: Int = 100) async throws {
+        // The queued bodies belong to the account the sync store is bound
+        // to; with anyone else (or nobody) declared signed in, nothing is
+        // sent. `SyncStoreFailure.accountMismatch` and the queue is kept.
+        try syncStore.checkAccountGuard()
         try setClaim(nil, forOpMatching: nil)
         for queued in try pendingRemoteOps(limit: limit) {
             // The remote id is re-read immediately before each send rather

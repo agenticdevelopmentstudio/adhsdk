@@ -419,8 +419,23 @@ and keeps both the outbox and the binding.
 ```swift
 await engine.pause()      // suspends until any in-flight cycle finishes
 credentials.clear()       // rows, outbox and cursor are kept
+store.signOut()           // the store now refuses push and pull
 await engine.resume()     // does NOT itself kick; the next sign-in does
+// on sign-in:
+switch try await store.signIn(account: principalId) {
+case .bound: break        // same account (or first bind): sync runs
+case .mismatch: break     // store refuses push/pull for this account
+}
 ```
+
+The pause is the host's courtesy; the guard is the store's. Once a host has
+declared who is signed in, `cursor`, `apply` and `pendingOps` throw
+`SyncStoreFailure.accountMismatch` for anyone but the bound account, and
+`MarkdownStore.drainRemoteQueue` does the same for its own outbox, so a
+host that forgets to pause still never pushes one account's queued work under
+another's credentials. Handing the store to a different account is explicit:
+`discardAccountState(rebindingTo:)` drops the outbox and each projection's
+local-only sidecars (`discardLocalState(in:)`), clears the cursor and binds.
 
 ### Bumping the toolkit across a `SyncEvent` case addition
 

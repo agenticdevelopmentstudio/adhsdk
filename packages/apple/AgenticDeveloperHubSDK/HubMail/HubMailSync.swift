@@ -50,6 +50,9 @@ public final class HubMailSync: Sendable {
     /// next identity pulls its own. The engine is paused around the reset and
     /// resumed after it, never stopped, so the next identity syncs through the
     /// same engine.
+    ///
+    /// The store is also told nobody is signed in, so until the next
+    /// `signIn(account:)` it refuses every push and pull.
     public func signOut() async throws {
         await engine.pause()
         do {
@@ -58,6 +61,26 @@ public final class HubMailSync: Sendable {
             await engine.resume()
             throw error
         }
+        syncStore.signOut()
         await engine.resume()
+    }
+
+    /// Declares `account` (a principal id) signed in and starts a sync. Mail
+    /// is pull-only and the hub holds all of it, so a store bound to another
+    /// account has nothing of its own to keep: its rows and cursor are
+    /// cleared and it is rebound to `account`, which pulls its own mail.
+    public func signIn(account: String) async throws {
+        await engine.pause()
+        do {
+            if case .mismatch = try await syncStore.signIn(account: account) {
+                try await syncStore.resetForResync()
+                try await syncStore.discardAccountState(rebindingTo: account)
+            }
+        } catch {
+            await engine.resume()
+            throw error
+        }
+        await engine.resume()
+        await engine.syncNow(reason: .manual)
     }
 }
