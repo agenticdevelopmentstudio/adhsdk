@@ -187,12 +187,13 @@ public final class DaemonProviderRegistrySource: ProviderRegistrySource {
                 config: config, template: template, pluginManager: pluginManager, currentModel: currentModel)
         }
         // No plugin host to describe this template: a bare one, so the chooser
-        // still opens, listing only the current model.
+        // still opens, listing only the current model, and takes any other
+        // model name typed into its search field.
         let bare = AIPluginDescriptor.ProviderTemplate(
             id: config.templateId, displayName: config.name,
             models: currentModel.isEmpty ? [] : [currentModel], secretRequired: false)
         return ModelChooserContext(
             pluginIdentifier: config.pluginIdentifier, template: bare,
-            baseURL: "", apiKey: nil, currentModel: currentModel)
+            baseURL: "", apiKey: nil, currentModel: currentModel, allowsCustomModel: true)
     }
 }
