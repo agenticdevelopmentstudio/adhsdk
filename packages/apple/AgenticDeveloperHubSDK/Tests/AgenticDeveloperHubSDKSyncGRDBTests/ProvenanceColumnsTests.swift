@@ -189,6 +189,21 @@ final class ProvenanceColumnsTests: XCTestCase {
         XCTAssertEqual(ops.map(\.rowId), ["n1"])
     }
 
+    // MARK: f7 — queries on a never-prepared store
+
+    func testANeverPreparedStoreAnswersRatherThanThrowingSQL() throws {
+        let store = GRDBSyncStore(database: try BoundedDatabase(path: path))
+        XCTAssertFalse(try store.acceptsLocalWrites(resource: "personal.notes"))
+        XCTAssertThrowsError(try store.localRecord(resource: "personal.notes", id: "n1")) { error in
+            XCTAssertEqual(error as? SyncStoreFailure, .unknownResource("personal.notes"))
+        }
+        XCTAssertThrowsError(try store.database.read { conn in
+            try store.localVersion(resource: "personal.notes", id: "n1", in: conn)
+        }) { error in
+            XCTAssertEqual(error as? SyncStoreFailure, .unknownResource("personal.notes"))
+        }
+    }
+
     // MARK: f6 — apply and complete on an older database, first call
 
     func testCompleteAsTheFirstCallOnAnOldDatabaseDeletesTheAppliedOp() async throws {

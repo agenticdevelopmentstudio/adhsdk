@@ -369,6 +369,11 @@ public final class GRDBSyncStore: SyncStore, @unchecked Sendable {
     }
 
     private func genericTable(for resource: String, in conn: Database) throws -> String {
+        // A never-prepared store has no registry: nothing is registered,
+        // which is `unknownResource`, not a raw "no such table".
+        guard try conn.tableExists("_sync_resources") else {
+            throw SyncStoreFailure.unknownResource(resource)
+        }
         let isKnown = try Bool.fetchOne(
             conn, sql: "SELECT EXISTS(SELECT 1 FROM _sync_resources WHERE resource = ?)",
             arguments: [resource]
