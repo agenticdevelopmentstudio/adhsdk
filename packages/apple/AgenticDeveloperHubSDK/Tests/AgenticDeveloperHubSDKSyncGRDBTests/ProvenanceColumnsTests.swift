@@ -430,4 +430,37 @@ final class ProvenanceColumnsTests: XCTestCase {
         let after = try XCTUnwrap(store.localRecord(resource: "personal.notes", id: "n1")).version
         XCTAssertGreaterThan(after, before + 1)
     }
+
+    // MARK: f8 — the change log is capped
+
+    func testTheChangeLogKeepsOnlyTheNewestEntries() async throws {
+        let store = GRDBSyncStore(database: try BoundedDatabase(path: path), changeLogCapacity: 3)
+        try await store.prepare(resources: [notes])
+        try await store.apply((1...5).map { upsert("n\($0)", title: "t") }, advancingTo: nil)
+
+        XCTAssertEqual(try store.changeHead(), 5)
+        XCTAssertEqual(try store.changeLogFloor(), 2)
+        XCTAssertEqual(try store.changes(since: 2, limit: 10).map(\.id), ["n3", "n4", "n5"])
+        XCTAssertThrowsError(try store.changes(since: 1, limit: 10)) { error in
+            XCTAssertEqual(error as? SyncStoreFailure, .changeHistoryPruned(since: 1, floor: 2))
+        }
+        let rows = try store.database.read { conn in
+            try Int.fetchOne(conn, sql: "SELECT count(*) FROM _change_log")
+        }
+        XCTAssertEqual(rows, 3)
+    }
+
+    func testAResyncDoesNotGrowTheChangeLogPastItsCap() async throws {
+        let store = GRDBSyncStore(database: try BoundedDatabase(path: path), changeLogCapacity: 4)
+        try await store.prepare(resources: [notes])
+        for _ in 0..<3 {
+            try await store.apply((1...3).map { upsert("n\($0)", title: "t") }, advancingTo: nil)
+            try await store.resetForResync()
+        }
+        let rows = try store.database.read { conn in
+            try Int.fetchOne(conn, sql: "SELECT count(*) FROM _change_log")
+        }
+        XCTAssertEqual(rows, 4)
+        XCTAssertEqual(try store.changes(since: store.changeLogFloor(), limit: 10).count, 4)
+    }
 }

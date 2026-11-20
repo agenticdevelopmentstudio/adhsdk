@@ -279,4 +279,8 @@ public enum SyncStoreFailure: Error, Sendable, Equatable {
     /// account nobody explicitly bound). Nothing is dropped; the bound
     /// account signing back in, or an explicit rebind, lifts it.
     case accountMismatch(bound: String?, signedIn: String?)
+    /// `changes(since:)` was asked for entries after `since`, but every entry
+    /// up to `floor` has been pruned from the change log. The reader rescans
+    /// the rows it follows and resumes from the head.
+    case changeHistoryPruned(since: Int64, floor: Int64)
 }

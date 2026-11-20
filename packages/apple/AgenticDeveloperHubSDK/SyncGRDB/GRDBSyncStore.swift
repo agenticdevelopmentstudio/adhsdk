@@ -56,12 +56,23 @@ public final class GRDBSyncStore: SyncStore, @unchecked Sendable {
     private let mirrorProjections: [any SyncMirrorProjection]
     /// Told after a commit that may have appended to `_change_log`.
     private let changeSignal = ChangeCommitSignal()
+    /// How many of the newest `_change_log` entries are kept. Older ones are
+    /// deleted in the transaction that logs past the cap, and a reader asking
+    /// for history before them gets `SyncStoreFailure.changeHistoryPruned`.
+    public let changeLogCapacity: Int
+
+    /// The default `changeLogCapacity`: room for a full re-pull of a large
+    /// mirror without pruning entries a live reader has not seen yet.
+    public static let defaultChangeLogCapacity = 100_000
 
     public init(
         database: BoundedDatabase,
         pullOnlyResources: Set<String> = [],
-        projections: [any SyncMirrorProjection] = []
+        projections: [any SyncMirrorProjection] = [],
+        changeLogCapacity: Int = GRDBSyncStore.defaultChangeLogCapacity
     ) {
+        precondition(changeLogCapacity > 0, "changeLogCapacity must be positive")
+        self.changeLogCapacity = changeLogCapacity
         var claimed: Set<String> = []
         for projection in projections {
             precondition(claimed.isDisjoint(with: projection.resources),
@@ -177,6 +188,7 @@ public final class GRDBSyncStore: SyncStore, @unchecked Sendable {
                 arguments: [resource])
             try conn.execute(sql: "DELETE FROM \"\(table)\"")
         }
+        try pruneChangeLog(in: conn)
     }
 
     /// The first `local_version` for a row inserted into `resource`'s
@@ -218,6 +230,8 @@ public final class GRDBSyncStore: SyncStore, @unchecked Sendable {
             seq INTEGER PRIMARY KEY AUTOINCREMENT, resource TEXT NOT NULL,
             row_id TEXT NOT NULL, kind TEXT NOT NULL, version INTEGER NOT NULL,
             at TEXT NOT NULL);
+        CREATE TABLE IF NOT EXISTS _change_log_pruned (
+            id INTEGER PRIMARY KEY CHECK (id = 1), through INTEGER NOT NULL);
         CREATE TABLE IF NOT EXISTS _sync_version_floor (
             resource TEXT PRIMARY KEY, floor INTEGER NOT NULL);
         """
@@ -389,12 +403,18 @@ public final class GRDBSyncStore: SyncStore, @unchecked Sendable {
     }
 
     /// Feed entries with `seq > since`, oldest first, at most `limit`. Empty
-    /// — never an error — for `since` at or above the head and on a store
-    /// that has never logged anything.
+    /// for `since` at or above the head and on a store that has never logged
+    /// anything. Throws `SyncStoreFailure.changeHistoryPruned` when `since`
+    /// is below `changeLogFloor()`: entries the reader has not seen were
+    /// pruned, so it must rescan the rows and resume from the head.
     public func changes(since: Int64, limit: Int) throws -> [RecordChange] {
         guard limit > 0 else { return [] }
         return try boundedDatabase.read { conn in
             guard try conn.tableExists("_change_log") else { return [] }
+            let floor = try Self.changeLogFloor(in: conn)
+            guard since >= floor else {
+                throw SyncStoreFailure.changeHistoryPruned(since: since, floor: floor)
+            }
             return try Row.fetchAll(
                 conn,
                 sql: """
@@ -415,8 +435,35 @@ public final class GRDBSyncStore: SyncStore, @unchecked Sendable {
     public func changeHead() throws -> Int64 {
         try boundedDatabase.read { conn in
             guard try conn.tableExists("_change_log") else { return 0 }
-            return try Int64.fetchOne(conn, sql: "SELECT MAX(seq) FROM _change_log") ?? 0
+            let head = try Int64.fetchOne(conn, sql: "SELECT MAX(seq) FROM _change_log") ?? 0
+            return max(head, try Self.changeLogFloor(in: conn))
         }
+    }
+
+    /// The lowest `since` that `changes(since:limit:)` answers: every entry
+    /// at or below it has been pruned. `0` until anything was pruned.
+    public func changeLogFloor() throws -> Int64 {
+        try boundedDatabase.read { conn in try Self.changeLogFloor(in: conn) }
+    }
+
+    private static func changeLogFloor(in conn: Database) throws -> Int64 {
+        guard try conn.tableExists("_change_log_pruned") else { return 0 }
+        return try Int64.fetchOne(conn, sql: "SELECT through FROM _change_log_pruned WHERE id = 1") ?? 0
+    }
+
+    /// Deletes all but the newest `changeLogCapacity` entries and records how
+    /// far it went, inside the caller's transaction.
+    private func pruneChangeLog(in conn: Database) throws {
+        guard let head = try Int64.fetchOne(conn, sql: "SELECT MAX(seq) FROM _change_log") else { return }
+        let through = head - Int64(changeLogCapacity)
+        guard through > (try Self.changeLogFloor(in: conn)) else { return }
+        try conn.execute(sql: "DELETE FROM _change_log WHERE seq <= ?", arguments: [through])
+        try conn.execute(
+            sql: """
+                INSERT INTO _change_log_pruned (id, through) VALUES (1, ?)
+                ON CONFLICT(id) DO UPDATE SET through = excluded.through
+                """,
+            arguments: [through])
     }
 
     private func genericTable(for resource: String, in conn: Database) throws -> String {
@@ -783,6 +830,7 @@ public final class GRDBSyncStore: SyncStore, @unchecked Sendable {
                 // derive from a resource it does not own (a title kept in the
                 // generic mirror).
                 for projection in store.mirrorProjections { try projection.finishBatch(in: conn) }
+                try store.pruneChangeLog(in: conn)
                 if let cursor {
                     try conn.execute(
                         sql: """
@@ -898,6 +946,7 @@ public final class GRDBSyncStore: SyncStore, @unchecked Sendable {
                 try Self.logChange(
                     resource: mutation.resource, table: table, id: mutation.rowId, kind: .upsert, in: conn)
             }
+            try pruneChangeLog(in: conn)
         }
 
         let existing = try Row.fetchOne(
