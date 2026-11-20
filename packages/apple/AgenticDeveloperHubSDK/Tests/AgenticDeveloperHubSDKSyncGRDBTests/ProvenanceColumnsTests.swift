@@ -189,6 +189,37 @@ final class ProvenanceColumnsTests: XCTestCase {
         XCTAssertEqual(ops.map(\.rowId), ["n1"])
     }
 
+    // MARK: f6 — apply and complete on an older database, first call
+
+    func testCompleteAsTheFirstCallOnAnOldDatabaseDeletesTheAppliedOp() async throws {
+        let database = try makeOldSchemaDatabase()
+        try database.write { conn in
+            try conn.execute(sql: """
+                INSERT INTO _sync_outbox (op_id, resource, row_id, type, payload, status, created_at)
+                VALUES ('op1', 'personal.notes', 'n1', 'upsert', '{}', 'inflight', datetime('now'))
+                """)
+        }
+        let store = GRDBSyncStore(database: database)
+
+        try await store.complete([SyncPushResult(opId: "op1", status: .applied, newVersion: "4")])
+
+        let remaining = try database.read { conn in
+            try Int.fetchOne(conn, sql: "SELECT COUNT(*) FROM _sync_outbox") ?? -1
+        }
+        XCTAssertEqual(remaining, 0)
+    }
+
+    func testApplyAsTheFirstCallOnAnOldDatabaseLogsTheChange() async throws {
+        let store = GRDBSyncStore(database: try makeOldSchemaDatabase())
+
+        try await store.apply(
+            [SyncChange(resource: "personal.notes", id: "n1", op: .upsert, syncVersion: "4",
+                        data: ["title": .string("pulled")])],
+            advancingTo: nil)
+
+        XCTAssertEqual(try store.changes(since: 0, limit: 10).map(\.id), ["n1"])
+    }
+
     // MARK: f2 — another account never drains the bound account's queue
 
     private func assertMismatch(

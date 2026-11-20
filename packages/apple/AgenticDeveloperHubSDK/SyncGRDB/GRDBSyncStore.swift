@@ -612,6 +612,9 @@ public final class GRDBSyncStore: SyncStore, @unchecked Sendable {
         let encoder = JSONEncoder()
         try await onQueue {
             try store.boundedDatabase.write { conn in
+                // A host may call apply first on an older database: the
+                // bound_account column and _change_log must exist.
+                try store.ensureSchema(in: conn)
                 try store.checkAccountGuard(in: conn)
                 let bound = try Self.boundAccount(in: conn)
                 let origin = Self.origin(forAccount: bound)
@@ -916,6 +919,9 @@ public final class GRDBSyncStore: SyncStore, @unchecked Sendable {
         let store = self
         try await onQueue {
             try store.boundedDatabase.write { conn in
+                // Before reading bound_account: failing here would roll back
+                // a completion the server has already applied.
+                try store.ensureSchema(in: conn)
                 for result in results {
                     switch result.status {
                     case .applied, .conflict:
