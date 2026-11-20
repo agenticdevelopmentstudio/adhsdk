@@ -26,9 +26,25 @@ vi.mock('@adh-sdk/auth/client', () => ({
   authedRequest: (...a: unknown[]) => authedRequest(...a),
 }))
 
-// The specifier useAppearanceSettings.ts actually writes — the package path, not a relative
-// one (see its import comment).
-vi.mock('@adh-sdk/adh/telemetry/report-error', () => ({ captureException: vi.fn() }))
+/**
+ * Wire a spy as THE telemetry reporter (what TelemetryProvider wires to GlitchTip), through the
+ * specifier useAppearanceSettings.ts actually writes — the package path, not a relative one (see
+ * its import comment) — in the same reset module graph the hook loads.
+ */
+async function reporterSpy() {
+  const spy = vi.fn()
+  const { setErrorReporter } = await import('@adh-sdk/adh/telemetry/report-error')
+  setErrorReporter(spy)
+  return spy
+}
+
+/** The shape authedRequest throws on a non-ok response: an Error carrying the HTTP status. */
+function httpError(status: number, message: string) {
+  return Object.assign(new Error(message), { name: 'AuthHttpError', status })
+}
+
+/** Let a rejected save's .catch run. */
+const settle = () => new Promise((r) => setTimeout(r, 0))
 
 /** The OS setting, which is what `auto` resolves against. */
 function systemPrefersDark(dark: boolean) {
@@ -116,5 +132,27 @@ describe('useAppearanceSettings', () => {
     expect(init.method).toBe('POST')
     // The whole shape, not just the patch, snake_case under the `appearance` include.
     expect(JSON.parse(String(init.body))).toMatchObject({ appearance: { color_mode: 'dark' } })
+  })
+
+  it('signed IN, session expired (401 after the refresh): the failed save is NOT reported — GlitchTip #246', async () => {
+    const reported = await reporterSpy()
+    auth = { isAuthenticated: true }
+    authedRequest.mockRejectedValue(httpError(401, 'invalid or expired token'))
+    const { setMode } = await renderHost()
+    setMode('dark')
+    await settle()
+    expect(authedRequest).toHaveBeenCalledTimes(1)
+    expect(reported).not.toHaveBeenCalled()
+  })
+
+  it('signed IN, any other failure: the failed save IS reported', async () => {
+    const reported = await reporterSpy()
+    auth = { isAuthenticated: true }
+    const err = httpError(503, 'unavailable')
+    authedRequest.mockRejectedValue(err)
+    const { setMode } = await renderHost()
+    setMode('dark')
+    await settle()
+    expect(reported).toHaveBeenCalledWith(err, { feature: 'appearance', step: 'savePrefs' })
   })
 })

@@ -14,7 +14,7 @@ import {
 
 // src/auth/AppearanceSync.tsx
 import { useEffect, useRef } from "react";
-import { reportUnexpectedAuthError, useAuth } from "@adh-sdk/auth";
+import { useAuth } from "@adh-sdk/auth";
 import { authedJson } from "@adh-sdk/auth/client";
 import { adoptAppearance, normalizeAppearance, resetAppearance } from "@adh-sdk/themes";
 
@@ -46,6 +46,7 @@ function appearanceToWire(prefs) {
 }
 
 // src/auth/AppearanceSync.tsx
+import { reportUnlessUnauthorized } from "@adh-sdk/adh/telemetry/report-error";
 function AppearanceSync() {
   const { isAuthenticated, isLoading, user } = useAuth();
   const themedFor = useRef(void 0);
@@ -65,7 +66,7 @@ function AppearanceSync() {
     }).catch((err) => {
       if (!live) return;
       themedFor.current = void 0;
-      reportUnexpectedAuthError(err, { feature: "appearance", step: "fetchPrefs" });
+      reportUnlessUnauthorized(err, { feature: "appearance", step: "fetchPrefs" });
     });
     return () => {
       live = false;
@@ -98,7 +99,7 @@ import { useCallback } from "react";
 import { useAuth as useAuth2 } from "@adh-sdk/auth";
 import { authedRequest } from "@adh-sdk/auth/client";
 import { useAppearancePreferences } from "@adh-sdk/themes";
-import { captureException as captureException2 } from "@adh-sdk/adh/telemetry/report-error";
+import { reportUnlessUnauthorized as reportUnlessUnauthorized2 } from "@adh-sdk/adh/telemetry/report-error";
 function useAppearanceSettings() {
   const { prefs, set: setLocal } = useAppearancePreferences();
   const { isAuthenticated } = useAuth2();
@@ -111,7 +112,7 @@ function useAppearanceSettings() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ appearance: appearanceToWire(next) })
-      }).catch(captureException2);
+      }).catch((err) => reportUnlessUnauthorized2(err, { feature: "appearance", step: "savePrefs" }));
     },
     [prefs, setLocal, isAuthenticated]
   );

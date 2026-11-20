@@ -14,7 +14,7 @@ export interface UseAppearanceSettings {
  * origin's localStorage.
  *
  * Optimistic by design: the document updates on the click, and the save rides behind it. A failed
- * save is reported but not rolled back — yanking the theme back mid-interaction is worse than a
+ * save is reported (except a 401 — an expired session, not a bug: GlitchTip #246) but not rolled back — yanking the theme back mid-interaction is worse than a
  * setting that is right here and re-syncs on the next load.
  *
  * Signed out, it degrades to the local-only behaviour (there is no account to save to).
