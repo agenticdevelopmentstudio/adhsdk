@@ -45,6 +45,29 @@ final class ProviderModelPickerViewTests: XCTestCase {
     }
 
     @MainActor
+    func testAStoredProviderTheListLacksIsKeptAndShownAsUnavailable() async {
+        let missing = UUID().uuidString
+        let setting = UserSetting<String>("test.providerPicker.\(UUID().uuidString)", default: missing)
+        let model = UserSetting<String>("test.providerPicker.model.\(UUID().uuidString)", default: "")
+        defer { setting.remove(); model.remove() }
+        model.value = "kept-model"
+        let config = DaemonProviderConfig(id: UUID(), name: "Ollama", pluginIdentifier: "p", templateId: "t")
+        let source = DaemonProviderRegistrySource(service: StubDaemonService(configs: [config]))
+        await source.load()
+        let picker = ProviderModelPickerView(
+            source: source, selectedSetting: setting,
+            leadingChoices: [.init(label: "Default (Claude CLI)", value: "")],
+            modelSetting: { _ in model })
+        XCTAssertEqual(setting.value, missing, "the picker never rewrites a selection it cannot find")
+        XCTAssertEqual(model.value, "kept-model")
+        XCTAssertEqual(picker.choices.map(\.label),
+                       ["Default (Claude CLI)", "Ollama", ProviderModelPickerView.unavailableProviderText])
+        XCTAssertEqual(picker.providerPopUpButton.titleOfSelectedItem, ProviderModelPickerView.unavailableProviderText)
+        picker.selectChoice(at: 1)
+        XCTAssertEqual(picker.choices.count, 2, "the unavailable entry goes once a listed provider is picked")
+    }
+
+    @MainActor
     func testModelRowShowsStoredModelThenChooseText() async {
         let config = DaemonProviderConfig(id: UUID(), name: "Ollama", pluginIdentifier: "p", templateId: "t")
         let setting = UserSetting<String>("test.providerPicker.\(UUID().uuidString)", default: config.id.uuidString)
