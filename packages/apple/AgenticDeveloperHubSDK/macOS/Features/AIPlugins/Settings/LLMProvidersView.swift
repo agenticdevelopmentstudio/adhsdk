@@ -132,8 +132,8 @@ final class LLMProviderEditorView: NSView {
         modelObserver = UserSettingObserver(setting) { [weak picker] _ in picker?.refresh() }
         let fields = pluginManager.fields(pluginIdentifier: configuration.pluginIdentifier, template: template)
         fieldObservers = fields.map { field in
-            UserSettingObserver(AIProviderConfigStore.fieldSetting(config: configuration.id, field: field)) {
-                [weak picker] _ in
+            let fieldSetting = AIProviderConfigStore.fieldSetting(config: configuration.id, field: field)
+            return UserSettingObserver(fieldSetting) { [weak picker] _ in
                 picker?.invalidateContext()
                 picker?.refresh()
             }
