@@ -124,20 +124,20 @@ describe.skipIf(!ADH_SPEC_PATH)('generated endpoint metadata ↔ openapi.json dr
     }
   })
 
-  it('spot-checks GET /persona/personas/{id} (the proof endpoint)', () => {
-    const meta = API_ENDPOINTS['GET /persona/personas/{id}']
+  it('spot-checks GET /v1/personas/{id} (the proof endpoint)', () => {
+    const meta = API_ENDPOINTS['GET /v1/personas/{id}']
     expect(meta, 'persona read endpoint missing').toBeDefined()
     expect(meta!.params.some((p) => p.in === 'path' && p.name === 'id')).toBe(true)
     expect(meta!.responses.some((r) => r.status === '200')).toBe(true)
     expect(meta!.tag).toBe('persona')
-    // Full CRUD family — related calls has all five plus the collection.
+    // Full CRUD family — related calls has all five plus the collection. /v1 updates with POST.
     expect(meta!.family).toEqual(
       expect.arrayContaining([
-        'GET /persona/personas',
-        'POST /persona/personas',
-        'GET /persona/personas/{id}',
-        'PUT /persona/personas/{id}',
-        'DELETE /persona/personas/{id}',
+        'GET /v1/personas',
+        'POST /v1/personas',
+        'GET /v1/personas/{id}',
+        'POST /v1/personas/{id}',
+        'DELETE /v1/personas/{id}',
       ]),
     )
   })
