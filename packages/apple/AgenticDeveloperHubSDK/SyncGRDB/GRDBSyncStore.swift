@@ -369,8 +369,14 @@ public final class GRDBSyncStore: SyncStore, @unchecked Sendable {
     /// Runs `body` in one write transaction and, once it has committed, tells
     /// the change observers. For a host composing its own local write
     /// (a version check, then `stage(_:in:)`) that must land atomically.
+    ///
+    /// It runs on the store's serial queue, like every other mutating
+    /// operation, so it never interleaves with a queued `apply`, `stage` or
+    /// reset. It blocks the caller until the queue reaches it, and must not
+    /// be called from that queue (a `writeLocal` body cannot nest one).
     public func writeLocal<T>(_ body: (Database) throws -> T) throws -> T {
-        let result = try boundedDatabase.write(body)
+        dispatchPrecondition(condition: .notOnQueue(queue))
+        let result = try queue.sync { try boundedDatabase.write(body) }
         changeSignal.fire()
         return result
     }

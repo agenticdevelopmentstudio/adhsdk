@@ -463,4 +463,20 @@ final class ProvenanceColumnsTests: XCTestCase {
         XCTAssertEqual(rows, 4)
         XCTAssertEqual(try store.changes(since: store.changeLogFloor(), limit: 10).count, 4)
     }
+
+    // MARK: f9 — writeLocal goes through the store's serial queue
+
+    func testWriteLocalRunsOnTheStoreQueue() async throws {
+        let store = GRDBSyncStore(database: try BoundedDatabase(path: path))
+        try await store.prepare(resources: [notes])
+
+        let label = try store.writeLocal { conn -> String in
+            try store.stage(LocalMutation(
+                resource: "personal.notes", rowId: "w1", type: .upsert, data: ["title": .string("x")]), in: conn)
+            return String(cString: __dispatch_queue_get_label(nil))
+        }
+
+        XCTAssertEqual(label, "GRDBSyncStore")
+        XCTAssertEqual(try store.localRecord(resource: "personal.notes", id: "w1")?.version, 1)
+    }
 }
