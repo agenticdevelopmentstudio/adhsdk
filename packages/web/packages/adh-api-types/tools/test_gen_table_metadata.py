@@ -65,3 +65,11 @@ def test_folded_sub_resource_is_not_an_edit_only_column():
     assert by_name["id"].get("createOnly") is True
     assert "createOnly" not in by_name["slug"]
     assert "settings" not in by_name
+
+
+if __name__ == "__main__":
+    # `pnpm test` runs this file with plain python (pytest is not in the toolchain).
+    for name, fn in sorted(globals().items()):
+        if name.startswith("test_") and callable(fn):
+            fn()
+            print(f"ok  {name}")
