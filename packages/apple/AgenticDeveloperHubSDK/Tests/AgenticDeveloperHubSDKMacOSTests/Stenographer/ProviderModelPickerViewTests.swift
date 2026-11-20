@@ -68,6 +68,18 @@ final class ProviderModelPickerViewTests: XCTestCase {
     }
 
     @MainActor
+    func testTheFirstAnswerNotifiesEvenWhenTheListIsUnchanged() async {
+        let source = DaemonProviderRegistrySource(service: StubDaemonService(configs: []))
+        var changes = 0
+        source.onChange = { changes += 1 }
+        await source.load()
+        XCTAssertTrue(source.isAuthoritative)
+        XCTAssertEqual(changes, 1, "an empty first answer still flips the source to authoritative")
+        await source.load()
+        XCTAssertEqual(changes, 1, "a later unchanged answer is quiet")
+    }
+
+    @MainActor
     func testModelRowShowsStoredModelThenChooseText() async {
         let config = DaemonProviderConfig(id: UUID(), name: "Ollama", pluginIdentifier: "p", templateId: "t")
         let setting = UserSetting<String>("test.providerPicker.\(UUID().uuidString)", default: config.id.uuidString)

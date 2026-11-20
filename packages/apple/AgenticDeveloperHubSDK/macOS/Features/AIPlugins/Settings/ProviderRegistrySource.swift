@@ -152,11 +152,14 @@ public final class DaemonProviderRegistrySource: ProviderRegistrySource {
     }
 
     /// Re-reads the daemon's configurations; an unreachable daemon keeps the list
-    /// as is. ``onChange`` fires only when the list changed.
+    /// as is. ``onChange`` fires when the list changed, and on the first answer
+    /// even when it did not (an empty daemon list equals the initial one), so a
+    /// picker learns the source is now authoritative.
     public func load() async {
         guard let fresh = await service.aiProviderConfigs(), !Task.isCancelled else { return }
+        let becameAuthoritative = !isAuthoritative
         isAuthoritative = true
-        guard fresh != configs else { return }
+        guard fresh != configs || becameAuthoritative else { return }
         configs = fresh
         onChange?()
     }
