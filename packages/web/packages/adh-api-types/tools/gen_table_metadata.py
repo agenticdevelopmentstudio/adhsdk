@@ -111,6 +111,25 @@ def json_schema_for(operation: dict[str, Any], *path: str) -> dict[str, Any]:
     return node if isinstance(node, dict) else {}
 
 
+def body_properties(schema: dict[str, Any]) -> tuple[dict[str, Any], set[str]]:
+    """(properties, required) of a request body, with `allOf` members merged in.
+
+    The /v1 gateway folds a resource's sub-resource writes into its update body as an
+    `allOf` — `POST /v1/applications/{id}` is the row update plus `client_auth` and
+    `schema_grants` — so the row's own fields sit one level down, not at the top.
+    Reading only the top-level `properties` saw an empty update body there and marked
+    every create field `createOnly`, which made the CRUD editor refuse to edit them.
+    """
+    props: dict[str, Any] = dict(schema.get("properties", {}))
+    required: set[str] = set(schema.get("required", []))
+    for member in schema.get("allOf", []):
+        if isinstance(member, dict):
+            member_props, member_required = body_properties(member)
+            props.update(member_props)
+            required |= member_required
+    return props, required
+
+
 def column_shape(prop: dict[str, Any]) -> tuple[str, bool, list[str] | None, int | None]:
     """(type, nullable, enum, maxLength) for one property schema."""
     nullable = False
@@ -223,9 +242,8 @@ def find_tables(paths: dict[str, Any], legacy_spec: dict[str, Any] | None = None
             paths[item_path]["post"], "requestBody", "content", "application/json", "schema"
         )
         row_props: dict[str, Any] = row_schema.get("properties", {})
-        create_props: dict[str, Any] = create_schema.get("properties", {})
-        update_props: dict[str, Any] = update_schema.get("properties", {})
-        required = set(create_schema.get("required", []))
+        create_props, required = body_properties(create_schema)
+        update_props, _ = body_properties(update_schema)
         if not row_props:
             raise SystemExit(
                 f"{schema}/{table}: GET {base} documents no row schema under "
@@ -234,7 +252,9 @@ def find_tables(paths: dict[str, Any], legacy_spec: dict[str, Any] | None = None
 
         # CrudColumn can express create-only (createOnly) but not edit-only —
         # fail loudly rather than emit metadata that misdescribes the table.
-        edit_only = sorted(set(update_props) - set(create_props))
+        # Only row columns count: a folded sub-resource write in the update body
+        # (`client_auth`, `schema_grants`) is not a column, so it cannot be edit-only.
+        edit_only = sorted((set(update_props) - set(create_props)) & set(row_props))
         if edit_only:
             raise SystemExit(
                 f"{schema}/{table}: column(s) accepted on update but not create: "
