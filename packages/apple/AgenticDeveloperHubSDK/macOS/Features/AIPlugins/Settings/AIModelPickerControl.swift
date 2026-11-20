@@ -114,6 +114,9 @@ public final class AIModelPickerControl: NSView, SettingsViewProtocol {
         caretButton.isEnabled = enabled
         nameButton.isEnabled = enabled
         applyTheme(resolvedThemeScope.palette)
+        // The pointing-hand rect follows the name's width and enabled state,
+        // and AppKit recomputes cursor rects only when told to.
+        window?.invalidateCursorRects(for: self)
     }
 
     /// Opens the chooser, as a click on the caret or the name does.
