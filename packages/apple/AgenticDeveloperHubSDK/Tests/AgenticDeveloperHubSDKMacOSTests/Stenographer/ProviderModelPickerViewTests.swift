@@ -93,6 +93,27 @@ final class ProviderModelPickerViewTests: XCTestCase {
     }
 
     @MainActor
+    func testAPerProviderModelSettingIsKeptWhenSwitchingProviders() async {
+        let a = DaemonProviderConfig(id: UUID(), name: "A", pluginIdentifier: "p", templateId: "t")
+        let b = DaemonProviderConfig(id: UUID(), name: "B", pluginIdentifier: "p", templateId: "t")
+        let prefix = "test.providerPicker.model.\(UUID().uuidString)."
+        let setting = UserSetting<String>("test.providerPicker.\(UUID().uuidString)", default: a.id.uuidString)
+        let modelA = UserSetting<String>(prefix + a.id.uuidString, default: "")
+        let modelB = UserSetting<String>(prefix + b.id.uuidString, default: "")
+        defer { setting.remove(); modelA.remove(); modelB.remove() }
+        modelA.value = "model-x"
+        let source = DaemonProviderRegistrySource(service: StubDaemonService(configs: [a, b]))
+        await source.load()
+        let picker = ProviderModelPickerView(
+            source: source, selectedSetting: setting,
+            modelSetting: { id in id.map { UserSetting<String>(prefix + $0.uuidString, default: "") } })
+        picker.selectChoice(at: 1)   // B
+        picker.selectChoice(at: 0)   // back to A
+        XCTAssertEqual(setting.value, a.id.uuidString)
+        XCTAssertEqual(modelA.value, "model-x", "each provider keeps its own model")
+    }
+
+    @MainActor
     func testModelRowShowsStoredModelThenChooseText() async {
         let config = DaemonProviderConfig(id: UUID(), name: "Ollama", pluginIdentifier: "p", templateId: "t")
         let setting = UserSetting<String>("test.providerPicker.\(UUID().uuidString)", default: config.id.uuidString)

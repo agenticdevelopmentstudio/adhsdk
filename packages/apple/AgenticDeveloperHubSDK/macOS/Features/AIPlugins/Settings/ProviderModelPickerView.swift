@@ -222,12 +222,24 @@ public final class ProviderModelPickerView: NSView, SettingsViewProtocol {
     }
 
     /// The provider-change rule: a new provider starts on its default model.
+    /// That applies to a model setting every provider shares, which holds the
+    /// old provider's model; a per-provider setting (Partner's, one per config)
+    /// is that provider's own remembered choice and is kept.
     private func select(_ value: String) {
         guard selectedSetting.value != value else { return }
         let newID = UUID(uuidString: value)
-        if let setting = modelSetting(newID), !setting.value.isEmpty { setting.value = "" }
+        if let setting = modelSetting(newID), !setting.value.isEmpty,
+           modelSettingIsShared(setting) {
+            setting.value = ""
+        }
         // Last, so the selection observer's refresh reads the cleared model.
         selectedSetting.value = value
+    }
+
+    /// Whether `setting` is the one every provider uses: a provider that
+    /// exists nowhere gets the same setting only when it is shared.
+    private func modelSettingIsShared(_ setting: UserSetting<String>) -> Bool {
+        modelSetting(UUID())?.name == setting.name
     }
 
     // MARK: - Layout
