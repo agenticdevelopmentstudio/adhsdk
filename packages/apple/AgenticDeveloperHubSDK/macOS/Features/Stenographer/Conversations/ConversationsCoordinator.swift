@@ -27,14 +27,9 @@ public final class ConversationsCoordinator: AppFeature {
     }
 
     private let service: any StenographerDaemonService
-    /// Resolves the daemon's provider templates for the provider-and-model
-    /// pickers; nil (Stenographer) shows the stored model only.
-    private let pluginManager: AIPluginManager?
 
-    public init(service: any StenographerDaemonService, commandRegistry: CommandRegistry,
-                pluginManager: AIPluginManager? = nil) {
+    public init(service: any StenographerDaemonService, commandRegistry: CommandRegistry) {
         self.service = service
-        self.pluginManager = pluginManager
         super.init()
         featureName = "Conversations"
         commandRegistry.register(AppCommand(
