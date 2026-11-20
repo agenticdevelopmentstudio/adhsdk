@@ -136,9 +136,19 @@ describe('AppearanceSync — whose theme is it?', () => {
     const reported = await reporterSpy()
     auth = { isAuthenticated: true, isLoading: false, user: { id: 'u1' } }
     authedJson.mockRejectedValue(httpError(401, 'invalid or expired token'))
-    await renderSync()
+    const { rerender } = await renderSync()
     await waitFor(() => expect(authedJson).toHaveBeenCalled())
     await new Promise((r) => setTimeout(r, 0)) // let the rejection's .catch run
+    expect(reported).not.toHaveBeenCalled()
+
+    // …and the .catch DID run: it clears the themed-for identity so a later auth change retries.
+    // Cycle isLoading to re-run the effect — only a handled failure lets it fetch a second time.
+    const { AppearanceSync } = await import('../AppearanceSync')
+    auth = { ...auth, isLoading: true }
+    rerender(<AppearanceSync />)
+    auth = { ...auth, isLoading: false }
+    rerender(<AppearanceSync />)
+    await waitFor(() => expect(authedJson).toHaveBeenCalledTimes(2))
     expect(reported).not.toHaveBeenCalled()
   })
 
