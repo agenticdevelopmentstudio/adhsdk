@@ -124,7 +124,8 @@ final class ProvenanceColumnsTests: XCTestCase {
         let store = GRDBSyncStore(database: database)
         try await store.prepare(resources: [notes])
 
-        XCTAssertEqual(try store.localRecord(resource: "personal.notes", id: "n1")?.version, 1, "an existing row starts at 1")
+        XCTAssertEqual(
+            try store.localRecord(resource: "personal.notes", id: "n1")?.version, 1, "an existing row starts at 1")
 
         try await store.apply(
             [SyncChange(resource: "personal.notes", id: "n1", op: .upsert, syncVersion: "4",
@@ -381,5 +382,52 @@ final class ProvenanceColumnsTests: XCTestCase {
         XCTAssertNil(cursor)
         XCTAssertEqual(projection.discardLocalStateCalls, 1)
         XCTAssertNotNil(try store.liveRow(resource: "personal.notes", id: "a1"), "mirror rows are kept")
+    }
+
+    // MARK: f3 — local_version never goes backwards across a reset or purge
+
+    private func upsert(_ id: String, title: String) -> SyncChange {
+        SyncChange(resource: "personal.notes", id: id, op: .upsert, syncVersion: "1",
+                   data: ["title": .string(title)])
+    }
+
+    func testResetForResyncLogsDeletesAndKeepsVersionsMonotonic() async throws {
+        let store = GRDBSyncStore(database: try BoundedDatabase(path: path))
+        try await store.prepare(resources: [notes])
+        try await store.apply([upsert("n1", title: "a")], advancingTo: nil)
+        try await store.apply([upsert("n1", title: "b")], advancingTo: nil)
+        let before = try XCTUnwrap(store.localRecord(resource: "personal.notes", id: "n1")).version
+        let fired = expectation(description: "observers told of the reset")
+        fired.assertForOverFulfill = false
+        store.observeCommittedChanges { fired.fulfill() }
+
+        try await store.resetForResync()
+        await fulfillment(of: [fired], timeout: 2)
+
+        let deleteEntry = try XCTUnwrap(store.changes(since: 0, limit: 10).last)
+        XCTAssertEqual(deleteEntry.id, "n1")
+        XCTAssertEqual(deleteEntry.kind, .delete)
+        XCTAssertGreaterThan(deleteEntry.version, before)
+
+        try await store.apply([upsert("n1", title: "c")], advancingTo: nil)
+        let after = try XCTUnwrap(store.localRecord(resource: "personal.notes", id: "n1")).version
+        XCTAssertGreaterThan(after, deleteEntry.version, "a row re-pulled after the reset starts above it")
+    }
+
+    func testPurgeAndReEnrollKeepsVersionsMonotonic() async throws {
+        let store = GRDBSyncStore(database: try BoundedDatabase(path: path))
+        try await store.prepare(resources: [notes])
+        try await store.stage(LocalMutation(
+            resource: "personal.notes", rowId: "n1", type: .upsert, data: ["title": .string("a")]))
+        let before = try XCTUnwrap(store.localRecord(resource: "personal.notes", id: "n1")).version
+
+        try await store.purgeResources(["personal.notes"])
+        XCTAssertEqual(try store.changes(since: 0, limit: 10).last?.kind, .delete)
+
+        try await store.prepare(resources: [notes])
+        try await store.stage(LocalMutation(
+            resource: "personal.notes", rowId: "n1", type: .upsert, data: ["title": .string("b")]))
+        let after = try XCTUnwrap(store.localRecord(resource: "personal.notes", id: "n1")).version
+        XCTAssertGreaterThan(after, before + 1)
     }
 }

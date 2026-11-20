@@ -24,7 +24,8 @@ public struct GRDBSyncStoreStatus: Codable, Sendable {
 ///
 /// Provenance: every generic mirror table carries `origin` (`'local'` for a
 /// row this device wrote, `'account:<principalId>'` for one pulled from an
-/// account, `'remote'` for one pulled before any account was bound) and `reached_accounts` (a JSON array of the principal ids the row
+/// account, `'remote'` for one pulled before any account was bound) and
+/// `reached_accounts` (a JSON array of the principal ids the row
 /// is known to have reached). Projections keep their own tables and are not
 /// given these columns.
 ///
@@ -153,9 +154,36 @@ public final class GRDBSyncStore: SyncStore, @unchecked Sendable {
             if !own.isEmpty { try mirrorProjection.truncate(resources: own, in: conn) }
         }
         for resource in registered where projection(for: resource) == nil {
-            try conn.execute(sql: "DELETE FROM \"\(try Self.mirrorTableName(for: resource))\"")
+            let table = try Self.mirrorTableName(for: resource)
+            // Every live row leaves the feed a delete entry one version past
+            // its own, so a reader following `changes(since:)` drops it
+            // instead of keeping a row that no longer exists.
+            try conn.execute(
+                sql: """
+                    INSERT INTO _change_log (resource, row_id, kind, version, at)
+                    SELECT ?, id, 'delete', local_version + 1, datetime('now')
+                    FROM "\(table)" WHERE deleted_at IS NULL ORDER BY id
+                    """,
+                arguments: [resource])
+            // The resource's high-water mark: a row written after this purge
+            // starts above every version (and delete entry) handed out
+            // before it, so `local_version` never goes backwards for an id.
+            try conn.execute(
+                sql: """
+                    INSERT INTO _sync_version_floor (resource, floor)
+                    SELECT ?, COALESCE(MAX(local_version), 0) + 1 FROM "\(table)"
+                    ON CONFLICT(resource) DO UPDATE SET floor = MAX(floor, excluded.floor)
+                    """,
+                arguments: [resource])
+            try conn.execute(sql: "DELETE FROM \"\(table)\"")
         }
     }
+
+    /// The first `local_version` for a row inserted into `resource`'s
+    /// mirror: one past the resource's high-water mark, `1` when it was
+    /// never emptied.
+    private static let firstLocalVersionSQL =
+        "(SELECT COALESCE(MAX(floor), 0) + 1 FROM _sync_version_floor WHERE resource = ?)"
 
     private func onQueue<T: Sendable>(_ body: @escaping @Sendable () throws -> T) async throws -> T {
         try await withCheckedThrowingContinuation { continuation in
@@ -190,6 +218,8 @@ public final class GRDBSyncStore: SyncStore, @unchecked Sendable {
             seq INTEGER PRIMARY KEY AUTOINCREMENT, resource TEXT NOT NULL,
             row_id TEXT NOT NULL, kind TEXT NOT NULL, version INTEGER NOT NULL,
             at TEXT NOT NULL);
+        CREATE TABLE IF NOT EXISTS _sync_version_floor (
+            resource TEXT PRIMARY KEY, floor INTEGER NOT NULL);
         """
 
     public func prepare(resources: [SyncResource]) async throws {
@@ -715,12 +745,12 @@ public final class GRDBSyncStore: SyncStore, @unchecked Sendable {
                             sql: """
                                 INSERT INTO "\(table)"
                                     (id, sync_version, deleted_at, data, origin, reached_accounts, local_version)
-                                VALUES (?, ?, datetime('now'), '{}', ?, ?, 1)
+                                VALUES (?, ?, datetime('now'), '{}', ?, ?, \(Self.firstLocalVersionSQL))
                                 ON CONFLICT(id) DO UPDATE SET
                                     sync_version = excluded.sync_version, deleted_at = excluded.deleted_at, data = '{}',
                                     local_version = local_version + 1
                                 """,
-                            arguments: [change.id, version, origin, Self.reachedJSON(for: bound)]
+                            arguments: [change.id, version, origin, Self.reachedJSON(for: bound), change.resource]
                         )
                         try Self.logChange(
                             resource: change.resource, table: table, id: change.id, kind: .delete, in: conn)
@@ -730,12 +760,14 @@ public final class GRDBSyncStore: SyncStore, @unchecked Sendable {
                             sql: """
                                 INSERT INTO "\(table)"
                                     (id, sync_version, deleted_at, data, origin, reached_accounts, local_version)
-                                VALUES (?, ?, NULL, ?, ?, ?, 1)
+                                VALUES (?, ?, NULL, ?, ?, ?, \(Self.firstLocalVersionSQL))
                                 ON CONFLICT(id) DO UPDATE SET
                                     sync_version = excluded.sync_version, deleted_at = NULL, data = excluded.data,
                                     local_version = local_version + 1
                                 """,
-                            arguments: [change.id, version, payload, origin, Self.reachedJSON(for: bound)]
+                            arguments: [
+                                change.id, version, payload, origin, Self.reachedJSON(for: bound), change.resource
+                            ]
                         )
                         // A row already here (written locally, or pulled
                         // before) keeps its origin; it has now reached the
@@ -857,11 +889,11 @@ public final class GRDBSyncStore: SyncStore, @unchecked Sendable {
                 try conn.execute(
                     sql: """
                         INSERT INTO "\(table)" (id, sync_version, deleted_at, data, local_version)
-                        VALUES (?, ?, NULL, ?, 1)
+                        VALUES (?, ?, NULL, ?, \(Self.firstLocalVersionSQL))
                         ON CONFLICT(id) DO UPDATE SET
                             deleted_at = NULL, data = excluded.data, local_version = local_version + 1
                         """,
-                    arguments: [mutation.rowId, base ?? 0, payload]
+                    arguments: [mutation.rowId, base ?? 0, payload, mutation.resource]
                 )
                 try Self.logChange(
                     resource: mutation.resource, table: table, id: mutation.rowId, kind: .upsert, in: conn)
@@ -1070,6 +1102,7 @@ public final class GRDBSyncStore: SyncStore, @unchecked Sendable {
                 try conn.execute(sql: "UPDATE _sync_state SET cursor = NULL")
             }
         }
+        changeSignal.fire()
     }
 
     /// resource -> registered schema_version, the twin of
@@ -1108,6 +1141,7 @@ public final class GRDBSyncStore: SyncStore, @unchecked Sendable {
                 // unregistered resource has no mirror table, so its purge is a
                 // silent no-op (twin of InMemorySyncStore.purgeResources) rather
                 // than a "no such table" throw.
+                try store.ensureSchema(in: conn)
                 try store.deleteMirrorRows(for: resources, in: conn)
                 for resource in resources {
                     try conn.execute(
@@ -1122,6 +1156,7 @@ public final class GRDBSyncStore: SyncStore, @unchecked Sendable {
                 }
             }
         }
+        changeSignal.fire()
     }
 
     // MARK: - Read helpers (hosts: daemon serving + UI observation)
