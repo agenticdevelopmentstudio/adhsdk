@@ -19,6 +19,7 @@ export {
   isoToUnix,
   V1_PAGE_MAX,
   type BackendTokenFields,
+  type ListAllV1Options,
   type V1List,
   type V1Deleted,
 } from "@adh-sdk/auth/client";

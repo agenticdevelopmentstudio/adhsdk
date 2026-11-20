@@ -167,6 +167,17 @@ describe("v1-case wrappers", () => {
     await expect(v1List("/v1/things")).rejects.toBeInstanceOf(Error);
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
+
+  it("v1-case-024 v1List pages an id-less collection by the cursor the caller names", async () => {
+    respondOnce({ object: "list", data: [{ slug: "acme", name: "Acme" }], has_more: true, url: "" });
+    respondOnce({ object: "list", data: [{ slug: "zed", name: "Zed" }], has_more: false, url: "" });
+    const rows = await v1List("/v1/workspaces", { cursorOf: (r) => (r as { slug?: string }).slug });
+    expect(new URL(urlAt(1), "http://x").searchParams.get("starting_after")).toBe("acme");
+    expect(rows).toEqual([
+      { slug: "acme", name: "Acme" },
+      { slug: "zed", name: "Zed" },
+    ]);
+  });
 });
 
 describe("FromV1 (the type of fromV1's result)", () => {
