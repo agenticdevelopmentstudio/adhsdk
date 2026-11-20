@@ -280,7 +280,7 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
-				LastUpgradeCheck = 1430;
+				LastUpgradeCheck = 1600;
 				TargetAttributes = {
 					1393FB59AF0BDB8EECF896B1 = {
 						ProvisioningStyle = Automatic;
@@ -319,11 +319,11 @@
 			);
 			projectRoot = "";
 			targets = (
-				4D24BAB28B6433A14B4F03D8 /* AgenticDeveloperHubSDKSampleApp-iOS */,
 				1393FB59AF0BDB8EECF896B1 /* AgenticDeveloperHubSDKSampleApp-macOS */,
+				4D24BAB28B6433A14B4F03D8 /* AgenticDeveloperHubSDKSampleApp-iOS */,
+				D7A256A7CA4522EA43A40AB4 /* AgenticDeveloperHubSDKSampleApp-watchOS */,
 				ADB361A09B65C7B7BFF33323 /* AgenticDeveloperHubSDKSampleApp-tvOS */,
 				EF85D5D2B4F00C48CDE91D48 /* AgenticDeveloperHubSDKSampleApp-visionOS */,
-				D7A256A7CA4522EA43A40AB4 /* AgenticDeveloperHubSDKSampleApp-watchOS */,
 			);
 		};
 /* End PBXProject section */

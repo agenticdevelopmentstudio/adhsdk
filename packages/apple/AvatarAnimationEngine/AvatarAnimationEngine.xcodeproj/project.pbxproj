@@ -378,7 +378,7 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
-				LastUpgradeCheck = 1430;
+				LastUpgradeCheck = 1600;
 				TargetAttributes = {
 				};
 			};
@@ -396,8 +396,8 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				341C8A085B8BCEA14EB2C06B /* AvatarAnimationEngine-iOS */,
 				B63AD2DD604CBFC03A7CF9DA /* AvatarAnimationEngine-macOS */,
+				341C8A085B8BCEA14EB2C06B /* AvatarAnimationEngine-iOS */,
 				0158E2137C96F9C138C5FA45 /* AvatarAnimationEngineTests-macOS */,
 			);
 		};

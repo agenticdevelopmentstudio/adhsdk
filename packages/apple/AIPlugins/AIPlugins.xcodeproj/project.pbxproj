@@ -493,13 +493,13 @@
 			);
 			projectRoot = "";
 			targets = (
-				0B633CF7EA0D73DBF4070B3D /* AIPluginsMacOSAll */,
-				3B530741512CAB2E3611F8BD /* AIPluginsTests */,
 				78D0E6AA9542822FD01209E4 /* ClaudeAPI */,
 				69B12492E5D241F6EF3DAC75 /* ClaudeLocal */,
 				BA37AF4B2F16BE7AB23931CA /* Google */,
 				40E8B4B9D4D13B107306FAD1 /* OpenAI */,
 				4902207C4C9CDF009D44C9FA /* OpenAICompatible */,
+				3B530741512CAB2E3611F8BD /* AIPluginsTests */,
+				0B633CF7EA0D73DBF4070B3D /* AIPluginsMacOSAll */,
 			);
 		};
 /* End PBXProject section */
