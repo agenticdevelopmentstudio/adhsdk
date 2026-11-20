@@ -26,8 +26,8 @@ public protocol ProviderRegistrySource: AnyObject {
     /// Called whenever ``providers`` changes.
     var onChange: (@MainActor () -> Void)? { get set }
     /// True when ``providers`` is the whole truth, so a stored selection naming
-    /// none of them is stale and may be rewritten. A daemon that has not
-    /// answered yet is not.
+    /// none of them is shown as unavailable (never rewritten). A daemon that
+    /// has not answered yet is not.
     var isAuthoritative: Bool { get }
     /// Re-reads the providers (the popup is about to open).
     func reload()

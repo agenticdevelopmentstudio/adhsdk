@@ -80,6 +80,19 @@ final class ProviderModelPickerViewTests: XCTestCase {
     }
 
     @MainActor
+    func testChoosingTheProvidersDefaultStoresEmptySoItFollowsTheDefault() {
+        let source = FixedProviderSource(defaultModel: "claude-sonnet-4-6")
+        let setting = UserSetting<String>("test.providerPicker.\(UUID().uuidString)", default: source.id.uuidString)
+        let model = UserSetting<String>("test.providerPicker.model.\(UUID().uuidString)", default: "")
+        defer { setting.remove(); model.remove() }
+        let picker = ProviderModelPickerView(source: source, selectedSetting: setting, modelSetting: { _ in model })
+        picker.choose("claude-opus-4-1")
+        XCTAssertEqual(model.value, "claude-opus-4-1")
+        picker.choose("claude-sonnet-4-6")
+        XCTAssertEqual(model.value, "", "the default row stores \"\", which follows the provider's default")
+    }
+
+    @MainActor
     func testModelRowShowsStoredModelThenChooseText() async {
         let config = DaemonProviderConfig(id: UUID(), name: "Ollama", pluginIdentifier: "p", templateId: "t")
         let setting = UserSetting<String>("test.providerPicker.\(UUID().uuidString)", default: config.id.uuidString)
@@ -178,4 +191,18 @@ class StubDaemonService: StenographerDaemonService, @unchecked Sendable {
     }
     func onReconnect(_ handler: @escaping @Sendable () -> Void) { reconnectHandlers.append(handler) }
     func fireReconnect() { reconnectHandlers.forEach { $0() } }
+}
+
+/// One provider with a known default model and no chooser.
+@MainActor
+final class FixedProviderSource: ProviderRegistrySource {
+    let id = UUID()
+    let defaultModelID: String
+    var onChange: (@MainActor () -> Void)?
+    let isAuthoritative = true
+    init(defaultModel: String) { defaultModelID = defaultModel }
+    var providers: [ProviderRegistryEntry] { [.init(id: id, name: "Fixed")] }
+    func reload() {}
+    func defaultModel(for id: UUID) -> String? { id == self.id ? defaultModelID : nil }
+    func chooserContext(for id: UUID, currentModel: String) -> ModelChooserContext? { nil }
 }

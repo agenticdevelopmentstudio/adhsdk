@@ -164,9 +164,13 @@ public final class ProviderModelPickerView: NSView, SettingsViewProtocol {
         return source.chooserContext(for: id, currentModel: displayedModel ?? "")
     }
 
-    private func choose(_ model: String) {
-        guard let setting = modelSetting(selectedProviderID) else { return }
-        if setting.value != model { setting.value = model }
+    /// Stores a pick. The provider's default model is stored as "", which is
+    /// what follows that default when the provider's Default Model changes;
+    /// re-picking the default row must not pin today's default id.
+    func choose(_ model: String) {
+        guard let id = selectedProviderID, let setting = modelSetting(id) else { return }
+        let value = model == source.defaultModel(for: id) ? "" : model
+        if setting.value != value { setting.value = value }
     }
 
     /// Follows the model setting the current selection names, so an edit made
