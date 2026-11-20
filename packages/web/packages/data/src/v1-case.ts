@@ -15,7 +15,7 @@
 // a saved view's `config`, an activity's `detail`, a template's `body`, a field's `value`, and a
 // milestone's `counts` (whose keys are the category names, `in_progress` included).
 
-import { authedJson, listAllV1, listV1Page, unixToIso } from "./http";
+import { authedJson, listAllV1, listV1Page, unixToIso, type ListAllV1Options } from "./http";
 
 const OPAQUE = new Set(["config", "detail", "body", "value", "counts"]);
 
@@ -86,9 +86,11 @@ export async function v1Json<T>(url: string, init?: RequestInit): Promise<T> {
   return fromV1<T>(await authedJson<unknown>(url, init));
 }
 
-/** Every row of a /v1 collection (all pages), mapped to camelCase rows. */
-export async function v1List<T>(url: string): Promise<T[]> {
-  return fromV1<T[]>(await listAllV1<unknown>(url));
+/** Every row of a /v1 collection (all pages), mapped to camelCase rows. `opts.cursorOf` names the
+ *  field a collection whose rows carry no `id` pages by (workspaces page by `slug`); without it a
+ *  second page cannot be asked for, and listAllV1 throws rather than truncate. */
+export async function v1List<T>(url: string, opts: ListAllV1Options = {}): Promise<T[]> {
+  return fromV1<T[]>(await listAllV1<unknown>(url, {}, opts));
 }
 
 /** One page of a /v1 collection, rows mapped to camelCase. */
