@@ -664,7 +664,8 @@ extension ModelChooserViewController: NSSplitViewDelegate {
 // MARK: - Presentation
 
 /// Presents ``ModelChooserViewController`` in a transient popover pointing at a
-/// view, and reports each model chosen in it.
+/// view (a sheet on the view's window while an app-modal session runs), and
+/// reports each model chosen in it.
 @MainActor
 public enum ModelChooser {
 
@@ -684,6 +685,15 @@ public enum ModelChooser {
                                onDismiss: (() -> Void)? = nil) {
         shown?.close()
         let controller = ModelChooserViewController(context: context)
+        controller.onChoose = onChoose
+        // A popover gets no events while an app-modal session runs (a settings
+        // dialog run with runModal): AppKit delivers them only to the modal
+        // window and its sheets. There the chooser is a sheet on the window
+        // the anchor is in, closed by Return, a double-click or Escape.
+        if NSApp.modalWindow != nil, let host = view.window {
+            presentSheet(controller, on: host, onDismiss: onDismiss)
+            return
+        }
         let popover = NSPopover()
         popover.behavior = .transient
         popover.animates = true
@@ -692,7 +702,6 @@ public enum ModelChooser {
         // After the controller: assigning it resizes the popover to the view.
         popover.contentSize = ModelChooserViewController.contentSize
         popover.delegate = closer
-        controller.onChoose = onChoose
         controller.onClose = { [weak popover] in popover?.performClose(nil) }
         controller.whileConfirming = { [weak popover] body in
             // A modal alert takes the key window, which a transient popover
@@ -707,6 +716,23 @@ public enum ModelChooser {
         // Below the anchor, whichever way its coordinates run.
         popover.show(relativeTo: view.bounds, of: view,
                      preferredEdge: view.isFlipped ? .maxY : .minY)
+    }
+
+    /// The chooser as a sheet on `host`, for an anchor inside a modal session.
+    private static func presentSheet(_ controller: ModelChooserViewController, on host: NSWindow,
+                                     onDismiss: (() -> Void)?) {
+        if let open = host.attachedSheet, open.contentViewController is ModelChooserViewController {
+            host.endSheet(open)
+        }
+        let sheet = NSWindow(contentViewController: controller)
+        sheet.styleMask = [.titled]
+        sheet.appearance = ThemePaletteObserver.currentPalette.standardAppearance
+        sheet.setContentSize(ModelChooserViewController.contentSize)
+        controller.onClose = { [weak sheet, weak host] in
+            guard let sheet, let host else { return }
+            host.endSheet(sheet)
+        }
+        host.beginSheet(sheet) { _ in onDismiss?() }
     }
 
     fileprivate static func didClose(_ popover: NSPopover) {
