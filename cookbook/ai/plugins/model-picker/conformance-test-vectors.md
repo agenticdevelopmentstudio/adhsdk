@@ -20,7 +20,9 @@
 | model-picker-017 | fixed-content-size | Present the chooser | The popover's content size is 720×450 points |
 | model-picker-018 | live-list-refresh | Open with `m1` selected; the live list arrives with `m1` and a new `m4` | The `m4` row is listed; `m1` stays selected; the callback is not called |
 | model-picker-019 | live-list-refresh | Context current model `fast`; the live list arrives in which `fast` resolves to `acme-fast-3` | The `acme-fast-3` row is selected; the callback is not called |
-| model-picker-020 | control-refresh | The display-name closure starts returning "Model Two" and the context closure starts returning none; refresh the control | The name button reads "Model Two"; both buttons are disabled |
+| model-picker-020 | control-refresh | The display-name closure starts returning "Model Two" and the context closure starts returning none; invalidate the context and refresh the control | The name button reads "Model Two"; both buttons are disabled |
+| model-picker-027 | control-refresh | Refresh the control twice without invalidating | The context closure was called once, at construction |
+| model-picker-028 | control-refresh | A provider's model list lands in the shared cache | The name is re-read; the context closure is not called again |
 | model-picker-021 | control-no-globals | Build the control from a display-name closure, a context closure over a stub context and a recording choice closure, with no settings or plugin manager supplied; choose `m2` | The control shows the stub's name, opens on the stub context and reports `m2` to the recording closure |
 | model-picker-022 | escape-or-outside-closes | Open with `m1` current; click outside the popover | The popover is closed; the callback was never called |
 | model-picker-023 | return-chooses-and-closes | Open; double-click the `m3` row | The callback receives `m3`; the popover is closed |

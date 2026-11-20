@@ -2,11 +2,11 @@
 id: b3059939-21f5-414b-82e4-edd11b192ae8
 title: "Model Picker"
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: 2026-11-19
-modified: 2026-11-19
+modified: 2026-11-20
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -143,13 +143,19 @@ ingredient covers the presentation, the choosing rules and the control.
 - **control-forwards-choice**: Each model the chooser reports MUST be passed
   to the caller's choice closure, and the control MUST then re-read its name.
 - **control-refresh**: Refreshing the control MUST re-read the name from the
-  display-name closure and the enabled state from the context closure.
+  display-name closure and take the enabled state from the context. The
+  control MUST build the context once and reuse it on later refreshes until
+  the caller invalidates it (building one can read a secret store), and
+  opening the chooser MUST always build a fresh one. The name MUST also be
+  re-read when any provider's model list lands, so a raw id takes its display
+  name, without building a new context.
 - **control-disabled-without-context**: The control MUST be disabled (caret
   and name both) when the context closure returns none, and clicking it then
   MUST NOT open anything.
 - **control-no-globals**: The control MUST take everything it shows and does
   through its injected closures and MUST NOT read settings, a plugin manager
-  or any other shared state itself.
+  or any other shared state itself; it only observes the shared model-list
+  cache as a signal to refresh (**control-refresh**).
 - **confines-to-ui-thread**: The component MUST be usable only on the UI thread.
 
 ## Appearance
@@ -238,7 +244,9 @@ from the search field, Return chooses and closes, and Escape closes.
 | model-picker-017 | fixed-content-size | Present the chooser | The popover's content size is 720×450 points |
 | model-picker-018 | live-list-refresh | Open with `m1` selected; the live list arrives with `m1` and a new `m4` | The `m4` row is listed; `m1` stays selected; the callback is not called |
 | model-picker-019 | live-list-refresh | Context current model `fast`; the live list arrives in which `fast` resolves to `acme-fast-3` | The `acme-fast-3` row is selected; the callback is not called |
-| model-picker-020 | control-refresh | The display-name closure starts returning "Model Two" and the context closure starts returning none; refresh the control | The name button reads "Model Two"; both buttons are disabled |
+| model-picker-020 | control-refresh | The display-name closure starts returning "Model Two" and the context closure starts returning none; invalidate the context and refresh the control | The name button reads "Model Two"; both buttons are disabled |
+| model-picker-027 | control-refresh | Refresh the control twice without invalidating | The context closure was called once, at construction |
+| model-picker-028 | control-refresh | A provider's model list lands in the shared cache | The name is re-read; the context closure is not called again |
 | model-picker-021 | control-no-globals | Build the control from a display-name closure, a context closure over a stub context and a recording choice closure, with no settings or plugin manager supplied; choose `m2` | The control shows the stub's name, opens on the stub context and reports `m2` to the recording closure |
 | model-picker-022 | escape-or-outside-closes | Open with `m1` current; click outside the popover | The popover is closed; the callback was never called |
 | model-picker-023 | return-chooses-and-closes | Open; double-click the `m3` row | The callback receives `m3`; the popover is closed |
@@ -400,8 +408,8 @@ calls own their logging.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIPlugins/Settings/ModelChooserViewController.swift` | confirmed (1.1.0) |
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIPlugins/Settings/AIModelPickerControl.swift` | confirmed (1.1.0) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIPlugins/Settings/ModelChooserViewController.swift` | confirmed (1.1.1) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIPlugins/Settings/AIModelPickerControl.swift` | confirmed (1.1.1) |
 
 ## Design Decisions
 
@@ -463,6 +471,7 @@ English literals.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-11-20 | Mike Fullerton | The row builds its chooser context once and reuses it until invalidated, and redraws its name when a model list lands. |
 | 1.1.0 | 2026-11-19 | Mike Fullerton | Lint pass: arrow keys move without choosing, repeat choices are reported, popover opens below the caret, accessibility names match the code, more vectors |
 | 1.0.1 | 2026-11-19 | Mike Fullerton | Fixed popover content size; the name shows a known id by its display name |
 | 1.0.0 | 2026-11-19 | Mike Fullerton | Initial creation, ahead of the code: the popover chooser and the AI model picker control |

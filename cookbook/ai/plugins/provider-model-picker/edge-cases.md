@@ -14,5 +14,8 @@
   still empty and the setting is left unchanged (**stale-selection-kept**).
 - A model setting shared by several providers (summaries and oversight): a
   provider change still writes `""` to it, which is the new provider's
-  default.
+  default. A per-provider setting is never cleared by a provider change.
+- A configuration deleted while selected, or missing from another picker's
+  stale daemon list: the selection is kept and shows as "Unavailable
+  Provider" until the person picks another (**stale-selection-kept**).
 

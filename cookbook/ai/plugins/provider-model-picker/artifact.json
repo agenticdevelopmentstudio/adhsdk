@@ -4,11 +4,11 @@
     "id": "c9385bf6-3abc-486b-82b5-d57a62d86735",
     "title": "Provider Model Picker",
     "type": "ingredient",
-    "version": "1.1.0",
+    "version": "1.1.1",
     "status": "review",
     "language": "en",
     "created": "2026-11-19",
-    "modified": "2026-11-19",
+    "modified": "2026-11-20",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -34,7 +34,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "d18cfc77a30703a3",
+  "synced": "81740856db483a36",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

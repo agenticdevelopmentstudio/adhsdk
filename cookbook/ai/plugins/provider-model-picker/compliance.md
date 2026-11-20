@@ -15,8 +15,8 @@ model picker control; `screen-reader-support` on the popup's label
 the model row take Tab focus only while the platform's full keyboard
 navigation is on. `data-integrity` passes because a provider change never
 carries a model id to a provider that does not serve it
-(**provider-change-resets-model**) and a stored selection is not rewritten
-before the source is authoritative (**stale-selection-kept**).
+(**provider-change-resets-model**) and a stored selection is never rewritten
+by the control (**stale-selection-kept**).
 `separation-of-concerns` passes because registries sit behind the provider
 source and settings are injected. The code exists; `unit-test-coverage` is
 `failed` because its tests cover only the popup order, the provider-change

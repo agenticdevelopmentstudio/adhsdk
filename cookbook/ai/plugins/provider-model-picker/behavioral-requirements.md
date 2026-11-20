@@ -25,8 +25,10 @@
   lists only the current model (none when it is empty).
 - **daemon-source-async**: The daemon source MUST load the daemon's list off
   the UI thread and MUST tell the control when it has loaded, so the control
-  rebuilds its popup and its model row; until then the popup lists only the
-  leading choices, and the source is not authoritative.
+  rebuilds its popup and its model row, both when the list changes and when
+  the source first becomes authoritative with an unchanged list; until then
+  the popup lists only the leading choices, and the source is not
+  authoritative.
 - **daemon-not-running**: A failed or unanswered list request MUST leave the
   daemon source's list as it was and the source not authoritative, with no
   error shown; the control stays as in Loading, and the request is retried
@@ -45,28 +47,30 @@
 - **selection-binding**: The popup MUST select the entry whose id equals the
   provider selection setting's value, and choosing an entry MUST write its
   id to that setting.
-- **stale-selection-kept**: While the source is not authoritative (a daemon
-  that has not answered), a stored selection that no popup entry matches MUST
-  NOT be rewritten, so loading the source late never silently changes it; the
-  popup shows its first entry meanwhile. Once the source is authoritative and
-  still lists no match, the control MUST select the first entry and write it
-  to the setting, under the provider-change rule
-  (**provider-change-resets-model**). With no entries at all, nothing is
-  selected or written.
-- **provider-change-resets-model**: Choosing a different provider MUST set
-  the newly selected provider's model setting to `""` when it is not already
-  empty, so the model becomes that provider's default; for a leading choice
-  only the setting the caller returns for no provider is cleared, if it
-  returns one. The model write MUST land before the selection write, so an
-  observer of the selection reads the cleared model. Re-choosing the provider
-  already selected MUST NOT write either setting.
+- **stale-selection-kept**: The control MUST NOT write the provider
+  selection setting except for the person's own choice in the popup. A stored
+  selection that no entry matches is kept: while the source is not
+  authoritative (a daemon that has not answered) the popup shows its first
+  entry, and once the source is authoritative the popup gains a last entry,
+  "Unavailable Provider", carrying the stored value, and selects it. With no
+  entries at all, nothing is selected or written.
+- **provider-change-resets-model**: When the model setting is shared (the
+  caller returns the same setting for every provider), choosing a different
+  provider MUST set it to `""` when it is not already empty, so the model
+  becomes the new provider's default; for a leading choice only the setting
+  the caller returns for no provider is cleared, if it returns one. The model
+  write MUST land before the selection write, so an observer of the selection
+  reads the cleared model. A per-provider model setting MUST NOT be cleared,
+  since it already belongs to that provider. Re-choosing the provider already
+  selected MUST NOT write either setting.
 - **sentinel-disables-model**: With a leading choice selected, the model row
   MUST be disabled and read "Choose a Model".
 - **model-display-rule**: The model row MUST show, in order of preference,
   the display name of the stored model when it is non-empty, else the display
   name of the provider configuration's default model, else "Choose a Model".
 - **model-choice-binding**: A model chosen in the popover MUST be written to
-  the selected provider's model setting.
+  the selected provider's model setting, as `""` when it is that provider's
+  default model, so the setting keeps following the default.
 - **external-change-refresh**: A change to the provider selection setting or
   to the selected provider's model setting made outside the control MUST
   update the popup and the model row.

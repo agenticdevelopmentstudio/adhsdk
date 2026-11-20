@@ -4,11 +4,11 @@
     "id": "d3863175-a089-426d-982c-d489965593ac",
     "title": "AI Providers Panel",
     "type": "ingredient",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "status": "review",
     "language": "en",
     "created": "2026-11-19",
-    "modified": "2026-11-19",
+    "modified": "2026-11-20",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -35,7 +35,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "44d51eb2ff99929b",
+  "synced": "f526b5e2f2096a93",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

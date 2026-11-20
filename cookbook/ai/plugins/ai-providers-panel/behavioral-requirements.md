@@ -56,7 +56,9 @@
   resolves to (`config-store-model-default` in
   [adhsdk.ingredient.ai.plugins.plugin-runtime](cookbook:e886e448-6aa5-4359-979d-49fba713ab2a))
   and the model a feature gets when it stores `""`. The row MUST refresh
-  when that setting changes elsewhere, such as from the Test Chat.
+  when that setting changes elsewhere, such as from the Test Chat, and MUST
+  rebuild what its chooser lists (and the name's display lookup) when a
+  connection field it reads changes, such as the base URL or the API key.
 - **providers-editor-no-free-text-model**: The editor MUST NOT offer a
   free-text model field; the default model row is the only way the editor
   sets the model.
