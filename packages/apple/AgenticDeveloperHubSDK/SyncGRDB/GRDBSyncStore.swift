@@ -24,7 +24,7 @@ public struct GRDBSyncStoreStatus: Codable, Sendable {
 ///
 /// Provenance: every generic mirror table carries `origin` (`'local'` for a
 /// row this device wrote, `'account:<principalId>'` for one pulled from an
-/// account) and `reached_accounts` (a JSON array of the principal ids the row
+/// account, `'remote'` for one pulled before any account was bound) and `reached_accounts` (a JSON array of the principal ids the row
 /// is known to have reached). Projections keep their own tables and are not
 /// given these columns.
 ///
@@ -432,6 +432,19 @@ public final class GRDBSyncStore: SyncStore, @unchecked Sendable {
     }
 
     private func writeBinding(_ account: String, in conn: Database) throws {
+        // The first binding claims the rows pulled while the store was bound
+        // to nobody: they came from the server, which was this account's.
+        if try Self.boundAccount(in: conn) == nil {
+            for resource in try String.fetchAll(conn, sql: "SELECT resource FROM _sync_resources")
+            where projection(for: resource) == nil {
+                let table = try Self.mirrorTableName(for: resource)
+                guard try conn.tableExists(table) else { continue }
+                try conn.execute(
+                    sql: "UPDATE \"\(table)\" SET origin = ?, reached_accounts = ? WHERE origin = ?",
+                    arguments: [Self.origin(forAccount: account), Self.reachedJSON(for: account),
+                                Self.unboundRemoteOrigin])
+            }
+        }
         try conn.execute(
             sql: """
                 INSERT INTO _sync_state (id, bound_account) VALUES (1, ?)
@@ -568,10 +581,15 @@ public final class GRDBSyncStore: SyncStore, @unchecked Sendable {
     }
 
     /// `'account:<principalId>'`, the `origin` of a row pulled from that
-    /// account; `'local'` when the store is bound to none.
+    /// account; `'remote'` for a row pulled while the store is bound to none
+    /// — never `'local'`, which means this device wrote it. The first
+    /// `bind` rewrites `'remote'` rows to that account.
     public static func origin(forAccount account: String?) -> String {
-        account.map { "account:\($0)" } ?? "local"
+        account.map { "account:\($0)" } ?? unboundRemoteOrigin
     }
+
+    /// The `origin` of a row pulled from the server before any binding.
+    public static let unboundRemoteOrigin = "remote"
 
     /// `reached_accounts` with `account` added (a JSON array, sorted, no
     /// duplicates). An unreadable value is replaced rather than failing the

@@ -189,6 +189,29 @@ final class ProvenanceColumnsTests: XCTestCase {
         XCTAssertEqual(ops.map(\.rowId), ["n1"])
     }
 
+    // MARK: f4 — rows pulled while unbound are remote, claimed on first bind
+
+    func testARowPulledWhileUnboundIsRemoteUntilTheFirstBind() async throws {
+        let store = GRDBSyncStore(database: try BoundedDatabase(path: path))
+        try await store.prepare(resources: [notes])
+        try await store.apply(
+            [SyncChange(resource: "personal.notes", id: "p1", op: .upsert, syncVersion: "1",
+                        data: ["title": .string("pulled")])],
+            advancingTo: nil)
+        try await store.stage(LocalMutation(
+            resource: "personal.notes", rowId: "l1", type: .upsert, data: ["title": .string("mine")]))
+
+        XCTAssertEqual(try provenance(store, id: "p1")?.origin, "remote")
+        XCTAssertEqual(try provenance(store, id: "l1")?.origin, "local")
+
+        try await store.bind(account: "acct-a")
+
+        XCTAssertEqual(try provenance(store, id: "p1")?.origin, "account:acct-a")
+        XCTAssertEqual(try provenance(store, id: "p1")?.reached, ["acct-a"])
+        XCTAssertEqual(try provenance(store, id: "l1")?.origin, "local", "a local row stays local")
+        XCTAssertEqual(try provenance(store, id: "l1")?.reached, [])
+    }
+
     // MARK: f5 — reached only when nothing newer is queued
 
     func testAnAppliedPushDoesNotMarkReachedWhileANewerEditIsQueued() async throws {
