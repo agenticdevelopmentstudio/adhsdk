@@ -57,6 +57,9 @@ final class LLMProviderEditorView: NSView {
 
     private var nameModel: ComposableSettings.ViewModel<String>!
     private var modelObserver: UserSettingObserver<String>?
+    /// The connection fields (base URL, API key): an edit changes what the
+    /// Default Model row's context describes.
+    private var fieldObservers: [UserSettingObserver<String>] = []
     private var configurationsObserver: AnyCancellable?
 
     init(configuration: AIProviderConfiguration, viewModel: LLMProvidersListViewModel) {
@@ -127,6 +130,14 @@ final class LLMProviderEditorView: NSView {
         group.addSettingSubview(picker)
         // The Test Chat below writes the same setting; follow it.
         modelObserver = UserSettingObserver(setting) { [weak picker] _ in picker?.refresh() }
+        let fields = pluginManager.fields(pluginIdentifier: configuration.pluginIdentifier, template: template)
+        fieldObservers = fields.map { field in
+            UserSettingObserver(AIProviderConfigStore.fieldSetting(config: configuration.id, field: field)) {
+                [weak picker] _ in
+                picker?.invalidateContext()
+                picker?.refresh()
+            }
+        }
     }
 
     /// Stores `model` as the configuration's default model, as a choice in

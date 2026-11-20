@@ -27,6 +27,15 @@ public final class AIModelPickerControl: NSView, SettingsViewProtocol {
     private let displayName: @MainActor () -> String?
     private let context: @MainActor () -> ModelChooserContext?
     private let onChoose: @MainActor (String) -> Void
+    /// The context `refresh()` last built. Building one resolves the
+    /// provider's field values, which reads its API key from the Keychain, so
+    /// the label reuses it until ``invalidateContext()``; only the chooser
+    /// itself always builds a fresh one.
+    private var cachedContext: ModelChooserContext?
+    private var contextIsCurrent = false
+    /// Redraws the name when any model list lands, so an alias or id shown raw
+    /// on a cold cache takes its display name once the list is in.
+    private var modelCacheObserver: UserSettingObserver<[String: ProviderModelList]>?
 
     /// - Parameters:
     ///   - label: the row's label, "AI Model" unless the caller names it.
@@ -47,6 +56,9 @@ public final class AIModelPickerControl: NSView, SettingsViewProtocol {
         translatesAutoresizingMaskIntoConstraints = false
         buildLayout()
         observeTheme { view, palette in view.applyTheme(palette) }
+        modelCacheObserver = UserSettingObserver(ProviderModelCache.setting) { [weak self] _ in
+            self?.refresh()
+        }
         refresh()
     }
 
@@ -75,10 +87,26 @@ public final class AIModelPickerControl: NSView, SettingsViewProtocol {
     /// that align other rows to it.
     public var caret: NSButton { caretButton }
 
+    /// Drops the cached context, so the next ``refresh()`` builds a new one.
+    /// Call it when what the context describes changes: another provider, or
+    /// its connection settings edited.
+    public func invalidateContext() {
+        contextIsCurrent = false
+    }
+
+    /// The cached context, built on first use after an invalidation.
+    private func currentContext() -> ModelChooserContext? {
+        if !contextIsCurrent {
+            cachedContext = context()
+            contextIsCurrent = true
+        }
+        return cachedContext
+    }
+
     /// Re-reads the name and whether there is anything to choose from.
     public func refresh() {
         let model = displayName() ?? ""
-        let context = context()
+        let context = currentContext()
         // Shown by its display name when the provider's manager knows it.
         let name = context?.displayName(for: model) ?? model
         nameButton.title = name.isEmpty ? Self.chooseModelText : name
@@ -91,6 +119,8 @@ public final class AIModelPickerControl: NSView, SettingsViewProtocol {
     /// Opens the chooser, as a click on the caret or the name does.
     public func openChooser() {
         guard isChoosingAllowed, let context = context() else { return }
+        cachedContext = context
+        contextIsCurrent = true
         ModelChooser.present(relativeTo: caretButton, context: context) { [weak self] model in
             self?.onChoose(model)
             self?.refresh()
