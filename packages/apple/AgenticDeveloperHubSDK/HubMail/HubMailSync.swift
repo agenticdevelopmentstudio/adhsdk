@@ -72,7 +72,10 @@ public final class HubMailSync: Sendable {
     public func signIn(account: String) async throws {
         await engine.pause()
         do {
-            if case .mismatch = try await syncStore.signIn(account: account) {
+            switch try await syncStore.signIn(account: account) {
+            case .bound:
+                break
+            case .mismatch, .unboundWithData:
                 try await syncStore.resetForResync()
                 try await syncStore.discardAccountState(rebindingTo: account)
             }

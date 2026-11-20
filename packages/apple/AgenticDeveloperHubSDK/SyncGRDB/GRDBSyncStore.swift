@@ -239,7 +239,7 @@ public final class GRDBSyncStore: SyncStore, @unchecked Sendable {
     /// the column here, in place, keeping its cursor.
     private static func ensureBookkeeping(in conn: Database) throws {
         try conn.execute(sql: bookkeepingSchema)
-        try addColumnIfMissing("bound_account", definition: "TEXT", to: "_sync_state", in: conn)
+        _ = try addColumnIfMissing("bound_account", definition: "TEXT", to: "_sync_state", in: conn)
     }
 
     /// `ensureBookkeeping` plus the additive mirror-column upgrade. Every
@@ -256,10 +256,11 @@ public final class GRDBSyncStore: SyncStore, @unchecked Sendable {
 
     private static func addColumnIfMissing(
         _ column: String, definition: String, to table: String, in conn: Database
-    ) throws {
+    ) throws -> Bool {
         let existing = try conn.columns(in: table).map(\.name)
-        guard !existing.contains(column) else { return }
+        guard !existing.contains(column) else { return false }
         try conn.execute(sql: "ALTER TABLE \"\(table)\" ADD COLUMN \(column) \(definition)")
+        return true
     }
 
     /// Additive, in-place upgrade of every registered generic mirror table
@@ -283,11 +284,24 @@ public final class GRDBSyncStore: SyncStore, @unchecked Sendable {
         for resource in resources where projection(for: resource) == nil {
             let table = try Self.mirrorTableName(for: resource)
             guard try conn.tableExists(table) else { continue }
-            try Self.addColumnIfMissing(
+            let addedOrigin = try Self.addColumnIfMissing(
                 "origin", definition: "TEXT NOT NULL DEFAULT 'local'", to: table, in: conn)
-            try Self.addColumnIfMissing(
+            if addedOrigin {
+                // Rows that predate provenance were pulled from the server,
+                // unless a queued op says this device wrote them. Marking
+                // them 'local' would make them look like unsynced writes for
+                // the first account that binds to push; 'remote' is claimed
+                // only by an explicit first bind.
+                try conn.execute(
+                    sql: """
+                        UPDATE "\(table)" SET origin = ?
+                        WHERE id NOT IN (SELECT row_id FROM _sync_outbox WHERE resource = ?)
+                        """,
+                    arguments: [Self.unboundRemoteOrigin, resource])
+            }
+            _ = try Self.addColumnIfMissing(
                 "reached_accounts", definition: "TEXT NOT NULL DEFAULT '[]'", to: table, in: conn)
-            try Self.addColumnIfMissing(
+            _ = try Self.addColumnIfMissing(
                 "local_version", definition: "INTEGER NOT NULL DEFAULT 0", to: table, in: conn)
         }
     }
@@ -476,6 +490,11 @@ public final class GRDBSyncStore: SyncStore, @unchecked Sendable {
         /// `SyncStoreFailure.accountMismatch` until that account signs back
         /// in or the host explicitly calls `discardAccountState(rebindingTo:)`.
         case mismatch(bound: String, signedIn: String)
+        /// The store is bound to nobody but already holds data (an upgraded
+        /// install, or rows pulled or written before any sign-in). It is not
+        /// handed to whichever account signs in first: push and pull refuse
+        /// until the host calls `bind(account:)` explicitly.
+        case unboundWithData(signedIn: String)
     }
 
     private let signedIn = SignedInState()
@@ -494,6 +513,7 @@ public final class GRDBSyncStore: SyncStore, @unchecked Sendable {
                 if let bound = try Self.boundAccount(in: conn) {
                     return bound == account ? .bound(account) : .mismatch(bound: bound, signedIn: account)
                 }
+                if try store.holdsData(in: conn) { return .unboundWithData(signedIn: account) }
                 try store.writeBinding(account, in: conn)
                 return .bound(account)
             }
@@ -549,7 +569,7 @@ public final class GRDBSyncStore: SyncStore, @unchecked Sendable {
             throw SyncStoreFailure.accountMismatch(bound: bound, signedIn: nil)
         case .account(let account):
             if bound == account { return }
-            if bound == nil { return }
+            if bound == nil, !(try holdsData(in: conn)) { return }
             throw SyncStoreFailure.accountMismatch(bound: bound, signedIn: account)
         }
     }

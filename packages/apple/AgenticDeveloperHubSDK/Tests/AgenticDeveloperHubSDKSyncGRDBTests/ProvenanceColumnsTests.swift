@@ -56,7 +56,7 @@ final class ProvenanceColumnsTests: XCTestCase {
 
         XCTAssertEqual(try store.liveRow(resource: "personal.notes", id: "n1")?["title"], .string("kept"))
         let row = try provenance(store, id: "n1")
-        XCTAssertEqual(row?.origin, "local")
+        XCTAssertEqual(row?.origin, "remote", "a pre-provenance row came from the server")
         XCTAssertEqual(row?.reached, [])
         let cursor = try await store.cursor()
         XCTAssertEqual(cursor?.rawValue, "c7")
@@ -187,6 +187,39 @@ final class ProvenanceColumnsTests: XCTestCase {
         XCTAssertEqual(try store.localRecord(resource: "personal.notes", id: "n1")?.version, 1)
         let ops = try await store.pendingOps(limit: 10)
         XCTAssertEqual(ops.map(\.rowId), ["n1"])
+    }
+
+    // MARK: adk-f1 — an upgraded unbound store is not handed to the first sign-in
+
+    func testAnUpgradedRowWithAQueuedOpStaysLocal() async throws {
+        let database = try makeOldSchemaDatabase()
+        try database.write { conn in
+            try conn.execute(sql: """
+                INSERT INTO personal_notes (id, sync_version, data) VALUES ('mine', 0, '{}');
+                INSERT INTO _sync_outbox (op_id, resource, row_id, type, payload, status, created_at)
+                VALUES ('op1', 'personal.notes', 'mine', 'upsert', '{}', 'pending', datetime('now'));
+                """)
+        }
+        let store = GRDBSyncStore(database: database)
+        _ = try await store.registrations()
+        XCTAssertEqual(try provenance(store, id: "n1")?.origin, "remote")
+        XCTAssertEqual(try provenance(store, id: "mine")?.origin, "local")
+    }
+
+    func testAnUnboundStoreWithDataNeedsAnExplicitBind() async throws {
+        let store = GRDBSyncStore(database: try makeOldSchemaDatabase())
+
+        let outcome = try await store.signIn(account: "acct-a")
+
+        XCTAssertEqual(outcome, .unboundWithData(signedIn: "acct-a"))
+        let bound = try await store.boundAccount()
+        XCTAssertNil(bound, "signing in did not bind")
+        await assertMismatch { _ = try await store.pendingOps(limit: 10) }
+        await assertMismatch { _ = try await store.cursor() }
+
+        try await store.bind(account: "acct-a")
+        _ = try await store.cursor()
+        XCTAssertEqual(try provenance(store, id: "n1")?.origin, "account:acct-a")
     }
 
     // MARK: f4 — rows pulled while unbound are remote, claimed on first bind
