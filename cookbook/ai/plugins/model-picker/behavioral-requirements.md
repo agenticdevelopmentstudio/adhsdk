@@ -74,12 +74,18 @@
 - **control-forwards-choice**: Each model the chooser reports MUST be passed
   to the caller's choice closure, and the control MUST then re-read its name.
 - **control-refresh**: Refreshing the control MUST re-read the name from the
-  display-name closure and the enabled state from the context closure.
+  display-name closure and take the enabled state from the context. The
+  control MUST build the context once and reuse it on later refreshes until
+  the caller invalidates it (building one can read a secret store), and
+  opening the chooser MUST always build a fresh one. The name MUST also be
+  re-read when any provider's model list lands, so a raw id takes its display
+  name, without building a new context.
 - **control-disabled-without-context**: The control MUST be disabled (caret
   and name both) when the context closure returns none, and clicking it then
   MUST NOT open anything.
 - **control-no-globals**: The control MUST take everything it shows and does
   through its injected closures and MUST NOT read settings, a plugin manager
-  or any other shared state itself.
+  or any other shared state itself; it only observes the shared model-list
+  cache as a signal to refresh (**control-refresh**).
 - **confines-to-ui-thread**: The component MUST be usable only on the UI thread.
 

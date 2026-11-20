@@ -2,11 +2,11 @@
 id: d3863175-a089-426d-982c-d489965593ac
 title: "AI Providers Panel"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-19
-modified: 2026-11-19
+modified: 2026-11-20
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -114,7 +114,9 @@ and an empty stored model there means the default model set here.
   resolves to (`config-store-model-default` in
   [adhsdk.ingredient.ai.plugins.plugin-runtime](cookbook:e886e448-6aa5-4359-979d-49fba713ab2a))
   and the model a feature gets when it stores `""`. The row MUST refresh
-  when that setting changes elsewhere, such as from the Test Chat.
+  when that setting changes elsewhere, such as from the Test Chat, and MUST
+  rebuild what its chooser lists (and the name's display lookup) when a
+  connection field it reads changes, such as the base URL or the API key.
 - **providers-editor-no-free-text-model**: The editor MUST NOT offer a
   free-text model field; the default model row is the only way the editor
   sets the model.
@@ -305,10 +307,10 @@ shown in the panel rather than logged by it.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIPlugins/Settings/LLMProvidersView.swift` | confirmed (1.0.0) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIPlugins/Settings/LLMProvidersListViewModel.swift` | confirmed (1.0.0) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIPlugins/Settings/AISettingsViewPanelController.swift` | confirmed (1.0.0) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIPlugins/Settings/PluginLoadFailuresPanel.swift` | confirmed (1.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIPlugins/Settings/LLMProvidersView.swift` | confirmed (1.0.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIPlugins/Settings/LLMProvidersListViewModel.swift` | confirmed (1.0.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIPlugins/Settings/AISettingsViewPanelController.swift` | confirmed (1.0.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIPlugins/Settings/PluginLoadFailuresPanel.swift` | confirmed (1.0.1) |
 
 ## Design Decisions
 
@@ -356,4 +358,5 @@ English literals.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-20 | Mike Fullerton | The default model row rebuilds its chooser context when a connection field changes. |
 | 1.0.0 | 2026-11-19 | Mike Fullerton | Initial creation: the AI Providers panel, moved out of the plugin runtime, with its list, add, rename and remove behavior |

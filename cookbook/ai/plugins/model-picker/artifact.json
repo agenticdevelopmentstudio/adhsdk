@@ -4,11 +4,11 @@
     "id": "b3059939-21f5-414b-82e4-edd11b192ae8",
     "title": "Model Picker",
     "type": "ingredient",
-    "version": "1.1.0",
+    "version": "1.1.1",
     "status": "review",
     "language": "en",
     "created": "2026-11-19",
-    "modified": "2026-11-19",
+    "modified": "2026-11-20",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -36,7 +36,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "17d00fd4372598a0",
+  "synced": "fca94d0c049cd623",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

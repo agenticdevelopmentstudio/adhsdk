@@ -6,6 +6,19 @@
   rejects. `""` already means the provider's default in every feature, and
   the default is set per configuration in the AI Providers panel.
   **Approved**: pending
+- **Decision**: Only a shared model setting is cleared on a provider change;
+  a per-provider one is left as it is.
+  **Rationale**: A per-provider setting already holds a model the provider
+  serves, chosen for it; clearing it on every switch would lose that choice
+  for no gain.
+  **Approved**: pending
+- **Decision**: The control never rewrites a stored selection the list lacks;
+  it shows it as "Unavailable Provider".
+  **Rationale**: A daemon's list can lack a configuration only for now (a
+  restart, a push not landed), and several pickers share one selection
+  setting, so a rewrite from one picker's stale list would silently change
+  what the person chose everywhere.
+  **Approved**: pending
 - **Decision**: One control over a provider source with local and daemon
   implementations, instead of a picker per registry.
   **Rationale**: The two pickers had drifted (one had a model chooser, the

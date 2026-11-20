@@ -2,11 +2,11 @@
 id: c9385bf6-3abc-486b-82b5-d57a62d86735
 title: "Provider Model Picker"
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: 2026-11-19
-modified: 2026-11-19
+modified: 2026-11-20
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -89,8 +89,10 @@ feature that stores an empty model follows it.
   lists only the current model (none when it is empty).
 - **daemon-source-async**: The daemon source MUST load the daemon's list off
   the UI thread and MUST tell the control when it has loaded, so the control
-  rebuilds its popup and its model row; until then the popup lists only the
-  leading choices, and the source is not authoritative.
+  rebuilds its popup and its model row, both when the list changes and when
+  the source first becomes authoritative with an unchanged list; until then
+  the popup lists only the leading choices, and the source is not
+  authoritative.
 - **daemon-not-running**: A failed or unanswered list request MUST leave the
   daemon source's list as it was and the source not authoritative, with no
   error shown; the control stays as in Loading, and the request is retried
@@ -109,28 +111,30 @@ feature that stores an empty model follows it.
 - **selection-binding**: The popup MUST select the entry whose id equals the
   provider selection setting's value, and choosing an entry MUST write its
   id to that setting.
-- **stale-selection-kept**: While the source is not authoritative (a daemon
-  that has not answered), a stored selection that no popup entry matches MUST
-  NOT be rewritten, so loading the source late never silently changes it; the
-  popup shows its first entry meanwhile. Once the source is authoritative and
-  still lists no match, the control MUST select the first entry and write it
-  to the setting, under the provider-change rule
-  (**provider-change-resets-model**). With no entries at all, nothing is
-  selected or written.
-- **provider-change-resets-model**: Choosing a different provider MUST set
-  the newly selected provider's model setting to `""` when it is not already
-  empty, so the model becomes that provider's default; for a leading choice
-  only the setting the caller returns for no provider is cleared, if it
-  returns one. The model write MUST land before the selection write, so an
-  observer of the selection reads the cleared model. Re-choosing the provider
-  already selected MUST NOT write either setting.
+- **stale-selection-kept**: The control MUST NOT write the provider
+  selection setting except for the person's own choice in the popup. A stored
+  selection that no entry matches is kept: while the source is not
+  authoritative (a daemon that has not answered) the popup shows its first
+  entry, and once the source is authoritative the popup gains a last entry,
+  "Unavailable Provider", carrying the stored value, and selects it. With no
+  entries at all, nothing is selected or written.
+- **provider-change-resets-model**: When the model setting is shared (the
+  caller returns the same setting for every provider), choosing a different
+  provider MUST set it to `""` when it is not already empty, so the model
+  becomes the new provider's default; for a leading choice only the setting
+  the caller returns for no provider is cleared, if it returns one. The model
+  write MUST land before the selection write, so an observer of the selection
+  reads the cleared model. A per-provider model setting MUST NOT be cleared,
+  since it already belongs to that provider. Re-choosing the provider already
+  selected MUST NOT write either setting.
 - **sentinel-disables-model**: With a leading choice selected, the model row
   MUST be disabled and read "Choose a Model".
 - **model-display-rule**: The model row MUST show, in order of preference,
   the display name of the stored model when it is non-empty, else the display
   name of the provider configuration's default model, else "Choose a Model".
 - **model-choice-binding**: A model chosen in the popover MUST be written to
-  the selected provider's model setting.
+  the selected provider's model setting, as `""` when it is that provider's
+  default model, so the setting keeps following the default.
 - **external-change-refresh**: A change to the provider selection setting or
   to the selected provider's model setting made outside the control MUST
   update the popup and the model row.
@@ -194,19 +198,22 @@ focus.
 |----|-------------|-------|----------|
 | provider-model-picker-001 | configurable-labels | Construct with labels "Summaries provider" and "Summaries model" | The rows read those labels |
 | provider-model-picker-002 | leading-choices | Leading choice "Default (CLI)"; source lists configs `a`, `b` | The popup lists "Default (CLI)", `a`, `b` in that order |
-| provider-model-picker-003 | provider-change-resets-model | Selection `a`; `b`'s model setting is `m9`; choose `b` | The selection setting is `b`; `b`'s model setting is `""` |
+| provider-model-picker-003 | provider-change-resets-model | Selection `a`; a model setting shared by every provider holds `m9`; choose `b` | The selection setting is `b`; the shared model setting is `""` |
 | provider-model-picker-004 | provider-change-resets-model | Selection `a`; choose `a` again | Neither setting is written |
 | provider-model-picker-005 | sentinel-disables-model, provider-change-resets-model | Selection `a`; the model setting function returns none for a leading choice; choose the leading choice | The selection is the sentinel's id; no model setting is written; the model row is disabled and reads "Choose a Model" |
 | provider-model-picker-006 | model-display-rule | Selected `a`; its model setting is `m2` (display "Model Two"); default `m1` | The model row reads "Model Two" |
 | provider-model-picker-007 | model-display-rule | Selected `a`; its model setting is `""`; default `m1` (display "Model One") | The model row reads "Model One" |
 | provider-model-picker-008 | model-display-rule | Selected `a`; model setting `""`; no default | The model row reads "Choose a Model" |
 | provider-model-picker-009 | model-choice-binding | Selected `a`; the chooser reports `m3` | `a`'s model setting is `m3` |
+| provider-model-picker-025 | model-choice-binding | Selected `a`, whose default model is `m1`; the chooser reports `m1` | `a`'s model setting is `""` |
+| provider-model-picker-026 | provider-change-resets-model | Selection `a`; a per-provider model setting, `b`'s holding `m9`; choose `b` | The selection setting is `b`; `b`'s model setting is still `m9` |
+| provider-model-picker-027 | daemon-source-async | Daemon source not yet answered; its first answer lists exactly what it listed before | The control is told, and rebuilds as an authoritative source |
 | provider-model-picker-010 | stale-selection-kept | Daemon source that has not answered; selection `gone`; leading choice `x` | The popup shows `x`; the setting is still `gone` |
 | provider-model-picker-011 | daemon-source, chooser-opens-without-catalog | Daemon source with no plugin manager; config `d1` selected; `d1`'s model setting is `qwen3` | The model row names `qwen3`, is enabled, and its chooser opens listing only `qwen3`; the source reports no default model for `d1` |
 | provider-model-picker-012 | external-change-refresh | The selected provider's model setting changes to `m4` elsewhere | The model row shows `m4`'s display name |
 | provider-model-picker-013 | local-source | Local source; configuration `c1` with an empty stored model and a template default `m1` | Its default model is `m1` |
 | provider-model-picker-014 | confines-to-ui-thread | Use the component from a thread other than the UI thread | The use is rejected, at build time or by a runtime check; the component's state is unchanged |
-| provider-model-picker-015 | stale-selection-kept | Authoritative source listing `a`, `b`; no leading choices; selection `gone` | The selection setting becomes `a`; `a`'s model setting is `""` |
+| provider-model-picker-015 | stale-selection-kept | Authoritative source listing `a`, `b`; no leading choices; selection `gone` | The popup lists `a`, `b`, "Unavailable Provider" and selects "Unavailable Provider"; the selection setting is still `gone` and no model setting is written |
 | provider-model-picker-016 | two-rows | Construct the control | A provider popup row sits above a model picker control row |
 | provider-model-picker-017 | selection-binding | Source lists `a`, `b`; selection `b` | The popup selects `b`; choosing `a` writes `a` to the selection setting |
 | provider-model-picker-018 | daemon-source-async, stale-selection-kept | Daemon source not yet answered; selection `d1`; the daemon's list then arrives with `d1` | The popup rebuilds and selects `d1`; the selection setting is unchanged |
@@ -233,7 +240,10 @@ focus.
   still empty and the setting is left unchanged (**stale-selection-kept**).
 - A model setting shared by several providers (summaries and oversight): a
   provider change still writes `""` to it, which is the new provider's
-  default.
+  default. A per-provider setting is never cleared by a provider change.
+- A configuration deleted while selected, or missing from another picker's
+  stale daemon list: the selection is kept and shows as "Unavailable
+  Provider" until the person picks another (**stale-selection-kept**).
 
 ## Configuration
 
@@ -350,8 +360,8 @@ through the daemon client's own logger; the control itself logs nothing.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIPlugins/Settings/ProviderModelPickerView.swift` | confirmed (1.1.0) |
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIPlugins/Settings/ProviderRegistrySource.swift` | confirmed (1.1.0) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIPlugins/Settings/ProviderModelPickerView.swift` | confirmed (1.1.1) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIPlugins/Settings/ProviderRegistrySource.swift` | confirmed (1.1.1) |
 
 ## Design Decisions
 
@@ -361,6 +371,19 @@ through the daemon client's own logger; the control itself logs nothing.
   carrying it across a provider change sends a request the new provider
   rejects. `""` already means the provider's default in every feature, and
   the default is set per configuration in the AI Providers panel.
+  **Approved**: pending
+- **Decision**: Only a shared model setting is cleared on a provider change;
+  a per-provider one is left as it is.
+  **Rationale**: A per-provider setting already holds a model the provider
+  serves, chosen for it; clearing it on every switch would lose that choice
+  for no gain.
+  **Approved**: pending
+- **Decision**: The control never rewrites a stored selection the list lacks;
+  it shows it as "Unavailable Provider".
+  **Rationale**: A daemon's list can lack a configuration only for now (a
+  restart, a push not landed), and several pickers share one selection
+  setting, so a rewrite from one picker's stale list would silently change
+  what the person chose everywhere.
   **Approved**: pending
 - **Decision**: One control over a provider source with local and daemon
   implementations, instead of a picker per registry.
@@ -415,8 +438,8 @@ model picker control; `screen-reader-support` on the popup's label
 the model row take Tab focus only while the platform's full keyboard
 navigation is on. `data-integrity` passes because a provider change never
 carries a model id to a provider that does not serve it
-(**provider-change-resets-model**) and a stored selection is not rewritten
-before the source is authoritative (**stale-selection-kept**).
+(**provider-change-resets-model**) and a stored selection is never rewritten
+by the control (**stale-selection-kept**).
 `separation-of-concerns` passes because registries sit behind the provider
 source and settings are injected. The code exists; `unit-test-coverage` is
 `failed` because its tests cover only the popup order, the provider-change
@@ -428,5 +451,6 @@ in the Design Decisions.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-11-20 | Mike Fullerton | A stored selection the list lacks is kept and shown as Unavailable Provider; only a shared model setting is cleared on a provider change; choosing the default model stores an empty value; the daemon source notifies on its first answer. |
 | 1.1.0 | 2026-11-19 | Mike Fullerton | Lint pass: daemon source's default model comes from the app's per-config setting, stale and failed-load behavior as coded, more vectors, accepted debt recorded |
 | 1.0.0 | 2026-11-19 | Mike Fullerton | Initial creation, ahead of the code: the combined provider and model control and its local and daemon provider sources |
