@@ -301,8 +301,15 @@ public final class GRDBSyncStore: SyncStore, @unchecked Sendable {
             }
             _ = try Self.addColumnIfMissing(
                 "reached_accounts", definition: "TEXT NOT NULL DEFAULT '[]'", to: table, in: conn)
-            _ = try Self.addColumnIfMissing(
+            let addedLocalVersion = try Self.addColumnIfMissing(
                 "local_version", definition: "INTEGER NOT NULL DEFAULT 0", to: table, in: conn)
+            if addedLocalVersion {
+                // Version 0 means "no such record" to a writer's create check
+                // (`expectedVersion: 0`). A row that already exists starts at
+                // 1, exactly as a row first written by stage or apply does,
+                // so a create can never silently overwrite it.
+                try conn.execute(sql: "UPDATE \"\(table)\" SET local_version = 1")
+            }
         }
     }
 

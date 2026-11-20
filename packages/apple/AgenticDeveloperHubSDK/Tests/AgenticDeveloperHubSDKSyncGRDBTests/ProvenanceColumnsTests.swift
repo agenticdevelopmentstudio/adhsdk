@@ -124,16 +124,16 @@ final class ProvenanceColumnsTests: XCTestCase {
         let store = GRDBSyncStore(database: database)
         try await store.prepare(resources: [notes])
 
-        XCTAssertEqual(try store.localRecord(resource: "personal.notes", id: "n1")?.version, 0)
+        XCTAssertEqual(try store.localRecord(resource: "personal.notes", id: "n1")?.version, 1, "an existing row starts at 1")
 
         try await store.apply(
             [SyncChange(resource: "personal.notes", id: "n1", op: .upsert, syncVersion: "4",
                         data: ["title": .string("pulled")])],
             advancingTo: nil)
 
-        XCTAssertEqual(try store.localRecord(resource: "personal.notes", id: "n1")?.version, 1)
+        XCTAssertEqual(try store.localRecord(resource: "personal.notes", id: "n1")?.version, 2)
         XCTAssertEqual(try store.changes(since: 0, limit: 10),
-                       [RecordChange(seq: 1, resource: "personal.notes", id: "n1", kind: .upsert, version: 1)])
+                       [RecordChange(seq: 1, resource: "personal.notes", id: "n1", kind: .upsert, version: 2)])
         XCTAssertEqual(try store.changeHead(), 1)
     }
 
@@ -184,7 +184,7 @@ final class ProvenanceColumnsTests: XCTestCase {
         try await store.stage(LocalMutation(
             resource: "personal.notes", rowId: "n1", type: .upsert, data: ["title": .string("edited")]))
 
-        XCTAssertEqual(try store.localRecord(resource: "personal.notes", id: "n1")?.version, 1)
+        XCTAssertEqual(try store.localRecord(resource: "personal.notes", id: "n1")?.version, 2)
         let ops = try await store.pendingOps(limit: 10)
         XCTAssertEqual(ops.map(\.rowId), ["n1"])
     }
