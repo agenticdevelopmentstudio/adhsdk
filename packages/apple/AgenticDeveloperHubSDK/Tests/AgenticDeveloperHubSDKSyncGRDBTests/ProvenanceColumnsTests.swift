@@ -136,4 +136,56 @@ final class ProvenanceColumnsTests: XCTestCase {
                        [RecordChange(seq: 1, resource: "personal.notes", id: "n1", kind: .upsert, version: 1)])
         XCTAssertEqual(try store.changeHead(), 1)
     }
+
+    /// A database from before provenance and local versions: old
+    /// `_sync_state`, a registered four-column mirror table, no `_change_log`.
+    private func makeOldSchemaDatabase() throws -> BoundedDatabase {
+        let database = try BoundedDatabase(path: path)
+        try database.write { conn in
+            try conn.execute(sql: """
+                CREATE TABLE _sync_state (id INTEGER PRIMARY KEY CHECK (id = 1), cursor TEXT);
+                CREATE TABLE _sync_resources (resource TEXT PRIMARY KEY, schema_version INTEGER NOT NULL);
+                CREATE TABLE _sync_outbox (
+                    op_id TEXT PRIMARY KEY, resource TEXT NOT NULL, row_id TEXT NOT NULL,
+                    type TEXT NOT NULL, base_version TEXT, payload TEXT,
+                    status TEXT NOT NULL DEFAULT 'pending', attempts INTEGER NOT NULL DEFAULT 0,
+                    created_at TEXT NOT NULL);
+                CREATE TABLE personal_notes (
+                    id TEXT PRIMARY KEY NOT NULL, sync_version INTEGER NOT NULL DEFAULT 0,
+                    deleted_at TEXT, data TEXT NOT NULL DEFAULT '{}');
+                INSERT INTO _sync_state (id, cursor) VALUES (1, 'c7');
+                INSERT INTO _sync_resources (resource, schema_version) VALUES ('personal.notes', 1);
+                INSERT INTO personal_notes (id, sync_version, data) VALUES ('n1', 3, '{"title":"kept"}');
+                """)
+        }
+        return database
+    }
+
+    // f1: the engine skips `prepare` when registrations already cover the
+    // manifest, so the upgrade has to happen on the paths it does take.
+    func testAPullWithoutPrepareUpgradesAnOldMirror() async throws {
+        let store = GRDBSyncStore(database: try makeOldSchemaDatabase())
+        let registered = try await store.registrations()
+        XCTAssertEqual(registered, ["personal.notes": 1])
+        _ = try await store.cursor()
+
+        try await store.apply(
+            [SyncChange(resource: "personal.notes", id: "n2", op: .upsert, syncVersion: "4",
+                        data: ["title": .string("pulled")])],
+            advancingTo: SyncCursor(rawValue: "c8"))
+
+        XCTAssertEqual(try store.liveRow(resource: "personal.notes", id: "n2")?["title"], .string("pulled"))
+        XCTAssertEqual(try store.liveRow(resource: "personal.notes", id: "n1")?["title"], .string("kept"))
+    }
+
+    func testAStageWithoutPrepareUpgradesAnOldMirror() async throws {
+        let store = GRDBSyncStore(database: try makeOldSchemaDatabase())
+
+        try await store.stage(LocalMutation(
+            resource: "personal.notes", rowId: "n1", type: .upsert, data: ["title": .string("edited")]))
+
+        XCTAssertEqual(try store.localRecord(resource: "personal.notes", id: "n1")?.version, 1)
+        let ops = try await store.pendingOps(limit: 10)
+        XCTAssertEqual(ops.map(\.rowId), ["n1"])
+    }
 }

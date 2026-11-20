@@ -240,6 +240,18 @@ public final class GRDBSyncStore: SyncStore, @unchecked Sendable {
         try addColumnIfMissing("bound_account", definition: "TEXT", to: "_sync_state", in: conn)
     }
 
+    /// `ensureBookkeeping` plus the additive mirror-column upgrade. Every
+    /// entry point that reads or writes `origin`, `reached_accounts` or
+    /// `local_version` runs this first: the engine skips `prepare` when its
+    /// registrations already cover the manifest, so an existing database
+    /// upgraded in place would otherwise never gain the columns and every
+    /// pull and local write would fail on them. Both halves are idempotent
+    /// and cheap (one `PRAGMA table_info` per registered generic table).
+    private func ensureSchema(in conn: Database) throws {
+        try Self.ensureBookkeeping(in: conn)
+        try migrateProvenanceColumns(in: conn)
+    }
+
     private static func addColumnIfMissing(
         _ column: String, definition: String, to table: String, in conn: Database
     ) throws {
@@ -252,14 +264,14 @@ public final class GRDBSyncStore: SyncStore, @unchecked Sendable {
     /// written before provenance existed: `origin` and `reached_accounts` are
     /// added with their defaults when missing, so the rows already there stay
     /// and read as `'local'` with no known account. Projection-owned resources
-    /// are skipped — their tables are the projection's. Idempotent; `prepare`
-    /// runs it too.
+    /// are skipped — their tables are the projection's. Idempotent; `prepare`,
+    /// `cursor`, `registrations`, `stage` and `resetForResync` run it too, so a
+    /// host never has to call this itself.
     public func migrateProvenanceColumns() async throws {
         let store = self
         try await onQueue {
             try store.boundedDatabase.write { conn in
-                try Self.ensureBookkeeping(in: conn)
-                try store.migrateProvenanceColumns(in: conn)
+                try store.ensureSchema(in: conn)
             }
         }
     }
@@ -448,10 +460,10 @@ public final class GRDBSyncStore: SyncStore, @unchecked Sendable {
     }
 
     public func cursor() async throws -> SyncCursor? {
-        let boundedDatabase = self.boundedDatabase
+        let store = self
         return try await onQueue {
-            try boundedDatabase.write { conn in
-                try Self.ensureBookkeeping(in: conn)
+            try store.boundedDatabase.write { conn in
+                try store.ensureSchema(in: conn)
                 return try String.fetchOne(conn, sql: "SELECT cursor FROM _sync_state WHERE id = 1")
             }.map(SyncCursor.init(rawValue:))
         }
@@ -609,6 +621,7 @@ public final class GRDBSyncStore: SyncStore, @unchecked Sendable {
         guard isKnown else {
             throw SyncStoreFailure.unknownResource(mutation.resource)
         }
+        try ensureSchema(in: conn)
         // Built here, not held. See the note on this type's `@unchecked
         // Sendable` conformance.
         let encoder = JSONEncoder()
@@ -843,7 +856,7 @@ public final class GRDBSyncStore: SyncStore, @unchecked Sendable {
         let store = self
         try await onQueue {
             try store.boundedDatabase.write { conn in
-                try Self.ensureBookkeeping(in: conn)
+                try store.ensureSchema(in: conn)
                 let tables = try String.fetchAll(conn, sql: "SELECT resource FROM _sync_resources")
                 try store.deleteMirrorRows(for: tables, in: conn)
                 try conn.execute(sql: "UPDATE _sync_state SET cursor = NULL")
@@ -857,10 +870,10 @@ public final class GRDBSyncStore: SyncStore, @unchecked Sendable {
     /// store this returns `[:]` rather than throwing "no such table:
     /// _sync_resources".
     public func registrations() async throws -> [String: Int] {
-        let boundedDatabase = self.boundedDatabase
+        let store = self
         return try await onQueue {
-            try boundedDatabase.write { conn in
-                try Self.ensureBookkeeping(in: conn)
+            try store.boundedDatabase.write { conn in
+                try store.ensureSchema(in: conn)
                 var out: [String: Int] = [:]
                 let rows = try Row.fetchAll(
                     conn, sql: "SELECT resource, schema_version FROM _sync_resources")
