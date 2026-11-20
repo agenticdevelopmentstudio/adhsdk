@@ -46,7 +46,9 @@ public struct ModelChooserContext {
 ///
 /// There is no OK or Cancel: clicking a row chooses it at once and the popover
 /// stays open, so the detail pane and the choice can be compared; Return or a
-/// double-click chooses and closes; Escape or a click outside closes.
+/// double-click chooses and closes; Escape or a click outside closes. A model
+/// too large for this Mac's comfort is the exception: a click shows its details,
+/// and only Return or a double-click chooses it, after a confirmation.
 @MainActor
 public final class ModelChooserViewController: NSViewController {
 
@@ -553,9 +555,14 @@ public final class ModelChooserViewController: NSViewController {
         let size = LocalModelServer.size(of: selectedModel, in: sizesByModel)
         if let prompt = ModelChooserContent.warnPrompt(
             model: selectedModel, sizeBytes: size, physicalRAM: physicalRAM,
-            warnPct: context.warnPct, blockPct: context.blockPct),
-           !whileConfirming({ self.confirmLargeModel(prompt) }) {
-            return   // Cancel: stay in the chooser, nothing chosen.
+            warnPct: context.warnPct, blockPct: context.blockPct) {
+            // A click on a large model only shows its details: it is chosen on
+            // Return or a double-click, after the confirmation, so reading its
+            // specs never raises an alert.
+            guard close else { return }
+            guard whileConfirming({ self.confirmLargeModel(prompt) }) else {
+                return   // Cancel: stay in the chooser, nothing chosen.
+            }
         }
         // A stored alias (`sonnet`) opens on the model it runs today. Choosing
         // that same row keeps the alias, so the connection goes on following the
@@ -663,12 +670,18 @@ public enum ModelChooser {
 
     /// The open chooser's popover: one at a time, held until it closes.
     private static var shown: NSPopover?
+    /// Each open popover's `onDismiss`, run once when it closes.
+    private static var dismissals: [ObjectIdentifier: () -> Void] = [:]
     private static let closer = PopoverCloser()
 
     /// Opens the chooser in a popover anchored to `view` (a control's caret or
-    /// button). `onChoose` fires for every model chosen while it is open.
+    /// button). `onChoose` fires for every model chosen while it is open;
+    /// `onDismiss` fires once when it closes, however it closes, so a host that
+    /// reports a change (a transcript note) can report the one it ended on
+    /// rather than every row clicked on the way.
     public static func present(relativeTo view: NSView, context: ModelChooserContext,
-                               onChoose: @escaping (String) -> Void) {
+                               onChoose: @escaping (String) -> Void,
+                               onDismiss: (() -> Void)? = nil) {
         shown?.close()
         let controller = ModelChooserViewController(context: context)
         let popover = NSPopover()
@@ -690,6 +703,7 @@ public enum ModelChooser {
             return body()
         }
         shown = popover
+        if let onDismiss { dismissals[ObjectIdentifier(popover)] = onDismiss }
         // Below the anchor, whichever way its coordinates run.
         popover.show(relativeTo: view.bounds, of: view,
                      preferredEdge: view.isFlipped ? .maxY : .minY)
@@ -697,6 +711,7 @@ public enum ModelChooser {
 
     fileprivate static func didClose(_ popover: NSPopover) {
         if shown === popover { shown = nil }
+        dismissals.removeValue(forKey: ObjectIdentifier(popover))?()
     }
 
     @MainActor

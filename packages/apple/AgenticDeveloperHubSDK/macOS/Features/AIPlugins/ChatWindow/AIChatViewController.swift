@@ -101,6 +101,10 @@ public final class AIChatViewController: NSViewController, Themeable {
     /// The model the transcript last said it was talking to, so a change made
     /// anywhere is noted once.
     private var announcedModel = ""
+    /// The model chooser is open. Each row clicked in it is chosen and saved, so
+    /// the transcript note waits for the chooser to close and names only the
+    /// model it closed on.
+    private var choosingModel = false
     private var chatView: ChatView?
 
     /// The window's initial content size. Not `preferredContentSize`: setting that
@@ -499,6 +503,7 @@ public final class AIChatViewController: NSViewController, Themeable {
     /// Posts "Model changed to …" into the transcript when the model the chat
     /// talks to is no longer the one it last announced.
     private func noteModelChange() {
+        guard !choosingModel else { return }
         let model = currentModel
         guard !model.isEmpty, model != announcedModel else { return }
         announcedModel = model
@@ -555,7 +560,8 @@ public final class AIChatViewController: NSViewController, Themeable {
             pluginIdentifier: config.pluginIdentifier, template: template,
             baseURL: values["baseURL"] ?? "", apiKey: values["apiKey"],
             currentModel: currentModel.isEmpty ? template.resolvedDefaultModel : currentModel)
-        ModelChooser.present(relativeTo: chooseModelButton, context: context) { [weak self] model in
+        choosingModel = true
+        ModelChooser.present(relativeTo: chooseModelButton, context: context, onChoose: { [weak self] model in
             guard let self else { return }
             // The chooser stays open while models are chosen in it, and the view it
             // points at can be pointed somewhere else meanwhile — a scripted `send test
@@ -565,12 +571,16 @@ public final class AIChatViewController: NSViewController, Themeable {
             // showing now.
             guard self.selectedConfiguration?.id == config.id else { return }
             self.selectModel(model, template: template, config: config)
-        }
+        }, onDismiss: { [weak self] in
+            self?.choosingModel = false
+            self?.noteModelChange()
+        })
     }
 
     /// Commits a model choice: persist it against the configuration, refresh the
     /// label, and — if a conversation is under way — post a "Model changed to …"
-    /// notice into the transcript.
+    /// notice into the transcript, held while the chooser is open (see
+    /// `choosingModel`).
     private func selectModel(_ model: String,
                              template: AIPluginDescriptor.ProviderTemplate,
                              config: AIProviderConfiguration) {
