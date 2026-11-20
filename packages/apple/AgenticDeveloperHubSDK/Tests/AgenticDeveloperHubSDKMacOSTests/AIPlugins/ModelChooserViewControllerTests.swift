@@ -7,12 +7,13 @@ import AIPluginKit
 @MainActor
 final class ModelChooserViewControllerTests: XCTestCase {
 
-    private func chooser(models: [String], current: String) -> (ModelChooserViewController, () -> [String]) {
+    private func chooser(models: [String], current: String,
+                         allowsCustomModel: Bool = false) -> (ModelChooserViewController, () -> [String]) {
         let template = AIPluginDescriptor.ProviderTemplate(
             id: "t-\(UUID().uuidString)", displayName: "Test", models: models, secretRequired: false)
         let context = ModelChooserContext(
             pluginIdentifier: "test.plugin", template: template, baseURL: "", apiKey: nil,
-            currentModel: current)
+            currentModel: current, allowsCustomModel: allowsCustomModel)
         let controller = ModelChooserViewController(context: context)
         _ = controller.view
         var chosen: [String] = []
@@ -37,5 +38,23 @@ final class ModelChooserViewControllerTests: XCTestCase {
         controller.selectRow(0)
         controller.commit(thenClose: false)
         XCTAssertEqual(chosen(), ["beta", "alpha"])
+    }
+
+    /// Return on a query no row matches chooses the query, when the host
+    /// accepts a model the list lacks.
+    func testReturnOnAnUnlistedQueryChoosesItWhenAllowed() {
+        let (controller, chosen) = chooser(models: ["alpha"], current: "alpha", allowsCustomModel: true)
+        controller.searchField.stringValue = "  gamma-2 "
+        controller.applyFilter()
+        controller.commit(thenClose: true)
+        XCTAssertEqual(chosen(), ["gamma-2"])
+    }
+
+    func testReturnOnAnUnlistedQueryChoosesNothingByDefault() {
+        let (controller, chosen) = chooser(models: ["alpha"], current: "alpha")
+        controller.searchField.stringValue = "gamma-2"
+        controller.applyFilter()
+        controller.commit(thenClose: true)
+        XCTAssertEqual(chosen(), [])
     }
 }

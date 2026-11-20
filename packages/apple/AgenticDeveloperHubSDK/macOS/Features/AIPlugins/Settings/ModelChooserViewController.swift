@@ -12,10 +12,16 @@ public struct ModelChooserContext {
     /// that store overrides pass them; the defaults match `ModelFitPolicy`'s.
     public let warnPct: Int
     public let blockPct: Int
+    /// The chooser may choose a model it does not list: Return on a query that
+    /// matches no row chooses the query as typed. For a host that knows a
+    /// provider only by its stored model (the daemon's registry has no model
+    /// list), so a different model can still be named.
+    public let allowsCustomModel: Bool
     public init(pluginIdentifier: String, template: AIPluginDescriptor.ProviderTemplate,
                 baseURL: String, apiKey: String?, currentModel: String,
                 warnPct: Int = ModelFitPolicy.defaultWarnPct,
-                blockPct: Int = ModelFitPolicy.defaultBlockPct) {
+                blockPct: Int = ModelFitPolicy.defaultBlockPct,
+                allowsCustomModel: Bool = false) {
         self.pluginIdentifier = pluginIdentifier
         self.template = template
         self.baseURL = baseURL
@@ -23,6 +29,7 @@ public struct ModelChooserContext {
         self.currentModel = currentModel
         self.warnPct = warnPct
         self.blockPct = blockPct
+        self.allowsCustomModel = allowsCustomModel
     }
 
     /// `model` as people read it ("Opus 5.5" for `claude-opus-5-5`): an alias
@@ -545,6 +552,13 @@ public final class ModelChooserViewController: NSViewController {
         // must not choose whatever an earlier keystroke selected.
         guard !selectedModel.isEmpty,
               filtered.contains(where: { $0.id == selectedModel }) else {
+            // Return on a query no row matches names a model the list lacks,
+            // when the host accepts one.
+            let typed = searchField.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
+            if close, context.allowsCustomModel, filtered.isEmpty, !typed.isEmpty {
+                lastChosen = typed
+                onChoose?(typed)
+            }
             if close { onClose?() }
             return
         }
