@@ -91,6 +91,7 @@ public final class ProviderModelPickerView: NSView, SettingsViewProtocol {
         selectionObserver = UserSettingObserver(selectedSetting) { [weak self] _ in
             self?.syncSelection()
             self?.observeModelSetting()
+            self?.modelControl.invalidateContext()
             self?.modelControl.refresh()
         }
         rebuildMenu()
@@ -184,6 +185,7 @@ public final class ProviderModelPickerView: NSView, SettingsViewProtocol {
         for choice in choices { providerPopup.addItem(withTitle: choice.label) }
         syncSelection()
         observeModelSetting()
+        modelControl.invalidateContext()
         modelControl.refresh()
     }
 
