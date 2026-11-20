@@ -164,8 +164,8 @@ export default defineConfig({
     'telemetry/retry': 'src/telemetry/retry.ts',
     'telemetry/report-error': 'src/telemetry/report-error.ts',
     // The telemetry-wired AuthProvider + appearance sync (Task 6.1). Reaches the two
-    // telemetry leaves above by package path (see wired-provider.tsx/AppearanceSync.tsx
-    // import comments) so this new entry shares their module state rather than inlining
+    // telemetry leaves above by package path (see the import comments in wired-provider.tsx and
+    // useAppearanceSettings.ts; AppearanceSync.tsx imports the same way) so this new entry shares their module state rather than inlining
     // a private copy.
     'auth/index': 'src/auth/index.ts',
     // The User Settings surface (Task 7). `settings/index` is the always-loaded barrel
