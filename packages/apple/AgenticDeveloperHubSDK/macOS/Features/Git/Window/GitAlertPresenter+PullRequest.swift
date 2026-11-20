@@ -101,6 +101,9 @@ extension GitAlertPresenter {
     }
 
     /// A built pull request form: the alert and the controls its answer is read from.
+    /// Main-actor like its presenter: a nested type does not inherit the isolation,
+    /// and every property it reads is an AppKit control's.
+    @MainActor
     struct PullRequestForm {
         let alert: NSAlert
         let titleField: NSTextField
@@ -122,6 +125,7 @@ extension GitAlertPresenter {
 }
 
 /// Keeps the form's Create button enabled only while the title is not blank.
+@MainActor
 private final class TitleEnabler: NSObject, NSTextFieldDelegate {
     private let field: NSTextField
     private weak var action: NSButton?
