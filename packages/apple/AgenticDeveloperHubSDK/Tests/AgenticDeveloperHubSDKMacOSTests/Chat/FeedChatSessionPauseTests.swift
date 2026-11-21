@@ -65,6 +65,22 @@ final class FeedChatSessionPauseTests: XCTestCase {
         try await waitUntil("unpausing read again") { reads.value > atPause }
     }
 
+    func testAClosedFeedNeverStartsReadingAgain() async throws {
+        let reads = ReadCount()
+        let session = FeedChatSession(refreshInterval: .milliseconds(10), paused: true) {
+            reads.note(); return []
+        }
+        let pump = subscribe(session)
+        defer { pump.cancel() }
+        try await Task.sleep(for: .milliseconds(50))
+        session.close()
+
+        session.isPaused = false
+        session.refresh()
+        try await Task.sleep(for: .milliseconds(100))
+        XCTAssertEqual(reads.value, 0, "a closed feed started polling again")
+    }
+
     func testTheWindowReadsTheFeedOnlyWhileItIsOnScreen() {
         let feed = ConversationsViewController(watchesFeed: false) { _, _, _ in [] }
         XCTAssertFalse(feed.watchesFeed)
