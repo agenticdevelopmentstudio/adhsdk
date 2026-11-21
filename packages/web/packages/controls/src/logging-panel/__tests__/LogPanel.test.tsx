@@ -178,4 +178,13 @@ describe('LogPanel followTail', () => {
     view.rerender(<LogPanel<Ctx> columns={baseColumns} lines={numbered(11)} followTail={false} />)
     expect(body.scrollTop).toBe(0)
   })
+
+  it('snaps to the end on the render that turns followTail back on', () => {
+    const view = render(<LogPanel<Ctx> columns={baseColumns} lines={numbered(10)} followTail={false} />)
+    const body = view.container.querySelector<HTMLElement>('.lp-body')!
+    const scroll = measure(body)
+    scroll.scrollTo(40)
+    view.rerender(<LogPanel<Ctx> columns={baseColumns} lines={numbered(10)} followTail />)
+    expect(body.scrollTop).toBe(10 * ROW)
+  })
 })

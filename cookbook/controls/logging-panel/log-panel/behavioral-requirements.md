@@ -4,7 +4,7 @@
 - **show-empty-state**: Component MUST display the `emptyMessage` (default: `"(no events)"`) when `lines` is empty or no rows are visible.
 - **enforce-max-lines**: Component MUST limit visible rows to the count specified in `maxLines` by retaining only the most recent entries, discarding older ones. See Edge Cases for behavior when `maxLines` is negative, `NaN`, or fractional.
 - **follow-tail-by-default**: Component MUST scroll to the bottom when new lines are added, if `followTail` is true (default).
-- **honor-follow-tail-toggle**: Component MUST stop scrolling to the bottom when `followTail` is set to false, and resume scrolling when `followTail` is set back to true.
+- **honor-follow-tail-toggle**: Component MUST stop scrolling to the bottom when `followTail` is set to false, and resume scrolling when `followTail` is set back to true; the render that sets it back to true scrolls the container to the bottom immediately, without waiting for the next append.
 - **detect-user-scroll**: Component MUST detect when the user has scrolled away from the bottom and stop following the tail until they scroll back to near the bottom (slack of 4 pixels).
 - **handle-cell-click**: Component MUST invoke `column.onCellClick` when a cell is clicked, passing the entire `LogLine` object, if the handler is defined.
 - **handle-cell-double-click**: Component MUST invoke `column.onCellDoubleClick` when a cell is double-clicked, passing the entire `LogLine` object, if the handler is defined. The click events that precede a double-click gesture still invoke `onCellClick`, if defined, per native browser event order (see Edge Cases).

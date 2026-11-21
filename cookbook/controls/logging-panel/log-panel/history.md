@@ -1,6 +1,7 @@
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.3.0 | 2026-11-21 | Mike Fullerton | Turning followTail back on snaps to the bottom on that render (pin reset in a layout effect); the follow effect is keyed on the visible slice so it keeps following past maxLines. |
 | 1.2.3 | 2026-11-14 | Mike Fullerton | Stated the color fallbacks and listed LogLevel values; tightened show-interactive-indicator and apply-cell-text-alignment; aligned the stop-event-propagation decision; fixed the ARIA, hover-state and tap-target contradictions; added 13 test vectors. |
 | 1.2.2 | 2026-09-25 | Mike Fullerton | String/undefined cells now correctly show defaultLevel/Mono apply; history reordered; Compliance added. |
 | 1.2.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |

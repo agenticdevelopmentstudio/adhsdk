@@ -12,7 +12,7 @@
 - **Column width as string**: A column width given as a string (e.g. `'1fr'`, `'50%'`) is used directly as the grid track size.
 - **Column width as number**: A column width given as a number (e.g. `200`) becomes the pixel value (`'200px'`) for the grid track size.
 - **Column width undefined**: A column with no width specified uses the default track size `minmax(120px, 1fr)`.
-- **followTail flips from false to true**: Resuming follow-tail causes the next appended line to scroll the container to the bottom, even if the user had scrolled away while it was disabled.
+- **followTail flips from false to true**: Resuming follow-tail re-pins the view and scrolls the container to the bottom on that same render, even if the user had scrolled away while it was disabled; later appends keep following.
 - **Scroll container not yet mounted**: All scroll-related logic is skipped when the scrollable element is not available; no errors occur.
 - **New lines added while scrolled away from the tail**: The component does not auto-scroll on subsequent appends until the user scrolls back within 4px of the bottom.
 - **Very long cell text**: Cell displays full text with a `title` attribute for a hover tooltip; no truncation or overflow behavior is enforced by the component (stylesheet responsibility).

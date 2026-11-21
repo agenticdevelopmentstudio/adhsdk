@@ -4,11 +4,11 @@
     "id": "57e33900-ca06-474e-abb1-d904c27a6336",
     "title": "Log Panel",
     "type": "ingredient",
-    "version": "1.2.3",
+    "version": "1.3.0",
     "status": "review",
     "language": "en",
     "created": "2026-09-22",
-    "modified": "2026-11-14",
+    "modified": "2026-11-21",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -31,7 +31,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "28f3af98a45b287f",
+  "synced": "a15e17f48f5c0458",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
