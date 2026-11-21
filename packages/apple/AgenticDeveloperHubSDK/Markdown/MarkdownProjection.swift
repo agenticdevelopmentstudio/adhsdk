@@ -225,24 +225,32 @@ public struct MarkdownProjection: SyncMirrorProjection {
         try bumpLocalVersion(resource: resource, id: id, kind: kind, in: conn)
     }
 
-    /// Columns a pull rewrites without changing what the document *says*:
-    /// sync bookkeeping, and the hub's own stamps. The hub echoing back a
-    /// write this device made changes exactly these, so a pull that touches
-    /// nothing else is not a change. Bumping `local_version` for it would make
-    /// every app holding the document see its own save come back as someone
-    /// else's edit, and a save racing the echo would be refused as stale.
-    private static let bookkeepingColumns: Set<String> = [
-        "sync_version", "sync_stamped_at", "local_version", "latest_version_id", "updated_at"
+    /// The columns that are what a document *says*: its text, whether it
+    /// exists, and its publication state. A pull that changes none of them is
+    /// not a change. Everything else is rewritten by the hub on every echo of
+    /// this device's own write — sync bookkeeping and stamps, but also
+    /// `current_version` (adh bumps it on each write), `created_at` (adh's
+    /// stamp, not the note's), `frontmatter` (adh's JSON serialization of
+    /// what `content` already carries), `content_hash`, `size_bytes` and the
+    /// `author_*` pair. Bumping `local_version` for those would make every app
+    /// holding the document see its own save come back as someone else's
+    /// edit, and a save racing the echo would be refused as stale.
+    ///
+    /// A list of what counts, not of what doesn't: a column added to the
+    /// table later is bookkeeping until someone decides the document says it.
+    static let documentColumns: [String] = [
+        "content", "is_deleted", "visibility", "stage", "public_route"
     ]
 
     /// What the document says, for comparing a row before and after a pull:
-    /// every column except `bookkeepingColumns`, or nil when there is no row.
-    private static func documentFingerprint(id: String, in conn: Database) throws -> [String: DatabaseValue]? {
-        guard let row = try Row.fetchOne(conn, sql: "SELECT * FROM markdown WHERE id = ?", arguments: [id])
+    /// `documentColumns`, or nil when there is no row.
+    private static func documentFingerprint(id: String, in conn: Database) throws -> [DatabaseValue]? {
+        guard let row = try Row.fetchOne(
+            conn,
+            sql: "SELECT \(documentColumns.joined(separator: ", ")) FROM markdown WHERE id = ?",
+            arguments: [id])
         else { return nil }
-        var values: [String: DatabaseValue] = [:]
-        for (column, value) in row where !bookkeepingColumns.contains(column) { values[column] = value }
-        return values
+        return documentColumns.map { row[$0] as DatabaseValue }
     }
 
     private static func bumpLocalVersion(
@@ -532,7 +540,7 @@ public struct MarkdownProjection: SyncMirrorProjection {
             arguments: StatementArguments(arguments))
         // Only a pull that changed what the document says is a change: the
         // hub's echo of this device's own write is not (see
-        // `bookkeepingColumns`).
+        // `documentColumns`).
         guard isMarkdown, try before == nil || Self.documentFingerprint(id: id, in: conn) != before
         else { return }
         try Self.recordLocalChange(
