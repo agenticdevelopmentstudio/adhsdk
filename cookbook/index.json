@@ -1617,7 +1617,9 @@
       "implementations": [
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:472316090f808bcaf7af9fd7ec97bdd76441ec403985c4349c148399ad32ffa8",
+            "state": "confirmed",
+            "version": "1.2.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Markdown/",
           "platform": "apple"
@@ -19190,23 +19192,27 @@
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:ecad14111b7fc7808d17fc383fd397772df9131748bfb95817bf42f2ec193551",
+            "hash": "sha256:fdf5daef4d5361742eb06ea71f5a2308dead6655388c00a5375bca1b9f87fe79",
             "state": "confirmed",
-            "version": "1.1.3"
+            "version": "1.2.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/NotesWindow/",
           "platform": "apple"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:db5d894239e9215fe63ec94d06cfc9fbfd5e957919ef2f781ec06438c2f6dfbc",
+            "state": "confirmed",
+            "version": "1.2.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Markdown/Note.swift",
           "platform": "apple"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:fd8e23b47034dce1a8ba22e5b531e3f85223c0e86265d07131f9a8191e7a369b",
+            "state": "confirmed",
+            "version": "1.2.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Markdown/MarkdownNoteMapping.swift",
           "platform": "apple"

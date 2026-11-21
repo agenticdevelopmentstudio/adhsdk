@@ -95,6 +95,10 @@
   the error MUST carry the stored note when the storage can say what it
   is, and nothing when the caller must re-read it. A storage with no
   concurrency token MUST never raise it.
+- **notestorage-writes-return-version**: Inserting and updating a note
+  MUST return the version the storage now holds for it, so the caller can
+  quote that version on its next write; a storage with no concurrency
+  token MUST still return the version it reports on read.
 - **notestorage-change-stream**: A storage MAY additionally be observable:
   it then MUST expose a stream of changes made by any writer, each one
   naming an upserted note id, a deleted note id, or a resync (the storage
@@ -138,7 +142,8 @@
   into the note's `version`.
 - **markdownnotestorage-version-ignored**: The markdown-backed conformer
   MUST ignore a note's `version` on every write and MUST never fail with
-  the stale error.
+  the stale error, yet MUST return the document's new local version from
+  every insert and update.
 - **markdownnotestorage-fetch-one**: Fetching one note by id MUST read
   that one document and its ownership record, and MUST answer nothing when
   no document has that id.
@@ -230,7 +235,8 @@
 - **notesmanager-pin-toggle-immediate**: Toggling a note's pin state MUST
   update the in-memory note, then write it through storage immediately on
   a snapshot of the just-toggled note, bypassing the content-update
-  debounce entirely.
+  debounce entirely; the note MUST count as having an unsaved edit until
+  that write lands, so another writer's change is not applied over it.
 - **notesmanager-delete-optimistic**: Deleting a note by id MUST remove
   the note from the notes list before attempting the storage delete, and
   MUST record — but MUST NOT use to reinstate the note — a failure of
@@ -255,9 +261,18 @@
   and cancel the subscription when it is released, applying each change
   on the primary thread: a resync reloads every note; a deletion of a
   held note removes it; an upsert fetches that note and replaces the held
-  copy only when the fetched version is higher than the held one (a
-  version at or below it is the manager's own echo), appends it when not
-  held, and removes the held copy when the fetch answers nothing.
+  copy only when the fetched version is higher than the version ledger
+  holds for it (a version at or below it is the manager's own echo),
+  appends it when not held, and removes the held copy when the fetch
+  answers nothing.
+- **notesmanager-version-ledger**: The manager MUST keep, per note, the
+  last version storage confirmed — filled by a load, advanced by every
+  insert and update's returned version and by every change it adopts, and
+  cleared when the note is forgotten — and MUST read and advance it inside
+  its ordered storage chain, so each queued write quotes the version the
+  write before it produced and two consecutive saves of its own are never
+  stale against each other. The in-memory note's `version` MUST follow the
+  ledger once a save lands.
 - **notesmanager-live-changes-skip-dirty**: An upsert for a note with an
   edit not yet saved MUST NOT be applied over the editor — checked both
   before the fetch and again after it returns — so that note's next save
@@ -265,12 +280,16 @@
 - **notesmanager-stale-resolution**: When a save fails with the stale
   error, the manager MUST obtain the stored note (from the error, or by
   fetching it), then: if the stored content still equals the content the
-  note last had when it matched storage, it MUST re-save the edit on top
-  of the stored version; otherwise it MUST keep the other writer's note
-  in the list and put the edit's text into a new note whose content is
-  `"# <title> (conflicted copy)\n\n"` followed by the edited content. If
-  the note no longer exists in storage, the edit MUST likewise become a
-  conflicted-copy note rather than vanish.
+  note last had when it matched storage, it MUST re-save the editor's
+  current note on top of the stored version; otherwise it MUST keep the
+  other writer's note in the list and, when the editor's text differs
+  from that base, put the editor's latest text — including anything typed
+  after the failed save was scheduled — into a new note whose content is
+  `"# <title> (conflicted copy)\n\n"` followed by that text. When only
+  the pin differs from the base, no copy is made: the pin state MUST be
+  re-applied on top of the other writer's note. If the note no longer
+  exists in storage, the edit MUST likewise become a conflicted-copy note
+  rather than vanish.
 - **notesmanager-markdown-store-accessor**: The manager's markdown-store
   accessor MUST return the wrapped document store only when the storage
   implementation also supports the taxonomy-provider extension, and MUST
