@@ -25,7 +25,7 @@ public enum MarkdownMarker: String, CaseIterable, Sendable {
 
     public var resource: String { "content.\(table)" }
 
-    /// The flag adh's `POST /content/markdown` takes for this marker.
+    /// The flag adh's `POST /v1/papers` takes for this marker.
     /// `papers` has no create-time flag upstream; a paper is marked by a
     /// separate call, so it contributes nothing to a create payload.
     var createFlag: String? {
@@ -50,7 +50,7 @@ public enum MarkdownStoreError: Error, Equatable {
     /// intent — silently coercing it to `.update` would push adh a content
     /// write for what might have been a `delete`.
     case unknownRemoteIntent(String)
-    /// A local edit moved a client-authored field that `PUT /content/markdown/:id`
+    /// A local edit moved a client-authored field that `POST /v1/papers/:id`
     /// has no key for. `visibility`, `stage` and `public_route` change only
     /// through the route named in `method`, so writing the row here would
     /// leave a local state adh is never told about — silently, and forever,
@@ -423,7 +423,7 @@ public final class MarkdownStore: @unchecked Sendable {
         }
     }
 
-    /// Writes the document's content and queues a `PUT /content/markdown/:id`.
+    /// Writes the document's content and queues a `POST /v1/papers/:id`.
     ///
     /// The wire payload is `content` and nothing else, which is narrower than
     /// it used to be and narrower than adh's `updateSchema`
@@ -582,7 +582,7 @@ public final class MarkdownStore: @unchecked Sendable {
 
     // MARK: - The four lifecycle routes
 
-    /// `POST /content/markdown/:id/publish` with `{ route }`.
+    /// `POST /v1/papers/:id/publish` with `{ route }`.
     ///
     /// `visibility` and `public_route` move together because upstream they are
     /// one operation — adh's route file states the invariant as "public_route
@@ -598,7 +598,7 @@ public final class MarkdownStore: @unchecked Sendable {
             intent: .publish, payload: ["route": .string(route)], now: now)
     }
 
-    /// `POST /content/markdown/:id/unpublish` — the other half of the same
+    /// `POST /v1/papers/:id/unpublish` — the other half of the same
     /// invariant: clearing the route and going private is one move.
     public func unpublishDocument(id: String, now: Date = Date()) throws {
         try setAuthoredState(
@@ -606,7 +606,7 @@ public final class MarkdownStore: @unchecked Sendable {
             intent: .unpublish, payload: [:], now: now)
     }
 
-    /// `POST /content/markdown/:id/finalize`. adh's `assertMutable` refuses a
+    /// `POST /v1/papers/:id/finalize`. adh's `assertMutable` refuses a
     /// *content* change on a final document with 409 afterwards;
     /// classification edits and publish/unpublish still work.
     public func finalizeDocument(id: String, now: Date = Date()) throws {
@@ -615,7 +615,7 @@ public final class MarkdownStore: @unchecked Sendable {
             intent: .finalize, payload: [:], now: now)
     }
 
-    /// `POST /content/markdown/:id/definalize`.
+    /// `POST /v1/papers/:id/definalize`.
     public func definalizeDocument(id: String, now: Date = Date()) throws {
         try setAuthoredState(
             id: id, assignments: "stage = 'draft'", values: [],
@@ -714,6 +714,15 @@ public final class MarkdownStore: @unchecked Sendable {
             // upstream forever, and nothing is left to re-derive the delete
             // from. `claimed_at IS NULL` is the question this actually meant
             // to ask.
+            //
+            // A claimed `create` is also *kept*, not cleared with the rest. A
+            // claim is never released (see `drainRemoteQueue`), so it may be
+            // a create whose send reached adh and whose answer was lost. Its
+            // replay under the same Idempotency-Key is the only way the
+            // minted id ever comes back, and the `delete` queued behind it
+            // needs that id: without it the delete addresses the local id,
+            // gets a 404 that counts as success, and the document stays
+            // upstream with nothing left to remove it.
             let hasPendingCreate = try Bool.fetchOne(
                 conn,
                 sql: """
@@ -723,7 +732,11 @@ public final class MarkdownStore: @unchecked Sendable {
                     """,
                 arguments: [id]) ?? false
             try conn.execute(
-                sql: "DELETE FROM _markdown_outbox WHERE document_id = ?", arguments: [id])
+                sql: """
+                    DELETE FROM _markdown_outbox
+                    WHERE document_id = ? AND NOT (intent = 'create' AND claimed_at IS NOT NULL)
+                    """,
+                arguments: [id])
             if !hasPendingCreate {
                 try enqueue(.delete, for: id, payload: [:], at: now, in: conn)
             }
@@ -811,18 +824,14 @@ public final class MarkdownStore: @unchecked Sendable {
         }
     }
 
-    /// Stamps or clears `claimed_at` — for one op when `opID` is given, for
-    /// every row when it is `nil`.
-    private func setClaim(_ stamp: String?, forOpMatching opID: String?) throws {
+    /// Stamps `claimed_at` on one op the first time it is handed to the
+    /// writer. A replay keeps the first stamp. Nothing ever clears it: the
+    /// row is deleted by `complete` once adh has acknowledged the op.
+    private func claim(opID: String) throws {
         try database.write { conn in
-            if let opID {
-                try conn.execute(
-                    sql: "UPDATE _markdown_outbox SET claimed_at = ? WHERE op_id = ?",
-                    arguments: [stamp, opID])
-            } else {
-                try conn.execute(
-                    sql: "UPDATE _markdown_outbox SET claimed_at = ?", arguments: [stamp])
-            }
+            try conn.execute(
+                sql: "UPDATE _markdown_outbox SET claimed_at = COALESCE(claimed_at, ?) WHERE op_id = ?",
+                arguments: [MarkdownTimestamp.string(Date()), opID])
         }
     }
 
@@ -841,19 +850,25 @@ public final class MarkdownStore: @unchecked Sendable {
     /// holds.
     ///
     /// One drain at a time. Each op is *claimed* (`_markdown_outbox.claimed_at`)
-    /// for the width of its send, which is what tells a concurrent
+    /// immediately before it is first handed to the writer, and the claim is
+    /// **never released**. That is what tells a concurrent or later
     /// `enqueue`/`deleteDocument` that the row is no longer theirs to merge
-    /// into or read as unsent. A claim is released if the send throws, and
-    /// every claim still standing when a drain begins is released first:
-    /// nothing was in flight before this call, so a leftover claim can only
-    /// be a pass that was killed mid-send, and leaving it would make the op
-    /// permanently invisible to the two callers above.
+    /// into or read as unsent.
+    ///
+    /// The claim outlives a failed send, and a pass that was killed mid-send,
+    /// on purpose. A send that threw (a timeout, a dropped connection) or
+    /// never returned may still have reached adh, and the writer resends the
+    /// op under the same Idempotency-Key (its `opID`). adh keeps a key for
+    /// 24 hours and refuses a reuse whose body differs. Releasing the claim
+    /// would make the op mergeable again, so the next edit would fold a new
+    /// body into it, and every resend would then be refused for a day while
+    /// every op behind it waited. An edit that lands on a claimed op is
+    /// queued behind it as an op of its own instead.
     public func drainRemoteQueue(into writer: any MarkdownRemoteWriter, limit: Int = 100) async throws {
         // The queued bodies belong to the account the sync store is bound
         // to; with anyone else (or nobody) declared signed in, nothing is
         // sent. `SyncStoreFailure.accountMismatch` and the queue is kept.
         try syncStore.checkAccountGuard()
-        try setClaim(nil, forOpMatching: nil)
         for queued in try pendingRemoteOps(limit: limit) {
             // The remote id is re-read immediately before each send rather
             // than trusted from the batch snapshot: an `update` queued behind
@@ -867,20 +882,12 @@ public final class MarkdownStore: @unchecked Sendable {
                 intent: queued.intent,
                 payload: queued.payload,
                 createdAt: queued.createdAt)
-            try setClaim(MarkdownTimestamp.string(Date()), forOpMatching: remoteOp.opID)
-            let assigned: String?
-            do {
-                assigned = try await writer.send(remoteOp)
-            } catch {
-                // Back to exactly the state before the claim. The op stays
-                // queued (that is this method's contract for a failed send),
-                // and staying queued has to mean staying *mergeable* — a
-                // claim left on a failed op would silently split the next
-                // edit of that document into a second row.
-                try setClaim(nil, forOpMatching: remoteOp.opID)
-                throw error
-            }
-            // adh mints the id — `POST /content/markdown` takes none — so a
+            try claim(opID: remoteOp.opID)
+            // A throw stops the drain with the op still queued and still
+            // claimed: it may have reached adh, so its body is frozen and the
+            // next drain resends it unchanged.
+            let assigned = try await writer.send(remoteOp)
+            // adh mints the id — a create carries none — so a
             // create's response is the only place the document's upstream
             // identity ever appears. Recording it here, before any later op
             // for the same document is sent, is what lets `update`/`delete`/
@@ -1062,8 +1069,10 @@ public final class MarkdownStore: @unchecked Sendable {
     ///    enqueued here always drains after the one it cancelled, so
     ///    whatever the in-flight op did on the server, this one undoes.
     ///
-    /// Both hold today: no remote writer exists yet, and the drain is
-    /// strictly ordered by `seq`.
+    /// Both hold: the writer sends every op but an update under an
+    /// Idempotency-Key (a resend replays adh's first answer), the writer
+    /// counts a delete of a document already gone as success, and the drain
+    /// is strictly ordered by `seq`.
     ///
     /// Everything *below* the cancel asks a narrower question — not "is there
     /// a row" but "is there a row still ours to change" — and filters on
@@ -1073,7 +1082,9 @@ public final class MarkdownStore: @unchecked Sendable {
     /// `op_id`, so the merged fields would be dropped the moment the send
     /// returns. An in-flight row is therefore left alone and the new op is
     /// inserted at the tail, where the ordering guarantee already puts it
-    /// after the op it supersedes.
+    /// after the op it supersedes. "In flight" includes an op whose send
+    /// failed or was killed: its claim is never released, because a resend
+    /// must carry the same body under the same Idempotency-Key.
     private func enqueue(
         _ intent: MarkdownRemoteIntent, for documentID: String,
         payload: [String: JSONValue], at now: Date, in conn: Database
@@ -1085,12 +1096,14 @@ public final class MarkdownStore: @unchecked Sendable {
         }
 
         // An *unclaimed* create still carries the document's body, so an
-        // update folds into it and one POST sends both. A claimed one is
-        // already on the wire: folding into it would either lose the fields
-        // (`complete` deletes that `op_id`) or, if it had been cancelled
-        // meanwhile, insert a second `create` and mint a second document
-        // upstream. So the update stays an update, and the remote id the
-        // in-flight create is about to record is what it addresses.
+        // update folds into it and one POST sends both. A claimed one has
+        // been on the wire at least once. Folding into it would lose the
+        // fields (`complete` deletes that `op_id`), change the body its
+        // resend carries under the same Idempotency-Key (refused by adh),
+        // or, if it had been cancelled meanwhile, insert a second `create`
+        // and mint a second document upstream. So the update stays an
+        // update, and the remote id the claimed create records is what it
+        // addresses.
         var target = intent
         if intent == .update {
             let hasPendingCreate = try Bool.fetchOne(

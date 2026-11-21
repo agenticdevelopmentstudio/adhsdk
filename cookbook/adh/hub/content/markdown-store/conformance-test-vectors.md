@@ -19,3 +19,7 @@
 | markdown-core-016 | unchanged-pull-is-silent | Pull a row, then pull it again with the same content and only a newer sync version and `updated_at` | The document stays at version 1 and the change log holds one entry for it |
 | markdown-core-017 | local-version-never-travels, unchanged-pull-is-silent | Pull a row, then pull it again with different content | The document reads back at version 2 and the change log holds entries with versions 1 and 2 |
 | markdown-core-018 | writes-return-version | Create a document, update it quoting version 1, then mutate it quoting version 2 | The update returns 2, the mutate returns 3, and the document reads back at version 3 |
+| markdown-core-019 | claim-is-never-released, sent-operation-is-frozen | Create a document, drain it into a writer that throws, then update the document | Two operations queued, create then update; the create keeps its operation id and its original body |
+| markdown-core-020 | claim-is-never-released | Create a document, drain into a writer that throws, then drain into a writer that accepts | The accepting writer receives the same operation id and body the failing one did; the queue is empty |
+| markdown-core-021 | delete-keeps-claimed-create | Create a document, drain into a writer that throws, delete the document, then drain into a writer that mints remote id R | The writer receives create (no remote id) then delete addressed to R |
+| markdown-core-022 | delete-drops-undelivered-create | Create a document and delete it before any drain | Nothing is queued |

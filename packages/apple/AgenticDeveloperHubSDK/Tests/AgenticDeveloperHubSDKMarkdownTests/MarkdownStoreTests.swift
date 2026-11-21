@@ -364,6 +364,72 @@ struct MarkdownStoreTests {
         #expect(try store.pendingRemoteOps(limit: 10).count == 1)
     }
 
+    // MARK: - A sent op is frozen
+
+    /// A send that threw may still have reached adh, and the resend carries
+    /// the same Idempotency-Key. adh refuses a reused key whose body differs,
+    /// so an edit must never fold into an op that has been on the wire.
+    @Test("an edit after a failed send queues behind the frozen create, which keeps its body")
+    func editAfterAFailedSendDoesNotMergeIntoTheSentCreate() async throws {
+        let store = try store()
+        var document = try store.createDocument(content: "one", markers: [])
+        let sent = try store.pendingRemoteOps(limit: 10)
+        await #expect(throws: (any Error).self) {
+            try await store.drainRemoteQueue(into: FailingWriter(), limit: 10)
+        }
+
+        document.content = "two"
+        try store.updateDocument(document)
+
+        let queued = try store.pendingRemoteOps(limit: 10)
+        #expect(queued.map(\.intent) == [.create, .update])
+        #expect(queued[0].opID == sent[0].opID)
+        #expect(queued[0].payload == sent[0].payload)
+    }
+
+    @Test("the resend after a failed send carries the same op id and body")
+    func resendAfterAFailureIsByteForByteTheSameOp() async throws {
+        let store = try store()
+        _ = try store.createDocument(content: "one", markers: [])
+        let first = try store.pendingRemoteOps(limit: 10)
+        await #expect(throws: (any Error).self) {
+            try await store.drainRemoteQueue(into: FailingWriter(), limit: 10)
+        }
+        let writer = RecordingWriter(minting: "adh-1")
+        try await store.drainRemoteQueue(into: writer, limit: 10)
+
+        #expect(await writer.sentOps.map(\.opID) == first.map(\.opID))
+        #expect(await writer.sentOps.map(\.payload) == first.map(\.payload))
+        #expect(try store.pendingRemoteOps(limit: 10).isEmpty)
+    }
+
+    /// The failed create may have created the document upstream. Dropping it
+    /// with the rest would leave the delete addressing the local id, which adh
+    /// answers 404 (counted as success), so the document would stay upstream.
+    @Test("deleting a document whose create failed mid-send keeps the create and deletes what it mints")
+    func deleteAfterAFailedCreateReplaysTheCreateThenDeletes() async throws {
+        let store = try store()
+        let created = try store.createDocument(content: "one", markers: [.note])
+        await #expect(throws: (any Error).self) {
+            try await store.drainRemoteQueue(into: FailingWriter(), limit: 10)
+        }
+        try store.deleteDocument(id: created.id)
+        #expect(try store.pendingRemoteOps(limit: 10).map(\.intent) == [.create, .delete])
+
+        let writer = RecordingWriter(minting: "adh-7")
+        try await store.drainRemoteQueue(into: writer, limit: 10)
+        #expect(await writer.sentIntents == [.create, .delete])
+        #expect(await writer.sentRemoteIDs == [nil, "adh-7"])
+    }
+
+    @Test("deleting a document whose create never left the queue sends nothing")
+    func deleteOfANeverSentCreateDropsBoth() throws {
+        let store = try store()
+        let created = try store.createDocument(content: "one", markers: [.note])
+        try store.deleteDocument(id: created.id)
+        #expect(try store.pendingRemoteOps(limit: 10).isEmpty)
+    }
+
     @Test("an outbox row with an unreadable created_at throws rather than inventing a send time")
     func pendingRemoteOpsThrowsOnUnreadableTimestamp() throws {
         let store = try store()
@@ -631,11 +697,13 @@ struct MarkdownStoreTests {
 private actor RecordingWriter: MarkdownRemoteWriter {
     private(set) var sentIntents: [MarkdownRemoteIntent] = []
     private(set) var sentRemoteIDs: [String?] = []
+    private(set) var sentOps: [MarkdownRemoteOp] = []
     private let mintedID: String?
 
     init(minting mintedID: String? = nil) { self.mintedID = mintedID }
 
     func send(_ remoteOp: MarkdownRemoteOp) async throws -> String? {
+        sentOps.append(remoteOp)
         sentIntents.append(remoteOp.intent)
         sentRemoteIDs.append(remoteOp.remoteID)
         return remoteOp.intent == .create ? mintedID : nil

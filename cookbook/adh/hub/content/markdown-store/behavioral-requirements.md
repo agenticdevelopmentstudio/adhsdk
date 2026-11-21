@@ -189,6 +189,10 @@
 - **delete-drops-undelivered-create**: Deleting a document MUST drop a still-
   unclaimed pending create/delete pair entirely rather than enqueuing a delete,
   since adh never learned of a document whose create has not yet drained.
+- **delete-keeps-claimed-create**: Deleting a document whose pending create is
+  claimed MUST keep that create and queue a delete behind it, since a claimed create
+  may have reached adh; its resend is the only way the remote id comes back, and the
+  delete needs that id to address the document.
 - **outbox-order-is-sequence**: The pending-operations read MUST order by the
   dedicated sequence column rather than a creation timestamp, which ties within a
   millisecond, or the operation id, whose sort order is effectively random.
@@ -207,17 +211,26 @@
   id immediately before sending each operation rather than trusting a batch
   snapshot, since an update queued behind its own create may only acquire that id
   partway through the drain.
-- **drain-preserves-order-on-failure**: The queue drain MUST release the failing
-  operation's claim and stop rather than skip ahead when the writer throws, so
-  strict sequence order is preserved across retries.
-- **drain-clears-stale-claims-first**: The queue drain MUST clear every outstanding
-  claim before reading pending operations, on the stated reasoning that a claim
-  still standing when a drain begins can only be a pass that was killed mid-send,
-  never a pass genuinely still in flight.
+- **drain-preserves-order-on-failure**: The queue drain MUST stop rather than skip
+  ahead when the writer throws, leaving the failing operation queued, so strict
+  sequence order is preserved across retries.
+- **claim-is-never-released**: The queue drain MUST claim an operation immediately
+  before first handing it to the writer and MUST NOT release that claim, not when the
+  send throws and not when a later drain begins; only the acknowledgment that deletes
+  the row ends it. A send that threw, or a pass killed mid-send, may still have
+  reached adh, and the resend carries the same Idempotency-Key (the operation id),
+  which adh refuses for 24 hours if the body differs. A released claim would let the
+  next edit fold a new body into the operation and wedge the queue behind it.
+- **sent-operation-is-frozen**: The enqueue path MUST NOT merge into or fold into a
+  claimed operation; a new edit for the same document is queued behind it as an
+  operation of its own, so a resend is byte-for-byte the operation first sent.
+  Cancelling a claimed operation by its opposing intent stays allowed: the cancel
+  changes no body, and the opposing operation drains after it.
 - **drain-mutual-exclusion**: one drain at a time is a caller precondition; the
   store does not enforce it (no lock or other exclusion mechanism). Two concurrent
-  calls on one store would each clear every claim, read their own snapshot of
-  pending operations, claim the same unclaimed operation, and send it to adh twice.
+  calls on one store would each read their own snapshot of pending operations and
+  send the same operation to adh twice (harmless under its Idempotency-Key, but the
+  second acknowledgment races the first).
 
 ### Taxonomy
 

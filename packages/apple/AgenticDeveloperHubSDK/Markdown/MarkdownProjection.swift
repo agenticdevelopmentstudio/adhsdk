@@ -630,7 +630,7 @@ public struct MarkdownProjection: SyncMirrorProjection {
     /// Resolves an incoming adh id back to the local id this client filed the
     /// document under, so a pulled row lands on the row it already has.
     ///
-    /// `POST /content/markdown` takes no id, so adh mints its own and
+    /// `POST /v1/papers` takes no id, so adh mints its own and
     /// `MarkdownStore` records the pairing in `_markdown_remote_id` rather
     /// than rewriting the local id (which `MarkdownNoteStorage` derives from
     /// `Note.id` and the taxonomy link rows cite as `target_id`). Without this
