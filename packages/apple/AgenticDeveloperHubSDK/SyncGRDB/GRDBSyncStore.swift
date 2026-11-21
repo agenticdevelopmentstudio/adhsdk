@@ -510,6 +510,34 @@ public final class GRDBSyncStore: SyncStore, @unchecked Sendable {
             arguments: [resource, id, kind.rawValue, version])
     }
 
+    /// Appends one entry to `_change_log` inside the caller's transaction, for
+    /// a writer that keeps its own `local_version` — a `SyncMirrorProjection`
+    /// during `apply`, which already prunes the log and fires the observers
+    /// once the batch commits, so this does neither.
+    public static func appendChange(
+        resource: String, id: String, kind: RecordChange.Kind, version: Int64, in conn: Database
+    ) throws {
+        try conn.execute(
+            sql: """
+                INSERT INTO _change_log (resource, row_id, kind, version, at)
+                VALUES (?, ?, ?, ?, datetime('now'))
+                """,
+            arguments: [resource, id, kind.rawValue, version])
+    }
+
+    /// Logs a change made by a writer outside this store's own paths (a
+    /// `MarkdownStore` local write) inside that writer's transaction: appends
+    /// to `_change_log`, prunes it, and fires the committed-change observers
+    /// once the transaction commits — never if it rolls back.
+    public func logChange(
+        resource: String, id: String, kind: RecordChange.Kind, version: Int64, in conn: Database
+    ) throws {
+        try Self.appendChange(resource: resource, id: id, kind: kind, version: version, in: conn)
+        try pruneChangeLog(in: conn)
+        let signal = changeSignal
+        conn.afterNextTransaction(onCommit: { _ in signal.fire() })
+    }
+
     // MARK: - Account binding
 
     /// The account this store's rows, outbox and cursor belong to, or `nil`

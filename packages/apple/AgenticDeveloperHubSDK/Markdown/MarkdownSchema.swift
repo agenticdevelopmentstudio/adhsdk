@@ -85,6 +85,19 @@ public enum MarkdownSchema {
             try conn.execute(sql: markerTable(name))
         }
         try conn.execute(sql: taxonomyDDL)
+        // `documentDDL` is frozen at its v1 shape (the migrator replays it), so
+        // the column v7 adds is added here too, for a bare-`prepare` host.
+        try addLocalVersionIfMissing(in: conn)
+    }
+
+    /// Adds `markdown.local_version`, every existing row at 1, when the table
+    /// does not have it yet. A row at 0 would look like one never written.
+    static func addLocalVersionIfMissing(in conn: Database) throws {
+        let has = try Row.fetchAll(conn, sql: "PRAGMA table_info(markdown)")
+            .contains { ($0["name"] as String) == "local_version" }
+        guard !has else { return }
+        try conn.execute(sql: "ALTER TABLE markdown ADD COLUMN local_version INTEGER NOT NULL DEFAULT 0")
+        try conn.execute(sql: "UPDATE markdown SET local_version = 1")
     }
 
     public static func migrator() -> DatabaseMigrator {
@@ -170,6 +183,14 @@ public enum MarkdownSchema {
         // the new shape, so the migration finds no `customer_id` and does nothing.
         migrator.registerMigration("markdown-v6-owner-pair") { conn in
             try rebuildForOwnerPair(in: conn)
+        }
+        // `markdown-v7-local-version`: a local, per-row version that every
+        // local write and every applied pull bumps. It is the concurrency
+        // token a writer quotes (`expectedVersion`) and the version each
+        // `_change_log` entry carries. LOCAL: adh has no such column; it is
+        // never pushed and never pulled.
+        migrator.registerMigration("markdown-v7-local-version") { conn in
+            try addLocalVersionIfMissing(in: conn)
         }
         return migrator
     }
