@@ -31,10 +31,11 @@ final class VersionedNoteStorage: ObservableNoteStorage, @unchecked Sendable {
 
     /// Changes a note as another writer would, and returns the stored result.
     @discardableResult
-    func otherWriter(_ id: UUID, content: String? = nil) -> Note {
+    func otherWriter(_ id: UUID, content: String? = nil, pinned: Bool? = nil) -> Note {
         lock.lock(); defer { lock.unlock() }
         var note = rows[id]!
         if let content { note.content = content }
+        if let pinned { note.isPinned = pinned }
         note.version += 1
         rows[id] = note
         return note

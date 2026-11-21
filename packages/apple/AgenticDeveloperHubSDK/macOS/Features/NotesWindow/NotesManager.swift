@@ -282,6 +282,12 @@ public final class NotesManager {
     /// version" from "the other writer changed the text" (Decision 10).
     private var baseContent: [UUID: String] = [:]
 
+    /// The pin each note had when it last matched storage, kept beside
+    /// `baseContent`. A stale save that re-saves on top of the other writer's
+    /// version takes their pin unless the pin was toggled here — the other
+    /// writer's pin toggle is exactly what bumps a version without its text.
+    private var basePinned: [UUID: Bool] = [:]
+
     /// Notes with an edit not yet saved. A feed change for one of them is not
     /// applied over the editor: its save takes the conflict path instead.
     private var dirty: Set<UUID> = []
@@ -326,6 +332,7 @@ public final class NotesManager {
                 replaced = false
             }
             baseContent[id] = fetched.content
+            basePinned[id] = fetched.isPinned
             versions[id] = fetched.version
             notes.sort(by: Note.defaultSort)
             postNotesDidChange()
@@ -338,6 +345,7 @@ public final class NotesManager {
     private func forget(_ id: UUID) {
         notes.removeAll(where: { $0.id == id })
         baseContent[id] = nil
+        basePinned[id] = nil
         versions[id] = nil
         dirty.remove(id)
     }
@@ -381,6 +389,7 @@ public final class NotesManager {
             notes[idx].version = version
         }
         baseContent[note.id] = note.content
+        basePinned[note.id] = note.isPinned
         if notes.first(where: { $0.id == note.id })?.content == note.content {
             dirty.remove(note.id)
         }
@@ -407,9 +416,20 @@ public final class NotesManager {
         }
         if stored.content == baseContent[note.id] {
             // Only the version moved (a pin toggle, a hub echo elsewhere):
-            // this editor's text still applies on top of it.
-            let written = try await write(note, version: stored.version)
-            markSaved(note, version: written)
+            // this editor's text still applies on top of it — with the
+            // other writer's pin, unless the pin was toggled here.
+            var rebased = note
+            if note.isPinned == basePinned[note.id] {
+                rebased.isPinned = stored.isPinned
+            }
+            let written = try await write(rebased, version: stored.version)
+            markSaved(rebased, version: written)
+            if let idx = notes.firstIndex(where: { $0.id == note.id }),
+               notes[idx].isPinned != rebased.isPinned {
+                notes[idx].isPinned = rebased.isPinned
+                notes.sort(by: Note.defaultSort)
+                postNotesDidChange()
+            }
             return
         }
         let textEdited = latest.content != baseContent[note.id]
@@ -426,6 +446,7 @@ public final class NotesManager {
             notes.append(stored)
         }
         baseContent[note.id] = stored.content
+        basePinned[note.id] = stored.isPinned
         versions[note.id] = stored.version
         dirty.remove(note.id)
         notes.sort(by: Note.defaultSort)
@@ -453,6 +474,7 @@ public final class NotesManager {
         copy.version = try await insert(copy)
         notes.append(copy)
         baseContent[copy.id] = copy.content
+        basePinned[copy.id] = copy.isPinned
         notes.sort(by: Note.defaultSort)
         postNotesDidChange()
         return copy
@@ -475,6 +497,7 @@ public final class NotesManager {
                 notes[idx] = copy
             }
             baseContent[copy.id] = copy.content
+            basePinned[copy.id] = copy.isPinned
         }
     }
 
@@ -519,6 +542,7 @@ public final class NotesManager {
             }
             notes = loaded.sorted(by: Note.defaultSort)
             baseContent = Dictionary(loaded.map { ($0.id, $0.content) }, uniquingKeysWith: { first, _ in first })
+            basePinned = Dictionary(loaded.map { ($0.id, $0.isPinned) }, uniquingKeysWith: { first, _ in first })
             dirty = []
             isLoaded = true
             postNotesDidChange()
@@ -550,6 +574,7 @@ public final class NotesManager {
             return nil
         }
         baseContent[note.id] = note.content
+        basePinned[note.id] = note.isPinned
         notes.append(note)
         notes.sort(by: Note.defaultSort)
         postNotesDidChange()
