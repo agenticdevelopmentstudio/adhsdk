@@ -57,6 +57,25 @@ final class GRDBSyncStoreLogChangeTests: XCTestCase {
         XCTAssertEqual(try store.changes(since: 0, limit: 10).map(\.id), ["m2"])
         XCTAssertEqual(fired.value, 0)
     }
+
+    func testChangesFilteredByResourceCountsOnlyMatches() async throws {
+        let store = try await makeStore()
+        try store.database.write { conn in
+            try store.logChange(resource: "personal.notes", id: "n1", kind: .upsert, version: 1, in: conn)
+            try store.logChange(resource: "content.markdown", id: "m1", kind: .upsert, version: 1, in: conn)
+            try store.logChange(resource: "personal.notes", id: "n2", kind: .upsert, version: 1, in: conn)
+            try store.logChange(resource: "content.markdown", id: "m2", kind: .delete, version: 2, in: conn)
+        }
+
+        // `limit` counts matching entries, so the second markdown entry is not
+        // crowded out by the notes entry between them.
+        let markdown = try store.changes(since: 0, limit: 2, resources: ["content.markdown"])
+        XCTAssertEqual(markdown.map(\.id), ["m1", "m2"])
+        XCTAssertEqual(try store.changes(since: 0, limit: 10).count, 4)
+        XCTAssertTrue(try store.changes(since: 0, limit: 10, resources: []).isEmpty)
+        let both = try store.changes(since: 0, limit: 10, resources: ["content.markdown", "personal.notes"])
+        XCTAssertEqual(both.map(\.id), ["n1", "m1", "n2", "m2"])
+    }
 }
 
 private final class LogChangeCounter: @unchecked Sendable {
