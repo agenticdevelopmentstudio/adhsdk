@@ -2,11 +2,11 @@
 id: 14ca2162-b5ec-48bb-95a0-90577e7c9810
 title: "SQL Sync Store"
 type: ingredient
-version: 1.3.0
+version: 1.4.0
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-11-18
+modified: 2026-11-21
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -181,6 +181,7 @@ top of it, a local write path (`writeLocal`, `localVersion`, `localRecord`,
 - **change-log**: Every write that raises a row's `local_version` MUST append `(resource, row_id, kind, version)` to `_change_log` in the same transaction, `kind` being `upsert` or `delete` and `version` the row's new `local_version`.
 - **change-log-cap**: The store MUST keep only the newest `changeLogCapacity` entries (default 100,000; positive), deleting older ones in the transaction that logs past the cap and recording the highest pruned `seq` in `_change_log_pruned`.
 - **changes-read**: `changes(since:limit:)` MUST return entries with `seq > since`, oldest first, at most `limit`; empty for a non-positive limit, for `since` at or above the head and on a store that never logged. It MUST raise `changeHistoryPruned(since:floor:)` when `since` is below `changeLogFloor()`.
+- **changes-resource-filter**: `changes(since:limit:resources:)` given a set of resource names MUST return only entries for those resources, filtered in the query so `limit` counts matching entries; `nil` (the default) MUST mean every resource, and an empty set MUST return nothing. The pruned-history check is unchanged by the filter.
 - **change-head**: `changeHead()` MUST return the highest `seq` ever logged (at least the pruning floor), `0` when nothing was logged; `changeLogFloor()` MUST return the highest pruned `seq`, `0` before any pruning.
 - **observe-committed**: `observeCommittedChanges` MUST register an observer told after every commit that may have appended to `_change_log`; the call carries no data.
 - **write-local**: `writeLocal(body)` MUST run `body` in one write transaction through the serialization point and notify the observers once it commits.
@@ -277,7 +278,7 @@ All vectors use a fresh file-backed database and a `personal.notes` resource at 
 | sync-grdb-040 | change-log-cap, changes-read, change-head | Store with `changeLogCapacity` 3; apply n1–n5 | `changeHead` = 5; `changeLogFloor` = 2; `changes(since: 2)` = n3, n4, n5; `changes(since: 1)` raises `changeHistoryPruned(1, 2)` |
 | sync-grdb-041 | write-local, serialized-operations | `writeLocal` staging w1 | Body runs on the store's serialization point; w1 `local_version` = 1 |
 | sync-grdb-042 | local-queries, write-acceptance | Never-prepared store; `acceptsLocalWrites("personal.notes")`; `localRecord("personal.notes", "x")` | false; raises `unknownResource` |
-
+| sync-grdb-043 | changes-resource-filter | Log entries notes n1, markdown m1, notes n2, markdown m2; `changes(since: 0, limit: 2, resources: [markdown])`; then with `resources: []` | m1, m2; then empty |
 ## Edge Cases
 
 - **Never-prepared store**: `cursor` MUST return nothing and `registrations` MUST return an empty map (both bootstrap the schema); `status`, `registeredResources`, `liveRows` and `liveRow` MUST surface the underlying database's "no such table" error, because they read on the pool without bootstrapping.
@@ -301,6 +302,7 @@ All vectors use a fresh file-backed database and a `personal.notes` resource at 
 - **Database deadline or lock timeout**: the underlying bounded database MUST eject an operation that exceeds its read or write deadline (10 s and 60 s by default) with a deadline-exceeded error, and fail a write that waits on a lock longer than its busy timeout (5 s by default); the store re-raises either error and its transaction rolls back.
 - **Disk full or I/O error**: the underlying database error MUST propagate to the caller and the transaction MUST roll back.
 - **`writeLocal` from the serialization point**: MUST be refused (a precondition failure), because it would wait on itself; a `writeLocal` body uses the same-connection variants instead.
+- **Filtered reader**: a reader following one resource with `changes(since:limit:resources:)` still advances `since` to the last returned `seq`; entries for other resources between them are skipped, never counted against `limit`.
 - **Reader behind the pruned history**: `changes(since:)` MUST raise `changeHistoryPruned`; the reader rescans the rows it follows and resumes from `changeHead()`.
 - **Re-enrolling a purged resource**: its `_sync_version_floor` row MUST survive the purge, so rows written after re-enrolment start above every earlier version.
 - **Cancellation**: a cancelled caller awaiting a mutating operation MUST still see the operation run to completion.
@@ -458,6 +460,7 @@ Storage is behind the `SyncStore` and `SyncMirrorProjection` protocols, and `GRD
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.4.0 | 2026-11-21 | Mike Fullerton | changes(since:limit:resources:) filters the feed by resource in SQL (changes-resource-filter, sync-grdb-043) |
 | 1.3.0 | 2026-11-18 | Mike Fullerton | Identity change keeps data; account binding and provenance columns replace purgeForIdentityChange |
 | 1.2.0 | 2026-10-04 | Mike Fullerton | Restate stage-mirror-patch as current behavior with a test vector and pending decision. |
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to data/sync/. |

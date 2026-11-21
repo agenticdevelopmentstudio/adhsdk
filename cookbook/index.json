@@ -1729,7 +1729,9 @@
       "implementations": [
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:baeac9409fdc2d471448c3bdd1ca474ea33dc0c414868b94a972b012968ce2a7",
+            "state": "confirmed",
+            "version": "1.4.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/SyncGRDB/",
           "platform": "apple"
