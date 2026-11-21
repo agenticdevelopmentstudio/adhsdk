@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest'
+import { afterEach, beforeEach, describe, it, expect, vi } from 'vitest'
 import { fireEvent, render, screen } from '@testing-library/react'
 import { LogPanel } from '../LogPanel'
 import type { LogColumn, LogLine } from '../types'
@@ -114,20 +114,52 @@ describe('LogPanel followTail', () => {
     expect(body.scrollTop).toBe(body.scrollHeight - body.clientHeight)
   }
 
-  /** jsdom lays nothing out: give the scroller a height per row and a settable scrollTop. */
-  function measure(body: HTMLElement) {
-    let top = 0
-    Object.defineProperty(body, 'clientHeight', { configurable: true, get: () => VIEW })
-    Object.defineProperty(body, 'scrollHeight', {
+  // jsdom lays nothing out. Give every `.lp-body` a height per row and a scrollTop
+  // that clamps like a browser's (to scrollHeight - clientHeight). The getters go on
+  // HTMLElement.prototype before each test renders, so the mount-time layout effect
+  // already sees them; any other element falls through to jsdom's own value.
+  const tops = new WeakMap<HTMLElement, number>()
+  const isBody = (el: HTMLElement) => el.classList.contains('lp-body')
+  const rowsHeight = (el: HTMLElement) => el.querySelectorAll('.lp-row').length * ROW
+  const STUBBED = ['clientHeight', 'scrollHeight', 'scrollTop'] as const
+  const saved = new Map<string, PropertyDescriptor | undefined>()
+
+  function jsdomValue(el: HTMLElement, name: string): number {
+    const desc = Object.getOwnPropertyDescriptor(Element.prototype, name)
+    return desc?.get ? (desc.get.call(el) as number) : 0
+  }
+
+  beforeEach(() => {
+    for (const name of STUBBED) saved.set(name, Object.getOwnPropertyDescriptor(HTMLElement.prototype, name))
+    Object.defineProperty(HTMLElement.prototype, 'clientHeight', {
       configurable: true,
-      get: () => body.querySelectorAll('.lp-row').length * ROW,
+      get(this: HTMLElement) { return isBody(this) ? VIEW : jsdomValue(this, 'clientHeight') },
     })
-    Object.defineProperty(body, 'scrollTop', {
+    Object.defineProperty(HTMLElement.prototype, 'scrollHeight', {
       configurable: true,
-      get: () => top,
-      // Clamp like a browser: the furthest a view can scroll is scrollHeight - clientHeight.
-      set: (v: number) => { top = Math.max(0, Math.min(v, body.scrollHeight - VIEW)) },
+      get(this: HTMLElement) { return isBody(this) ? rowsHeight(this) : jsdomValue(this, 'scrollHeight') },
     })
+    Object.defineProperty(HTMLElement.prototype, 'scrollTop', {
+      configurable: true,
+      get(this: HTMLElement) { return isBody(this) ? (tops.get(this) ?? 0) : jsdomValue(this, 'scrollTop') },
+      set(this: HTMLElement, v: number) {
+        if (isBody(this)) tops.set(this, Math.max(0, Math.min(v, rowsHeight(this) - VIEW)))
+        else Object.getOwnPropertyDescriptor(Element.prototype, 'scrollTop')?.set?.call(this, v)
+      },
+    })
+  })
+
+  afterEach(() => {
+    for (const name of STUBBED) {
+      const desc = saved.get(name)
+      if (desc) Object.defineProperty(HTMLElement.prototype, name, desc)
+      else delete (HTMLElement.prototype as unknown as Record<string, unknown>)[name]
+    }
+    saved.clear()
+  })
+
+  /** Scroll the body as a user would: move it, then let the panel see the scroll event. */
+  function scroller(body: HTMLElement) {
     return {
       scrollTo(v: number) { body.scrollTop = v; fireEvent.scroll(body) },
       toEnd() { this.scrollTo(body.scrollHeight - VIEW) },
@@ -137,8 +169,13 @@ describe('LogPanel followTail', () => {
   function setup() {
     const view = render(<LogPanel<Ctx> columns={baseColumns} lines={numbered(10)} />)
     const body = view.container.querySelector<HTMLElement>('.lp-body')!
-    return { ...view, body, scroll: measure(body) }
+    return { ...view, body, scroll: scroller(body) }
   }
+
+  it('opens scrolled to the end', () => {
+    const { body } = setup()
+    expectAtEnd(body, 10)
+  })
 
   it('follows new lines while the view is at the end', () => {
     const { body, rerender } = setup()
@@ -178,7 +215,7 @@ describe('LogPanel followTail', () => {
   it('keeps following once maxLines caps the list and the row count stops growing', () => {
     const view = render(<LogPanel<Ctx> columns={baseColumns} lines={numbered(10)} maxLines={10} />)
     const body = view.container.querySelector<HTMLElement>('.lp-body')!
-    measure(body)
+    expectAtEnd(body, 10)
     view.rerender(<LogPanel<Ctx> columns={baseColumns} lines={numbered(11)} maxLines={10} />)
     expectAtEnd(body, 10)
     body.scrollTop = 0
@@ -190,7 +227,7 @@ describe('LogPanel followTail', () => {
   it('never moves the view when followTail is off', () => {
     const view = render(<LogPanel<Ctx> columns={baseColumns} lines={numbered(10)} followTail={false} />)
     const body = view.container.querySelector<HTMLElement>('.lp-body')!
-    measure(body)
+    expect(body.scrollTop).toBe(0)
     view.rerender(<LogPanel<Ctx> columns={baseColumns} lines={numbered(11)} followTail={false} />)
     expect(body.scrollTop).toBe(0)
   })
@@ -198,7 +235,7 @@ describe('LogPanel followTail', () => {
   it('snaps to the end on the render that turns followTail back on', () => {
     const view = render(<LogPanel<Ctx> columns={baseColumns} lines={numbered(10)} followTail={false} />)
     const body = view.container.querySelector<HTMLElement>('.lp-body')!
-    const scroll = measure(body)
+    const scroll = scroller(body)
     scroll.scrollTo(40)
     view.rerender(<LogPanel<Ctx> columns={baseColumns} lines={numbered(10)} followTail />)
     expectAtEnd(body, 10)
