@@ -639,7 +639,7 @@ export function NotebookPane({
         <MasterDetailLeaf
           form={{ actions, editing, draft }}
           api={{
-            path: "/content/markdown/{id}",
+            path: "/v1/papers/{id}",
             pathValues: { id: selectedId },
             title: `${noun.One} API`,
           }}

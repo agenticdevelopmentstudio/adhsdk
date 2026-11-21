@@ -74,7 +74,7 @@ export function TeamSettingsPane({
       getId={(t) => t.id}
       title={title}
       api={{
-        path: "/team/teams/{id}",
+        path: "/v1/teams/{id}",
         pathValues: { id: teamId },
         title: "Team API",
       }}

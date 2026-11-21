@@ -107,8 +107,9 @@ export function ClientAuthSettingsPane({
       api={
         ecosystemId
           ? {
-              path: "/ecosystem/client-auth/{ecosystemId}",
-              pathValues: { ecosystemId },
+              path: "/v1/ecosystems/{id}",
+              pathValues: { id: ecosystemId },
+              queryValues: { "include[]": "client_auth" },
               title: "Client auth API",
             }
           : null

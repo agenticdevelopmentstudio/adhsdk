@@ -657,13 +657,15 @@ export function IntegrationsPane({
           api={
               cfg
                 ? {
-                    path: "/integrations/ecosystems/{ecosystemId}/provider-configs/{configId}",
-                    pathValues: { ecosystemId, configId: cfg.id },
+                    path: "/v1/integrations/provider_configs/{id}",
+                    pathValues: { id: cfg.id },
+                    queryValues: { ecosystem: ecosystemId },
                     title: "Integration config API",
                   }
                 : {
-                    path: "/integrations/ecosystems/{ecosystemId}/provider-configs",
-                    pathValues: { ecosystemId },
+                    path: "/v1/integrations/provider_configs",
+                    pathValues: {},
+                    queryValues: { ecosystem: ecosystemId },
                     title: "Integrations API",
                   }
           }

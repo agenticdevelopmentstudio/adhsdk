@@ -229,7 +229,7 @@ export function ServerBagsPane({
     // The shared details pane: its header carries this list's API button and "?" help.
     <DetailsPane
       help={help}
-      api={{ path: "/ecosystem/server-bag/{id}", pathValues: { id: ecosystemId }, title: "Server bags API" }}
+      api={{ path: "/v1/server_bag", pathValues: {}, queryValues: { ecosystem: ecosystemId }, title: "Server bags API" }}
       bodyClassName="px-6 py-6"
     >
       <div className="space-y-6">

@@ -638,7 +638,7 @@ function ServiceEditor({
         }}
         showCreate={false}
         api={{
-          path: "/persona/services/{id}",
+          path: "/v1/ai_services/{id}",
           pathValues: { id: service.id },
           title: "Service API",
         }}

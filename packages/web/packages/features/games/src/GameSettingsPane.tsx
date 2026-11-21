@@ -93,7 +93,7 @@ export function GameSettingsPane({
   return (
     <DetailsPane
       help={help}
-      api={{ method: "PUT", path: "/game/games/{id}", pathValues: { id: game?.id }, title: "Game API" }}
+      api={{ method: "POST", path: "/v1/games/{id}", pathValues: { id: game?.id }, title: "Game API" }}
       section={{ dirty, canSave: !validationError, blockedReason: validationError, save, reset }}
     >
       <div className="max-w-3xl space-y-6">

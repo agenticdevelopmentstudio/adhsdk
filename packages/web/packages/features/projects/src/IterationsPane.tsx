@@ -385,7 +385,7 @@ export function IterationsPane({
         form={form}
         error={loadError}
         api={{
-          path: "/project/iterations/{id}",
+          path: "/v1/iterations/{id}",
           pathValues: { id: form.selectedId },
           title: "Iteration API",
         }}

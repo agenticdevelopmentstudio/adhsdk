@@ -672,7 +672,7 @@ export function WorkItemsSurface({
         // The header's API slot is about the OPEN item while the editor is showing (the editor
         // used to draw its own button beside ItemKey, in the body); browsing the list is not
         // about one endpoint, so the button is disabled rather than omitted there.
-        api={showEditor && selected ? { path: "/project/work-items/{id}", pathValues: { id: selected.id }, title: "Work item API" } : null}
+        api={showEditor && selected ? { path: "/v1/work_items/{id}", pathValues: { id: selected.id }, title: "Work item API" } : null}
       />
       <section className="flex min-h-0 min-w-0 flex-1 flex-col gap-4 px-6 py-4">
         <ErrorText error={loadError} />

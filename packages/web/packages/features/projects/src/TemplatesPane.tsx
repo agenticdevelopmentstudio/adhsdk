@@ -150,7 +150,7 @@ export function TemplatesPane({
         form={form}
         error={loadError}
         api={{
-          path: "/project/templates/{id}",
+          path: "/v1/project_templates/{id}",
           pathValues: { id: form.selectedId },
           title: "Template API",
         }}

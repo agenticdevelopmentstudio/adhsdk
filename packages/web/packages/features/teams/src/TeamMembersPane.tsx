@@ -158,7 +158,7 @@ export function TeamMembersPane({
         title={title ?? "Members"}
         api={
           teamId
-            ? { path: "/team/members", pathValues: {}, queryValues: { teamId }, title: "Team members API" }
+            ? { path: "/v1/team_members", pathValues: {}, queryValues: { team_id: teamId }, title: "Team members API" }
             : null
         }
       />

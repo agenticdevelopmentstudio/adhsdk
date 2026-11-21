@@ -159,9 +159,10 @@ async function loadRealmConfig(ecosystemId: string): Promise<RealmConfig> {
 /** The realm config endpoint, for the pane's API button. */
 export function realmConfigApi(ecosystemId: string | undefined) {
   return {
-    method: "PUT",
-    path: "/gamification/realms/{ecosystemId}/config",
-    pathValues: { ecosystemId },
+    method: "POST",
+    path: "/v1/gamification/config",
+    pathValues: {},
+    queryValues: { ecosystem: ecosystemId },
     title: "Realm config API",
   };
 }

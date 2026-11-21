@@ -37,7 +37,7 @@ export function ProjectActivityPane({
       <FeatureTitle
         title={title}
         api={{
-          path: "/project/projects/{id}/activity",
+          path: "/v1/projects/{id}/activity",
           pathValues: { id: projectId },
           title: "Project activity API",
         }}

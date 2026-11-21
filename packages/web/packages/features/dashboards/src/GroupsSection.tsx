@@ -130,7 +130,7 @@ export function GroupsSection({
       <MasterDetailLeaf
         form={form}
         api={{
-          path: "/monitoring/site-groups/{id}",
+          path: "/v1/monitoring/site_groups/{id}",
           pathValues: { id: form.selectedId },
           title: "Site group API",
         }}

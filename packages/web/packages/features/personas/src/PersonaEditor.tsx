@@ -510,7 +510,7 @@ export function PersonaEditor({
       icon: <Target size={16} aria-hidden />,
       // Facet 2 — the persona's purpose IS its `modelPrompt`: the system prompt that defines what it
       // is for (required). Alongside the editor, an "API" button opens a live, authed try-it panel for
-      // GET /persona/personas/{id} (id prefilled), only once the persona exists.
+      // GET /v1/personas/{id} (id prefilled), only once the persona exists.
       render: () => (
         <div className="flex min-h-0 min-w-0 flex-1 flex-col">
           {persisted && (
@@ -771,13 +771,13 @@ export function PersonaEditor({
   const personaApi = persisted
     ? {
         method: "GET",
-        path: "/persona/personas/{id}",
+        path: "/v1/personas/{id}",
         pathValues: { id: persisted.id },
         title: "Persona API",
       }
     : {
         method: "POST",
-        path: "/persona/personas",
+        path: "/v1/personas",
         pathValues: {},
         title: "Create persona API",
       };

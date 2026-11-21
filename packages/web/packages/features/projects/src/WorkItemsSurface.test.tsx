@@ -1046,7 +1046,7 @@ describe("WorkItemsSurface", () => {
 
       // The header now carries a LIVE button for w1's own endpoint…
       expect(
-        screen.getByRole("button", { name: "Live API /project/work-items/{id}" }),
+        screen.getByRole("button", { name: "Live API /v1/work_items/{id}" }),
       ).not.toBeNull();
       // …the disabled fallback is gone…
       expect(screen.queryByRole("button", { name: "API — This view has no API endpoint" })).toBeNull();

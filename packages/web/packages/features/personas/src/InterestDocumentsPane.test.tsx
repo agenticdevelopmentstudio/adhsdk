@@ -140,7 +140,7 @@ describe("KnowledgeFacet", () => {
   const LABEL_B = "Science Fiction › Space Opera › Firefly";
 
   const persona = {
-    // An RDID, exactly what GET /persona/personas returns — the only form of a persona id any
+    // An RDID, exactly what GET /v1/personas returns — the only form of a persona id any
     // client ever holds. `SpecialInterestRow.personaId` is the SAME string: the CRUD read path
     // swaps the stored uuid back to the rdid on the way out (crud/factory.ts's `refEntries`), so
     // there is no uuid anywhere on the wire to choose between.

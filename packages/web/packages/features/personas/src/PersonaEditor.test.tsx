@@ -915,7 +915,7 @@ describe("PersonaEditor API button", () => {
     expect(header?.contains(apis[0]!)).toBe(true);
     expect(seen.at(-1)).toMatchObject({
       method: "GET",
-      path: "/persona/personas/{id}",
+      path: "/v1/personas/{id}",
       pathValues: { id: "persona-1" },
     });
   });

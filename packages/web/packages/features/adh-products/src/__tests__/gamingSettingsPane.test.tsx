@@ -19,9 +19,10 @@ vi.mock("@adh-sdk/data/games", () => ({ gamesApi: { update: vi.fn() } }));
 vi.mock("@adh-sdk/gamification", () => ({
   RealmSettingsPane: () => <div data-testid="realm-switches" />,
   realmConfigApi: (ecosystemId: string | undefined) => ({
-    method: "PUT",
-    path: "/gamification/realms/{ecosystemId}/config",
-    pathValues: { ecosystemId },
+    method: "POST",
+    path: "/v1/gamification/config",
+    pathValues: {},
+    queryValues: { ecosystem: ecosystemId },
   }),
 }));
 vi.mock("@adh-sdk/games", () => ({

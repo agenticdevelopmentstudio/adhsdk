@@ -41,8 +41,9 @@ export function EcoRequestsPane({ ecosystemRdid }: { ecosystemRdid: string }): R
       <FeatureTitle
         title="Requests"
         api={{
-          path: "/auth/ecosystems/{ecosystemId}/invitation-requests",
-          pathValues: { ecosystemId: ecosystemRdid },
+          path: "/v1/invitation_requests",
+          pathValues: {},
+          queryValues: { ecosystem: ecosystemRdid },
           title: "Invitation requests API",
         }}
       />
@@ -74,8 +75,9 @@ export function EcoPendingUsersPane({ ecosystemRdid }: { ecosystemRdid: string }
       <FeatureTitle
         title="Pending users"
         api={{
-          path: "/auth/ecosystems/{ecosystemId}/pending-users",
-          pathValues: { ecosystemId: ecosystemRdid },
+          path: "/v1/pending_users",
+          pathValues: {},
+          queryValues: { ecosystem: ecosystemRdid },
           title: "Pending users API",
         }}
       />
@@ -124,8 +126,9 @@ export function EcoInvitesPane({ ecosystemRdid }: { ecosystemRdid: string }): Re
       <FeatureTitle
         title="Invites"
         api={{
-          path: "/auth/ecosystems/{ecosystemId}/invitations",
-          pathValues: { ecosystemId: ecosystemRdid },
+          path: "/v1/invitations",
+          pathValues: {},
+          queryValues: { ecosystem: ecosystemRdid },
           title: "Sent invitations API",
         }}
       />

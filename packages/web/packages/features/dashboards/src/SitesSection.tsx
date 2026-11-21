@@ -122,7 +122,7 @@ export function SitesSection({
       <MasterDetailLeaf
         form={form}
         api={{
-          path: "/monitoring/sites/{id}",
+          path: "/v1/monitoring/sites/{id}",
           pathValues: { id: form.selectedId },
           title: "Monitored site API",
         }}

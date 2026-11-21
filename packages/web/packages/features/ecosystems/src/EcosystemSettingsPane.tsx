@@ -205,7 +205,7 @@ export function EcosystemSettingsPane({
       title={title}
       help={help}
       api={{
-        path: "/ecosystem/ecosystems/{id}",
+        path: "/v1/ecosystems/{id}",
         pathValues: { id: ecosystemId },
         title: `${noun} API`,
       }}

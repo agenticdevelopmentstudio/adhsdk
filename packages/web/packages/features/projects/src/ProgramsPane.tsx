@@ -216,7 +216,7 @@ export function ProgramsPane({
         form={form}
         error={loadError}
         api={{
-          path: "/project/programs/{id}",
+          path: "/v1/programs/{id}",
           pathValues: { id: form.selectedId },
           title: "Program API",
         }}

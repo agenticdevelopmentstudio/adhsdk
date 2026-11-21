@@ -230,7 +230,7 @@ export function ProjectContentsPane({
       <FeatureTitle
         title={title}
         api={{
-          path: "/project/projects/{id}/artifacts",
+          path: "/v1/projects/{id}/artifacts",
           pathValues: { id: projectId },
           title: "Project contents API",
         }}

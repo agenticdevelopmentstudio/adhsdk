@@ -220,7 +220,7 @@ export function FeatureFlagsPane({
     // The shared details pane: its header carries this list's API button and "?" help.
     <DetailsPane
       help={help}
-      api={{ path: "/ecosystem/feature-flags/{id}", pathValues: { id: ecosystemId }, title: "Feature flags API" }}
+      api={{ path: "/v1/feature_flags", pathValues: {}, queryValues: { ecosystem: ecosystemId }, title: "Feature flags API" }}
       bodyClassName="px-6 py-6"
     >
       <div className="space-y-6">

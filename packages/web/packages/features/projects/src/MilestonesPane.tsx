@@ -300,7 +300,7 @@ export function MilestonesPane({
         form={form}
         error={loadError}
         api={{
-          path: "/project/projects/{id}/milestones",
+          path: "/v1/projects/{id}/milestones",
           pathValues: { id: projectId },
           title: "Milestones API",
         }}
