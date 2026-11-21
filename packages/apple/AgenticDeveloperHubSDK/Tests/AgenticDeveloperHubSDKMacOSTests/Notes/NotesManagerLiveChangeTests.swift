@@ -124,4 +124,56 @@ final class NotesManagerLiveChangeTests: XCTestCase {
 
         await fulfillment(of: [posted], timeout: 1)
     }
+
+    // MARK: - A replaced note reaches the editor
+
+    func testUpsertOverAHeldNotePostsNoteReplaced() async {
+        let note = makeNote("# One")
+        let storage = VersionedNoteStorage([note])
+        let manager = NotesManager(storage: storage)
+        await manager.loadNotes()
+
+        let posted = expectation(forNotification: NotesManager.noteReplacedNotification, object: manager) {
+            $0.userInfo?[NotesManager.noteIDUserInfoKey] as? UUID == note.id
+        }
+        storage.otherWriter(note.id, content: "# One, edited elsewhere")
+        await manager.apply(.upserted(note.id))
+
+        await fulfillment(of: [posted], timeout: 1)
+    }
+
+    func testUpsertOfANewNoteDoesNotPostNoteReplaced() async throws {
+        let storage = VersionedNoteStorage()
+        let manager = NotesManager(storage: storage)
+        await manager.loadNotes()
+
+        let posted = expectation(forNotification: NotesManager.noteReplacedNotification, object: manager)
+        posted.isInverted = true
+        let note = makeNote("# Arrived")
+        try storage.insertNote(note)
+        await manager.apply(.upserted(note.id))
+
+        await fulfillment(of: [posted], timeout: 0.2)
+    }
+
+    /// The branch that changed neither text nor pin used to post nothing,
+    /// leaving the editor on the old text at the other writer's version.
+    func testStaleSaveThatKeepsTheirsPostsNoteReplaced() async {
+        let note = makeNote("# Shared")
+        let storage = VersionedNoteStorage([note])
+        let manager = NotesManager(storage: storage)
+        await manager.loadNotes()
+
+        storage.otherWriter(note.id, content: "# Shared, theirs")
+        let posted = expectation(forNotification: NotesManager.noteReplacedNotification, object: manager) {
+            $0.userInfo?[NotesManager.noteIDUserInfoKey] as? UUID == note.id
+        }
+        // Typed and typed back: the text equals the base, so nothing is copied.
+        await manager.updateNote(manager.notes[0], content: "# Shared")
+        await manager.flushPendingSaves()
+
+        await fulfillment(of: [posted], timeout: 1)
+        XCTAssertEqual(manager.notes.first?.content, "# Shared, theirs")
+        XCTAssertEqual(storage.all.count, 1)
+    }
 }
