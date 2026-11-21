@@ -193,6 +193,17 @@ public enum MarkdownSchema {
         migrator.registerMigration("markdown-v7-local-version") { conn in
             try addLocalVersionIfMissing(in: conn)
         }
+        // `markdown-v8-outbox-parked`: an op adh refused for good (a 4xx other
+        // than 408/429, reported by the writer as `MarkdownRemoteRefusal`) is
+        // *parked* instead of resent forever: `parked_at` stamps when, and
+        // `park_reason` keeps the writer's reason. A parked op, and every
+        // later op for its document, is left out of the drain until it is
+        // retried or discarded. Nullable with no default, so every existing
+        // row migrates unparked.
+        migrator.registerMigration("markdown-v8-outbox-parked") { conn in
+            try conn.execute(sql: "ALTER TABLE _markdown_outbox ADD COLUMN parked_at TEXT")
+            try conn.execute(sql: "ALTER TABLE _markdown_outbox ADD COLUMN park_reason TEXT")
+        }
         return migrator
     }
 

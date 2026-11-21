@@ -753,18 +753,25 @@ public final class MarkdownStore: @unchecked Sendable {
             // needs that id: without it the delete addresses the local id,
             // gets a 404 that counts as success, and the document stays
             // upstream with nothing left to remove it.
+            //
+            // A *parked* create is the exception to both: adh answered it
+            // with a permanent refusal (`MarkdownRemoteRefusal`), so it minted
+            // nothing and never will. It counts as pending (no delete is
+            // queued for an id adh never had) and is cleared with the rest.
             let hasPendingCreate = try Bool.fetchOne(
                 conn,
                 sql: """
                     SELECT EXISTS(
                         SELECT 1 FROM _markdown_outbox
-                        WHERE document_id = ? AND intent = 'create' AND claimed_at IS NULL)
+                        WHERE document_id = ? AND intent = 'create'
+                          AND (claimed_at IS NULL OR parked_at IS NOT NULL))
                     """,
                 arguments: [id]) ?? false
             try conn.execute(
                 sql: """
                     DELETE FROM _markdown_outbox
-                    WHERE document_id = ? AND NOT (intent = 'create' AND claimed_at IS NOT NULL)
+                    WHERE document_id = ?
+                      AND NOT (intent = 'create' AND claimed_at IS NOT NULL AND parked_at IS NULL)
                     """,
                 arguments: [id])
             if !hasPendingCreate {
@@ -784,6 +791,11 @@ public final class MarkdownStore: @unchecked Sendable {
     /// two ops enqueued in the same millisecond, and not by `op_id`, whose
     /// UUIDv7 tie-break is random. Under the old ordering an `update` could
     /// come back ahead of the `create` it depends on.
+    ///
+    /// A parked op is not pending, and neither is any later op for its
+    /// document: those wait behind it, because sending them past it would
+    /// break the order they depend on (an `update` for a document whose
+    /// `create` adh refused). `parkedRemoteOps()` lists the parked ones.
     public func pendingRemoteOps(limit: Int = 100) throws -> [MarkdownRemoteOp] {
         try database.read { conn in
             try Row.fetchAll(
@@ -792,32 +804,111 @@ public final class MarkdownStore: @unchecked Sendable {
                     SELECT o.*, r.remote_id AS remote_id
                     FROM _markdown_outbox o
                     LEFT JOIN _markdown_remote_id r ON r.local_id = o.document_id
+                    WHERE NOT EXISTS (
+                        SELECT 1 FROM _markdown_outbox p
+                        WHERE p.document_id = o.document_id
+                          AND p.parked_at IS NOT NULL AND p.seq <= o.seq)
                     ORDER BY o.seq LIMIT ?
                     """,
                 arguments: [limit]
+            ).map { try self.remoteOp(from: $0) }
+        }
+    }
+
+    /// Every parked op, oldest first, with the reason adh refused it.
+    public func parkedRemoteOps() throws -> [MarkdownParkedRemoteOp] {
+        try database.read { conn in
+            try Row.fetchAll(
+                conn,
+                sql: """
+                    SELECT o.*, r.remote_id AS remote_id
+                    FROM _markdown_outbox o
+                    LEFT JOIN _markdown_remote_id r ON r.local_id = o.document_id
+                    WHERE o.parked_at IS NOT NULL
+                    ORDER BY o.seq
+                    """
             ).map { row in
-                // An unreadable `intent`, `payload` or `created_at` is on-disk
-                // corruption, not a legitimate default — `?? .update` / `?? [:]`
-                // / `?? Date()` would silently turn it into a content push, drop
-                // already-queued fields, or invent a send time, so all three
-                // throw instead of guessing.
-                let opID: String = row["op_id"]
-                let rawIntent: String = row["intent"]
-                guard let intent = MarkdownRemoteIntent(rawValue: rawIntent) else {
-                    throw MarkdownStoreError.unknownRemoteIntent(rawIntent)
+                let remoteOp = try self.remoteOp(from: row)
+                guard let parkedAt = MarkdownTimestamp.date(row["parked_at"]) else {
+                    throw MarkdownStoreError.unreadableOutboxTimestamp(opID: remoteOp.opID)
                 }
-                guard let createdAt = MarkdownTimestamp.date(row["created_at"]) else {
-                    throw MarkdownStoreError.unreadableOutboxTimestamp(opID: opID)
-                }
-                return MarkdownRemoteOp(
-                    opID: opID,
-                    documentID: row["document_id"],
-                    remoteID: row["remote_id"],
-                    intent: intent,
-                    payload: try self.decodePayload(row["payload"]),
-                    createdAt: createdAt)
+                return MarkdownParkedRemoteOp(
+                    remoteOp: remoteOp, reason: row["park_reason"] ?? "", parkedAt: parkedAt)
             }
         }
+    }
+
+    /// Takes a parked op out of the park, so the next drain sends it again —
+    /// the same body under the same `opID`, since its claim is kept — and then
+    /// the ops that waited behind it. For when whatever adh refused has been
+    /// fixed on its side. An op that is not parked is left alone.
+    public func retryParkedRemoteOp(opID: String) throws {
+        try database.write { conn in
+            try conn.execute(
+                sql: """
+                    UPDATE _markdown_outbox SET parked_at = NULL, park_reason = NULL
+                    WHERE op_id = ? AND parked_at IS NOT NULL
+                    """,
+                arguments: [opID])
+        }
+    }
+
+    /// Gives up on a parked op: its row leaves the queue and the ops behind it
+    /// are released. The document is not touched, so its content stays
+    /// readable and editable locally; only the call to adh is dropped.
+    ///
+    /// Discarding a parked `create` also drops every other op queued for that
+    /// document: adh never minted it, so each of them would address an id adh
+    /// has never heard of. An op that is not parked is left alone.
+    public func discardParkedRemoteOp(opID: String) throws {
+        try database.write { conn in
+            guard let row = try Row.fetchOne(
+                conn,
+                sql: """
+                    SELECT document_id, intent FROM _markdown_outbox
+                    WHERE op_id = ? AND parked_at IS NOT NULL
+                    """,
+                arguments: [opID])
+            else { return }
+            if (row["intent"] as String) == MarkdownRemoteIntent.create.rawValue {
+                try conn.execute(
+                    sql: "DELETE FROM _markdown_outbox WHERE document_id = ?",
+                    arguments: [row["document_id"] as String])
+            } else {
+                try conn.execute(sql: "DELETE FROM _markdown_outbox WHERE op_id = ?", arguments: [opID])
+            }
+        }
+    }
+
+    private func park(opID: String, reason: String) throws {
+        try database.write { conn in
+            try conn.execute(
+                sql: "UPDATE _markdown_outbox SET parked_at = ?, park_reason = ? WHERE op_id = ?",
+                arguments: [MarkdownTimestamp.string(Date()), reason, opID])
+        }
+    }
+
+    private func remoteOp(from row: Row) throws -> MarkdownRemoteOp {
+        // An unreadable `intent`, `payload` or `created_at` is on-disk
+        // corruption, not a legitimate default — `?? .update` / `?? [:]`
+        // / `?? Date()` would silently turn it into a content push, drop
+        // already-queued fields, or invent a send time, so all three
+        // throw instead of guessing.
+        let opID: String = row["op_id"]
+        let rawIntent: String = row["intent"]
+        guard let intent = MarkdownRemoteIntent(rawValue: rawIntent) else {
+            throw MarkdownStoreError.unknownRemoteIntent(rawIntent)
+        }
+        guard let createdAt = MarkdownTimestamp.date(row["created_at"]) else {
+            throw MarkdownStoreError.unreadableOutboxTimestamp(opID: opID)
+        }
+        return MarkdownRemoteOp(
+            opID: opID,
+            documentID: row["document_id"],
+            remoteID: row["remote_id"],
+            intent: intent,
+            payload: try decodePayload(row["payload"]),
+            createdAt: createdAt)
     }
 
     /// The id adh knows a locally-created document by, once its `create` has
@@ -877,6 +968,16 @@ public final class MarkdownStore: @unchecked Sendable {
     /// (a `create` before its `update`), so skipping past a failure would push
     /// an update for a document adh has never seen.
     ///
+    /// The one throw that does not stop it is `MarkdownRemoteRefusal`, a
+    /// permanent refusal: resending it can never succeed, and stopping on it
+    /// would hold every other document's ops behind it forever. That op is
+    /// *parked* (`parked_at`, `park_reason`), every later op for the same
+    /// document is held back with it, and the drain goes on with the other
+    /// documents. The park keeps the op's body and claim, and the document is
+    /// untouched; `parkedRemoteOps()`, `retryParkedRemoteOp(opID:)` and
+    /// `discardParkedRemoteOp(opID:)` are how it leaves, and
+    /// `deleteDocument(id:)` clears it with the rest of the document's ops.
+    ///
     /// Never call this from inside a `database.write { }` block. It `await`s
     /// the network writer between reading and clearing each op, and that
     /// `await` may resume on a different thread than the one that entered the
@@ -906,7 +1007,11 @@ public final class MarkdownStore: @unchecked Sendable {
         // to; with anyone else (or nobody) declared signed in, nothing is
         // sent. `SyncStoreFailure.accountMismatch` and the queue is kept.
         try syncStore.checkAccountGuard()
+        // Documents with an op parked during this pass: their later ops are
+        // in the snapshot already and must wait behind it.
+        var parkedDocuments: Set<String> = []
         for queued in try pendingRemoteOps(limit: limit) {
+            if parkedDocuments.contains(queued.documentID) { continue }
             // The remote id is re-read immediately before each send rather
             // than trusted from the batch snapshot: an `update` queued behind
             // its own document's `create` had no remote id when the batch was
@@ -923,8 +1028,16 @@ public final class MarkdownStore: @unchecked Sendable {
             guard try claim(opID: remoteOp.opID) else { continue }
             // A throw stops the drain with the op still queued and still
             // claimed: it may have reached adh, so its body is frozen and the
-            // next drain resends it unchanged.
-            let assigned = try await writer.send(remoteOp)
+            // next drain resends it unchanged. A permanent refusal parks it
+            // instead and the drain moves on to the next document.
+            let assigned: String?
+            do {
+                assigned = try await writer.send(remoteOp)
+            } catch let refusal as MarkdownRemoteRefusal {
+                try park(opID: remoteOp.opID, reason: refusal.reason)
+                parkedDocuments.insert(remoteOp.documentID)
+                continue
+            }
             // adh mints the id — a create carries none — so a
             // create's response is the only place the document's upstream
             // identity ever appears. Recording it here, before any later op

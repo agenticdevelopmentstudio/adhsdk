@@ -74,6 +74,43 @@ public struct MarkdownRemoteOp: Equatable, Sendable {
     }
 }
 
+/// What a writer throws when adh refused an op **for good**: a 4xx other than
+/// 408 and 429, which no resend of the same body under the same
+/// Idempotency-Key can ever turn into a success.
+///
+/// `MarkdownStore.drainRemoteQueue` parks the op (it stays in the queue with
+/// its body, its claim and this `reason`), holds back every later op for the
+/// same document, and goes on with other documents. Any other error is
+/// transient and stops the drain with the op queued, as before. A parked op
+/// is listed by `MarkdownStore.parkedRemoteOps()` and leaves the park only
+/// through `retryParkedRemoteOp(opID:)`, `discardParkedRemoteOp(opID:)` or
+/// `deleteDocument(id:)`. The document itself is never touched, so nothing
+/// the user wrote is lost.
+public struct MarkdownRemoteRefusal: Error, Equatable, Sendable {
+    /// Why adh refused, for the person who decides what to do with the op
+    /// (for example "422 content is required").
+    public let reason: String
+
+    public init(reason: String) {
+        self.reason = reason
+    }
+}
+
+/// An op the drain parked after its writer threw `MarkdownRemoteRefusal`.
+public struct MarkdownParkedRemoteOp: Equatable, Sendable {
+    /// The op as it is queued: the body a retry sends, under the same `opID`.
+    public let remoteOp: MarkdownRemoteOp
+    /// The refusal's `reason`.
+    public let reason: String
+    public let parkedAt: Date
+
+    public init(remoteOp: MarkdownRemoteOp, reason: String, parkedAt: Date) {
+        self.remoteOp = remoteOp
+        self.reason = reason
+        self.parkedAt = parkedAt
+    }
+}
+
 /// Drains `_markdown_outbox` against adh.
 ///
 /// adhd's `HubMarkdownRemoteWriter` implements it. The queue is durable rather
@@ -81,6 +118,9 @@ public struct MarkdownRemoteOp: Equatable, Sendable {
 /// out, offline) are still there when one can.
 public protocol MarkdownRemoteWriter: Sendable {
     /// Throws to leave the op queued. Returning normally means adh accepted it.
+    /// Throw `MarkdownRemoteRefusal` when adh refused it for good (a 4xx other
+    /// than 408/429): the op is parked and the drain moves on to other
+    /// documents. Any other error stops the drain.
     ///
     /// A throw does not mean adh never saw the op: the op stays claimed and is
     /// resent unchanged, under the same `opID`, on the next drain. A writer
