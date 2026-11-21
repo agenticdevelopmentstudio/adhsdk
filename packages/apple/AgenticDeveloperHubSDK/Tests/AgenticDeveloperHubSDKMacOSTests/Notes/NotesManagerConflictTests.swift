@@ -1,4 +1,5 @@
 import XCTest
+import AgenticDeveloperHubSDKMarkdown
 @testable import AgenticDeveloperHubSDKMacOS
 
 /// Decision 10: a stale save never loses text.
@@ -55,7 +56,7 @@ final class NotesManagerConflictTests: XCTestCase {
 
         let copies = storage.all.filter { $0.id != note.id }
         XCTAssertEqual(copies.count, 1)
-        XCTAssertEqual(copies.first?.content, "# Shared (conflicted copy)\n\n# Shared\n\nmine")
+        XCTAssertEqual(copies.first?.content, "# Shared (conflicted copy)\n\nmine")
         XCTAssertTrue(manager.notes.contains(where: { $0.id == copies.first?.id }))
     }
 
@@ -133,7 +134,7 @@ final class NotesManagerConflictTests: XCTestCase {
         await manager.flushPendingSaves()
 
         let copies = storage.all.filter { $0.id != note.id }
-        XCTAssertEqual(copies.map(\.content), ["# Shared (conflicted copy)\n\n# Shared\n\nmine, and more"])
+        XCTAssertEqual(copies.map(\.content), ["# Shared (conflicted copy)\n\nmine, and more"])
     }
 
     func testStalePinToggleOverChangedTextPinsTheirsWithoutACopy() async {
@@ -150,5 +151,49 @@ final class NotesManagerConflictTests: XCTestCase {
         XCTAssertEqual(storage.note(note.id)?.isPinned, true)
         XCTAssertEqual(manager.notes.first?.isPinned, true)
         XCTAssertEqual(manager.notes.first?.content, "# Pin me\n\ntheirs")
+    }
+
+    // MARK: - The copy's text: marked on its title, nothing else changed
+
+    func testLeadingHeadingIsMarkedInPlaceNotRepeated() {
+        XCTAssertEqual(
+            NotesManager.conflictedCopyContent(of: "# Shared\n\nmine"),
+            "# Shared (conflicted copy)\n\nmine")
+    }
+
+    func testFrontmatterTitleIsMarkedAndTheBlockStaysFirst() {
+        let copy = NotesManager.conflictedCopyContent(of: "---\ntitle: Plan\ntags: x\n---\nBody")
+        XCTAssertEqual(copy, "---\ntitle: Plan (conflicted copy)\ntags: x\n---\nBody")
+        XCTAssertEqual(Note.new(content: copy).title, "Plan (conflicted copy)")
+    }
+
+    func testFrontmatterNameIsMarkedWhenThereIsNoTitle() {
+        XCTAssertEqual(
+            NotesManager.conflictedCopyContent(of: "---\nname: Plan\n---\nBody"),
+            "---\nname: Plan (conflicted copy)\n---\nBody")
+    }
+
+    func testFrontmatterWithoutATitleKeepsTheBlockAndMarksTheHeadingBelowIt() {
+        XCTAssertEqual(
+            NotesManager.conflictedCopyContent(of: "---\ntags: x\n---\n# Plan\n\nBody"),
+            "---\ntags: x\n---\n# Plan (conflicted copy)\n\nBody")
+    }
+
+    func testFrontmatterWithoutAnyHeadingGetsOneAfterTheBlock() {
+        let copy = NotesManager.conflictedCopyContent(of: "---\ntags: x\n---\nJust text")
+        XCTAssertEqual(copy, "---\ntags: x\n---\n# Just text (conflicted copy)\n\nJust text")
+        XCTAssertEqual(Frontmatter.stringValue("tags", in: copy), "x")
+    }
+
+    func testPlainTextGetsAHeadingCarryingItsTitle() {
+        XCTAssertEqual(
+            NotesManager.conflictedCopyContent(of: "Just text\nmore"),
+            "# Just text (conflicted copy)\n\nJust text\nmore")
+    }
+
+    func testTheEditorsTextIsKeptWhole() {
+        let original = "---\ntitle: Plan\n---\nline one\n\n## Section\nline two"
+        let copy = NotesManager.conflictedCopyContent(of: original)
+        XCTAssertTrue(copy.hasSuffix("line one\n\n## Section\nline two"))
     }
 }
