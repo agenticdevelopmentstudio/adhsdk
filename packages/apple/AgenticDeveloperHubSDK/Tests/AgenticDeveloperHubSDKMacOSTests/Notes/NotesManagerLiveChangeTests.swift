@@ -229,4 +229,74 @@ final class NotesManagerLiveChangeTests: XCTestCase {
         XCTAssertEqual(storage.all.map(\.content), ["# Doomed (conflicted copy)\n\nmine"])
         XCTAssertFalse(manager.notes.contains(where: { $0.id == note.id }))
     }
+
+    // MARK: - A resync keeps unsaved edits
+
+    func testResyncKeepsAnUnsavedEditAndItsSaveLands() async {
+        let note = makeNote("# Mine")
+        let storage = VersionedNoteStorage([note])
+        let manager = NotesManager(storage: storage)
+        await manager.loadNotes()
+
+        await manager.updateNote(manager.notes[0], content: "# Mine, typing")
+        await manager.apply(.resync)
+
+        XCTAssertEqual(manager.notes.first?.content, "# Mine, typing")
+        let stillFailing = await manager.flushPendingSaves()
+        XCTAssertTrue(stillFailing.isEmpty)
+        XCTAssertEqual(storage.note(note.id)?.content, "# Mine, typing")
+    }
+
+    /// The resync must not hand the pending save the other writer's version:
+    /// the save goes stale and keeps both texts.
+    func testResyncOverAChangedNoteLetsTheSaveConflict() async {
+        let note = makeNote("# Shared\n\nstart")
+        let storage = VersionedNoteStorage([note])
+        let manager = NotesManager(storage: storage)
+        await manager.loadNotes()
+
+        await manager.updateNote(manager.notes[0], content: "# Shared\n\nmine")
+        storage.otherWriter(note.id, content: "# Shared\n\ntheirs")
+        await manager.apply(.resync)
+        XCTAssertEqual(manager.notes.first(where: { $0.id == note.id })?.content, "# Shared\n\nmine")
+
+        await manager.flushPendingSaves()
+
+        XCTAssertEqual(storage.note(note.id)?.content, "# Shared\n\ntheirs")
+        let copies = storage.all.filter { $0.id != note.id }
+        XCTAssertEqual(copies.map(\.content), ["# Shared (conflicted copy)\n\nmine"])
+    }
+
+    func testResyncAfterTheNoteWasDeletedKeepsTheEditAsACopy() async throws {
+        let note = makeNote("# Doomed")
+        let storage = VersionedNoteStorage([note])
+        let manager = NotesManager(storage: storage)
+        await manager.loadNotes()
+
+        await manager.updateNote(manager.notes[0], content: "# Doomed\n\nmine")
+        try storage.deleteNote(id: note.id)
+        await manager.apply(.resync)
+        XCTAssertEqual(manager.notes.first(where: { $0.id == note.id })?.content, "# Doomed\n\nmine")
+
+        await manager.flushPendingSaves()
+
+        XCTAssertEqual(storage.all.map(\.content), ["# Doomed (conflicted copy)\n\nmine"])
+        XCTAssertFalse(manager.notes.contains(where: { $0.id == note.id }))
+    }
+
+    func testResyncThatChangesAHeldNotePostsNoteReplaced() async {
+        let note = makeNote("# One")
+        let storage = VersionedNoteStorage([note])
+        let manager = NotesManager(storage: storage)
+        await manager.loadNotes()
+
+        let posted = expectation(forNotification: NotesManager.noteReplacedNotification, object: manager) {
+            $0.userInfo?[NotesManager.noteIDUserInfoKey] as? UUID == note.id
+        }
+        storage.otherWriter(note.id, content: "# One, missed by the feed")
+        await manager.apply(.resync)
+
+        await fulfillment(of: [posted], timeout: 1)
+        XCTAssertEqual(manager.notes.first?.content, "# One, missed by the feed")
+    }
 }
