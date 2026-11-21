@@ -886,4 +886,58 @@ final class NotesSplitViewControllerTests: XCTestCase {
 
         XCTAssertEqual(split.paneSearchPlaceholder, "Search Notes")
     }
+
+    // MARK: - Another writer's text reaches the open editor
+
+    /// Loads `notes` into a split pane with `selected` open in the editor.
+    private func makeSplitShowing(
+        _ selected: Note, among notes: [Note]
+    ) async throws -> (
+        split: NotesSplitViewController, storage: VersionedNoteStorage,
+        manager: NotesManager, editor: NoteEditorViewController
+    ) {
+        let storage = VersionedNoteStorage(notes)
+        let notesManager = NotesManager(storage: storage)
+        await notesManager.loadNotes()
+        let split = NotesSplitViewController(
+            notesManager: notesManager, taxonomy: nil, autosaveName: makeAutosaveName())
+        split.loadViewIfNeeded()
+        let listVC = try XCTUnwrap(split.splitViewItems[1].viewController as? NotesListViewController)
+        listVC.reload(notes: notesManager.notes, keepingSelectedID: selected.id)
+        split.reload()
+        let editorVC = try XCTUnwrap(split.splitViewItems[2].viewController as? NoteEditorViewController)
+        return (split, storage, notesManager, editorVC)
+    }
+
+    private func makeNote(_ content: String) -> Note {
+        Note(id: UUID(), content: content, createdDate: Date(), modifiedDate: Date(), isPinned: false)
+    }
+
+    /// The list refresh deliberately leaves the editor alone, so a feed upsert
+    /// of the open note used to leave the old text on screen while the
+    /// manager held the new version — and the next keystroke saved the old
+    /// text over the other writer's, unchecked.
+    func testAnUpsertOfTheOpenNoteIsShownInTheEditor() async throws {
+        let note = makeNote("# Open")
+        let (split, storage, manager, editor) = try await makeSplitShowing(note, among: [note])
+        XCTAssertEqual(editor.editorController.content, "# Open")
+
+        storage.otherWriter(note.id, content: "# Open, edited elsewhere")
+        await manager.apply(.upserted(note.id))
+
+        XCTAssertEqual(editor.editorController.content, "# Open, edited elsewhere")
+        withExtendedLifetime(split) {}
+    }
+
+    func testAnUpsertOfAnotherNoteLeavesTheEditorAlone() async throws {
+        let open = makeNote("# Open")
+        let other = makeNote("# Other")
+        let (split, storage, manager, editor) = try await makeSplitShowing(open, among: [open, other])
+
+        storage.otherWriter(other.id, content: "# Other, edited elsewhere")
+        await manager.apply(.upserted(other.id))
+
+        XCTAssertEqual(editor.editorController.content, "# Open")
+        withExtendedLifetime(split) {}
+    }
 }

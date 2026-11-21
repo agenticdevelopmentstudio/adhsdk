@@ -176,6 +176,21 @@ public final class NotesSplitViewController: ThemedSplitViewController {
         NotificationCenter.default.addObserver(
             self, selector: #selector(taxonomyDidChange),
             name: NotesManager.taxonomyDidChangeNotification, object: notesManager)
+        NotificationCenter.default.addObserver(
+            self, selector: #selector(noteReplaced(_:)),
+            name: NotesManager.noteReplacedNotification, object: notesManager)
+    }
+
+    /// Another writer's text replaced a note: if it is the one in the editor,
+    /// show the text the manager now holds. Setting the editor's content
+    /// programmatically does not report a change, so this schedules no save.
+    @objc private func noteReplaced(_ notification: Notification) {
+        guard let id = notification.userInfo?[NotesManager.noteIDUserInfoKey] as? UUID,
+              listVC.selectedNoteID == id,
+              let note = notesManager.notes.first(where: { $0.id == id }),
+              editorVC.editorController.content != note.content
+        else { return }
+        editorVC.show(note: note)
     }
 
     /// Another writer changed the folders: rebuild the tree. The folder list

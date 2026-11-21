@@ -51,8 +51,34 @@ public final class NotesManager {
     public static let taxonomyDidChangeNotification = Notification.Name(
         "AgenticDeveloperHubSDK.NotesManager.taxonomyDidChange")
 
+    /// Posted when a note's text in `notes` was replaced by another writer's
+    /// — a feed upsert, or a stale save that kept the other writer's note —
+    /// so a host showing that note in an editor re-shows it.
+    ///
+    /// `notesDidChangeNotification` cannot carry this: it refreshes lists,
+    /// and a list deliberately leaves the editor alone, since most changes it
+    /// reports came *from* the editor. Without this the editor kept showing
+    /// the old text over a note the manager now held at the other writer's
+    /// version, and the next keystroke saved the old text on top of theirs
+    /// with no conflict check.
+    ///
+    /// `userInfo[noteIDUserInfoKey]` is the note's `UUID`; `object` is the
+    /// manager. Observers read the note from `notes`.
+    public static let noteReplacedNotification = Notification.Name(
+        "AgenticDeveloperHubSDK.NotesManager.noteReplaced")
+
+    /// The `userInfo` key of `noteReplacedNotification`: the replaced note's
+    /// `UUID`.
+    public static let noteIDUserInfoKey = "noteID"
+
     private func postNotesDidChange() {
         NotificationCenter.default.post(name: Self.notesDidChangeNotification, object: self)
+    }
+
+    private func postNoteReplaced(_ id: UUID) {
+        NotificationCenter.default.post(
+            name: Self.noteReplacedNotification, object: self,
+            userInfo: [Self.noteIDUserInfoKey: id])
     }
 
     // MARK: - State
@@ -291,15 +317,21 @@ public final class NotesManager {
             }
             // At or below what is held: this manager's own echo.
             if let held = versions[id], fetched.version <= held { return }
+            let replaced: Bool
             if let idx = notes.firstIndex(where: { $0.id == id }) {
                 notes[idx] = fetched
+                replaced = true
             } else {
                 notes.append(fetched)
+                replaced = false
             }
             baseContent[id] = fetched.content
             versions[id] = fetched.version
             notes.sort(by: Note.defaultSort)
             postNotesDidChange()
+            // The editor shows the text at the version the ledger now holds,
+            // or its next keystroke overwrites this one unchecked.
+            if replaced { postNoteReplaced(id) }
         }
     }
 
@@ -381,6 +413,13 @@ public final class NotesManager {
             return
         }
         let textEdited = latest.content != baseContent[note.id]
+        if textEdited {
+            // The copy first, the other writer's note second: until the copy
+            // is stored, the editor's text lives only in `notes` and on
+            // screen, so a failed insert leaves both alone (and the save
+            // pending, to come back here) instead of discarding the text.
+            try await insertConflictedCopy(following: note.id, from: latest)
+        }
         if let idx = notes.firstIndex(where: { $0.id == note.id }) {
             notes[idx] = stored
         } else {
@@ -389,8 +428,11 @@ public final class NotesManager {
         baseContent[note.id] = stored.content
         versions[note.id] = stored.version
         dirty.remove(note.id)
+        notes.sort(by: Note.defaultSort)
+        postNotesDidChange()
+        postNoteReplaced(note.id)
         if textEdited {
-            try await insertConflictedCopy(of: latest)
+            return
         } else if latest.isPinned != stored.isPinned {
             // Only the pin was changed here: the other writer's text stands,
             // and the pin goes on top of it rather than into a copy.
@@ -405,13 +447,35 @@ public final class NotesManager {
         }
     }
 
-    private func insertConflictedCopy(of note: Note) async throws {
+    @discardableResult
+    private func insertConflictedCopy(of note: Note) async throws -> Note {
         var copy = Note.new(content: Self.conflictedCopyContent(of: note.content))
         copy.version = try await insert(copy)
         notes.append(copy)
         baseContent[copy.id] = copy.content
         notes.sort(by: Note.defaultSort)
         postNotesDidChange()
+        return copy
+    }
+
+    /// Stores the editor's text for `id` as a conflicted copy, and keeps the
+    /// copy in step with any typing that lands in `id` while the writes are
+    /// out — the editor still shows `id` until the caller replaces it, so a
+    /// keystroke there is text the copy must not miss. `latest` is the text
+    /// to start from when `id` is no longer in `notes`.
+    private func insertConflictedCopy(following id: UUID, from latest: Note) async throws {
+        var copied = notes.first(where: { $0.id == id }) ?? latest
+        var copy = try await insertConflictedCopy(of: copied)
+        while let now = notes.first(where: { $0.id == id }), now.content != copied.content {
+            copied = now
+            copy.content = Self.conflictedCopyContent(of: now.content)
+            copy.modifiedDate = Date()
+            copy.version = try await write(copy, version: nil)
+            if let idx = notes.firstIndex(where: { $0.id == copy.id }) {
+                notes[idx] = copy
+            }
+            baseContent[copy.id] = copy.content
+        }
     }
 
     /// The text of a conflicted copy: `content` with "(conflicted copy)"
