@@ -117,6 +117,14 @@
   its `local_version` by one and append the change (upsert or delete, with the new
   version) to the sync store's change log inside the pull's transaction, so a pull
   reaches every app watching the feed.
+- **unchanged-pull-is-silent**: A pulled upsert counts as a change only when it
+  inserts the row or alters a column other than the bookkeeping columns
+  (`sync_version`, `sync_stamped_at`, `local_version`, `latest_version_id`,
+  `updated_at`); a pull that differs only in those — the echo of this store's own
+  push, or a re-sync of an unchanged row — MUST neither bump `local_version` nor
+  append to the change log, so a writer holding the version is not made stale by
+  its own write coming back. A pulled tombstone counts only when the row was not
+  already deleted.
 - **schema-drift-guard**: The projection's hand-maintained per-resource column lists
   MUST match the live schema's column info at runtime, so the two cannot silently
   drift apart.
@@ -137,6 +145,10 @@
   (a create starts it at 1) and log the change to the sync store's change log
   under `content.markdown` with that version; the log is pruned and change
   observers fire only once the transaction commits, never on a rollback.
+- **writes-return-version**: Creating a document MUST return the document with its
+  new version, and updating and mutating a document MUST return the new
+  `local_version`, so a writer can quote it as the expected version of its next
+  write without reading the row again.
 - **expected-version-check**: Updating, mutating, and deleting a document MUST
   accept an optional expected version; when given, a stored `local_version` that
   differs MUST refuse the write with a stale-version error carrying the current
