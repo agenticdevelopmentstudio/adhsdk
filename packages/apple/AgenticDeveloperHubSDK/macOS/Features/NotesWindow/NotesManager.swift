@@ -102,6 +102,38 @@ public final class NotesManager {
     /// (M1(b) in the review this fixes) and this is a `let`: the reference
     /// never changes after `init`, only what it points to does I/O.
     private nonisolated let storage: NoteStorage
+
+    /// The storage version of each note's `baseContent`: what the next write
+    /// of that note must send as `Note.version`.
+    ///
+    /// Read and written *inside* the storage chain (`performStorage(_:)`),
+    /// not from the snapshot a save was scheduled with. Saves queue behind
+    /// one another, so a snapshot taken on the main actor carries the version
+    /// from before the save ahead of it in the queue lands, and would be
+    /// refused as stale against this manager's own write. The ledger is
+    /// updated by that earlier write before the later one reads it.
+    ///
+    /// It only advances when the manager adopts the matching content: a feed
+    /// change skipped because the note is being edited leaves it alone, so
+    /// the edit's save is refused as stale and takes Decision 10's path
+    /// rather than overwriting the other writer's text.
+    private nonisolated let versions = VersionLedger()
+
+    /// A lock-guarded `[UUID: Int64]`, shareable with the detached storage
+    /// tasks.
+    final class VersionLedger: Sendable {
+        private let state = OSAllocatedUnfairLock(initialState: [UUID: Int64]())
+
+        subscript(id: UUID) -> Int64? {
+            get { state.withLock { $0[id] } }
+            set { state.withLock { $0[id] = newValue } }
+        }
+
+        func replaceAll(with notes: [Note]) {
+            let map = Dictionary(notes.map { ($0.id, $0.version) }, uniquingKeysWith: max)
+            state.withLock { $0 = map }
+        }
+    }
     /// Per-note debounced autosave.
     ///
     /// The dictionary of per-key `Task`s this used to be lived here, in
@@ -246,14 +278,15 @@ public final class NotesManager {
                 postNotesDidChange()
                 return
             }
+            // At or below what is held: this manager's own echo.
+            if let held = versions[id], fetched.version <= held { return }
             if let idx = notes.firstIndex(where: { $0.id == id }) {
-                // At or below what is held: this manager's own echo.
-                guard fetched.version > notes[idx].version else { return }
                 notes[idx] = fetched
             } else {
                 notes.append(fetched)
             }
             baseContent[id] = fetched.content
+            versions[id] = fetched.version
             notes.sort(by: Note.defaultSort)
             postNotesDidChange()
         }
@@ -262,20 +295,48 @@ public final class NotesManager {
     private func forget(_ id: UUID) {
         notes.removeAll(where: { $0.id == id })
         baseContent[id] = nil
+        versions[id] = nil
         dirty.remove(id)
     }
 
     /// Writes `note`, and resolves a stale refusal without losing text.
     private func persist(_ note: Note) async throws {
         do {
-            try await performStorage { try await $0.updateNote(note) }
-            markSaved(note)
+            let written = try await write(note, version: nil)
+            markSaved(note, version: written)
         } catch NoteStorageError.stale(let current) {
             try await resolveStale(note, current: current)
         }
     }
 
-    private func markSaved(_ note: Note) {
+    /// Updates `note` in storage at `version`, or at the ledger's version
+    /// when nil, and records the version the write produced — both inside
+    /// the storage chain (see `versions`).
+    private func write(_ note: Note, version: Int64?) async throws -> Int64 {
+        let ledger = versions
+        return try await performStorage { storage in
+            var toSave = note
+            if let held = version ?? ledger[note.id] { toSave.version = held }
+            let written = try await storage.updateNote(toSave)
+            ledger[note.id] = written
+            return written
+        }
+    }
+
+    /// Inserts `note` and records its first version.
+    private func insert(_ note: Note) async throws -> Int64 {
+        let ledger = versions
+        return try await performStorage { storage in
+            let written = try await storage.insertNote(note)
+            ledger[note.id] = written
+            return written
+        }
+    }
+
+    private func markSaved(_ note: Note, version: Int64) {
+        if let idx = notes.firstIndex(where: { $0.id == note.id }) {
+            notes[idx].version = version
+        }
         baseContent[note.id] = note.content
         if notes.first(where: { $0.id == note.id })?.content == note.content {
             dirty.remove(note.id)
@@ -290,37 +351,52 @@ public final class NotesManager {
         if stored == nil {
             stored = try await performStorage { try await $0.fetchNote(id: note.id) }
         }
+        // The editor's text as it stands now, not as `note` captured it: the
+        // user may have typed on while the refused write and the re-read were
+        // out, and that text is what must not be lost.
+        let latest = notes.first(where: { $0.id == note.id }) ?? note
         guard let stored else {
             // Deleted underneath the editor: the editor's text becomes a note
             // of its own rather than vanishing.
             forget(note.id)
-            try await insertConflictedCopy(of: note)
+            try await insertConflictedCopy(of: latest)
             return
         }
         if stored.content == baseContent[note.id] {
-            var retry = note
-            retry.version = stored.version
-            if let idx = notes.firstIndex(where: { $0.id == note.id }) {
-                notes[idx].version = stored.version
-            }
-            let toSave = retry
-            try await performStorage { try await $0.updateNote(toSave) }
-            markSaved(toSave)
+            // Only the version moved (a pin toggle, a hub echo elsewhere):
+            // this editor's text still applies on top of it.
+            let written = try await write(note, version: stored.version)
+            markSaved(note, version: written)
             return
         }
+        let textEdited = latest.content != baseContent[note.id]
         if let idx = notes.firstIndex(where: { $0.id == note.id }) {
             notes[idx] = stored
         } else {
             notes.append(stored)
         }
         baseContent[note.id] = stored.content
+        versions[note.id] = stored.version
         dirty.remove(note.id)
-        try await insertConflictedCopy(of: note)
+        if textEdited {
+            try await insertConflictedCopy(of: latest)
+        } else if latest.isPinned != stored.isPinned {
+            // Only the pin was changed here: the other writer's text stands,
+            // and the pin goes on top of it rather than into a copy.
+            var pinned = stored
+            pinned.isPinned = latest.isPinned
+            dirty.insert(note.id)
+            let written = try await write(pinned, version: stored.version)
+            markSaved(pinned, version: written)
+            if let idx = notes.firstIndex(where: { $0.id == note.id }) {
+                notes[idx].isPinned = latest.isPinned
+            }
+        }
     }
 
     private func insertConflictedCopy(of note: Note) async throws {
-        let copy = Note.new(content: "# \(note.title) (conflicted copy)\n\n" + note.content)
-        try await performStorage { try await $0.insertNote(copy) }
+        var copy = Note.new(content: "# \(note.title) (conflicted copy)\n\n" + note.content)
+        copy.version = try await insert(copy)
         notes.append(copy)
         baseContent[copy.id] = copy.content
         notes.sort(by: Note.defaultSort)
@@ -331,7 +407,12 @@ public final class NotesManager {
 
     public func loadNotes() async {
         do {
-            let loaded = try await performStorage { try await $0.fetchAllNotes() }
+            let ledger = versions
+            let loaded = try await performStorage { storage in
+                let all = try await storage.fetchAllNotes()
+                ledger.replaceAll(with: all)
+                return all
+            }
             notes = loaded.sorted(by: Note.defaultSort)
             baseContent = Dictionary(loaded.map { ($0.id, $0.content) }, uniquingKeysWith: { first, _ in first })
             dirty = []
@@ -357,9 +438,9 @@ public final class NotesManager {
     /// answer that leaves the screen telling the truth.
     @discardableResult
     public func createNote(content: String) async -> UUID? {
-        let note = Note.new(content: content)
+        var note = Note.new(content: content)
         do {
-            try await performStorage { try await $0.insertNote(note) }
+            note.version = try await insert(note)
         } catch {
             record(.create, error)
             return nil
@@ -392,6 +473,9 @@ public final class NotesManager {
         updated.isPinned.toggle()
         updated.modifiedDate = Date()
         notes[idx] = updated
+        // Dirty until the write lands, so a feed change arriving meanwhile is
+        // not adopted over the toggle (`markSaved` clears it).
+        dirty.insert(note.id)
         notes.sort(by: Note.defaultSort)
         // `updated` is a `var`; the `@Sendable` closure below cannot capture
         // it by reference, only a snapshot — `toSave` is that snapshot.
@@ -399,6 +483,11 @@ public final class NotesManager {
         do {
             try await persist(toSave)
         } catch {
+            // Not retried, so stop holding feed changes off: the next one
+            // brings the screen back to what storage holds.
+            if notes.first(where: { $0.id == note.id })?.content == baseContent[note.id] {
+                dirty.remove(note.id)
+            }
             record(.save, error)
         }
         postNotesDidChange()

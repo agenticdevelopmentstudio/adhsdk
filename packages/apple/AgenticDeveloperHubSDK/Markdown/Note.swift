@@ -8,9 +8,9 @@ public struct Note: Identifiable, Equatable, Sendable {
     public var isPinned: Bool
 
     /// The storage's version of this note: the value a write must quote to be
-    /// accepted (`NoteStorageError.stale` otherwise). A storage with no
-    /// concurrency token — `MarkdownNoteStorage` — leaves it at 0 and ignores
-    /// it; a daemon-backed one returns the row's `local_version`. Lives in the
+    /// accepted (`NoteStorageError.stale` otherwise). Every storage reports
+    /// the row's `local_version` here; one with no concurrency check —
+    /// `MarkdownNoteStorage` — just never refuses a write over it. Lives in the
     /// Markdown tier with the rest of `Note` so a daemon or a CLI can build one
     /// without linking AppKit.
     public var version: Int64

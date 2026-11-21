@@ -17,10 +17,18 @@ public protocol NoteStorage: Sendable {
     func fetchAllNotes() async throws -> [Note]
     /// The stored note, or `nil` when it no longer exists.
     func fetchNote(id: UUID) async throws -> Note?
-    func insertNote(_ note: Note) async throws
+    /// Returns the version the storage gave the new note.
+    @discardableResult
+    func insertNote(_ note: Note) async throws -> Int64
     /// Throws `NoteStorageError.stale` when the storage has a newer version
     /// than `note.version`. A storage with no concurrency token never does.
-    func updateNote(_ note: Note) async throws
+    ///
+    /// Returns the version the write produced. A caller that saves the same
+    /// note again sends that version, not the one it read: without it every
+    /// save after the first would be refused as stale against the caller's
+    /// own previous save.
+    @discardableResult
+    func updateNote(_ note: Note) async throws -> Int64
     func deleteNote(id: UUID) async throws
 }
 

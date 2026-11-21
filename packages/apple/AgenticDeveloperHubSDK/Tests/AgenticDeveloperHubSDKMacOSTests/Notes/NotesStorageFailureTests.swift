@@ -36,12 +36,14 @@ struct ThrowingNoteStorage: NoteStorage {
         return stored
     }
 
-    func insertNote(_ note: Note) throws {
+    @discardableResult func insertNote(_ note: Note) throws -> Int64 {
         if failing.contains(.insert) { throw Failure() }
+        return 1
     }
 
-    func updateNote(_ note: Note) throws {
+    @discardableResult func updateNote(_ note: Note) throws -> Int64 {
         if failing.contains(.update) { throw Failure() }
+        return note.version + 1
     }
 
     func deleteNote(id: UUID) throws {
