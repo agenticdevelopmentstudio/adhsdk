@@ -31,3 +31,13 @@
 - A pull that moves only `updated_at` or the server's version id (another device
   touched the row without changing its text, or this store's own push echoed back)
   is silent: the document keeps its `local_version`, and no feed entry appears.
+- A send that throws (a timeout or dropped connection) may still have reached adh.
+  The operation stays queued and claimed, and the next drain resends it unchanged
+  under the same Idempotency-Key, so adh replays its first answer instead of
+  refusing a different body.
+- The process dies between the send and the acknowledgment. The claim survives the
+  restart, so an edit made afterwards queues behind the sent operation rather than
+  folding into it.
+- A document is deleted while its create is claimed but unacknowledged. The create
+  stays queued ahead of the delete, so the delete addresses the id adh minted rather
+  than leaving the document upstream.

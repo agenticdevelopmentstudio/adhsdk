@@ -2,7 +2,7 @@
 id: 11f7a665-60e9-42df-853c-fe4de3af0fd8
 title: "Markdown Store"
 type: ingredient
-version: 1.2.0
+version: 2.0.0
 status: review
 language: en
 created: 2026-09-24
@@ -260,6 +260,10 @@ open its own database or share one a host already owns.
 - **delete-drops-undelivered-create**: Deleting a document MUST drop a still-
   unclaimed pending create/delete pair entirely rather than enqueuing a delete,
   since adh never learned of a document whose create has not yet drained.
+- **delete-keeps-claimed-create**: Deleting a document whose pending create is
+  claimed MUST keep that create and queue a delete behind it, since a claimed create
+  may have reached adh; its resend is the only way the remote id comes back, and the
+  delete needs that id to address the document.
 - **outbox-order-is-sequence**: The pending-operations read MUST order by the
   dedicated sequence column rather than a creation timestamp, which ties within a
   millisecond, or the operation id, whose sort order is effectively random.
@@ -278,17 +282,26 @@ open its own database or share one a host already owns.
   id immediately before sending each operation rather than trusting a batch
   snapshot, since an update queued behind its own create may only acquire that id
   partway through the drain.
-- **drain-preserves-order-on-failure**: The queue drain MUST release the failing
-  operation's claim and stop rather than skip ahead when the writer throws, so
-  strict sequence order is preserved across retries.
-- **drain-clears-stale-claims-first**: The queue drain MUST clear every outstanding
-  claim before reading pending operations, on the stated reasoning that a claim
-  still standing when a drain begins can only be a pass that was killed mid-send,
-  never a pass genuinely still in flight.
+- **drain-preserves-order-on-failure**: The queue drain MUST stop rather than skip
+  ahead when the writer throws, leaving the failing operation queued, so strict
+  sequence order is preserved across retries.
+- **claim-is-never-released**: The queue drain MUST claim an operation immediately
+  before first handing it to the writer and MUST NOT release that claim, not when the
+  send throws and not when a later drain begins; only the acknowledgment that deletes
+  the row ends it. A send that threw, or a pass killed mid-send, may still have
+  reached adh, and the resend carries the same Idempotency-Key (the operation id),
+  which adh refuses for 24 hours if the body differs. A released claim would let the
+  next edit fold a new body into the operation and wedge the queue behind it.
+- **sent-operation-is-frozen**: The enqueue path MUST NOT merge into or fold into a
+  claimed operation; a new edit for the same document is queued behind it as an
+  operation of its own, so a resend is byte-for-byte the operation first sent.
+  Cancelling a claimed operation by its opposing intent stays allowed: the cancel
+  changes no body, and the opposing operation drains after it.
 - **drain-mutual-exclusion**: one drain at a time is a caller precondition; the
   store does not enforce it (no lock or other exclusion mechanism). Two concurrent
-  calls on one store would each clear every claim, read their own snapshot of
-  pending operations, claim the same unclaimed operation, and send it to adh twice.
+  calls on one store would each read their own snapshot of pending operations and
+  send the same operation to adh twice (harmless under its Idempotency-Key, but the
+  second acknowledgment races the first).
 
 ### Taxonomy
 
@@ -360,6 +373,10 @@ layer, not a visual component.
 | markdown-core-016 | unchanged-pull-is-silent | Pull a row, then pull it again with the same content and only a newer sync version and `updated_at` | The document stays at version 1 and the change log holds one entry for it |
 | markdown-core-017 | local-version-never-travels, unchanged-pull-is-silent | Pull a row, then pull it again with different content | The document reads back at version 2 and the change log holds entries with versions 1 and 2 |
 | markdown-core-018 | writes-return-version | Create a document, update it quoting version 1, then mutate it quoting version 2 | The update returns 2, the mutate returns 3, and the document reads back at version 3 |
+| markdown-core-019 | claim-is-never-released, sent-operation-is-frozen | Create a document, drain it into a writer that throws, then update the document | Two operations queued, create then update; the create keeps its operation id and its original body |
+| markdown-core-020 | claim-is-never-released | Create a document, drain into a writer that throws, then drain into a writer that accepts | The accepting writer receives the same operation id and body the failing one did; the queue is empty |
+| markdown-core-021 | delete-keeps-claimed-create | Create a document, drain into a writer that throws, delete the document, then drain into a writer that mints remote id R | The writer receives create (no remote id) then delete addressed to R |
+| markdown-core-022 | delete-drops-undelivered-create | Create a document and delete it before any drain | Nothing is queued |
 ## Edge Cases
 
 - The document-list read path and the single-document read path deliberately
@@ -394,6 +411,16 @@ layer, not a visual component.
 - A pull that moves only `updated_at` or the server's version id (another device
   touched the row without changing its text, or this store's own push echoed back)
   is silent: the document keeps its `local_version`, and no feed entry appears.
+- A send that throws (a timeout or dropped connection) may still have reached adh.
+  The operation stays queued and claimed, and the next drain resends it unchanged
+  under the same Idempotency-Key, so adh replays its first answer instead of
+  refusing a different body.
+- The process dies between the send and the acknowledgment. The claim survives the
+  restart, so an edit made afterwards queues behind the sent operation rather than
+  folding into it.
+- A document is deleted while its create is claimed but unacknowledged. The create
+  stays queued ahead of the delete, so the delete addresses the id adh minted rather
+  than leaving the document upstream.
 ## Configuration
 
 | Option | Type | Default | Description |
@@ -550,7 +577,7 @@ framework that protocol lives in.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Markdown/` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Markdown/` | confirmed (1.2.0) |
 
 ## Design Decisions
 
@@ -581,7 +608,7 @@ Separation of concerns holds structurally: `MarkdownSchema` owns DDL and migrati
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
-| 1.2.0 | 2026-11-21 | Mike Fullerton | markdown.local_version (migration v7) bumped by every local write and applied pull and logged to the change feed; expectedVersion checks with staleVersion on update, mutate and delete; documents carry version; init(database:syncStore:customerID:ecosystemID:) for a host-owned database. |
+| 2.0.0 | 2026-11-21 | Mike Fullerton | A sent outbox op is frozen: its claim is never released, edits queue behind it, and deleting a document keeps a claimed create; drain-clears-stale-claims-first replaced by claim-is-never-released, sent-operation-is-frozen, delete-keeps-claimed-create |
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to adh/hub/content/. |
 | 1.0.1 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |
 | 1.0.0 | 2026-09-24 | Mike Fullerton | Initial creation |
