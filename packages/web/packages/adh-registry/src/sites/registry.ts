@@ -1369,7 +1369,7 @@ export function siteHomePath(id: SiteId): string {
  *
  *  The backend no longer trusts this list. A site's sign-in returns and CORS come
  *  from its `web` application's login registration in the hub's ecosystem
- *  (adhbackend `docs/designs/client-auth.md` §11), so adding a site here grants it
+ *  (`adhbackend/docs/designs/client-auth.md` §11), so adding a site here grants it
  *  nothing: give it an application in the hub's ecosystem instead. The backend
  *  reads this list in one place, while moving the origins the `adh` client still
  *  holds onto applications (`src/lib/move-site-origins.ts`): an origin on the

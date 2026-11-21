@@ -106,5 +106,5 @@ These hosts moved to the rail's own filter, or to the controlled/`live` modes:
 - Code review `2026-11-06-live-claude-default-3dbf` (`/code-review max`, 15
   findings, each fixed in its own commit with a `Review-Finding` trailer).
 - Peer repos re-pointed at that main: adhcontent PR #390 (the ui-showcase caption),
-  statussite PR #27 and buildersite PR #6 (`websites/external/adhsdk` gitlink bumps
+  statussite PR #27 and buildersite PR #6 (`<site>/websites/external/adhsdk` gitlink bumps
   and re-vendors), and adhubwebsite (gitlink bump on its `htdv-fixes` branch).

@@ -3,7 +3,7 @@
 // turns red for 24 h on a single unresolved error) only hears about OUR failures.
 //
 // Every rule below is backed by real GlitchTip traffic (Nov 2026 triage,
-// docs/status-site/status-glitchtip-noise-and-scheduler.md in statussite):
+// statussite/docs/status-site/status-glitchtip-noise-and-scheduler.md):
 //   • bots           — HeadlessChrome / crawlers / scraping browsers run our pages in
 //                      broken JS engines and report the breakage as ours. Known by the
 //                      user agent, or — for a scraper that spoofs Chrome's — by a frame

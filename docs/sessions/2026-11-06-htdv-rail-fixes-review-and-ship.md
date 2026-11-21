@@ -62,7 +62,7 @@ are merged. The design record is
 
 ## Research / findings
 
-- When a site's `websites/external/adhsdk` gitlink points at a pre-squash commit,
+- When a site's `<site>/websites/external/adhsdk` gitlink points at a pre-squash commit,
   that commit falls off adhsdk main once the branch is squashed. Every peer has to be
   re-pointed at main after the merge.
 - statussite and buildersite vendor adhsdk twice. `vendor-shared.py` writes
@@ -80,7 +80,7 @@ are merged. The design record is
   to the squashed commits now on main. So skipping every replayed commit is lossless.
   After that, `proj branch delete <peer>/htdv-fixes --allow-unmerged` clears the
   stale remote branch, which would otherwise block `proj wt delete`.
-- adhubwebsite's worktree held 9 uncommitted files under `websites/agenticdeveloperhub/src`
+- adhubwebsite's worktree held 9 uncommitted files under `adhubwebsite/websites/agenticdeveloperhub/src`
   that looked like a revert of the hub-data work. A search of every session transcript showed
   that only this session touched that worktree. The files came from the hub suite's
   `[[prepare]]` step "assemble the site from site/" (`assemble_site.py`), which ran when this

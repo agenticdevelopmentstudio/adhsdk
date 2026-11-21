@@ -73,7 +73,9 @@ measurements are in
 ## Pointers
 
 - Topic doc: [`docs/architecture/apple-build-footprint.md`](../architecture/apple-build-footprint.md)
-- Vendored package: `packages/apple/AgenticDeveloperHubSDK/Vendor/CodeEditLanguages/` (README has upgrade steps)
+- Vendored package: `CodeEditLanguages`, then in the SDK's `Vendor` folder (its README had the upgrade
+  steps). The vendored copy was removed on 2026-11-15 (72fc62d2a); external Swift packages now come
+  from one shared folder, `~/Library/Developer/SharedPackages`.
 - PR #47: `fix(apple): shrink per-worktree build folders`
 - Biggest non-build disk users at the time:
   - Stenographer Application Support: 100 GB
