@@ -1,3 +1,4 @@
+/// <reference types="@testing-library/jest-dom/vitest" />
 import { readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -219,7 +220,7 @@ describe('MenuButton', () => {
     const bars = Array.from(container.querySelectorAll('.mb-bar'))
     expect(bars).toHaveLength(2)
     bars.forEach((bar) => expect(getComputedStyle(bar).getPropertyValue('grid-area')).toBe('1 / 1'))
-    expect(getComputedStyle(bars[0]).transform).toBe('rotate(45deg)')
-    expect(getComputedStyle(bars[1]).transform).toBe('rotate(-45deg)')
+    expect(getComputedStyle(bars[0]!).transform).toBe('rotate(45deg)')
+    expect(getComputedStyle(bars[1]!).transform).toBe('rotate(-45deg)')
   })
 })

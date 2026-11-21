@@ -25,8 +25,8 @@ describe('PopoverAnchor', () => {
     const anchor = anchorOf(container)
     expect(anchor.tagName).toBe('DIV')
     expect(Array.from(anchor.children).map((c) => c.tagName)).toEqual(['BUTTON', 'DIV'])
-    expect(anchor.children[0].textContent).toBe('Trigger')
-    expect(anchor.children[1].textContent).toBe('Panel')
+    expect(anchor.children[0]!.textContent).toBe('Trigger')
+    expect(anchor.children[1]!.textContent).toBe('Panel')
   })
 
   it('anchor-002: base.css gives the anchor position: relative', () => {

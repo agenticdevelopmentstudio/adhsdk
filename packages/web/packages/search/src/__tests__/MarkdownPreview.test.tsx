@@ -76,7 +76,7 @@ const screen = {
   getByText(text: string): HTMLElement {
     const found = leaves(text)
     if (found.length !== 1) throw new Error(`expected one "${text}", found ${found.length}`)
-    return found[0]
+    return found[0]!
   },
   queryByText(text: string | RegExp): HTMLElement | null {
     return leaves(text)[0] ?? null
@@ -100,7 +100,7 @@ const screen = {
       (e) => opts.name === undefined || e.textContent === opts.name,
     )
     if (found.length !== 1) throw new Error(`expected one ${role}, found ${found.length}`)
-    return found[0]
+    return found[0]!
   },
   queryByRole(role: string): HTMLElement | null {
     return document.querySelector<HTMLElement>(`[role="${role}"]`)
@@ -204,14 +204,14 @@ afterEach(() => {
 })
 
 function fireTimeout(index = timeoutControllers.length - 1): void {
-  act(() => timeoutControllers[index].abort(new DOMException('timed out', 'TimeoutError')))
+  act(() => timeoutControllers[index]!.abort(new DOMException('timed out', 'TimeoutError')))
 }
 
 describe('MarkdownPreview conformance vectors', () => {
   it('mp-001 builds the content URL from the source template, base URL, slug and route', async () => {
     render(<MarkdownPreview hit={hit()} source={src()} />)
     await waitFor(() => expect(calls).toHaveLength(1))
-    expect(calls[0].url).toBe('https://api.example.com/alice-wonder/paper-001')
+    expect(calls[0]!.url).toBe('https://api.example.com/alice-wonder/paper-001')
   })
 
   it('mp-002 renders the fetched markdown through MarkdownRenderer', async () => {
@@ -277,7 +277,7 @@ describe('MarkdownPreview conformance vectors', () => {
     expect(timeoutCalls).toEqual([5000])
     fireTimeout()
     await screen.findByText('Timed out loading paper after 5s.')
-    expect(calls[0].signal.aborted).toBe(true)
+    expect(calls[0]!.signal.aborted).toBe(true)
     expect(screen.getByRole('alert')).toBeTruthy()
   })
 
@@ -296,7 +296,7 @@ describe('MarkdownPreview conformance vectors', () => {
     responder = stalled
     fireEvent.click(screen.getByRole('button', { name: 'Retry' }))
     await waitFor(() => expect(calls).toHaveLength(2))
-    expect(calls[1].url).toBe(calls[0].url)
+    expect(calls[1]!.url).toBe(calls[0]!.url)
     expect(container.firstElementChild).toBe(root)
     expect(screen.getByText('Loading paper…')).toBeTruthy()
     expect(screen.queryByText('Failed to load paper')).toBeNull()
@@ -316,8 +316,8 @@ describe('MarkdownPreview conformance vectors', () => {
     await waitFor(() => expect(calls).toHaveLength(1))
     rerender(<MarkdownPreview hit={hit({ author: { slug: 'bob', displayName: null } })} source={src()} />)
     await waitFor(() => expect(calls).toHaveLength(2))
-    expect(calls[0].signal.aborted).toBe(true)
-    expect(calls[1].url).toBe('https://api.example.com/bob/paper-001')
+    expect(calls[0]!.signal.aborted).toBe(true)
+    expect(calls[1]!.url).toBe('https://api.example.com/bob/paper-001')
     await act(async () => {
       resolveFirst({ ok: true, status: 200, json: async () => ({ content: 'ALICE RESULT' }) } as Response)
     })
@@ -342,7 +342,7 @@ describe('MarkdownPreview conformance vectors', () => {
   it('mp-013 URL-encodes the slug and route', async () => {
     render(<MarkdownPreview hit={hit({ author: { slug: 'a b/c', displayName: null }, publicRoute: 'p-1' })} source={src()} />)
     await waitFor(() => expect(calls).toHaveLength(1))
-    expect(calls[0].url).toBe('https://api.example.com/a%20b%2Fc/p-1')
+    expect(calls[0]!.url).toBe('https://api.example.com/a%20b%2Fc/p-1')
   })
 
   it('mp-014 does not refetch when only fetchInit changes', async () => {
@@ -370,7 +370,7 @@ describe('MarkdownPreview conformance vectors', () => {
       />,
     )
     await waitFor(() => expect(calls).toHaveLength(2))
-    expect(calls[1].url).toBe('https://api.example.com/v2/alice-wonder/paper-001')
+    expect(calls[1]!.url).toBe('https://api.example.com/v2/alice-wonder/paper-001')
   })
 
   it('mp-017 aborts the pending request on unmount and makes no later state update', async () => {
@@ -383,7 +383,7 @@ describe('MarkdownPreview conformance vectors', () => {
     const { unmount } = render(<MarkdownPreview hit={hit()} source={src()} />)
     await waitFor(() => expect(calls).toHaveLength(1))
     unmount()
-    expect(calls[0].signal.aborted).toBe(true)
+    expect(calls[0]!.signal.aborted).toBe(true)
     await act(async () => {
       resolveFetch({ ok: true, status: 200, json: async () => ({ content: 'late' }) } as Response)
     })

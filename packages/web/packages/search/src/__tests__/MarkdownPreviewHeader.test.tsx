@@ -216,9 +216,9 @@ describe('MarkdownPreviewHeader conformance vectors', () => {
     expect(row.className).toContain('flex-wrap')
     const kids = [...row.children]
     expect(kids).toHaveLength(3)
-    expect(kids[0].getAttribute('data-slot')).toBe('badge')
-    expect(kids[1].textContent).toContain('by Alice Smith')
-    expect(kids[2].textContent).toBe('· Updated Sep 20, 2026')
+    expect(kids[0]!.getAttribute('data-slot')).toBe('badge')
+    expect(kids[1]!.textContent).toContain('by Alice Smith')
+    expect(kids[2]!.textContent).toBe('· Updated Sep 20, 2026')
   })
 
   it('header-028 shows the previous day for a date-only string west of UTC', () => {

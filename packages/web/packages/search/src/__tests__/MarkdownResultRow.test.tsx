@@ -40,14 +40,14 @@ const screen = {
       role === 'heading' ? `h${opts.level ?? 3}` : role === 'link' ? 'a[href]' : role === 'button' ? 'button' : `[role="${role}"]`
     const found = document.querySelectorAll<HTMLElement>(sel)
     if (found.length !== 1) throw new Error(`expected one ${role}, found ${found.length}`)
-    return found[0]
+    return found[0]!
   },
   getByText(text: string): HTMLElement {
     const found = [...document.querySelectorAll<HTMLElement>('body *')].filter(
       (e) => e.children.length === 0 && e.textContent === text,
     )
     if (found.length !== 1) throw new Error(`expected one "${text}", found ${found.length}`)
-    return found[0]
+    return found[0]!
   },
 }
 
@@ -103,7 +103,7 @@ describe('MarkdownResultRow conformance vectors', () => {
     row(hit({ title: 'Search results' }), { query: 'search' })
     const marks = screen.getByRole('heading', { level: 3 }).querySelectorAll('mark')
     expect(marks).toHaveLength(1)
-    expect(marks[0].textContent).toBe('Search')
+    expect(marks[0]!.textContent).toBe('Search')
   })
 
   it('mrr-004 renders no <mark> when the title does not match', () => {
@@ -149,7 +149,7 @@ describe('MarkdownResultRow conformance vectors', () => {
     row(hit({ snippet: 'Find results fast' }), { query: 'results' })
     const marks = document.querySelector('p')?.querySelectorAll('mark')
     expect(marks).toHaveLength(1)
-    expect(marks?.[0].textContent).toBe('results')
+    expect(marks?.[0]!.textContent).toBe('results')
   })
 
   it('mrr-010 clamps the snippet to two lines', () => {

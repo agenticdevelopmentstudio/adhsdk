@@ -184,7 +184,7 @@ async function search(n: number, props: Partial<SearchViewProps<Hit>> = {}): Pro
 }
 
 async function openRow(index: number): Promise<void> {
-  click(rows()[index])
+  click(rows()[index]!)
   await advance(0)
 }
 
@@ -251,38 +251,38 @@ describe('SearchView conformance vectors', () => {
   it('search-view-006 ArrowDown moves focus to the next row', async () => {
     await search(3)
     const r = rows()
-    focus(r[0])
-    key(r[0], 'ArrowDown')
+    focus(r[0]!)
+    key(r[0]!, 'ArrowDown')
     expect(document.activeElement).toBe(rows()[1])
-    expect(rows()[1].tabIndex).toBe(0)
-    expect(rows()[0].tabIndex).toBe(-1)
+    expect(rows()[1]!.tabIndex).toBe(0)
+    expect(rows()[0]!.tabIndex).toBe(-1)
   })
 
   it('search-view-007 ArrowDown on the last row stays on it', async () => {
     await search(3)
-    focus(rows()[2])
-    key(rows()[2], 'ArrowDown')
-    key(rows()[2], 'ArrowDown')
-    key(rows()[2], 'ArrowDown')
+    focus(rows()[2]!)
+    key(rows()[2]!, 'ArrowDown')
+    key(rows()[2]!, 'ArrowDown')
+    key(rows()[2]!, 'ArrowDown')
     expect(document.activeElement).toBe(rows()[2])
-    expect(rows()[2].tabIndex).toBe(0)
+    expect(rows()[2]!.tabIndex).toBe(0)
   })
 
   it('search-view-008 Home moves focus to the first row and resets the index', async () => {
     await search(4)
-    key(rows()[0], 'ArrowDown')
-    key(rows()[1], 'ArrowDown')
-    key(rows()[2], 'Home')
+    key(rows()[0]!, 'ArrowDown')
+    key(rows()[1]!, 'ArrowDown')
+    key(rows()[2]!, 'Home')
     expect(document.activeElement).toBe(rows()[0])
-    expect(rows()[0].tabIndex).toBe(0)
+    expect(rows()[0]!.tabIndex).toBe(0)
   })
 
   it('search-view-009 End moves focus to the last row', async () => {
     await search(4)
-    focus(rows()[0])
-    key(rows()[0], 'End')
+    focus(rows()[0]!)
+    key(rows()[0]!, 'End')
     expect(document.activeElement).toBe(rows()[3])
-    expect(rows()[3].tabIndex).toBe(0)
+    expect(rows()[3]!.tabIndex).toBe(0)
   })
 
   it('search-view-010 shows "No matching documents" and no Retry for zero results', async () => {
@@ -350,8 +350,8 @@ describe('SearchView conformance vectors', () => {
 
   it('search-view-017 Escape in the preview collapses it and returns focus to row 2', async () => {
     await search(4)
-    key(rows()[0], 'ArrowDown')
-    key(rows()[1], 'ArrowDown')
+    key(rows()[0]!, 'ArrowDown')
+    key(rows()[1]!, 'ArrowDown')
     await openRow(2)
     expect(document.activeElement).toBe(previewRegion())
     key(previewRegion()!, 'Escape')
@@ -449,21 +449,21 @@ describe('SearchView conformance vectors', () => {
 
   it('search-view-027 clamps the active index when the result set shrinks', async () => {
     await search(6)
-    for (let i = 0; i < 5; i++) key(rows()[Math.min(i, 5)], 'ArrowDown')
-    expect(rows()[5].tabIndex).toBe(0)
+    for (let i = 0; i < 5; i++) key(rows()[Math.min(i, 5)]!, 'ArrowDown')
+    expect(rows()[5]!.tabIndex).toBe(0)
     resultHits = hits(2)
     key(input(), 'Enter')
     await advance(10)
     expect(rows()).toHaveLength(2)
-    expect(rows()[1].tabIndex).toBe(0)
-    expect(rows()[0].tabIndex).toBe(-1)
+    expect(rows()[1]!.tabIndex).toBe(0)
+    expect(rows()[0]!.tabIndex).toBe(-1)
   })
 
   it('search-view-028 Escape in the list collapses the preview and leaves focus where it is', async () => {
     await search(3)
     await openRow(1)
-    focus(rows()[1])
-    key(rows()[1], 'Escape')
+    focus(rows()[1]!)
+    key(rows()[1]!, 'Escape')
     expect(previewRegion()).toBeNull()
     expect(rows().every((r) => r.getAttribute('aria-pressed') === 'false')).toBe(true)
     expect(document.activeElement).toBe(rows()[1])
@@ -544,8 +544,8 @@ describe('SearchView conformance vectors', () => {
 
   it('search-view-038 Escape from the dock toggle collapses it and returns focus to row 2', async () => {
     await search(4)
-    key(rows()[0], 'ArrowDown')
-    key(rows()[1], 'ArrowDown')
+    key(rows()[0]!, 'ArrowDown')
+    key(rows()[1]!, 'ArrowDown')
     await openRow(2)
     focus(toggle())
     key(toggle(), 'Escape')
@@ -567,18 +567,18 @@ describe('SearchView conformance vectors', () => {
     await search(3)
     await openRow(1)
     focus(input())
-    click(rows()[1])
+    click(rows()[1]!)
     await advance(0)
     expect(document.activeElement).toBe(previewRegion())
     expect(toggle().getAttribute('aria-expanded')).toBe('true')
-    expect(rows()[1].getAttribute('aria-pressed')).toBe('true')
+    expect(rows()[1]!.getAttribute('aria-pressed')).toBe('true')
     expect(textIn(must('[data-testid="preview-header"]'))).toBe('header h1')
   })
 
   it('search-view-041 Escape in the list with no selection changes nothing', async () => {
     await search(3)
-    focus(rows()[1])
-    key(rows()[1], 'Escape')
+    focus(rows()[1]!)
+    key(rows()[1]!, 'Escape')
     expect(document.activeElement).toBe(rows()[1])
     expect(toggle().getAttribute('aria-expanded')).toBe('false')
     expect(rows()).toHaveLength(3)
@@ -586,19 +586,19 @@ describe('SearchView conformance vectors', () => {
 
   it('search-view-042 Escape returns focus to the active-index row, not the clicked one', async () => {
     await search(5)
-    focus(rows()[0])
+    focus(rows()[0]!)
     await openRow(3)
-    expect(rows()[3].getAttribute('aria-pressed')).toBe('true')
+    expect(rows()[3]!.getAttribute('aria-pressed')).toBe('true')
     focus(previewRegion()!)
     key(previewRegion()!, 'Escape')
     expect(previewRegion()).toBeNull()
-    expect(rows()[3].getAttribute('aria-pressed')).toBe('false')
+    expect(rows()[3]!.getAttribute('aria-pressed')).toBe('false')
     expect(document.activeElement).toBe(rows()[0])
   })
 
   it('search-view-043 requests the source base URL and results endpoint', async () => {
     await search(1)
-    const url = resultCalls()[0]
+    const url = resultCalls()[0]!
     expect(url.startsWith('https://example.test/api/results?')).toBe(true)
     expect(new URL(url).searchParams.get('q')).toBe('foo')
   })
@@ -642,10 +642,10 @@ describe('SearchView conformance vectors', () => {
 
   it('search-view-048 ArrowDown twice moves the index to 2 without selecting or opening a preview', async () => {
     await search(4)
-    focus(rows()[0])
-    key(rows()[0], 'ArrowDown')
-    key(rows()[1], 'ArrowDown')
-    expect(rows()[2].tabIndex).toBe(0)
+    focus(rows()[0]!)
+    key(rows()[0]!, 'ArrowDown')
+    key(rows()[1]!, 'ArrowDown')
+    expect(rows()[2]!.tabIndex).toBe(0)
     expect(rows().every((r) => r.getAttribute('aria-pressed') === 'false')).toBe(true)
     expect(previewRegion()).toBeNull()
     expect(q('[data-testid="preview-header"]')).toBeNull()
@@ -687,8 +687,8 @@ describe('SearchView conformance vectors', () => {
   it('search-view-053 matches the selected row by the getId value', async () => {
     await search(2)
     await openRow(1)
-    expect(rows()[1].getAttribute('aria-pressed')).toBe('true')
-    expect(rows()[0].getAttribute('aria-pressed')).toBe('false')
+    expect(rows()[1]!.getAttribute('aria-pressed')).toBe('true')
+    expect(rows()[0]!.getAttribute('aria-pressed')).toBe('false')
   })
 
   it('search-view-054 the collapsed header shows what getTitle returns', async () => {
