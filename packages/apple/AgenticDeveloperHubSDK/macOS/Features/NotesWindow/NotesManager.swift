@@ -158,12 +158,12 @@ public final class NotesManager {
     /// (`MarkdownStore.mutateDocument`), which is atomicity, not ordering —
     /// two writers there resolve last-writer-wins over the whole note.
     private func performStorage<Value: Sendable>(
-        _ operation: @escaping @Sendable (NoteStorage) throws -> Value
+        _ operation: @escaping @Sendable (NoteStorage) async throws -> Value
     ) async throws -> Value {
         let previous = storageChain
-        let work = Task.detached { [storage] () throws -> Value in
+        let work = Task.detached { [storage] () async throws -> Value in
             await previous.value
-            return try operation(storage)
+            return try await operation(storage)
         }
         storageChain = Task { _ = try? await work.value }
         return try await work.value
@@ -185,14 +185,156 @@ public final class NotesManager {
 
     public init(storage: NoteStorage) {
         self.storage = storage
+        if let observable = storage as? ObservableNoteStorage {
+            let stream = observable.changes()
+            observation.task = Task { [weak self] in
+                for await change in stream {
+                    guard let self else { return }
+                    await self.apply(change)
+                }
+            }
+        }
+    }
+
+    deinit {
+        observation.task?.cancel()
+    }
+
+    // MARK: - Live changes and conflicts
+
+    /// Holds the feed subscription so the nonisolated `deinit` can cancel it.
+    /// A `let` reference to a box rather than a `var Task` because `deinit`
+    /// cannot touch main-actor state; the box is written once, in `init`.
+    private final class ObservationBox: @unchecked Sendable {
+        var task: Task<Void, Never>?
+    }
+    private let observation = ObservationBox()
+
+    /// The content each note had when it last matched storage — loaded,
+    /// created, saved, or replaced from the feed. A stale save compares the
+    /// stored content against this to tell "the other writer only bumped the
+    /// version" from "the other writer changed the text" (Decision 10).
+    private var baseContent: [UUID: String] = [:]
+
+    /// Notes with an edit not yet saved. A feed change for one of them is not
+    /// applied over the editor: its save takes the conflict path instead.
+    private var dirty: Set<UUID> = []
+
+    /// Applies one change another writer made.
+    func apply(_ change: NoteChange) async {
+        switch change {
+        case .resync:
+            await loadNotes()
+        case .deleted(let id):
+            guard notes.contains(where: { $0.id == id }) else { return }
+            forget(id)
+            postNotesDidChange()
+        case .upserted(let id):
+            guard !dirty.contains(id) else { return }
+            let fetched: Note?
+            do {
+                fetched = try await performStorage { try await $0.fetchNote(id: id) }
+            } catch {
+                record(.load, error)
+                return
+            }
+            // The editor may have been typed into while the read was out.
+            guard !dirty.contains(id) else { return }
+            guard let fetched else {
+                guard notes.contains(where: { $0.id == id }) else { return }
+                forget(id)
+                postNotesDidChange()
+                return
+            }
+            if let idx = notes.firstIndex(where: { $0.id == id }) {
+                // At or below what is held: this manager's own echo.
+                guard fetched.version > notes[idx].version else { return }
+                notes[idx] = fetched
+            } else {
+                notes.append(fetched)
+            }
+            baseContent[id] = fetched.content
+            notes.sort(by: Note.defaultSort)
+            postNotesDidChange()
+        }
+    }
+
+    private func forget(_ id: UUID) {
+        notes.removeAll(where: { $0.id == id })
+        baseContent[id] = nil
+        dirty.remove(id)
+    }
+
+    /// Writes `note`, and resolves a stale refusal without losing text.
+    private func persist(_ note: Note) async throws {
+        do {
+            try await performStorage { try await $0.updateNote(note) }
+            markSaved(note)
+        } catch NoteStorageError.stale(let current) {
+            try await resolveStale(note, current: current)
+        }
+    }
+
+    private func markSaved(_ note: Note) {
+        baseContent[note.id] = note.content
+        if notes.first(where: { $0.id == note.id })?.content == note.content {
+            dirty.remove(note.id)
+        }
+    }
+
+    /// Decision 10: if storage still holds the text this editor started from,
+    /// re-save on top of its version; otherwise keep the other writer's note
+    /// and put this editor's text in a new "(conflicted copy)" note.
+    private func resolveStale(_ note: Note, current: Note?) async throws {
+        var stored = current
+        if stored == nil {
+            stored = try await performStorage { try await $0.fetchNote(id: note.id) }
+        }
+        guard let stored else {
+            // Deleted underneath the editor: the editor's text becomes a note
+            // of its own rather than vanishing.
+            forget(note.id)
+            try await insertConflictedCopy(of: note)
+            return
+        }
+        if stored.content == baseContent[note.id] {
+            var retry = note
+            retry.version = stored.version
+            if let idx = notes.firstIndex(where: { $0.id == note.id }) {
+                notes[idx].version = stored.version
+            }
+            let toSave = retry
+            try await performStorage { try await $0.updateNote(toSave) }
+            markSaved(toSave)
+            return
+        }
+        if let idx = notes.firstIndex(where: { $0.id == note.id }) {
+            notes[idx] = stored
+        } else {
+            notes.append(stored)
+        }
+        baseContent[note.id] = stored.content
+        dirty.remove(note.id)
+        try await insertConflictedCopy(of: note)
+    }
+
+    private func insertConflictedCopy(of note: Note) async throws {
+        let copy = Note.new(content: "# \(note.title) (conflicted copy)\n\n" + note.content)
+        try await performStorage { try await $0.insertNote(copy) }
+        notes.append(copy)
+        baseContent[copy.id] = copy.content
+        notes.sort(by: Note.defaultSort)
+        postNotesDidChange()
     }
 
     // MARK: - Load
 
     public func loadNotes() async {
         do {
-            let loaded = try await performStorage { try $0.fetchAllNotes() }
+            let loaded = try await performStorage { try await $0.fetchAllNotes() }
             notes = loaded.sorted(by: Note.defaultSort)
+            baseContent = Dictionary(loaded.map { ($0.id, $0.content) }, uniquingKeysWith: { first, _ in first })
+            dirty = []
             isLoaded = true
             postNotesDidChange()
             logger.info("Loaded \(loaded.count) notes")
@@ -217,11 +359,12 @@ public final class NotesManager {
     public func createNote(content: String) async -> UUID? {
         let note = Note.new(content: content)
         do {
-            try await performStorage { try $0.insertNote(note) }
+            try await performStorage { try await $0.insertNote(note) }
         } catch {
             record(.create, error)
             return nil
         }
+        baseContent[note.id] = note.content
         notes.append(note)
         notes.sort(by: Note.defaultSort)
         postNotesDidChange()
@@ -237,6 +380,7 @@ public final class NotesManager {
         updated.content = content
         updated.modifiedDate = Date()
         notes[idx] = updated
+        dirty.insert(note.id)
         notes.sort(by: Note.defaultSort)
         postNotesDidChange()
         scheduleSave(updated)
@@ -253,7 +397,7 @@ public final class NotesManager {
         // it by reference, only a snapshot — `toSave` is that snapshot.
         let toSave = updated
         do {
-            try await performStorage { try $0.updateNote(toSave) }
+            try await persist(toSave)
         } catch {
             record(.save, error)
         }
@@ -261,9 +405,9 @@ public final class NotesManager {
     }
 
     public func deleteNote(id: UUID) async {
-        notes.removeAll(where: { $0.id == id })
+        forget(id)
         do {
-            try await performStorage { try $0.deleteNote(id: id) }
+            try await performStorage { try await $0.deleteNote(id: id) }
         } catch {
             record(.delete, error)
         }
@@ -282,7 +426,7 @@ public final class NotesManager {
         let noteID = note.id
         saveDebouncer.schedule(key: noteID) { [weak self] in
             guard let self, let current = self.notes.first(where: { $0.id == noteID }) else { return }
-            try await self.performStorage { try $0.updateNote(current) }
+            try await self.persist(current)
         }
     }
 
