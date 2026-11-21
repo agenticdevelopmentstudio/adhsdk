@@ -182,6 +182,10 @@ describe('ClientAuthSettingsPane: who can sign in', () => {
     expect(clientAuthApi.updateEcosystem).not.toHaveBeenCalled()
   })
 
+  // Its own time budget, not the 5s default. The pane renders 501 rows in about 0.3s; the time is in
+  // the two `getByRole('button', { name })` lookups (Add person, Save), each of which computes the
+  // accessible name of every row's button — about 1.7s apiece on an idle machine. Alone it ran in
+  // 4.3s, and under the full workspace run it crossed 5s and timed out.
   it('ecosystem-config-032: refuses a 501st email, and Save stays blocked', async () => {
     const many = Array.from({ length: 500 }, (_, i) => `p${i}@example.com`)
     await renderPane(config({ loginAllowedEmails: many }))
@@ -190,7 +194,7 @@ describe('ClientAuthSettingsPane: who can sign in', () => {
     expect(screen.getByText('At most 500 people can be listed.')).toBeInTheDocument()
     save()
     expect(clientAuthApi.updateEcosystem).not.toHaveBeenCalled()
-  })
+  }, 30_000)
 
   it('Cancel puts the saved rows back', async () => {
     await renderPane(config({ loginAllowedEmails: [ALICE] }))
