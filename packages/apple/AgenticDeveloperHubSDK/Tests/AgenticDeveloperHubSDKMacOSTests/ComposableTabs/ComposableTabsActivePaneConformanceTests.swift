@@ -89,6 +89,17 @@ final class ComposableTabsActivePaneConformanceTests: XCTestCase {
         RunLoop.current.run(until: Date().addingTimeInterval(0.05))
     }
 
+    /// Runs the run loop until `condition` holds or `timeout` passes. A
+    /// setting change reaches the panes through a sink on the main queue, so
+    /// it lands a turn after the write — on a loaded machine, later than one
+    /// fixed `drain()` allows. Waiting on the outcome makes that wait exact.
+    private func drain(until condition: () -> Bool, timeout: TimeInterval = 5) {
+        let deadline = Date().addingTimeInterval(timeout)
+        while !condition(), Date() < deadline {
+            RunLoop.current.run(until: Date().addingTimeInterval(0.01))
+        }
+    }
+
     private func setFollows(_ enabled: Bool) {
         UserSettings.shared.set(enabled, for: UserSettings.activePaneFollowsMouse)
         drain()
@@ -616,6 +627,7 @@ final class ComposableTabsActivePaneConformanceTests: XCTestCase {
         let rig = makeRig()
         rig.panes[0].layer?.borderWidth = 7
         setHighlight(false)
+        drain { rig.panes[0].layer?.borderWidth != 7 }
         XCTAssertEqual(rig.panes[0].layer?.borderWidth, 2)
     }
 
