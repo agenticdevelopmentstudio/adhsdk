@@ -301,7 +301,20 @@ public final class NotesManager {
         case .taxonomyChanged:
             NotificationCenter.default.post(name: Self.taxonomyDidChangeNotification, object: self)
         case .deleted(let id):
-            guard notes.contains(where: { $0.id == id }) else { return }
+            guard let held = notes.first(where: { $0.id == id }) else { return }
+            if dirty.contains(id) {
+                // Typed into and not yet saved: the text becomes a note of
+                // its own, as a stale save onto a deleted note does. Stored
+                // before the note is dropped, so if the insert fails the note
+                // stays, dirty, and its pending save resolves the same way.
+                do {
+                    try await insertConflictedCopy(following: id, from: held)
+                } catch {
+                    record(.save, error)
+                    return
+                }
+                saveDebouncer.cancel(key: id)
+            }
             forget(id)
             postNotesDidChange()
         case .upserted(let id):
@@ -409,9 +422,13 @@ public final class NotesManager {
         let latest = notes.first(where: { $0.id == note.id }) ?? note
         guard let stored else {
             // Deleted underneath the editor: the editor's text becomes a note
-            // of its own rather than vanishing.
+            // of its own rather than vanishing. Not when the note has already
+            // left `notes`: then it was deleted here, or the feed's delete
+            // already stored its text as a copy (`apply(.deleted)`).
+            guard notes.contains(where: { $0.id == note.id }) else { return }
+            try await insertConflictedCopy(following: note.id, from: latest)
             forget(note.id)
-            try await insertConflictedCopy(of: latest)
+            postNotesDidChange()
             return
         }
         if stored.content == baseContent[note.id] {

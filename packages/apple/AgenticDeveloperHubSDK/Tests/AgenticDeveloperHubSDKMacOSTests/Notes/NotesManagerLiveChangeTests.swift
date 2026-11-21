@@ -176,4 +176,57 @@ final class NotesManagerLiveChangeTests: XCTestCase {
         XCTAssertEqual(manager.notes.first?.content, "# Shared, theirs")
         XCTAssertEqual(storage.all.count, 1)
     }
+
+    // MARK: - A remote delete keeps unsaved text
+
+    func testDeleteOfANoteWithAnUnsavedEditKeepsTheTextAsACopy() async throws {
+        let note = makeNote("# Doomed")
+        let storage = VersionedNoteStorage([note])
+        let manager = NotesManager(storage: storage)
+        await manager.loadNotes()
+
+        await manager.updateNote(manager.notes[0], content: "# Doomed\n\ntyped, not yet saved")
+        try storage.deleteNote(id: note.id)
+        await manager.apply(.deleted(note.id))
+
+        XCTAssertFalse(manager.notes.contains(where: { $0.id == note.id }))
+        let copies = storage.all
+        XCTAssertEqual(copies.map(\.content), ["# Doomed (conflicted copy)\n\ntyped, not yet saved"])
+        XCTAssertEqual(manager.notes.map(\.id), copies.map(\.id))
+
+        // The save that was pending neither resurrects the note nor copies twice.
+        let stillFailing = await manager.flushPendingSaves()
+        XCTAssertTrue(stillFailing.isEmpty)
+        XCTAssertEqual(storage.all.count, 1)
+    }
+
+    func testDeleteOfANoteWithoutEditsMakesNoCopy() async throws {
+        let note = makeNote("# Doomed")
+        let storage = VersionedNoteStorage([note])
+        let manager = NotesManager(storage: storage)
+        await manager.loadNotes()
+
+        try storage.deleteNote(id: note.id)
+        await manager.apply(.deleted(note.id))
+
+        XCTAssertTrue(manager.notes.isEmpty)
+        XCTAssertTrue(storage.all.isEmpty)
+    }
+
+    /// The pending save meets the delete itself (stale with no note) and takes
+    /// the same path, once.
+    func testASaveThatFindsItsNoteDeletedCopiesTheTextOnce() async throws {
+        let note = makeNote("# Doomed")
+        let storage = VersionedNoteStorage([note])
+        let manager = NotesManager(storage: storage)
+        await manager.loadNotes()
+
+        await manager.updateNote(manager.notes[0], content: "# Doomed\n\nmine")
+        try storage.deleteNote(id: note.id)
+        await manager.flushPendingSaves()
+        await manager.apply(.deleted(note.id))
+
+        XCTAssertEqual(storage.all.map(\.content), ["# Doomed (conflicted copy)\n\nmine"])
+        XCTAssertFalse(manager.notes.contains(where: { $0.id == note.id }))
+    }
 }
