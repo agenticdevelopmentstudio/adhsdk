@@ -21,9 +21,18 @@ enum TextMateFixture {
         GrammarRegistry(sources: [try BundledGrammarSource(resources: resources())])
     }
 
+    /// Limits no colouring test can reach. The test host has no `allow-jit`
+    /// entitlement, so JavaScriptCore interprets the WASM Oniguruma, and a
+    /// grammar's first line also pays for compiling its regexes: under a
+    /// loaded machine that runs past the shipped 500 ms line limit and the
+    /// text comes back uncoloured. The limits themselves are tested with
+    /// their own explicit values (`slowHighlighter`).
+    static let unreachableLimit = 600_000
+
     /// A new highlighter whose engine has not been created yet.
     static func highlighter() throws -> SyntaxHighlighter {
-        try SyntaxHighlighter(resources: resources(), registry: bundledRegistry())
+        try SyntaxHighlighter(resources: resources(), registry: bundledRegistry(),
+                              lineTimeLimit: unreachableLimit, timeBudget: unreachableLimit)
     }
 
     static func theme(_ name: String) throws -> CodeTheme {
