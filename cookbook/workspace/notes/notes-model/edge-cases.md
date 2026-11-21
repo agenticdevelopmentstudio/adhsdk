@@ -39,4 +39,15 @@
   conflicted copy.
 - A resync from the change stream discards the manager's record of
   unsaved edits along with the list, because it reloads every note.
+- A resync also posts the taxonomy-change notification, even when no
+  category changed: the feed lost track of what changed, so the folders
+  pane rebuilds its tree as well as the notes list.
+- A taxonomy change posts only the taxonomy-change notification; it
+  never reloads or refetches a note, so a note's folder membership
+  changing elsewhere updates the folders pane without touching an
+  unsaved edit.
+- A storage that is not observable never posts the taxonomy-change
+  notification, so the folders pane shows another writer's category edit
+  only when one of this window's own folder edits or membership changes
+  next rebuilds the tree.
 

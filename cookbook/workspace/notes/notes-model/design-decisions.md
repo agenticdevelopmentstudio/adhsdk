@@ -31,6 +31,11 @@
 **Rationale**: A version bump alone (a pin elsewhere, a no-op round trip) is not a conflict and should not produce a copy; a real text change elsewhere must never be overwritten, and the user's edit must never vanish. A copy keeps both texts visible with no merge UI.
 **Approved**: pending
 
+**Decision**: The folders pane, the Move-to menu and the split view reach categories through `NoteTaxonomy`, a synchronous protocol in the Markdown tier, rather than through `MarkdownStore`; `NoteTaxonomyProviding.taxonomy` and `NotesManager.taxonomy` expose it, and another writer's category edit arrives as `NoteChange.taxonomyChanged`.
+**Rationale**: Exposing `MarkdownStore` meant only a storage with a local GRDB file could show folders, and a daemon-backed storage could not. The interface stays synchronous, unlike `NoteStorage`, because its callers run on the main actor while they build menus and rows, where a network round trip would stall the UI; a remote storage answers from a local copy it keeps current and announces outside changes on its change stream. `MarkdownStore` conforms with the methods it already had, so the existing storage changed nothing.
+**Approved**: pending
+
 **Decision**: `Note` and `MarkdownNoteMapping` live in the Markdown framework, not the macOS feature tier, and `NoteStorage` is `async`.
 **Rationale**: A daemon or CLI serving notes must apply exactly the same pinning rules as the app without linking AppKit, and a daemon-backed storage answers over the network. Synchronous conformers still satisfy the async requirements, so the move cost existing storages nothing.
 **Approved**: pending
+
