@@ -1,19 +1,26 @@
 import Foundation
 import AgenticDeveloperHubSDKSync
 
-/// One queued call against adh's `/content/markdown` routes.
+/// One queued call against adh's markdown documents ("papers").
 ///
-/// The intents map one-for-one onto `routes/markdownDocuments.ts`:
+/// The intents map one-for-one onto adh's `/v1/papers` gateway routes, which
+/// front `routes/markdownDocuments.ts`. The `/v1` gateway is the one that
+/// honours `Idempotency-Key`, so a writer sends there, keyed by the op's
+/// `opID`:
 ///
 /// | intent | request |
 /// |---|---|
-/// | `create` | `POST /` with `{ content, note?, doc? }` |
-/// | `update` | `PUT /:id` with `{ content }` |
-/// | `delete` | `DELETE /:id` |
-/// | `publish` | `POST /:id/publish` with `{ route }` |
-/// | `unpublish` | `POST /:id/unpublish` |
-/// | `finalize` | `POST /:id/finalize` |
-/// | `definalize` | `POST /:id/definalize` |
+/// | `create` | `POST /v1/papers` with `{ content, note?, doc? }` |
+/// | `update` | `POST /v1/papers/:id` with `{ content }` |
+/// | `delete` | `DELETE /v1/papers/:id` |
+/// | `publish` | `POST /v1/papers/:id/publish` with `{ route }` |
+/// | `unpublish` | `POST /v1/papers/:id/unpublish` |
+/// | `finalize` | `POST /v1/papers/:id/finalize` |
+/// | `definalize` | `POST /v1/papers/:id/definalize` |
+///
+/// adh keeps an Idempotency-Key for 24 hours and refuses a reuse whose body
+/// differs, which is why `MarkdownStore` freezes an op's body once it has been
+/// handed to a writer (see `MarkdownStore.drainRemoteQueue`).
 ///
 /// `category` and `tags` are keys on adh's create and update schemas but are
 /// deliberately absent from these payloads: a document's classification lives
@@ -41,13 +48,14 @@ public struct MarkdownRemoteOp: Equatable, Sendable {
     /// told about it yet.
     ///
     /// These are two different identifiers, and the store keeps both rather
-    /// than replacing one with the other: `POST /content/markdown` takes no
+    /// than replacing one with the other: `POST /v1/papers` takes no
     /// `id`, so the server mints its own and returns it at 201, while the
     /// local id is already load-bearing (`MarkdownNoteStorage` derives it from
     /// `Note.id`, and the taxonomy link rows cite it as `target_id`).
     /// Rewriting the local id to match the server's would silently invalidate
     /// all of that, so `_markdown_remote_id` records the pairing instead and
-    /// this field carries it out to the writer, which addresses `/:id` with it.
+    /// this field carries it out to the writer, which addresses `/v1/papers/:id`
+    /// with it.
     public let remoteID: String?
     public let intent: MarkdownRemoteIntent
     public let payload: [String: JSONValue]
@@ -68,11 +76,15 @@ public struct MarkdownRemoteOp: Equatable, Sendable {
 
 /// Drains `_markdown_outbox` against adh.
 ///
-/// Nothing implements this yet — Whippet holds no adh credentials — and that is
-/// the whole reason the queue is durable rather than best-effort: edits made
-/// before a writer exists must still be there when one does.
+/// adhd's `HubMarkdownRemoteWriter` implements it. The queue is durable rather
+/// than best-effort so that edits made while no writer can reach adh (signed
+/// out, offline) are still there when one can.
 public protocol MarkdownRemoteWriter: Sendable {
     /// Throws to leave the op queued. Returning normally means adh accepted it.
+    ///
+    /// A throw does not mean adh never saw the op: the op stays claimed and is
+    /// resent unchanged, under the same `opID`, on the next drain. A writer
+    /// therefore sends `opID` as the Idempotency-Key on every non-update call.
     ///
     /// The return value is the id adh assigned, and only a `.create` can have
     /// one — every other intent addresses a document adh already has, at

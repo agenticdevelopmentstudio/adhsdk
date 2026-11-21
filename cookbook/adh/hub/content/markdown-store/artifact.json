@@ -4,7 +4,7 @@
     "id": "11f7a665-60e9-42df-853c-fe4de3af0fd8",
     "title": "Markdown Store",
     "type": "ingredient",
-    "version": "1.2.0",
+    "version": "2.0.0",
     "status": "review",
     "language": "en",
     "created": "2026-09-24",
@@ -43,7 +43,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "e25e2beb9a51142f",
+  "synced": "680738f87fd76c8d",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

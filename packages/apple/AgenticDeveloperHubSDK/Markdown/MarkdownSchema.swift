@@ -162,11 +162,12 @@ public enum MarkdownSchema {
         // leaving the document on the server with nothing left locally to
         // re-derive it from.
         //
-        // `claimed_at` is stamped immediately before the send and cleared if
-        // the send throws, so `claimed_at IS NULL` is exactly "still ours to
-        // change". Nullable with no default, so every existing row migrates
-        // to unclaimed, which is what a row in a database with no drain in
-        // progress is.
+        // `claimed_at` is stamped immediately before the first send and is
+        // never cleared (a send that threw may still have reached adh, and
+        // its resend must carry the same body under the same key), so
+        // `claimed_at IS NULL` is exactly "never sent, still ours to change".
+        // Nullable with no default, so every existing row migrates to
+        // unclaimed: before this column no op had a claim to keep.
         migrator.registerMigration("markdown-v5-outbox-claim") { conn in
             try conn.execute(sql: "ALTER TABLE _markdown_outbox ADD COLUMN claimed_at TEXT")
         }
