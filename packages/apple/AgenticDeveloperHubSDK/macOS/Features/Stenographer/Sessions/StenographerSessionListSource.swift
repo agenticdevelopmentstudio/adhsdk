@@ -34,6 +34,21 @@ public final class StenographerSessionListSource: SessionWatcher.SessionListSour
     typealias Fetcher = @Sendable (Int) async -> [SessionWatcher.SessionWatcherSession]?
     private let fetcher: Fetcher
 
+    /// For an all-sessions source (`sinceHours` 0): how often the whole roster
+    /// is read. Every other poll reads only the sessions active in the last
+    /// ``recentHours`` and lays them over the last whole read. The roster is
+    /// every session ever recorded — megabytes of JSON — and a session with no
+    /// event in a day has nothing new to say, so reading it every three seconds
+    /// was nearly all waste. A session that wakes up has an event, so it is in
+    /// the next slice; the occasional whole read catches what changes without
+    /// one (a session the daemon's reaper ends, a summary written later).
+    static let rosterInterval: TimeInterval = 600
+    static let recentHours = 24
+    /// The last whole read, and when it was taken. Under `lock`.
+    private var roster: [SessionWatcher.SessionWatcherSession]?
+    private var rosterReadAt: Date?
+    private let now: @Sendable () -> Date
+
     /// `summaryFeature` picks which feature's AI summary each session carries:
     /// the Sessions window shows Sessions' own, a Coding Project window its own.
     public convenience init(
@@ -45,9 +60,13 @@ public final class StenographerSessionListSource: SessionWatcher.SessionListSour
             fetcher: Self.fetcher(service: service, summaryFeature: summaryFeature))
     }
 
-    init(pollInterval: TimeInterval = 3, sinceHours: Int = 24, fetcher: @escaping Fetcher) {
+    init(
+        pollInterval: TimeInterval = 3, sinceHours: Int = 24,
+        now: @escaping @Sendable () -> Date = { Date() }, fetcher: @escaping Fetcher
+    ) {
         self.pollInterval = pollInterval
         self.sinceHours = sinceHours
+        self.now = now
         self.fetcher = fetcher
     }
 
@@ -65,6 +84,8 @@ public final class StenographerSessionListSource: SessionWatcher.SessionListSour
         let changed: Bool = lock.withLock {
             guard sinceHours != hours else { return false }
             sinceHours = hours
+            roster = nil
+            rosterReadAt = nil
             return true
         }
         guard changed else { return }
@@ -113,12 +134,42 @@ public final class StenographerSessionListSource: SessionWatcher.SessionListSour
     private func refresh() async -> Bool {
         let hours = lock.withLock { sinceHours }
         // nil = daemon unreachable / transient failure — keep the last good snapshot.
-        guard let sessions = await fetcher(hours) else { return false }
+        guard let sessions = hours == 0 ? await rosterRead() : await fetcher(hours) else { return false }
         return lock.withLock {
             guard sessions != cache else { return false }
             cache = sessions
             return true
         }
+    }
+
+    /// Every session: the whole roster when it is due, otherwise the recent
+    /// slice laid over the last whole read. The slice comes first, in the
+    /// daemon's most-recent-first order, then the rest of the roster as it was.
+    private func rosterRead() async -> [SessionWatcher.SessionWatcherSession]? {
+        let (base, due) = lock.withLock { () -> ([SessionWatcher.SessionWatcherSession]?, Bool) in
+            let due = rosterReadAt.map { now().timeIntervalSince($0) >= Self.rosterInterval } ?? true
+            return (roster, due || roster == nil)
+        }
+        if due || base == nil {
+            let readAt = now()
+            guard let whole = await fetcher(0) else { return nil }
+            lock.withLock {
+                // A filter change mid-read leaves this read for a source that
+                // no longer wants it.
+                guard sinceHours == 0 else { return }
+                roster = whole
+                rosterReadAt = readAt
+            }
+            return whole
+        }
+        guard let base, let recent = await fetcher(Self.recentHours) else { return nil }
+        let fresh = Set(recent.map(\.sessionId))
+        let merged = recent + base.filter { !fresh.contains($0.sessionId) }
+        lock.withLock {
+            guard sinceHours == 0 else { return }
+            roster = merged
+        }
+        return merged
     }
 
     /// The live fetch: the time-filtered slice from the daemon, or nil on failure.

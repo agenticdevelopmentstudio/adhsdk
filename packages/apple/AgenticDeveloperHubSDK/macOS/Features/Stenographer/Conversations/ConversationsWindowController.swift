@@ -116,7 +116,9 @@ public final class ConversationsWindowController: SingleWindowController {
         // No hours filter (`sinceHours: 0`). The Sessions window shows a time
         // slice because it is a list of sessions; this is answering "what is
         // *that* row doing", and a session old enough to fall outside the slice
-        // would read as idle rather than as unknown.
+        // would read as idle rather than as unknown. The source reads that whole
+        // roster only every few minutes and the recent slice in between (see
+        // `StenographerSessionListSource.rosterInterval`).
         let activitySource = StenographerSessionListSource(
             service: service, sinceHours: 0, summaryFeature: .conversations)
         self.activitySource = activitySource

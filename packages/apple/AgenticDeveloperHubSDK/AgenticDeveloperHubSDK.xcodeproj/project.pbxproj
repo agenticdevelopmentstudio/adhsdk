@@ -2764,6 +2764,7 @@
 		98CC9343859C22C03D8AA7A1 /* InputActivityTrigger.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8ECE8662EA237236EE39911 /* InputActivityTrigger.swift */; };
 		98ECAE3AC87D7F14BB0AFE04 /* BrowserJarLabelGate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E0FE856CD88A87005E693D1 /* BrowserJarLabelGate.swift */; };
 		98F0F4F81F8F98D73E2DFAED /* ProjectWorkspace.swift in Sources */ = {isa = PBXBuildFile; fileRef = 472711BDA83A46ACA0186493 /* ProjectWorkspace.swift */; };
+		98FE332688F76173D2C4BD6C /* SessionListSourceRosterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 555F373D6EB59D9C36E28905 /* SessionListSourceRosterTests.swift */; };
 		9907427969377D175B7DBD3F /* MockStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1612F36CBF59400D6EFCFBC7 /* MockStorage.swift */; };
 		9916527081331AD417E2918F /* ContributionRegistrationsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0FB160019669DD0D82BD31C /* ContributionRegistrationsTests.swift */; };
 		991791A3BF6DD52B884E1833 /* AgenticDeveloperHubSDKPermissions.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = DAE9D06DBA7E410231438FBD /* AgenticDeveloperHubSDKPermissions.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -8939,6 +8940,7 @@
 		5518728ADDCAA448B5232AAB /* BrowserEngineKind.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowserEngineKind.swift; sourceTree = "<group>"; };
 		5529E868A25D126BCB07A96F /* FakeLanguageServerSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FakeLanguageServerSession.swift; sourceTree = "<group>"; };
 		5536B3CD01D7AFE3516ADF6C /* WebviewHostDocument.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebviewHostDocument.swift; sourceTree = "<group>"; };
+		555F373D6EB59D9C36E28905 /* SessionListSourceRosterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionListSourceRosterTests.swift; sourceTree = "<group>"; };
 		55656F593712D5112A9C15E3 /* WebviewPanelLinkPolicyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebviewPanelLinkPolicyTests.swift; sourceTree = "<group>"; };
 		55B155333FE0F136DC18DA0F /* ScriptPredicate+Eval.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ScriptPredicate+Eval.swift"; sourceTree = "<group>"; };
 		55E480750A971B9AE8AEC2D4 /* StenographerFeaturePermissionsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StenographerFeaturePermissionsTests.swift; sourceTree = "<group>"; };
@@ -19259,6 +19261,7 @@
 				02E2B43F451AFCF7B67AAABC /* OversightScriptsSummaryTests.swift */,
 				307848DF4BAD4FBF105C00A2 /* ProviderModelPickerViewTests.swift */,
 				790770985427322DCF3383A7 /* SessionListSourceFilterTests.swift */,
+				555F373D6EB59D9C36E28905 /* SessionListSourceRosterTests.swift */,
 				76DE96B183C34DFD16562298 /* SessionsWindowAccessibilityTests.swift */,
 				D1A909B733EA04EF48D76500 /* StenographerAIConfigPushTests.swift */,
 				55E480750A971B9AE8AEC2D4 /* StenographerFeaturePermissionsTests.swift */,
@@ -23377,6 +23380,7 @@
 				2CB385365BFAD0F0ED480879 /* SemanticTokenHighlightProviderTests.swift in Sources */,
 				7170354F986447140A017AE3 /* SessionLayoutStateTests.swift in Sources */,
 				472C9CE8C9FC2DD50DA4C306 /* SessionListSourceFilterTests.swift in Sources */,
+				98FE332688F76173D2C4BD6C /* SessionListSourceRosterTests.swift in Sources */,
 				C07FD743D243ED11EB5CFF74 /* SessionListViewModelTests.swift in Sources */,
 				604421F105E4E6FF26C2880A /* SessionListViewTests.swift in Sources */,
 				1D1E466C4ABA03927E2670EC /* SessionWatcherActionHandlerTests.swift in Sources */,
