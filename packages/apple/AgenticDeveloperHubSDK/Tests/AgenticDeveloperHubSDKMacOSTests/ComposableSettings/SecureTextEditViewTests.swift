@@ -30,6 +30,12 @@ struct SecureTextEditViewTests {
         deinit { pasteboard.releaseGlobally() }
     }
 
+    /// Lets the observer's change report run: a write through the view
+    /// model reaches the row on the next main-queue turn, never in the write.
+    private func drainMainQueue() {
+        RunLoop.main.run(until: Date().addingTimeInterval(0.05))
+    }
+
     private func host(_ view: NSView) -> NSWindow {
         let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 400, height: 80),
                               styleMask: [.titled], backing: .buffered, defer: false)
@@ -110,6 +116,7 @@ struct SecureTextEditViewTests {
         let harness = Harness("")
         #expect(!harness.row.copyButton.isEnabled)
         harness.model.settingObserver.value = "sk-1"
+        drainMainQueue()
         #expect(harness.row.copyButton.isEnabled)
     }
 
@@ -175,6 +182,7 @@ struct SecureTextEditViewTests {
         harness.row.setRevealed(true)
 
         harness.model.settingObserver.value = "sk-999"
+        drainMainQueue()
 
         #expect(!harness.row.isRevealed)
         #expect(harness.row.textField.stringValue == "sk-999")
