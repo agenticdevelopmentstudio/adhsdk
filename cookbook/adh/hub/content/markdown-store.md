@@ -2,15 +2,15 @@
 id: 11f7a665-60e9-42df-853c-fe4de3af0fd8
 title: "Markdown Store"
 type: ingredient
-version: 1.1.0
+version: 1.2.0
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-09-27
+modified: 2026-11-21
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
-summary: "The local relational-database mirror and outbox for the content.markdown resource family — schema, sync projection, document lifecycle, taxonomy, and timestamp normalization."
+summary: "The local relational-database mirror and outbox for the content.markdown resource family — schema, sync projection, document lifecycle, local versions and change-feed logging, taxonomy, and timestamp normalization."
 platforms:
   - swift
   - macos
@@ -32,6 +32,8 @@ references:
   - packages/apple/AgenticDeveloperHubSDK/Markdown/MarkdownTaxonomy.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/Markdown/MarkdownTimestamp.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/Markdown/MarkdownRemoteWriter.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Markdown/MarkdownDocument.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/SyncGRDB/GRDBSyncStore.swift (adhsdk)
 approved-by: ""
 approved-date: ""
 ---
@@ -60,6 +62,11 @@ through a generic sync-mirror-projection engine via the projection component, th
 only place adh's rows are translated into this schema's columns; `content.markdown`,
 `content.notes`, `content.docs`, and `content.papers` are pull-only, while taxonomy
 resources ride the same generic push path documents deliberately do not.
+
+Each document row also carries a local-only `local_version`, bumped by every local
+write and every applied pull and logged to the sync store's change feed, which a
+writer may quote as an expected version to have a stale write refused. The store can
+open its own database or share one a host already owns.
 
 ## Behavioral Requirements
 
@@ -92,8 +99,8 @@ resources ride the same generic push path documents deliberately do not.
 - **keyword-label-uniqueness**: `keywords` MUST enforce a unique constraint over
   customer, ecosystem, and label together, so a label is unique per author within one
   ecosystem.
-- **migration-sequence**: The schema's migrator MUST apply its five migrations,
-  `markdown-v1` through `markdown-v5-outbox-claim`, in order, and the migration step
+- **migration-sequence**: The schema's migrator MUST apply its seven migrations,
+  `markdown-v1` through `markdown-v7-local-version`, in order, and the migration step
   MUST turn on foreign-key enforcement before migrating, so enforcement is active
   before any migrated row is written.
 - **frontmatter-owner-backfill**: The `markdown-v3-frontmatter-owner` migration MUST
@@ -103,6 +110,11 @@ resources ride the same generic push path documents deliberately do not.
 - **title-claim-release**: The `markdown-v4-release-title-claims` migration MUST
   delete every stale `title` claim, leaving an upgraded database with no `title`
   claim outstanding.
+- **local-version-column**: The `markdown-v7-local-version` migration MUST add a
+  local-only integer `local_version` column to `markdown`, setting every existing
+  row to 1 (a row at 0 would look like one never written); a host that only
+  prepares the schema without the migrator MUST get the same column, because the
+  document table's definition is frozen at its first shape.
 - **outbox-shape-frozen**: The `_markdown_outbox` table's original shape MUST stay
   frozen; ordering was added by a separate `seq` column in
   `markdown-v2-outbox-order` and in-flight tracking by a separate `claimed_at` column
@@ -170,6 +182,12 @@ resources ride the same generic push path documents deliberately do not.
   bound on upsert — a throwaway value on a partial patch that never lands on an
   existing row, or the real value on a full-row pull — so a column with no schema
   default can never be omitted from the write.
+- **local-version-never-travels**: `local_version` MUST be a known column of
+  `content.markdown` yet MUST never be read from or written to the wire; a pulled
+  upsert or tombstone of a `content.markdown` row that changed it MUST instead bump
+  its `local_version` by one and append the change (upsert or delete, with the new
+  version) to the sync store's change log inside the pull's transaction, so a pull
+  reaches every app watching the feed.
 - **schema-drift-guard**: The projection's hand-maintained per-resource column lists
   MUST match the live schema's column info at runtime, so the two cannot silently
   drift apart.
@@ -179,6 +197,25 @@ resources ride the same generic push path documents deliberately do not.
 - **tenancy-ids-required**: The store's initializer MUST take a customer id and an
   ecosystem id with no defaults, since an empty string is a value the schema can
   store, not an absence the store should silently substitute.
+- **shared-database-init**: The store MUST offer a second initializer over a
+  database and sync store the host already owns and shares with other stores,
+  taking the same required tenancy ids; it MUST run the markdown migrations on that
+  database and MUST NOT prepare the sync store, which the host prepared for every
+  family at once.
+- **local-version-bumped-by-every-write**: Every local document write — create,
+  update, mutate, publish/unpublish/finalize/definalize, and delete of a live
+  document — MUST, in the same transaction, set or bump the row's `local_version`
+  (a create starts it at 1) and log the change to the sync store's change log
+  under `content.markdown` with that version; the log is pruned and change
+  observers fire only once the transaction commits, never on a rollback.
+- **expected-version-check**: Updating, mutating, and deleting a document MUST
+  accept an optional expected version; when given, a stored `local_version` that
+  differs MUST refuse the write with a stale-version error carrying the current
+  version, and nothing is written. When omitted, the write is unconditional.
+  Deleting a document already gone MUST still succeed whatever version is quoted.
+- **document-carries-version**: Every document read MUST carry the row's
+  `local_version` as the document's version, distinct from the server's own
+  current version.
 - **db-path-shared-token**: The default database path MUST resolve under one
   token-named directory rather than a name derived from the token's display form, so
   this store and any other consumer of the same token agree on one database file and
@@ -303,7 +340,11 @@ layer, not a visual component.
 | markdown-core-008 | number-range-clamping | A pulled JSON number outside the 64-bit signed integer range | The value is stored as a lossy floating-point value rather than trapping |
 | markdown-core-009 | unencodable-value-throws | A pulled array or object value bound for a scalar column | Throws rather than binding a null value |
 | markdown-core-010 | postgres-form-repair | The timestamp reader given a database wire-form timestamp with a space separator and a two-digit offset | Parses to the same instant the writer would produce for the ISO-8601 spelling |
-
+| markdown-core-011 | local-version-column | Migrate a database holding `markdown` rows written before `markdown-v7-local-version` | Every existing row reads back with `local_version` 1 |
+| markdown-core-012 | local-version-bumped-by-every-write, document-carries-version | Create a document, then update it once | The created document has version 1; after the update it reads back with version 2, and the change log holds two `content.markdown` upsert entries with versions 1 and 2 |
+| markdown-core-013 | expected-version-check | Update a document at version 2 quoting expected version 1 | Throws the stale-version error carrying current version 2; the stored content is unchanged |
+| markdown-core-014 | expected-version-check, delete-is-idempotent | Delete a document that is already gone, quoting any expected version | Succeeds without throwing |
+| markdown-core-015 | shared-database-init | Construct the store over a host-owned database and an already-prepared sync store | The markdown tables exist and the sync store is not prepared again |
 ## Edge Cases
 
 - The document-list read path and the single-document read path deliberately
@@ -330,7 +371,11 @@ layer, not a visual component.
 - Purging `notes`, `docs`, or `papers` alone succeeds when each has no rows; purging
   `content.markdown` alone while any marker table still has rows is refused
   regardless of whether that table is empty of *unrelated* rows.
-
+- A delete of a document that is already tombstoned neither checks the expected
+  version nor bumps `local_version` nor logs a change: only a live document's delete
+  is versioned and logged.
+- A pulled row whose `local_version` update touches no row (the row did not land)
+  appends nothing to the change log.
 ## Configuration
 
 | Option | Type | Default | Description |
@@ -439,7 +484,14 @@ framework that protocol lives in.
   `isTruthy` implements the truthy-parsing rule; `truncate` implements the
   orphan-purge refusal.
 
-  `MarkdownStore.init` takes the required tenancy ids; `createDocument`,
+  `MarkdownStore.init` takes the required tenancy ids, and
+  `init(database:syncStore:customerID:ecosystemID:)` opens a host-owned database
+  (**shared-database-init**); `updateDocument`, `mutateDocument` and
+  `deleteDocument` take `expectedVersion` and throw
+  `MarkdownStoreError.staleVersion(current:)` (**expected-version-check**), and every
+  write logs through `GRDBSyncStore.logChange`, while a pull appends through the
+  static `GRDBSyncStore.appendChange` (**local-version-bumped-by-every-write**,
+  **local-version-never-travels**); `createDocument`,
   `updateDocument`, `publishDocument`/`unpublishDocument`, and `deleteDocument`
   implement the lifecycle methods above; `drainRemoteQueue` implements the queue
   drain, sending each operation through a caller-supplied `MarkdownRemoteWriter`;
@@ -483,6 +535,13 @@ framework that protocol lives in.
 **Rationale**: An unconditional update would stage a mutation into the taxonomy outbox on every idempotent re-add, since staging follows the count of rows the database engine reports as actually changed; the guard makes "already exists and live" distinguishable from "actually changed" at the SQL level instead of requiring a pre-read.
 **Approved**: pending
 
+**Decision**: Add a local-only `local_version` per document as the concurrency token and the change-feed version, rather than reusing the server's `current_version`.
+**Rationale**: The server's version moves only when adh accepts a write, so it cannot order local writers against each other or against a pull; a local counter bumped by every local write and every applied pull can. It never travels, because adh has no such column.
+**Approved**: pending
+
+**Decision**: An expected version is optional on update, mutate and delete, and omitting it writes unconditionally.
+**Rationale**: Existing callers (the app's own notes storage) have no token to quote and kept their last-writer-wins behavior; a daemon serving several clients quotes one and gets a stale error instead of overwriting.
+**Approved**: pending
 ## Compliance
 
 | Check | Status | Category |
@@ -499,6 +558,7 @@ Separation of concerns holds structurally: `MarkdownSchema` owns DDL and migrati
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.2.0 | 2026-11-21 | Mike Fullerton | markdown.local_version (migration v7) bumped by every local write and applied pull and logged to the change feed; expectedVersion checks with staleVersion on update, mutate and delete; documents carry version; init(database:syncStore:customerID:ecosystemID:) for a host-owned database. |
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to adh/hub/content/. |
 | 1.0.1 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |
 | 1.0.0 | 2026-09-24 | Mike Fullerton | Initial creation |

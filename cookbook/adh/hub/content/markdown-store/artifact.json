@@ -4,15 +4,15 @@
     "id": "11f7a665-60e9-42df-853c-fe4de3af0fd8",
     "title": "Markdown Store",
     "type": "ingredient",
-    "version": "1.1.0",
+    "version": "1.2.0",
     "status": "review",
     "language": "en",
     "created": "2026-09-24",
-    "modified": "2026-09-27",
+    "modified": "2026-11-21",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
-    "summary": "The local relational-database mirror and outbox for the content.markdown resource family — schema, sync projection, document lifecycle, taxonomy, and timestamp normalization.",
+    "summary": "The local relational-database mirror and outbox for the content.markdown resource family — schema, sync projection, document lifecycle, local versions and change-feed logging, taxonomy, and timestamp normalization.",
     "platforms": [
       "swift",
       "macos",
@@ -36,12 +36,14 @@
       "packages/apple/AgenticDeveloperHubSDK/Markdown/MarkdownStore.swift (adhsdk)",
       "packages/apple/AgenticDeveloperHubSDK/Markdown/MarkdownTaxonomy.swift (adhsdk)",
       "packages/apple/AgenticDeveloperHubSDK/Markdown/MarkdownTimestamp.swift (adhsdk)",
-      "packages/apple/AgenticDeveloperHubSDK/Markdown/MarkdownRemoteWriter.swift (adhsdk)"
+      "packages/apple/AgenticDeveloperHubSDK/Markdown/MarkdownRemoteWriter.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Markdown/MarkdownDocument.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/SyncGRDB/GRDBSyncStore.swift (adhsdk)"
     ],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "952ed02f55607863",
+  "synced": "7aa047f1511222f9",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

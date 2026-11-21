@@ -19369,6 +19369,20 @@
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/NotesWindow/",
           "platform": "apple"
+        },
+        {
+          "conformance": {
+            "state": "unverified"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/Markdown/Note.swift",
+          "platform": "apple"
+        },
+        {
+          "conformance": {
+            "state": "unverified"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/Markdown/MarkdownNoteMapping.swift",
+          "platform": "apple"
         }
       ],
       "kind": "ingredient",

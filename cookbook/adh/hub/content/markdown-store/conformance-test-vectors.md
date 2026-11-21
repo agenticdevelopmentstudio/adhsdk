@@ -11,4 +11,8 @@
 | markdown-core-008 | number-range-clamping | A pulled JSON number outside the 64-bit signed integer range | The value is stored as a lossy floating-point value rather than trapping |
 | markdown-core-009 | unencodable-value-throws | A pulled array or object value bound for a scalar column | Throws rather than binding a null value |
 | markdown-core-010 | postgres-form-repair | The timestamp reader given a database wire-form timestamp with a space separator and a two-digit offset | Parses to the same instant the writer would produce for the ISO-8601 spelling |
-
+| markdown-core-011 | local-version-column | Migrate a database holding `markdown` rows written before `markdown-v7-local-version` | Every existing row reads back with `local_version` 1 |
+| markdown-core-012 | local-version-bumped-by-every-write, document-carries-version | Create a document, then update it once | The created document has version 1; after the update it reads back with version 2, and the change log holds two `content.markdown` upsert entries with versions 1 and 2 |
+| markdown-core-013 | expected-version-check | Update a document at version 2 quoting expected version 1 | Throws the stale-version error carrying current version 2; the stored content is unchanged |
+| markdown-core-014 | expected-version-check, delete-is-idempotent | Delete a document that is already gone, quoting any expected version | Succeeds without throwing |
+| markdown-core-015 | shared-database-init | Construct the store over a host-owned database and an already-prepared sync store | The markdown tables exist and the sync store is not prepared again |

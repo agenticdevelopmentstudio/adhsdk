@@ -20,3 +20,8 @@ only place adh's rows are translated into this schema's columns; `content.markdo
 `content.notes`, `content.docs`, and `content.papers` are pull-only, while taxonomy
 resources ride the same generic push path documents deliberately do not.
 
+Each document row also carries a local-only `local_version`, bumped by every local
+write and every applied pull and logged to the sync store's change feed, which a
+writer may quote as an expected version to have a stale write refused. The store can
+open its own database or share one a host already owns.
+
