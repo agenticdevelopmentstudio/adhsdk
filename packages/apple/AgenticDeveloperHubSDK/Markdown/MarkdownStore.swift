@@ -845,11 +845,18 @@ public final class MarkdownStore: @unchecked Sendable {
     /// Stamps `claimed_at` on one op the first time it is handed to the
     /// writer. A replay keeps the first stamp. Nothing ever clears it: the
     /// row is deleted by `complete` once adh has acknowledged the op.
-    private func claim(opID: String) throws {
+    ///
+    /// Answers whether the op is still queued. The drain works from a
+    /// snapshot, and `deleteDocument` may have removed an unclaimed op since
+    /// it was read (a create/delete pair that drops, queuing no delete); an
+    /// op that is gone must not be sent, or adh mints a document nothing
+    /// will ever delete.
+    private func claim(opID: String) throws -> Bool {
         try database.write { conn in
             try conn.execute(
                 sql: "UPDATE _markdown_outbox SET claimed_at = COALESCE(claimed_at, ?) WHERE op_id = ?",
                 arguments: [MarkdownTimestamp.string(Date()), opID])
+            return conn.changesCount > 0
         }
     }
 
@@ -900,7 +907,8 @@ public final class MarkdownStore: @unchecked Sendable {
                 intent: queued.intent,
                 payload: queued.payload,
                 createdAt: queued.createdAt)
-            try claim(opID: remoteOp.opID)
+            // Gone since the snapshot was read: `deleteDocument` dropped it.
+            guard try claim(opID: remoteOp.opID) else { continue }
             // A throw stops the drain with the op still queued and still
             // claimed: it may have reached adh, so its body is frozen and the
             // next drain resends it unchanged.

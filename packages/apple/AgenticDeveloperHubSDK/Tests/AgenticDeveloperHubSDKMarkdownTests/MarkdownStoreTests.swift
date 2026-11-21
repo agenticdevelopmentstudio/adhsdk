@@ -364,6 +364,27 @@ struct MarkdownStoreTests {
         #expect(try store.pendingRemoteOps(limit: 10).count == 1)
     }
 
+    /// The drain works from a snapshot. A create that `deleteDocument`
+    /// dropped while an earlier op was on the wire (unclaimed, so no delete
+    /// was queued) must not be sent: adh would mint a document nothing will
+    /// ever delete.
+    @Test("an op deleteDocument removed after the snapshot was read is not sent")
+    func drainSkipsAnOpRemovedMidDrain() async throws {
+        let store = try store()
+        _ = try store.createDocument(content: "first", markers: [])
+        let doomed = try store.createDocument(content: "doomed", markers: [.note])
+        // While op 1 is in flight, the user deletes the second document.
+        let writer = HookedWriter { sent in
+            if sent.documentID != doomed.id {
+                try? store.deleteDocument(id: doomed.id)
+            }
+        }
+        try await store.drainRemoteQueue(into: writer, limit: 10)
+
+        #expect(await writer.sentDocumentIDs.contains(doomed.id) == false)
+        #expect(try store.pendingRemoteOps(limit: 10).isEmpty)
+    }
+
     // MARK: - A sent op is frozen
 
     /// A send that threw may still have reached adh, and the resend carries
@@ -707,6 +728,21 @@ private actor RecordingWriter: MarkdownRemoteWriter {
         sentIntents.append(remoteOp.intent)
         sentRemoteIDs.append(remoteOp.remoteID)
         return remoteOp.intent == .create ? mintedID : nil
+    }
+}
+
+/// Runs `onSend` on each op before accepting it, so a test can change the
+/// store while an op is "on the wire".
+private actor HookedWriter: MarkdownRemoteWriter {
+    private(set) var sentDocumentIDs: [String] = []
+    private let onSend: @Sendable (MarkdownRemoteOp) -> Void
+
+    init(onSend: @escaping @Sendable (MarkdownRemoteOp) -> Void) { self.onSend = onSend }
+
+    func send(_ remoteOp: MarkdownRemoteOp) async throws -> String? {
+        onSend(remoteOp)
+        sentDocumentIDs.append(remoteOp.documentID)
+        return nil
     }
 }
 
