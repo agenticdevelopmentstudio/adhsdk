@@ -42,7 +42,9 @@ public struct GRDBSyncStoreStatus: Codable, Sendable {
 public final class GRDBSyncStore: SyncStore, @unchecked Sendable {
 
     private let boundedDatabase: BoundedDatabase
-    private let queue = DispatchQueue(label: "GRDBSyncStore")
+    /// Every mutating call is serialized here. Internal, not private, so a
+    /// test can assert a body runs while this queue is held.
+    let queue = DispatchQueue(label: "GRDBSyncStore")
     /// Resources this host may pull but never push. `stage(_:)` refuses them
     /// up front with `SyncStoreFailure.pullOnlyResource` (twin of
     /// `InMemorySyncStore.pullOnlyResources`).
@@ -179,10 +181,14 @@ public final class GRDBSyncStore: SyncStore, @unchecked Sendable {
             // The resource's high-water mark: a row written after this purge
             // starts above every version (and delete entry) handed out
             // before it, so `local_version` never goes backwards for an id.
+            // `WHERE true` is load-bearing: without it SQLite parses the
+            // `ON` of an upsert after `INSERT … SELECT … FROM t` as a join
+            // constraint and fails "near DO" (sqlite.org/lang_upsert.html,
+            // "Parsing Ambiguity").
             try conn.execute(
                 sql: """
                     INSERT INTO _sync_version_floor (resource, floor)
-                    SELECT ?, COALESCE(MAX(local_version), 0) + 1 FROM "\(table)"
+                    SELECT ?, COALESCE(MAX(local_version), 0) + 1 FROM "\(table)" WHERE true
                     ON CONFLICT(resource) DO UPDATE SET floor = MAX(floor, excluded.floor)
                     """,
                 arguments: [resource])

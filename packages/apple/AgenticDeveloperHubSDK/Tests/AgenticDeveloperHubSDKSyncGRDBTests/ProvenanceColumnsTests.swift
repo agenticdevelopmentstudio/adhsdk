@@ -470,13 +470,16 @@ final class ProvenanceColumnsTests: XCTestCase {
         let store = GRDBSyncStore(database: try BoundedDatabase(path: path))
         try await store.prepare(resources: [notes])
 
-        let label = try store.writeLocal { conn -> String in
+        // The body itself runs on GRDB's writer queue (the store hops onto it
+        // inside its own `queue.sync`), so the current queue's label is
+        // GRDB's. What matters is that the store's queue is held meanwhile,
+        // which `dispatchPrecondition` checks through the nested sync.
+        try store.writeLocal { conn in
             try store.stage(LocalMutation(
                 resource: "personal.notes", rowId: "w1", type: .upsert, data: ["title": .string("x")]), in: conn)
-            return String(cString: __dispatch_queue_get_label(nil))
+            dispatchPrecondition(condition: .onQueue(store.queue))
         }
 
-        XCTAssertEqual(label, "GRDBSyncStore")
         XCTAssertEqual(try store.localRecord(resource: "personal.notes", id: "w1")?.version, 1)
     }
 }
