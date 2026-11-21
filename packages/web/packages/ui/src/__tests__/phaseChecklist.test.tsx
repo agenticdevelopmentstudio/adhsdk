@@ -39,10 +39,10 @@ describe('PhaseChecklist (ui)', () => {
   it('T4: every row carries its status name', () => {
     render(<PhaseChecklist phases={phases} />)
     const rows = screen.getAllByRole('listitem')
-    expect(within(rows[0]).getByText('done')).toBeInTheDocument()
-    expect(within(rows[1]).getByText('in progress')).toBeInTheDocument()
-    expect(within(rows[2]).getByText('to do')).toBeInTheDocument()
-    expect(within(rows[3]).getByText('stopped')).toBeInTheDocument()
+    expect(within(rows[0]!).getByText('done')).toBeInTheDocument()
+    expect(within(rows[1]!).getByText('in progress')).toBeInTheDocument()
+    expect(within(rows[2]!).getByText('to do')).toBeInTheDocument()
+    expect(within(rows[3]!).getByText('stopped')).toBeInTheDocument()
   })
 
   it('T5: status icons are decorative', () => {
