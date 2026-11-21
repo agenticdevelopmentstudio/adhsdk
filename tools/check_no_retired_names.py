@@ -34,6 +34,9 @@ What is NOT a retired name:
     domains until it moves, which is a separate piece of work.
   * The files in LEGACY_FILES. Each one reads data an older build wrote under a
     retired name, so it has to spell that name to find the data.
+  * The toolkit site's own name, "Agentic Developer Toolkit", in its site-registry
+    row (SITE_NAMES). The SDK took the hub-sdk name, but the toolkit site keeps its
+    own (adhsdk 482f4f19); nothing else on that line, or in that file, is exempt.
   * Dated history in `docs/sessions/`, which records what was true at the time.
   * The guards themselves, and their self-tests, by filename only. A guard that
     hunts a string has to contain it.
@@ -73,8 +76,25 @@ LEGACY_FILES = {
     "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/AIPlugins/AIProviderMigrationTests.swift",
     # The window-contexts state directory the sample host used to write.
     "packages/apple/AgenticDeveloperHubSDKApp/AgenticDeveloperHubSDKApp/WindowContextsCoordinator.swift",
-    # The localStorage key the color-mode choice used to live under.
+    # The localStorage key the color-mode choice used to live under, its test, and the
+    # recipe that specifies reading it.
     "packages/web/packages/themes/src/colorMode.tsx",
+    "packages/web/packages/themes/src/__tests__/colorMode.test.tsx",
+    "cookbook/themes/color-mode.md",
+    "cookbook/themes/color-mode/behavioral-requirements.md",
+    "cookbook/themes/color-mode/configuration.md",
+    "cookbook/themes/color-mode/conformance-test-vectors.md",
+    "cookbook/themes/color-mode/design-decisions.md",
+    "cookbook/themes/color-mode/edge-cases.md",
+}
+
+# Repo-relative file -> exact fragments that name a site which keeps a retired-looking
+# name. The fragment is removed before the line is matched, so anything else on the line
+# that names a retired name is still caught.
+SITE_NAMES = {
+    "packages/web/packages/adh-registry/src/sites/registry.ts": (
+        "fullLabel: 'Agentic Developer Toolkit'",
+    ),
 }
 
 # Dated history: it records what was true when it was written.
@@ -102,21 +122,28 @@ SKIP_SUFFIXES = {
 
 def _scan_lines(text: str, rel: str) -> list[str]:
     hits: list[str] = []
+    allowed = SITE_NAMES.get(rel, ())
     for lineno, line in enumerate(text.splitlines(), start=1):
+        probe = line
+        for fragment in allowed:
+            probe = probe.replace(fragment, "")
         for label, pattern in PATTERNS.items():
-            if pattern.search(line):
+            if pattern.search(probe):
                 hits.append(f"{rel}:{lineno}: {label}: {line.strip()}")
     return hits
 
 
 def _skipped(path: Path, repo_root: Path) -> bool:
+    # Only the directories below the repo root count: a checkout that itself sits under a
+    # `worktrees/` directory (`.claude/worktrees/<name>/`) must still be scanned.
     try:
-        rel = path.relative_to(repo_root).as_posix()
+        rel_path = path.relative_to(repo_root)
     except ValueError:
-        rel = path.as_posix()
+        rel_path = path
+    rel = rel_path.as_posix()
     if rel in LEGACY_FILES or rel.startswith(SKIP_PREFIXES):
         return True
-    if any(part in SKIP_DIRS for part in path.parts):
+    if any(part in SKIP_DIRS for part in rel_path.parts[:-1]):
         return True
     return path.name in SKIP_NAMES or path.suffix.lower() in SKIP_SUFFIXES
 

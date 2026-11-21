@@ -93,6 +93,31 @@ def test_lockfiles_and_build_output_are_skipped() -> None:
         assert run(repo).returncode == 0
 
 
+def test_a_repo_inside_a_worktrees_dir_is_still_scanned() -> None:
+    # The skip list names directories inside the repo. A checkout at
+    # .claude/worktrees/<name>/ is the repo itself and must not skip every file.
+    with tempfile.TemporaryDirectory() as tmp:
+        repo = Path(tmp) / ".claude" / "worktrees" / "feature"
+        repo.mkdir(parents=True)
+        (repo / "README.md").write_text("clean\n", encoding="utf-8")
+        assert run(repo).returncode == 0
+        (repo / "README.md").write_text("AgenticToolkit\n", encoding="utf-8")
+        assert run(repo).returncode == 1
+        (repo / "README.md").write_text("clean\n", encoding="utf-8")
+        (repo / "worktrees").mkdir()
+        (repo / "worktrees" / "other.md").write_text("AgenticToolkit\n", encoding="utf-8")
+        assert run(repo).returncode == 0
+
+
+def test_the_toolkit_site_name_is_allowed_only_in_its_registry_row() -> None:
+    registry = "packages/web/packages/adh-registry/src/sites/registry.ts"
+    check("{ id: 'toolkit', fullLabel: 'Agentic Developer Toolkit' },", False, registry)
+    # The rest of that line, and the name anywhere else, is still checked.
+    check("{ fullLabel: 'Agentic Developer Toolkit', pkg: '@agentic-toolkit/ui' },", True, registry)
+    check("description: 'Agentic Developer Toolkit'", True, registry)
+    check("fullLabel: 'Agentic Developer Toolkit'", True, "docs/guide.md")
+
+
 def test_explicit_roots_scan_only_those() -> None:
     with tempfile.TemporaryDirectory() as tmp:
         repo = Path(tmp)

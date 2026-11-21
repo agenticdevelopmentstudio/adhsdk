@@ -12,12 +12,12 @@ import { MAIN_SITE_IDS, MARKETING_SITE_IDS } from '../sites/registry'
 // The map arrives in one share per repo that builds part of the fleet —
 // `routes.main.generated.ts` from adh, `routes.marketing.generated.ts` from
 // adhmarketing, `routes.placeholder.generated.ts` from adhplaceholders,
-// `routes.hub.generated.ts` from agenticdeveloperhubwebsite,
-// `routes.devteam.generated.ts` from agenticdeveloperteamwebsite,
-// `routes.cookbook.generated.ts` from agenticdevelopercookbookwebsite,
-// `routes.toolkit.generated.ts` from agenticdevelopertoolkitwebsite,
+// `routes.hub.generated.ts` from adhubwebsite,
+// `routes.devteam.generated.ts` from adteamwebsite,
+// `routes.cookbook.generated.ts` from adcookbookwebsite,
+// `routes.toolkit.generated.ts` from adtoolkitwebsite,
 // `routes.personaregistry.generated.ts` from agenticpersonaregistrywebsite,
-// `routes.community.generated.ts` from agenticdevelopercommunitywebsite — because
+// `routes.community.generated.ts` from adcommunitywebsite — because
 // this package is a submodule of all of them, each owns part of the fleet, and no
 // generator can see the others' site trees.
 // `routes.generated.ts` merges them and is hand-written. The two assertions about that
