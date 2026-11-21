@@ -9469,15 +9469,6 @@
         },
         {
           "conformance": {
-            "hash": "sha256:932162785f39ad3a906649327f01680bdd286c067fd8ea75fbc6cfcdecc07bda",
-            "state": "confirmed",
-            "version": "1.0.3"
-          },
-          "location": "packages/web/packages/themes/src/theme-data.ts",
-          "platform": "web"
-        },
-        {
-          "conformance": {
             "hash": "sha256:27eda41879bf4967f2f4c257a06483591428babdbcbb94e01c4392ca44bbd836",
             "state": "confirmed",
             "version": "1.0.3"

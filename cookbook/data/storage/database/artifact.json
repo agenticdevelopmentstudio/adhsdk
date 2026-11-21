@@ -39,6 +39,7 @@
     "approved-by": "",
     "approved-date": ""
   },
+  "names_hosts": "The code this spec describes resolves an empty provider id to the Claude CLI; the spec states that value.",
   "synced": "e62b8c9294912a4e",
   "parts": [
     {"part": "intro"},
