@@ -154,9 +154,18 @@ describe('LogPanel followTail', () => {
 
   it('counts a view within a few pixels of the end as at the end', () => {
     const { body, rerender, scroll } = setup()
+    scroll.scrollTo(40) // un-pin first, so only the 3px scroll can re-pin it
     scroll.scrollTo(10 * ROW - VIEW - 3)
     rerender(<LogPanel<Ctx> columns={baseColumns} lines={numbered(11)} />)
     expect(body.scrollTop).toBe(11 * ROW)
+  })
+
+  it('treats a view just past the slack from the end as scrolled up', () => {
+    const { body, rerender, scroll } = setup()
+    scroll.scrollTo(40)
+    scroll.scrollTo(10 * ROW - VIEW - 5)
+    rerender(<LogPanel<Ctx> columns={baseColumns} lines={numbered(11)} />)
+    expect(body.scrollTop).toBe(10 * ROW - VIEW - 5)
   })
 
   it('keeps following once maxLines caps the list and the row count stops growing', () => {
