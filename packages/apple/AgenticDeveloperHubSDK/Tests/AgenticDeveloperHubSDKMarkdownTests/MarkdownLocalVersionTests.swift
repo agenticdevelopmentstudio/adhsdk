@@ -113,7 +113,9 @@ struct MarkdownLocalVersionTests {
         })
     }
 
-    private func pulled(_ content: String, syncVersion: String, updatedAt: String) -> SyncChange {
+    private func pulled(
+        _ content: String, syncVersion: String, updatedAt: String, extra: [String: JSONValue] = [:]
+    ) -> SyncChange {
         SyncChange(
             resource: "content.markdown", id: "m1", op: .upsert, syncVersion: syncVersion,
             data: [
@@ -123,7 +125,7 @@ struct MarkdownLocalVersionTests {
                 "owner_id": .string("cust-1"),
                 "created_at": .string("2026-01-01T00:00:00Z"),
                 "updated_at": .string(updatedAt)
-            ])
+            ].merging(extra) { _, new in new })
     }
 
     private func feed(_ store: MarkdownStore) throws -> [Int64] {
@@ -143,6 +145,52 @@ struct MarkdownLocalVersionTests {
 
         #expect(try store.document(id: "m1")?.version == 1)
         #expect(try feed(store) == [1])
+    }
+
+    /// The hub's real echo of a push: adh bumps `current_version`, stamps its
+    /// own `created_at`, serializes `frontmatter`, and fills `content_hash`,
+    /// `size_bytes` and the author pair. None of that is what the document says.
+    @Test("an echo that changes only server-owned columns neither bumps nor logs")
+    func serverOwnedColumnsAreNotAChange() async throws {
+        let store = try store()
+        try await store.syncStore.apply(
+            [pulled("# Same", syncVersion: "5", updatedAt: "2026-01-02T00:00:00Z")], advancingTo: nil)
+        try await store.syncStore.apply([
+            SyncChange(
+                resource: "content.markdown", id: "m1", op: .upsert, syncVersion: "6",
+                data: [
+                    "title": .string("From the server"),
+                    "content": .string("# Same"),
+                    "owner_kind": .string("customer"),
+                    "owner_id": .string("cust-1"),
+                    "current_version": .number(2),
+                    "frontmatter": .string("{}"),
+                    "content_hash": .string("abc123"),
+                    "size_bytes": .number(6),
+                    "author_kind": .string("customer"),
+                    "author_id": .string("cust-1"),
+                    "created_at": .string("2026-01-01T00:00:05Z"),
+                    "updated_at": .string("2026-01-03T00:00:00Z")
+                ])
+        ], advancingTo: nil)
+
+        #expect(try store.document(id: "m1")?.currentVersion == 2)
+        #expect(try store.document(id: "m1")?.version == 1)
+        #expect(try feed(store) == [1])
+    }
+
+    @Test("a pull that changes the publication state bumps and logs")
+    func publicationStateIsAChange() async throws {
+        let store = try store()
+        try await store.syncStore.apply(
+            [pulled("# Same", syncVersion: "5", updatedAt: "2026-01-02T00:00:00Z")], advancingTo: nil)
+        let finalized = pulled(
+            "# Same", syncVersion: "6", updatedAt: "2026-01-03T00:00:00Z",
+            extra: ["stage": .string("final")])
+        try await store.syncStore.apply([finalized], advancingTo: nil)
+
+        #expect(try store.document(id: "m1")?.version == 2)
+        #expect(try feed(store) == [1, 2])
     }
 
     @Test("a re-pulled row with new content bumps and logs")
