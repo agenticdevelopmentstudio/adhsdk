@@ -232,8 +232,12 @@ public final class ProviderModelPickerView: NSView, SettingsViewProtocol {
            modelSettingIsShared(setting) {
             setting.value = ""
         }
-        // Last, so the selection observer's refresh reads the cleared model.
+        // Last, so the rebuild reads the cleared model.
         selectedSetting.value = value
+        // Now, not on the observer's next main-queue turn: the user's own pick
+        // drops an "Unavailable Provider" entry and re-targets the model row
+        // at once. The observer still covers writes made elsewhere.
+        rebuildMenu()
     }
 
     /// Whether `setting` is the one every provider uses: a provider that
