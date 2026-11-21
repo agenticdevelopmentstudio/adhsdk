@@ -1,12 +1,17 @@
 // Ecosystem-owner react-query glue for the Invitations topic. Same shapes as the
-// platform-admin hooks (websites/main/admin/src/api/invitations.ts), but each hook
-// takes the ecosystem's rdid, builds its URLs from ecosystemInvitationEndpoints(rdid)
-// (everything under /api/auth/ecosystems/<rdid>/*), maps the byte-identical backend
-// responses with the shared mappers, and namespaces its query keys by rdid so two
-// ecosystems' caches never collide. No pane logic here — the panes are prop-driven.
+// platform-admin hooks (@adh-sdk/adh-admin api/invitations.ts), but each hook takes the
+// ecosystem's rdid, builds its URLs from ecosystemInvitationEndpoints(rdid) (the /v1
+// invitation, note and history routes with `?ecosystem=<rdid>`), maps the backend rows with
+// the shared mappers, and namespaces its query keys by rdid so two ecosystems' caches never
+// collide. No pane logic here — the panes are prop-driven.
+//
+// The wire is the admin hooks' wire, ecosystem-scoped: every read is a /v1 LIST
+// (`{object:"list", data, has_more}`, paged through listAllV1), and every write is a /v1 POST
+// with a snake_case body that names its ecosystem (E.withEcosystem). Reading a list as a bare
+// array threw on `.map` and left each pane on "Failed to load".
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { authedJson, authedRequest } from "../http";
+import { authedJson, authedRequest, listAllV1 } from "../http";
 import {
   toRequest,
   toPendingUser,
@@ -46,7 +51,7 @@ export function useEcoInvitationRequests(ecosystemRdid: string) {
   return useQuery({
     queryKey: KEYS.requests(ecosystemRdid),
     queryFn: async (): Promise<InvitationRequest[]> => {
-      const rows = await authedJson<BackendRequest[]>(E.requests);
+      const rows = await listAllV1<BackendRequest>(E.requests);
       return rows.map(toRequest);
     },
   });
@@ -57,7 +62,7 @@ export function useEcoPendingUsers(ecosystemRdid: string) {
   return useQuery({
     queryKey: KEYS.pending(ecosystemRdid),
     queryFn: async (): Promise<PendingUser[]> => {
-      const rows = await authedJson<BackendPendingUser[]>(E.pendingUsers);
+      const rows = await listAllV1<BackendPendingUser>(E.pendingUsers);
       return rows.map(toPendingUser);
     },
   });
@@ -68,7 +73,7 @@ export function useEcoInvites(ecosystemRdid: string) {
   return useQuery({
     queryKey: KEYS.invites(ecosystemRdid),
     queryFn: async (): Promise<Invite[]> => {
-      const rows = await authedJson<BackendInvite[]>(E.invitations);
+      const rows = await listAllV1<BackendInvite>(E.invitations);
       return rows.map(toInvite);
     },
   });
@@ -81,7 +86,7 @@ export function useEcoRowNotes(ecosystemRdid: string, subjectTable: string, subj
   return useQuery({
     queryKey: KEYS.notes(ecosystemRdid, subjectTable, subjectId),
     queryFn: async (): Promise<AdminNote[]> => {
-      const rows = await authedJson<BackendAdminNote[]>(E.adminNotes(subjectTable, subjectId));
+      const rows = await listAllV1<BackendAdminNote>(E.adminNotes(subjectTable, subjectId));
       return rows.map(toAdminNote);
     },
     enabled: !!subjectId,
@@ -93,7 +98,7 @@ export function useEcoRowHistory(ecosystemRdid: string, subjectTable: string, su
   return useQuery({
     queryKey: KEYS.history(ecosystemRdid, subjectTable, subjectId),
     queryFn: async (): Promise<HistoryEntry[]> => {
-      const rows = await authedJson<BackendHistoryEntry[]>(E.entityHistory(subjectTable, subjectId));
+      const rows = await listAllV1<BackendHistoryEntry>(E.entityHistory(subjectTable, subjectId));
       return rows.map(toHistoryEntry);
     },
     enabled: !!subjectId,
@@ -114,12 +119,14 @@ export function useEcoSaveNotes(ecosystemRdid: string) {
       notes: { id?: string; content: string }[];
     }) =>
       authedJson(E.adminNotesPut, {
-        method: "PUT",
-        body: JSON.stringify({
-          subjectTable,
-          subjectId,
-          notes: notes.map((n) => ({ id: n.id, content: n.content })),
-        }),
+        method: "POST",
+        body: JSON.stringify(
+          E.withEcosystem({
+            subject_table: subjectTable,
+            subject_id: subjectId,
+            notes: notes.map((n) => ({ id: n.id, content: n.content })),
+          }),
+        ),
       }),
     onSuccess: (_data, { subjectTable, subjectId }) => {
       void qc.invalidateQueries({ queryKey: KEYS.notes(ecosystemRdid, subjectTable, subjectId) });
@@ -143,9 +150,9 @@ export function useEcoSendInvitations(ecosystemRdid: string) {
       email?: { note?: string };
       sms?: { note?: string };
     }) =>
-      authedJson(E.invitations, {
+      authedJson(E.invitationsSend, {
         method: "POST",
-        body: JSON.stringify({ pendingUserIds, email, sms }),
+        body: JSON.stringify(E.withEcosystem({ pending_user_ids: pendingUserIds, email, sms })),
       }),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: KEYS.pending(ecosystemRdid) });
@@ -159,9 +166,9 @@ export function useEcoAddPendingUsers(ecosystemRdid: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (users: Array<{ name: string; email?: string; phone?: string; note?: string }>) =>
-      authedJson(E.pendingUsers, {
+      authedJson(E.pendingUsersCreate, {
         method: "POST",
-        body: JSON.stringify({ users }),
+        body: JSON.stringify(E.withEcosystem({ users })),
       }),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: KEYS.pending(ecosystemRdid) });
