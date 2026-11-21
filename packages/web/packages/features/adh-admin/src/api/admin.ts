@@ -990,7 +990,11 @@ export interface SetMessagingProviderVars {
   enabled?: boolean;
 }
 
-export function useSetMessagingProvider() {
+export function useSetMessagingProvider(): UseMutationResult<
+  SuccessBody<"/v1/messaging/providers/{id}", "post">,
+  Error,
+  SetMessagingProviderVars
+> {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ providerId, fields, enabled }: SetMessagingProviderVars) => {
@@ -1008,7 +1012,7 @@ export function useSetMessagingProvider() {
   });
 }
 
-export function useRemoveMessagingProvider() {
+export function useRemoveMessagingProvider(): UseMutationResult<void, Error, MessagingProviderId> {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (providerId: MessagingProviderId) =>
@@ -1023,7 +1027,11 @@ export interface TestMessagingProviderVars {
   to?: string;
 }
 
-export function useTestMessagingProvider() {
+export function useTestMessagingProvider(): UseMutationResult<
+  MessagingProviderTestResult,
+  Error,
+  TestMessagingProviderVars
+> {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ providerId, to }: TestMessagingProviderVars) => {
@@ -1042,7 +1050,11 @@ export function useTestMessagingProvider() {
   });
 }
 
-export function useRotateMessagingWebhookSecret() {
+export function useRotateMessagingWebhookSecret(): UseMutationResult<
+  SuccessBody<"/v1/messaging/providers/{id}/rotate_webhook_secret", "post">,
+  Error,
+  MessagingProviderId
+> {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (providerId: MessagingProviderId) =>

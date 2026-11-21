@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useState, type FormEvent, type ReactElement } from "react";
 import { Button } from "@adh-sdk/ui/components/button";
 import { Input } from "@adh-sdk/ui/components/input";
 import { Badge } from "@adh-sdk/ui/components/badge";
@@ -267,7 +267,7 @@ function ProviderRowCard({
  */
 export function MessagingProvidersSection({
   onDirtyChange,
-}: { onDirtyChange?: (dirty: boolean) => void } = {}) {
+}: { onDirtyChange?: (dirty: boolean) => void } = {}): ReactElement {
   const providers = useMessagingProviders();
   const rows = messagingProviderRows(providers.data ?? []);
   const [dirtyIds, setDirtyIds] = useState<ReadonlySet<string>>(() => new Set());
