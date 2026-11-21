@@ -250,11 +250,13 @@ public final class ConversationsSplitViewController: NSSplitViewController {
         // Watched from here, not from the shelf's own appearance: the shelf is
         // often collapsed, and the feed's status line reads the same activity.
         shelf.watchesActivity = true
+        feed.watchesFeed = true
     }
 
     public override func viewWillDisappear() {
         super.viewWillDisappear()
         shelf.watchesActivity = false
+        feed.watchesFeed = false
     }
 
     // MARK: - Key commands

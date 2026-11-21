@@ -380,10 +380,13 @@ public final class ConversationsViewController: NSViewController {
     ///   - pageLimit: how many entries a read asks for while nothing is hidden.
     ///     A hidden session multiplies it, so that ticking a box changes *which*
     ///     conversations are on the timeline and not how much timeline there is.
+    ///   - watchesFeed: whether the feed is read from the start. See
+    ///     ``watchesFeed``.
     ///   - load: reads the feed.
     public init(
         refreshInterval: Duration = .seconds(5),
         pageLimit: Int = 200,
+        watchesFeed: Bool = true,
         load: @escaping Load
     ) {
         self.pageLimit = pageLimit
@@ -412,6 +415,7 @@ public final class ConversationsViewController: NSViewController {
             // the destination the line was typed at. What decides whether the
             // composer is live is `canSend`, set below.
             send: { text, destination in await sendTarget.write(text, to: destination) },
+            paused: !watchesFeed,
             load: {
                 // Read once, so the three reads below and the cache entry all
                 // agree about which question was asked.
@@ -681,6 +685,15 @@ public final class ConversationsViewController: NSViewController {
     /// Called whenever the composer is turned on or off, so a host's Tab order
     /// can drop it out of the cycle while it is off.
     public var onComposerEnablementChanged: (() -> Void)?
+
+    /// Whether the feed is being re-read. A window built at launch and never
+    /// opened builds this with it off, and the window switches it on while it
+    /// is on screen — the shelf's ``ConversationsShelfViewController/watchesActivity``
+    /// recipe — so a closed window asks the daemon for nothing.
+    public var watchesFeed: Bool {
+        get { !session.isPaused }
+        set { session.isPaused = !newValue }
+    }
 
     @available(*, unavailable)
     public required init?(coder: NSCoder) { fatalError() }
