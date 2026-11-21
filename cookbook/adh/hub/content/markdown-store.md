@@ -188,6 +188,14 @@ open its own database or share one a host already owns.
   its `local_version` by one and append the change (upsert or delete, with the new
   version) to the sync store's change log inside the pull's transaction, so a pull
   reaches every app watching the feed.
+- **unchanged-pull-is-silent**: A pulled upsert counts as a change only when it
+  inserts the row or alters a column other than the bookkeeping columns
+  (`sync_version`, `sync_stamped_at`, `local_version`, `latest_version_id`,
+  `updated_at`); a pull that differs only in those — the echo of this store's own
+  push, or a re-sync of an unchanged row — MUST neither bump `local_version` nor
+  append to the change log, so a writer holding the version is not made stale by
+  its own write coming back. A pulled tombstone counts only when the row was not
+  already deleted.
 - **schema-drift-guard**: The projection's hand-maintained per-resource column lists
   MUST match the live schema's column info at runtime, so the two cannot silently
   drift apart.
@@ -208,6 +216,10 @@ open its own database or share one a host already owns.
   (a create starts it at 1) and log the change to the sync store's change log
   under `content.markdown` with that version; the log is pruned and change
   observers fire only once the transaction commits, never on a rollback.
+- **writes-return-version**: Creating a document MUST return the document with its
+  new version, and updating and mutating a document MUST return the new
+  `local_version`, so a writer can quote it as the expected version of its next
+  write without reading the row again.
 - **expected-version-check**: Updating, mutating, and deleting a document MUST
   accept an optional expected version; when given, a stored `local_version` that
   differs MUST refuse the write with a stale-version error carrying the current
@@ -345,6 +357,9 @@ layer, not a visual component.
 | markdown-core-013 | expected-version-check | Update a document at version 2 quoting expected version 1 | Throws the stale-version error carrying current version 2; the stored content is unchanged |
 | markdown-core-014 | expected-version-check, delete-is-idempotent | Delete a document that is already gone, quoting any expected version | Succeeds without throwing |
 | markdown-core-015 | shared-database-init | Construct the store over a host-owned database and an already-prepared sync store | The markdown tables exist and the sync store is not prepared again |
+| markdown-core-016 | unchanged-pull-is-silent | Pull a row, then pull it again with the same content and only a newer sync version and `updated_at` | The document stays at version 1 and the change log holds one entry for it |
+| markdown-core-017 | local-version-never-travels, unchanged-pull-is-silent | Pull a row, then pull it again with different content | The document reads back at version 2 and the change log holds entries with versions 1 and 2 |
+| markdown-core-018 | writes-return-version | Create a document, update it quoting version 1, then mutate it quoting version 2 | The update returns 2, the mutate returns 3, and the document reads back at version 3 |
 ## Edge Cases
 
 - The document-list read path and the single-document read path deliberately
@@ -376,6 +391,9 @@ layer, not a visual component.
   is versioned and logged.
 - A pulled row whose `local_version` update touches no row (the row did not land)
   appends nothing to the change log.
+- A pull that moves only `updated_at` or the server's version id (another device
+  touched the row without changing its text, or this store's own push echoed back)
+  is silent: the document keeps its `local_version`, and no feed entry appears.
 ## Configuration
 
 | Option | Type | Default | Description |
@@ -491,7 +509,12 @@ framework that protocol lives in.
   `MarkdownStoreError.staleVersion(current:)` (**expected-version-check**), and every
   write logs through `GRDBSyncStore.logChange`, while a pull appends through the
   static `GRDBSyncStore.appendChange` (**local-version-bumped-by-every-write**,
-  **local-version-never-travels**); `createDocument`,
+  **local-version-never-travels**); `MarkdownProjection.upsert` fingerprints the row
+  without its bookkeeping columns before and after the write and logs only when the
+  fingerprint changed, and `markDeleted` only when the row was live
+  (**unchanged-pull-is-silent**); `updateDocument` and `mutateDocument` are
+  `@discardableResult` and return the new `local_version` (**writes-return-version**);
+  `createDocument`,
   `updateDocument`, `publishDocument`/`unpublishDocument`, and `deleteDocument`
   implement the lifecycle methods above; `drainRemoteQueue` implements the queue
   drain, sending each operation through a caller-supplied `MarkdownRemoteWriter`;

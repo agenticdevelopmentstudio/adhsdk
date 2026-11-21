@@ -34,6 +34,9 @@
 - A note deleted by another writer while this editor still has an unsaved
   edit is not lost: the stale save turns the edit into a
   "(conflicted copy)" note.
+- A pin toggle that meets another writer's text change has no text of its
+  own to keep, so it pins the other writer's note instead of making a
+  conflicted copy.
 - A resync from the change stream discards the manager's record of
   unsaved edits along with the list, because it reloads every note.
 

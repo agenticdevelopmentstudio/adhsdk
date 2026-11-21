@@ -16,3 +16,6 @@
 | markdown-core-013 | expected-version-check | Update a document at version 2 quoting expected version 1 | Throws the stale-version error carrying current version 2; the stored content is unchanged |
 | markdown-core-014 | expected-version-check, delete-is-idempotent | Delete a document that is already gone, quoting any expected version | Succeeds without throwing |
 | markdown-core-015 | shared-database-init | Construct the store over a host-owned database and an already-prepared sync store | The markdown tables exist and the sync store is not prepared again |
+| markdown-core-016 | unchanged-pull-is-silent | Pull a row, then pull it again with the same content and only a newer sync version and `updated_at` | The document stays at version 1 and the change log holds one entry for it |
+| markdown-core-017 | local-version-never-travels, unchanged-pull-is-silent | Pull a row, then pull it again with different content | The document reads back at version 2 and the change log holds entries with versions 1 and 2 |
+| markdown-core-018 | writes-return-version | Create a document, update it quoting version 1, then mutate it quoting version 2 | The update returns 2, the mutate returns 3, and the document reads back at version 3 |

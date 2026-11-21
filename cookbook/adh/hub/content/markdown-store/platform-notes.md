@@ -45,7 +45,12 @@
   `MarkdownStoreError.staleVersion(current:)` (**expected-version-check**), and every
   write logs through `GRDBSyncStore.logChange`, while a pull appends through the
   static `GRDBSyncStore.appendChange` (**local-version-bumped-by-every-write**,
-  **local-version-never-travels**); `createDocument`,
+  **local-version-never-travels**); `MarkdownProjection.upsert` fingerprints the row
+  without its bookkeeping columns before and after the write and logs only when the
+  fingerprint changed, and `markDeleted` only when the row was live
+  (**unchanged-pull-is-silent**); `updateDocument` and `mutateDocument` are
+  `@discardableResult` and return the new `local_version` (**writes-return-version**);
+  `createDocument`,
   `updateDocument`, `publishDocument`/`unpublishDocument`, and `deleteDocument`
   implement the lifecycle methods above; `drainRemoteQueue` implements the queue
   drain, sending each operation through a caller-supplied `MarkdownRemoteWriter`;

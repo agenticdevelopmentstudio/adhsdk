@@ -166,6 +166,10 @@ is a coincidence, not a shared contract.
   the error MUST carry the stored note when the storage can say what it
   is, and nothing when the caller must re-read it. A storage with no
   concurrency token MUST never raise it.
+- **notestorage-writes-return-version**: Inserting and updating a note
+  MUST return the version the storage now holds for it, so the caller can
+  quote that version on its next write; a storage with no concurrency
+  token MUST still return the version it reports on read.
 - **notestorage-change-stream**: A storage MAY additionally be observable:
   it then MUST expose a stream of changes made by any writer, each one
   naming an upserted note id, a deleted note id, or a resync (the storage
@@ -209,7 +213,8 @@ is a coincidence, not a shared contract.
   into the note's `version`.
 - **markdownnotestorage-version-ignored**: The markdown-backed conformer
   MUST ignore a note's `version` on every write and MUST never fail with
-  the stale error.
+  the stale error, yet MUST return the document's new local version from
+  every insert and update.
 - **markdownnotestorage-fetch-one**: Fetching one note by id MUST read
   that one document and its ownership record, and MUST answer nothing when
   no document has that id.
@@ -301,7 +306,8 @@ is a coincidence, not a shared contract.
 - **notesmanager-pin-toggle-immediate**: Toggling a note's pin state MUST
   update the in-memory note, then write it through storage immediately on
   a snapshot of the just-toggled note, bypassing the content-update
-  debounce entirely.
+  debounce entirely; the note MUST count as having an unsaved edit until
+  that write lands, so another writer's change is not applied over it.
 - **notesmanager-delete-optimistic**: Deleting a note by id MUST remove
   the note from the notes list before attempting the storage delete, and
   MUST record — but MUST NOT use to reinstate the note — a failure of
@@ -326,9 +332,18 @@ is a coincidence, not a shared contract.
   and cancel the subscription when it is released, applying each change
   on the primary thread: a resync reloads every note; a deletion of a
   held note removes it; an upsert fetches that note and replaces the held
-  copy only when the fetched version is higher than the held one (a
-  version at or below it is the manager's own echo), appends it when not
-  held, and removes the held copy when the fetch answers nothing.
+  copy only when the fetched version is higher than the version ledger
+  holds for it (a version at or below it is the manager's own echo),
+  appends it when not held, and removes the held copy when the fetch
+  answers nothing.
+- **notesmanager-version-ledger**: The manager MUST keep, per note, the
+  last version storage confirmed — filled by a load, advanced by every
+  insert and update's returned version and by every change it adopts, and
+  cleared when the note is forgotten — and MUST read and advance it inside
+  its ordered storage chain, so each queued write quotes the version the
+  write before it produced and two consecutive saves of its own are never
+  stale against each other. The in-memory note's `version` MUST follow the
+  ledger once a save lands.
 - **notesmanager-live-changes-skip-dirty**: An upsert for a note with an
   edit not yet saved MUST NOT be applied over the editor — checked both
   before the fetch and again after it returns — so that note's next save
@@ -336,12 +351,16 @@ is a coincidence, not a shared contract.
 - **notesmanager-stale-resolution**: When a save fails with the stale
   error, the manager MUST obtain the stored note (from the error, or by
   fetching it), then: if the stored content still equals the content the
-  note last had when it matched storage, it MUST re-save the edit on top
-  of the stored version; otherwise it MUST keep the other writer's note
-  in the list and put the edit's text into a new note whose content is
-  `"# <title> (conflicted copy)\n\n"` followed by the edited content. If
-  the note no longer exists in storage, the edit MUST likewise become a
-  conflicted-copy note rather than vanish.
+  note last had when it matched storage, it MUST re-save the editor's
+  current note on top of the stored version; otherwise it MUST keep the
+  other writer's note in the list and, when the editor's text differs
+  from that base, put the editor's latest text — including anything typed
+  after the failed save was scheduled — into a new note whose content is
+  `"# <title> (conflicted copy)\n\n"` followed by that text. When only
+  the pin differs from the base, no copy is made: the pin state MUST be
+  re-applied on top of the other writer's note. If the note no longer
+  exists in storage, the edit MUST likewise become a conflicted-copy note
+  rather than vanish.
 - **notesmanager-markdown-store-accessor**: The manager's markdown-store
   accessor MUST return the wrapped document store only when the storage
   implementation also supports the taxonomy-provider extension, and MUST
@@ -395,6 +414,11 @@ no visual surface, not a visual component.
 | notes-model-017 | notesmanager-stale-resolution | Another writer changes a note's text; this manager then saves an edit to the same note and storage answers stale. | The other writer's note stays in the list and a new note titled `"<title> (conflicted copy)"` holds the edited text. |
 | notes-model-018 | notesmanager-stale-resolution | Storage answers stale but its stored content equals what the editor started from (only the version moved). | The edit is re-saved on top of the stored version and no conflicted copy is created. |
 | notes-model-019 | notemapping-shared, note-version | Map a markdown document with local version 7 and an owned `pinned: true` to a note. | The note's version is 7, it is pinned, and its content has the owned `pinned` line stripped. |
+| notes-model-020 | notesmanager-version-ledger, notestorage-writes-return-version | Over a versioned storage double, save an edit to a note, then save a second edit to it. | Both saves land on the same note with no stale error and no conflicted copy, and the held note's version equals the stored version. |
+| notes-model-021 | notesmanager-version-ledger | Create a note through the manager, then save an edit to it. | The edit lands on the created note with no conflicted copy. |
+| notes-model-022 | notesmanager-live-changes, notesmanager-version-ledger | Save an edit, then the double emits an upsert for that note at the version the save returned. | The held note keeps the saved text and is not replaced. |
+| notes-model-023 | notesmanager-stale-resolution | Another writer changes a note's text; this manager edits it twice before the debounced save runs and storage answers stale. | The conflicted copy holds the second edit's text. |
+| notes-model-024 | notesmanager-stale-resolution, notesmanager-pin-toggle-immediate | Another writer changes a note's text; this manager then toggles the note's pin and storage answers stale. | No conflicted copy is created; the stored note keeps the other writer's text and is pinned, and so does the held note. |
 ## Edge Cases
 
 - An empty-content note (created from an empty string) derives the
@@ -432,6 +456,9 @@ no visual surface, not a visual component.
 - A note deleted by another writer while this editor still has an unsaved
   edit is not lost: the stale save turns the edit into a
   "(conflicted copy)" note.
+- A pin toggle that meets another writer's text change has no text of its
+  own to keep, so it pins the other writer's note instead of making a
+  conflicted copy.
 - A resync from the change stream discards the manager's record of
   unsaved edits along with the list, because it reloads every note.
 
@@ -560,7 +587,12 @@ factory) | Category: the manager's name
   `NotesManager` is itself `@MainActor`, and every storage call it issues
   runs off the main actor through `Task.detached`, serialized into its
   own `storageChain`; the change stream is an `AsyncStream<NoteChange>` consumed by a `Task` the manager cancels in `deinit` (see `notesmanager-confined-to-primary-thread` and
-  `notesmanager-storage-off-primary-thread`). `NoteFolder`'s explicit,
+  `notesmanager-storage-off-primary-thread`). The version ledger is a
+  `nonisolated let versions = VersionLedger()`, a `[UUID: Int64]` behind an
+  `OSAllocatedUnfairLock`, read and advanced by the `write(_:version:)` and
+  `insert(_:)` helpers from inside the `storageChain`, so a queued save
+  never quotes a version read on the main actor before the save ahead of
+  it landed (see `notesmanager-version-ledger`). `NoteFolder`'s explicit,
   non-accidental `Hashable` conformance exists because an `NSOutlineView`
   bridges a Swift value lacking that conformance to a boxed object whose
   hash falls back to that box's own identity, so two

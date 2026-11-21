@@ -28,3 +28,6 @@
   is versioned and logged.
 - A pulled row whose `local_version` update touches no row (the row did not land)
   appends nothing to the change log.
+- A pull that moves only `updated_at` or the server's version id (another device
+  touched the row without changing its text, or this store's own push echoed back)
+  is silent: the document keeps its `local_version`, and no feed entry appears.

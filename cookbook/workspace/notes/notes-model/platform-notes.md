@@ -34,7 +34,12 @@
   `NotesManager` is itself `@MainActor`, and every storage call it issues
   runs off the main actor through `Task.detached`, serialized into its
   own `storageChain`; the change stream is an `AsyncStream<NoteChange>` consumed by a `Task` the manager cancels in `deinit` (see `notesmanager-confined-to-primary-thread` and
-  `notesmanager-storage-off-primary-thread`). `NoteFolder`'s explicit,
+  `notesmanager-storage-off-primary-thread`). The version ledger is a
+  `nonisolated let versions = VersionLedger()`, a `[UUID: Int64]` behind an
+  `OSAllocatedUnfairLock`, read and advanced by the `write(_:version:)` and
+  `insert(_:)` helpers from inside the `storageChain`, so a queued save
+  never quotes a version read on the main actor before the save ahead of
+  it landed (see `notesmanager-version-ledger`). `NoteFolder`'s explicit,
   non-accidental `Hashable` conformance exists because an `NSOutlineView`
   bridges a Swift value lacking that conformance to a boxed object whose
   hash falls back to that box's own identity, so two
