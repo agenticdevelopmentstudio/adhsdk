@@ -1,0 +1,5 @@
+- **Swift / SwiftUI**: Not applicable until a SwiftUI port; translate EventTimeline as a `VStack` of rows.
+- **Kotlin / Compose**: Not applicable until a Compose port; use `Column` with one row composable per item.
+- **React / Web (TypeScript)**: Exported from `@adh-sdk/ui` (`@adh-sdk/ui/blocks/event-timeline`). `StatusDot` and `EmptyState` come from `@adh-sdk/ui`.
+- **AppKit / UIKit**: Not applicable until a native port; use `NSStackView`/`UIStackView`.
+- **WinUI 3**: Not applicable until a WinUI port; use `StackPanel`.

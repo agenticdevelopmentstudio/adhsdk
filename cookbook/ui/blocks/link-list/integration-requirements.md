@@ -1,0 +1,8 @@
+- **render-row-per-link**: The block MUST render a `<ul>` with one `<li>` per link, in the order given.
+- **render-icon**: Each row MUST show a decorative icon: Image when `image`, else File when `kind` is `file`, else Globe.
+- **link-title**: A title with an `href` MUST render as an `ExternalLink` (new tab, `noopener noreferrer`, no arrow glyph); without an `href` it is plain text.
+- **render-description**: A description MUST render muted under the title.
+- **thumbnail-images**: A link with `image` and an `href` MUST show an `<img loading="lazy" alt="">` no taller than 12rem, rounded and bordered, wrapped in a link to the `href`. Other links show no thumbnail.
+- **mark-missing**: A `missing` row MUST show the title struck through in the dim text token with a "missing" label, and MUST NOT render a link or a thumbnail.
+- **show-empty**: An empty list MUST show `emptyLabel` (default "No links yet.") in the shared `EmptyState` and no `<ul>`.
+- **forward-class**: The block MUST merge `className` into its root element.

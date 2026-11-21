@@ -1,0 +1,9 @@
+- **render-row-per-event**: The block MUST render an `<ol>` with one `<li>` per event, in the order given (no sorting).
+- **tone-by-state**: Each row's `StatusDot` MUST use a tone from the state: info is neutral, running is blue, done is success, warning is orange, failed is error. A missing state means info.
+- **pulse-running**: A running event's dot MUST pulse; no other state pulses.
+- **name-state**: Each row MUST carry its state name ("info", "running", "done", "warning", "failed") as visually hidden text, and the dot MUST be decorative.
+- **render-time**: Each row MUST show the time inside `<time dateTime={iso}>` in mono dim text, formatted by `formatTime`, default `new Date(iso).toLocaleString()`.
+- **render-detail**: A detail MUST render through `renderMarkdown` when given, else as plain text in a `<p>`; no detail renders nothing.
+- **connect-rows**: Rows MUST be joined by a thin vertical connector line; the last row has none.
+- **show-empty**: An empty list MUST show `emptyLabel` (default "No events yet.") in the shared `EmptyState` and no `<ol>`.
+- **forward-class**: The block MUST merge `className` into its root element.

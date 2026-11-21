@@ -237,6 +237,13 @@ export { DescriptionCard, type DescriptionCardProps } from "./description-card";
 export { ProgressSummary, type ProgressSummaryProps } from "./progress-summary";
 export { PhaseChecklist, type PhaseChecklistProps } from "./phase-checklist";
 export {
+  EventTimeline,
+  type EventTimelineProps,
+  type TimelineEvent,
+  type TimelineState,
+} from "./event-timeline";
+export { LinkList, type LinkItem, type LinkListProps } from "./link-list";
+export {
   StatList,
   StatListRow,
   type StatListProps,

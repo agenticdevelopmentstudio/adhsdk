@@ -1,0 +1,4 @@
+- **No state** reads as info.
+- **No detail** renders no detail element.
+- **An unparseable time** is passed through `formatTime` as given; the default shows what `Date` produces.
+- **Keys are indices**: the list is display-only and has no stable ids.

@@ -7788,6 +7788,22 @@
       "path": "ui/components/display/commit-graph-cell",
       "rdid": "adhsdk.ingredient.ui.components.display.commit-graph-cell"
     },
+    "598bbb0d-199d-4d3f-936c-7cf3b9f15aa5": {
+      "implementations": [
+        {
+          "conformance": {
+            "hash": "sha256:324dc783a5c0fa67a1e1d2d6e40d07b1e094259f216ee6415abf34fb6ddb14fa",
+            "state": "confirmed",
+            "version": "1.0.0"
+          },
+          "location": "packages/web/packages/ui/src/blocks/link-list.tsx",
+          "platform": "web"
+        }
+      ],
+      "kind": "recipe",
+      "path": "ui/blocks/link-list",
+      "rdid": "adhsdk.recipe.ui.blocks.link-list"
+    },
     "59f7893e-58fe-4f11-abd9-f80c1e05c002": {
       "implementations": [
         {
@@ -12442,6 +12458,22 @@
       "kind": "ingredient",
       "path": "controls/search-dialog",
       "rdid": "adhsdk.ingredient.controls.search-dialog"
+    },
+    "890b37b6-fbbe-4e65-a13a-bae923766daa": {
+      "implementations": [
+        {
+          "conformance": {
+            "hash": "sha256:f7a435166f49356c8777d7acf8a9ff914c63a76cee2118282d5e8b2aa160bec9",
+            "state": "confirmed",
+            "version": "1.0.0"
+          },
+          "location": "packages/web/packages/ui/src/blocks/event-timeline.tsx",
+          "platform": "web"
+        }
+      ],
+      "kind": "recipe",
+      "path": "ui/blocks/event-timeline",
+      "rdid": "adhsdk.recipe.ui.blocks.event-timeline"
     },
     "89a912f3-f0a0-4896-ba06-a386407ecb15": {
       "implementations": [

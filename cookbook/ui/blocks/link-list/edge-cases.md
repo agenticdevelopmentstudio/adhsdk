@@ -1,0 +1,4 @@
+- **No `href`** renders the title as text, and an image gets no thumbnail.
+- **An `image` that is also `kind: "file"`** shows the Image icon.
+- **A missing row ignores `href`**: nothing links to a target that is gone.
+- **Keys are indices**: the list is display-only and has no stable ids.

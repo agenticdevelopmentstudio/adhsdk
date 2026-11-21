@@ -1,0 +1,48 @@
+{
+  "format": 2,
+  "meta": {
+    "id": "598bbb0d-199d-4d3f-936c-7cf3b9f15aa5",
+    "title": "LinkList",
+    "type": "recipe",
+    "version": "1.0.0",
+    "status": "review",
+    "language": "en",
+    "created": "2026-11-21",
+    "modified": "2026-11-21",
+    "author": "Mike Fullerton",
+    "copyright": "2026 Mike Fullerton",
+    "license": "MIT",
+    "summary": "A list of links: an icon by kind, the title as a new-tab link, a muted description, a bounded linked thumbnail for images, and a struck-through \"missing\" row for a target that is gone.",
+    "platforms": [
+      "typescript",
+      "web"
+    ],
+    "tags": [
+      "block",
+      "links",
+      "list",
+      "ui"
+    ],
+    "ingredients": [],
+    "depends-on": [],
+    "related": [],
+    "references": [],
+    "approved-by": "",
+    "approved-date": ""
+  },
+  "synced": "8e992c5e1950992e",
+  "parts": [
+    {"part": "intro"},
+    {"part": "overview", "heading": "Overview"},
+    {"part": "ingredients", "heading": "Ingredients"},
+    {"part": "integration-requirements", "heading": "Integration Requirements"},
+    {"part": "layout", "heading": "Layout"},
+    {"part": "shared-state", "heading": "Shared State"},
+    {"part": "integration-test-vectors", "heading": "Integration Test Vectors"},
+    {"part": "edge-cases", "heading": "Edge Cases"},
+    {"part": "platform-notes", "heading": "Platform Notes"},
+    {"part": "design-decisions", "heading": "Design Decisions"},
+    {"part": "compliance", "heading": "Compliance"},
+    {"part": "history", "heading": "Change History"}
+  ]
+}
