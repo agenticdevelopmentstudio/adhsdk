@@ -413,8 +413,21 @@ public final class GRDBSyncStore: SyncStore, @unchecked Sendable {
     /// anything. Throws `SyncStoreFailure.changeHistoryPruned` when `since`
     /// is below `changeLogFloor()`: entries the reader has not seen were
     /// pruned, so it must rescan the rows and resume from the head.
-    public func changes(since: Int64, limit: Int) throws -> [RecordChange] {
+    ///
+    /// `resources`, when given, keeps only entries for those resources, in
+    /// the SQL, so `limit` counts matching entries. `nil` is every resource;
+    /// an empty set matches nothing.
+    public func changes(
+        since: Int64, limit: Int, resources: Set<String>? = nil
+    ) throws -> [RecordChange] {
         guard limit > 0 else { return [] }
+        if let resources, resources.isEmpty { return [] }
+        let filter = resources.map { names in
+            "AND resource IN (" + Array(repeating: "?", count: names.count).joined(separator: ", ") + ")"
+        } ?? ""
+        var arguments: StatementArguments = [since]
+        if let resources { arguments += StatementArguments(resources.sorted()) }
+        arguments += [limit]
         return try boundedDatabase.read { conn in
             guard try conn.tableExists("_change_log") else { return [] }
             let floor = try Self.changeLogFloor(in: conn)
@@ -425,9 +438,9 @@ public final class GRDBSyncStore: SyncStore, @unchecked Sendable {
                 conn,
                 sql: """
                     SELECT seq, resource, row_id, kind, version FROM _change_log
-                    WHERE seq > ? ORDER BY seq LIMIT ?
+                    WHERE seq > ? \(filter) ORDER BY seq LIMIT ?
                     """,
-                arguments: [since, limit]
+                arguments: arguments
             ).compactMap { row in
                 guard let kind = RecordChange.Kind(rawValue: row["kind"]) else { return nil }
                 return RecordChange(
