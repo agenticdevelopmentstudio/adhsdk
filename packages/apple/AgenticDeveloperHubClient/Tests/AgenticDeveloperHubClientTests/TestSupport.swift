@@ -41,7 +41,7 @@ final class MockClientTransport: ClientTransport, @unchecked Sendable {
 
     /// - Parameter responder: produces the response for a given request.
     ///   Defaults to a `200` health payload (`{"status":"ok"}`).
-    init(responder: @escaping @Sendable (HTTPRequest) -> (HTTPResponse, HTTPBody?) = { _ in MockClientTransport.healthOK() }) {
+    init(responder: @escaping @Sendable (HTTPRequest) -> (HTTPResponse, HTTPBody?) = { _ in MockClientTransport.versionOK() }) {
         self.responder = responder
     }
 
@@ -67,11 +67,15 @@ final class MockClientTransport: ClientTransport, @unchecked Sendable {
         return responder(request)
     }
 
-    /// A valid `GET /health` 200 response the generated `getHealth` deserializer accepts.
-    static func healthOK() -> (HTTPResponse, HTTPBody?) {
+    /// A `GET /version` body the generated `getVersion` deserializer accepts
+    /// (the /v1 schema forbids extra keys, so it is exactly these three).
+    static let versionJSON = Data(#"{"name":"adh","version":"test","region":"local"}"#.utf8)
+
+    /// A valid `GET /version` 200 response.
+    static func versionOK() -> (HTTPResponse, HTTPBody?) {
         var response = HTTPResponse(status: .ok)
         response.headerFields[.contentType] = "application/json"
-        return (response, HTTPBody(Data(#"{"status":"ok"}"#.utf8)))
+        return (response, HTTPBody(versionJSON))
     }
 }
 

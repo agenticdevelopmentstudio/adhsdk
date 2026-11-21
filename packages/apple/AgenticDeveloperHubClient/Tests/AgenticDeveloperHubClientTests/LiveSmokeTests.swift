@@ -17,12 +17,12 @@ import Foundation
 struct LiveSmokeTests {
 
     @Test(
-        "Direct transport gets 200 from the live GET /health",
+        "Direct transport gets 200 from the live GET /version",
         .enabled(if: ProcessInfo.processInfo.environment["ADH_LIVE_TESTS"] == "1")
     )
-    func liveHealth() async throws {
+    func liveVersion() async throws {
         let adh = ADHClient.direct(credentials: InMemoryCredentialStore())
-        let output = try await adh.api.getHealth()
+        let output = try await adh.api.getVersion()
         _ = try output.ok  // throws unless the backend answered 200
     }
 }

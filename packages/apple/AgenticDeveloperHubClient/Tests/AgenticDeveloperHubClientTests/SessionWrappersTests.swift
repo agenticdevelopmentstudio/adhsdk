@@ -14,9 +14,13 @@ import Foundation
 @Suite("Session sign-in wrappers")
 struct SessionWrappersTests {
 
-    private static let authJSON = #"{"refreshToken":"r-1","token":"jwt-1","user":{"avatarUrl":"","capabilities":[],"email":"a@b.c","id":"u1","name":"A","profileVisibility":"private","publicProfileEnabled":false,"slug":null}}"#
+    /// `POST /v1/auth/sessions` 200: the /v1 `AuthResult`, snake_case.
+    private static let authJSON = #"{"object":"auth.session","token":"jwt-1","refresh_token":"r-1","user":{"id":"u1","email":"a@b.c","name":"A","avatar_url":"","slug":null,"public_profile_enabled":false,"profile_visibility":"private","capabilities":[]}}"#
+    /// `/oauth/signin/exchange` is unversioned and still answers camelCase.
+    private static let exchangeJSON = #"{"refreshToken":"r-1","token":"jwt-1","user":{"avatarUrl":"","capabilities":[],"email":"a@b.c","id":"u1","name":"A","profileVisibility":"private","publicProfileEnabled":false,"slug":null}}"#
     private static let mfaJSON = #"{"mfaRequired":true,"token":"mfa-tok","methods":["totp","sms"]}"#
-    private static let userJSON = #"{"avatarUrl":"","capabilities":["x"],"email":"a@b.c","id":"u1","name":"A","profileVisibility":"private","publicProfileEnabled":false,"slug":null}"#
+    /// `GET /v1/account` 200: the user plus the account tag.
+    private static let userJSON = #"{"object":"account","id":"u1","email":"a@b.c","name":"A","avatar_url":"","slug":null,"public_profile_enabled":false,"profile_visibility":"private","capabilities":["x"]}"#
 
     private func makeClient(
         store: InMemorySessionStore = InMemorySessionStore(),
@@ -69,7 +73,7 @@ struct SessionWrappersTests {
 
     @Test("signIn maps 401 to invalidCredentials")
     func signInInvalid() async throws {
-        let (adh, _) = makeClient { _ in (.unauthorized, #"{"error":{"message":"invalid credentials"}}"#) }
+        let (adh, _) = makeClient { _ in (.unauthorized, #"{"error":{"type":"authentication_error","message":"invalid credentials"}}"#) }
 
         await #expect(throws: SessionError.invalidCredentials) {
             try await adh.signIn(email: "a@b.c", password: "wrong")
@@ -84,7 +88,7 @@ struct SessionWrappersTests {
         let user = try await adh.completeMfa(challengeToken: "mfa-tok", method: .totp, code: "123456")
 
         #expect(user.id == "u1")
-        #expect(mock.lastRequest?.path == "/auth/login/mfa")
+        #expect(mock.lastRequest?.path == "/v1/auth/sessions")
         #expect(store.currentSession()?.refreshToken == "r-1")
     }
 
@@ -94,7 +98,7 @@ struct SessionWrappersTests {
 
         try await adh.sendMfaSms(challengeToken: "mfa-tok")
 
-        #expect(mock.lastRequest?.path == "/auth/login/mfa/sms/send")
+        #expect(mock.lastRequest?.path == "/v1/auth/sms_codes")
     }
 
     @Test("passkeyOptions returns the challenge token and the raw options object")
@@ -105,7 +109,7 @@ struct SessionWrappersTests {
 
         let result = try await adh.passkeyOptions(identifier: "a@b.c")
 
-        #expect(mock.lastRequest?.path == "/auth/login/webauthn/options")
+        #expect(mock.lastRequest?.path == "/v1/auth/passkey_challenges")
         #expect(result.token == "pk-tok")
         #expect(result.options.value["challenge"] as? String == "abc")
     }
@@ -121,7 +125,7 @@ struct SessionWrappersTests {
         )
 
         #expect(user.id == "u1")
-        #expect(mock.lastRequest?.path == "/auth/login/webauthn")
+        #expect(mock.lastRequest?.path == "/v1/auth/sessions")
         #expect(store.currentSession()?.credentials.token == "jwt-1")
     }
 
@@ -131,7 +135,7 @@ struct SessionWrappersTests {
 
         let result = try await adh.mfaPasskeyOptions(challengeToken: "mfa-tok")
 
-        #expect(mock.lastRequest?.path == "/auth/login/mfa/webauthn/options")
+        #expect(mock.lastRequest?.path == "/v1/auth/passkey_challenges")
         #expect(result.token == "mfa-tok-2")
         #expect(result.options.value["challenge"] as? String == "abc")
     }
@@ -147,14 +151,14 @@ struct SessionWrappersTests {
         )
 
         #expect(user.id == "u1")
-        #expect(mock.lastRequest?.path == "/auth/login/mfa/webauthn")
+        #expect(mock.lastRequest?.path == "/v1/auth/sessions")
         #expect(store.currentSession()?.credentials.token == "jwt-1")
     }
 
     @Test("exchangeOAuthCode stores the session")
     func exchangeOAuthCode() async throws {
         let store = InMemorySessionStore()
-        let (adh, mock) = makeClient(store: store) { _ in (.ok, Self.authJSON) }
+        let (adh, mock) = makeClient(store: store) { _ in (.ok, Self.exchangeJSON) }
 
         let user = try await adh.exchangeOAuthCode("code-1")
 
@@ -170,9 +174,9 @@ struct SessionWrappersTests {
 
         await adh.signOut()
 
-        #expect(mock.lastRequest?.path == "/auth/revoke")
-        // The committed `openapi.json` describes `POST /auth/revoke` as
-        // bodiless, but the backend requires the refresh token in the body —
+        #expect(mock.lastRequest?.path == "/v1/auth/sessions/revoke")
+        // The /v1 spec leaves `POST /v1/auth/sessions/revoke`'s body
+        // undeclared, but the backend requires the refresh token in it —
         // which is the whole reason `signOut` sends it through `rawJSON`. A
         // revoke without this body is a silent no-op server-side, so assert
         // the body, not just the path.
@@ -188,17 +192,17 @@ struct SessionWrappersTests {
     @Test("a 401 on revoke does not trigger a refresh")
     func signOutDoesNotRefreshOn401() async throws {
         let store = InMemorySessionStore(HubSession(credentials: Credentials(token: "jwt-expired", kind: .jwt), refreshToken: "r-signout"))
-        let (adh, mock) = makeClient(store: store) { _ in (.unauthorized, #"{"error":{"message":"token expired"}}"#) }
+        let (adh, mock) = makeClient(store: store) { _ in (.unauthorized, #"{"error":{"type":"authentication_error","message":"token expired"}}"#) }
 
         await adh.signOut()
 
-        #expect(mock.recordedPaths == ["/auth/revoke"])
+        #expect(mock.recordedPaths == ["/v1/auth/sessions/revoke"])
         #expect(mock.recorded.first?.operationID == ADHClient.revokeRawOperationID)
         #expect(mock.recorded.first?.body == Data(#"{"refreshToken":"r-signout"}"#.utf8))
         #expect(store.currentSession() == nil)
     }
 
-    @Test("currentUser decodes GET /auth/me")
+    @Test("currentUser decodes GET /v1/account")
     func currentUser() async throws {
         let (adh, _) = makeClient(store: InMemorySessionStore(HubSession(credentials: Credentials(token: "jwt-1", kind: .jwt)))) { _ in (.ok, Self.userJSON) }
 

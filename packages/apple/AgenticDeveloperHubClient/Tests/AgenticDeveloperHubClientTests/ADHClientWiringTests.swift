@@ -51,16 +51,16 @@ struct ADHClientWiringTests {
         let mock = MockClientTransport()
         let adh = client(transport: mock)
 
-        let output = try await adh.api.getHealth()
+        let output = try await adh.api.getVersion()
 
-        // Decoded the 200 (the spec documents no response body for /health).
+        // Decoded the 200 and its version body.
         _ = try output.ok
 
         // The generated client produced the right request and handed it to our transport.
         let recorded = try #require(mock.recorded.last)
         #expect(recorded.request.method == .get)
-        #expect(recorded.request.path == "/health")
-        #expect(recorded.operationID == "get/health")
+        #expect(recorded.request.path == "/version")
+        #expect(recorded.operationID == "getVersion")
         #expect(recorded.baseURL == DaemonContract.backendURL)
     }
 
@@ -69,7 +69,7 @@ struct ADHClientWiringTests {
         let mock = MockClientTransport()
         let adh = client(token: "tok-abc", transport: mock)
 
-        _ = try await adh.api.getHealth()
+        _ = try await adh.api.getVersion()
 
         let request = try #require(mock.lastRequest)
         #expect(request.headerFields[.authorization] == "Bearer tok-abc")
@@ -80,7 +80,7 @@ struct ADHClientWiringTests {
         let mock = MockClientTransport()
         let adh = client(token: nil, transport: mock)
 
-        _ = try await adh.api.getHealth()
+        _ = try await adh.api.getVersion()
 
         let request = try #require(mock.lastRequest)
         #expect(request.headerFields[.authorization] == nil)
@@ -94,8 +94,8 @@ struct ADHClientWiringTests {
         let direct = client(kind: .direct, serverURL: DaemonContract.backendURL, token: "tok-xyz", transport: directMock)
         let daemon = client(kind: .daemon, serverURL: DaemonContract.daemonURL(), token: "tok-xyz", transport: daemonMock)
 
-        _ = try await direct.api.getHealth()
-        _ = try await daemon.api.getHealth()
+        _ = try await direct.api.getVersion()
+        _ = try await daemon.api.getVersion()
 
         let directReq = try #require(directMock.lastRequest)
         let daemonReq = try #require(daemonMock.lastRequest)
@@ -127,22 +127,22 @@ struct ADHClientWiringTests {
         let calls = Box<[HTTPRequest]>([])
         let mock = MockClientTransport { request in
             calls.set(calls.get + [request])
-            if request.path == "/auth/refresh" {
+            if request.path == "/v1/auth/sessions/refresh" {
                 var response = HTTPResponse(status: .ok)
                 response.headerFields[.contentType] = "application/json"
-                return (response, HTTPBody(Data(#"{"token":"jwt-2","refreshToken":"r-2"}"#.utf8)))
+                return (response, HTTPBody(Data(#"{"token":"jwt-2","refresh_token":"r-2"}"#.utf8)))
             }
             if request.headerFields[.authorization] == "Bearer jwt-wiring" {
                 return (HTTPResponse(status: .unauthorized), nil)
             }
-            return MockClientTransport.healthOK()
+            return MockClientTransport.versionOK()
         }
         let adh = ADHClient(transport: .direct(transport: mock), session: store)
 
-        _ = try await adh.api.getHealth()
+        _ = try await adh.api.getVersion()
 
         #expect(adh.transport.kind == .direct)
-        #expect(calls.get.map { $0.path ?? "" } == ["/health", "/auth/refresh", "/health"])
+        #expect(calls.get.map { $0.path ?? "" } == ["/version", "/v1/auth/sessions/refresh", "/version"])
         #expect(store.currentSession()?.credentials.token == "jwt-2")
     }
 
@@ -156,7 +156,7 @@ struct ADHClientWiringTests {
         let mock = MockClientTransport { _ in (HTTPResponse(status: .unauthorized), nil) }
         let adh = ADHClient(transport: .direct(transport: mock), session: store, onSessionExpired: { expired.set(true) })
 
-        let output = try await adh.api.getHealth()
+        let output = try await adh.api.getVersion()
 
         #expect(throws: (any Error).self) { try output.ok }
         #expect(expired.get == true)

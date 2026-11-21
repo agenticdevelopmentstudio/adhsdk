@@ -19,7 +19,7 @@ struct DaemonTransportTests {
 
     @Test("a typed operation round-trips through the daemon over loopback")
     func roundTripsThroughDaemon() async throws {
-        let server = MockDaemonServer()
+        let server = MockDaemonServer { _ in .init(body: MockClientTransport.versionJSON) }
         let port = try server.start()
         #expect(port != 0)
         defer { server.stop() }
@@ -27,25 +27,25 @@ struct DaemonTransportTests {
         let creds = InMemoryCredentialStore(Credentials(token: "tok-daemon", kind: .jwt))
         let adh = ADHClient(transport: .daemon(port: Int(port)), credentials: creds)
 
-        let output = try await adh.api.getHealth()
+        let output = try await adh.api.getVersion()
         _ = try output.ok  // decoded the daemon's 200
         #expect(adh.transportKind == .daemon)
     }
 
     @Test("the daemon receives the request verbatim, bearer included")
     func daemonReceivesBearerVerbatim() async throws {
-        let server = MockDaemonServer()
+        let server = MockDaemonServer { _ in .init(body: MockClientTransport.versionJSON) }
         let port = try server.start()
         defer { server.stop() }
 
         let creds = InMemoryCredentialStore(Credentials(token: "tok-verbatim", kind: .jwt))
         let adh = ADHClient(transport: .daemon(port: Int(port)), credentials: creds)
 
-        _ = try await adh.api.getHealth()
+        _ = try await adh.api.getVersion()
 
         let received = try #require(server.requests.last)
         #expect(received.method == "GET")
-        #expect(received.path == DaemonContract.healthPath)
+        #expect(received.path == "/version")
         #expect(received.headers["authorization"] == "Bearer tok-verbatim")
     }
 }

@@ -33,7 +33,7 @@ extension StubURLProtocolSuites {
         @Test("real URLSessionTransport reaches the backend URL with the bearer and decodes 200")
         func directRoundTripThroughURLSession() async throws {
             StubURLProtocol.install { _ in
-                StubURLProtocol.Stub()  // 200 application/json {"status":"ok"}
+                StubURLProtocol.Stub(body: MockClientTransport.versionJSON)
             }
             defer { StubURLProtocol.reset() }
 
@@ -43,11 +43,11 @@ extension StubURLProtocolSuites {
                 credentials: creds
             )
 
-            let output = try await adh.api.getHealth()
-            _ = try output.ok  // decoded the live 200 (the spec documents no body)
+            let output = try await adh.api.getVersion()
+            _ = try output.ok  // decoded the 200 and its version body
 
             let request = try #require(StubURLProtocol.capturedRequests.last)
-            #expect(request.url?.absoluteString == "https://api.agenticdeveloperhub.com/health")
+            #expect(request.url?.absoluteString == "https://api.agenticdeveloperhub.com/version")
             #expect(request.httpMethod == "GET")
             #expect(request.value(forHTTPHeaderField: "Authorization") == "Bearer tok-direct")
         }

@@ -17,19 +17,19 @@ import Foundation
 @Suite("Auth convenience wrappers")
 struct AuthWrappersTests {
 
-    private static let loginJSON = #"{"refreshToken":"r","token":"jwt-xyz","user":{"avatarUrl":"","capabilities":[],"email":"a@b.c","id":"u1","name":"A","profileVisibility":"private","publicProfileEnabled":false,"slug":null}}"#
-    private static let tokenJSON = #"{"createdAt":"2026-01-01","id":"t1","name":"ci","prefix":"adh_","token":"tok-secret"}"#
+    private static let loginJSON = #"{"object":"auth.session","token":"jwt-xyz","refresh_token":"r","user":{"id":"u1","email":"a@b.c","name":"A","avatar_url":"","slug":null,"public_profile_enabled":false,"profile_visibility":"private","capabilities":[]}}"#
+    private static let tokenJSON = #"{"object":"api_key","id":"t1","name":"ci","prefix":"adh_","created":1767225600,"expires_at":null,"last_used_at":null,"token":"tok-secret"}"#
 
     private func makeClient(store: any CredentialStore) -> ADHClient {
         let mock = MockClientTransport { request in
             let path = request.path ?? ""
             let (status, json): (HTTPResponse.Status, String)
-            if path.hasSuffix("/auth/login") {
+            if path == "/v1/auth/sessions" {
                 (status, json) = (.ok, Self.loginJSON)
-            } else if path.hasSuffix("/auth/tokens") {
+            } else if path == "/v1/api_keys" {
                 (status, json) = (.created, Self.tokenJSON)
             } else {
-                (status, json) = (.ok, #"{"status":"ok"}"#)
+                (status, json) = (.notFound, #"{"error":{"type":"invalid_request_error","message":"no route"}}"#)
             }
             var response = HTTPResponse(status: status)
             response.headerFields[.contentType] = "application/json"

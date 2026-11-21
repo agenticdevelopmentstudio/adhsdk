@@ -25,7 +25,7 @@ import Foundation
 struct SessionRefreshMiddlewareTests {
 
     private static let baseURL = URL(string: "https://api.example.invalid")!
-    private static let refreshJSON = #"{"token":"jwt-2","refreshToken":"r-2"}"#
+    private static let refreshJSON = #"{"token":"jwt-2","refresh_token":"r-2"}"#
 
     private struct Call: Sendable {
         var path: String
@@ -64,10 +64,10 @@ struct SessionRefreshMiddlewareTests {
     private func intercept(
         _ middleware: SessionRefreshMiddleware,
         script: Script,
-        operationID: String = Operations.GetAuthMe.id,
+        operationID: String = Operations.GetV1Account.id,
         body: Data? = nil
     ) async throws -> HTTPResponse {
-        let request = HTTPRequest(method: .get, scheme: nil, authority: nil, path: "/auth/me")
+        let request = HTTPRequest(method: .get, scheme: nil, authority: nil, path: "/v1/account")
         let (response, _) = try await middleware.intercept(
             request,
             body: body.map { HTTPBody($0) },
@@ -110,17 +110,17 @@ struct SessionRefreshMiddlewareTests {
         let response = try await intercept(
             SessionRefreshMiddleware(session: store),
             script: script,
-            operationID: Operations.PatchAuthMe.id,
+            operationID: Operations.PostV1Account.id,
             body: requestBody
         )
 
         #expect(response.status == .ok)
         let calls = script.recorded
         #expect(calls.count == 3)
-        #expect(calls[1].path == "/auth/refresh")
+        #expect(calls[1].path == "/v1/auth/sessions/refresh")
         #expect(calls[1].authorization == nil)
         #expect(calls[1].body == Data(#"{"refreshToken":"r-retry"}"#.utf8))
-        #expect(calls[2].path == "/auth/me")
+        #expect(calls[2].path == "/v1/account")
         #expect(calls[2].authorization == "Bearer jwt-2")
         #expect(calls[2].body == requestBody)
         #expect(store.currentSession() == HubSession(credentials: Credentials(token: "jwt-2", kind: .jwt), refreshToken: "r-2"))
@@ -164,11 +164,11 @@ struct SessionRefreshMiddlewareTests {
         let store = jwtStore(token: "jwt-throwing", refresh: "r-throwing")
         let counter = Box(0)
         let middleware = SessionRefreshMiddleware(session: store)
-        let request = HTTPRequest(method: .get, scheme: nil, authority: nil, path: "/auth/me")
+        let request = HTTPRequest(method: .get, scheme: nil, authority: nil, path: "/v1/account")
 
-        let (response, _) = try await middleware.intercept(request, body: nil, baseURL: Self.baseURL, operationID: Operations.GetAuthMe.id) { req, _, _ in
+        let (response, _) = try await middleware.intercept(request, body: nil, baseURL: Self.baseURL, operationID: Operations.GetV1Account.id) { req, _, _ in
             counter.set(counter.get + 1)
-            if req.path == "/auth/refresh" { throw URLError(.notConnectedToInternet) }
+            if req.path == "/v1/auth/sessions/refresh" { throw URLError(.notConnectedToInternet) }
             return (HTTPResponse(status: .unauthorized), nil)
         }
 
@@ -178,19 +178,15 @@ struct SessionRefreshMiddlewareTests {
     }
 
     /// The generated `Operations.X.id` for every route that answers 401 as a
-    /// normal outcome, plus the raw revoke `signOut` sends. Written as the
-    /// generated constants — never as the Swift method names
-    /// (`postAuthLogin`), which are *not* what the runtime hands `intercept`.
+    /// normal outcome, plus the raw OAuth exchange and revoke, which ride
+    /// `rawJSON`. Written as the generated constants, never as literals, so a
+    /// renamed operation fails to compile instead of rotting into a dead entry.
     private static let exemptOperations: [String] = [
-        Operations.PostAuthLogin.id,
-        Operations.PostAuthLoginMfa.id,
-        Operations.PostAuthLoginMfaSmsSend.id,
-        Operations.PostAuthLoginMfaWebauthn.id,
-        Operations.PostAuthLoginMfaWebauthnOptions.id,
-        Operations.PostAuthLoginWebauthn.id,
-        Operations.PostAuthLoginWebauthnOptions.id,
-        Operations.PostAuthRefresh.id,
-        Operations.PostOauthSigninExchange.id,
+        Operations.PostV1AuthSessions.id,
+        Operations.PostV1AuthSmsCodes.id,
+        Operations.PostV1AuthPasskeyChallenges.id,
+        Operations.PostV1AuthSessionsRefresh.id,
+        ADHClient.oauthExchangeRawOperationID,
         ADHClient.revokeRawOperationID,
     ]
 
@@ -208,24 +204,22 @@ struct SessionRefreshMiddlewareTests {
 
     /// Pins the *shape* of the IDs. The behavioral test above iterates the
     /// same constants the middleware does, so it would still pass if every
-    /// entry were a dead Swift-method-name literal; this one would not.
-    @Test("the exemption set is exactly the generated, path-style operation IDs")
+    /// entry were stale; this one pins the /v1 operationIds and the raw IDs,
+    /// and that the generated revoke (unused: `signOut` sends it raw) and the
+    /// account read are not exempt.
+    @Test("the exemption set is exactly the /v1 operation IDs plus the raw exchange and revoke")
     func exemptionSetIsGeneratedIDs() {
         #expect(SessionRefreshMiddleware.exemptOperationIDs == Set(Self.exemptOperations))
         #expect(SessionRefreshMiddleware.exemptOperationIDs == [
-            "post/auth/login",
-            "post/auth/login/mfa",
-            "post/auth/login/mfa/sms/send",
-            "post/auth/login/mfa/webauthn",
-            "post/auth/login/mfa/webauthn/options",
-            "post/auth/login/webauthn",
-            "post/auth/login/webauthn/options",
-            "post/auth/refresh",
-            "post/oauth/signin/exchange",
-            "raw POST /auth/revoke",
+            "postV1AuthSessions",
+            "postV1AuthSmsCodes",
+            "postV1AuthPasskeyChallenges",
+            "postV1AuthSessionsRefresh",
+            "raw POST /oauth/signin/exchange",
+            "raw POST /v1/auth/sessions/revoke",
         ])
-        #expect(!SessionRefreshMiddleware.exemptOperationIDs.contains("postAuthLogin"))
-        #expect(!SessionRefreshMiddleware.exemptOperationIDs.contains(Operations.GetAuthMe.id))
+        #expect(!SessionRefreshMiddleware.exemptOperationIDs.contains("postV1AuthSessionsRevoke"))
+        #expect(!SessionRefreshMiddleware.exemptOperationIDs.contains(Operations.GetV1Account.id))
     }
 
     @Test("an API-token session is never refreshed")
@@ -256,10 +250,10 @@ struct SessionRefreshMiddlewareTests {
         let store = jwtStore(token: "jwt-coalesce", refresh: "r-coalesce")
         let middleware = SessionRefreshMiddleware(session: store)
         let refreshCalls = Box(0)
-        let request = HTTPRequest(method: .get, scheme: nil, authority: nil, path: "/auth/me")
+        let request = HTTPRequest(method: .get, scheme: nil, authority: nil, path: "/v1/account")
 
         @Sendable func next(_ req: HTTPRequest, _ body: HTTPBody?, _ url: URL) async throws -> (HTTPResponse, HTTPBody?) {
-            if req.path == "/auth/refresh" {
+            if req.path == "/v1/auth/sessions/refresh" {
                 refreshCalls.set(refreshCalls.get + 1)
                 try await Task.sleep(for: .milliseconds(50))
                 var response = HTTPResponse(status: .ok)
@@ -272,7 +266,7 @@ struct SessionRefreshMiddlewareTests {
             return (HTTPResponse(status: .ok), nil)
         }
 
-        async let a = middleware.intercept(request, body: nil, baseURL: Self.baseURL, operationID: Operations.GetAuthMe.id, next: next)
+        async let a = middleware.intercept(request, body: nil, baseURL: Self.baseURL, operationID: Operations.GetV1Account.id, next: next)
         async let b = middleware.intercept(request, body: nil, baseURL: Self.baseURL, operationID: ADHClient.rawOperationID(method: .get, path: "/workspaces"), next: next)
         let (ra, rb) = try await (a.0, b.0)
 
@@ -302,10 +296,10 @@ struct SessionRefreshMiddlewareTests {
             session: store,
             onSessionExpired: { expired.set(expired.get + 1) }
         )
-        let request = HTTPRequest(method: .get, scheme: nil, authority: nil, path: "/auth/me")
+        let request = HTTPRequest(method: .get, scheme: nil, authority: nil, path: "/v1/account")
 
         @Sendable func next(_ req: HTTPRequest, _ body: HTTPBody?, _ url: URL) async throws -> (HTTPResponse, HTTPBody?) {
-            if req.path == "/auth/refresh" {
+            if req.path == "/v1/auth/sessions/refresh" {
                 let attempt = refreshCalls.get + 1
                 refreshCalls.set(attempt)
                 try await Task.sleep(for: .milliseconds(50))
@@ -322,7 +316,7 @@ struct SessionRefreshMiddlewareTests {
 
         let firstMiddleware = try #require(first.middlewares.first)
         let secondMiddleware = try #require(second.middlewares.first)
-        async let a = firstMiddleware.intercept(request, body: nil, baseURL: Self.baseURL, operationID: Operations.GetAuthMe.id, next: next)
+        async let a = firstMiddleware.intercept(request, body: nil, baseURL: Self.baseURL, operationID: Operations.GetV1Account.id, next: next)
         async let b = secondMiddleware.intercept(request, body: nil, baseURL: Self.baseURL, operationID: ADHClient.rawOperationID(method: .get, path: "/workspaces"), next: next)
         let (ra, rb) = try await (a.0, b.0)
 
@@ -341,18 +335,18 @@ struct SessionRefreshMiddlewareTests {
         let first = jwtStore(token: "jwt-separate-a", refresh: "r-separate-a")
         let second = jwtStore(token: "jwt-separate-b", refresh: "r-separate-b")
         let refreshBodies = Box<[String]>([])
-        let request = HTTPRequest(method: .get, scheme: nil, authority: nil, path: "/auth/me")
+        let request = HTTPRequest(method: .get, scheme: nil, authority: nil, path: "/v1/account")
 
         @Sendable func next(_ req: HTTPRequest, _ body: HTTPBody?, _ url: URL) async throws -> (HTTPResponse, HTTPBody?) {
-            if req.path == "/auth/refresh" {
+            if req.path == "/v1/auth/sessions/refresh" {
                 let sent = String(decoding: try await Data(collecting: body ?? HTTPBody(), upTo: 1 << 20), as: UTF8.self)
                 refreshBodies.set(refreshBodies.get + [sent])
                 try await Task.sleep(for: .milliseconds(20))
                 var response = HTTPResponse(status: .ok)
                 response.headerFields[.contentType] = "application/json"
                 let rotated = sent.contains("r-separate-b")
-                    ? #"{"token":"jwt-separate-b2","refreshToken":"r-separate-b2"}"#
-                    : #"{"token":"jwt-separate-a2","refreshToken":"r-separate-a2"}"#
+                    ? #"{"token":"jwt-separate-b2","refresh_token":"r-separate-b2"}"#
+                    : #"{"token":"jwt-separate-a2","refresh_token":"r-separate-a2"}"#
                 return (response, HTTPBody(Data(rotated.utf8)))
             }
             let bearer = req.headerFields[.authorization]
@@ -364,8 +358,8 @@ struct SessionRefreshMiddlewareTests {
 
         let a = SessionRefreshMiddleware(session: first)
         let b = SessionRefreshMiddleware(session: second)
-        async let ra = a.intercept(request, body: nil, baseURL: Self.baseURL, operationID: Operations.GetAuthMe.id, next: next)
-        async let rb = b.intercept(request, body: nil, baseURL: Self.baseURL, operationID: Operations.GetAuthMe.id, next: next)
+        async let ra = a.intercept(request, body: nil, baseURL: Self.baseURL, operationID: Operations.GetV1Account.id, next: next)
+        async let rb = b.intercept(request, body: nil, baseURL: Self.baseURL, operationID: Operations.GetV1Account.id, next: next)
         let (responseA, responseB) = try await (ra.0, rb.0)
 
         #expect(responseA.status == .ok)

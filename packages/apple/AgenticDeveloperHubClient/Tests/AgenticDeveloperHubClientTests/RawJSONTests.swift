@@ -43,10 +43,10 @@ struct RawJSONTests {
         // wave by the expired access token (real tokens never collide).
         let store = InMemorySessionStore(HubSession(credentials: Credentials(token: "jwt-raw", kind: .jwt), refreshToken: "r-raw"))
         let mock = MockClientTransport { request in
-            if request.path == "/auth/refresh" {
+            if request.path == "/v1/auth/sessions/refresh" {
                 var response = HTTPResponse(status: .ok)
                 response.headerFields[.contentType] = "application/json"
-                return (response, HTTPBody(Data(#"{"token":"jwt-2","refreshToken":"r-2"}"#.utf8)))
+                return (response, HTTPBody(Data(#"{"token":"jwt-2","refresh_token":"r-2"}"#.utf8)))
             }
             if request.headerFields[.authorization] == "Bearer jwt-raw" {
                 return (HTTPResponse(status: .unauthorized), nil)
@@ -58,7 +58,7 @@ struct RawJSONTests {
         let response = try await adh.rawJSON(method: .put, path: "/me/workspace-prefs", body: Data(#"{"x":1}"#.utf8))
 
         #expect(response.status == 200)
-        #expect(mock.recorded.map { $0.request.path ?? "" } == ["/me/workspace-prefs", "/auth/refresh", "/me/workspace-prefs"])
+        #expect(mock.recorded.map { $0.request.path ?? "" } == ["/me/workspace-prefs", "/v1/auth/sessions/refresh", "/me/workspace-prefs"])
         #expect(mock.recorded.last?.request.headerFields[.contentType] == "application/json")
     }
 

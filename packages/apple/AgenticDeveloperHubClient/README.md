@@ -28,7 +28,7 @@ let client = await ADHClient.resolved()
 try await client.login(email: "me@example.com", password: "…")
 
 // Call any operation on the full generated API surface.
-let health = try await client.api.getHealth()
+let version = try await client.api.getVersion()
 let me = try await client.api.getV1Account()
 ```
 
@@ -155,7 +155,7 @@ offline**:
 - `MockDaemonServer` (in-process `NWListener` loopback) exercises the Daemon
   transport and the resolver's up/down paths over a real socket.
 
-One opt-in integration test hits the live backend's `/health`; it is skipped
+One opt-in integration test hits the live backend's `/version`; it is skipped
 unless enabled:
 
 ```bash
