@@ -222,6 +222,32 @@ public struct MarkdownProjection: SyncMirrorProjection {
         resource: String, id: String, kind: RecordChange.Kind, in conn: Database
     ) throws {
         guard resource == "content.markdown" else { return }
+        try bumpLocalVersion(resource: resource, id: id, kind: kind, in: conn)
+    }
+
+    /// Columns a pull rewrites without changing what the document *says*:
+    /// sync bookkeeping, and the hub's own stamps. The hub echoing back a
+    /// write this device made changes exactly these, so a pull that touches
+    /// nothing else is not a change. Bumping `local_version` for it would make
+    /// every app holding the document see its own save come back as someone
+    /// else's edit, and a save racing the echo would be refused as stale.
+    private static let bookkeepingColumns: Set<String> = [
+        "sync_version", "sync_stamped_at", "local_version", "latest_version_id", "updated_at"
+    ]
+
+    /// What the document says, for comparing a row before and after a pull:
+    /// every column except `bookkeepingColumns`, or nil when there is no row.
+    private static func documentFingerprint(id: String, in conn: Database) throws -> [String: DatabaseValue]? {
+        guard let row = try Row.fetchOne(conn, sql: "SELECT * FROM markdown WHERE id = ?", arguments: [id])
+        else { return nil }
+        var values: [String: DatabaseValue] = [:]
+        for (column, value) in row where !bookkeepingColumns.contains(column) { values[column] = value }
+        return values
+    }
+
+    private static func bumpLocalVersion(
+        resource: String, id: String, kind: RecordChange.Kind, in conn: Database
+    ) throws {
         try conn.execute(
             sql: "UPDATE markdown SET local_version = local_version + 1 WHERE id = ?",
             arguments: [id])
@@ -495,6 +521,8 @@ public struct MarkdownProjection: SyncMirrorProjection {
             if isFullRow, Self.nullableColumns(for: resource).contains(column) { return nil }
             return Self.timestampColumns.contains(column) ? MarkdownTimestamp.string(Date()) : ""
         }
+        let isMarkdown = resource == "content.markdown"
+        let before = isMarkdown ? try Self.documentFingerprint(id: id, in: conn) : nil
         try conn.execute(
             sql: """
                 INSERT INTO \(table(for: resource)) (\(names.joined(separator: ", ")))
@@ -502,6 +530,11 @@ public struct MarkdownProjection: SyncMirrorProjection {
                 ON CONFLICT(id) DO UPDATE SET \(assignments)
                 """,
             arguments: StatementArguments(arguments))
+        // Only a pull that changed what the document says is a change: the
+        // hub's echo of this device's own write is not (see
+        // `bookkeepingColumns`).
+        guard isMarkdown, try before == nil || Self.documentFingerprint(id: id, in: conn) != before
+        else { return }
         try Self.recordLocalChange(
             resource: resource, id: id, kind: isDeleted ? .delete : .upsert, in: conn)
     }
@@ -650,6 +683,11 @@ public struct MarkdownProjection: SyncMirrorProjection {
         // its indexes filters on `is_deleted`, so setting only `deleted_at`
         // would leave a deleted document listed.
         let extra = resource == "content.markdown" ? ", is_deleted = 1" : ""
+        // A tombstone pulled for a document already deleted here (this
+        // device's own delete coming back) changes nothing a reader can see.
+        let wasDeleted = resource == "content.markdown"
+            ? try Bool.fetchOne(conn, sql: "SELECT is_deleted FROM markdown WHERE id = ?", arguments: [id]) ?? false
+            : false
         try conn.execute(
             sql: """
                 UPDATE \(table(for: resource))
@@ -658,7 +696,7 @@ public struct MarkdownProjection: SyncMirrorProjection {
                 WHERE id = ?
                 """,
             arguments: [stamp, stamp, syncVersion, id])
-        guard conn.changesCount > 0 else { return }
+        guard conn.changesCount > 0, !wasDeleted else { return }
         try Self.recordLocalChange(resource: resource, id: id, kind: .delete, in: conn)
     }
 
