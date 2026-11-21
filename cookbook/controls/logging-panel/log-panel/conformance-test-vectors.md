@@ -28,7 +28,7 @@
 | log-panel-025 | render-columns | columns=[...], showHeader=false | No header row is rendered |
 | log-panel-026 | show-empty-state | lines=[], emptyMessage not provided | Container displays text '(no events)' |
 | log-panel-027 | enforce-max-lines | lines=[{id:'1',...},{id:'2',...}], maxLines=0 | Zero rows are visible; empty message is shown |
-| log-panel-028 | honor-follow-tail-toggle | followTail=false, user scrolled away from the bottom, then followTail=true, line appended | The next append scrolls the container to the bottom |
+| log-panel-028 | honor-follow-tail-toggle | followTail=false, user scrolled away from the bottom, then followTail=true with the same lines | The render that sets followTail=true scrolls the container to the bottom |
 | log-panel-029 | apply-cell-mono-font | cell={mono: undefined}, column={defaultMono:true} | fontFamily is 'var(--font-mono, ui-monospace, SFMono-Regular, monospace)' |
 | log-panel-030 | apply-cell-mono-font | cell={mono:false}, column={defaultMono:true} | fontFamily is not set to the monospace stack |
 | log-panel-031 | apply-cell-level-color | cell has no level, column={defaultLevel:'warn'} | Cell color matches the 'warn' row of the Level Colors table |

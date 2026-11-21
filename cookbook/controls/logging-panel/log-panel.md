@@ -2,11 +2,11 @@
 id: 57e33900-ca06-474e-abb1-d904c27a6336
 title: "Log Panel"
 type: ingredient
-version: 1.2.3
+version: 1.3.0
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-11-14
+modified: 2026-11-21
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -40,7 +40,7 @@ The Log Panel component displays structured log data as rows and columns in a sc
 - **show-empty-state**: Component MUST display the `emptyMessage` (default: `"(no events)"`) when `lines` is empty or no rows are visible.
 - **enforce-max-lines**: Component MUST limit visible rows to the count specified in `maxLines` by retaining only the most recent entries, discarding older ones. See Edge Cases for behavior when `maxLines` is negative, `NaN`, or fractional.
 - **follow-tail-by-default**: Component MUST scroll to the bottom when new lines are added, if `followTail` is true (default).
-- **honor-follow-tail-toggle**: Component MUST stop scrolling to the bottom when `followTail` is set to false, and resume scrolling when `followTail` is set back to true.
+- **honor-follow-tail-toggle**: Component MUST stop scrolling to the bottom when `followTail` is set to false, and resume scrolling when `followTail` is set back to true; the render that sets it back to true scrolls the container to the bottom immediately, without waiting for the next append.
 - **detect-user-scroll**: Component MUST detect when the user has scrolled away from the bottom and stop following the tail until they scroll back to near the bottom (slack of 4 pixels).
 - **handle-cell-click**: Component MUST invoke `column.onCellClick` when a cell is clicked, passing the entire `LogLine` object, if the handler is defined.
 - **handle-cell-double-click**: Component MUST invoke `column.onCellDoubleClick` when a cell is double-clicked, passing the entire `LogLine` object, if the handler is defined. The click events that precede a double-click gesture still invoke `onCellClick`, if defined, per native browser event order (see Edge Cases).
@@ -135,7 +135,7 @@ The Log Panel component displays structured log data as rows and columns in a sc
 | log-panel-025 | render-columns | columns=[...], showHeader=false | No header row is rendered |
 | log-panel-026 | show-empty-state | lines=[], emptyMessage not provided | Container displays text '(no events)' |
 | log-panel-027 | enforce-max-lines | lines=[{id:'1',...},{id:'2',...}], maxLines=0 | Zero rows are visible; empty message is shown |
-| log-panel-028 | honor-follow-tail-toggle | followTail=false, user scrolled away from the bottom, then followTail=true, line appended | The next append scrolls the container to the bottom |
+| log-panel-028 | honor-follow-tail-toggle | followTail=false, user scrolled away from the bottom, then followTail=true with the same lines | The render that sets followTail=true scrolls the container to the bottom |
 | log-panel-029 | apply-cell-mono-font | cell={mono: undefined}, column={defaultMono:true} | fontFamily is 'var(--font-mono, ui-monospace, SFMono-Regular, monospace)' |
 | log-panel-030 | apply-cell-mono-font | cell={mono:false}, column={defaultMono:true} | fontFamily is not set to the monospace stack |
 | log-panel-031 | apply-cell-level-color | cell has no level, column={defaultLevel:'warn'} | Cell color matches the 'warn' row of the Level Colors table |
@@ -165,7 +165,7 @@ The Log Panel component displays structured log data as rows and columns in a sc
 - **Column width as string**: A column width given as a string (e.g. `'1fr'`, `'50%'`) is used directly as the grid track size.
 - **Column width as number**: A column width given as a number (e.g. `200`) becomes the pixel value (`'200px'`) for the grid track size.
 - **Column width undefined**: A column with no width specified uses the default track size `minmax(120px, 1fr)`.
-- **followTail flips from false to true**: Resuming follow-tail causes the next appended line to scroll the container to the bottom, even if the user had scrolled away while it was disabled.
+- **followTail flips from false to true**: Resuming follow-tail re-pins the view and scrolls the container to the bottom on that same render, even if the user had scrolled away while it was disabled; later appends keep following.
 - **Scroll container not yet mounted**: All scroll-related logic is skipped when the scrollable element is not available; no errors occur.
 - **New lines added while scrolled away from the tail**: The component does not auto-scroll on subsequent appends until the user scrolls back within 4px of the bottom.
 - **Very long cell text**: Cell displays full text with a `title` attribute for a hover tooltip; no truncation or overflow behavior is enforced by the component (stylesheet responsibility).
@@ -227,7 +227,7 @@ Not applicable: The component does not emit logs or diagnostic output.
 
 - **Compose**: Implement as a Composable using `LazyColumn` for virtualized row rendering. Track scroll position via `rememberLazyListState()` and derive "at the bottom" from its `layoutInfo` (comparing the last visible item's index and offset against the total item count) — `LazyListState` has no built-in `isScrolledToTheEnd()`. Apply `Text` and `Row` composables for cells with color and font styles. Use the `clickable` modifier for interactive cells. Map log levels to the Material 3 color palette.
 
-- **React/Web**: The component is implemented in TypeScript/React using hooks (`useRef`, `useEffect`, `useLayoutEffect`, `useMemo`). It uses CSS Grid for layout and relies on stylesheet rules for visual appearance (colors, spacing, fonts). Key files: `LogPanel.tsx`, `types.ts` (defines `LogPanelProps`, `LogLine`, `LogColumn`, `LogLevel`, `LogCellValue`). Cell values are normalized via a `normalize()` helper (`undefined` → `{text: ''}`, a plain string → `{text: value}`), column track sizes are computed via `trackSize()` (`number` → `'Npx'`, `string` passed through, `undefined` → the default), the visible row slice is memoized (`useMemo`) keyed on `[lines, maxLines]`, and tail-pinning state is tracked in a ref (`pinnedRef`) that is updated on scroll and reset via a `useEffect` when `followTail` flips back to `true`. Styling is applied via CSS class names (`lp-root`, `lp-header`, `lp-body`, `lp-row`, `lp-cell`, `lp-cell--interactive`, `lp-cell--link`, `lp-empty`) and inline styles for layout (`gridTemplateColumns`) and level-based colors. ARIA roles describe structure only; interactivity is communicated solely by the `lp-cell--interactive` and `lp-cell--link` class names, which carry no ARIA semantics (see Accessibility).
+- **React/Web**: The component is implemented in TypeScript/React using hooks (`useRef`, `useLayoutEffect`, `useMemo`). It uses CSS Grid for layout and relies on stylesheet rules for visual appearance (colors, spacing, fonts). Key files: `LogPanel.tsx`, `types.ts` (defines `LogPanelProps`, `LogLine`, `LogColumn`, `LogLevel`, `LogCellValue`). Cell values are normalized via a `normalize()` helper (`undefined` → `{text: ''}`, a plain string → `{text: value}`), column track sizes are computed via `trackSize()` (`number` → `'Npx'`, `string` passed through, `undefined` → the default), the visible row slice is memoized (`useMemo`) keyed on `[lines, maxLines]`, and tail-pinning state is tracked in a ref (`pinnedRef`) that is updated on scroll and reset to `true` by a `useLayoutEffect` keyed on `followTail`, declared before the follow effect so it runs first in the same commit. The follow effect is a `useLayoutEffect` keyed on the visible slice itself (not its length, which stops changing once `maxLines` caps the list) and `followTail`. Styling is applied via CSS class names (`lp-root`, `lp-header`, `lp-body`, `lp-row`, `lp-cell`, `lp-cell--interactive`, `lp-cell--link`, `lp-empty`) and inline styles for layout (`gridTemplateColumns`) and level-based colors. ARIA roles describe structure only; interactivity is communicated solely by the `lp-cell--interactive` and `lp-cell--link` class names, which carry no ARIA semantics (see Accessibility).
 
 - **AppKit / UIKit**: Implement as a `UITableView` (or `NSTableView` on macOS) with dynamic row height. `UITableView` has no native column concept — lay out each row's cells in a horizontal stack (`UIStackView`) or a custom cell class that positions subviews to match the grid columns; `NSTableView` on macOS does have real columns via `NSTableColumn`. Implement scroll tracking via `UIScrollViewDelegate.scrollViewDidScroll(_:)` (or the equivalent bounds-change notification on `NSScrollView`) to detect pinning. Apply `NSAttributedString` or `UIFont` with colors matching the log level. Use tap and double-tap gesture recognizers (or the table view delegate's selection/double-click handling) for cell interactions. For accessibility, set `accessibilityLabel` to the cell text and the appropriate `accessibilityTraits` on interactive cells — `accessibilityRole` is not a UIKit API.
 
@@ -294,6 +294,7 @@ Statuses rest on the source: interactive cells have no ARIA label or role beyond
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.3.0 | 2026-11-21 | Mike Fullerton | Turning followTail back on snaps to the bottom on that render (pin reset in a layout effect); the follow effect is keyed on the visible slice so it keeps following past maxLines. |
 | 1.2.3 | 2026-11-14 | Mike Fullerton | Stated the color fallbacks and listed LogLevel values; tightened show-interactive-indicator and apply-cell-text-alignment; aligned the stop-event-propagation decision; fixed the ARIA, hover-state and tap-target contradictions; added 13 test vectors. |
 | 1.2.2 | 2026-09-25 | Mike Fullerton | String/undefined cells now correctly show defaultLevel/Mono apply; history reordered; Compliance added. |
 | 1.2.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |

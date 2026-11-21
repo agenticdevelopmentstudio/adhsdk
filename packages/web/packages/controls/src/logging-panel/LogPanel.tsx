@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useLayoutEffect, useMemo, useRef } from 'react'
+import { useLayoutEffect, useMemo, useRef } from 'react'
 import type { CSSProperties, MouseEvent } from 'react'
 import type { LogCellValue, LogColumn, LogLevel, LogLine, LogPanelProps } from './types'
 
@@ -77,6 +77,13 @@ export function LogPanel<TContext = unknown>(props: LogPanelProps<TContext>) {
     pinnedRef.current = el.scrollHeight - el.scrollTop - el.clientHeight <= slack
   }
 
+  // Re-pin when followTail flips on. A layout effect declared before the follow effect
+  // runs ahead of it in the same commit, so the flip itself snaps the view to the end;
+  // a passive effect would run after it and leave the view put until the next append.
+  useLayoutEffect(() => {
+    if (followTail) pinnedRef.current = true
+  }, [followTail])
+
   useLayoutEffect(() => {
     if (!followTail) return
     if (!pinnedRef.current) return
@@ -86,11 +93,6 @@ export function LogPanel<TContext = unknown>(props: LogPanelProps<TContext>) {
     // Keyed on `visible` itself, not its length: once `maxLines` caps the list, each
     // append drops the oldest row and the length stops changing, but the slice is new.
   }, [visible, followTail])
-
-  // Reset pinning when followTail flips on so the next append snaps to bottom.
-  useEffect(() => {
-    if (followTail) pinnedRef.current = true
-  }, [followTail])
 
   const gridTemplateColumns = columns.map((c) => trackSize(c.width)).join(' ')
   const rootClass = className ? `lp-root ${className}` : 'lp-root'
