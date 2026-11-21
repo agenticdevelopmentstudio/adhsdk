@@ -406,12 +406,41 @@ public final class NotesManager {
     }
 
     private func insertConflictedCopy(of note: Note) async throws {
-        var copy = Note.new(content: "# \(note.title) (conflicted copy)\n\n" + note.content)
+        var copy = Note.new(content: Self.conflictedCopyContent(of: note.content))
         copy.version = try await insert(copy)
         notes.append(copy)
         baseContent[copy.id] = copy.content
         notes.sort(by: Note.defaultSort)
         postNotesDidChange()
+    }
+
+    /// The text of a conflicted copy: `content` with "(conflicted copy)"
+    /// marked on wherever its title comes from, and nothing else changed.
+    ///
+    /// A frontmatter block stays first, or its keys become body text. A title
+    /// the frontmatter names (`title`, else `name`, as `MarkdownText` derives
+    /// it) is marked in place; a leading `# Heading` is marked in place rather
+    /// than repeated; otherwise a heading carrying the title is inserted right
+    /// after the frontmatter.
+    static func conflictedCopyContent(of content: String) -> String {
+        let marker = " (conflicted copy)"
+        for key in ["title", "name"] {
+            guard let named = Frontmatter.stringValue(key, in: content)?
+                .trimmingCharacters(in: .whitespacesAndNewlines), !named.isEmpty else { continue }
+            return Frontmatter.setting(key, to: .string(named + marker), in: content)
+        }
+        let parts = Frontmatter.split(content)
+        var lines = parts.body.components(separatedBy: "\n")
+        if let first = lines.firstIndex(where: {
+            !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        }), lines[first].hasPrefix("# ") {
+            let heading = lines[first]
+            let trailing = heading.hasSuffix("\r") ? "\r" : ""
+            lines[first] = String(heading.dropLast(trailing.count)) + marker + trailing
+            return parts.prefix + lines.joined(separator: "\n")
+        }
+        let title = MarkdownText.deriveTitle(content)
+        return parts.prefix + "# \(title)\(marker)\n\n" + parts.body
     }
 
     // MARK: - Load
