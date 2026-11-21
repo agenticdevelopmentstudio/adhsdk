@@ -2,7 +2,7 @@
 id: d46b3e1c-9cd9-41b6-bdd2-524ece5e294b
 title: "Notes Model"
 type: ingredient
-version: 1.2.0
+version: 2.0.0
 status: review
 language: en
 created: 2026-09-24
@@ -172,14 +172,20 @@ is a coincidence, not a shared contract.
   token MUST still return the version it reports on read.
 - **notestorage-change-stream**: A storage MAY additionally be observable:
   it then MUST expose a stream of changes made by any writer, each one
-  naming an upserted note id, a deleted note id, or a resync (the storage
-  lost track of what changed and the reader must re-read everything).
+  naming an upserted note id, a deleted note id, a resync (the storage
+  lost track of what changed and the reader must re-read everything), or
+  a taxonomy change (another writer changed the categories or which notes
+  are in them, and no note changed).
 - **notetaxonomyproviding-contract**: A storage implementation MAY
-  additionally support a taxonomy-provider extension to expose its
-  backing document store for taxonomy (folder) queries; the base storage
-  contract itself MUST NOT reference categories, so a storage backend
-  with no taxonomy concept can implement the base contract alone and
-  simply not support folders.
+  additionally support a taxonomy-provider extension, which exposes a
+  note taxonomy — the markdown tier's synchronous category interface —
+  for folder queries and edits, never the concrete document store
+  behind it, so a storage that keeps its categories elsewhere (a daemon
+  over HTTP, answering from a local copy) can supply folders too. The
+  markdown-backed conformer MUST supply its markdown document store as
+  that taxonomy. The base storage contract itself MUST NOT reference
+  categories, so a storage backend with no taxonomy concept can implement
+  the base contract alone and simply not support folders.
 
 ### MarkdownNoteStorage
 
@@ -271,6 +277,14 @@ is a coincidence, not a shared contract.
   writer, or a conflicted copy — so an observer re-reads the
   notes list from the posting manager rather than from a stale payload
   snapshot that could already be out of date by the time it is read.
+- **notesmanager-taxonomy-notification**: The manager MUST post a
+  taxonomy-change notification (same shape: the manager as subject, no
+  payload) when its storage's change stream reports a taxonomy change,
+  and again after the notes reload a resync triggers, since a resync may
+  have carried a category edit. A taxonomy change MUST NOT touch the
+  notes list or post the notes change notification. This window's own
+  category edits do not come through it; an observer that shows folders
+  rebuilds them on it, which is how another writer's folders appear.
 - **notesmanager-failure-surface**: The manager MUST record a failed
   storage operation as a single failure record carrying the operation and
   the error's description, log it as an error, and post a storage-failure
@@ -330,8 +344,9 @@ is a coincidence, not a shared contract.
 - **notesmanager-live-changes**: When its storage is observable, the
   manager MUST subscribe to the storage's change stream at construction
   and cancel the subscription when it is released, applying each change
-  on the primary thread: a resync reloads every note; a deletion of a
-  held note removes it; an upsert fetches that note and replaces the held
+  on the primary thread: a resync reloads every note and then posts the
+  taxonomy-change notification; a taxonomy change only posts that
+  notification; a deletion of a held note removes it; an upsert fetches that note and replaces the held
   copy only when the fetched version is higher than the version ledger
   holds for it (a version at or below it is the manager's own echo),
   appends it when not held, and removes the held copy when the fetch
@@ -361,12 +376,15 @@ is a coincidence, not a shared contract.
   re-applied on top of the other writer's note. If the note no longer
   exists in storage, the edit MUST likewise become a conflicted-copy note
   rather than vanish.
-- **notesmanager-markdown-store-accessor**: The manager's markdown-store
-  accessor MUST return the wrapped document store only when the storage
+- **notesmanager-taxonomy-accessor**: The manager's taxonomy accessor
+  MUST return the storage's note taxonomy only when the storage
   implementation also supports the taxonomy-provider extension, and MUST
-  return nothing otherwise, so a host whose storage is not
-  markdown-store-backed (e.g. a test double) can treat the folders
-  feature as simply unavailable.
+  return nothing otherwise, so a host whose storage supplies no taxonomy
+  (e.g. a test double) can treat the folders feature as simply
+  unavailable. It MUST be typed as the taxonomy interface, never as the
+  markdown document store, so a consumer that shows or edits folders
+  depends only on the interface and a daemon-backed storage drives it
+  unchanged.
 - **notesmanager-flush-before-termination**: Flushing pending saves MUST
   synchronously drain every pending debounced save and MUST return the
   ids of any note whose flushed write still failed, so a caller invoked
@@ -407,7 +425,7 @@ no visual surface, not a visual component.
 | notes-model-010 | notefolder-tree-cycle-safety | Build the folder tree from edges forming a 3-node cycle with no true root. | The returned roots list is not empty — the cycle degrades to treating all three categories as roots. |
 | notes-model-011 | notesmanager-storage-issue-order | 24 create-note calls, then 24 concurrently-issued pin-toggle tasks against a storage double that dwells 50ms per call and records arrival order. | The storage double never observes more than one call in flight at a time, and the arrival order of the updates equals the exact order the 24 tasks were issued in. |
 | notes-model-012 | notesmanager-failure-surface, notesmanager-create-rollback | Create a note from content against a storage double whose insert operation always fails. | Returns nothing; the manager's recorded failure names the create operation; the notes list stays empty. |
-| notes-model-013 | notesmanager-markdown-store-accessor | Construct the manager with a markdown-backed storage implementation, versus a storage implementation that does not support the taxonomy-provider extension. | The markdown-store accessor returns the same document store instance in the first case, nothing in the second. |
+| notes-model-013 | notesmanager-taxonomy-accessor, notetaxonomyproviding-contract | Construct the manager with a markdown-backed storage implementation, versus a storage implementation that does not support the taxonomy-provider extension. | The taxonomy accessor returns the same document store instance (as the taxonomy interface) in the first case, nothing in the second. |
 | notes-model-014 | notesmanager-live-changes | A manager over an observable storage double; another writer updates a held note to a higher version and the double emits an upsert for it. | The held note is replaced by the fetched one and a change notification is posted. |
 | notes-model-015 | notesmanager-live-changes | The double emits an upsert for a note whose fetched version equals the held version. | The held note is left unchanged (its own echo). |
 | notes-model-016 | notesmanager-live-changes-skip-dirty | Edit a note's content, then before the debounced save runs the double emits an upsert for that note with a newer version. | The edited content stays in the list; the change is not applied. |
@@ -419,6 +437,9 @@ no visual surface, not a visual component.
 | notes-model-022 | notesmanager-live-changes, notesmanager-version-ledger | Save an edit, then the double emits an upsert for that note at the version the save returned. | The held note keeps the saved text and is not replaced. |
 | notes-model-023 | notesmanager-stale-resolution | Another writer changes a note's text; this manager edits it twice before the debounced save runs and storage answers stale. | The conflicted copy holds the second edit's text. |
 | notes-model-024 | notesmanager-stale-resolution, notesmanager-pin-toggle-immediate | Another writer changes a note's text; this manager then toggles the note's pin and storage answers stale. | No conflicted copy is created; the stored note keeps the other writer's text and is pinned, and so does the held note. |
+| notes-model-025 | notesmanager-taxonomy-notification, notestorage-change-stream | A loaded manager over an observable storage double applies a taxonomy change. | The taxonomy-change notification is posted with the manager as subject; no notes change notification is posted and the notes list is unchanged. |
+| notes-model-026 | notesmanager-taxonomy-notification, notesmanager-live-changes | A loaded manager over an observable storage double applies a resync. | The notes are reloaded and the taxonomy-change notification is posted. |
+
 ## Edge Cases
 
 - An empty-content note (created from an empty string) derives the
@@ -461,6 +482,17 @@ no visual surface, not a visual component.
   conflicted copy.
 - A resync from the change stream discards the manager's record of
   unsaved edits along with the list, because it reloads every note.
+- A resync also posts the taxonomy-change notification, even when no
+  category changed: the feed lost track of what changed, so the folders
+  pane rebuilds its tree as well as the notes list.
+- A taxonomy change posts only the taxonomy-change notification; it
+  never reloads or refetches a note, so a note's folder membership
+  changing elsewhere updates the folders pane without touching an
+  unsaved edit.
+- A storage that is not observable never posts the taxonomy-change
+  notification, so the folders pane shows another writer's category edit
+  only when one of this window's own folder edits or membership changes
+  next rebuilds the tree.
 
 ## Configuration
 
@@ -560,13 +592,25 @@ factory) | Category: the manager's name
   way an AppKit host does.
 - **Compose**: Port `Note` as a `data class`, `NoteFolder` as a recursive
   `data class`, and `NoteStorage` as a Kotlin `interface` of five
-  `suspend` functions, with the change stream as a `Flow<NoteChange>`. `NotesManager` becomes a `ViewModel` holding a
-  `StateFlow<List<Note>>` in place of the notification pair, with the
+  `suspend` functions, with the change stream as a `Flow<NoteChange>`
+  (a sealed class whose cases include `TaxonomyChanged`). The note
+  taxonomy stays a plain, non-`suspend` Kotlin `interface`, because the
+  folders pane and the Move-to menu call it on the main thread while they
+  build rows and menus; a remote storage implements it over a local copy
+  it keeps current. The taxonomy-provider extension is a second interface
+  exposing `val taxonomy: NoteTaxonomy`, checked with `as?`.
+  `NotesManager` becomes a `ViewModel` holding a
+  `StateFlow<List<Note>>` in place of the notification pair (and a
+  `SharedFlow<Unit>` in place of the taxonomy-change notification), with the
   debounced save mapped onto a coroutine job keyed by note id (the role
   `KeyedDebouncer` plays here) and the storage-issue-ordering guarantee
   reproduced with a single-threaded dispatcher or a `Mutex`.
 - **React/Web**: `Note`/`NoteFolder` become plain TypeScript interfaces;
-  `NoteStorage` an interface of five `Promise`-returning methods, with the change stream as an async iterable.
+  `NoteStorage` an interface of five `Promise`-returning methods, with the change stream as an async iterable
+  (a discriminated union with a `taxonomyChanged` member). The note
+  taxonomy stays synchronous (plain methods, no `Promise`), answered from
+  a local copy by a remote storage, and the taxonomy-provider extension
+  is an optional `taxonomy` property checked before use.
   `NotesManager` becomes a store (a hook backed by
   `useSyncExternalStore`, or a small class with subscribers in place of
   `NotificationCenter`), with the per-note debounce implemented via
@@ -580,14 +624,22 @@ factory) | Category: the manager's name
   `MarkdownNoteStorage.swift`, `NotesManager.swift` and
   `NotesMarkdownReExports.swift` under
   `packages/apple/AgenticDeveloperHubSDK/macOS/Features/NotesWindow/` — are the
-  source platform: a macOS-only target consumed by
+  source platform, with the `NoteTaxonomy` protocol they consume in
+  `Markdown/NoteTaxonomy.swift`: a macOS-only target consumed by
   `NotesCoordinator`/`NotesSplitViewController` (out of scope for this
-  recipe) via `NotificationCenter` observation and `@MainActor` calls.
+  ingredient) via `NotificationCenter` observation and `@MainActor` calls.
   `Note`, `NoteFolder`, and `MarkdownNoteStorage` are `Sendable`;
   `NotesManager` is itself `@MainActor`, and every storage call it issues
   runs off the main actor through `Task.detached`, serialized into its
   own `storageChain`; the change stream is an `AsyncStream<NoteChange>` consumed by a `Task` the manager cancels in `deinit` (see `notesmanager-confined-to-primary-thread` and
-  `notesmanager-storage-off-primary-thread`). The version ledger is a
+  `notesmanager-storage-off-primary-thread`). `NoteTaxonomyProviding`
+  declares `var taxonomy: any NoteTaxonomy`, which `MarkdownNoteStorage`
+  answers with its `store`; `NotesManager.taxonomy` is
+  `(any NoteTaxonomy)?`, and `NotesSplitViewController(taxonomy:)` and
+  `NotesFolderListViewController(taxonomy:)` take the same optional
+  existential. `NoteChange.taxonomyChanged` and a `.resync` each make
+  `apply(_:)` post `NotesManager.taxonomyDidChangeNotification`, which
+  `NotesSplitViewController` observes to call `folderVC.reload()`. The version ledger is a
   `nonisolated let versions = VersionLedger()`, a `[UUID: Int64]` behind an
   `OSAllocatedUnfairLock`, read and advanced by the `write(_:version:)` and
   `insert(_:)` helpers from inside the `storageChain`, so a queued save
@@ -619,15 +671,20 @@ factory) | Category: the manager's name
   `SemaphoreSlim(1, 1)` awaited before each storage call reproduces the
   one-at-a-time, issue-ordered `storageChain`, and a
   `System.Threading.Timer` per note id, restarted on each edit,
-  reproduces `KeyedDebouncer`'s per-key debounce-with-retry.
+  reproduces `KeyedDebouncer`'s per-key debounce-with-retry. The change
+  stream becomes an `IAsyncEnumerable<NoteChange>` over a record hierarchy
+  that includes a taxonomy-changed case, the note taxonomy a synchronous
+  C# interface answered from a local copy, the taxonomy-provider extension
+  a second interface checked with `is`, and the taxonomy-change
+  notification a plain C# event.
 
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/NotesWindow/` | confirmed (1.1.3) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Markdown/Note.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Markdown/MarkdownNoteMapping.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/NotesWindow/` | confirmed (2.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Markdown/Note.swift` | confirmed (2.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Markdown/MarkdownNoteMapping.swift` | confirmed (2.0.0) |
 
 ## Design Decisions
 
@@ -663,9 +720,14 @@ factory) | Category: the manager's name
 **Rationale**: A version bump alone (a pin elsewhere, a no-op round trip) is not a conflict and should not produce a copy; a real text change elsewhere must never be overwritten, and the user's edit must never vanish. A copy keeps both texts visible with no merge UI.
 **Approved**: pending
 
+**Decision**: The folders pane, the Move-to menu and the split view reach categories through `NoteTaxonomy`, a synchronous protocol in the Markdown tier, rather than through `MarkdownStore`; `NoteTaxonomyProviding.taxonomy` and `NotesManager.taxonomy` expose it, and another writer's category edit arrives as `NoteChange.taxonomyChanged`.
+**Rationale**: Exposing `MarkdownStore` meant only a storage with a local GRDB file could show folders, and a daemon-backed storage could not. The interface stays synchronous, unlike `NoteStorage`, because its callers run on the main actor while they build menus and rows, where a network round trip would stall the UI; a remote storage answers from a local copy it keeps current and announces outside changes on its change stream. `MarkdownStore` conforms with the methods it already had, so the existing storage changed nothing.
+**Approved**: pending
+
 **Decision**: `Note` and `MarkdownNoteMapping` live in the Markdown framework, not the macOS feature tier, and `NoteStorage` is `async`.
 **Rationale**: A daemon or CLI serving notes must apply exactly the same pinning rules as the app without linking AppKit, and a daemon-backed storage answers over the network. Synchronous conformers still satisfy the async requirements, so the move cost existing storages nothing.
 **Approved**: pending
+
 ## Compliance
 
 | Check | Status | Category |
@@ -677,13 +739,13 @@ factory) | Category: the manager's name
 | [adc.check.reliability.data-integrity](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d773e5db-bb22-5da8-a6f1-953c35a3798d) | passed | reliability |
 | [adc.check.reliability.state-recovery](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/6e64e2f2-28ad-55d5-a8ed-cee075366674) | partial | reliability |
 
-Separation of concerns holds structurally: `NoteStorage` is a narrow, five-method asynchronous persistence seam that knows nothing about markdown, frontmatter, or ownership; `MarkdownNoteStorage` is the only conformer that reaches into `MarkdownStore`, and it alone applies the entire frontmatter-ownership contract, whose rules live in the shared `MarkdownNoteMapping`; `NotesManager` owns in-memory state, notification, debouncing, and failure surfacing without ever touching a document's bytes directly. Unit test coverage holds: `MarkdownNoteStorageTests`, `NoteFolderTests`, `NotesStorageFailureTests`, `NotesManagerStorageOrderingTests`, and `NotesManagerMarkdownStoreTests` between them exercise nearly every requirement above by name, including the concurrency-ordering and ownership-race cases. Explicit error handling holds: every one of the five `NoteStorage` methods is `async throws`, and every `NotesManager` call site either propagates the failure to its caller (`createNote` returning `nil`) or records it as a typed `NotesStorageFailure` with a log line — nothing here discards an error silently. Error recovery holds for the debounced save path specifically: `KeyedDebouncer`'s contract keeps a note whose write threw pending and retries it with backoff, rather than dropping it once and logging. Data integrity holds: `MarkdownNoteMapping.note(from:ownedKeys:)` skips a document whose id fails `UUID(uuidString:)` rather than crashing or corrupting the list, and `updateNote`'s single-transaction read-merge-write is what lets another writer's concurrent, in-transaction mark survive rather than being silently overwritten. State recovery is marked partial: `flushPendingSaves()` exists precisely to drain every pending debounced save before termination and to report which ones still failed, but nothing in the sources given here calls it automatically — invoking it is a caller precondition (the host app's own termination handling, out of scope for this recipe), so a host that never calls it can still lose an in-flight edit to a crash or a forced quit.
+Separation of concerns holds structurally: `NoteStorage` is a narrow, five-method asynchronous persistence seam that knows nothing about markdown, frontmatter, or ownership; `MarkdownNoteStorage` is the only conformer that reaches into `MarkdownStore`, the folders seam (`NoteTaxonomyProviding`) hands out the `NoteTaxonomy` protocol rather than the store, and `MarkdownNoteStorage` alone applies the entire frontmatter-ownership contract, whose rules live in the shared `MarkdownNoteMapping`; `NotesManager` owns in-memory state, notification, debouncing, and failure surfacing without ever touching a document's bytes directly. Unit test coverage holds: `MarkdownNoteStorageTests`, `NoteFolderTests`, `NotesStorageFailureTests`, `NotesManagerStorageOrderingTests`, `NotesManagerMarkdownStoreTests`, and `NotesManagerLiveChangeTests` between them exercise nearly every requirement above by name, including the concurrency-ordering and ownership-race cases. Explicit error handling holds: every one of the five `NoteStorage` methods is `async throws`, and every `NotesManager` call site either propagates the failure to its caller (`createNote` returning `nil`) or records it as a typed `NotesStorageFailure` with a log line — nothing here discards an error silently. Error recovery holds for the debounced save path specifically: `KeyedDebouncer`'s contract keeps a note whose write threw pending and retries it with backoff, rather than dropping it once and logging. Data integrity holds: `MarkdownNoteMapping.note(from:ownedKeys:)` skips a document whose id fails `UUID(uuidString:)` rather than crashing or corrupting the list, and `updateNote`'s single-transaction read-merge-write is what lets another writer's concurrent, in-transaction mark survive rather than being silently overwritten. State recovery is marked partial: `flushPendingSaves()` exists precisely to drain every pending debounced save before termination and to report which ones still failed, but nothing in the sources given here calls it automatically — invoking it is a caller precondition (the host app's own termination handling, out of scope for this ingredient), so a host that never calls it can still lose an in-flight edit to a crash or a forced quit.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
-| 1.2.0 | 2026-11-21 | Mike Fullerton | Note and MarkdownNoteMapping move to the Markdown tier; Note carries a version; NoteStorage is async with fetchNote(id:), a stale(current:) error and an ObservableNoteStorage change stream; NotesManager applies other writers' changes live and turns a stale save into a (conflicted copy) note. |
+| 2.0.0 | 2026-11-21 | Mike Fullerton | Note and MarkdownNoteMapping move to the Markdown tier; Note carries a version; NoteStorage is async with fetchNote(id:), a stale(current:) error and an ObservableNoteStorage change stream; NotesManager applies other writers' changes live and turns a stale save into a (conflicted copy) note. Folders go through the synchronous NoteTaxonomy: NoteTaxonomyProviding.taxonomy and NotesManager.taxonomy replace the MarkdownStore accessors (notesmanager-markdown-store-accessor becomes notesmanager-taxonomy-accessor), and NoteChange.taxonomyChanged and a resync post taxonomyDidChangeNotification (notesmanager-taxonomy-notification). |
 | 1.1.4 | 2026-11-13 | Mike Fullerton | The notes list shows modified dates through the shared relative-date formatter. |
 | 1.1.3 | 2026-10-04 | Mike Fullerton | Dropped the stray reference to the hub's notes client from the overview. |
 | 1.1.2 | 2026-10-04 | Mike Fullerton | Legacy recipe citations restored to the legacy recipes' own adhsdk://recipes/ domains; the adhsdk://recipes/ form named nothing. |

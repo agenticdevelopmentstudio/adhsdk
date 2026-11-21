@@ -1,7 +1,7 @@
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
-| 1.2.0 | 2026-11-21 | Mike Fullerton | Note and MarkdownNoteMapping move to the Markdown tier; Note carries a version; NoteStorage is async with fetchNote(id:), a stale(current:) error and an ObservableNoteStorage change stream; NotesManager applies other writers' changes live and turns a stale save into a (conflicted copy) note. |
+| 2.0.0 | 2026-11-21 | Mike Fullerton | Note and MarkdownNoteMapping move to the Markdown tier; Note carries a version; NoteStorage is async with fetchNote(id:), a stale(current:) error and an ObservableNoteStorage change stream; NotesManager applies other writers' changes live and turns a stale save into a (conflicted copy) note. Folders go through the synchronous NoteTaxonomy: NoteTaxonomyProviding.taxonomy and NotesManager.taxonomy replace the MarkdownStore accessors (notesmanager-markdown-store-accessor becomes notesmanager-taxonomy-accessor), and NoteChange.taxonomyChanged and a resync post taxonomyDidChangeNotification (notesmanager-taxonomy-notification). |
 | 1.1.4 | 2026-11-13 | Mike Fullerton | The notes list shows modified dates through the shared relative-date formatter. |
 | 1.1.3 | 2026-10-04 | Mike Fullerton | Dropped the stray reference to the hub's notes client from the overview. |
 | 1.1.2 | 2026-10-04 | Mike Fullerton | Legacy recipe citations restored to the legacy recipes' own adhsdk://recipes/ domains; the adhsdk://recipes/ form named nothing. |

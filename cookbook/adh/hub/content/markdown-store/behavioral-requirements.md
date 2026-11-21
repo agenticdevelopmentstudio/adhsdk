@@ -260,6 +260,23 @@
 - **note-count-is-direct-not-transitive**: Category note counts MUST count only
   direct membership, never transitively through child categories, matching a
   folder-badge count's own direct-membership semantics.
+- **create-category-with-chosen-id**: Creating a category MUST accept an id the
+  caller chose, store and stage the category under that id lowercased, and return it
+  under that id; the form that takes no id MUST mint a lowercased unique id and go
+  through the same path, so both forms insert the row and stage its outbox upsert
+  the same way. A client that shows a new category before the daemon answers mints
+  the id itself, so both sides name the category the same way.
+- **note-taxonomy-conformance**: The store MUST conform to the note-taxonomy
+  interface — listing categories, category edges, per-category note counts, the
+  "All Notes" count for a marker, the documents in a category and the categories of
+  a document; creating, renaming and deleting a category; adding a category edge;
+  and assigning and unassigning a category — with its existing taxonomy methods and
+  no adapter. Every call in that interface MUST be synchronous, because a notes
+  window calls it on the main thread while it builds menus and rows; a storage that
+  keeps its categories remotely conforms by answering from a local copy it keeps
+  current. The interface MUST name every parameter the store's methods take, and
+  supply the shorter forms a notes window calls (create by name, and the rest
+  without a sort order or timestamp) as defaults built on them.
 - **taxonomy-rides-generic-outbox**: Category and keyword mutations MUST stage their
   pushable fields onto the generic sync outbox in the same transaction as the local
   write, unlike document mutations, which use the dedicated markdown outbox instead

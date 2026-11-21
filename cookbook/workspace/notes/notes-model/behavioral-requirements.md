@@ -101,14 +101,20 @@
   token MUST still return the version it reports on read.
 - **notestorage-change-stream**: A storage MAY additionally be observable:
   it then MUST expose a stream of changes made by any writer, each one
-  naming an upserted note id, a deleted note id, or a resync (the storage
-  lost track of what changed and the reader must re-read everything).
+  naming an upserted note id, a deleted note id, a resync (the storage
+  lost track of what changed and the reader must re-read everything), or
+  a taxonomy change (another writer changed the categories or which notes
+  are in them, and no note changed).
 - **notetaxonomyproviding-contract**: A storage implementation MAY
-  additionally support a taxonomy-provider extension to expose its
-  backing document store for taxonomy (folder) queries; the base storage
-  contract itself MUST NOT reference categories, so a storage backend
-  with no taxonomy concept can implement the base contract alone and
-  simply not support folders.
+  additionally support a taxonomy-provider extension, which exposes a
+  note taxonomy — the markdown tier's synchronous category interface —
+  for folder queries and edits, never the concrete document store
+  behind it, so a storage that keeps its categories elsewhere (a daemon
+  over HTTP, answering from a local copy) can supply folders too. The
+  markdown-backed conformer MUST supply its markdown document store as
+  that taxonomy. The base storage contract itself MUST NOT reference
+  categories, so a storage backend with no taxonomy concept can implement
+  the base contract alone and simply not support folders.
 
 ### MarkdownNoteStorage
 
@@ -200,6 +206,14 @@
   writer, or a conflicted copy — so an observer re-reads the
   notes list from the posting manager rather than from a stale payload
   snapshot that could already be out of date by the time it is read.
+- **notesmanager-taxonomy-notification**: The manager MUST post a
+  taxonomy-change notification (same shape: the manager as subject, no
+  payload) when its storage's change stream reports a taxonomy change,
+  and again after the notes reload a resync triggers, since a resync may
+  have carried a category edit. A taxonomy change MUST NOT touch the
+  notes list or post the notes change notification. This window's own
+  category edits do not come through it; an observer that shows folders
+  rebuilds them on it, which is how another writer's folders appear.
 - **notesmanager-failure-surface**: The manager MUST record a failed
   storage operation as a single failure record carrying the operation and
   the error's description, log it as an error, and post a storage-failure
@@ -259,8 +273,9 @@
 - **notesmanager-live-changes**: When its storage is observable, the
   manager MUST subscribe to the storage's change stream at construction
   and cancel the subscription when it is released, applying each change
-  on the primary thread: a resync reloads every note; a deletion of a
-  held note removes it; an upsert fetches that note and replaces the held
+  on the primary thread: a resync reloads every note and then posts the
+  taxonomy-change notification; a taxonomy change only posts that
+  notification; a deletion of a held note removes it; an upsert fetches that note and replaces the held
   copy only when the fetched version is higher than the version ledger
   holds for it (a version at or below it is the manager's own echo),
   appends it when not held, and removes the held copy when the fetch
@@ -290,12 +305,15 @@
   re-applied on top of the other writer's note. If the note no longer
   exists in storage, the edit MUST likewise become a conflicted-copy note
   rather than vanish.
-- **notesmanager-markdown-store-accessor**: The manager's markdown-store
-  accessor MUST return the wrapped document store only when the storage
+- **notesmanager-taxonomy-accessor**: The manager's taxonomy accessor
+  MUST return the storage's note taxonomy only when the storage
   implementation also supports the taxonomy-provider extension, and MUST
-  return nothing otherwise, so a host whose storage is not
-  markdown-store-backed (e.g. a test double) can treat the folders
-  feature as simply unavailable.
+  return nothing otherwise, so a host whose storage supplies no taxonomy
+  (e.g. a test double) can treat the folders feature as simply
+  unavailable. It MUST be typed as the taxonomy interface, never as the
+  markdown document store, so a consumer that shows or edits folders
+  depends only on the interface and a daemon-backed storage drives it
+  unchanged.
 - **notesmanager-flush-before-termination**: Flushing pending saves MUST
   synchronously drain every pending debounced save and MUST return the
   ids of any note whose flushed write still failed, so a caller invoked

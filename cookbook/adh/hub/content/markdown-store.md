@@ -48,7 +48,9 @@ database's structure and migrations; a projection translates pulled rows into an
 of that schema as a sync-mirror projection; a store owns document creation, update,
 lifecycle (publish/unpublish/finalize/definalize/delete), and a dedicated outbox
 queue; a taxonomy extension adds categories, category edges, and keywords on top of
-the store; a timestamp component is the one place a column becomes a date and back;
+the store, and the store conforms to the note-taxonomy interface — the synchronous
+category calls a notes window makes, declared beside it so a storage that keeps its
+categories elsewhere can answer them too; a timestamp component is the one place a column becomes a date and back;
 and a remote-writer contract declares — without yet implementing — the interface a
 host uses to actually send a queued operation to adh.
 
@@ -331,6 +333,23 @@ open its own database or share one a host already owns.
 - **note-count-is-direct-not-transitive**: Category note counts MUST count only
   direct membership, never transitively through child categories, matching a
   folder-badge count's own direct-membership semantics.
+- **create-category-with-chosen-id**: Creating a category MUST accept an id the
+  caller chose, store and stage the category under that id lowercased, and return it
+  under that id; the form that takes no id MUST mint a lowercased unique id and go
+  through the same path, so both forms insert the row and stage its outbox upsert
+  the same way. A client that shows a new category before the daemon answers mints
+  the id itself, so both sides name the category the same way.
+- **note-taxonomy-conformance**: The store MUST conform to the note-taxonomy
+  interface — listing categories, category edges, per-category note counts, the
+  "All Notes" count for a marker, the documents in a category and the categories of
+  a document; creating, renaming and deleting a category; adding a category edge;
+  and assigning and unassigning a category — with its existing taxonomy methods and
+  no adapter. Every call in that interface MUST be synchronous, because a notes
+  window calls it on the main thread while it builds menus and rows; a storage that
+  keeps its categories remotely conforms by answering from a local copy it keeps
+  current. The interface MUST name every parameter the store's methods take, and
+  supply the shorter forms a notes window calls (create by name, and the rest
+  without a sort order or timestamp) as defaults built on them.
 - **taxonomy-rides-generic-outbox**: Category and keyword mutations MUST stage their
   pushable fields onto the generic sync outbox in the same transaction as the local
   write, unlike document mutations, which use the dedicated markdown outbox instead
@@ -377,6 +396,8 @@ layer, not a visual component.
 | markdown-core-020 | claim-is-never-released | Create a document, drain into a writer that throws, then drain into a writer that accepts | The accepting writer receives the same operation id and body the failing one did; the queue is empty |
 | markdown-core-021 | delete-keeps-claimed-create | Create a document, drain into a writer that throws, delete the document, then drain into a writer that mints remote id R | The writer receives create (no remote id) then delete addressed to R |
 | markdown-core-022 | delete-drops-undelivered-create | Create a document and delete it before any drain | Nothing is queued |
+| markdown-core-023 | create-category-with-chosen-id, taxonomy-rides-generic-outbox | Create a category under the caller's id `ABC-123` | The returned category's id is `abc-123`, the category list holds exactly `abc-123`, and the generic outbox holds one `content.categories` op for row `abc-123` |
+| markdown-core-024 | note-taxonomy-conformance | Hand the store to a consumer typed as the note-taxonomy interface, then create a category by name and assign it to a live document through that interface | The category is listed by the store and the document's categories include it |
 ## Edge Cases
 
 - The document-list read path and the single-document read path deliberately
@@ -500,9 +521,9 @@ framework that protocol lives in.
   an IndexedDB-backed store with the same pull-only/outbox split, exposed to React
   through a hook, not a component prop.
 - **AppKit / UIKit**: this is the source, though neither framework is actually
-  linked — the implementation is six plain Foundation files (`MarkdownSchema.swift`,
+  linked — the implementation is seven plain Foundation files (`MarkdownSchema.swift`,
   `MarkdownProjection.swift`, `MarkdownStore.swift`, `MarkdownTaxonomy.swift`,
-  `MarkdownTimestamp.swift`, `MarkdownRemoteWriter.swift`) backed by a local SQLite
+  `NoteTaxonomy.swift`, `MarkdownTimestamp.swift`, `MarkdownRemoteWriter.swift`) backed by a local SQLite
   database accessed through GRDB (`BoundedDatabase`), so an AppKit or UIKit
   controller holds a reference and observes it through the same wrapper any other
   consumer uses, never a delegate protocol specific to this component.
@@ -555,6 +576,20 @@ framework that protocol lives in.
   `deleteCategory`; `categoryNoteCounts`' direct-not-transitive counting rule is
   explicitly modeled on Apple Notes' own folder-badge semantics — a precedent from a
   first-party Apple app, not a general database convention.
+  `createCategory(id:name:description:color:icon:sortOrder:now:)` is the one body
+  that inserts the row and stages its upsert, lowercasing the id; the id-minting
+  `createCategory(name:…)` calls it with `UUID().uuidString.lowercased()`
+  (**create-category-with-chosen-id**).
+
+  `NoteTaxonomy.swift` declares `public protocol NoteTaxonomy: AnyObject, Sendable`,
+  whose requirements spell out every parameter of `MarkdownStore`'s own methods, so
+  `extension MarkdownStore: NoteTaxonomy {}` is the whole conformance; a protocol
+  extension supplies `createCategory(name:)`, `renameCategory(_:to:)`,
+  `deleteCategory(_:)`, `addCategoryEdge(parent:child:)`,
+  `assignCategory(_:toDocument:)` and `unassignCategory(_:fromDocument:)`, each
+  passing `0` and `Date()` for the rest. The notes feature reaches it as
+  `any NoteTaxonomy` through `NoteTaxonomyProviding.taxonomy`
+  (**note-taxonomy-conformance**).
 
   `defaultPath(inHome:token:)` resolves the default database path. Logging goes
   through `MarkdownStore.logger`, a plain `os.Logger` (Apple's unified-logging type)
@@ -577,7 +612,7 @@ framework that protocol lives in.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Markdown/` | confirmed (1.2.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Markdown/` | confirmed (2.0.0) |
 
 ## Design Decisions
 
@@ -602,7 +637,7 @@ framework that protocol lives in.
 | [adc.check.reliability.idempotent-operations](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/b476dbc7-de81-5f6b-8d9e-de6d319e631b) | passed | reliability |
 | [adc.check.reliability.data-integrity](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d773e5db-bb22-5da8-a6f1-953c35a3798d) | partial | reliability |
 
-Separation of concerns holds structurally: `MarkdownSchema` owns DDL and migration, `MarkdownProjection` owns the sync-mirror translation contract, `MarkdownStore` owns document and outbox lifecycle, and `MarkdownTaxonomy` extends the store for categories and keywords rather than folding taxonomy concerns into it — six files, four clear responsibilities, no circular reach between them. Unit test coverage holds: the four test files covering this component between them exercise nearly every requirement above by name, including the schema-drift self-check against the live table definitions. Explicit error handling holds: every failure surface in this component is a typed enum thrown to the caller, never a swallowed optional-try or a silently substituted default — the two real optional-try uses in the projection guard a validity check with a proper fallthrough, not a discarded failure. Idempotent operations hold for every lifecycle method examined except the one place idempotency is explicitly not wanted: `deleteDocument` treats a missing id as success by design, and the taxonomy's revive-on-conflict pattern makes re-adding an edge, assignment, or keyword a no-op. Data integrity is marked partial: the dual-flag delete-state normalization, the cycle and self-edge refusals, and the orphan-purge refusal are all real integrity guards, but `drain-mutual-exclusion` in Behavioral Requirements leaves serializing drains to the caller: two concurrent drains would send one outbox operation to adh twice, with nothing in this component to prevent it.
+Separation of concerns holds structurally: `MarkdownSchema` owns DDL and migration, `MarkdownProjection` owns the sync-mirror translation contract, `MarkdownStore` owns document and outbox lifecycle, and `MarkdownTaxonomy` extends the store for categories and keywords rather than folding taxonomy concerns into it, and `NoteTaxonomy` declares the category calls a notes window makes without naming the store — seven files, four clear responsibilities, no circular reach between them. Unit test coverage holds: the four test files covering this component between them exercise nearly every requirement above by name, including the schema-drift self-check against the live table definitions. Explicit error handling holds: every failure surface in this component is a typed enum thrown to the caller, never a swallowed optional-try or a silently substituted default — the two real optional-try uses in the projection guard a validity check with a proper fallthrough, not a discarded failure. Idempotent operations hold for every lifecycle method examined except the one place idempotency is explicitly not wanted: `deleteDocument` treats a missing id as success by design, and the taxonomy's revive-on-conflict pattern makes re-adding an edge, assignment, or keyword a no-op. Data integrity is marked partial: the dual-flag delete-state normalization, the cycle and self-edge refusals, and the orphan-purge refusal are all real integrity guards, but `drain-mutual-exclusion` in Behavioral Requirements leaves serializing drains to the caller: two concurrent drains would send one outbox operation to adh twice, with nothing in this component to prevent it.
 
 ## Change History
 

@@ -5,7 +5,9 @@ database's structure and migrations; a projection translates pulled rows into an
 of that schema as a sync-mirror projection; a store owns document creation, update,
 lifecycle (publish/unpublish/finalize/definalize/delete), and a dedicated outbox
 queue; a taxonomy extension adds categories, category edges, and keywords on top of
-the store; a timestamp component is the one place a column becomes a date and back;
+the store, and the store conforms to the note-taxonomy interface — the synchronous
+category calls a notes window makes, declared beside it so a storage that keeps its
+categories elsewhere can answer them too; a timestamp component is the one place a column becomes a date and back;
 and a remote-writer contract declares — without yet implementing — the interface a
 host uses to actually send a queued operation to adh.
 
