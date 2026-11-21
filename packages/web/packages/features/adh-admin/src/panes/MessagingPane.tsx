@@ -11,10 +11,12 @@ import {
   useMessagingStatus,
   useMessagingTemplates,
 } from "../api/admin";
+import { MessagingProvidersSection } from "./MessagingProvidersSection";
 
 /**
- * The platform-wide Messaging tool: send email/SMS to any user via the hub's own
- * Postmark/Twilio config, with the full message log.
+ * The platform-wide Messaging tool: the platform's own Postmark/Twilio config (the Providers
+ * section, `/v1/messaging/providers`), sending email/SMS to any user through it, and the full
+ * message log.
  *
  * Everything a reader sees is `MessagingSurface`, which the per-product Messaging pane
  * renders too — this file is the admin-scoped HALF: the `/v1/messaging/{status,messages}`
@@ -41,6 +43,7 @@ export function MessagingPane({ help }: { help?: ReactNode } = {}) {
       <FeatureTitle title="Messaging" help={help} />
       <div className="flex min-h-0 min-w-0 flex-1 flex-col space-y-8 overflow-y-auto px-6 pb-8 pt-2">
         <UnsavedChangesGuard when={dirty} onNavigate={(href) => router.push(href)} />
+        <MessagingProvidersSection />
         <MessagingSurface
           onDirtyChange={setDirty}
           status={{ data: status.data, isLoading: status.isLoading, isError: status.isError }}
@@ -56,7 +59,7 @@ export function MessagingPane({ help }: { help?: ReactNode } = {}) {
           onPageChange={setPage}
           userIdLabel="User ID"
           providerSetupHint={() => (
-            <>Configure Postmark/Twilio as integrations on the hub ecosystem (Hub → Settings → Integrations).</>
+            <>Configure Postmark/Twilio in Providers above.</>
           )}
         />
       </div>

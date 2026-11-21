@@ -879,3 +879,169 @@ export function useMessagingTemplates() {
       })),
   });
 }
+
+// ── Messaging providers ──────────────────────────────────────────────────
+//
+// The platform's own Postmark and Twilio, behind the admin-only `/api/v1/messaging/providers`.
+// They are stored under the hub's key, but they are the platform's, not a product's: the hub's
+// Settings → Integrations refuses them since phase 3, and this is their one door. Every write
+// refreshes the list and the status, because the status is what says whether a channel can send.
+
+/** The two providers the platform sends with, in the order the pane shows them. */
+export const MESSAGING_PROVIDER_IDS = ["postmark", "twilio"] as const;
+export type MessagingProviderId = (typeof MESSAGING_PROVIDER_IDS)[number];
+
+/** One provider config row as the list serves it (masked: a secret is only `has_secret`). */
+export type MessagingProviderWire = SuccessBody<"/v1/messaging/providers", "get">["data"][number];
+/** What a test send answers: `sent`, or `failed` with the provider's reason. */
+export type MessagingProviderTestResult = SuccessBody<"/v1/messaging/providers/{id}/test", "post">;
+
+/** One config field the pane asks for, mirroring the backend's provider catalog. */
+export interface MessagingProviderField {
+  key: string;
+  label: string;
+  secret: boolean;
+  required: boolean;
+  placeholder?: string;
+}
+
+/**
+ * The fields each provider takes. A copy of the backend's provider catalog
+ * (`src/integration/providers/catalog.ts`), because the catalog is not on the wire for these two;
+ * the backend still checks the merged config, so a drifted copy fails loudly on save.
+ */
+export const MESSAGING_PROVIDER_FIELDS: Record<MessagingProviderId, MessagingProviderField[]> = {
+  postmark: [
+    { key: "serverToken", label: "Server Token", secret: true, required: true },
+    { key: "fromEmail", label: "From Email", secret: false, required: true, placeholder: "noreply@example.com" },
+    { key: "broadcastStream", label: "Broadcast message stream", secret: false, required: false, placeholder: "broadcast" },
+  ],
+  twilio: [
+    { key: "accountSid", label: "Account SID", secret: false, required: true },
+    { key: "authToken", label: "Auth Token", secret: true, required: true },
+    { key: "fromNumber", label: "From Number", secret: false, required: true, placeholder: "+15551234567" },
+  ],
+};
+
+/** One row of the pane's Providers section: a provider, set or not, and what it can do. */
+export interface MessagingProviderRow {
+  providerId: MessagingProviderId;
+  label: string;
+  channel: "email" | "sms";
+  /** The active config, or null when the provider is not set. */
+  config: MessagingProviderWire | null;
+  fields: MessagingProviderField[];
+  /** Only Postmark owns an inbound webhook, so only Postmark offers a rotate. */
+  canRotateWebhookSecret: boolean;
+  /** A Twilio test has no default recipient; Postmark falls back to the caller's own email. */
+  testNeedsRecipient: boolean;
+}
+
+/**
+ * The pane's row model: one row per provider, set or not, built from the list. A provider may
+ * have more than one stored row; the write routes act on the active one, so that is the one shown.
+ */
+export function messagingProviderRows(configs: MessagingProviderWire[]): MessagingProviderRow[] {
+  return MESSAGING_PROVIDER_IDS.map((providerId) => {
+    const mine = configs.filter((c) => c.provider_id === providerId);
+    return {
+      providerId,
+      label: providerId === "postmark" ? "Postmark" : "Twilio",
+      channel: providerId === "postmark" ? "email" : "sms",
+      config: mine.find((c) => c.active) ?? null,
+      fields: MESSAGING_PROVIDER_FIELDS[providerId],
+      canRotateWebhookSecret: providerId === "postmark",
+      testNeedsRecipient: providerId === "twilio",
+    };
+  });
+}
+
+export const MESSAGING_PROVIDERS_KEY = ["admin", "messaging", "providers"];
+const MESSAGING_PROVIDERS_PATH = "/api/v1/messaging/providers";
+const providerPath = (providerId: string) =>
+  `${MESSAGING_PROVIDERS_PATH}/${encodeURIComponent(providerId)}`;
+
+function invalidateMessagingProviders(qc: ReturnType<typeof useQueryClient>): Promise<void> {
+  return Promise.all([
+    qc.invalidateQueries({ queryKey: MESSAGING_PROVIDERS_KEY }),
+    qc.invalidateQueries({ queryKey: ["admin", "messaging", "status"] }),
+  ]).then(() => undefined);
+}
+
+export function useMessagingProviders(): UseQueryResult<MessagingProviderWire[]> {
+  return useQuery({
+    queryKey: MESSAGING_PROVIDERS_KEY,
+    queryFn: () => listAllV1<MessagingProviderWire>(MESSAGING_PROVIDERS_PATH),
+  });
+}
+
+/** Set or replace a provider. A blank secret keeps the stored one. */
+export interface SetMessagingProviderVars {
+  providerId: MessagingProviderId;
+  fields: Record<string, string>;
+  enabled?: boolean;
+}
+
+export function useSetMessagingProvider() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ providerId, fields, enabled }: SetMessagingProviderVars) => {
+      const body: RequestBody<"/v1/messaging/providers/{id}", "post"> = {
+        fields,
+        ...(enabled !== undefined ? { enabled } : {}),
+      };
+      // The /v1 surface updates with a POST on the item path; the legacy route is a PUT.
+      return authedJson<SuccessBody<"/v1/messaging/providers/{id}", "post">>(providerPath(providerId), {
+        method: "POST",
+        body: JSON.stringify(body),
+      });
+    },
+    onSuccess: () => invalidateMessagingProviders(qc),
+  });
+}
+
+export function useRemoveMessagingProvider() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (providerId: MessagingProviderId) =>
+      authedRequest(providerPath(providerId), { method: "DELETE" }),
+    onSuccess: () => invalidateMessagingProviders(qc),
+  });
+}
+
+/** Send one fixed test message. `to` is optional for Postmark and required for Twilio. */
+export interface TestMessagingProviderVars {
+  providerId: MessagingProviderId;
+  to?: string;
+}
+
+export function useTestMessagingProvider() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ providerId, to }: TestMessagingProviderVars) => {
+      const body: RequestBody<"/v1/messaging/providers/{id}/test", "post"> = to ? { to } : {};
+      return authedJson<MessagingProviderTestResult>(`${providerPath(providerId)}/test`, {
+        method: "POST",
+        body: JSON.stringify(body),
+      });
+    },
+    // A test send is logged, so the message log refreshes along with the providers.
+    onSuccess: () =>
+      Promise.all([
+        invalidateMessagingProviders(qc),
+        qc.invalidateQueries({ queryKey: ["admin", "messaging", "log"] }),
+      ]).then(() => undefined),
+  });
+}
+
+export function useRotateMessagingWebhookSecret() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (providerId: MessagingProviderId) =>
+      authedJson<SuccessBody<"/v1/messaging/providers/{id}/rotate_webhook_secret", "post">>(
+        `${providerPath(providerId)}/rotate_webhook_secret`,
+        { method: "POST" },
+      ),
+    onSuccess: () => invalidateMessagingProviders(qc),
+  });
+}
