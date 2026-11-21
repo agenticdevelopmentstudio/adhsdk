@@ -237,7 +237,7 @@ Not applicable: The component does not emit logs or diagnostic output.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/controls/src/logging-panel/LogPanel.tsx` | confirmed (1.2.3) |
+| web | `packages/web/packages/controls/src/logging-panel/LogPanel.tsx` | confirmed (1.3.0) |
 
 ## Design Decisions
 
