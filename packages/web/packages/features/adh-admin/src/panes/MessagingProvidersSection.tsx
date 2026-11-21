@@ -158,7 +158,9 @@ function ProviderRowCard({ row }: { row: MessagingProviderRow }) {
           )}
         </div>
       )}
-      <ErrorText error={errorText(remove.error) ?? errorText(rotate.error)} />
+      {/* One line each: both can have failed, and neither error should hide the other. */}
+      <ErrorText error={errorText(remove.error)} />
+      <ErrorText error={errorText(rotate.error)} />
 
       {isSet && webhook && (
         <div className="space-y-1 text-sm">
