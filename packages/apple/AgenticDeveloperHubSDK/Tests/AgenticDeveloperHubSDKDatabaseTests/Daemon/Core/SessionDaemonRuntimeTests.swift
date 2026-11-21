@@ -184,7 +184,11 @@ final class SessionDaemonRuntimeTests: XCTestCase {
         try runtime.pipeline.capture(try hookEvent("SessionStart"))
         let ingested = try waitUntil { try eventLogCount(runtime.database) == 1 }
         XCTAssertTrue(ingested, "the legacy drainer did not ingest the capture")
-        XCTAssertEqual(runtime.spool.pendingCount(), 0)
+        // The drainer commits the event before it completes the spool row
+        // (at-least-once), so the row leaves the spool a moment after the event
+        // lands: wait for that too rather than reading the count in between.
+        let completed = waitUntil { runtime.spool.pendingCount() == 0 }
+        XCTAssertTrue(completed, "the ingested capture was left pending in the spool")
         await runtime.shutdown()
     }
 
