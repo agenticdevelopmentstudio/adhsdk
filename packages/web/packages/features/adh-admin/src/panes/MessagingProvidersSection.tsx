@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { Button } from "@adh-sdk/ui/components/button";
 import { Input } from "@adh-sdk/ui/components/input";
 import { Badge } from "@adh-sdk/ui/components/badge";
@@ -34,17 +34,28 @@ function ProviderForm({
   row,
   onDone,
   onSaved,
+  onDirtyChange,
 }: {
   row: MessagingProviderRow;
   onDone: () => void;
   /** After a successful save, before the form closes: the config just changed. */
   onSaved: () => void;
+  /** Whether the form holds typed values that differ from what it opened with. Stable callback. */
+  onDirtyChange: (dirty: boolean) => void;
 }) {
   const set = useSetMessagingProvider();
   const isSet = row.config !== null;
-  const [values, setValues] = useState<Record<string, string>>(() =>
+  const [initial] = useState<Record<string, string>>(() =>
     Object.fromEntries(row.fields.map((f) => [f.key, f.secret ? "" : storedValue(row, f.key)])),
   );
+  const [values, setValues] = useState<Record<string, string>>(initial);
+  // Typed credentials are what a stray nav click would throw away, so the pane's unsaved-changes
+  // guard has to hear about them. A closed form (saved, cancelled, unmounted) is clean again.
+  const dirty = row.fields.some((f) => (values[f.key] ?? "") !== (initial[f.key] ?? ""));
+  useEffect(() => {
+    onDirtyChange(dirty);
+    return () => onDirtyChange(false);
+  }, [dirty, onDirtyChange]);
 
   function submit(e: FormEvent) {
     e.preventDefault();
@@ -93,8 +104,18 @@ function ProviderForm({
   );
 }
 
-function ProviderRowCard({ row }: { row: MessagingProviderRow }) {
+function ProviderRowCard({
+  row,
+  onDirtyChange,
+}: {
+  row: MessagingProviderRow;
+  onDirtyChange: (providerId: string, dirty: boolean) => void;
+}) {
   const [editing, setEditing] = useState(false);
+  const reportDirty = useCallback(
+    (dirty: boolean) => onDirtyChange(row.providerId, dirty),
+    [onDirtyChange, row.providerId],
+  );
   const [confirmRemove, setConfirmRemove] = useState(false);
   const [to, setTo] = useState("");
   const remove = useRemoveMessagingProvider();
@@ -136,7 +157,12 @@ function ProviderRowCard({ row }: { row: MessagingProviderRow }) {
 
       {editing ? (
         // A test result describes the config it was sent with, so a new config clears it.
-        <ProviderForm row={row} onDone={() => setEditing(false)} onSaved={() => test.reset()} />
+        <ProviderForm
+          row={row}
+          onDone={() => setEditing(false)}
+          onSaved={() => test.reset()}
+          onDirtyChange={reportDirty}
+        />
       ) : (
         <div className="flex flex-wrap items-center gap-2">
           <Button type="button" variant="outline" onClick={() => setEditing(true)}>
@@ -235,10 +261,29 @@ function ProviderRowCard({ row }: { row: MessagingProviderRow }) {
  * The platform's own Postmark and Twilio: the providers it sends sign-in codes, MFA, invitations
  * and notifications with. They live here, not in the hub's Settings → Integrations, which refuses
  * them since phase 3.
+ *
+ * `onDirtyChange` reports whether any provider form holds unsaved typed values, for the page's
+ * unsaved-changes guard.
  */
-export function MessagingProvidersSection() {
+export function MessagingProvidersSection({
+  onDirtyChange,
+}: { onDirtyChange?: (dirty: boolean) => void } = {}) {
   const providers = useMessagingProviders();
   const rows = messagingProviderRows(providers.data ?? []);
+  const [dirtyIds, setDirtyIds] = useState<ReadonlySet<string>>(() => new Set());
+  const reportDirty = useCallback((providerId: string, dirty: boolean) => {
+    setDirtyIds((prev) => {
+      if (prev.has(providerId) === dirty) return prev;
+      const next = new Set(prev);
+      if (dirty) next.add(providerId);
+      else next.delete(providerId);
+      return next;
+    });
+  }, []);
+  const anyDirty = dirtyIds.size > 0;
+  useEffect(() => {
+    onDirtyChange?.(anyDirty);
+  }, [anyDirty, onDirtyChange]);
 
   return (
     <Card>
@@ -249,7 +294,9 @@ export function MessagingProvidersSection() {
         ) : providers.isError ? (
           <ErrorText error={`Could not load the providers: ${errorText(providers.error) ?? "unknown error"}`} />
         ) : (
-          rows.map((row) => <ProviderRowCard key={row.providerId} row={row} />)
+          rows.map((row) => (
+            <ProviderRowCard key={row.providerId} row={row} onDirtyChange={reportDirty} />
+          ))
         )}
       </CardContent>
     </Card>

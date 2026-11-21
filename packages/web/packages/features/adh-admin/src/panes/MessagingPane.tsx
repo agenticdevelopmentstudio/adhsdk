@@ -37,13 +37,18 @@ export function MessagingPane({ help }: { help?: ReactNode } = {}) {
   // mounted directly. Without it the shared prop is left dangling on this half of the split
   // and a click on the admin nav silently throws away a typed message.
   const [dirty, setDirty] = useState(false);
+  // The Providers forms hold typed credentials, which a nav click would lose just the same.
+  const [providersDirty, setProvidersDirty] = useState(false);
 
   return (
     <div className="flex min-h-0 min-w-0 flex-1 flex-col">
       <FeatureTitle title="Messaging" help={help} />
       <div className="flex min-h-0 min-w-0 flex-1 flex-col space-y-8 overflow-y-auto px-6 pb-8 pt-2">
-        <UnsavedChangesGuard when={dirty} onNavigate={(href) => router.push(href)} />
-        <MessagingProvidersSection />
+        <UnsavedChangesGuard
+          when={dirty || providersDirty}
+          onNavigate={(href) => router.push(href)}
+        />
+        <MessagingProvidersSection onDirtyChange={setProvidersDirty} />
         <MessagingSurface
           onDirtyChange={setDirty}
           status={{ data: status.data, isLoading: status.isLoading, isError: status.isError }}
