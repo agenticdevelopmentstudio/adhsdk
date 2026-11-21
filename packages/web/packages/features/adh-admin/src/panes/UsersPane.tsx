@@ -5,7 +5,6 @@ import { Trash2, UserPlus } from "lucide-react";
 import {
   useAdminUsers,
   useDeleteUser,
-  useHubEcosystemRdid,
   useRevokeRole,
   type AdminUserSummary,
   type RdidMapping,
@@ -32,16 +31,20 @@ import {
   useEditableList,
   type EditableListColumn,
 } from "../components/editable-list";
-import { ConfirmSourceDialog } from "../users/TransferDialog";
-import { transferUser, useTransferPreview } from "../users/transfer";
 import { NO_ROLE, roleLabel, roleMenuItems, roleValues } from "../users/roles";
 import { formatDate } from "../lib/timestamps";
 
 /**
- * Users — every customer of the hub ecosystem, and the four things an admin does to a set of them.
+ * Users — every hub account (`platform.accounts` on the hub key), and what an admin does to a set
+ * of them.
  *
- * Everything that acts lives in the BAR, not in the rows: Delete, Transfer and Add to ecosystem
- * all take a selection, and a per-row copy of each would be the same action offered twice with
+ * There is no Transfer. Since phase 3 a hub account has nowhere to move: the backend refuses a
+ * transfer between a platform account and a product user (400, `refuseCrossSideCustomerTransfer`)
+ * and one into or out of Operators (409, `refuseReservedCustomerTransfer`), which leaves no
+ * destination. Product users are not listed here.
+ *
+ * Everything that acts lives in the BAR, not in the rows: Delete and Add to ecosystem
+ * both take a selection, and a per-row copy of each would be the same action offered twice with
  * different reach. The two controls that stayed in a row are the two that mean nothing across a
  * selection — the role menu (one user is an admin or is not; "make these nine admins" is not a
  * thing an operator asks for by ticking boxes) and the ecosystem chips (each chip is one
@@ -55,8 +58,6 @@ const USERS_KEY = ["admin", "users"];
 const DELETE_WORD = "delete";
 
 export function UsersPane({ help }: { help?: ReactNode } = {}) {
-  const [pickerOpen, setPickerOpen] = useState(false);
-  const [target, setTarget] = useState<RdidOption | null>(null);
   const [addPickerOpen, setAddPickerOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -69,7 +70,6 @@ export function UsersPane({ help }: { help?: ReactNode } = {}) {
   const [roleError, setRoleError] = useState<string | null>(null);
 
   const { data: users, isLoading, error } = useAdminUsers();
-  const { data: hubRdid } = useHubEcosystemRdid();
   const deleteUser = useDeleteUser();
   const revokeRole = useRevokeRole();
   // The cells read only this flag; the mutation object itself is new on every render.
@@ -80,7 +80,6 @@ export function UsersPane({ help }: { help?: ReactNode } = {}) {
   // One runner per action rather than one shared between them: two runs can't be in flight at
   // once, but their progress modals say different things, and a single piece of state would have
   // to carry which run it belonged to anyway.
-  const transferRun = useBatchRun({ invalidateKey: USERS_KEY, successMessage: "moved" });
   const deleteRun = useBatchRun({ invalidateKey: USERS_KEY, successMessage: "deleted" });
   const addRun = useBatchRun({ invalidateKey: USERS_KEY, successMessage: "added" });
 
@@ -246,15 +245,6 @@ export function UsersPane({ help }: { help?: ReactNode } = {}) {
     () => selected.map((user) => ({ id: user.id, label: labelOf(user) })),
     [selected],
   );
-  // The preflight runs while the SECOND gate is open — after a destination is chosen, before the
-  // operator has typed the source address. That is the last moment the answer can still change
-  // what they do, and the only one where nothing has moved yet.
-  const preview = useTransferPreview(
-    useMemo(() => selected.map((u) => u.id), [selected]),
-    target?.entityId ?? null,
-    target !== null,
-  );
-
   const searchEcosystems = async (query: string, signal: AbortSignal): Promise<RdidOption[]> => {
     // One page is the whole picker: it shows the first 20 matches and the operator narrows with `q`.
     const url = withV1Query("/api/v1/identifiers", { q: query, entity_type: "ecosystem", limit: 20 });
@@ -297,17 +287,6 @@ export function UsersPane({ help }: { help?: ReactNode } = {}) {
             >
               <UserPlus data-icon="inline-start" />
               Add to ecosystem
-            </Button>
-            <Button
-              size="sm"
-              variant="ghost"
-              // The unresolved hub address disables Transfer for a concrete reason: the second
-              // gate asks the operator to type the address they are moving OUT of, and it has no
-              // string to check against until that lookup lands.
-              disabled={selected.length === 0 || !hubRdid}
-              onClick={() => setPickerOpen(true)}
-            >
-              Transfer
             </Button>
             <Button
               size="sm"
@@ -399,60 +378,6 @@ export function UsersPane({ help }: { help?: ReactNode } = {}) {
         onContinue={addRun.continueRun}
         onStop={addRun.stop}
         onClose={() => addRun.reset()}
-      />
-
-      {/* ── Transfer ───────────────────────────────────────────────────────
-          Two gates: pick the destination, then type the address being moved out of. */}
-      <RdidPicker
-        open={pickerOpen}
-        onOpenChange={setPickerOpen}
-        entityTypeLabel="ecosystem"
-        title="Choose the destination ecosystem"
-        search={searchEcosystems}
-        onPick={(option) => {
-          setPickerOpen(false);
-          setTarget(option);
-        }}
-      />
-
-      <ConfirmSourceDialog
-        open={target !== null}
-        sourceRdid={hubRdid ?? ""}
-        targetRdid={target?.rdid ?? ""}
-        count={selected.length}
-        conflicts={preview.data}
-        checking={preview.isFetching}
-        labelOf={(id) => {
-          const user = selected.find((u) => u.id === id);
-          return user ? labelOf(user) : id;
-        }}
-        onCancel={() => setTarget(null)}
-        onConfirm={() => {
-          const chosen = target;
-          setTarget(null);
-          if (!chosen) return;
-          void transferRun.run(items, (item) => transferUser(item.id, chosen.entityId));
-        }}
-      />
-
-      <ProgressModal
-        open={transferRun.state.running || transferRun.state.finished}
-        title="Moving users"
-        description="Each user moves in its own transaction; a failure leaves the earlier moves in place."
-        total={transferRun.state.total}
-        done={transferRun.state.done}
-        currentLabel={transferRun.state.currentLabel}
-        error={transferRun.state.error}
-        results={transferRun.state.results}
-        finished={transferRun.state.finished}
-        onContinue={transferRun.continueRun}
-        onStop={transferRun.stop}
-        onClose={() => {
-          transferRun.reset();
-          // The moved users are gone from this ecosystem's list, so the selection they were in no
-          // longer describes anything.
-          list.clearSelection();
-        }}
       />
 
       {/* ── Remove one membership ──────────────────────────────────────────
