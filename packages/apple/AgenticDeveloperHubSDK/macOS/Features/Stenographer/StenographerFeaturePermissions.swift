@@ -10,6 +10,11 @@ import AgenticDeveloperHubSDKPermissions
 /// first-launch walkthrough, so the user is asked once, in one place.
 public enum StenographerFeaturePermissions {
 
+    /// Module-qualified: `AgenticDeveloperHubSDKMacOS` re-exports Markdown,
+    /// which re-exports `AgenticDeveloperHubSDK`, whose own `Permission`
+    /// would otherwise make the bare name ambiguous here.
+    public typealias Permission = AgenticDeveloperHubSDKPermissions.Permission
+
     public static let all: [Permission] = [
         .automation(targetBundleID: "com.googlecode.iterm2"),
         .automation(targetBundleID: "com.apple.Terminal")

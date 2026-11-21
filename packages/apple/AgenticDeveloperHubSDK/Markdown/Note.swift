@@ -1,5 +1,4 @@
 import Foundation
-import AgenticDeveloperHubSDKMarkdown
 
 public struct Note: Identifiable, Equatable, Sendable {
     public let id: UUID
@@ -7,6 +6,14 @@ public struct Note: Identifiable, Equatable, Sendable {
     public let createdDate: Date
     public var modifiedDate: Date
     public var isPinned: Bool
+
+    /// The storage's version of this note: the value a write must quote to be
+    /// accepted (`NoteStorageError.stale` otherwise). A storage with no
+    /// concurrency token — `MarkdownNoteStorage` — leaves it at 0 and ignores
+    /// it; a daemon-backed one returns the row's `local_version`. Lives in the
+    /// Markdown tier with the rest of `Note` so a daemon or a CLI can build one
+    /// without linking AppKit.
+    public var version: Int64
 
     /// A note has no title field of its own — this is `MarkdownDocument.title`,
     /// the same derivation adh applies: frontmatter `title`/`name` first, then
@@ -27,13 +34,15 @@ public struct Note: Identifiable, Equatable, Sendable {
         content: String,
         createdDate: Date,
         modifiedDate: Date,
-        isPinned: Bool
+        isPinned: Bool,
+        version: Int64 = 0
     ) {
         self.id = id
         self.content = content
         self.createdDate = createdDate
         self.modifiedDate = modifiedDate
         self.isPinned = isPinned
+        self.version = version
     }
 
     /// Sort comparator: pinned notes first, then by modifiedDate descending.
