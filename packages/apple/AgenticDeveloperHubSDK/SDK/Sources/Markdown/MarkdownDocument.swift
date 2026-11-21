@@ -42,6 +42,12 @@ public struct MarkdownDocument: Identifiable, Equatable, Sendable {
     public let currentVersion: Int
     public let latestVersionID: String?
 
+    /// The local store's version of this row (`markdown.local_version`):
+    /// bumped by every local write and every applied pull, and the value an
+    /// `expectedVersion` write must quote. Local-only, unlike
+    /// `currentVersion`, which is the server's.
+    public var version: Int64
+
     public init(
         id: String,
         content: String,
@@ -55,7 +61,8 @@ public struct MarkdownDocument: Identifiable, Equatable, Sendable {
         deletedAt: Date? = nil,
         isDeleted: Bool = false,
         currentVersion: Int = 1,
-        latestVersionID: String? = nil
+        latestVersionID: String? = nil,
+        version: Int64 = 0
     ) {
         self.id = id
         self.content = content
@@ -70,6 +77,7 @@ public struct MarkdownDocument: Identifiable, Equatable, Sendable {
         self.isDeleted = isDeleted
         self.currentVersion = currentVersion
         self.latestVersionID = latestVersionID
+        self.version = version
     }
 
     public static func new(
