@@ -30,7 +30,16 @@ function storedValue(row: MessagingProviderRow, key: string): string {
  * The set-or-replace form. Every field starts from what is stored except the secret, which is
  * never sent back to the browser: left blank, the backend keeps the stored one.
  */
-function ProviderForm({ row, onDone }: { row: MessagingProviderRow; onDone: () => void }) {
+function ProviderForm({
+  row,
+  onDone,
+  onSaved,
+}: {
+  row: MessagingProviderRow;
+  onDone: () => void;
+  /** After a successful save, before the form closes: the config just changed. */
+  onSaved: () => void;
+}) {
   const set = useSetMessagingProvider();
   const isSet = row.config !== null;
   const [values, setValues] = useState<Record<string, string>>(() =>
@@ -41,7 +50,15 @@ function ProviderForm({ row, onDone }: { row: MessagingProviderRow; onDone: () =
     e.preventDefault();
     // A blank optional or kept-secret field is left out rather than sent empty.
     const fields = Object.fromEntries(Object.entries(values).filter(([, v]) => v.trim() !== ""));
-    set.mutate({ providerId: row.providerId, fields }, { onSuccess: onDone });
+    set.mutate(
+      { providerId: row.providerId, fields },
+      {
+        onSuccess: () => {
+          onSaved();
+          onDone();
+        },
+      },
+    );
   }
 
   return (
@@ -118,7 +135,8 @@ function ProviderRowCard({ row }: { row: MessagingProviderRow }) {
       )}
 
       {editing ? (
-        <ProviderForm row={row} onDone={() => setEditing(false)} />
+        // A test result describes the config it was sent with, so a new config clears it.
+        <ProviderForm row={row} onDone={() => setEditing(false)} onSaved={() => test.reset()} />
       ) : (
         <div className="flex flex-wrap items-center gap-2">
           <Button type="button" variant="outline" onClick={() => setEditing(true)}>
@@ -132,7 +150,10 @@ function ProviderRowCard({ row }: { row: MessagingProviderRow }) {
                   variant="destructive"
                   disabled={remove.isPending}
                   onClick={() =>
-                    remove.mutate(row.providerId, { onSettled: () => setConfirmRemove(false) })
+                    remove.mutate(row.providerId, {
+                      onSuccess: () => test.reset(),
+                      onSettled: () => setConfirmRemove(false),
+                    })
                   }
                 >
                   Confirm remove
