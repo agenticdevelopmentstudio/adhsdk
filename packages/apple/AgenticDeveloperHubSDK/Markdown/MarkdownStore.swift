@@ -339,6 +339,24 @@ public final class MarkdownStore: @unchecked Sendable {
         }
     }
 
+    /// The live document `id`, only if it carries `marker` — the one-row
+    /// form of `documents(marker:)`, so a caller asking for one note and a
+    /// caller listing notes agree on what counts as a note. A document that
+    /// is live but unmarked (a doc or paper sharing the id space) answers nil.
+    public func document(id: String, marker: MarkdownMarker) throws -> MarkdownDocument? {
+        try database.read { conn in
+            try Row.fetchOne(
+                conn,
+                sql: """
+                    SELECT m.* FROM markdown m
+                    JOIN \(marker.table) k ON k.markdown_id = m.id AND k.deleted_at IS NULL
+                    WHERE m.id = ? AND m.is_deleted = 0
+                    """,
+                arguments: [id]
+            ).map(Self.document(from:))
+        }
+    }
+
     /// Every readable document carrying `marker`, newest first.
     ///
     /// A row whose timestamps will not parse is **skipped and logged**, not
