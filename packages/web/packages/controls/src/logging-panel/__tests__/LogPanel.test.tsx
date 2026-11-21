@@ -108,6 +108,12 @@ describe('LogPanel followTail', () => {
   const numbered = (n: number): LogLine<Ctx>[] =>
     Array.from({ length: n }, (_, i) => ({ id: `${i}`, values: { message: `m${i}` } }))
 
+  /** At the end means the last row's bottom edge meets the viewport's bottom edge. */
+  function expectAtEnd(body: HTMLElement, rows: number) {
+    expect(body.scrollHeight).toBe(rows * ROW)
+    expect(body.scrollTop).toBe(body.scrollHeight - body.clientHeight)
+  }
+
   /** jsdom lays nothing out: give the scroller a height per row and a settable scrollTop. */
   function measure(body: HTMLElement) {
     let top = 0
@@ -119,7 +125,8 @@ describe('LogPanel followTail', () => {
     Object.defineProperty(body, 'scrollTop', {
       configurable: true,
       get: () => top,
-      set: (v: number) => { top = v },
+      // Clamp like a browser: the furthest a view can scroll is scrollHeight - clientHeight.
+      set: (v: number) => { top = Math.max(0, Math.min(v, body.scrollHeight - VIEW)) },
     })
     return {
       scrollTo(v: number) { body.scrollTop = v; fireEvent.scroll(body) },
@@ -136,9 +143,9 @@ describe('LogPanel followTail', () => {
   it('follows new lines while the view is at the end', () => {
     const { body, rerender } = setup()
     rerender(<LogPanel<Ctx> columns={baseColumns} lines={numbered(11)} />)
-    expect(body.scrollTop).toBe(11 * ROW)
+    expectAtEnd(body, 11)
     rerender(<LogPanel<Ctx> columns={baseColumns} lines={numbered(12)} />)
-    expect(body.scrollTop).toBe(12 * ROW)
+    expectAtEnd(body, 12)
   })
 
   it('stays put while scrolled up, and follows again once back at the end', () => {
@@ -149,7 +156,7 @@ describe('LogPanel followTail', () => {
 
     scroll.toEnd()
     rerender(<LogPanel<Ctx> columns={baseColumns} lines={numbered(12)} />)
-    expect(body.scrollTop).toBe(12 * ROW)
+    expectAtEnd(body, 12)
   })
 
   it('counts a view within a few pixels of the end as at the end', () => {
@@ -157,7 +164,7 @@ describe('LogPanel followTail', () => {
     scroll.scrollTo(40) // un-pin first, so only the 3px scroll can re-pin it
     scroll.scrollTo(10 * ROW - VIEW - 3)
     rerender(<LogPanel<Ctx> columns={baseColumns} lines={numbered(11)} />)
-    expect(body.scrollTop).toBe(11 * ROW)
+    expectAtEnd(body, 11)
   })
 
   it('treats a view just past the slack from the end as scrolled up', () => {
@@ -173,10 +180,10 @@ describe('LogPanel followTail', () => {
     const body = view.container.querySelector<HTMLElement>('.lp-body')!
     measure(body)
     view.rerender(<LogPanel<Ctx> columns={baseColumns} lines={numbered(11)} maxLines={10} />)
-    expect(body.scrollTop).toBe(10 * ROW)
+    expectAtEnd(body, 10)
     body.scrollTop = 0
     view.rerender(<LogPanel<Ctx> columns={baseColumns} lines={numbered(12)} maxLines={10} />)
-    expect(body.scrollTop).toBe(10 * ROW)
+    expectAtEnd(body, 10)
     expect(screen.getByText('m11')).toBeTruthy()
   })
 
@@ -194,6 +201,6 @@ describe('LogPanel followTail', () => {
     const scroll = measure(body)
     scroll.scrollTo(40)
     view.rerender(<LogPanel<Ctx> columns={baseColumns} lines={numbered(10)} followTail />)
-    expect(body.scrollTop).toBe(10 * ROW)
+    expectAtEnd(body, 10)
   })
 })
