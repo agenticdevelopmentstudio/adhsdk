@@ -163,9 +163,18 @@ public final class NotesManager {
             set { state.withLock { $0[id] = newValue } }
         }
 
-        func replaceAll(with notes: [Note]) {
-            let map = Dictionary(notes.map { ($0.id, $0.version) }, uniquingKeysWith: max)
-            state.withLock { $0 = map }
+        /// Replaces every version with `notes`' except those of `kept`, which
+        /// keep the version they had, and returns the map as it was before.
+        @discardableResult
+        func replaceAll(with notes: [Note], keeping kept: Set<UUID> = []) -> [UUID: Int64] {
+            let loaded = Dictionary(notes.map { ($0.id, $0.version) }, uniquingKeysWith: max)
+            return state.withLock { current in
+                let previous = current
+                var map = loaded
+                for id in kept { map[id] = previous[id] }
+                current = map
+                return previous
+            }
         }
     }
     /// Per-note debounced autosave.
@@ -549,20 +558,39 @@ public final class NotesManager {
 
     // MARK: - Load
 
+    /// Reads every note from storage — except a note with an unsaved edit,
+    /// which keeps its text, its base and its ledger version, so its pending
+    /// save is checked against storage (and goes stale, taking Decision 10's
+    /// path, if storage moved) instead of being reset to the stored text and
+    /// dropped. A `.resync` from the feed lands here while the user types.
     public func loadNotes() async {
         do {
             let ledger = versions
-            let loaded = try await performStorage { storage in
+            let unsavedAtStart = dirty
+            let (loaded, previous) = try await performStorage { storage in
                 let all = try await storage.fetchAllNotes()
-                ledger.replaceAll(with: all)
-                return all
+                let previous = ledger.replaceAll(with: all, keeping: unsavedAtStart)
+                return (all, previous)
             }
-            notes = loaded.sorted(by: Note.defaultSort)
-            baseContent = Dictionary(loaded.map { ($0.id, $0.content) }, uniquingKeysWith: { first, _ in first })
-            basePinned = Dictionary(loaded.map { ($0.id, $0.isPinned) }, uniquingKeysWith: { first, _ in first })
-            dirty = []
+            // Typed into while the read was out: kept the same way.
+            let unsaved = dirty
+            for id in unsaved.subtracting(unsavedAtStart) {
+                ledger[id] = previous[id]
+            }
+            let held = Dictionary(notes.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+            let fresh = loaded.filter { !unsaved.contains($0.id) }
+            notes = (fresh + notes.filter { unsaved.contains($0.id) }).sorted(by: Note.defaultSort)
+            baseContent = Dictionary(fresh.map { ($0.id, $0.content) }, uniquingKeysWith: { first, _ in first })
+                .merging(baseContent.filter { unsaved.contains($0.key) }) { _, kept in kept }
+            basePinned = Dictionary(fresh.map { ($0.id, $0.isPinned) }, uniquingKeysWith: { first, _ in first })
+                .merging(basePinned.filter { unsaved.contains($0.key) }) { _, kept in kept }
             isLoaded = true
             postNotesDidChange()
+            // A held note whose text moved while this manager was not
+            // following: the editor showing it must show the new text.
+            for note in fresh where held[note.id].map({ $0.content != note.content }) == true {
+                postNoteReplaced(note.id)
+            }
             logger.info("Loaded \(loaded.count) notes")
         } catch {
             isLoaded = true
