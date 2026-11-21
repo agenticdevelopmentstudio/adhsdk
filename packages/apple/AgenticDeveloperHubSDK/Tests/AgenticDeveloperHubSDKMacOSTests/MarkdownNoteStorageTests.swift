@@ -190,6 +190,26 @@ struct MarkdownNoteStorageTests {
         #expect(try storage.fetchAllNotes().isEmpty)
     }
 
+    @Test("fetchNote answers nil for a live document without the note marker")
+    func fetchNoteSkipsUnmarkedDocuments() throws {
+        let storage = try storage()
+        let id = UUID()
+        _ = try storage.store.createDocument(
+            content: "# A paper", markers: [.paper], id: id.uuidString.lowercased())
+        #expect(try storage.fetchNote(id: id) == nil)
+        #expect(try storage.fetchAllNotes().isEmpty)
+    }
+
+    @Test("fetchNote finds a marked note, agreeing with fetchAllNotes")
+    func fetchNoteFindsMarkedNotes() throws {
+        let storage = try storage()
+        let id = UUID()
+        _ = try storage.store.createDocument(
+            content: "# A note", markers: [.note], id: id.uuidString.lowercased())
+        #expect(try storage.fetchNote(id: id)?.id == id)
+        #expect(try storage.fetchAllNotes().map(\.id) == [id])
+    }
+
     @Test("a foreign frontmatter key survives a read, alongside our own")
     func foreignFrontmatterSurvivesRead() throws {
         let storage = try storage()

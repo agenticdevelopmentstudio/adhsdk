@@ -114,7 +114,7 @@ public final class MarkdownNoteStorage: NoteStorage, Sendable {
 
     public func fetchNote(id: UUID) throws -> Note? {
         let key = id.uuidString.lowercased()
-        guard let document = try store.document(id: key) else { return nil }
+        guard let document = try store.document(id: key, marker: .note) else { return nil }
         let owned = try store.ownedFrontmatterKeys(forDocument: key)
         return MarkdownNoteMapping.note(from: document, ownedKeys: owned)
     }
