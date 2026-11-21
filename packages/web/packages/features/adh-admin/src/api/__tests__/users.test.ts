@@ -5,9 +5,22 @@
 // code they covered: the page no longer paginates, and `useEditableList` now owns narrowing and
 // ordering (see src/components/editable-list/__tests__/use-editable-list.test.ts). What is left is
 // the part that is still this module's job — turning four fetch results into one row.
-import { describe, expect, it } from "vitest";
-import { rdidMapFrom, toUserRows } from "../admin";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { UserEcosystem } from "../memberships";
+
+const { authedRequest, listAllV1 } = vi.hoisted(() => ({
+  authedRequest: vi.fn(),
+  listAllV1: vi.fn(),
+}));
+vi.mock("../http", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("../http")>()),
+  authedRequest,
+  listAllV1,
+}));
+
+const { deleteHubAccount, fetchHubAccounts, rdidMapFrom, toUserRows } = await import("../admin");
+
+const HUB_ECOSYSTEM_ID = "00000000-0000-4000-8000-00000000a001";
 
 type Customer = Parameters<typeof toUserRows>[0][number];
 const user = (o: Partial<Customer> & { id: string }): Customer =>
@@ -18,6 +31,33 @@ const eco = (o: Partial<UserEcosystem> & { ecosystemId: string }): UserEcosystem
   rdid: null,
   isHub: false,
   ...o,
+});
+
+// Phase 3: hub accounts are platform accounts. The list and the delete go to /v1/accounts; the
+// product-user door, /v1/customers, is no longer this page's.
+describe("hub account calls", () => {
+  beforeEach(() => {
+    authedRequest.mockReset();
+    listAllV1.mockReset();
+  });
+
+  it("lists the hub's accounts from /api/v1/accounts", async () => {
+    listAllV1.mockResolvedValue([{ id: "a1", created: 0 }]);
+    const rows = await fetchHubAccounts();
+    expect(listAllV1).toHaveBeenCalledWith(`/api/v1/accounts?ecosystem_id=${HUB_ECOSYSTEM_ID}`);
+    expect(rows.map((r) => r.id)).toEqual(["a1"]);
+  });
+
+  it("deletes through DELETE /api/v1/accounts/{id}", async () => {
+    authedRequest.mockResolvedValue(undefined);
+    await deleteHubAccount("a/1");
+    expect(authedRequest).toHaveBeenCalledWith("/api/v1/accounts/a%2F1", { method: "DELETE" });
+  });
+
+  it("surfaces the last-operator refusal instead of swallowing it", async () => {
+    authedRequest.mockRejectedValue(new Error("last_operator"));
+    await expect(deleteHubAccount("a1")).rejects.toThrow(/last_operator/);
+  });
 });
 
 describe("toUserRows", () => {

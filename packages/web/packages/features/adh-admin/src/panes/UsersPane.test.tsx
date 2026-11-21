@@ -31,6 +31,16 @@ vi.mock("../api/http", async (importOriginal) => ({
   listV1Page: vi.fn().mockResolvedValue({ data: [], has_more: false }),
 }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn() }) }));
+// The header's API affordance is a portal into a host this test does not mount; the title is
+// stubbed to expose the endpoint it was handed, which is the part this file pins.
+vi.mock("@adh-sdk/resource", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@adh-sdk/resource")>()),
+  FeatureTitle: ({ title, api }: { title: string; api?: { method: string; path: string } | null }) => (
+    <h1 data-api-method={api?.method} data-api-path={api?.path}>
+      {title}
+    </h1>
+  ),
+}));
 
 import { UsersPane } from "./UsersPane";
 
@@ -84,5 +94,16 @@ describe("UsersPane role menu", () => {
     fireEvent.click(await screen.findByRole("option", { name: "User" }));
     expect(revokeMutateAsync).toHaveBeenCalledWith({ userId: "u-1", role: "admin" });
     expect(await screen.findByText(message)).toBeTruthy();
+  });
+});
+
+describe("UsersPane API link", () => {
+  // Phase 3: hub accounts are platform accounts, so the pane's endpoint is /v1/accounts. The
+  // product-user door, /v1/customers, belongs to the product panes.
+  it("names /v1/accounts", async () => {
+    mount();
+    const heading = await screen.findByRole("heading", { name: "Users" });
+    expect(heading.getAttribute("data-api-method")).toBe("GET");
+    expect(heading.getAttribute("data-api-path")).toBe("/v1/accounts");
   });
 });

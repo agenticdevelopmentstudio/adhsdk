@@ -622,6 +622,58 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/accounts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List accounts
+         * @description Replaces GET /platform/accounts.
+         */
+        get: operations["getV1Accounts"];
+        put?: never;
+        /**
+         * Create accounts
+         * @description Replaces POST /platform/accounts.
+         */
+        post: operations["postV1Accounts"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/accounts/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get accounts by id
+         * @description Replaces GET /platform/accounts/{id}.
+         */
+        get: operations["getV1AccountsById"];
+        put?: never;
+        /**
+         * Update accounts
+         * @description Replaces PUT /platform/accounts/{id}.
+         */
+        post: operations["postV1AccountsById"];
+        /**
+         * Delete accounts
+         * @description Replaces DELETE /platform/accounts/{id}.
+         */
+        delete: operations["deleteV1AccountsById"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/admin_notes": {
         parameters: {
             query?: never;
@@ -8004,6 +8056,98 @@ export interface paths {
         get: operations["getV1MessagingMessagesById"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/messaging/providers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List the platform's own messaging provider configs, Postmark and Twilio (admin)
+         * @description The providers the platform sends OTP, MFA, invitation and notification messages with, stored under the hub's key. Masked: secrets collapse to `hasSecret`, except the Postmark deliverability webhook secret the platform mints.
+         *
+         *     Replaces GET /messaging/providers.
+         */
+        get: operations["getV1MessagingProviders"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/messaging/providers/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Set or replace one of the platform's messaging providers (admin)
+         * @description Updates the active config, or creates it when there is none. The submitted fields are merged over the stored config; a blank or absent secret field keeps the stored secret. A new Postmark config is created with its own deliverability webhook secret. 404 for any provider other than postmark or twilio.
+         *
+         *     Replaces PUT /messaging/providers/{providerId}.
+         */
+        post: operations["postV1MessagingProvidersById"];
+        /**
+         * Remove one of the platform's messaging providers (admin)
+         * @description Replaces DELETE /messaging/providers/{providerId}.
+         */
+        delete: operations["deleteV1MessagingProvidersById"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/messaging/providers/{id}/rotate_webhook_secret": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Rotate the platform Postmark config's deliverability webhook secret (admin)
+         * @description Mints a new secret and returns it on `deliverabilityWebhook.secret`; the old one stops working at once. 404 for twilio, which has no webhook, and when Postmark is not configured.
+         *
+         *     Replaces POST /messaging/providers/{providerId}/rotate-webhook-secret.
+         */
+        post: operations["postV1MessagingProvidersByIdRotateWebhookSecret"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/messaging/providers/{id}/test": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Send a test message through a platform messaging provider (admin)
+         * @description Email goes to `to`, or to the calling admin's own address without it. SMS needs `to` (400 without it). The send is logged with origin platform.
+         *
+         *     Replaces POST /messaging/providers/{providerId}/test.
+         */
+        post: operations["postV1MessagingProvidersByIdTest"];
         delete?: never;
         options?: never;
         head?: never;
@@ -15844,6 +15988,10 @@ export interface components {
             /** @description Unix timestamp, in seconds. */
             created: number;
         };
+        PlatformMessagingProvider: components["schemas"]["IntegrationProviderConfig"] & {
+            /** @description Whether this is the row the platform sends with. The write routes act on this row only. */
+            active: boolean;
+        };
         MessagingLogEntry: {
             id: string;
             /** @description Kind of principal that owns the message (the recipient, for a message to a user): 'customer', 'organization', 'application', 'persona' or 'ecosystem'. */
@@ -21344,6 +21492,369 @@ export interface operations {
             };
         };
     };
+    getV1Accounts: {
+        parameters: {
+            query?: {
+                /** @description Page size, 1–100 (default 10). */
+                limit?: number;
+                /** @description Cursor: an object id; returns the page after it. */
+                starting_after?: string;
+                /** @description Cursor: an object id; returns the page before it. */
+                ending_before?: string;
+                /** @description Related objects to return in full instead of as an id. Up to four levels, e.g. `ecosystem_id`; on a list, `data.<field>`. */
+                "expand[]"?: string[];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description List */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        object: "list";
+                        data: {
+                            /** @constant */
+                            object?: "account";
+                            id: string;
+                            ecosystem_id: string;
+                            external_id: string | null;
+                            email: string | null;
+                            display_name: string | null;
+                            slug: string;
+                            avatar_url: string;
+                            public_profile_enabled: boolean;
+                            profile_visibility: string;
+                            token_version: number;
+                            preferred_mfa_method: string | null;
+                            mfa_failed_attempts: number;
+                            mfa_locked_until: string | null;
+                            deleted_at: string | null;
+                            /** @description Unix timestamp, in seconds. */
+                            created: number;
+                            /** @description Unix timestamp, in seconds. */
+                            updated: number;
+                            sync_version: number;
+                            sync_stamped_at: string | null;
+                            sync_txid: number;
+                        }[];
+                        has_more: boolean;
+                        url: string;
+                    };
+                };
+            };
+            /** @description Error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+        };
+    };
+    postV1Accounts: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    ecosystem_id?: string;
+                    external_id?: string | null;
+                    email?: string | null;
+                    display_name?: string | null;
+                    slug: string;
+                    avatar_url?: string;
+                    profile_visibility?: string;
+                    preferred_mfa_method?: string | null;
+                };
+            };
+        };
+        responses: {
+            /** @description accounts */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        object?: "account";
+                        id: string;
+                        ecosystem_id: string;
+                        external_id: string | null;
+                        email: string | null;
+                        display_name: string | null;
+                        slug: string;
+                        avatar_url: string;
+                        public_profile_enabled: boolean;
+                        profile_visibility: string;
+                        token_version: number;
+                        preferred_mfa_method: string | null;
+                        mfa_failed_attempts: number;
+                        mfa_locked_until: string | null;
+                        deleted_at: string | null;
+                        /** @description Unix timestamp, in seconds. */
+                        created: number;
+                        /** @description Unix timestamp, in seconds. */
+                        updated: number;
+                        sync_version: number;
+                        sync_stamped_at: string | null;
+                        sync_txid: number;
+                    };
+                };
+            };
+            /** @description Error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+        };
+    };
+    getV1AccountsById: {
+        parameters: {
+            query?: {
+                /** @description Related objects to return in full instead of as an id. Up to four levels, e.g. `ecosystem_id`; on a list, `data.<field>`. */
+                "expand[]"?: string[];
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description accounts */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        object?: "account";
+                        id: string;
+                        ecosystem_id: string;
+                        external_id: string | null;
+                        email: string | null;
+                        display_name: string | null;
+                        slug: string;
+                        avatar_url: string;
+                        public_profile_enabled: boolean;
+                        profile_visibility: string;
+                        token_version: number;
+                        preferred_mfa_method: string | null;
+                        mfa_failed_attempts: number;
+                        mfa_locked_until: string | null;
+                        deleted_at: string | null;
+                        /** @description Unix timestamp, in seconds. */
+                        created: number;
+                        /** @description Unix timestamp, in seconds. */
+                        updated: number;
+                        sync_version: number;
+                        sync_stamped_at: string | null;
+                        sync_txid: number;
+                    };
+                };
+            };
+            /** @description Error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+        };
+    };
+    postV1AccountsById: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    ecosystem_id?: string;
+                    external_id?: string | null;
+                    email?: string | null;
+                    display_name?: string | null;
+                    slug?: string;
+                    avatar_url?: string;
+                    profile_visibility?: string;
+                    preferred_mfa_method?: string | null;
+                };
+            };
+        };
+        responses: {
+            /** @description accounts */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        object?: "account";
+                        id: string;
+                        ecosystem_id: string;
+                        external_id: string | null;
+                        email: string | null;
+                        display_name: string | null;
+                        slug: string;
+                        avatar_url: string;
+                        public_profile_enabled: boolean;
+                        profile_visibility: string;
+                        token_version: number;
+                        preferred_mfa_method: string | null;
+                        mfa_failed_attempts: number;
+                        mfa_locked_until: string | null;
+                        deleted_at: string | null;
+                        /** @description Unix timestamp, in seconds. */
+                        created: number;
+                        /** @description Unix timestamp, in seconds. */
+                        updated: number;
+                        sync_version: number;
+                        sync_stamped_at: string | null;
+                        sync_txid: number;
+                    };
+                };
+            };
+            /** @description Error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+        };
+    };
+    deleteV1AccountsById: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deleted */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Deleted"];
+                };
+            };
+            /** @description Error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+        };
+    };
     getV1AdminNotes: {
         parameters: {
             query: {
@@ -24966,7 +25477,7 @@ export interface operations {
                 } | {
                     /** @description Email or login slug */
                     identifier: string;
-                    /** @description Sign-in client the passkey login is for; picks the login realm (the admin client signs in operators). Absent: the hub. */
+                    /** @description Sign-in client the passkey login is for; picks the login realm (the admin client signs in operators). Absent: the hub, then the operator realm. An unknown or customer-realm client is a 400. */
                     client_id?: string;
                 }) & {
                     /**
@@ -57774,6 +58285,314 @@ export interface operations {
             };
         };
     };
+    getV1MessagingProviders: {
+        parameters: {
+            query?: {
+                /** @description Page size, 1–100 (default 10). */
+                limit?: number;
+                /** @description Cursor: an object id; returns the page after it. */
+                starting_after?: string;
+                /** @description Cursor: an object id; returns the page before it. */
+                ending_before?: string;
+                /** @description Related objects to return in full instead of as an id. Up to four levels, e.g. `ecosystem_id`; on a list, `data.<field>`. */
+                "expand[]"?: string[];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Platform messaging providers */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        object: "list";
+                        data: ({
+                            /** @constant */
+                            object?: "messaging.provider";
+                        } & components["schemas"]["PlatformMessagingProvider"])[];
+                        has_more: boolean;
+                        url: string;
+                    };
+                };
+            };
+            /** @description Error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+        };
+    };
+    postV1MessagingProvidersById: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @description Instance name */
+                    name?: string;
+                    /** @description The provider's config fields by key: postmark serverToken, fromEmail, …; twilio accountSid, authToken, fromNumber. */
+                    fields?: {
+                        [key: string]: string;
+                    };
+                    /** @description false pauses the provider */
+                    enabled?: boolean;
+                };
+            };
+        };
+        responses: {
+            /** @description Masked provider config */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        object?: "messaging.provider";
+                    } & components["schemas"]["IntegrationProviderConfig"];
+                };
+            };
+            /** @description Error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+        };
+    };
+    deleteV1MessagingProvidersById: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deleted */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Deleted"];
+                };
+            };
+            /** @description Error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+        };
+    };
+    postV1MessagingProvidersByIdRotateWebhookSecret: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Masked provider config carrying the new webhook secret */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        object?: "messaging.provider";
+                    } & components["schemas"]["IntegrationProviderConfig"];
+                };
+            };
+            /** @description Error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+        };
+    };
+    postV1MessagingProvidersByIdTest: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @description Email address or phone number to send the test to */
+                    to?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Sent */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        object?: "messaging.provider";
+                    } & components["schemas"]["MessagingSendResult"];
+                };
+            };
+            /** @description Error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+        };
+    };
     getV1MessagingStatus: {
         parameters: {
             query?: {
@@ -81872,9 +82691,9 @@ export interface operations {
                 archived?: "true";
                 /** @description Page size, 1–100 (default 10). */
                 limit?: number;
-                /** @description Cursor: an object id; returns the page after it. */
+                /** @description Cursor: an object's `slug`; returns the page after it. */
                 starting_after?: string;
-                /** @description Cursor: an object id; returns the page before it. */
+                /** @description Cursor: an object's `slug`; returns the page before it. */
                 ending_before?: string;
                 /** @description Related objects to return in full instead of as an id. Up to four levels, e.g. `ecosystem_id`; on a list, `data.<field>`. */
                 "expand[]"?: string[];

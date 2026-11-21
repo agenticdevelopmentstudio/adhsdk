@@ -27,14 +27,13 @@ import { fetchV1WindowPage, useWindowedList } from "./windowed";
 
 // ── Users ────────────────────────────────────────────────────────────────
 //
-// Platform users (hub developers + staff) are customers of ecosystem zero
-// (`com.agenticdeveloperhub`) after the identity collapse — the retired
-// `auth.users` table is now `customer.customers`. `GET /api/v1/customers`
-// is filtered to the hub ecosystem so this page keeps its old
-// meaning: a developer's END-USERS are also customers (of their own ecosystem),
-// and an admin caller (who bypasses tenant scoping) would otherwise see every
-// ecosystem's customers mixed in. The whole list is fetched once and narrowed
-// in the browser — there is no server-side page.
+// Hub accounts (developers and staff) live on the PLATFORM side since phase 3: their rows are in
+// `platform.accounts`, served at `GET /api/v1/accounts`. A developer's END-USERS are product users
+// and stay on the CUSTOMER side, in `customer.customers` behind `/api/v1/customers` - the product
+// panes and the transfer flow (`users/transfer.ts`) keep reading that door. `platform.accounts`
+// also holds the Operators ecosystem's accounts, and an admin caller bypasses tenant scoping, so
+// the list is filtered to the hub ecosystem to keep this page's meaning: the hub's own accounts.
+// The whole list is fetched once and narrowed in the browser - there is no server-side page.
 //
 // Capabilities for the Roles column come from the admin-gated
 // `GET /api/v1/auth/capabilities` (returns every {user_id, capability}); the join
@@ -59,10 +58,20 @@ export interface AdminUserSummary {
   ecosystems: UserEcosystem[];
 }
 
-// The raw `customer.customers` row from `GET /api/v1/customers`, sourced
+// The raw `platform.accounts` row from `GET /api/v1/accounts`, sourced
 // from the OpenAPI spec (@adh-sdk/adh-api-types) rather than hand-written —
 // so a backend schema change surfaces here as a type error, not at runtime.
-type BackendUser = SuccessBody<"/v1/customers", "get">["data"][number];
+type BackendUser = SuccessBody<"/v1/accounts", "get">["data"][number];
+
+/** Every hub account, from the platform side, walking the /v1 list envelope. */
+export function fetchHubAccounts(): Promise<BackendUser[]> {
+  return listAllV1<BackendUser>(`/api/v1/accounts?ecosystem_id=${HUB_ECOSYSTEM_ID}`);
+}
+
+/** Delete one hub account. The backend answers 409 `last_operator` rather than remove the last one. */
+export function deleteHubAccount(id: string): Promise<void> {
+  return authedRequest(`/api/v1/accounts/${encodeURIComponent(id)}`, { method: "DELETE" });
+}
 
 /** One `{user_id, capability}` grant from `GET /api/v1/auth/capabilities`. */
 export interface CapabilityGrant {
@@ -201,7 +210,7 @@ export function useAdminUsersSource() {
     queryKey: ["admin", "users", "source"],
     queryFn: async (): Promise<AdminUserSource> => {
       const [rows, caps] = await Promise.all([
-        listAllV1<BackendUser>(`/api/v1/customers?ecosystem_id=${HUB_ECOSYSTEM_ID}`),
+        fetchHubAccounts(),
         fetchCapabilityGrants(),
       ]);
       const userIds = rows.map((u) => u.id);
@@ -375,8 +384,7 @@ export function useRevokeRole(): UseMutationResult<unknown, Error, RevokeRoleVar
 export function useDeleteUser() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) =>
-      authedRequest(`/api/v1/customers/${encodeURIComponent(id)}`, { method: "DELETE" }),
+    mutationFn: (id: string) => deleteHubAccount(id),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["admin", "users"] }),
   });
 }

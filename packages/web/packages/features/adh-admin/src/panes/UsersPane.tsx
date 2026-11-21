@@ -270,7 +270,7 @@ export function UsersPane({ help }: { help?: ReactNode } = {}) {
     <div className="flex min-h-0 min-w-0 flex-1 flex-col">
       <FeatureTitle
         title="Users"
-        api={{ method: "GET", path: "/v1/customers", pathValues: {}, title: "Customers API" }}
+        api={{ method: "GET", path: "/v1/accounts", pathValues: {}, title: "Accounts API" }}
         help={help}
       />
       <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto px-6 pb-8 pt-2">
