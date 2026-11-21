@@ -50,6 +50,7 @@ public final class FeedChatSession: ChatSession, @unchecked Sendable {
 
     private let lock = NSLock()
     private var sendable: Bool
+    private var paused: Bool
     private var continuation: AsyncStream<ChatEvent>.Continuation?
     private var pump: Task<Void, Never>?
     /// Which pump is allowed to write ``loaded``. Bumped by every `start()` and
@@ -85,20 +86,47 @@ public final class FeedChatSession: ChatSession, @unchecked Sendable {
     ///     first thing that publishes — a line typed before the first poll
     ///     landed — yields *only* that line, wiping whatever the host had
     ///     already put on screen.
+    ///   - paused: start without reading, for a feed built before anything
+    ///     shows it. See ``isPaused``.
     ///   - load: reads the transcript.
     public init(
         refreshInterval: Duration = .seconds(5),
         sendTimeout: Duration = .seconds(60),
         send: Sender? = nil,
         initial: [ChatMessage] = [],
+        paused: Bool = false,
         load: @escaping Loader
     ) {
+        self.paused = paused
         self.refreshInterval = refreshInterval
         self.sendTimeout = sendTimeout
         self.send = send
         self.sendable = send != nil
         self.loaded = initial
         self.load = load
+    }
+
+    /// Whether the feed is re-read. While paused nothing is read — not on the
+    /// interval, not on ``refresh()`` — and what was last read stays on screen.
+    /// Unpausing reads at once, then on the interval again.
+    ///
+    /// For a feed whose window is built at launch so it can be restored: a
+    /// window nobody has open has nobody to re-read for, and every read is a
+    /// request to the daemon.
+    public var isPaused: Bool {
+        get { withLock { paused } }
+        set {
+            let (running, subscribed) = withLock { () -> (Task<Void, Never>?, Bool) in
+                guard paused != newValue else { return (nil, false) }
+                paused = newValue
+                return (pump, continuation != nil)
+            }
+            if newValue {
+                running?.cancel()
+            } else if subscribed {
+                start()
+            }
+        }
     }
 
     /// Whether anything typed here has somewhere to go.
@@ -333,11 +361,13 @@ public final class FeedChatSession: ChatSession, @unchecked Sendable {
     /// Replaces the running poll rather than adding one, so a burst of
     /// `refresh()` calls (a filter toggled three times) leaves exactly one.
     private func start() {
-        let (existing, mine) = withLock { () -> (Task<Void, Never>?, UInt64) in
+        let (existing, mine, isPaused) = withLock { () -> (Task<Void, Never>?, UInt64, Bool) in
             generation &+= 1
-            return (pump, generation)
+            return (pump, generation, paused)
         }
         existing?.cancel()
+        // Paused, a refresh is held rather than dropped: unpausing reads.
+        guard !isPaused else { return }
         let task = Task { [weak self] in
             guard let self else { return }
             while !Task.isCancelled {

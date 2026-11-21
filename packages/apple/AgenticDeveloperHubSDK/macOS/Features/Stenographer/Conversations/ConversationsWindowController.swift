@@ -83,8 +83,11 @@ public final class ConversationsWindowController: SingleWindowController {
     private init(service: any StenographerDaemonService) {
         let feed = ConversationsFeed(service: service)
         self.feed = feed
+        // Built at launch so the window can be restored, and read only while
+        // it is on screen: the split controller turns the feed on when the
+        // window appears and off when it goes.
         let conversations = ConversationsViewController(
-            pageLimit: ConversationsFeed.limit
+            pageLimit: ConversationsFeed.limit, watchesFeed: false
         ) { includeWorkOutput, sourceID, limit in
             await feed.load(
                 includeWorkOutput: includeWorkOutput, sessionID: sourceID, limit: limit)

@@ -30,9 +30,19 @@ public final class StenographerHTTPClient: StenographerDaemonService, @unchecked
     private var lastUptime: TimeInterval?
     private var healthTask: Task<Void, Never>?
 
+    /// The default session: no URL cache and no cookie store. The app polls
+    /// the daemon every few seconds, and `URLSession.shared` wrote each reply
+    /// to its on-disk cache — gigabytes a day for answers nobody reads twice.
+    public static let uncachedSession: URLSession = {
+        let configuration = URLSessionConfiguration.ephemeral
+        configuration.urlCache = nil
+        configuration.requestCachePolicy = .reloadIgnoringLocalCacheData
+        return URLSession(configuration: configuration)
+    }()
+
     public init(
         baseURL: URL = StenographerHTTPClient.defaultBaseURL,
-        session: URLSession = .shared,
+        session: URLSession = StenographerHTTPClient.uncachedSession,
         healthPollInterval: TimeInterval = 30
     ) {
         self.baseURL = baseURL

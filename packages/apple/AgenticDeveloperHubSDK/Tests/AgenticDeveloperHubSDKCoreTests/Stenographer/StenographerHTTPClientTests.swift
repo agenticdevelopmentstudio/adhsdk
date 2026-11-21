@@ -34,6 +34,14 @@ final class StenographerHTTPClientTests: XCTestCase {
 
     override func tearDown() { StubDaemonProtocol.handler = nil }
 
+    /// The app polls the daemon every few seconds; through `URLSession.shared`
+    /// every reply was written to the on-disk URL cache, gigabytes a day.
+    func testTheDefaultSessionKeepsNoURLCache() {
+        let configuration = StenographerHTTPClient.uncachedSession.configuration
+        XCTAssertNil(configuration.urlCache, "daemon replies are written to a URL cache")
+        XCTAssertEqual(configuration.requestCachePolicy, .reloadIgnoringLocalCacheData)
+    }
+
     func testUnreachableDaemonReturnsNil() async {
         StubDaemonProtocol.handler = nil
         let client = makeClient()
