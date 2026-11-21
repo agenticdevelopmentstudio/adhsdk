@@ -4,7 +4,7 @@
     "id": "d46b3e1c-9cd9-41b6-bdd2-524ece5e294b",
     "title": "Notes Model",
     "type": "ingredient",
-    "version": "1.2.0",
+    "version": "2.0.0",
     "status": "review",
     "language": "en",
     "created": "2026-09-24",
@@ -43,7 +43,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "c39ad1161da3835a",
+  "synced": "19392c2bfdb58c2d",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

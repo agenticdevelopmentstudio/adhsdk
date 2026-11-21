@@ -7,13 +7,25 @@
   way an AppKit host does.
 - **Compose**: Port `Note` as a `data class`, `NoteFolder` as a recursive
   `data class`, and `NoteStorage` as a Kotlin `interface` of five
-  `suspend` functions, with the change stream as a `Flow<NoteChange>`. `NotesManager` becomes a `ViewModel` holding a
-  `StateFlow<List<Note>>` in place of the notification pair, with the
+  `suspend` functions, with the change stream as a `Flow<NoteChange>`
+  (a sealed class whose cases include `TaxonomyChanged`). The note
+  taxonomy stays a plain, non-`suspend` Kotlin `interface`, because the
+  folders pane and the Move-to menu call it on the main thread while they
+  build rows and menus; a remote storage implements it over a local copy
+  it keeps current. The taxonomy-provider extension is a second interface
+  exposing `val taxonomy: NoteTaxonomy`, checked with `as?`.
+  `NotesManager` becomes a `ViewModel` holding a
+  `StateFlow<List<Note>>` in place of the notification pair (and a
+  `SharedFlow<Unit>` in place of the taxonomy-change notification), with the
   debounced save mapped onto a coroutine job keyed by note id (the role
   `KeyedDebouncer` plays here) and the storage-issue-ordering guarantee
   reproduced with a single-threaded dispatcher or a `Mutex`.
 - **React/Web**: `Note`/`NoteFolder` become plain TypeScript interfaces;
-  `NoteStorage` an interface of five `Promise`-returning methods, with the change stream as an async iterable.
+  `NoteStorage` an interface of five `Promise`-returning methods, with the change stream as an async iterable
+  (a discriminated union with a `taxonomyChanged` member). The note
+  taxonomy stays synchronous (plain methods, no `Promise`), answered from
+  a local copy by a remote storage, and the taxonomy-provider extension
+  is an optional `taxonomy` property checked before use.
   `NotesManager` becomes a store (a hook backed by
   `useSyncExternalStore`, or a small class with subscribers in place of
   `NotificationCenter`), with the per-note debounce implemented via
@@ -27,14 +39,22 @@
   `MarkdownNoteStorage.swift`, `NotesManager.swift` and
   `NotesMarkdownReExports.swift` under
   `packages/apple/AgenticDeveloperHubSDK/macOS/Features/NotesWindow/` — are the
-  source platform: a macOS-only target consumed by
+  source platform, with the `NoteTaxonomy` protocol they consume in
+  `Markdown/NoteTaxonomy.swift`: a macOS-only target consumed by
   `NotesCoordinator`/`NotesSplitViewController` (out of scope for this
-  recipe) via `NotificationCenter` observation and `@MainActor` calls.
+  ingredient) via `NotificationCenter` observation and `@MainActor` calls.
   `Note`, `NoteFolder`, and `MarkdownNoteStorage` are `Sendable`;
   `NotesManager` is itself `@MainActor`, and every storage call it issues
   runs off the main actor through `Task.detached`, serialized into its
   own `storageChain`; the change stream is an `AsyncStream<NoteChange>` consumed by a `Task` the manager cancels in `deinit` (see `notesmanager-confined-to-primary-thread` and
-  `notesmanager-storage-off-primary-thread`). The version ledger is a
+  `notesmanager-storage-off-primary-thread`). `NoteTaxonomyProviding`
+  declares `var taxonomy: any NoteTaxonomy`, which `MarkdownNoteStorage`
+  answers with its `store`; `NotesManager.taxonomy` is
+  `(any NoteTaxonomy)?`, and `NotesSplitViewController(taxonomy:)` and
+  `NotesFolderListViewController(taxonomy:)` take the same optional
+  existential. `NoteChange.taxonomyChanged` and a `.resync` each make
+  `apply(_:)` post `NotesManager.taxonomyDidChangeNotification`, which
+  `NotesSplitViewController` observes to call `folderVC.reload()`. The version ledger is a
   `nonisolated let versions = VersionLedger()`, a `[UUID: Int64]` behind an
   `OSAllocatedUnfairLock`, read and advanced by the `write(_:version:)` and
   `insert(_:)` helpers from inside the `storageChain`, so a queued save
@@ -66,5 +86,10 @@
   `SemaphoreSlim(1, 1)` awaited before each storage call reproduces the
   one-at-a-time, issue-ordered `storageChain`, and a
   `System.Threading.Timer` per note id, restarted on each edit,
-  reproduces `KeyedDebouncer`'s per-key debounce-with-retry.
+  reproduces `KeyedDebouncer`'s per-key debounce-with-retry. The change
+  stream becomes an `IAsyncEnumerable<NoteChange>` over a record hierarchy
+  that includes a taxonomy-changed case, the note taxonomy a synchronous
+  C# interface answered from a local copy, the taxonomy-provider extension
+  a second interface checked with `is`, and the taxonomy-change
+  notification a plain C# event.
 

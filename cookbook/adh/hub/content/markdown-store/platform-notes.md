@@ -9,9 +9,9 @@
   an IndexedDB-backed store with the same pull-only/outbox split, exposed to React
   through a hook, not a component prop.
 - **AppKit / UIKit**: this is the source, though neither framework is actually
-  linked — the implementation is six plain Foundation files (`MarkdownSchema.swift`,
+  linked — the implementation is seven plain Foundation files (`MarkdownSchema.swift`,
   `MarkdownProjection.swift`, `MarkdownStore.swift`, `MarkdownTaxonomy.swift`,
-  `MarkdownTimestamp.swift`, `MarkdownRemoteWriter.swift`) backed by a local SQLite
+  `NoteTaxonomy.swift`, `MarkdownTimestamp.swift`, `MarkdownRemoteWriter.swift`) backed by a local SQLite
   database accessed through GRDB (`BoundedDatabase`), so an AppKit or UIKit
   controller holds a reference and observes it through the same wrapper any other
   consumer uses, never a delegate protocol specific to this component.
@@ -64,6 +64,20 @@
   `deleteCategory`; `categoryNoteCounts`' direct-not-transitive counting rule is
   explicitly modeled on Apple Notes' own folder-badge semantics — a precedent from a
   first-party Apple app, not a general database convention.
+  `createCategory(id:name:description:color:icon:sortOrder:now:)` is the one body
+  that inserts the row and stages its upsert, lowercasing the id; the id-minting
+  `createCategory(name:…)` calls it with `UUID().uuidString.lowercased()`
+  (**create-category-with-chosen-id**).
+
+  `NoteTaxonomy.swift` declares `public protocol NoteTaxonomy: AnyObject, Sendable`,
+  whose requirements spell out every parameter of `MarkdownStore`'s own methods, so
+  `extension MarkdownStore: NoteTaxonomy {}` is the whole conformance; a protocol
+  extension supplies `createCategory(name:)`, `renameCategory(_:to:)`,
+  `deleteCategory(_:)`, `addCategoryEdge(parent:child:)`,
+  `assignCategory(_:toDocument:)` and `unassignCategory(_:fromDocument:)`, each
+  passing `0` and `Date()` for the rest. The notes feature reaches it as
+  `any NoteTaxonomy` through `NoteTaxonomyProviding.taxonomy`
+  (**note-taxonomy-conformance**).
 
   `defaultPath(inHome:token:)` resolves the default database path. Logging goes
   through `MarkdownStore.logger`, a plain `os.Logger` (Apple's unified-logging type)
