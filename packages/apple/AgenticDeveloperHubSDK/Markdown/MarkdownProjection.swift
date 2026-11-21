@@ -204,7 +204,32 @@ public struct MarkdownProjection: SyncMirrorProjection {
     /// have, `id` and `sync_version` included — the two `columns(for:)`
     /// leaves out because the store passes them separately.
     static func knownColumns(for resource: String) -> Set<String> {
-        Set(["id", "sync_version"] + commonColumns + (specificColumns[resource] ?? []))
+        Set(["id", "sync_version"] + commonColumns + (specificColumns[resource] ?? [])
+            + (localOnlyColumns[resource] ?? []))
+    }
+
+    /// Columns a table has that never travel on the wire, so `columns(for:)`
+    /// leaves them out of every pull. `local_version` is bumped below instead.
+    private static let localOnlyColumns: [String: [String]] = [
+        "content.markdown": ["local_version"]
+    ]
+
+    /// Bumps a pulled document's `local_version` and appends it to the change
+    /// feed, so a pull from the hub reaches every app watching the feed.
+    /// `GRDBSyncStore.apply` prunes the log and fires the observers after the
+    /// batch, so this only appends.
+    private static func recordLocalChange(
+        resource: String, id: String, kind: RecordChange.Kind, in conn: Database
+    ) throws {
+        guard resource == "content.markdown" else { return }
+        try conn.execute(
+            sql: "UPDATE markdown SET local_version = local_version + 1 WHERE id = ?",
+            arguments: [id])
+        guard conn.changesCount > 0,
+              let version = try Int64.fetchOne(
+                conn, sql: "SELECT local_version FROM markdown WHERE id = ?", arguments: [id])
+        else { return }
+        try GRDBSyncStore.appendChange(resource: resource, id: id, kind: kind, version: version, in: conn)
     }
 
     /// Called from `GRDBSyncStore.prepare(resources:in:)`. On the
@@ -477,6 +502,8 @@ public struct MarkdownProjection: SyncMirrorProjection {
                 ON CONFLICT(id) DO UPDATE SET \(assignments)
                 """,
             arguments: StatementArguments(arguments))
+        try Self.recordLocalChange(
+            resource: resource, id: id, kind: isDeleted ? .delete : .upsert, in: conn)
     }
 
     private func rowExists(resource: String, id: String, in conn: Database) throws -> Bool {
@@ -631,6 +658,8 @@ public struct MarkdownProjection: SyncMirrorProjection {
                 WHERE id = ?
                 """,
             arguments: [stamp, stamp, syncVersion, id])
+        guard conn.changesCount > 0 else { return }
+        try Self.recordLocalChange(resource: resource, id: id, kind: .delete, in: conn)
     }
 
     public func setSyncVersion(

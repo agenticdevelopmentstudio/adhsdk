@@ -77,6 +77,9 @@ public enum MarkdownStoreError: Error, Equatable {
     /// adh's `UNIQUE (owner_kind, owner_id, ecosystem_id, label)` is unconditional, so
     /// this is what the server would answer too.
     case duplicateKeyword(label: String)
+    /// A write quoted an `expectedVersion` the row no longer has. `current` is
+    /// the row's `local_version`; nothing was written.
+    case staleVersion(current: Int64)
 }
 
 /// The nine mirrored tables, plus the local REST queue, over one GRDB database.
@@ -175,6 +178,49 @@ public final class MarkdownStore: @unchecked Sendable {
         }
     }
 
+    /// A store over a database the host already owns and shares with other
+    /// stores (adhd keeps one database for every family it serves). Runs the
+    /// markdown migrations on it; does **not** prepare `syncStore`, which the
+    /// host prepared for every family at once.
+    public init(
+        database: BoundedDatabase, syncStore: GRDBSyncStore, customerID: String, ecosystemID: String
+    ) throws {
+        self.database = database
+        self.syncStore = syncStore
+        self.customerID = customerID
+        self.ecosystemID = ecosystemID
+        try MarkdownSchema.migrate(database)
+    }
+
+    /// The resource every document change is logged under.
+    static let documentResource = "content.markdown"
+
+    /// Bumps a document's `local_version` (or reads it, after an insert that
+    /// set it) and logs the change, inside the caller's transaction.
+    @discardableResult
+    private func logDocumentChange(
+        id: String, kind: RecordChange.Kind, bump: Bool = true, in conn: Database
+    ) throws -> Int64 {
+        if bump {
+            try conn.execute(
+                sql: "UPDATE markdown SET local_version = local_version + 1 WHERE id = ?",
+                arguments: [id])
+        }
+        let version = try Int64.fetchOne(
+            conn, sql: "SELECT local_version FROM markdown WHERE id = ?", arguments: [id]) ?? 0
+        try syncStore.logChange(
+            resource: Self.documentResource, id: id, kind: kind, version: version, in: conn)
+        return version
+    }
+
+    /// Throws `staleVersion` when `expected` is given and the stored row's
+    /// `local_version` differs.
+    private static func refuseStale(_ expected: Int64?, stored: Row) throws {
+        guard let expected else { return }
+        let current: Int64 = stored["local_version"] ?? 0
+        guard current == expected else { throw MarkdownStoreError.staleVersion(current: current) }
+    }
+
     // MARK: - Documents
 
     /// `ownedFrontmatterKeys` records, in the same transaction as the insert,
@@ -216,7 +262,8 @@ public final class MarkdownStore: @unchecked Sendable {
             ownerKind: .customer,
             ownerID: customerID,
             createdAt: createdAt,
-            updatedAt: now)
+            updatedAt: now,
+            version: 1)
         try database.write { conn in
             try insert(document, in: conn)
             for marker in markers {
@@ -228,6 +275,7 @@ public final class MarkdownStore: @unchecked Sendable {
             }
             try enqueue(.create, for: document.id, payload: payload, at: now, in: conn)
             try Self.writeOwnedFrontmatterKeys(ownedFrontmatterKeys, for: document.id, in: conn)
+            try logDocumentChange(id: document.id, kind: .upsert, bump: false, in: conn)
         }
         return document
     }
@@ -405,10 +453,15 @@ public final class MarkdownStore: @unchecked Sendable {
     /// about provenance, which leaves the record as it is; a non-nil set
     /// replaces it, in this same transaction, so the document and the record of
     /// who wrote its frontmatter can never be written apart.
+    ///
+    /// `expectedVersion`, when given, must equal the row's `local_version` or
+    /// the write is refused with `staleVersion` and nothing changes; `nil`
+    /// writes unconditionally, as before.
     public func updateDocument(
         _ document: MarkdownDocument,
         ownedFrontmatterKeys: Set<String>? = nil,
-        now: Date = Date()
+        now: Date = Date(),
+        expectedVersion: Int64? = nil
     ) throws {
         let now = Self.normalizedTimestamp(now)
         try database.write { conn in
@@ -417,6 +470,7 @@ public final class MarkdownStore: @unchecked Sendable {
                 arguments: [document.id]) else {
                 throw MarkdownStoreError.notFound(document.id)
             }
+            try Self.refuseStale(expectedVersion, stored: stored)
             try store(document, over: stored, ownedFrontmatterKeys: ownedFrontmatterKeys,
                       at: now, in: conn)
         }
@@ -450,6 +504,7 @@ public final class MarkdownStore: @unchecked Sendable {
     public func mutateDocument(
         id: String,
         now: Date = Date(),
+        expectedVersion: Int64? = nil,
         _ merge: (inout MarkdownDocument, inout Set<String>) throws -> Void
     ) throws {
         let now = Self.normalizedTimestamp(now)
@@ -459,6 +514,7 @@ public final class MarkdownStore: @unchecked Sendable {
                 arguments: [id]) else {
                 throw MarkdownStoreError.notFound(id)
             }
+            try Self.refuseStale(expectedVersion, stored: stored)
             var document = try Self.document(from: stored)
             var owned = try Self.ownedFrontmatterKeys(for: id, in: conn)
 
@@ -488,6 +544,7 @@ public final class MarkdownStore: @unchecked Sendable {
         if let ownedFrontmatterKeys {
             try Self.writeOwnedFrontmatterKeys(ownedFrontmatterKeys, for: document.id, in: conn)
         }
+        try logDocumentChange(id: document.id, kind: .upsert, in: conn)
     }
 
     /// Throws when `document` carries a different `visibility`, `stage` or
@@ -579,6 +636,7 @@ public final class MarkdownStore: @unchecked Sendable {
                 sql: "UPDATE markdown SET \(assignments), updated_at = ? WHERE id = ?",
                 arguments: arguments)
             try enqueue(intent, for: id, payload: payload, at: now, in: conn)
+            try logDocumentChange(id: id, kind: .upsert, in: conn)
         }
     }
 
@@ -601,9 +659,17 @@ public final class MarkdownStore: @unchecked Sendable {
     ///
     /// (Raised as L1 in the final review and refused for the above; recorded
     /// here so the next reader does not re-raise it.)
-    public func deleteDocument(id: String, now: Date = Date()) throws {
+    ///
+    /// `expectedVersion`, when given and the document is live, must equal its
+    /// `local_version` or the delete is refused with `staleVersion`. A document
+    /// already gone is still a success.
+    public func deleteDocument(id: String, now: Date = Date(), expectedVersion: Int64? = nil) throws {
         let now = Self.normalizedTimestamp(now)
         try database.write { conn in
+            let live = try Row.fetchOne(
+                conn, sql: "SELECT local_version FROM markdown WHERE id = ? AND is_deleted = 0",
+                arguments: [id])
+            if let live { try Self.refuseStale(expectedVersion, stored: live) }
             let stamp = MarkdownTimestamp.string(now)
             // Both flags, because adh carries both: its indexes filter on
             // `is_deleted` and the markers filter on `deleted_at`. Inventing one
@@ -654,6 +720,9 @@ public final class MarkdownStore: @unchecked Sendable {
                 try enqueue(.delete, for: id, payload: [:], at: now, in: conn)
             }
             try Self.writeOwnedFrontmatterKeys([], for: id, in: conn)
+            if live != nil {
+                try logDocumentChange(id: id, kind: .delete, in: conn)
+            }
         }
     }
 
@@ -869,7 +938,8 @@ public final class MarkdownStore: @unchecked Sendable {
             deletedAt: (row["deleted_at"] as String?).flatMap(MarkdownTimestamp.date),
             isDeleted: (row["is_deleted"] as Int) != 0,
             currentVersion: row["current_version"],
-            latestVersionID: row["latest_version_id"])
+            latestVersionID: row["latest_version_id"],
+            version: (row["local_version"] as Int64?) ?? 0)
     }
 
     private func insert(_ document: MarkdownDocument, in conn: Database) throws {
@@ -879,8 +949,8 @@ public final class MarkdownStore: @unchecked Sendable {
                     (id, author_kind, author_id, ecosystem_id, title, content, frontmatter,
                      content_hash, size_bytes, current_version, latest_version_id,
                      is_deleted, public_route, visibility, stage, owner_kind, owner_id,
-                     created_at, updated_at, deleted_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                     created_at, updated_at, deleted_at, local_version)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
             arguments: arguments(for: document))
     }
@@ -919,7 +989,8 @@ public final class MarkdownStore: @unchecked Sendable {
             document.ownerKind.rawValue, document.ownerID,
             MarkdownTimestamp.string(document.createdAt),
             MarkdownTimestamp.string(document.updatedAt),
-            document.deletedAt.map(MarkdownTimestamp.string)
+            document.deletedAt.map(MarkdownTimestamp.string),
+            document.version
         ]
     }
 
