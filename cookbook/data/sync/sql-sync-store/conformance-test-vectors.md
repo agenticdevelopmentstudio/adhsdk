@@ -45,4 +45,4 @@ All vectors use a fresh file-backed database and a `personal.notes` resource at 
 | sync-grdb-040 | change-log-cap, changes-read, change-head | Store with `changeLogCapacity` 3; apply n1–n5 | `changeHead` = 5; `changeLogFloor` = 2; `changes(since: 2)` = n3, n4, n5; `changes(since: 1)` raises `changeHistoryPruned(1, 2)` |
 | sync-grdb-041 | write-local, serialized-operations | `writeLocal` staging w1 | Body runs on the store's serialization point; w1 `local_version` = 1 |
 | sync-grdb-042 | local-queries, write-acceptance | Never-prepared store; `acceptsLocalWrites("personal.notes")`; `localRecord("personal.notes", "x")` | false; raises `unknownResource` |
-
+| sync-grdb-043 | changes-resource-filter | Log entries notes n1, markdown m1, notes n2, markdown m2; `changes(since: 0, limit: 2, resources: [markdown])`; then with `resources: []` | m1, m2; then empty |

@@ -1,6 +1,7 @@
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.4.0 | 2026-11-21 | Mike Fullerton | changes(since:limit:resources:) filters the feed by resource in SQL (changes-resource-filter, sync-grdb-043) |
 | 1.3.0 | 2026-11-18 | Mike Fullerton | Identity change keeps data; account binding and provenance columns replace purgeForIdentityChange |
 | 1.2.0 | 2026-10-04 | Mike Fullerton | Restate stage-mirror-patch as current behavior with a test vector and pending decision. |
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to data/sync/. |
