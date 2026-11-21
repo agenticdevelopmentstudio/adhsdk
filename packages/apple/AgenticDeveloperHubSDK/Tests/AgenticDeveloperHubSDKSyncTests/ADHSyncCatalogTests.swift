@@ -9,12 +9,14 @@ final class ADHSyncCatalogTests: XCTestCase {
     /// update these by hand. They already drifted once (79/27 -> 97/44) across three
     /// regenerations before anyone noticed.
     func testCatalogShape() {
-        XCTAssertEqual(ADHSyncCatalog.all.count, 101)
+        XCTAssertEqual(ADHSyncCatalog.all.count, 102)
         XCTAssertEqual(ADHSyncCatalog.pullOnly.count, 50)
         // content.markdown_chunks (pull-only) took them from 100/49.
         XCTAssertTrue(ADHSyncCatalog.pullOnly.contains("content.markdown_chunks"))
         // pullOnly ⊆ all
         let names = Set(ADHSyncCatalog.all.map(\.resource))
+        // platform.accounts (phase 3, pushable) took them from 101/50.
+        XCTAssertTrue(names.contains("platform.accounts"))
         XCTAssertTrue(ADHSyncCatalog.pullOnly.isSubset(of: names))
         // no duplicates
         XCTAssertEqual(names.count, ADHSyncCatalog.all.count)
