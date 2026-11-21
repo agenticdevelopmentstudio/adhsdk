@@ -31,9 +31,14 @@ struct SecureTextEditViewTests {
     }
 
     /// Lets the observer's change report run: a write through the view
-    /// model reaches the row on the next main-queue turn, never in the write.
-    private func drainMainQueue() {
-        RunLoop.main.run(until: Date().addingTimeInterval(0.05))
+    /// model reaches the row on a later main-queue turn, never in the write.
+    /// The test must suspend for that — a nested run loop cannot drain the
+    /// main queue from inside a main-queue job — and the main queue is FIFO,
+    /// so a block queued now runs after the report already queued.
+    private func drainMainQueue() async {
+        await withCheckedContinuation { continuation in
+            DispatchQueue.main.async { continuation.resume() }
+        }
     }
 
     private func host(_ view: NSView) -> NSWindow {
@@ -112,11 +117,11 @@ struct SecureTextEditViewTests {
         #expect(harness.pasteboard.string(forType: .string) == "sk-123")
     }
 
-    @Test func copyIsDisabledWhileTheFieldIsEmpty() {
+    @Test func copyIsDisabledWhileTheFieldIsEmpty() async {
         let harness = Harness("")
         #expect(!harness.row.copyButton.isEnabled)
         harness.model.settingObserver.value = "sk-1"
-        drainMainQueue()
+        await drainMainQueue()
         #expect(harness.row.copyButton.isEnabled)
     }
 
@@ -177,12 +182,12 @@ struct SecureTextEditViewTests {
         #expect(!harness.row.isRevealed)
     }
 
-    @Test func anOutsideChangeHidesTheSecretBeforeShowingTheNewValue() {
+    @Test func anOutsideChangeHidesTheSecretBeforeShowingTheNewValue() async {
         let harness = Harness("sk-123")
         harness.row.setRevealed(true)
 
         harness.model.settingObserver.value = "sk-999"
-        drainMainQueue()
+        await drainMainQueue()
 
         #expect(!harness.row.isRevealed)
         #expect(harness.row.textField.stringValue == "sk-999")
