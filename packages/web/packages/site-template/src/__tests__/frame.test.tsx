@@ -5,6 +5,7 @@ import type { LandingPage, LandingSection } from '@adh-sdk/landing'
 import { LandingFrame } from '../landing-frame'
 import { FrameFooter } from '../footer'
 import { SiteChrome } from '../chrome'
+import { resetAppearance } from '@adh-sdk/themes'
 import { FrameMark } from '../frame-mark'
 import { FrameBand } from '../frame-band'
 import { frameShot } from '../frame-shot'
@@ -375,6 +376,14 @@ describe('LandingFrame', () => {
 })
 
 describe('SiteChrome', () => {
+  // The frame wears none of the reader's appearance prefs. The header a site puts in it can hold an
+  // AuthProvider, whose sign-out reset runs on every load; the frame must keep it off <html>.
+  it('keeps the appearance store off <html> on a frame route', () => {
+    render(<SiteChrome copy={copy} page={empty} extra={[]} />)
+    resetAppearance()
+    expect(document.documentElement.hasAttribute('data-color-mode')).toBe(false)
+  })
+
   it('lists only Home when the page has no sections', () => {
     const { container } = render(<SiteChrome copy={copy} page={empty} extra={[]} />)
     const links = Array.from(container.querySelectorAll('nav a:not([href^="mailto:"])'))

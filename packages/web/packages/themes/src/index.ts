@@ -28,6 +28,8 @@ export {
   resetAppearance,
   mountAppearanceScope,
   AppearanceScope,
+  declareAppearanceScoped,
+  AppearanceFrame,
   type UseAppearancePreferences,
 } from './appearance-store'
 export { DocumentLoadScript } from './DocumentLoadScript'

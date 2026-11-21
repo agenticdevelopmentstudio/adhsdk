@@ -147,4 +147,24 @@ describe('appearance scope', () => {
     os.flip(true)
     expect(document.documentElement.classList.contains('dark')).toBe(true)
   })
+
+  // The site template's frame wears none of the prefs, and a document loaded straight onto it has
+  // mounted no scope yet. AppearanceSync's sign-out reset runs on every load; with the store still
+  // unscoped it painted data-color-mode="auto" on the frame's <html>.
+  it('AS-008: a declared-scoped site paints nothing before a scope mounts, then paints in one', async () => {
+    const os = installSchemeQuery(false)
+    const store = await freshStore()
+
+    store.declareAppearanceScoped()
+    store.resetAppearance()
+    expect(painted()).toBe(false)
+    os.flip(true)
+    expect(painted()).toBe(false)
+
+    const release = store.mountAppearanceScope()
+    expect(document.documentElement.dataset.colorMode).toBe('auto')
+    expect(document.documentElement.classList.contains('dark')).toBe(true)
+    release()
+    expect(painted()).toBe(false)
+  })
 })

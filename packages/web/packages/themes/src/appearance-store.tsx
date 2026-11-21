@@ -140,6 +140,27 @@ export function AppearanceScope(): null {
   return null
 }
 
+/**
+ * Tell the store this site is scoped without wearing the prefs: from now on it paints <html> only
+ * while a scope is mounted. Idempotent, and never undone, since a site does not stop being scoped.
+ */
+export function declareAppearanceScoped(): void {
+  scoped = true
+}
+
+/**
+ * The other half of the scope, for the routes that wear none of the prefs (the site template's
+ * frame). Without it a document loaded straight onto such a route has the store unscoped, since
+ * no scope has mounted yet, so the first commit (AppearanceSync's sign-out reset, which runs on
+ * every load) paints <html> with prefs the route never asked for, and the page differs from the
+ * same route reached from a scoped one. A layout effect, so the store is scoped before any
+ * passive effect in the same commit can paint.
+ */
+export function AppearanceFrame(): null {
+  useLayoutEffect(() => declareAppearanceScoped(), [])
+  return null
+}
+
 function setPrefs(patch: Partial<AppearancePrefs>): void {
   commit({ ...getSnapshot(), ...patch }, true)
 }

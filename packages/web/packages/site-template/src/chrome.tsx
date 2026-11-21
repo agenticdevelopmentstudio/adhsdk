@@ -4,6 +4,7 @@ import type { ReactElement, ReactNode } from 'react'
 import { Btn, indexRows } from '@adh-sdk/landing'
 import type { LandingPage, NavLink } from '@adh-sdk/landing'
 import { NavChrome } from '@adh-sdk/landing/client'
+import { AppearanceFrame } from '@adh-sdk/themes'
 import type { FrameConfig, FrameCopy } from './types'
 import { Words } from './words'
 
@@ -79,26 +80,33 @@ export function SiteChrome({
     </>
   )
   const { action } = copy.nav
+  // The frame wears none of the reader's appearance preferences, so it tells the store the site
+  // is scoped: a sign-in or sign-out resolving on a document loaded straight onto `/` would
+  // otherwise paint them on <html> (see AppearanceFrame).
   if (underHeader) {
     return (
       <div className="st-chrome-under-header" style={{ display: 'contents' }}>
+        <AppearanceFrame />
         <NavChrome links={links} sections={sections} footer={footer} />
       </div>
     )
   }
   return (
-    <NavChrome
-      brand={<Words text={copy.brand} />}
-      links={links}
-      sections={sections}
-      footer={footer}
-      action={
-        action === undefined ? undefined : (
-          <Btn href={action.href} variant="ghost">
-            {action.label}
-          </Btn>
-        )
-      }
-    />
+    <>
+      <AppearanceFrame />
+      <NavChrome
+        brand={<Words text={copy.brand} />}
+        links={links}
+        sections={sections}
+        footer={footer}
+        action={
+          action === undefined ? undefined : (
+            <Btn href={action.href} variant="ghost">
+              {action.label}
+            </Btn>
+          )
+        }
+      />
+    </>
   )
 }
