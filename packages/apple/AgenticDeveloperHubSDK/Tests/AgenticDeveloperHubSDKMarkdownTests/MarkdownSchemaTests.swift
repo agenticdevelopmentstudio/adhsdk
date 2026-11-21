@@ -335,6 +335,28 @@ struct MarkdownSchemaTests {
         }
         #expect(keys == ["pinned"])
     }
+
+    @Test("a v7 database migrates to v8 with every queued op unparked")
+    func v7MigratesToV8() throws {
+        let database = try BoundedDatabase(path: ":memory:")
+        try MarkdownSchema.migrator().migrate(database.writer, upTo: "markdown-v7-local-version")
+        try database.write { conn in
+            try conn.execute(
+                sql: """
+                    INSERT INTO _markdown_outbox (op_id, document_id, intent, payload, created_at, seq)
+                    VALUES ('op-1', 'm1', 'create', '{}', '2026-01-01T00:00:00.000Z', 1)
+                    """)
+        }
+
+        try MarkdownSchema.migrate(database)
+
+        try database.read { conn in
+            let row = try #require(try Row.fetchOne(
+                conn, sql: "SELECT parked_at, park_reason FROM _markdown_outbox WHERE op_id = 'op-1'"))
+            #expect((row["parked_at"] as String?) == nil)
+            #expect((row["park_reason"] as String?) == nil)
+        }
+    }
 }
 
 @Suite("MarkdownTimestamp")

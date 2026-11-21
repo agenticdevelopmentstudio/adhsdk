@@ -711,6 +711,146 @@ struct MarkdownStoreTests {
             #expect(content.contains("line-\(index)"), "append \(index) was lost")
         }
     }
+
+    // MARK: - A refused op is parked, not retried forever
+
+    @Test("a refused op is parked with its reason and the drain moves on to other documents")
+    func refusedOpIsParkedAndTheDrainMovesOn() async throws {
+        let store = try store()
+        let bad = try store.createDocument(content: "refused", markers: [.note])
+        let good = try store.createDocument(content: "fine", markers: [.note])
+        let writer = RefusingWriter(refusing: [bad.id])
+
+        try await store.drainRemoteQueue(into: writer, limit: 10)
+
+        #expect(await writer.sentDocumentIDs == [bad.id, good.id])
+        let parked = try store.parkedRemoteOps()
+        #expect(parked.map(\.remoteOp.documentID) == [bad.id])
+        #expect(parked.first?.remoteOp.intent == .create)
+        #expect(parked.first?.reason == "422 invalid payload")
+        #expect(try store.pendingRemoteOps(limit: 10).isEmpty)
+        // Nothing of the document is lost: the row and the queued body stay.
+        #expect(try store.document(id: bad.id)?.content == "refused")
+        #expect(parked.first?.remoteOp.payload["content"] == .string("refused"))
+    }
+
+    @Test("ops behind a parked op of the same document wait, in order")
+    func opsBehindAParkedOpWait() async throws {
+        let store = try store()
+        var document = try store.createDocument(content: "one", markers: [])
+        let writer = RefusingWriter(refusing: [document.id])
+        try await store.drainRemoteQueue(into: writer, limit: 10)
+
+        document.content = "two"
+        try store.updateDocument(document)
+        try await store.drainRemoteQueue(into: writer, limit: 10)
+
+        #expect(await writer.sentDocumentIDs == [document.id], "the update is not sent past its parked create")
+        #expect(try store.pendingRemoteOps(limit: 10).isEmpty)
+        #expect(try store.parkedRemoteOps().count == 1)
+    }
+
+    @Test("a parked op is never sent again by a later drain")
+    func parkedOpIsNotResent() async throws {
+        let store = try store()
+        let document = try store.createDocument(content: "refused", markers: [])
+        let writer = RefusingWriter(refusing: [document.id])
+        try await store.drainRemoteQueue(into: writer, limit: 10)
+        try await store.drainRemoteQueue(into: writer, limit: 10)
+
+        #expect(await writer.sentDocumentIDs == [document.id])
+    }
+
+    @Test("deleting a document whose create was refused drops the create and queues no delete")
+    func deleteClearsAParkedCreate() async throws {
+        let store = try store()
+        let document = try store.createDocument(content: "refused", markers: [])
+        try await store.drainRemoteQueue(into: RefusingWriter(refusing: [document.id]), limit: 10)
+
+        try store.deleteDocument(id: document.id)
+
+        #expect(try store.parkedRemoteOps().isEmpty)
+        #expect(try store.pendingRemoteOps(limit: 10).isEmpty, "adh never minted it, so there is nothing to delete")
+    }
+
+    @Test("deleting a document with a refused update clears it and queues the delete")
+    func deleteClearsAParkedUpdateAndQueuesTheDelete() async throws {
+        let store = try store()
+        var document = try store.createDocument(content: "one", markers: [])
+        try await store.drainRemoteQueue(into: RecordingWriter(minting: "remote-1"), limit: 10)
+        document.content = "two"
+        try store.updateDocument(document)
+        try await store.drainRemoteQueue(into: RefusingWriter(refusing: [document.id]), limit: 10)
+        #expect(try store.parkedRemoteOps().map(\.remoteOp.intent) == [.update])
+
+        try store.deleteDocument(id: document.id)
+
+        #expect(try store.parkedRemoteOps().isEmpty)
+        let queued = try store.pendingRemoteOps(limit: 10)
+        #expect(queued.map(\.intent) == [.delete])
+        #expect(queued.first?.remoteID == "remote-1")
+    }
+
+    @Test("retrying a parked op resends it with the same op id and body, then what waited behind it")
+    func retryResendsTheSameOp() async throws {
+        let store = try store()
+        var document = try store.createDocument(content: "one", markers: [])
+        try await store.drainRemoteQueue(into: RefusingWriter(refusing: [document.id]), limit: 10)
+        let parked = try #require(try store.parkedRemoteOps().first)
+        document.content = "two"
+        try store.updateDocument(document)
+
+        try store.retryParkedRemoteOp(opID: parked.remoteOp.opID)
+        let writer = RecordingWriter(minting: "remote-1")
+        try await store.drainRemoteQueue(into: writer, limit: 10)
+
+        let sent = await writer.sentOps
+        #expect(sent.map(\.intent) == [.create, .update])
+        #expect(sent.first?.opID == parked.remoteOp.opID)
+        #expect(sent.first?.payload == parked.remoteOp.payload)
+        #expect(sent.last?.remoteID == "remote-1")
+        #expect(try store.parkedRemoteOps().isEmpty)
+    }
+
+    @Test("discarding a parked op drops only the op; the document stays")
+    func discardDropsOnlyTheOp() async throws {
+        let store = try store()
+        let document = try store.createDocument(content: "kept", markers: [.note])
+        try await store.drainRemoteQueue(into: RefusingWriter(refusing: [document.id]), limit: 10)
+        let parked = try #require(try store.parkedRemoteOps().first)
+
+        try store.discardParkedRemoteOp(opID: parked.remoteOp.opID)
+
+        #expect(try store.parkedRemoteOps().isEmpty)
+        #expect(try store.pendingRemoteOps(limit: 10).isEmpty)
+        #expect(try store.document(id: document.id)?.content == "kept")
+    }
+
+    @Test("retry and discard touch only parked ops")
+    func retryAndDiscardIgnoreUnparkedOps() async throws {
+        let store = try store()
+        _ = try store.createDocument(content: "queued", markers: [])
+        let queued = try #require(try store.pendingRemoteOps(limit: 10).first)
+
+        try store.discardParkedRemoteOp(opID: queued.opID)
+        try store.retryParkedRemoteOp(opID: queued.opID)
+
+        #expect(try store.pendingRemoteOps(limit: 10).map(\.opID) == [queued.opID])
+    }
+
+    @Test("an error that is not a refusal still stops the drain and parks nothing")
+    func otherErrorsStillStopTheDrain() async throws {
+        let store = try store()
+        _ = try store.createDocument(content: "one", markers: [])
+        _ = try store.createDocument(content: "two", markers: [])
+
+        await #expect(throws: (any Error).self) {
+            try await store.drainRemoteQueue(into: FailingWriter(), limit: 10)
+        }
+
+        #expect(try store.parkedRemoteOps().isEmpty)
+        #expect(try store.pendingRemoteOps(limit: 10).count == 2)
+    }
 }
 
 /// Records what it was handed, and answers a `create` with the id adh would
@@ -749,4 +889,21 @@ private actor HookedWriter: MarkdownRemoteWriter {
 private struct FailingWriter: MarkdownRemoteWriter {
     struct Offline: Error {}
     func send(_ remoteOp: MarkdownRemoteOp) async throws -> String? { throw Offline() }
+}
+
+/// Refuses, for good, every op for the documents it is given — the way
+/// adhd's writer reports a 4xx other than 408/429 — and accepts the rest.
+private actor RefusingWriter: MarkdownRemoteWriter {
+    private(set) var sentDocumentIDs: [String] = []
+    private let refused: Set<String>
+
+    init(refusing refused: Set<String>) { self.refused = refused }
+
+    func send(_ remoteOp: MarkdownRemoteOp) async throws -> String? {
+        sentDocumentIDs.append(remoteOp.documentID)
+        if refused.contains(remoteOp.documentID) {
+            throw MarkdownRemoteRefusal(reason: "422 invalid payload")
+        }
+        return nil
+    }
 }
