@@ -366,7 +366,7 @@ Not applicable: the sources make no log call; every failure is raised to the cal
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/SyncGRDB/` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/SyncGRDB/` | confirmed (1.4.0) |
 
 ## Design Decisions
 
