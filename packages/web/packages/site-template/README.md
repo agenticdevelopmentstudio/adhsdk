@@ -282,7 +282,7 @@ The template's scripts include `build:next` (`next build`), which every site rep
 
 ## Next is pinned
 
-The generated package.json asks for `next` `16.4.3` exactly, not `^16.4.3`. Every 16.3.x
+The generated package.json asks for `next` `16.4.5` exactly, not `^16.4.5`. Every 16.3.x
 release tried (16.3.3, 16.3.8) panics when Turbopack prints a source code frame for a CSS
 warning and the frame's line holds a box-drawing comment rule, which this fleet writes
 everywhere:
@@ -297,7 +297,12 @@ range let any lockfile generated fresh float onto it. Reproduced 2026-10-28 by i
 markdown package's stylesheet as it was before toolkit `d813c3347` (an `@source` warning framed
 over `/* ── … */`) into a templated site: 16.3.3 and 16.3.8 panic; 16.2.9 and 16.4.3 build.
 The pin moved from 16.2.9 to 16.4.3 on 2026-11-02, because every `next` security advisory
-open against 16.2.9 is fixed only in 16.4.1 or later.
+open against 16.2.9 is fixed only in 16.4.1 or later. It moved to 16.4.5 on 2026-11-21, the
+release admin, help and status already ran, because 16.4.3 then carried an open advisory of its
+own. Besides the security exposure, that advisory stopped every other `next dev` start whenever
+the command ran under a coding agent: Next prints an upgrade notice and exits 1, then lets the
+next start through on a single-use receipt in `.next/cache`, so a templated site's e2e lane
+failed on alternate runs before Playwright had a server.
 Move the pin forward only to a release that builds that repro clean — a plain `next build`
 shows it in seconds.
 
