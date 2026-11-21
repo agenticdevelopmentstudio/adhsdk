@@ -119,6 +119,8 @@ public final class FeedChatSession: ChatSession, @unchecked Sendable {
             let (running, subscribed) = withLock { () -> (Task<Void, Never>?, Bool) in
                 guard paused != newValue else { return (nil, false) }
                 paused = newValue
+                // A read already past its cancellation check must not land.
+                if newValue { generation &+= 1 }
                 return (pump, continuation != nil)
             }
             if newValue {
@@ -389,7 +391,15 @@ public final class FeedChatSession: ChatSession, @unchecked Sendable {
                 try? await Task.sleep(for: self.refreshInterval)
             }
         }
-        withLock { pump = task }
+        // Kept only if nothing changed while it was built: a pause, or another
+        // start that bumped the generation, makes this one stale. Checked in the
+        // same section as the store, so a pause can never miss it.
+        let kept = withLock { () -> Bool in
+            guard !paused, generation == mine else { return false }
+            pump = task
+            return true
+        }
+        if !kept { task.cancel() }
     }
 
     private func withLock<Value>(_ body: () -> Value) -> Value {
