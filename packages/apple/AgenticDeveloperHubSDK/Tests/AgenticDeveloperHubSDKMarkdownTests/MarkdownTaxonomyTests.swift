@@ -32,6 +32,18 @@ struct MarkdownTaxonomyTests {
         #expect(ops[0]["type"] as String == "upsert")
     }
 
+    @Test("a category created under a caller's id keeps it, lowercased, and stages under it")
+    func categoryKeepsTheCallersID() throws {
+        let store = try store()
+        let created = try store.createCategory(id: "ABC-123", name: "Recipes")
+        #expect(created.id == "abc-123")
+        #expect(try store.categories().map(\.id) == ["abc-123"])
+        let rowIDs = try store.database.read { conn in
+            try String.fetchAll(conn, sql: "SELECT row_id FROM _sync_outbox WHERE resource = 'content.categories'")
+        }
+        #expect(rowIDs == ["abc-123"])
+    }
+
     @Test("a diamond is allowed — two parents is not a cycle")
     func diamondIsAllowed() throws {
         let store = try store()
