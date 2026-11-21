@@ -55,14 +55,15 @@ final class VersionedNoteStorage: ObservableNoteStorage, @unchecked Sendable {
 
     func fetchNote(id: UUID) throws -> Note? { note(id) }
 
-    func insertNote(_ note: Note) throws {
+    @discardableResult func insertNote(_ note: Note) throws -> Int64 {
         lock.lock(); defer { lock.unlock() }
         var stored = note
         stored.version = 1
         rows[note.id] = stored
+        return 1
     }
 
-    func updateNote(_ note: Note) throws {
+    @discardableResult func updateNote(_ note: Note) throws -> Int64 {
         lock.lock(); defer { lock.unlock() }
         guard let existing = rows[note.id] else {
             throw NoteStorageError.stale(current: nil)
@@ -73,6 +74,7 @@ final class VersionedNoteStorage: ObservableNoteStorage, @unchecked Sendable {
         var stored = note
         stored.version = existing.version + 1
         rows[note.id] = stored
+        return stored.version
     }
 
     func deleteNote(id: UUID) throws {

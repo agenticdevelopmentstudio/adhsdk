@@ -33,8 +33,10 @@ public final class MarkdownNoteStorage: NoteStorage, Sendable {
     // recorded in `MarkdownStore.ownedFrontmatterKeys`, never inferred; the
     // rules that follow from it are `MarkdownNoteMapping`'s.
     //
-    // `Note.version` is ignored throughout: this store has no concurrency
-    // token, so it never throws `NoteStorageError.stale`. The methods stay
+    // `Note.version` is never checked here: this storage writes last-writer-
+    // wins and never throws `NoteStorageError.stale`. It still reports the
+    // document's `local_version` (read into `Note.version` and returned from
+    // each write), so a caller's held version stays true. The methods stay
     // synchronous, which satisfies the async protocol and keeps existing
     // synchronous callers compiling.
 
@@ -50,7 +52,8 @@ public final class MarkdownNoteStorage: NoteStorage, Sendable {
             .sorted(by: Note.defaultSort)
     }
 
-    public func insertNote(_ note: Note) throws {
+    @discardableResult
+    public func insertNote(_ note: Note) throws -> Int64 {
         // A create claims a key only when the note's own text does not already
         // have one, so a hand-typed `pinned:` fence is kept, unclaimed.
         let (content, owned) = MarkdownNoteMapping.content(
@@ -60,13 +63,13 @@ public final class MarkdownNoteStorage: NoteStorage, Sendable {
         // else in the row records — passing only `now:` stamped `created_at`
         // with the modification date, so every note appeared to have been
         // created when it was last edited, irrecoverably.
-        _ = try store.createDocument(
+        return try store.createDocument(
             content: content,
             markers: [.note],
             id: note.id.uuidString.lowercased(),
             now: note.modifiedDate,
             createdAt: note.createdDate,
-            ownedFrontmatterKeys: owned)
+            ownedFrontmatterKeys: owned).version
     }
 
     /// Rewrites the keys this class owns in place, preserving whatever position
@@ -98,9 +101,10 @@ public final class MarkdownNoteStorage: NoteStorage, Sendable {
     /// note.content` outright, so a stale snapshot still clobbers a newer one
     /// — atomically. A compare-and-swap would be a different feature, and
     /// would need a token adh does not send.
-    public func updateNote(_ note: Note) throws {
+    @discardableResult
+    public func updateNote(_ note: Note) throws -> Int64 {
         let id = note.id.uuidString.lowercased()
-        try store.mutateDocument(id: id, now: note.modifiedDate) { document, owned in
+        return try store.mutateDocument(id: id, now: note.modifiedDate) { document, owned in
             let merged = MarkdownNoteMapping.content(
                 for: note, existing: document.content, ownedKeys: owned)
             document.content = merged.content

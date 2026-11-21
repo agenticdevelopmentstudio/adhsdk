@@ -55,8 +55,11 @@ final class NotesManagerStorageOrderingTests: XCTestCase {
         }
 
         func fetchAllNotes() throws -> [Note] { [] }
-        func insertNote(_ note: Note) throws { dwell() }
-        func updateNote(_ note: Note) throws { dwell(recording: note.content) }
+        @discardableResult func insertNote(_ note: Note) throws -> Int64 { dwell(); return 1 }
+        @discardableResult func updateNote(_ note: Note) throws -> Int64 {
+            dwell(recording: note.content)
+            return note.version + 1
+        }
         func deleteNote(id: UUID) throws { dwell() }
     }
 

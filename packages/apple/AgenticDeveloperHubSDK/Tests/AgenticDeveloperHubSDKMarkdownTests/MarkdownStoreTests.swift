@@ -612,7 +612,7 @@ struct MarkdownStoreTests {
         await withTaskGroup(of: Void.self) { group in
             for index in 0..<20 {
                 group.addTask {
-                    try? store.mutateDocument(id: document.id) { merging, _ in
+                    _ = try? store.mutateDocument(id: document.id) { merging, _ in
                         merging.content += "\nline-\(index)"
                     }
                 }

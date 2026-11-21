@@ -457,22 +457,27 @@ public final class MarkdownStore: @unchecked Sendable {
     /// `expectedVersion`, when given, must equal the row's `local_version` or
     /// the write is refused with `staleVersion` and nothing changes; `nil`
     /// writes unconditionally, as before.
+    ///
+    /// Returns the document's new `local_version`, so a caller holding the
+    /// version it read can hold the one it wrote instead, and its next write
+    /// is not refused as stale against its own.
+    @discardableResult
     public func updateDocument(
         _ document: MarkdownDocument,
         ownedFrontmatterKeys: Set<String>? = nil,
         now: Date = Date(),
         expectedVersion: Int64? = nil
-    ) throws {
+    ) throws -> Int64 {
         let now = Self.normalizedTimestamp(now)
-        try database.write { conn in
+        return try database.write { conn in
             guard let stored = try Row.fetchOne(
                 conn, sql: "SELECT * FROM markdown WHERE id = ? AND is_deleted = 0",
                 arguments: [document.id]) else {
                 throw MarkdownStoreError.notFound(document.id)
             }
             try Self.refuseStale(expectedVersion, stored: stored)
-            try store(document, over: stored, ownedFrontmatterKeys: ownedFrontmatterKeys,
-                      at: now, in: conn)
+            return try store(document, over: stored, ownedFrontmatterKeys: ownedFrontmatterKeys,
+                             at: now, in: conn)
         }
     }
 
@@ -501,14 +506,17 @@ public final class MarkdownStore: @unchecked Sendable {
     /// `write` runs inline on this same connection and appears to work. It
     /// then loses: the whole-row `store(...)` below overwrites whatever the
     /// nested call wrote, and a second `.update` is enqueued for one edit.
+    ///
+    /// Returns the document's new `local_version`, as `updateDocument` does.
+    @discardableResult
     public func mutateDocument(
         id: String,
         now: Date = Date(),
         expectedVersion: Int64? = nil,
         _ merge: (inout MarkdownDocument, inout Set<String>) throws -> Void
-    ) throws {
+    ) throws -> Int64 {
         let now = Self.normalizedTimestamp(now)
-        try database.write { conn in
+        return try database.write { conn in
             guard let stored = try Row.fetchOne(
                 conn, sql: "SELECT * FROM markdown WHERE id = ? AND is_deleted = 0",
                 arguments: [id]) else {
@@ -520,7 +528,7 @@ public final class MarkdownStore: @unchecked Sendable {
 
             try merge(&document, &owned)
 
-            try store(document, over: stored, ownedFrontmatterKeys: owned, at: now, in: conn)
+            return try store(document, over: stored, ownedFrontmatterKeys: owned, at: now, in: conn)
         }
     }
 
@@ -532,7 +540,7 @@ public final class MarkdownStore: @unchecked Sendable {
         ownedFrontmatterKeys: Set<String>?,
         at now: Date,
         in conn: Database
-    ) throws {
+    ) throws -> Int64 {
         try Self.refuseAuthoredFieldDrift(from: stored, to: document)
 
         var updated = document
@@ -544,7 +552,7 @@ public final class MarkdownStore: @unchecked Sendable {
         if let ownedFrontmatterKeys {
             try Self.writeOwnedFrontmatterKeys(ownedFrontmatterKeys, for: document.id, in: conn)
         }
-        try logDocumentChange(id: document.id, kind: .upsert, in: conn)
+        return try logDocumentChange(id: document.id, kind: .upsert, in: conn)
     }
 
     /// Throws when `document` carries a different `visibility`, `stage` or

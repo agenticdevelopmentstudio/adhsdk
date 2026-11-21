@@ -17,8 +17,8 @@ final class NotesWindowToolbarTests: XCTestCase {
 
     private struct EmptyNoteStorage: NoteStorage {
         func fetchAllNotes() throws -> [Note] { [] }
-        func insertNote(_ note: Note) throws {}
-        func updateNote(_ note: Note) throws {}
+        @discardableResult func insertNote(_ note: Note) throws -> Int64 { 1 }
+        @discardableResult func updateNote(_ note: Note) throws -> Int64 { note.version + 1 }
         func deleteNote(id: UUID) throws {}
     }
 
@@ -369,8 +369,8 @@ final class NotesWindowToolbarTests: XCTestCase {
     private struct OneNoteStorage: NoteStorage {
         let note: Note
         func fetchAllNotes() throws -> [Note] { [note] }
-        func insertNote(_ note: Note) throws {}
-        func updateNote(_ note: Note) throws {}
+        @discardableResult func insertNote(_ note: Note) throws -> Int64 { 1 }
+        @discardableResult func updateNote(_ note: Note) throws -> Int64 { note.version + 1 }
         func deleteNote(id: UUID) throws {}
     }
 

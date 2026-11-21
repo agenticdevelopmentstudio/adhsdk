@@ -112,4 +112,62 @@ struct MarkdownLocalVersionTests {
             $0.resource == "content.markdown" && $0.id == "m1" && $0.kind == .upsert && $0.version == 1
         })
     }
+
+    private func pulled(_ content: String, syncVersion: String, updatedAt: String) -> SyncChange {
+        SyncChange(
+            resource: "content.markdown", id: "m1", op: .upsert, syncVersion: syncVersion,
+            data: [
+                "title": .string("From the server"),
+                "content": .string(content),
+                "owner_kind": .string("customer"),
+                "owner_id": .string("cust-1"),
+                "created_at": .string("2026-01-01T00:00:00Z"),
+                "updated_at": .string(updatedAt)
+            ])
+    }
+
+    private func feed(_ store: MarkdownStore) throws -> [Int64] {
+        try store.syncStore.changes(since: 0, limit: 100)
+            .filter { $0.resource == "content.markdown" && $0.id == "m1" }
+            .map(\.version)
+    }
+
+    @Test("a re-pulled row with the same content neither bumps nor logs")
+    func unchangedPullIsSilent() async throws {
+        let store = try store()
+        try await store.syncStore.apply(
+            [pulled("# Same", syncVersion: "5", updatedAt: "2026-01-02T00:00:00Z")], advancingTo: nil)
+        // The echo of a push, or a re-sync: only bookkeeping differs.
+        try await store.syncStore.apply(
+            [pulled("# Same", syncVersion: "6", updatedAt: "2026-01-03T00:00:00Z")], advancingTo: nil)
+
+        #expect(try store.document(id: "m1")?.version == 1)
+        #expect(try feed(store) == [1])
+    }
+
+    @Test("a re-pulled row with new content bumps and logs")
+    func changedPullBumps() async throws {
+        let store = try store()
+        try await store.syncStore.apply(
+            [pulled("# One", syncVersion: "5", updatedAt: "2026-01-02T00:00:00Z")], advancingTo: nil)
+        try await store.syncStore.apply(
+            [pulled("# Two", syncVersion: "6", updatedAt: "2026-01-03T00:00:00Z")], advancingTo: nil)
+
+        #expect(try store.document(id: "m1")?.version == 2)
+        #expect(try feed(store) == [1, 2])
+    }
+
+    @Test("updateDocument and mutateDocument return the new version")
+    func writesReturnTheVersion() throws {
+        let store = try store()
+        let created = try store.createDocument(content: "# A", markers: [.note])
+        var edited = created
+        edited.content = "# B"
+        #expect(try store.updateDocument(edited, expectedVersion: 1) == 2)
+        let mutated = try store.mutateDocument(id: created.id, expectedVersion: 2) { document, _ in
+            document.content = "# C"
+        }
+        #expect(mutated == 3)
+        #expect(try store.document(id: created.id)?.version == 3)
+    }
 }
