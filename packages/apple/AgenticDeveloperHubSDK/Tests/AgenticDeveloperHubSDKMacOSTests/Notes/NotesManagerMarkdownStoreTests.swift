@@ -15,8 +15,8 @@ final class NotesManagerMarkdownStoreTests: XCTestCase {
     /// backed by a `MarkdownStore`.
     private struct EmptyNoteStorage: NoteStorage {
         func fetchAllNotes() throws -> [Note] { [] }
-        func insertNote(_ note: Note) throws {}
-        func updateNote(_ note: Note) throws {}
+        @discardableResult func insertNote(_ note: Note) throws -> Int64 { 1 }
+        @discardableResult func updateNote(_ note: Note) throws -> Int64 { note.version + 1 }
         func deleteNote(id: UUID) throws {}
     }
 

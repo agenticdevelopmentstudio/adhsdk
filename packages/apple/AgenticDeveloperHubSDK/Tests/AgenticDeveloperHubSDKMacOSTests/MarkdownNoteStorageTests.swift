@@ -82,9 +82,9 @@ struct MarkdownNoteStorageTests {
             for index in 0..<30 {
                 // A merge that changes nothing, and so writes back exactly
                 // what it read — the purest form of the revert.
-                group.addTask { try? storage.updateNote(seed) }
+                group.addTask { _ = try? storage.updateNote(seed) }
                 group.addTask {
-                    try? storage.store.mutateDocument(id: id) { document, _ in
+                    _ = try? storage.store.mutateDocument(id: id) { document, _ in
                         document.ownerID += "|\(index)"
                     }
                 }
