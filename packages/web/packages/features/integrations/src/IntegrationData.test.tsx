@@ -1,10 +1,12 @@
 // @vitest-environment jsdom
 import { describe, it, expect, afterEach, beforeEach, vi } from "vitest";
-import { render, screen, cleanup, waitFor } from "@testing-library/react";
+import { render, screen, cleanup, waitFor, fireEvent } from "@testing-library/react";
 
-const { getConnectionData, listConnections } = vi.hoisted(() => ({
+const { getConnectionData, listConnections, guard } = vi.hoisted(() => ({
   getConnectionData: vi.fn(),
   listConnections: vi.fn(),
+  // The exit guard the mounted editor reports; null = no unsaved work.
+  guard: { current: null as { isDirty: () => boolean } | null },
 }));
 vi.mock("@adh-sdk/data/integrations", () => ({
   integrationsApi: { getConnectionData, listConnections },
@@ -13,11 +15,10 @@ vi.mock("@adh-sdk/data/integrations", () => ({
 vi.mock("@adh-sdk/crud", () => ({
   CRUD_TABLES: { "integration/integration-bookmarks": {} },
   CrudDataView: () => <div>crud-view</div>,
-  useExitGuardChannel: () => ({ exitGuard: undefined, registerGuard: vi.fn() }),
+  useExitGuardChannel: () => ({ exitGuard: guard.current, registerGuard: vi.fn() }),
 }));
 vi.mock("@adh-sdk/resource", () => ({
   useRailExitGuard: () => undefined,
-  StackGroupDetail: () => null,
 }));
 
 import { IntegrationData, providerDataTables } from "./IntegrationData";
@@ -26,6 +27,7 @@ afterEach(cleanup);
 beforeEach(() => {
   getConnectionData.mockReset();
   listConnections.mockReset();
+  guard.current = null;
 });
 
 const dataResources = (id: string) =>
@@ -78,5 +80,52 @@ describe("IntegrationData — a data-route table", () => {
     render(<IntegrationData providerId="gmail" ecosystemId="eco-1" />);
     await waitFor(() => expect(screen.getByText("No account connected.")).toBeTruthy());
     expect(getConnectionData).not.toHaveBeenCalled();
+  });
+});
+
+// Several tables render INSIDE the saved integration's detail, so they must never publish a rail
+// level: one would take over that detail's frontier and hide its configuration and connected
+// accounts behind a "Select an item from Data" hint (the Bluesky/Mastodon regression).
+describe("IntegrationData — several tables", () => {
+  beforeEach(() => {
+    listConnections.mockResolvedValue([{ id: "conn-1", provider: "bluesky", displayName: "me" }]);
+    getConnectionData.mockResolvedValue({ rows: [], nextCursor: null });
+  });
+
+  it("shows the first table at once and switches tables with a local tab strip", async () => {
+    render(<IntegrationData providerId="bluesky" ecosystemId="eco-1" />);
+    const posts = screen.getByRole("tab", { name: "Posts" });
+    const notifications = screen.getByRole("tab", { name: "Notifications" });
+    expect(posts.getAttribute("aria-selected")).toBe("true");
+    await waitFor(() =>
+      expect(getConnectionData).toHaveBeenCalledWith("conn-1", "social-posts", { cursor: null }),
+    );
+
+    fireEvent.click(notifications);
+    expect(notifications.getAttribute("aria-selected")).toBe("true");
+    await waitFor(() =>
+      expect(getConnectionData).toHaveBeenCalledWith("conn-1", "social-notifications", {
+        cursor: null,
+      }),
+    );
+  });
+
+  it("holds a tab switch behind the unsaved-changes prompt while the editor is dirty", async () => {
+    guard.current = { isDirty: () => true };
+    render(<IntegrationData providerId="bluesky" ecosystemId="eco-1" />);
+    fireEvent.click(screen.getByRole("tab", { name: "Notifications" }));
+    await waitFor(() => expect(screen.getByRole("button", { name: "Discard" })).toBeTruthy());
+    // `hidden`: the open alert marks the page behind it inert, so the strip leaves the a11y tree.
+    expect(
+      screen.getByRole("tab", { name: "Posts", hidden: true }).getAttribute("aria-selected"),
+    ).toBe("true");
+
+    // Discard runs the held switch.
+    fireEvent.click(screen.getByRole("button", { name: "Discard" }));
+    await waitFor(() =>
+      expect(
+        screen.getByRole("tab", { name: "Notifications" }).getAttribute("aria-selected"),
+      ).toBe("true"),
+    );
   });
 });

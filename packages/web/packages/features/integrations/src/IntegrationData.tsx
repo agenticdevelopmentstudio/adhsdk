@@ -1,9 +1,7 @@
 "use client";
 
-import { useCallback } from "react";
-import { Table2 } from "lucide-react";
+import { useCallback, useState } from "react";
 import { CrudDataView, CRUD_TABLES, useExitGuardChannel } from "@adh-sdk/crud";
-import { StackGroupDetail } from "@adh-sdk/resource";
 import { useRailExitGuard as useWorkspaceExitGuard } from "@adh-sdk/resource";
 import { isServiceUnavailable, useResourceList } from "@adh-sdk/data";
 import {
@@ -11,6 +9,9 @@ import {
   type ConnectionDataResource,
   type SafeConnection,
 } from "@adh-sdk/data/integrations";
+import { ViewTabBar } from "@adh-sdk/ui/blocks";
+import { UnsavedChangesAlert } from "@adh-sdk/ui/components/unsaved-changes-alert";
+import { useExitGate } from "@adh-sdk/ui/hooks/useExitGate";
 import { ConnectionDataView } from "./ConnectionDataView";
 
 /** Where a Data table's rows come from: the generic CRUD API (`key` is a CRUD_TABLES key,
@@ -130,8 +131,10 @@ function ConnectionDataTables({
 
 /** The Data topic's pane: one view per synced table, filtered to this provider's rows and
  *  SCOPED to the ecosystem the pane is configuring (the caller's JWT ecosystem is never that
- *  one — see CrudDataView.scopeEcosystemId). A single table renders directly; several publish
- *  one more rail. Staged edits in a CRUD view register an unsaved-work guard so a topic/provider
+ *  one — see CrudDataView.scopeEcosystemId). A single table renders directly; several switch
+ * with a local tab strip. NEVER a published rail level: this renders INSIDE the saved
+ * integration's detail, and a stack level would take over that detail's frontier, hiding the
+ * configuration and connected accounts behind a "Select an item from Data" hint. Staged edits in a CRUD view register an unsaved-work guard so a topic/provider
  *  switch prompts Save/Discard/Cancel instead of silently dropping them. Data-route tables are
  *  read-only. */
 export function IntegrationData({
@@ -149,7 +152,10 @@ export function IntegrationData({
   // the single channel always reflects the visible editor.
   const { exitGuard, registerGuard } = useExitGuardChannel();
   useWorkspaceExitGuard(exitGuard);
+  // A tab switch unmounts the active editor, so it is gated by the same guard.
+  const { attemptExit, exitAlertProps } = useExitGate(exitGuard ?? null);
   const tables = providerDataTables(providerId);
+  const [activeId, setActiveId] = useState<string | null>(null);
   if (tables.length === 0) return null;
 
   const renderTable = (t: DataTable) => (
@@ -174,16 +180,21 @@ export function IntegrationData({
   );
 
   if (tables.length === 1) return renderTable(tables[0]!);
+  const active = tables.find((t) => t.id === activeId) ?? tables[0]!;
   return (
-    <StackGroupDetail
-      levelId={`integration-data-${providerId}`}
-      title="Data"
-      items={tables.map((t) => ({
-        id: t.id,
-        label: t.label,
-        icon: <Table2 className="h-4 w-4" />,
-        render: () => renderTable(t),
-      }))}
-    />
+    <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+      <ViewTabBar
+        tabs={tables.map((t) => ({ value: t.id, label: t.label }))}
+        value={active.id}
+        onChange={(id) => {
+          if (id !== active.id) attemptExit(() => setActiveId(id));
+        }}
+      />
+      {/* Keyed so a switch remounts: only the visible table's editor is ever mounted. */}
+      <div key={active.id} className="flex min-h-0 min-w-0 flex-1 flex-col">
+        {renderTable(active)}
+      </div>
+      <UnsavedChangesAlert {...exitAlertProps} />
+    </div>
   );
 }
