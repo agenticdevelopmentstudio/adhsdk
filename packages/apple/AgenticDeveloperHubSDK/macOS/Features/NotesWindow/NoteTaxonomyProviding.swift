@@ -1,15 +1,17 @@
 import Foundation
 import AgenticDeveloperHubSDKMarkdown
 
-/// Storage that happens to be backed by a `MarkdownStore`, and can therefore
-/// answer taxonomy questions.
+/// Storage that can also answer taxonomy questions (categories and which notes
+/// are in them).
 ///
 /// `NoteStorage` deliberately does not know about categories — it is an
-/// abstract note-persistence seam over "SQLite, Core Data, file system" — so
-/// the folders pane asks for this capability separately and does without when
-/// the host's storage cannot supply it.
+/// abstract note-persistence seam — so the folders pane asks for this
+/// capability separately and does without when the host's storage cannot
+/// supply it.
 public protocol NoteTaxonomyProviding {
-    var store: MarkdownStore { get }
+    var taxonomy: any NoteTaxonomy { get }
 }
 
-extension MarkdownNoteStorage: NoteTaxonomyProviding {}
+extension MarkdownNoteStorage: NoteTaxonomyProviding {
+    public var taxonomy: any NoteTaxonomy { store }
+}

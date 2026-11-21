@@ -3,7 +3,7 @@ import XCTest
 import AgenticDeveloperHubSDKMarkdown
 @testable import AgenticDeveloperHubSDKMacOS
 
-/// `NotesManager.markdownStore` is the seam the folders pane reaches through
+/// `NotesManager.taxonomy` is the seam the folders pane reaches through
 /// to get at a `MarkdownStore` — see `NoteTaxonomyProviding`. A future
 /// refactor that quietly severs the chain (a new `NoteStorage` that does not
 /// conform, or `NotesManager` losing the accessor) should fail a test, not
@@ -22,12 +22,12 @@ final class NotesManagerMarkdownStoreTests: XCTestCase {
 
     func testReturnsNilWhenStorageDoesNotConformToNoteTaxonomyProviding() {
         let manager = NotesManager(storage: EmptyNoteStorage())
-        XCTAssertNil(manager.markdownStore)
+        XCTAssertNil(manager.taxonomy)
     }
 
     func testReturnsTheStoreWhenStorageIsMarkdownBacked() throws {
         let store = try MarkdownStore(path: ":memory:", customerID: "cust-1", ecosystemID: "eco-1")
         let manager = NotesManager(storage: MarkdownNoteStorage(store: store))
-        XCTAssertTrue(manager.markdownStore === store)
+        XCTAssertTrue(manager.taxonomy === store)
     }
 }

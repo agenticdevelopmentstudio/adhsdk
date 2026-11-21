@@ -43,6 +43,14 @@ public final class NotesManager {
     public static let storageDidFailNotification = Notification.Name(
         "AgenticDeveloperHubSDK.NotesManager.storageDidFail")
 
+    /// Posted when the storage's taxonomy (`NoteTaxonomy`) changed under this
+    /// manager — another writer's category edit, or a resync that may have
+    /// carried one. Same shape as `notesDidChangeNotification`. The folders
+    /// pane reloads its tree on it; this window's own category edits reload it
+    /// directly and do not come through here.
+    public static let taxonomyDidChangeNotification = Notification.Name(
+        "AgenticDeveloperHubSDK.NotesManager.taxonomyDidChange")
+
     private func postNotesDidChange() {
         NotificationCenter.default.post(name: Self.notesDidChangeNotification, object: self)
     }
@@ -201,14 +209,14 @@ public final class NotesManager {
         return try await work.value
     }
 
-    /// The taxonomy store behind this manager's storage, when there is one.
+    /// The taxonomy behind this manager's storage, when there is one.
     ///
     /// `NoteStorage` does not know about categories, so this asks whether the
     /// concrete storage backing this manager happens to also be
     /// `NoteTaxonomyProviding` — `MarkdownNoteStorage` is, an in-memory or
     /// file-based test double is not. `nil` here is what keeps the folders
     /// pane optional rather than a hard dependency on a `MarkdownStore`.
-    public var markdownStore: MarkdownStore? { (storage as? NoteTaxonomyProviding)?.store }
+    public var taxonomy: (any NoteTaxonomy)? { (storage as? NoteTaxonomyProviding)?.taxonomy }
 
     /// Debounce interval for auto-save.
     private static let saveDebounce: Duration = .seconds(1)
@@ -257,6 +265,9 @@ public final class NotesManager {
         switch change {
         case .resync:
             await loadNotes()
+            NotificationCenter.default.post(name: Self.taxonomyDidChangeNotification, object: self)
+        case .taxonomyChanged:
+            NotificationCenter.default.post(name: Self.taxonomyDidChangeNotification, object: self)
         case .deleted(let id):
             guard notes.contains(where: { $0.id == id }) else { return }
             forget(id)

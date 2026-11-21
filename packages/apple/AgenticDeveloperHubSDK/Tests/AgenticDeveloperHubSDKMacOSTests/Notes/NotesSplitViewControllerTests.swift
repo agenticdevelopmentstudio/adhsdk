@@ -50,10 +50,10 @@ final class NotesSplitViewControllerTests: XCTestCase {
         return name
     }
 
-    private func makeSplit(autosaveName: String, markdownStore: MarkdownStore? = nil) -> NotesSplitViewController {
+    private func makeSplit(autosaveName: String, taxonomy: MarkdownStore? = nil) -> NotesSplitViewController {
         NotesSplitViewController(
             notesManager: NotesManager(storage: EmptyNoteStorage()),
-            markdownStore: markdownStore,
+            taxonomy: taxonomy,
             autosaveName: autosaveName
         )
     }
@@ -242,7 +242,7 @@ final class NotesSplitViewControllerTests: XCTestCase {
         let notesManager = NotesManager(storage: MarkdownNoteStorage(store: store))
         await notesManager.loadNotes()
         let split = NotesSplitViewController(
-            notesManager: notesManager, markdownStore: store, autosaveName: makeAutosaveName())
+            notesManager: notesManager, taxonomy: store, autosaveName: makeAutosaveName())
         split.loadViewIfNeeded()
         split.reload()
         XCTAssertEqual(listRowCount(split), 2, "unfiltered — All Notes is selected by default")
@@ -256,6 +256,31 @@ final class NotesSplitViewControllerTests: XCTestCase {
         XCTAssertEqual(listRowCount(split), 1)
     }
 
+    /// Another writer's category edit arrives as `taxonomyDidChangeNotification`;
+    /// the folders pane shows it without anyone reloading the window.
+    func testTaxonomyDidChangeReloadsTheFolderTree() async throws {
+        let store = try store()
+        let notesManager = NotesManager(storage: MarkdownNoteStorage(store: store))
+        await notesManager.loadNotes()
+        let split = NotesSplitViewController(
+            notesManager: notesManager, taxonomy: store, autosaveName: makeAutosaveName())
+        split.loadViewIfNeeded()
+        split.reload()
+        let folderVC = try XCTUnwrap(split.splitViewItems[0].viewController as? NotesFolderListViewController)
+        func hasFolder(_ id: String) -> Bool {
+            (0..<folderVC.outline.numberOfRows).contains {
+                (folderVC.outline.item(atRow: $0) as? NoteFolder)?.id == id
+            }
+        }
+
+        let elsewhere = try store.createCategory(name: "Made elsewhere")
+        XCTAssertFalse(hasFolder(elsewhere.id), "nothing has told the pane yet")
+
+        NotificationCenter.default.post(name: NotesManager.taxonomyDidChangeNotification, object: notesManager)
+
+        XCTAssertTrue(hasFolder(elsewhere.id))
+    }
+
     func testSelectingAllNotesRestoresTheFullList() async throws {
         let store = try store()
         let recipes = try store.createCategory(name: "Recipes")
@@ -266,7 +291,7 @@ final class NotesSplitViewControllerTests: XCTestCase {
         let notesManager = NotesManager(storage: MarkdownNoteStorage(store: store))
         await notesManager.loadNotes()
         let split = NotesSplitViewController(
-            notesManager: notesManager, markdownStore: store, autosaveName: makeAutosaveName())
+            notesManager: notesManager, taxonomy: store, autosaveName: makeAutosaveName())
         split.loadViewIfNeeded()
         split.reload()
 
@@ -306,7 +331,7 @@ final class NotesSplitViewControllerTests: XCTestCase {
         let notesManager = NotesManager(storage: MarkdownNoteStorage(store: store))
         await notesManager.loadNotes()
         let split = NotesSplitViewController(
-            notesManager: notesManager, markdownStore: store, autosaveName: makeAutosaveName())
+            notesManager: notesManager, taxonomy: store, autosaveName: makeAutosaveName())
         split.loadViewIfNeeded()
         split.reload()
 
@@ -351,7 +376,7 @@ final class NotesSplitViewControllerTests: XCTestCase {
         let notesManager = NotesManager(storage: MarkdownNoteStorage(store: store))
         await notesManager.loadNotes()
         let split = NotesSplitViewController(
-            notesManager: notesManager, markdownStore: store, autosaveName: makeAutosaveName())
+            notesManager: notesManager, taxonomy: store, autosaveName: makeAutosaveName())
         split.loadViewIfNeeded()
         split.reload()
 
@@ -392,7 +417,7 @@ final class NotesSplitViewControllerTests: XCTestCase {
         let notesManager = NotesManager(storage: MarkdownNoteStorage(store: store))
         await notesManager.loadNotes()
         let split = NotesSplitViewController(
-            notesManager: notesManager, markdownStore: store, autosaveName: makeAutosaveName())
+            notesManager: notesManager, taxonomy: store, autosaveName: makeAutosaveName())
         split.loadViewIfNeeded()
         let note = try XCTUnwrap(notesManager.notes.first)
         let listVC = try XCTUnwrap(split.splitViewItems[1].viewController as? NotesListViewController)
@@ -423,7 +448,7 @@ final class NotesSplitViewControllerTests: XCTestCase {
         let notesManager = NotesManager(storage: MarkdownNoteStorage(store: store))
         await notesManager.loadNotes()
         let split = NotesSplitViewController(
-            notesManager: notesManager, markdownStore: store, autosaveName: makeAutosaveName())
+            notesManager: notesManager, taxonomy: store, autosaveName: makeAutosaveName())
         split.loadViewIfNeeded()
         // Deliberately no selection made through the list pane.
 
@@ -621,7 +646,7 @@ final class NotesSplitViewControllerTests: XCTestCase {
         let notesManager = NotesManager(storage: MarkdownNoteStorage(store: store))
         await notesManager.loadNotes()
         let split = NotesSplitViewController(
-            notesManager: notesManager, markdownStore: store, autosaveName: makeAutosaveName())
+            notesManager: notesManager, taxonomy: store, autosaveName: makeAutosaveName())
         split.loadViewIfNeeded()
         split.reload()
 
@@ -658,7 +683,7 @@ final class NotesSplitViewControllerTests: XCTestCase {
         let notesManager = NotesManager(storage: MarkdownNoteStorage(store: store))
         await notesManager.loadNotes()
         let split = NotesSplitViewController(
-            notesManager: notesManager, markdownStore: store, autosaveName: makeAutosaveName())
+            notesManager: notesManager, taxonomy: store, autosaveName: makeAutosaveName())
         split.loadViewIfNeeded()
         split.reload()
 
@@ -690,7 +715,7 @@ final class NotesSplitViewControllerTests: XCTestCase {
         let notesManager = NotesManager(storage: MarkdownNoteStorage(store: store))
         await notesManager.loadNotes()
         let split = NotesSplitViewController(
-            notesManager: notesManager, markdownStore: store, autosaveName: makeAutosaveName())
+            notesManager: notesManager, taxonomy: store, autosaveName: makeAutosaveName())
         split.loadViewIfNeeded()
 
         let toDelete = try XCTUnwrap(notesManager.notes.first { $0.content == "to be deleted" })
@@ -718,7 +743,7 @@ final class NotesSplitViewControllerTests: XCTestCase {
         let notesManager = NotesManager(storage: MarkdownNoteStorage(store: store))
         await notesManager.loadNotes()
         let split = NotesSplitViewController(
-            notesManager: notesManager, markdownStore: store, autosaveName: makeAutosaveName())
+            notesManager: notesManager, taxonomy: store, autosaveName: makeAutosaveName())
         split.loadViewIfNeeded()
         XCTAssertNil(split.paneSelectionDescription, "nothing selected ends the path at the pane")
 
@@ -741,7 +766,7 @@ final class NotesSplitViewControllerTests: XCTestCase {
         let notesManager = NotesManager(storage: MarkdownNoteStorage(store: store))
         await notesManager.loadNotes()
         let split = NotesSplitViewController(
-            notesManager: notesManager, markdownStore: store, autosaveName: makeAutosaveName())
+            notesManager: notesManager, taxonomy: store, autosaveName: makeAutosaveName())
         split.loadViewIfNeeded()
         let note = try XCTUnwrap(notesManager.notes.first)
         let listVC = try XCTUnwrap(split.splitViewItems[1].viewController as? NotesListViewController)
@@ -836,7 +861,7 @@ final class NotesSplitViewControllerTests: XCTestCase {
         let notesManager = NotesManager(storage: MarkdownNoteStorage(store: store))
         await notesManager.loadNotes()
         let split = NotesSplitViewController(
-            notesManager: notesManager, markdownStore: store, autosaveName: makeAutosaveName())
+            notesManager: notesManager, taxonomy: store, autosaveName: makeAutosaveName())
         split.loadViewIfNeeded()
         split.reload()
         XCTAssertEqual(listRowCount(split), 2, "unfiltered to begin with")

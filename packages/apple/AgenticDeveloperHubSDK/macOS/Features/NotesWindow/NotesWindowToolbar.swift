@@ -267,7 +267,7 @@ public final class NotesWindowToolbar: NSObject, NSToolbarDelegate {
         menu.addItem(findItem)
 
         let moveToItem = NSMenuItem(title: "Move to", action: nil, keyEquivalent: "")
-        moveToItem.isEnabled = hasSelection && splitViewController?.markdownStore != nil
+        moveToItem.isEnabled = hasSelection && splitViewController?.taxonomy != nil
         moveToItem.submenu = buildMoveToSubmenu(for: note)
         moveToItem.accessibilityID("notes.menu.move-to")
         menu.addItem(moveToItem)
@@ -309,7 +309,7 @@ public final class NotesWindowToolbar: NSObject, NSToolbarDelegate {
     /// call to make, not this menu's.
     private func buildMoveToSubmenu(for note: Note?) -> NSMenu {
         let submenu = NSMenu(title: "Move to")
-        guard let store = splitViewController?.markdownStore else { return submenu }
+        guard let store = splitViewController?.taxonomy else { return submenu }
 
         let currentCategoryIDs: Set<String>
         if let note {

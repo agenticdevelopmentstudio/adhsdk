@@ -27,7 +27,7 @@ final class NotesFolderListViewControllerTests: XCTestCase {
     // MARK: - No store
 
     func testInitWithNilStoreShowsOnlyAllNotesWithZeroCount() {
-        let controller = NotesFolderListViewController(store: nil)
+        let controller = NotesFolderListViewController(taxonomy: nil)
         _ = controller.view
         controller.reload()
         XCTAssertEqual(controller.outline.numberOfRows, 1)
@@ -45,7 +45,7 @@ final class NotesFolderListViewControllerTests: XCTestCase {
         let note = try store.createDocument(content: "hello", markers: [.note])
         try store.assignCategory(recipes.id, toDocument: note.id)
 
-        let controller = NotesFolderListViewController(store: store)
+        let controller = NotesFolderListViewController(taxonomy: store)
         _ = controller.view
         controller.reload()
 
@@ -68,7 +68,7 @@ final class NotesFolderListViewControllerTests: XCTestCase {
     func testSelectFolderSetsSelectedFolderIDWithoutNotifyingDelegate() throws {
         let store = try store()
         let recipes = try store.createCategory(name: "Recipes")
-        let controller = NotesFolderListViewController(store: store)
+        let controller = NotesFolderListViewController(taxonomy: store)
         let spy = Spy()
         controller.delegate = spy
         _ = controller.view
@@ -85,7 +85,7 @@ final class NotesFolderListViewControllerTests: XCTestCase {
     func testSelectingARowNotifiesDelegateWithTheFolder() throws {
         let store = try store()
         let recipes = try store.createCategory(name: "Recipes")
-        let controller = NotesFolderListViewController(store: store)
+        let controller = NotesFolderListViewController(taxonomy: store)
         let spy = Spy()
         controller.delegate = spy
         _ = controller.view
@@ -103,7 +103,7 @@ final class NotesFolderListViewControllerTests: XCTestCase {
     func testSelectingAllNotesRowNotifiesDelegateWithAnAllNotesFolder() throws {
         let store = try store()
         _ = try store.createDocument(content: "hello", markers: [.note])
-        let controller = NotesFolderListViewController(store: store)
+        let controller = NotesFolderListViewController(taxonomy: store)
         let spy = Spy()
         controller.delegate = spy
         _ = controller.view
@@ -119,7 +119,7 @@ final class NotesFolderListViewControllerTests: XCTestCase {
 
     func testCreateFolderAtRootAddsACategoryAndNotifiesDelegate() throws {
         let store = try store()
-        let controller = NotesFolderListViewController(store: store)
+        let controller = NotesFolderListViewController(taxonomy: store)
         let spy = Spy()
         controller.delegate = spy
         _ = controller.view
@@ -138,7 +138,7 @@ final class NotesFolderListViewControllerTests: XCTestCase {
     func testCreateFolderUnderAParentAddsAnEdge() throws {
         let store = try store()
         let parent = try store.createCategory(name: "Parent")
-        let controller = NotesFolderListViewController(store: store)
+        let controller = NotesFolderListViewController(taxonomy: store)
         _ = controller.view
         controller.reload()
         let parentFolder = NoteFolder(id: parent.id, name: parent.name, noteCount: 0, children: [])
@@ -152,7 +152,7 @@ final class NotesFolderListViewControllerTests: XCTestCase {
 
     func testCreateFolderUnderAllNotesCreatesARootFolder() throws {
         let store = try store()
-        let controller = NotesFolderListViewController(store: store)
+        let controller = NotesFolderListViewController(taxonomy: store)
         _ = controller.view
         controller.reload()
         let allNotes = NoteFolder(id: "", name: "All Notes", noteCount: 0, children: [])
@@ -167,7 +167,7 @@ final class NotesFolderListViewControllerTests: XCTestCase {
     func testRenameFolderUpdatesTheStoreReloadsAndNotifiesDelegate() throws {
         let store = try store()
         let recipes = try store.createCategory(name: "Recipes")
-        let controller = NotesFolderListViewController(store: store)
+        let controller = NotesFolderListViewController(taxonomy: store)
         let spy = Spy()
         controller.delegate = spy
         _ = controller.view
@@ -184,7 +184,7 @@ final class NotesFolderListViewControllerTests: XCTestCase {
 
     func testRenameFolderIgnoresAllNotes() throws {
         let store = try store()
-        let controller = NotesFolderListViewController(store: store)
+        let controller = NotesFolderListViewController(taxonomy: store)
         let spy = Spy()
         controller.delegate = spy
         _ = controller.view
@@ -205,7 +205,7 @@ final class NotesFolderListViewControllerTests: XCTestCase {
     func testCommitRenameTrimsWhitespaceAndCallsRenameFolder() throws {
         let store = try store()
         let recipes = try store.createCategory(name: "Recipes")
-        let controller = NotesFolderListViewController(store: store)
+        let controller = NotesFolderListViewController(taxonomy: store)
         let spy = Spy()
         controller.delegate = spy
         _ = controller.view
@@ -223,7 +223,7 @@ final class NotesFolderListViewControllerTests: XCTestCase {
     func testCommitRenameIgnoresAnEmptyOrWhitespaceOnlyName() throws {
         let store = try store()
         let recipes = try store.createCategory(name: "Recipes")
-        let controller = NotesFolderListViewController(store: store)
+        let controller = NotesFolderListViewController(taxonomy: store)
         let spy = Spy()
         controller.delegate = spy
         _ = controller.view
@@ -240,7 +240,7 @@ final class NotesFolderListViewControllerTests: XCTestCase {
     func testCommitRenameIgnoresAnUnchangedName() throws {
         let store = try store()
         let recipes = try store.createCategory(name: "Recipes")
-        let controller = NotesFolderListViewController(store: store)
+        let controller = NotesFolderListViewController(taxonomy: store)
         let spy = Spy()
         controller.delegate = spy
         _ = controller.view
@@ -256,7 +256,7 @@ final class NotesFolderListViewControllerTests: XCTestCase {
 
     func testAllNotesRowFieldIsNotEditable() throws {
         let store = try store()
-        let controller = NotesFolderListViewController(store: store)
+        let controller = NotesFolderListViewController(taxonomy: store)
         _ = controller.view
         controller.reload()
         let allNotes = NoteFolder(id: "", name: "All Notes", noteCount: 0, children: [])
@@ -270,7 +270,7 @@ final class NotesFolderListViewControllerTests: XCTestCase {
     func testRegularFolderRowFieldIsEditable() throws {
         let store = try store()
         let recipes = try store.createCategory(name: "Recipes")
-        let controller = NotesFolderListViewController(store: store)
+        let controller = NotesFolderListViewController(taxonomy: store)
         _ = controller.view
         controller.reload()
         let folder = NoteFolder(id: recipes.id, name: recipes.name, noteCount: 0, children: [])
@@ -296,7 +296,7 @@ final class NotesFolderListViewControllerTests: XCTestCase {
         let recipes = try store.createCategory(name: "Recipes")
         let note = try store.createDocument(content: "hello", markers: [.note])
         try store.assignCategory(recipes.id, toDocument: note.id)
-        let controller = NotesFolderListViewController(store: store)
+        let controller = NotesFolderListViewController(taxonomy: store)
         let spy = Spy()
         controller.delegate = spy
         _ = controller.view
@@ -313,7 +313,7 @@ final class NotesFolderListViewControllerTests: XCTestCase {
 
     func testDeleteFolderIgnoresAllNotes() throws {
         let store = try store()
-        let controller = NotesFolderListViewController(store: store)
+        let controller = NotesFolderListViewController(taxonomy: store)
         let spy = Spy()
         controller.delegate = spy
         _ = controller.view
