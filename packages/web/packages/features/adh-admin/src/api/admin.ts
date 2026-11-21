@@ -63,9 +63,17 @@ export interface AdminUserSummary {
 // so a backend schema change surfaces here as a type error, not at runtime.
 type BackendUser = SuccessBody<"/v1/accounts", "get">["data"][number];
 
-/** Every hub account, from the platform side, walking the /v1 list envelope. */
-export function fetchHubAccounts(): Promise<BackendUser[]> {
-  return listAllV1<BackendUser>(`/api/v1/accounts?ecosystem_id=${HUB_ECOSYSTEM_ID}`);
+/**
+ * Every hub account, from the platform side, walking the /v1 list envelope.
+ *
+ * Narrowed HERE, not by a query parameter: `/v1/accounts` declares no `ecosystem_id` filter, and
+ * the generic list behind it matches a query key against a column's property name
+ * (`ecosystemId`), so `?ecosystem_id=` is dropped as a stray param. An admin bypasses tenant
+ * scoping, so without this the Operators ecosystem's accounts would be listed as hub users.
+ */
+export async function fetchHubAccounts(): Promise<BackendUser[]> {
+  const rows = await listAllV1<BackendUser>("/api/v1/accounts");
+  return rows.filter((row) => row.ecosystem_id === HUB_ECOSYSTEM_ID);
 }
 
 /** Delete one hub account. The backend answers 409 `last_operator` rather than remove the last one. */

@@ -41,10 +41,13 @@ describe("hub account calls", () => {
     listAllV1.mockReset();
   });
 
-  it("lists the hub's accounts from /api/v1/accounts", async () => {
-    listAllV1.mockResolvedValue([{ id: "a1", created: 0 }]);
+  it("lists the hub's accounts from /api/v1/accounts, dropping Operators accounts", async () => {
+    listAllV1.mockResolvedValue([
+      { id: "a1", ecosystem_id: HUB_ECOSYSTEM_ID, created: 0 },
+      { id: "op1", ecosystem_id: "00000000-0000-4000-8000-00000000a002", created: 0 },
+    ]);
     const rows = await fetchHubAccounts();
-    expect(listAllV1).toHaveBeenCalledWith(`/api/v1/accounts?ecosystem_id=${HUB_ECOSYSTEM_ID}`);
+    expect(listAllV1).toHaveBeenCalledWith("/api/v1/accounts");
     expect(rows.map((r) => r.id)).toEqual(["a1"]);
   });
 
