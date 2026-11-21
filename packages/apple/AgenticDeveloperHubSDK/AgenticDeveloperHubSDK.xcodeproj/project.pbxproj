@@ -2026,6 +2026,7 @@
 		6C955DBAB12640EB356BCB3A /* JSONFileDocumentStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73F8C98CFEBB4B073ADE7BD2 /* JSONFileDocumentStoreTests.swift */; };
 		6C9AEFED4653BBDBF1D1612E /* SubprocessChannelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F916B4469D48DE38A8B6CD6A /* SubprocessChannelTests.swift */; };
 		6C9AFB44941040E9B6B3687C /* SessionWatcherActionHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B045EF84229A8B9ACAC48CC /* SessionWatcherActionHandler.swift */; };
+		6CA209F6C42C81C0EB254EA1 /* FeedChatSessionPauseTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 956B5649876CFA6F195EE4F4 /* FeedChatSessionPauseTests.swift */; };
 		6CB11875C8C686E4E4B7D1CF /* AIProviderConfigurationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43C3DBDA70A339BF31815149 /* AIProviderConfigurationTests.swift */; };
 		6CB229FB8C48A6B0B9A4FB84 /* ParticipantConversationState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 596163E8F8C71ABE804A00AE /* ParticipantConversationState.swift */; };
 		6CC6A11FD313E7DDDBE93799 /* LanguageServerConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 482C1E8ECE426B121D81C3ED /* LanguageServerConfiguration.swift */; };
@@ -9749,6 +9750,7 @@
 		953BD1431B5694029A0A20E4 /* MailClassification.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MailClassification.swift; sourceTree = "<group>"; };
 		953D5B6B6CA43209B2196407 /* StorableSetting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StorableSetting.swift; sourceTree = "<group>"; };
 		95655C90FF355B2B3542919D /* FilePreviewLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilePreviewLoader.swift; sourceTree = "<group>"; };
+		956B5649876CFA6F195EE4F4 /* FeedChatSessionPauseTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedChatSessionPauseTests.swift; sourceTree = "<group>"; };
 		956C0C2E5182132D3A223E6D /* DaemonAIChat+Log.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DaemonAIChat+Log.swift"; sourceTree = "<group>"; };
 		957033682183F49D35C2C1FB /* DaemonDatabaseTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DaemonDatabaseTests.swift; sourceTree = "<group>"; };
 		95815985FA0D9774695100C8 /* BuiltInThemes+Native.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BuiltInThemes+Native.swift"; sourceTree = "<group>"; };
@@ -19188,6 +19190,7 @@
 				F3E26FBDD8ADE53AE7E2883E /* ConversationsStatusLineTests.swift */,
 				B32354E30AE5AF1FFE4231CD /* ConversationsSwitchTests.swift */,
 				44031DED56A4130B3ED307A9 /* ConversationsWorkOutputTests.swift */,
+				956B5649876CFA6F195EE4F4 /* FeedChatSessionPauseTests.swift */,
 				CDAA47D323E439CE23177E4A /* LocalChatSessionTests.swift */,
 				97E357C64DCEE4A98C89DF58 /* MCPChipsBarViewConformanceTests.swift */,
 				4C20838D51D90AC4D7910F62 /* TranscriptDateTests.swift */,
@@ -23121,6 +23124,7 @@
 				52CE362DF822F9CC98C3C5FE /* ExtensionsSettingsPanelTests.swift in Sources */,
 				4BE121508EC35EA57D209A47 /* ExternalThemeChangeObservationTests.swift in Sources */,
 				EEDE51BDAA0F3233A06AA59C /* FakeBillingClient.swift in Sources */,
+				6CA209F6C42C81C0EB254EA1 /* FeedChatSessionPauseTests.swift in Sources */,
 				6A5600E9B6AAAFC3E8D6D0C0 /* FileBrowserClickFocusTests.swift in Sources */,
 				55246732B88266BF498D5684 /* FileBrowserRestorationStateTests.swift in Sources */,
 				CBFD579A5CA08CB21DDC2258 /* FileEditorHighlightProviderTests.swift in Sources */,
