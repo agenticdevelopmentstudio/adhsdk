@@ -152,7 +152,9 @@
   every insert and update.
 - **markdownnotestorage-fetch-one**: Fetching one note by id MUST read
   that one document and its ownership record, and MUST answer nothing when
-  no document has that id.
+  no live document with the note marker has that id, so a doc or paper
+  sharing the id space is never handed back as a note (fetching all notes
+  lists by the same marker).
 - **markdownnotestorage-frontmatter-ownership**: The markdown-backed
   conformer MUST record, per document, which frontmatter keys it itself
   wrote, and MUST use that recorded fact — never the key's value — to
@@ -206,6 +208,15 @@
   writer, or a conflicted copy — so an observer re-reads the
   notes list from the posting manager rather than from a stale payload
   snapshot that could already be out of date by the time it is read.
+- **notesmanager-note-replaced-notification**: The manager MUST post a
+  note-replaced notification, with the manager as subject and the note's id
+  under the note-id key, whenever it replaces a held note's text with
+  another writer's — an applied upsert over a held note, a stale save that
+  keeps the other writer's note, or a reload that brings a held note's
+  changed text — so an editor showing that note re-shows it instead of
+  keeping text that is no longer the note's. The notes window MUST re-show
+  the open note on it when the editor's text differs from the note's, and
+  leave the editor alone for any other note.
 - **notesmanager-taxonomy-notification**: The manager MUST post a
   taxonomy-change notification (same shape: the manager as subject, no
   payload) when its storage's change stream reports a taxonomy change,
@@ -275,7 +286,10 @@
   and cancel the subscription when it is released, applying each change
   on the primary thread: a resync reloads every note and then posts the
   taxonomy-change notification; a taxonomy change only posts that
-  notification; a deletion of a held note removes it; an upsert fetches that note and replaces the held
+  notification; a deletion of a held note removes it — unless the note has an unsaved
+  edit, in which case the editor's text is first stored as a conflicted
+  copy and the note is removed only once the copy is stored (a failed copy
+  records the failure and keeps the note); an upsert fetches that note and replaces the held
   copy only when the fetched version is higher than the version ledger
   holds for it (a version at or below it is the manager's own echo),
   appends it when not held, and removes the held copy when the fetch
@@ -288,6 +302,14 @@
   write before it produced and two consecutive saves of its own are never
   stale against each other. The in-memory note's `version` MUST follow the
   ledger once a save lands.
+- **notesmanager-reload-keeps-unsaved-edits**: A load or resync MUST NOT
+  overwrite or forget a note with an unsaved edit: it keeps that note's
+  in-memory text, the base content and pin it last matched storage with,
+  and its ledger version (also for a note that turns dirty while the read
+  is in flight), and it MUST NOT clear the record of unsaved edits, so the
+  pending save is judged against the version it started from — it lands
+  when nobody else wrote, goes stale and keeps both texts when another
+  writer did, and becomes a conflicted copy when the note was deleted.
 - **notesmanager-live-changes-skip-dirty**: An upsert for a note with an
   edit not yet saved MUST NOT be applied over the editor — checked both
   before the fetch and again after it returns — so that note's next save
@@ -296,15 +318,24 @@
   error, the manager MUST obtain the stored note (from the error, or by
   fetching it), then: if the stored content still equals the content the
   note last had when it matched storage, it MUST re-save the editor's
-  current note on top of the stored version; otherwise it MUST keep the
+  current note on top of the stored version, taking the stored pin when
+  this editor did not change the pin since its base (so another writer's
+  pin or unpin survives) and the editor's pin when it did; otherwise it MUST keep the
   other writer's note in the list and, when the editor's text differs
   from that base, put the editor's latest text — including anything typed
-  after the failed save was scheduled — into a new note whose content is
-  `"# <title> (conflicted copy)\n\n"` followed by that text. When only
+  after the failed save was scheduled, and anything typed while the copy is
+  being written — into a new note, stored before the held note is replaced
+  with the other writer's, so a failed copy leaves the edit in the editor.
+  The copy is the editor's text with " (conflicted copy)" added wherever
+  the title comes from: a frontmatter `title` or `name` is marked in place,
+  a leading heading is marked in place, and otherwise a
+  `# <title> (conflicted copy)` heading is inserted after any frontmatter
+  block, so the frontmatter survives and the heading is never doubled. When only
   the pin differs from the base, no copy is made: the pin state MUST be
   re-applied on top of the other writer's note. If the note no longer
   exists in storage, the edit MUST likewise become a conflicted-copy note
-  rather than vanish.
+  rather than vanish, stored once before the note is forgotten, and not at
+  all when the note was already forgotten.
 - **notesmanager-taxonomy-accessor**: The manager's taxonomy accessor
   MUST return the storage's note taxonomy only when the storage
   implementation also supports the taxonomy-provider extension, and MUST

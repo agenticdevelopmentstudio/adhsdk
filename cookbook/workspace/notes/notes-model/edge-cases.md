@@ -37,8 +37,12 @@
 - A pin toggle that meets another writer's text change has no text of its
   own to keep, so it pins the other writer's note instead of making a
   conflicted copy.
-- A resync from the change stream discards the manager's record of
-  unsaved edits along with the list, because it reloads every note.
+- A resync from the change stream reloads every note but keeps each note
+  with an unsaved edit as the editor has it, with its base and its ledger
+  version, so the edit's save still conflicts properly rather than
+  overwriting another writer's text or vanishing.
+- Another writer deletes a note this editor is typing into. The typed text
+  is stored as a conflicted copy before the note leaves the list.
 - A resync also posts the taxonomy-change notification, even when no
   category changed: the feed lost track of what changed, so the folders
   pane rebuilds its tree as well as the notes list.
