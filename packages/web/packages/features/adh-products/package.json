@@ -2,7 +2,7 @@
   "name": "@adh-sdk/adh-products",
   "version": "0.1.0",
   "description": "The Products feature: @adh-sdk/ecosystems presented as Products, with its topic rail and the panes each topic opens.",
-  "license": "UNLICENSED",
+  "license": "Apache-2.0",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

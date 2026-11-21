@@ -2,7 +2,7 @@
   "name": "@adh-sdk/shipr",
   "version": "0.1.0",
   "description": "The shipr deployment console: the folder tree over deploy repositories, the toolbar that runs prepare/deploy/status/register/unregister on the selection, the column-aligned commit ladder, and the activity log beside it.",
-  "license": "UNLICENSED",
+  "license": "Apache-2.0",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

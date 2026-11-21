@@ -2,7 +2,7 @@
   "name": "@adh-sdk/adh-ecosystem-panes",
   "version": "0.1.0",
   "description": "An ecosystem's own sub-resources as panes: Applications, Storage Buckets, Users and Messaging — the four surfaces of an ecosystem that are typed against adh's backend API.",
-  "license": "UNLICENSED",
+  "license": "Apache-2.0",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

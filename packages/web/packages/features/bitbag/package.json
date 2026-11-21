@@ -2,7 +2,7 @@
   "name": "@adh-sdk/bitbag",
   "version": "0.1.0",
   "description": "bitbag — his persona, voice, avatar rig, and chat surface. Mounts on any site that links @adh-sdk.",
-  "license": "UNLICENSED",
+  "license": "Apache-2.0",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

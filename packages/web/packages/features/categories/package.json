@@ -2,7 +2,7 @@
   "name": "@adh-sdk/categories",
   "version": "0.1.0",
   "description": "The shared category rail: the level-builder hook every markdown surface's hierarchical category browser is built from, and the category/tag filter items every markdown list's gear offers.",
-  "license": "UNLICENSED",
+  "license": "Apache-2.0",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

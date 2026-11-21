@@ -2,7 +2,7 @@
   "name": "@adh-sdk/resource",
   "version": "0.1.0",
   "description": "Generic resource-browsing UI: ResourceExplorer, landing/dialog/master-detail, and the rail-host & record-affordance host seams.",
-  "license": "UNLICENSED",
+  "license": "Apache-2.0",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

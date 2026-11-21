@@ -2,7 +2,7 @@
   "name": "@adh-sdk/teams",
   "version": "0.1.0",
   "description": "The Teams feature: team list/settings/members/permissions over the resource substrate.",
-  "license": "UNLICENSED",
+  "license": "Apache-2.0",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

@@ -2,7 +2,7 @@
   "name": "@adh-sdk/adh-billing",
   "version": "0.1.0",
   "description": "The Billing feature: connect Stripe, declare what is for sale, and see who is paying.",
-  "license": "UNLICENSED",
+  "license": "Apache-2.0",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

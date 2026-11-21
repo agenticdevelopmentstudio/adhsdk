@@ -2,7 +2,7 @@
   "name": "@adh-sdk/knowledgebases",
   "version": "0.1.0",
   "description": "The Knowledge Bases feature: CRUD data views over the feature tables.",
-  "license": "UNLICENSED",
+  "license": "Apache-2.0",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

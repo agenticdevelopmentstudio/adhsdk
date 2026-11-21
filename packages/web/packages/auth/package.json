@@ -2,7 +2,7 @@
   "name": "@adh-sdk/auth",
   "version": "0.1.0",
   "description": "Shared authentication for Agentic Developer Hub sites — capabilities-based AuthProvider with SSO/MFA, Bearer HTTP client with CAS refresh, auth gates, login/signup cards, and the BFF proxy.",
-  "license": "UNLICENSED",
+  "license": "Apache-2.0",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

@@ -2,7 +2,7 @@
   "name": "@adh-sdk/authentication",
   "version": "0.1.0",
   "description": "The Authentication feature: API tokens, ecosystem access, and bucket-access panes.",
-  "license": "UNLICENSED",
+  "license": "Apache-2.0",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

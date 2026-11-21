@@ -2,7 +2,7 @@
   "name": "@adh-sdk/personas",
   "version": "0.1.0",
   "description": "The Personas feature: persona editor, services, abilities/permissions panels.",
-  "license": "UNLICENSED",
+  "license": "Apache-2.0",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

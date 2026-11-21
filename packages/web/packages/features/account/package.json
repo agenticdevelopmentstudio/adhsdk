@@ -2,7 +2,7 @@
   "name": "@adh-sdk/account",
   "version": "0.1.0",
   "description": "A user's ACCOUNT settings surface: the portable panels behind User Settings — account, profile, contact info, notifications, security, subscription and archived organizations — plus the master-detail settings layout they share.",
-  "license": "UNLICENSED",
+  "license": "Apache-2.0",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

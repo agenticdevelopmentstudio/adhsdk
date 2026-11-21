@@ -2,7 +2,7 @@
   "name": "@adh-sdk/hub-mail",
   "version": "0.1.0",
   "description": "Reads a signed-in customer's hub-synced Gmail in the browser through the hub API, held in memory for the page's lifetime.",
-  "license": "UNLICENSED",
+  "license": "Apache-2.0",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

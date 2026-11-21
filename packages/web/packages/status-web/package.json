@@ -1,6 +1,7 @@
 {
   "name": "@adh-sdk/status-web",
   "version": "0.1.0",
+  "license": "Apache-2.0",
   "description": "A status monitor's operator dashboard: React panels, hooks and the browser-side API client. A Next host mounts these in its own pages, providers and proxy.",
   "type": "module",
   "sideEffects": [

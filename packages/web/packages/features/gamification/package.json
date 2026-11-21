@@ -2,7 +2,7 @@
   "name": "@adh-sdk/gamification",
   "version": "0.1.0",
   "description": "The Gamification feature: a product's realm config, badge catalog, level ladder, and custom event types — as one composite pane or four topic panes.",
-  "license": "UNLICENSED",
+  "license": "Apache-2.0",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

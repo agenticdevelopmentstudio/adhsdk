@@ -2,7 +2,7 @@
   "name": "@adh-sdk/adh-site-homes",
   "version": "0.1.0",
   "description": "Every fleet site's workspace implementation, one SiteHomeModel per entry. Each site re-exports its own; the hub mounts the same objects as routes under /<workspace>/<siteId>. One entry per site so a consumer pulls only what it mounts.",
-  "license": "UNLICENSED",
+  "license": "Apache-2.0",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

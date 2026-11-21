@@ -2,7 +2,7 @@
   "name": "@adh-sdk/projects",
   "version": "0.1.0",
   "description": "The Projects feature: ProjectsFeature + its panes/views (overview, work-items surface with five views, editor, activity) over the resource substrate.",
-  "license": "UNLICENSED",
+  "license": "Apache-2.0",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

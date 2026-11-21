@@ -2,7 +2,7 @@
   "name": "@adh-sdk/ecosystems",
   "version": "0.1.0",
   "description": "The Ecosystems feature: ecosystem explorer, settings/detail panes, invitation panes (host-composed topic panes are injected).",
-  "license": "UNLICENSED",
+  "license": "Apache-2.0",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

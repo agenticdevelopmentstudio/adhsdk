@@ -2,7 +2,7 @@
   "name": "@adh-sdk/data",
   "version": "0.1.0",
   "description": "Unified headless data model: authed HTTP, tenant, resource-list cache, feature domains.",
-  "license": "UNLICENSED",
+  "license": "Apache-2.0",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

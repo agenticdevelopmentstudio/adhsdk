@@ -2,7 +2,7 @@
   "name": "@adh-sdk/registry",
   "version": "0.1.0",
   "description": "The crossing point to @adh-sdk/registry-*. Re-publishes the profile renderer and the field-type catalog so adh sites never name that scope themselves — which is what keeps exactly one copy of it in a bundle — and adds the API client, the editing widgets and the contact composer sites need.",
-  "license": "UNLICENSED",
+  "license": "Apache-2.0",
   "type": "module",
   "sideEffects": ["**/*.css"],
   "files": ["dist"],

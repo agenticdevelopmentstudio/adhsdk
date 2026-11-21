@@ -2,7 +2,7 @@
   "name": "@adh-sdk/api-explorer",
   "version": "0.1.0",
   "description": "Reusable, authed \"try-it-out\" endpoint panel for agentic-web-toolkit consumers — spec-generated endpoint metadata plus a theme-aware React panel that documents one REST endpoint (URL, params, request/response schemas, errors, CRUD-family siblings) and calls it with the logged-in user's credentials.",
-  "license": "UNLICENSED",
+  "license": "Apache-2.0",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

@@ -2,7 +2,7 @@
   "name": "@adh-sdk/adh-admin",
   "version": "0.1.0",
   "description": "The Admin console feature: users, invitations, feature flags, server bags, sync, audit, messaging, feedback, authentication, LLM providers, usage limits, and reserved identifiers.",
-  "license": "UNLICENSED",
+  "license": "Apache-2.0",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

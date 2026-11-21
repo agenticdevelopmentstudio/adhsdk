@@ -1,6 +1,7 @@
 {
   "name": "@adh-sdk/adh-next-config",
   "version": "0.1.0",
+  "license": "Apache-2.0",
   "private": true,
   "type": "module",
   "description": "The composition root every ADH site's next.config.ts calls. Derives the site from cwd, asserts its dependency declarations, and assembles the shared config.",

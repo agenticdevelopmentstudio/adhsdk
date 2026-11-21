@@ -2,7 +2,7 @@
   "name": "@adh-sdk/crud",
   "version": "0.1.0",
   "description": "Generic table CRUD for agentic-web-toolkit consumers — spec-generated table metadata, an authed REST hook over the backend's generic CRUD API, and metadata-driven list/form components.",
-  "license": "UNLICENSED",
+  "license": "Apache-2.0",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

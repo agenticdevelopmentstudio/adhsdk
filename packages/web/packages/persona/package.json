@@ -2,7 +2,7 @@
   "name": "@adh-sdk/persona",
   "version": "0.1.0",
   "description": "The single crossing point to @adh-sdk/*. Re-publishes the persona layer's chat, themes and viewport vocabulary so consumers never name that scope themselves — which is what keeps exactly one copy of it in a bundle.",
-  "license": "UNLICENSED",
+  "license": "Apache-2.0",
   "type": "module",
   "sideEffects": [
     "**/*.css"

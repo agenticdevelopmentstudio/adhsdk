@@ -2,7 +2,7 @@
   "name": "@adh-sdk/messaging",
   "version": "0.1.0",
   "description": "Direct messages and notifications for agentic-web-toolkit consumers — authed SSE-backed hooks over the backend's DM/notification API, plus the DM list/thread/panel, notification bell/inbox and presence-dot components.",
-  "license": "UNLICENSED",
+  "license": "Apache-2.0",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

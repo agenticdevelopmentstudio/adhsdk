@@ -2,7 +2,7 @@
   "name": "@adh-sdk/research",
   "version": "0.1.0",
   "description": "The Research feature: markdown research documents — search, editor, publish flow.",
-  "license": "UNLICENSED",
+  "license": "Apache-2.0",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

@@ -2,7 +2,7 @@
   "name": "@adh-sdk/adh-registries",
   "version": "0.1.0",
   "description": "The Registries feature: the owner's explorer over the registries a workspace built, and the registrant's editor for their own listing in one.",
-  "license": "UNLICENSED",
+  "license": "Apache-2.0",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

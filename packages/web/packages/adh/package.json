@@ -2,7 +2,7 @@
   "name": "@adh-sdk/adh",
   "version": "0.2.0",
   "description": "Agentic Developer Hub shared components — header, footer, theme switcher composed on shadcn + @adh-sdk primitives.",
-  "license": "UNLICENSED",
+  "license": "Apache-2.0",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

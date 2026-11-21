@@ -2,7 +2,7 @@
   "name": "@adh-sdk/notebook",
   "version": "0.1.0",
   "description": "The Notebook feature: the owner's notes, browsed through a hierarchical category rail.",
-  "license": "UNLICENSED",
+  "license": "Apache-2.0",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

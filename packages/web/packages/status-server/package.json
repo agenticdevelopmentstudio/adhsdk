@@ -1,6 +1,7 @@
 {
   "name": "@adh-sdk/status-server",
   "version": "0.1.0",
+  "license": "Apache-2.0",
   "description": "A status monitor's server: Hono app factory, monitor cycle, board, routes, OpenAPI, MCP, peers, telemetry, storage and the libSQL implementation. No React, no Next, no DOM \u2014 a backend host depends on this package alone.",
   "type": "module",
   "main": "./dist/index.js",

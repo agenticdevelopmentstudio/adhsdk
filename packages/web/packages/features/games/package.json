@@ -2,7 +2,7 @@
   "name": "@adh-sdk/games",
   "version": "0.1.0",
   "description": "The games authoring workspace: a game catalog, its engine, and the definitions, connections and effects it declares.",
-  "license": "UNLICENSED",
+  "license": "Apache-2.0",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
