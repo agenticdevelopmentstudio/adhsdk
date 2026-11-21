@@ -135,6 +135,13 @@ public final class ConversationFocusOverlay: DismissibleOverlayView {
     /// than up to one interval behind it.
     public func refresh() { session.refresh() }
 
+    /// Whether this conversation is re-read — off while the window it covers
+    /// is off screen. See ``FeedChatSession/isPaused``.
+    public var isPaused: Bool {
+        get { session.isPaused }
+        set { session.isPaused = newValue }
+    }
+
     deinit { session.close() }
 
     /// Stopped before the fade rather than in `deinit`: the fade is a fifth of a

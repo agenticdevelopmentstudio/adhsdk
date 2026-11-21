@@ -690,9 +690,13 @@ public final class ConversationsViewController: NSViewController {
     /// opened builds this with it off, and the window switches it on while it
     /// is on screen — the shelf's ``ConversationsShelfViewController/watchesActivity``
     /// recipe — so a closed window asks the daemon for nothing.
+    /// The focus overlay is a second reader, so it follows the same switch.
     public var watchesFeed: Bool {
         get { !session.isPaused }
-        set { session.isPaused = !newValue }
+        set {
+            session.isPaused = !newValue
+            overlay?.isPaused = !newValue
+        }
     }
 
     @available(*, unavailable)
@@ -805,6 +809,7 @@ public final class ConversationsViewController: NSViewController {
             if self?.overlay === overlay { self?.overlay = nil }
         }
         self.overlay = overlay
+        overlay.isPaused = !watchesFeed
         overlay.present(in: view)
     }
 
