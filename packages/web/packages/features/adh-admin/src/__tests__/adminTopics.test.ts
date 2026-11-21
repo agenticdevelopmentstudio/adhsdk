@@ -10,7 +10,10 @@ import { INVITATION_TOPICS } from "../panes/InvitationsPane";
 
 // Case-insensitive, so "AI Processing" sorts after "Access" the way a reader expects.
 const isAlphabetical = (labels: readonly string[]): boolean =>
-  labels.every((l, i) => i === 0 || labels[i - 1].localeCompare(l, "en", { sensitivity: "base" }) <= 0);
+  labels.every((l, i) => {
+    const prev = labels[i - 1];
+    return prev === undefined || prev.localeCompare(l, "en", { sensitivity: "base" }) <= 0;
+  });
 
 describe("every admin list is alphabetical", () => {
   it("the categories", () => {
