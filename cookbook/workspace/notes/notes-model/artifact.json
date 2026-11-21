@@ -4,15 +4,15 @@
     "id": "d46b3e1c-9cd9-41b6-bdd2-524ece5e294b",
     "title": "Notes Model",
     "type": "ingredient",
-    "version": "1.1.4",
+    "version": "1.2.0",
     "status": "review",
     "language": "en",
     "created": "2026-09-24",
-    "modified": "2026-11-13",
+    "modified": "2026-11-21",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
-    "summary": "The on-device model, storage contract, and orchestrator behind the Notes feature — a note, a note folder, a storage seam, a markdown-backed conformer, and the manager coordinating them.",
+    "summary": "The on-device model, storage contract, and orchestrator behind the Notes feature — a versioned note and its shared markdown mapping, a note folder, an async storage seam with stale errors and a change stream, a markdown-backed conformer, and the manager coordinating them, live changes and conflicted copies included.",
     "platforms": [
       "swift",
       "macos"
@@ -31,17 +31,19 @@
     ],
     "related": [],
     "references": [
-      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/NotesWindow/Note.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Markdown/Note.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Markdown/MarkdownNoteMapping.swift (adhsdk)",
       "packages/apple/AgenticDeveloperHubSDK/macOS/Features/NotesWindow/NoteFolder.swift (adhsdk)",
       "packages/apple/AgenticDeveloperHubSDK/macOS/Features/NotesWindow/NoteStorage.swift (adhsdk)",
       "packages/apple/AgenticDeveloperHubSDK/macOS/Features/NotesWindow/NoteTaxonomyProviding.swift (adhsdk)",
       "packages/apple/AgenticDeveloperHubSDK/macOS/Features/NotesWindow/MarkdownNoteStorage.swift (adhsdk)",
-      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/NotesWindow/NotesManager.swift (adhsdk)"
+      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/NotesWindow/NotesManager.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/NotesWindow/NotesMarkdownReExports.swift (adhsdk)"
     ],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "3fd6fc3a4492d549",
+  "synced": "4de13b4ae0d1a7f4",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

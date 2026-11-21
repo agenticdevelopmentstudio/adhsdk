@@ -38,7 +38,14 @@
   `isTruthy` implements the truthy-parsing rule; `truncate` implements the
   orphan-purge refusal.
 
-  `MarkdownStore.init` takes the required tenancy ids; `createDocument`,
+  `MarkdownStore.init` takes the required tenancy ids, and
+  `init(database:syncStore:customerID:ecosystemID:)` opens a host-owned database
+  (**shared-database-init**); `updateDocument`, `mutateDocument` and
+  `deleteDocument` take `expectedVersion` and throw
+  `MarkdownStoreError.staleVersion(current:)` (**expected-version-check**), and every
+  write logs through `GRDBSyncStore.logChange`, while a pull appends through the
+  static `GRDBSyncStore.appendChange` (**local-version-bumped-by-every-write**,
+  **local-version-never-travels**); `createDocument`,
   `updateDocument`, `publishDocument`/`unpublishDocument`, and `deleteDocument`
   implement the lifecycle methods above; `drainRemoteQueue` implements the queue
   drain, sending each operation through a caller-supplied `MarkdownRemoteWriter`;

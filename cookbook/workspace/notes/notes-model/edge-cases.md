@@ -27,6 +27,13 @@
   the debounced write.
 - Updating a note's single-transaction read-merge-write buys atomicity
   against a concurrent writer, not ordering between two update calls on
-  the same note — the second one to commit always wins over the whole
-  note, matching this system's own head-has-no-concurrency-token model.
+  the same note — the markdown-backed conformer has no concurrency token,
+  so the second one to commit always wins over the whole note. A storage
+  with a token (a daemon-backed one) refuses the later write as stale
+  instead, and the manager resolves it.
+- A note deleted by another writer while this editor still has an unsaved
+  edit is not lost: the stale save turns the edit into a
+  "(conflicted copy)" note.
+- A resync from the change stream discards the manager's record of
+  unsaved edits along with the list, because it reloads every note.
 
