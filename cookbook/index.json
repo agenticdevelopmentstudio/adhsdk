@@ -4809,6 +4809,22 @@
       "path": "themes/tokens",
       "rdid": "adhsdk.ingredient.themes.tokens"
     },
+    "34d98464-3a63-49c7-9979-8cc5f4940b6a": {
+      "implementations": [
+        {
+          "conformance": {
+            "hash": "sha256:6f56d4a0438c598327c7fc7b06e04d5681850855b287a0697aabbe8c3281fb9c",
+            "state": "confirmed",
+            "version": "1.0.0"
+          },
+          "location": "packages/web/packages/ui/src/blocks/description-card.tsx",
+          "platform": "web"
+        }
+      ],
+      "kind": "recipe",
+      "path": "ui/blocks/description-card",
+      "rdid": "adhsdk.recipe.ui.blocks.description-card"
+    },
     "351e3bf8-b137-4f59-94de-c769aa8b0666": {
       "implementations": [
         {
@@ -12667,6 +12683,31 @@
       "path": "workspace/browser/element-picker",
       "rdid": "adhsdk.ingredient.workspace.browser.element-picker"
     },
+    "8b6eb57b-458b-4901-9591-01736f0e4153": {
+      "implementations": [
+        {
+          "conformance": {
+            "hash": "sha256:ef0fdde6c33374d679752341a7e01530b150d48edb5423ec4d1016fc4a57898d",
+            "state": "confirmed",
+            "version": "1.0.0"
+          },
+          "location": "packages/web/packages/ui/src/blocks/phase-checklist.tsx",
+          "platform": "web"
+        },
+        {
+          "conformance": {
+            "hash": "sha256:1b42c70d361ab0657c2c746089e3d2b97ec1892438fe8b829e093b3a3b553638",
+            "state": "confirmed",
+            "version": "1.0.0"
+          },
+          "location": "packages/web/packages/ui/src/lib/progress-count.ts",
+          "platform": "web"
+        }
+      ],
+      "kind": "recipe",
+      "path": "ui/blocks/phase-checklist",
+      "rdid": "adhsdk.recipe.ui.blocks.phase-checklist"
+    },
     "8b79c521-04f3-4a43-90db-ae6e0bba9f84": {
       "implementations": [],
       "kind": "ingredient",
@@ -14454,6 +14495,22 @@
       "kind": "ingredient",
       "path": "foundation/terminal/terminal-text-injector",
       "rdid": "adhsdk.ingredient.foundation.terminal.terminal-text-injector"
+    },
+    "9dfb3209-066d-43bf-acdb-ad8b71959858": {
+      "implementations": [
+        {
+          "conformance": {
+            "hash": "sha256:c07ee119e8ab9b8e188c796b1bfd43fb232339c238b147aeb61f731ad9d7edf4",
+            "state": "confirmed",
+            "version": "1.0.0"
+          },
+          "location": "packages/web/packages/ui/src/blocks/progress-summary.tsx",
+          "platform": "web"
+        }
+      ],
+      "kind": "recipe",
+      "path": "ui/blocks/progress-summary",
+      "rdid": "adhsdk.recipe.ui.blocks.progress-summary"
     },
     "9e06ce25-a124-473e-9cf6-ea11a7c40b2d": {
       "implementations": [

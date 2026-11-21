@@ -1,0 +1,48 @@
+{
+  "format": 2,
+  "meta": {
+    "id": "8b6eb57b-458b-4901-9591-01736f0e4153",
+    "title": "PhaseChecklist",
+    "type": "recipe",
+    "version": "1.0.0",
+    "status": "review",
+    "language": "en",
+    "created": "2026-11-21",
+    "modified": "2026-11-21",
+    "author": "Mike Fullerton",
+    "copyright": "2026 Mike Fullerton",
+    "license": "MIT",
+    "summary": "A checklist grouped by phase: each phase a section with its own \"done / total\", each item a row with a status icon and accessible status name; stopped items struck through and muted.",
+    "platforms": [
+      "typescript",
+      "web"
+    ],
+    "tags": [
+      "block",
+      "checklist",
+      "progress",
+      "ui"
+    ],
+    "ingredients": [],
+    "depends-on": [],
+    "related": [],
+    "references": [],
+    "approved-by": "",
+    "approved-date": ""
+  },
+  "synced": "0120296aaa87abee",
+  "parts": [
+    {"part": "intro"},
+    {"part": "overview", "heading": "Overview"},
+    {"part": "ingredients", "heading": "Ingredients"},
+    {"part": "integration-requirements", "heading": "Integration Requirements"},
+    {"part": "layout", "heading": "Layout"},
+    {"part": "shared-state", "heading": "Shared State"},
+    {"part": "integration-test-vectors", "heading": "Integration Test Vectors"},
+    {"part": "edge-cases", "heading": "Edge Cases"},
+    {"part": "platform-notes", "heading": "Platform Notes"},
+    {"part": "design-decisions", "heading": "Design Decisions"},
+    {"part": "compliance", "heading": "Compliance"},
+    {"part": "history", "heading": "Change History"}
+  ]
+}

@@ -1,0 +1,50 @@
+{
+  "format": 2,
+  "meta": {
+    "id": "9dfb3209-066d-43bf-acdb-ad8b71959858",
+    "title": "ProgressSummary",
+    "type": "recipe",
+    "version": "1.0.0",
+    "status": "review",
+    "language": "en",
+    "created": "2026-11-21",
+    "modified": "2026-11-21",
+    "author": "Mike Fullerton",
+    "copyright": "2026 Mike Fullerton",
+    "license": "MIT",
+    "summary": "The overall progress line: \"x of y items done\" and a whole percentage over a Progress bar that turns green when everything is done.",
+    "platforms": [
+      "typescript",
+      "web"
+    ],
+    "tags": [
+      "block",
+      "progress",
+      "summary",
+      "ui"
+    ],
+    "ingredients": [
+      "b3a92adc-a28e-4a33-8120-c33f8f0abdf6"
+    ],
+    "depends-on": [],
+    "related": [],
+    "references": [],
+    "approved-by": "",
+    "approved-date": ""
+  },
+  "synced": "411708d03e21d2e6",
+  "parts": [
+    {"part": "intro"},
+    {"part": "overview", "heading": "Overview"},
+    {"part": "ingredients", "heading": "Ingredients"},
+    {"part": "integration-requirements", "heading": "Integration Requirements"},
+    {"part": "layout", "heading": "Layout"},
+    {"part": "shared-state", "heading": "Shared State"},
+    {"part": "integration-test-vectors", "heading": "Integration Test Vectors"},
+    {"part": "edge-cases", "heading": "Edge Cases"},
+    {"part": "platform-notes", "heading": "Platform Notes"},
+    {"part": "design-decisions", "heading": "Design Decisions"},
+    {"part": "compliance", "heading": "Compliance"},
+    {"part": "history", "heading": "Change History"}
+  ]
+}

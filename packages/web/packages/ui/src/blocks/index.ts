@@ -233,6 +233,9 @@ export {
   type InfoPanelProps,
 } from "./info-panel";
 export { StatCard, type StatCardProps, type StatCardStat } from "./stat-card";
+export { DescriptionCard, type DescriptionCardProps } from "./description-card";
+export { ProgressSummary, type ProgressSummaryProps } from "./progress-summary";
+export { PhaseChecklist, type PhaseChecklistProps } from "./phase-checklist";
 export {
   StatList,
   StatListRow,
