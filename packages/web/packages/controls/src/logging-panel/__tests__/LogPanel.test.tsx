@@ -159,6 +159,18 @@ describe('LogPanel followTail', () => {
     expect(body.scrollTop).toBe(11 * ROW)
   })
 
+  it('keeps following once maxLines caps the list and the row count stops growing', () => {
+    const view = render(<LogPanel<Ctx> columns={baseColumns} lines={numbered(10)} maxLines={10} />)
+    const body = view.container.querySelector<HTMLElement>('.lp-body')!
+    measure(body)
+    view.rerender(<LogPanel<Ctx> columns={baseColumns} lines={numbered(11)} maxLines={10} />)
+    expect(body.scrollTop).toBe(10 * ROW)
+    body.scrollTop = 0
+    view.rerender(<LogPanel<Ctx> columns={baseColumns} lines={numbered(12)} maxLines={10} />)
+    expect(body.scrollTop).toBe(10 * ROW)
+    expect(screen.getByText('m11')).toBeTruthy()
+  })
+
   it('never moves the view when followTail is off', () => {
     const view = render(<LogPanel<Ctx> columns={baseColumns} lines={numbered(10)} followTail={false} />)
     const body = view.container.querySelector<HTMLElement>('.lp-body')!

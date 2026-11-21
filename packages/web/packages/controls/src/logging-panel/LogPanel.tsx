@@ -83,7 +83,9 @@ export function LogPanel<TContext = unknown>(props: LogPanelProps<TContext>) {
     const el = scrollerRef.current
     if (!el) return
     el.scrollTop = el.scrollHeight
-  }, [visible.length, followTail])
+    // Keyed on `visible` itself, not its length: once `maxLines` caps the list, each
+    // append drops the oldest row and the length stops changing, but the slice is new.
+  }, [visible, followTail])
 
   // Reset pinning when followTail flips on so the next append snaps to bottom.
   useEffect(() => {
