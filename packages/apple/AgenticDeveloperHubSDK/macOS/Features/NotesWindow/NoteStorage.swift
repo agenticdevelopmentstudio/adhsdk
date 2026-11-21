@@ -53,6 +53,9 @@ public enum NoteChange: Equatable, Sendable {
     case deleted(UUID)
     /// The storage lost track of what changed (a gap in its feed); re-read all.
     case resync
+    /// Another writer changed the categories or which notes are in them
+    /// (`NoteTaxonomy`); no note changed.
+    case taxonomyChanged
 }
 
 /// A storage that announces changes made by other writers, so `NotesManager`

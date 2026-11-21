@@ -26,7 +26,7 @@ import AgenticDeveloperHubSDKMarkdown
 /// This controller owns its store mutations — `createCategory`,
 /// `addCategoryEdge`, `renameCategory`, `deleteCategory` — rather than
 /// asking its delegate to perform them. `init(store:)` exists specifically
-/// so this controller can reach a live `MarkdownStore` on its own (see
+/// so this controller can reach a live `NoteTaxonomy` on its own (see
 /// `NoteTaxonomyProviding`); routing every edit back through a delegate that
 /// would need that same store reference would just duplicate the plumbing.
 /// The delegate's "DidRequest" methods are notifications of what already
@@ -42,10 +42,10 @@ import AgenticDeveloperHubSDKMarkdown
 
     public weak var delegate: NotesFolderListViewControllerDelegate?
 
-    private let store: MarkdownStore?
+    private let store: (any NoteTaxonomy)?
 
-    public init(store: MarkdownStore?) {
-        self.store = store
+    public init(taxonomy: (any NoteTaxonomy)?) {
+        self.store = taxonomy
         super.init(nibName: nil, bundle: nil)
     }
 
@@ -71,7 +71,7 @@ import AgenticDeveloperHubSDKMarkdown
     /// including from within a mutation method below — each of those calls
     /// this once it has written to the store.
     ///
-    /// A `nil` store (a host whose `NoteStorage` is not `MarkdownStore`-backed
+    /// A `nil` store (a host whose `NoteStorage` supplies no `NoteTaxonomy`
     /// — see `NoteTaxonomyProviding`) still shows "All Notes", just with
     /// nothing under it and a count of zero, rather than an empty pane with
     /// no explanation.

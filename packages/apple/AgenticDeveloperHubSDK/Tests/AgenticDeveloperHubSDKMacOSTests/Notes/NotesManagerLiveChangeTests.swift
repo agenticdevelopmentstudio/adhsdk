@@ -96,4 +96,32 @@ final class NotesManagerLiveChangeTests: XCTestCase {
 
         XCTAssertEqual(manager.notes.first?.content, "# Fed")
     }
+
+    // MARK: - Taxonomy
+
+    func testTaxonomyChangedPostsTaxonomyDidChangeAndLeavesNotesAlone() async {
+        let note = makeNote("# One")
+        let storage = VersionedNoteStorage([note])
+        let manager = NotesManager(storage: storage)
+        await manager.loadNotes()
+        let posted = expectation(forNotification: NotesManager.taxonomyDidChangeNotification, object: manager)
+        let notesChanged = expectation(forNotification: NotesManager.notesDidChangeNotification, object: manager)
+        notesChanged.isInverted = true
+
+        await manager.apply(.taxonomyChanged)
+
+        await fulfillment(of: [posted, notesChanged], timeout: 0.2)
+        XCTAssertEqual(manager.notes.map(\.id), [note.id])
+    }
+
+    func testResyncAlsoPostsTaxonomyDidChange() async {
+        let storage = VersionedNoteStorage([makeNote("# One")])
+        let manager = NotesManager(storage: storage)
+        await manager.loadNotes()
+        let posted = expectation(forNotification: NotesManager.taxonomyDidChangeNotification, object: manager)
+
+        await manager.apply(.resync)
+
+        await fulfillment(of: [posted], timeout: 1)
+    }
 }

@@ -52,7 +52,7 @@ final class NotesWindowToolbarTests: XCTestCase {
         let store = try MarkdownStore(path: ":memory:", customerID: "cust-1", ecosystemID: "eco-1")
         let split = NotesSplitViewController(
             notesManager: NotesManager(storage: EmptyNoteStorage()),
-            markdownStore: store,
+            taxonomy: store,
             autosaveName: makeAutosaveName()
         )
         split.loadViewIfNeeded()
@@ -69,7 +69,7 @@ final class NotesWindowToolbarTests: XCTestCase {
         let notesManager = NotesManager(storage: MarkdownNoteStorage(store: store))
         await notesManager.loadNotes()
         let split = NotesSplitViewController(
-            notesManager: notesManager, markdownStore: store, autosaveName: makeAutosaveName())
+            notesManager: notesManager, taxonomy: store, autosaveName: makeAutosaveName())
         split.loadViewIfNeeded()
         let note = try XCTUnwrap(notesManager.notes.first)
         let listVC = try XCTUnwrap(split.splitViewItems[1].viewController as? NotesListViewController)
@@ -347,7 +347,7 @@ final class NotesWindowToolbarTests: XCTestCase {
         let notesManager = NotesManager(storage: MarkdownNoteStorage(store: store))
         await notesManager.loadNotes()
         let split = NotesSplitViewController(
-            notesManager: notesManager, markdownStore: store, autosaveName: makeAutosaveName())
+            notesManager: notesManager, taxonomy: store, autosaveName: makeAutosaveName())
         split.loadViewIfNeeded()
         let listVC = try XCTUnwrap(split.splitViewItems[1].viewController as? NotesListViewController)
         let note = try XCTUnwrap(notesManager.notes.first)
@@ -379,7 +379,7 @@ final class NotesWindowToolbarTests: XCTestCase {
         let notesManager = NotesManager(storage: OneNoteStorage(note: note))
         await notesManager.loadNotes()
         let split = NotesSplitViewController(
-            notesManager: notesManager, markdownStore: nil, autosaveName: makeAutosaveName())
+            notesManager: notesManager, taxonomy: nil, autosaveName: makeAutosaveName())
         split.loadViewIfNeeded()
         let listVC = try XCTUnwrap(split.splitViewItems[1].viewController as? NotesListViewController)
         listVC.reload(notes: notesManager.notes, keepingSelectedID: note.id)

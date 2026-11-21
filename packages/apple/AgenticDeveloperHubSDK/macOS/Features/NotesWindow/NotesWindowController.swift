@@ -22,7 +22,7 @@ public final class NotesWindowController: WindowController<NotesSplitViewControl
     public init(notesManager: NotesManager) {
         self.notesManager = notesManager
         let splitViewController = NotesSplitViewController(
-            notesManager: notesManager, markdownStore: notesManager.markdownStore)
+            notesManager: notesManager, taxonomy: notesManager.taxonomy)
         self.toolbarDelegate = NotesWindowToolbar(splitViewController: splitViewController)
         super.init(
             windowID: Self.windowID,

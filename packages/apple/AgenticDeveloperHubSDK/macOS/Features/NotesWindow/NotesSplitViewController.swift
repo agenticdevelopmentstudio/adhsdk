@@ -11,8 +11,8 @@ public final class NotesSplitViewController: ThemedSplitViewController {
     private let notesManager: NotesManager
 
     /// The taxonomy store for the folders pane, when the host's storage has
-    /// one — see `NotesManager.markdownStore`.
-    public let markdownStore: MarkdownStore?
+    /// one — see `NotesManager.taxonomy`.
+    public let taxonomy: (any NoteTaxonomy)?
 
     /// Divider-position key, distinct per pane when a host can open more than
     /// one notes pane at a time.
@@ -74,11 +74,11 @@ public final class NotesSplitViewController: ThemedSplitViewController {
 
     public init(
         notesManager: NotesManager,
-        markdownStore: MarkdownStore? = nil,
+        taxonomy: (any NoteTaxonomy)? = nil,
         autosaveName: String = "notes-split-4"
     ) {
         self.notesManager = notesManager
-        self.markdownStore = markdownStore
+        self.taxonomy = taxonomy
         self.splitAutosaveName = autosaveName
         // The list watches the manager itself, so a note created anywhere else
         // — Quick Note, a scripting command, a second window — reaches this
@@ -86,7 +86,7 @@ public final class NotesSplitViewController: ThemedSplitViewController {
         // explicit `reload()` calls below stay: they also refresh the editor
         // and move the selection, which the notification deliberately does not.
         self.listVC = NotesListViewController(notesManager: notesManager)
-        self.folderVC = NotesFolderListViewController(store: markdownStore)
+        self.folderVC = NotesFolderListViewController(taxonomy: taxonomy)
         super.init(nibName: nil, bundle: nil)
         // Must wait until after `super.init()`: capturing `self`, even
         // weakly, to reach `notesForCurrentFolder()` is "use of self before
@@ -173,6 +173,15 @@ public final class NotesSplitViewController: ThemedSplitViewController {
         NotificationCenter.default.addObserver(
             self, selector: #selector(storageDidFail),
             name: NotesManager.storageDidFailNotification, object: notesManager)
+        NotificationCenter.default.addObserver(
+            self, selector: #selector(taxonomyDidChange),
+            name: NotesManager.taxonomyDidChangeNotification, object: notesManager)
+    }
+
+    /// Another writer changed the folders: rebuild the tree. The folder list
+    /// keeps its selection across a reload when the folder still exists.
+    @objc private func taxonomyDidChange() {
+        folderVC.reload()
     }
 
     @objc private func storageDidFail() {
@@ -391,13 +400,13 @@ public final class NotesSplitViewController: ThemedSplitViewController {
         guard let note = selectedNote() else { return }
         Task { @MainActor in
             guard let newID = await notesManager.createNote(content: note.content) else { return }
-            if let markdownStore {
+            if let taxonomy {
                 let documentID = note.id.uuidString.lowercased()
                 let newDocumentID = newID.uuidString.lowercased()
-                let categories = (try? markdownStore.categories(forDocument: documentID)) ?? []
+                let categories = (try? taxonomy.categories(forDocument: documentID)) ?? []
                 for category in categories {
                     do {
-                        try markdownStore.assignCategory(category.id, toDocument: newDocumentID)
+                        try taxonomy.assignCategory(category.id, toDocument: newDocumentID)
                     } catch {
                         Self.logger.error(
                             """
@@ -467,18 +476,18 @@ public final class NotesSplitViewController: ThemedSplitViewController {
     /// removes every current membership. With no store this is a no-op — the
     /// menu already disables the whole submenu in that case.
     public func moveSelectedNote(toFolder id: String) {
-        guard let note = selectedNote(), let markdownStore else { return }
+        guard let note = selectedNote(), let taxonomy else { return }
         let documentID = note.id.uuidString.lowercased()
         do {
-            let current = try markdownStore.categories(forDocument: documentID)
+            let current = try taxonomy.categories(forDocument: documentID)
             if id.isEmpty {
                 for category in current {
-                    try markdownStore.unassignCategory(category.id, fromDocument: documentID)
+                    try taxonomy.unassignCategory(category.id, fromDocument: documentID)
                 }
             } else if current.contains(where: { $0.id == id }) {
-                try markdownStore.unassignCategory(id, fromDocument: documentID)
+                try taxonomy.unassignCategory(id, fromDocument: documentID)
             } else {
-                try markdownStore.assignCategory(id, toDocument: documentID)
+                try taxonomy.assignCategory(id, toDocument: documentID)
             }
         } catch {
             // Matches `createNote()`'s log shape (documentID, the folder id,
@@ -572,10 +581,10 @@ public final class NotesSplitViewController: ThemedSplitViewController {
             // landed on "All Notes", skipping the filing entirely and leaving
             // the note unfiled while the editor shows it.
             let folderID = selectedFolderID
-            if let markdownStore, !folderID.isEmpty {
+            if let taxonomy, !folderID.isEmpty {
                 let newDocumentID = newID.uuidString.lowercased()
                 do {
-                    try markdownStore.assignCategory(folderID, toDocument: newDocumentID)
+                    try taxonomy.assignCategory(folderID, toDocument: newDocumentID)
                 } catch {
                     Self.logger.error(
                         """
@@ -628,8 +637,8 @@ public final class NotesSplitViewController: ThemedSplitViewController {
         // writes `note.id.uuidString.lowercased()` as the document id) — so
         // the result has to come back through `UUID(uuidString:)` before it
         // is comparable to `Note.id`.
-        if let markdownStore, !selectedFolderID.isEmpty,
-           let documentIDs = try? markdownStore.documentIDs(forCategory: selectedFolderID) {
+        if let taxonomy, !selectedFolderID.isEmpty,
+           let documentIDs = try? taxonomy.documentIDs(forCategory: selectedFolderID) {
             ids = Set(documentIDs.compactMap { UUID(uuidString: $0) })
         } else {
             ids = []
