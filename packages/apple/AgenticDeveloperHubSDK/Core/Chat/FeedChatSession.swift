@@ -59,6 +59,9 @@ public final class FeedChatSession: ChatSession, @unchecked Sendable {
     /// `isCancelled` check and its commit, and a read for the conversation the
     /// reader just left landing in it puts that conversation back on screen.
     private var generation: UInt64 = 0
+    /// Which ``events()`` stream is current, so an older stream ending never
+    /// drops a newer one's continuation.
+    private var subscription: UInt64 = 0
 
     /// The last transcript read, and the messages written since that are not in
     /// it yet. What the view sees is the two, in that order.
@@ -174,8 +177,24 @@ public final class FeedChatSession: ChatSession, @unchecked Sendable {
 
     public func events() -> AsyncStream<ChatEvent> {
         AsyncStream { continuation in
-            withLock { self.continuation = continuation }
-            continuation.onTermination = { [weak self] _ in self?.pump?.cancel() }
+            let subscription = withLock { () -> UInt64 in
+                self.continuation = continuation
+                self.subscription &+= 1
+                return self.subscription
+            }
+            // A finished stream has nobody to read for: dropping the
+            // continuation is what stops a later refresh or unpause from
+            // starting a poll that yields into nothing. Only this stream's own
+            // continuation is dropped, never a newer subscriber's.
+            continuation.onTermination = { [weak self] _ in
+                guard let self else { return }
+                let running = self.withLock { () -> Task<Void, Never>? in
+                    guard self.subscription == subscription else { return nil }
+                    self.continuation = nil
+                    return self.pump
+                }
+                running?.cancel()
+            }
             start()
         }
     }
@@ -263,7 +282,10 @@ public final class FeedChatSession: ChatSession, @unchecked Sendable {
             destinations.removeAll()
             pending.removeAll()
         }
-        withLock { continuation }?.finish()
+        withLock { () -> AsyncStream<ChatEvent>.Continuation? in
+            defer { continuation = nil }
+            return continuation
+        }?.finish()
     }
 
     // MARK: - Pending writes
@@ -369,7 +391,8 @@ public final class FeedChatSession: ChatSession, @unchecked Sendable {
         }
         existing?.cancel()
         // Paused, a refresh is held rather than dropped: unpausing reads.
-        guard !isPaused else { return }
+        // With nobody subscribed there is nothing to read for.
+        guard !isPaused, withLock({ continuation }) != nil else { return }
         let task = Task { [weak self] in
             guard let self else { return }
             while !Task.isCancelled {
