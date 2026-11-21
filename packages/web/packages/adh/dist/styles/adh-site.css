@@ -164,6 +164,17 @@ a.adh-footer__brand-link:focus-visible {
   }
 }
 
+/* ROOM FOR THE CORNERS. The `i` and bitbag float over the page, so a page that runs to the
+   bottom of the window put its last row under them: a pane's action row ends in the lower-right
+   corner, and its Publish button sat beneath bitbag's resting box, which takes the pointer, so
+   it could not be clicked. The bar that used to reserve this room went with the floating footer;
+   a landing page keeps its own (`--lp-dock-clear`). So the app shell's page column stops short
+   of the corners wherever the floating footer is mounted: his resting box tops out about 3.9rem
+   up (62px at the 1.75rem margin), the `i` at 3.45rem, and 4.5rem clears both. */
+.adh-app-shell:has(> .adh-footer--floating) > .adh-app-shell__main {
+  padding-bottom: var(--adh-corner-clear, calc(4.5rem + env(safe-area-inset-bottom, 0px)));
+}
+
 /* WHERE BITBAG PARKS — one line of it, because the rest is HIS.
    The dock now positions itself: bottom-right and fixed to the viewport, 560px
    wide, riding up over a phone keyboard (bitbag-dock.css, ported from fishlamp.com's

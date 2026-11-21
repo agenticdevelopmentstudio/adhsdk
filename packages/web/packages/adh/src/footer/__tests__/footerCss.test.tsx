@@ -171,6 +171,25 @@ describe('the floating box', () => {
     const box = site.filter((r) => r.at.length === 0 && r.selectors.includes('.adh-footer--floating .adh-footer__copyright'))
     expect(box.map((r) => r.get('pointer-events'))).toContain('auto')
   })
+
+  it("keeps the app shell's page column clear of the corners it and bitbag float over", () => {
+    // A pane's action row ends in the lower-right corner; without this room its last button sat
+    // under bitbag's resting box, which takes the pointer, and could not be clicked.
+    const clear = site.filter(
+      (r) => r.at.length === 0 && r.selectors.some((s) => s.endsWith('> .adh-app-shell__main')),
+    )
+    expect(clear, 'adh-site.css reserves no room under the page column').toHaveLength(1)
+    expect(clear[0]!.get('padding-bottom')).toMatch(/4\.5rem/)
+    // The rule's selector names the shell the footer is really mounted in.
+    const { container } = render(
+      <div className="adh-app-shell">
+        <main className="adh-app-shell__main" />
+        <SiteFooter />
+      </div>,
+    )
+    const main = container.querySelector('.adh-app-shell__main')!
+    expect(clear[0]!.selectors.some((s) => main.matches(s))).toBe(true)
+  })
 })
 
 describe('the preview badge', () => {
