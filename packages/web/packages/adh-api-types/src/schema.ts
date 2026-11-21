@@ -8095,7 +8095,7 @@ export interface paths {
         put?: never;
         /**
          * Set or replace one of the platform's messaging providers (admin)
-         * @description Updates the active config, or creates it when there is none. The submitted fields are merged over the stored config; a blank or absent secret field keeps the stored secret. A new Postmark config is created with its own deliverability webhook secret. 404 for any provider other than postmark or twilio.
+         * @description Updates the active config, or creates it when there is none. The submitted fields are merged over the stored config; a blank or absent secret field keeps the stored secret, and an optional field sent as an empty string or null is cleared. A new Postmark config is created with its own deliverability webhook secret. 404 for any provider other than postmark or twilio.
          *
          *     Replaces PUT /messaging/providers/{providerId}.
          */
@@ -21495,6 +21495,8 @@ export interface operations {
     getV1Accounts: {
         parameters: {
             query?: {
+                /** @description Uuid of the ecosystem whose accounts are listed: the hub or Operators. Narrows the list; it never widens what the caller can see. */
+                ecosystem_id?: string;
                 /** @description Page size, 1–100 (default 10). */
                 limit?: number;
                 /** @description Cursor: an object id; returns the page after it. */
@@ -58355,9 +58357,9 @@ export interface operations {
                 "application/json": {
                     /** @description Instance name */
                     name?: string;
-                    /** @description The provider's config fields by key: postmark serverToken, fromEmail, …; twilio accountSid, authToken, fromNumber. */
+                    /** @description The provider's config fields by key: postmark serverToken, fromEmail, …; twilio accountSid, authToken, fromNumber. An empty string or null clears an optional field. */
                     fields?: {
-                        [key: string]: string;
+                        [key: string]: string | null;
                     };
                     /** @description false pauses the provider */
                     enabled?: boolean;
