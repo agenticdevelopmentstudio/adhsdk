@@ -196,4 +196,51 @@ final class NotesManagerConflictTests: XCTestCase {
         let copy = NotesManager.conflictedCopyContent(of: original)
         XCTAssertTrue(copy.hasSuffix("line one\n\n## Section\nline two"))
     }
+
+    // MARK: - A stale re-save keeps the other writer's pin
+
+    func testStaleSaveKeepsAPinTheOtherWriterSet() async {
+        let note = makeNote("# Typing")
+        let storage = VersionedNoteStorage([note])
+        let manager = NotesManager(storage: storage)
+        await manager.loadNotes()
+
+        await manager.updateNote(manager.notes[0], content: "# Typing, more")
+        // Another device pins it while this one types: the feed upsert is
+        // skipped (the note is dirty), and the save goes stale on the bump.
+        storage.otherWriter(note.id, pinned: true)
+        await manager.flushPendingSaves()
+
+        XCTAssertEqual(storage.note(note.id)?.content, "# Typing, more")
+        XCTAssertEqual(storage.note(note.id)?.isPinned, true, "the other writer's pin is not undone")
+        XCTAssertEqual(manager.notes.first?.isPinned, true)
+    }
+
+    func testStaleSaveKeepsAnUnpinTheOtherWriterMade() async {
+        var note = makeNote("# Typing")
+        note.isPinned = true
+        let storage = VersionedNoteStorage([note])
+        let manager = NotesManager(storage: storage)
+        await manager.loadNotes()
+
+        await manager.updateNote(manager.notes[0], content: "# Typing, more")
+        storage.otherWriter(note.id, pinned: false)
+        await manager.flushPendingSaves()
+
+        XCTAssertEqual(storage.note(note.id)?.isPinned, false)
+        XCTAssertEqual(manager.notes.first?.isPinned, false)
+    }
+
+    func testStalePinToggleHereStillWinsOverAVersionBump() async {
+        let note = makeNote("# Pin me")
+        let storage = VersionedNoteStorage([note])
+        let manager = NotesManager(storage: storage)
+        await manager.loadNotes()
+
+        storage.otherWriter(note.id)
+        await manager.togglePin(note: manager.notes[0])
+
+        XCTAssertEqual(storage.note(note.id)?.isPinned, true)
+        XCTAssertEqual(manager.notes.first?.isPinned, true)
+    }
 }
