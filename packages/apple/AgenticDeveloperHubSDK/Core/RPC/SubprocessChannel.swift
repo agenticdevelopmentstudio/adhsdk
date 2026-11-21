@@ -127,6 +127,18 @@ public actor SubprocessChannel {
     /// `terminate()` is a hang.
     private static let messagePumpDrainGraceSeconds: TimeInterval = 0.5
 
+    /// How long `terminate()` waits — after the child is dead and before the
+    /// chunk streams are stopped — for stdout to reach EOF on its own. The
+    /// dead child's write end is already closed, so on the ordinary path the
+    /// reader drains whatever is still sitting in the kernel pipe and the pump
+    /// finishes almost at once. Stopping the readers first would discard those
+    /// unread bytes: `.stop` cancels the read in flight and closes the
+    /// descriptor, and a final frame the child wrote just before `exit` —
+    /// still in the pipe because the reader had not been scheduled yet — is
+    /// lost. Bounded because a grandchild holding the write end withholds EOF
+    /// for ever.
+    private static let naturalEndOfStreamGraceSeconds: TimeInterval = 0.5
+
     /// How much of the child's stderr this actor retains. Frames already
     /// have a 16 MB cap (`MessageFramingDecoder.maximumFrameBytes`); stderr
     /// had no equivalent, and a verbose long-lived child would otherwise
@@ -448,19 +460,22 @@ public actor SubprocessChannel {
     /// channel.
     ///
     /// Order matters, and is: close the child's stdin → SIGTERM → wait up to
-    /// `terminationGraceSeconds` → SIGKILL → stop the two `DispatchIO`
+    /// `terminationGraceSeconds` → SIGKILL → wait up to
+    /// `naturalEndOfStreamGraceSeconds` for stdout to reach EOF on its own,
+    /// so bytes still in the pipe are read → stop the two `DispatchIO`
     /// readers, which is the only place descriptors are closed → wait up to
     /// `messagePumpDrainGraceSeconds` for the pump to flush and finish the
     /// message stream itself.
     ///
     /// **Worst case this takes `terminationGraceSeconds` +
-    /// `messagePumpDrainGraceSeconds` — 2.5 s as configured — flat**, and a
+    /// `naturalEndOfStreamGraceSeconds` + `messagePumpDrainGraceSeconds` —
+    /// 3.0 s as configured — flat**, and a
     /// later `standardErrorText()` can add `standardErrorDrainGraceSeconds`
     /// (0.5 s) on top of that. The child's own SIGTERM handler runs *inside*
     /// the first budget rather than after it: `withWallClockBudget` resumes at
     /// expiry and never awaits the loser, and everything following that wait —
     /// the `isRunning` re-check, `SIGKILL`, `stopAll()` — is non-blocking. So
-    /// a slow handler cannot push this past 2.5 s; it can only use up more of
+    /// a slow handler cannot push this past 3.0 s; it can only use up more of
     /// the 2 s it already has.
     ///
     /// **This is not cancellable.** The work runs in an unstructured `Task`
@@ -468,7 +483,7 @@ public actor SubprocessChannel {
     /// cancelled caller must not abandon a half-killed child), and
     /// `await task.value` on a non-throwing task is not a cancellation point
     /// either. A caller under a deadline cannot shorten any single channel's
-    /// 2.5 s — so shut several channels down *concurrently* rather than in
+    /// 3.0 s — so shut several channels down *concurrently* rather than in
     /// sequence; these budgets are per channel and do not share.
     ///
     /// When this method is what ends the child's output, the message stream
@@ -488,14 +503,14 @@ public actor SubprocessChannel {
     /// child's stdout/stderr read ends any earlier makes its next write raise
     /// SIGPIPE, so a child that flushes a shutdown log from its own SIGTERM
     /// handler dies of a signal with that log unwritten and the grace period
-    /// buys nothing at all. The readers are stopped unconditionally —
-    /// not after waiting for the pump/drain tasks to observe EOF on their
-    /// own, which a child launched through a shell wrapper (`sh -c …`,
-    /// `npx …`) can withhold forever if a grandchild still holds the write
-    /// end. Stopping a `DispatchIO` channel has a defined interaction with a
-    /// read in flight (the outstanding handler is called with `ECANCELED`,
-    /// then the cleanup handler closes the descriptor), so forcing it here is
-    /// safe rather than a crash risk.
+    /// buys nothing at all. The readers are stopped unconditionally, after a
+    /// bounded wait for stdout's own EOF — never an unbounded one, which a
+    /// child launched through a shell wrapper (`sh -c …`, `npx …`) can
+    /// withhold forever if a grandchild still holds the write end. Stopping
+    /// a `DispatchIO` channel has a defined interaction with a read in flight
+    /// (the outstanding handler is called with `ECANCELED`, then the cleanup
+    /// handler closes the descriptor), so forcing it here is safe rather than
+    /// a crash risk.
     ///
     /// **Termination reaches the direct child only.** Both the SIGTERM and
     /// the SIGKILL escalation signal a single pid, never a process group, so
@@ -591,9 +606,21 @@ public actor SubprocessChannel {
             }
         }
 
-        // The child is dead by here, so closing the read ends can no longer
-        // SIGPIPE anything, and both readers have had the whole grace period
-        // to carry whatever the child said on its way out.
+        // The child is dead by here. Before closing anything, let stdout end
+        // on its own: what the child wrote just before `exit` can still be in
+        // the kernel pipe, unread, and `stopAll()` below discards unread bytes.
+        // With the child's write end closed, the reader drains the pipe, sees
+        // EOF and finishes its chunk stream, and the pump decodes the last
+        // frame and finishes the message stream. Bounded, for a grandchild
+        // that still holds the write end.
+        let naturalEndPumpTask = pumpTask
+        _ = try? await withWallClockBudget(Self.naturalEndOfStreamGraceSeconds) {
+            await naturalEndPumpTask?.value
+        }
+
+        // Closing the read ends can no longer SIGPIPE anything, and both
+        // readers have had the grace periods to carry whatever the child said
+        // on its way out.
         readerBox.stopAll()
 
         // `stopAll()` closes both channels with `.stop`, which calls each
