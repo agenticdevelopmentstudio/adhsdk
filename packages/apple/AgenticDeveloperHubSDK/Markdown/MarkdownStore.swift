@@ -80,6 +80,12 @@ public enum MarkdownStoreError: Error, Equatable {
     /// A write quoted an `expectedVersion` the row no longer has. `current` is
     /// the row's `local_version`; nothing was written.
     case staleVersion(current: Int64)
+    /// The shared-database initializer was handed a `GRDBSyncStore` built on
+    /// a different `BoundedDatabase`. Every document write logs to the sync
+    /// store's change feed on the markdown connection, so the pair must be
+    /// one database: otherwise the log fails (`no such table: _change_log`)
+    /// or lands in a feed whose observers never hear of it.
+    case syncStoreDatabaseMismatch
 }
 
 /// The nine mirrored tables, plus the local REST queue, over one GRDB database.
@@ -182,9 +188,15 @@ public final class MarkdownStore: @unchecked Sendable {
     /// stores (adhd keeps one database for every family it serves). Runs the
     /// markdown migrations on it; does **not** prepare `syncStore`, which the
     /// host prepared for every family at once.
+    ///
+    /// `syncStore` must be built on `database` (the same instance); anything
+    /// else throws `syncStoreDatabaseMismatch` before a migration runs.
     public init(
         database: BoundedDatabase, syncStore: GRDBSyncStore, customerID: String, ecosystemID: String
     ) throws {
+        guard syncStore.database === database else {
+            throw MarkdownStoreError.syncStoreDatabaseMismatch
+        }
         self.database = database
         self.syncStore = syncStore
         self.customerID = customerID

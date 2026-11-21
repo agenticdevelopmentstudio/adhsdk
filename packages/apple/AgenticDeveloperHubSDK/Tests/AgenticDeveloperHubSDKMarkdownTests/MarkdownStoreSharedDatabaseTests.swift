@@ -53,6 +53,27 @@ struct MarkdownStoreSharedDatabaseTests {
 
         #expect(fired.value == 1)
     }
+
+    @Test("a sync store built on another database is refused before anything runs")
+    func mismatchedSyncStoreIsRefused() throws {
+        let database = try BoundedDatabase(path: ":memory:")
+        let other = try BoundedDatabase(path: ":memory:")
+        let syncStore = GRDBSyncStore(
+            database: other,
+            pullOnlyResources: Set(MarkdownProjection.pullOnlyResources),
+            projection: MarkdownProjection())
+
+        #expect(throws: MarkdownStoreError.syncStoreDatabaseMismatch) {
+            try MarkdownStore(
+                database: database, syncStore: syncStore, customerID: "cust-1", ecosystemID: "eco-1")
+        }
+        // Refused before the migrations: the host's database is untouched.
+        let tables = try database.read { conn in
+            try String.fetchAll(
+                conn, sql: "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'markdown'")
+        }
+        #expect(tables.isEmpty)
+    }
 }
 
 /// A thread-safe tally for a `@Sendable` observer.
