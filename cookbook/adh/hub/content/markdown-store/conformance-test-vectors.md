@@ -25,3 +25,12 @@
 | markdown-core-022 | delete-drops-undelivered-create | Create a document and delete it before any drain | Nothing is queued |
 | markdown-core-023 | create-category-with-chosen-id, taxonomy-rides-generic-outbox | Create a category under the caller's id `ABC-123` | The returned category's id is `abc-123`, the category list holds exactly `abc-123`, and the generic outbox holds one `content.categories` op for row `abc-123` |
 | markdown-core-024 | note-taxonomy-conformance | Hand the store to a consumer typed as the note-taxonomy interface, then create a category by name and assign it to a live document through that interface | The category is listed by the store and the document's categories include it |
+| markdown-core-025 | refused-op-is-parked | Create documents A and B, drain into a writer that refuses A permanently | The writer receives A then B; A's create is listed as parked with the writer's reason and body; nothing is pending; A's content still reads back |
+| markdown-core-026 | parked-op-holds-its-document | Park A's create, update A, drain again | Nothing is sent; nothing is pending; one op is parked |
+| markdown-core-027 | delete-drops-undelivered-create, parked-op-leaves-explicitly | Park A's create, then delete A | No parked op and nothing pending |
+| markdown-core-028 | parked-op-leaves-explicitly | Park A's create, update A, retry the parked op, drain into a writer that mints R | The writer receives the create with its original op id and body, then the update addressed to R |
+| markdown-core-029 | parked-op-leaves-explicitly | Park A's create and discard it | Nothing parked or pending; A's content still reads back |
+| markdown-core-030 | drain-skips-removed-op | Drain two documents; while the first is in flight, delete the second (never sent) | The second is never sent and nothing is pending |
+| markdown-core-031 | shared-database-init | Construct the store over a database and a sync store built on another database | Throws the sync-store-database-mismatch error and creates no markdown table |
+| markdown-core-032 | unchanged-pull-is-silent | Pull a row, then pull it again with the same content but a new `current_version`, `created_at`, `frontmatter`, `content_hash` and author | The document stays at version 1 and the change log holds one entry for it |
+| markdown-core-033 | document-by-marker | Create a document with only the doc marker, then read it by id scoped to the note marker | Nothing is returned |

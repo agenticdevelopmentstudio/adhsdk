@@ -45,8 +45,8 @@
   `MarkdownStoreError.staleVersion(current:)` (**expected-version-check**), and every
   write logs through `GRDBSyncStore.logChange`, while a pull appends through the
   static `GRDBSyncStore.appendChange` (**local-version-bumped-by-every-write**,
-  **local-version-never-travels**); `MarkdownProjection.upsert` fingerprints the row
-  without its bookkeeping columns before and after the write and logs only when the
+  **local-version-never-travels**); `MarkdownProjection.upsert` fingerprints the row's
+  `documentColumns` before and after the write and logs only when the
   fingerprint changed, and `markDeleted` only when the row was live
   (**unchanged-pull-is-silent**); `updateDocument` and `mutateDocument` are
   `@discardableResult` and return the new `local_version` (**writes-return-version**);
@@ -54,6 +54,15 @@
   `updateDocument`, `publishDocument`/`unpublishDocument`, and `deleteDocument`
   implement the lifecycle methods above; `drainRemoteQueue` implements the queue
   drain, sending each operation through a caller-supplied `MarkdownRemoteWriter`;
+  a writer throws `MarkdownRemoteRefusal(reason:)` for a permanent refusal, which
+  the drain catches and parks (**refused-op-is-parked**); `parkedRemoteOps()`
+  returns `[MarkdownParkedRemoteOp]` (`remoteOp`, `reason`, `parkedAt`), and
+  `retryParkedRemoteOp(opID:)` and `discardParkedRemoteOp(opID:)` take an op out of
+  the park (**parked-op-leaves-explicitly**); the private `claim(opID:)` returns
+  whether the row still exists (**drain-skips-removed-op**);
+  `document(id:marker:)` is the marker-scoped single read (**document-by-marker**);
+  the shared-database initializer compares `syncStore.database` by identity and
+  throws `MarkdownStoreError.syncStoreDatabaseMismatch`;
   `mutateDocument` is the reentrant merge-then-write update path called out in Edge
   Cases. `drainRemoteQueue`'s own doc comment states the one-drain-at-a-time
   precondition; nothing in `MarkdownStore` enforces it with an actor, lock, or

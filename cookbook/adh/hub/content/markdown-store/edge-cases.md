@@ -38,6 +38,12 @@
 - The process dies between the send and the acknowledgment. The claim survives the
   restart, so an edit made afterwards queues behind the sent operation rather than
   folding into it.
+- adh refuses an operation for good (for example a 422). The operation is parked,
+  not resent, and every later operation for that document waits behind it while
+  other documents keep draining; an edit made meanwhile queues behind the parked
+  operation rather than folding into it, because the parked operation stays claimed.
+- A document whose create was parked is deleted. adh never minted it, so the create
+  and everything queued behind it drop and no delete is queued.
 - A document is deleted while its create is claimed but unacknowledged. The create
   stays queued ahead of the delete, so the delete addresses the id adh minted rather
   than leaving the document upstream.

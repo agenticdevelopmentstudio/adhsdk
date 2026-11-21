@@ -101,8 +101,8 @@ open its own database or share one a host already owns.
 - **keyword-label-uniqueness**: `keywords` MUST enforce a unique constraint over
   customer, ecosystem, and label together, so a label is unique per author within one
   ecosystem.
-- **migration-sequence**: The schema's migrator MUST apply its seven migrations,
-  `markdown-v1` through `markdown-v7-local-version`, in order, and the migration step
+- **migration-sequence**: The schema's migrator MUST apply its eight migrations,
+  `markdown-v1` through `markdown-v8-outbox-parked`, in order, and the migration step
   MUST turn on foreign-key enforcement before migrating, so enforcement is active
   before any migrated row is written.
 - **frontmatter-owner-backfill**: The `markdown-v3-frontmatter-owner` migration MUST
@@ -120,7 +120,9 @@ open its own database or share one a host already owns.
 - **outbox-shape-frozen**: The `_markdown_outbox` table's original shape MUST stay
   frozen; ordering was added by a separate `seq` column in
   `markdown-v2-outbox-order` and in-flight tracking by a separate `claimed_at` column
-  in `markdown-v5-outbox-claim`, rather than by altering the original columns.
+  in `markdown-v5-outbox-claim`, and parking by separate nullable `parked_at` and
+  `park_reason` columns in `markdown-v8-outbox-parked` (every existing row migrates
+  unparked), rather than by altering the original columns.
 
 ### Timestamp Normalization
 
@@ -191,11 +193,14 @@ open its own database or share one a host already owns.
   version) to the sync store's change log inside the pull's transaction, so a pull
   reaches every app watching the feed.
 - **unchanged-pull-is-silent**: A pulled upsert counts as a change only when it
-  inserts the row or alters a column other than the bookkeeping columns
-  (`sync_version`, `sync_stamped_at`, `local_version`, `latest_version_id`,
-  `updated_at`); a pull that differs only in those — the echo of this store's own
-  push, or a re-sync of an unchanged row — MUST neither bump `local_version` nor
-  append to the change log, so a writer holding the version is not made stale by
+  inserts the row or alters one of the columns that are what the document says —
+  `content`, `is_deleted`, `visibility`, `stage`, `public_route` — named as a list of
+  what counts, so a column added later is bookkeeping until someone decides
+  otherwise. A pull that differs only in other columns — sync bookkeeping and
+  stamps, `current_version`, `created_at`, `frontmatter` (adh's serialization of
+  what the content already carries), `content_hash`, `size_bytes`, the author pair:
+  the echo of this store's own push, or a re-sync of an unchanged row — MUST neither
+  bump `local_version` nor append to the change log, so a writer holding the version is not made stale by
   its own write coming back. A pulled tombstone counts only when the row was not
   already deleted.
 - **schema-drift-guard**: The projection's hand-maintained per-resource column lists
@@ -211,7 +216,10 @@ open its own database or share one a host already owns.
   database and sync store the host already owns and shares with other stores,
   taking the same required tenancy ids; it MUST run the markdown migrations on that
   database and MUST NOT prepare the sync store, which the host prepared for every
-  family at once.
+  family at once. A sync store built on a different database instance MUST be
+  refused with a sync-store-database-mismatch error before any migration runs,
+  since every document write logs to the sync store's change feed on the markdown
+  connection.
 - **local-version-bumped-by-every-write**: Every local document write — create,
   update, mutate, publish/unpublish/finalize/definalize, and delete of a live
   document — MUST, in the same transaction, set or bump the row's `local_version`
@@ -230,6 +238,10 @@ open its own database or share one a host already owns.
 - **document-carries-version**: Every document read MUST carry the row's
   `local_version` as the document's version, distinct from the server's own
   current version.
+- **document-by-marker**: The store MUST offer a single-document read scoped to a
+  marker, answering a live document by id only when it carries a live marker row of
+  that kind, so a caller that lists documents by marker (a notes list) never gets a
+  document of another kind back from a fetch by id.
 - **db-path-shared-token**: The default database path MUST resolve under one
   token-named directory rather than a name derived from the token's display form, so
   this store and any other consumer of the same token agree on one database file and
@@ -260,10 +272,11 @@ open its own database or share one a host already owns.
 - **delete-tombstones-both-flags**: Deleting a document MUST set both delete columns
   together on the document and on every one of its marker rows.
 - **delete-drops-undelivered-create**: Deleting a document MUST drop a still-
-  unclaimed pending create/delete pair entirely rather than enqueuing a delete,
-  since adh never learned of a document whose create has not yet drained.
+  unclaimed or parked pending create/delete pair entirely rather than enqueuing a
+  delete, since adh never learned of a document whose create has not yet drained,
+  and a parked create is one adh refused for good and minted nothing for.
 - **delete-keeps-claimed-create**: Deleting a document whose pending create is
-  claimed MUST keep that create and queue a delete behind it, since a claimed create
+  claimed and not parked MUST keep that create and queue a delete behind it, since a claimed create
   may have reached adh; its resend is the only way the remote id comes back, and the
   delete needs that id to address the document.
 - **outbox-order-is-sequence**: The pending-operations read MUST order by the
@@ -285,8 +298,28 @@ open its own database or share one a host already owns.
   snapshot, since an update queued behind its own create may only acquire that id
   partway through the drain.
 - **drain-preserves-order-on-failure**: The queue drain MUST stop rather than skip
-  ahead when the writer throws, leaving the failing operation queued, so strict
-  sequence order is preserved across retries.
+  ahead when the writer throws any error other than a permanent refusal, leaving the
+  failing operation queued, so strict sequence order is preserved across retries.
+- **drain-skips-removed-op**: The queue drain MUST NOT send an operation that was
+  removed from the queue after its batch snapshot was read (a create/delete pair a
+  delete dropped); claiming it reports that the row is gone and the drain moves on,
+  since sending it would mint a document upstream that nothing will ever delete.
+- **refused-op-is-parked**: When the writer reports a permanent refusal (adh
+  answered a 4xx other than 408 or 429), the queue drain MUST park that operation —
+  stamping when and keeping the writer's reason, its body and its claim — hold back
+  every later operation for the same document, and go on with other documents. The
+  document row is never touched, so nothing the user wrote is lost.
+- **parked-op-holds-its-document**: The pending-operations read MUST leave out a
+  parked operation and every operation for its document with a later sequence, so a
+  later drain neither resends a refused operation nor sends past it.
+- **parked-op-leaves-explicitly**: The store MUST list parked operations, oldest
+  first, with their reason and park time, and a parked operation MUST leave the
+  park only by being retried (unparked; the next drain resends the same body under
+  the same operation id, then what waited behind it), discarded (the row is
+  dropped — with every other operation for the document when it is a create, since
+  each would address an id adh never minted — and the document is left alone), or
+  cleared by deleting its document. Retry and discard MUST leave an operation that
+  is not parked alone.
 - **claim-is-never-released**: The queue drain MUST claim an operation immediately
   before first handing it to the writer and MUST NOT release that claim, not when the
   send throws and not when a later drain begins; only the acknowledgment that deletes
@@ -398,6 +431,15 @@ layer, not a visual component.
 | markdown-core-022 | delete-drops-undelivered-create | Create a document and delete it before any drain | Nothing is queued |
 | markdown-core-023 | create-category-with-chosen-id, taxonomy-rides-generic-outbox | Create a category under the caller's id `ABC-123` | The returned category's id is `abc-123`, the category list holds exactly `abc-123`, and the generic outbox holds one `content.categories` op for row `abc-123` |
 | markdown-core-024 | note-taxonomy-conformance | Hand the store to a consumer typed as the note-taxonomy interface, then create a category by name and assign it to a live document through that interface | The category is listed by the store and the document's categories include it |
+| markdown-core-025 | refused-op-is-parked | Create documents A and B, drain into a writer that refuses A permanently | The writer receives A then B; A's create is listed as parked with the writer's reason and body; nothing is pending; A's content still reads back |
+| markdown-core-026 | parked-op-holds-its-document | Park A's create, update A, drain again | Nothing is sent; nothing is pending; one op is parked |
+| markdown-core-027 | delete-drops-undelivered-create, parked-op-leaves-explicitly | Park A's create, then delete A | No parked op and nothing pending |
+| markdown-core-028 | parked-op-leaves-explicitly | Park A's create, update A, retry the parked op, drain into a writer that mints R | The writer receives the create with its original op id and body, then the update addressed to R |
+| markdown-core-029 | parked-op-leaves-explicitly | Park A's create and discard it | Nothing parked or pending; A's content still reads back |
+| markdown-core-030 | drain-skips-removed-op | Drain two documents; while the first is in flight, delete the second (never sent) | The second is never sent and nothing is pending |
+| markdown-core-031 | shared-database-init | Construct the store over a database and a sync store built on another database | Throws the sync-store-database-mismatch error and creates no markdown table |
+| markdown-core-032 | unchanged-pull-is-silent | Pull a row, then pull it again with the same content but a new `current_version`, `created_at`, `frontmatter`, `content_hash` and author | The document stays at version 1 and the change log holds one entry for it |
+| markdown-core-033 | document-by-marker | Create a document with only the doc marker, then read it by id scoped to the note marker | Nothing is returned |
 ## Edge Cases
 
 - The document-list read path and the single-document read path deliberately
@@ -439,6 +481,12 @@ layer, not a visual component.
 - The process dies between the send and the acknowledgment. The claim survives the
   restart, so an edit made afterwards queues behind the sent operation rather than
   folding into it.
+- adh refuses an operation for good (for example a 422). The operation is parked,
+  not resent, and every later operation for that document waits behind it while
+  other documents keep draining; an edit made meanwhile queues behind the parked
+  operation rather than folding into it, because the parked operation stays claimed.
+- A document whose create was parked is deleted. adh never minted it, so the create
+  and everything queued behind it drop and no delete is queued.
 - A document is deleted while its create is claimed but unacknowledged. The create
   stays queued ahead of the delete, so the delete addresses the id adh minted rather
   than leaving the document upstream.
@@ -557,8 +605,8 @@ framework that protocol lives in.
   `MarkdownStoreError.staleVersion(current:)` (**expected-version-check**), and every
   write logs through `GRDBSyncStore.logChange`, while a pull appends through the
   static `GRDBSyncStore.appendChange` (**local-version-bumped-by-every-write**,
-  **local-version-never-travels**); `MarkdownProjection.upsert` fingerprints the row
-  without its bookkeeping columns before and after the write and logs only when the
+  **local-version-never-travels**); `MarkdownProjection.upsert` fingerprints the row's
+  `documentColumns` before and after the write and logs only when the
   fingerprint changed, and `markDeleted` only when the row was live
   (**unchanged-pull-is-silent**); `updateDocument` and `mutateDocument` are
   `@discardableResult` and return the new `local_version` (**writes-return-version**);
@@ -566,6 +614,15 @@ framework that protocol lives in.
   `updateDocument`, `publishDocument`/`unpublishDocument`, and `deleteDocument`
   implement the lifecycle methods above; `drainRemoteQueue` implements the queue
   drain, sending each operation through a caller-supplied `MarkdownRemoteWriter`;
+  a writer throws `MarkdownRemoteRefusal(reason:)` for a permanent refusal, which
+  the drain catches and parks (**refused-op-is-parked**); `parkedRemoteOps()`
+  returns `[MarkdownParkedRemoteOp]` (`remoteOp`, `reason`, `parkedAt`), and
+  `retryParkedRemoteOp(opID:)` and `discardParkedRemoteOp(opID:)` take an op out of
+  the park (**parked-op-leaves-explicitly**); the private `claim(opID:)` returns
+  whether the row still exists (**drain-skips-removed-op**);
+  `document(id:marker:)` is the marker-scoped single read (**document-by-marker**);
+  the shared-database initializer compares `syncStore.database` by identity and
+  throws `MarkdownStoreError.syncStoreDatabaseMismatch`;
   `mutateDocument` is the reentrant merge-then-write update path called out in Edge
   Cases. `drainRemoteQueue`'s own doc comment states the one-drain-at-a-time
   precondition; nothing in `MarkdownStore` enforces it with an actor, lock, or

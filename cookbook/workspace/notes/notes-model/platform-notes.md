@@ -54,7 +54,14 @@
   `NotesFolderListViewController(taxonomy:)` take the same optional
   existential. `NoteChange.taxonomyChanged` and a `.resync` each make
   `apply(_:)` post `NotesManager.taxonomyDidChangeNotification`, which
-  `NotesSplitViewController` observes to call `folderVC.reload()`. The version ledger is a
+  `NotesSplitViewController` observes to call `folderVC.reload()`.
+  `NotesManager.noteReplacedNotification` carries the id under
+  `NotesManager.noteIDUserInfoKey`; `NotesSplitViewController` observes it
+  and calls `editorVC.show(note:)` for the selected note when the editor's
+  text differs. `MarkdownNoteStorage.fetchNote` reads
+  `MarkdownStore.document(id:marker: .note)`. `loadNotes()` keeps dirty notes
+  through `VersionLedger.replaceAll(with:keeping:)`, and `basePinned` sits
+  beside `baseContent` for the stale re-save's pin rule. The version ledger is a
   `nonisolated let versions = VersionLedger()`, a `[UUID: Int64]` behind an
   `OSAllocatedUnfairLock`, read and advanced by the `write(_:version:)` and
   `insert(_:)` helpers from inside the `storageChain`, so a queued save
