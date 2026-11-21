@@ -23,4 +23,8 @@
 - Purging `notes`, `docs`, or `papers` alone succeeds when each has no rows; purging
   `content.markdown` alone while any marker table still has rows is refused
   regardless of whether that table is empty of *unrelated* rows.
-
+- A delete of a document that is already tombstoned neither checks the expected
+  version nor bumps `local_version` nor logs a change: only a live document's delete
+  is versioned and logged.
+- A pulled row whose `local_version` update touches no row (the row did not land)
+  appends nothing to the change log.

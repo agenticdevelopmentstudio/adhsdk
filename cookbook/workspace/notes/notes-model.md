@@ -2,15 +2,15 @@
 id: d46b3e1c-9cd9-41b6-bdd2-524ece5e294b
 title: "Notes Model"
 type: ingredient
-version: 1.1.4
+version: 1.2.0
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-11-13
+modified: 2026-11-21
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
-summary: "The on-device model, storage contract, and orchestrator behind the Notes feature — a note, a note folder, a storage seam, a markdown-backed conformer, and the manager coordinating them."
+summary: "The on-device model, storage contract, and orchestrator behind the Notes feature — a versioned note and its shared markdown mapping, a note folder, an async storage seam with stale errors and a change stream, a markdown-backed conformer, and the manager coordinating them, live changes and conflicted copies included."
 platforms:
   - swift
   - macos
@@ -26,12 +26,14 @@ depends-on:
   - 9f938c20-ea6e-42d7-9ddf-9531a96e3ad0
 related: []
 references:
-  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/NotesWindow/Note.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Markdown/Note.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Markdown/MarkdownNoteMapping.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/macOS/Features/NotesWindow/NoteFolder.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/macOS/Features/NotesWindow/NoteStorage.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/macOS/Features/NotesWindow/NoteTaxonomyProviding.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/macOS/Features/NotesWindow/MarkdownNoteStorage.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/macOS/Features/NotesWindow/NotesManager.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/NotesWindow/NotesMarkdownReExports.swift (adhsdk)
 approved-by: ""
 approved-date: ""
 ---
@@ -46,15 +48,19 @@ a local, on-device notes store with no UI of its own. A note is an
 immutable-id value whose title and excerpt are always derived from its
 markdown content, never stored. A note folder is the tree shape a folders
 pane displays, built from a flat category/edge read. The storage contract
-is the abstract, four-operation persistence seam the manager depends on,
-required to be safe to call from multiple threads; the markdown-backed
-conformer is the concrete implementation that maps a note onto a
-markdown-store document, and is also the layer that owns the entire
-frontmatter-ownership contract for the one key it writes, `pinned`. The
-manager is the object, confined to the primary UI thread, that owns the
-in-memory list of notes, issues every storage call off that thread in
-strict issue order, runs a per-note debounced autosave, and surfaces a
-failed read or write as a single failure record.
+is the abstract, five-operation asynchronous persistence seam the manager
+depends on, required to be safe to call from multiple threads, with a
+versioned stale-write error and an optional change stream for storages
+that see other writers. The note and its document mapping live in the
+markdown tier, so a daemon can share them; the mapping owns the entire
+frontmatter-ownership contract for the one key a note writes, `pinned`,
+and the markdown-backed conformer is the concrete implementation that
+applies it to a markdown-store document. The manager is the object,
+confined to the primary UI thread, that owns the in-memory list of notes,
+issues every storage call off that thread in strict issue order, runs a
+per-note debounced autosave, shows notes changed by another writer live,
+turns a stale save into a "(conflicted copy)" note rather than losing
+text, and surfaces a failed read or write as a single failure record.
 
 This is a different, unrelated contract from the web-side notes client —
 its notes are a backend content
@@ -70,8 +76,18 @@ is a coincidence, not a shared contract.
   for equality, MUST be safe to pass across concurrent contexts, and its
   id MUST be immutable once created.
 - **note-fields**: A note MUST carry exactly `content` (text),
-  `createdDate` (immutable), `modifiedDate`, and `isPinned` as its stored
-  state; it MUST have no stored `title` field.
+  `createdDate` (immutable), `modifiedDate`, `isPinned`, and `version` as
+  its stored state; it MUST have no stored `title` field.
+- **note-version**: A note's `version` MUST be the storage's concurrency
+  token for that note — a 64-bit integer defaulting to 0 — which a write
+  quotes to be accepted. A storage with no concurrency token MUST leave it
+  at 0 and ignore it; a storage backed by the markdown store's local row
+  version MUST return that value.
+- **note-markdown-tier**: The note value and its document mapping MUST
+  live in the markdown tier with no UI-framework dependency, so a daemon
+  or a command-line tool can build and map notes without linking the
+  desktop UI framework; the desktop feature tier MUST re-export the
+  markdown tier so its existing callers keep compiling unchanged.
 - **note-title-derivation**: A note's title MUST be computed on every
   access from its content via the shared markdown title-derivation
   utility, never stored, so it can never go stale against content
@@ -133,12 +149,27 @@ is a coincidence, not a shared contract.
 ### NoteStorage & NoteTaxonomyProviding
 
 - **notestorage-contract**: The storage contract MUST declare exactly
-  four operations that can fail — fetch all notes, insert a note, update
-  a note, and delete a note by id — and MUST itself be safe to call from
-  multiple threads, since the manager calls these operations off the
+  five asynchronous operations that can fail — fetch all notes, fetch one
+  note by id (answering nothing when it no longer exists), insert a note,
+  update a note, and delete a note by id — and MUST itself be safe to call
+  from multiple threads, since the manager calls these operations off the
   primary thread; the thread safety of the concrete storage is the
   conformer's own responsibility, stated as a precondition, not enforced
-  by the contract itself.
+  by the contract itself. A synchronous throwing implementation MUST
+  still satisfy each operation.
+- **notestorage-fetch-one-fallback**: The contract MUST supply a default
+  single-note fetch built on fetching all notes and picking the one with
+  the matching id, so a storage with no cheaper single-note read conforms
+  without writing one.
+- **notestorage-stale-error**: Updating a note MUST fail with a stale
+  error when the storage holds a newer version than the note's `version`;
+  the error MUST carry the stored note when the storage can say what it
+  is, and nothing when the caller must re-read it. A storage with no
+  concurrency token MUST never raise it.
+- **notestorage-change-stream**: A storage MAY additionally be observable:
+  it then MUST expose a stream of changes made by any writer, each one
+  naming an upserted note id, a deleted note id, or a resync (the storage
+  lost track of what changed and the reader must re-read everything).
 - **notetaxonomyproviding-contract**: A storage implementation MAY
   additionally support a taxonomy-provider extension to expose its
   backing document store for taxonomy (folder) queries; the base storage
@@ -169,6 +200,19 @@ is a coincidence, not a shared contract.
   respectively, so a note's original creation date is preserved
   distinctly from its last-modified date rather than both collapsing
   onto one write timestamp.
+- **notemapping-shared**: The rules turning a markdown document into a
+  note and a note back into document content (pin ownership, stripping
+  owned keys, claim and release) MUST live in one shared mapping in the
+  markdown tier, used by the markdown-backed conformer and by every other
+  notes storage, so there is only one answer to "is this note pinned?".
+  Mapping a document to a note MUST carry the document's local version
+  into the note's `version`.
+- **markdownnotestorage-version-ignored**: The markdown-backed conformer
+  MUST ignore a note's `version` on every write and MUST never fail with
+  the stale error.
+- **markdownnotestorage-fetch-one**: Fetching one note by id MUST read
+  that one document and its ownership record, and MUST answer nothing when
+  no document has that id.
 - **markdownnotestorage-frontmatter-ownership**: The markdown-backed
   conformer MUST record, per document, which frontmatter keys it itself
   wrote, and MUST use that recorded fact — never the key's value — to
@@ -218,7 +262,8 @@ is a coincidence, not a shared contract.
 - **notesmanager-change-notification**: The manager MUST post a change
   notification (with the manager itself as the subject and no payload)
   after every operation that changes the notes list — a load, a create, a
-  content update, a pin toggle, or a delete — so an observer re-reads the
+  content update, a pin toggle, a delete, an applied change from another
+  writer, or a conflicted copy — so an observer re-reads the
   notes list from the posting manager rather than from a stale payload
   snapshot that could already be out of date by the time it is read.
 - **notesmanager-failure-surface**: The manager MUST record a failed
@@ -276,6 +321,27 @@ is a coincidence, not a shared contract.
   resurrect superseded content. This ordering covers only calls issued by
   this one manager instance; a second, independent writer against the
   same storage contract is outside its scope.
+- **notesmanager-live-changes**: When its storage is observable, the
+  manager MUST subscribe to the storage's change stream at construction
+  and cancel the subscription when it is released, applying each change
+  on the primary thread: a resync reloads every note; a deletion of a
+  held note removes it; an upsert fetches that note and replaces the held
+  copy only when the fetched version is higher than the held one (a
+  version at or below it is the manager's own echo), appends it when not
+  held, and removes the held copy when the fetch answers nothing.
+- **notesmanager-live-changes-skip-dirty**: An upsert for a note with an
+  edit not yet saved MUST NOT be applied over the editor — checked both
+  before the fetch and again after it returns — so that note's next save
+  takes the stale-resolution path instead.
+- **notesmanager-stale-resolution**: When a save fails with the stale
+  error, the manager MUST obtain the stored note (from the error, or by
+  fetching it), then: if the stored content still equals the content the
+  note last had when it matched storage, it MUST re-save the edit on top
+  of the stored version; otherwise it MUST keep the other writer's note
+  in the list and put the edit's text into a new note whose content is
+  `"# <title> (conflicted copy)\n\n"` followed by the edited content. If
+  the note no longer exists in storage, the edit MUST likewise become a
+  conflicted-copy note rather than vanish.
 - **notesmanager-markdown-store-accessor**: The manager's markdown-store
   accessor MUST return the wrapped document store only when the storage
   implementation also supports the taxonomy-provider extension, and MUST
@@ -323,7 +389,12 @@ no visual surface, not a visual component.
 | notes-model-011 | notesmanager-storage-issue-order | 24 create-note calls, then 24 concurrently-issued pin-toggle tasks against a storage double that dwells 50ms per call and records arrival order. | The storage double never observes more than one call in flight at a time, and the arrival order of the updates equals the exact order the 24 tasks were issued in. |
 | notes-model-012 | notesmanager-failure-surface, notesmanager-create-rollback | Create a note from content against a storage double whose insert operation always fails. | Returns nothing; the manager's recorded failure names the create operation; the notes list stays empty. |
 | notes-model-013 | notesmanager-markdown-store-accessor | Construct the manager with a markdown-backed storage implementation, versus a storage implementation that does not support the taxonomy-provider extension. | The markdown-store accessor returns the same document store instance in the first case, nothing in the second. |
-
+| notes-model-014 | notesmanager-live-changes | A manager over an observable storage double; another writer updates a held note to a higher version and the double emits an upsert for it. | The held note is replaced by the fetched one and a change notification is posted. |
+| notes-model-015 | notesmanager-live-changes | The double emits an upsert for a note whose fetched version equals the held version. | The held note is left unchanged (its own echo). |
+| notes-model-016 | notesmanager-live-changes-skip-dirty | Edit a note's content, then before the debounced save runs the double emits an upsert for that note with a newer version. | The edited content stays in the list; the change is not applied. |
+| notes-model-017 | notesmanager-stale-resolution | Another writer changes a note's text; this manager then saves an edit to the same note and storage answers stale. | The other writer's note stays in the list and a new note titled `"<title> (conflicted copy)"` holds the edited text. |
+| notes-model-018 | notesmanager-stale-resolution | Storage answers stale but its stored content equals what the editor started from (only the version moved). | The edit is re-saved on top of the stored version and no conflicted copy is created. |
+| notes-model-019 | notemapping-shared, note-version | Map a markdown document with local version 7 and an owned `pinned: true` to a note. | The note's version is 7, it is pinned, and its content has the owned `pinned` line stripped. |
 ## Edge Cases
 
 - An empty-content note (created from an empty string) derives the
@@ -354,8 +425,15 @@ no visual surface, not a visual component.
   the debounced write.
 - Updating a note's single-transaction read-merge-write buys atomicity
   against a concurrent writer, not ordering between two update calls on
-  the same note — the second one to commit always wins over the whole
-  note, matching this system's own head-has-no-concurrency-token model.
+  the same note — the markdown-backed conformer has no concurrency token,
+  so the second one to commit always wins over the whole note. A storage
+  with a token (a daemon-backed one) refuses the later write as stale
+  instead, and the manager resolves it.
+- A note deleted by another writer while this editor still has an unsaved
+  edit is not lost: the stale save turns the edit into a
+  "(conflicted copy)" note.
+- A resync from the change stream discards the manager's record of
+  unsaved edits along with the list, because it reloads every note.
 
 ## Configuration
 
@@ -368,7 +446,7 @@ no visual surface, not a visual component.
 
 ## Deep Linking
 
-Not applicable: none of these six sources exposes a URL scheme, route, or
+Not applicable: none of these sources exposes a URL scheme, route, or
 path — the note model, note folder, storage contract, markdown-backed
 conformer, and manager are an in-process persistence and orchestration
 layer with no addressable location of their own.
@@ -401,13 +479,13 @@ manager.
 
 ## Feature Flags
 
-Not applicable: none of these six sources reads a feature-flag key, a
+Not applicable: none of these sources reads a feature-flag key, a
 settings-store toggle, or a remote-config value to gate any behavior
 described above.
 
 ## Analytics
 
-Not applicable: none of these six sources emits an analytics event; the
+Not applicable: none of these sources emits an analytics event; the
 only instrumentation present is the diagnostic logging documented under
 Logging below.
 
@@ -420,10 +498,10 @@ Logging below.
 - **Storage**: Persisted locally by whatever storage implementation the
   host injects. The markdown-backed conformer persists a note as a row in
   a local document store (a local database), keyed by
-  the note's id lowercased to a string; none of the six sources given
+  the note's id lowercased to a string; none of the sources given
   here adds encryption, secure-credential storage, or any protection
   beyond what that document store itself already applies.
-- **Transmission**: None of these six sources calls out to a network
+- **Transmission**: None of these sources calls out to a network
   directly. The markdown-backed conformer's insert operation does enqueue
   a create operation onto the document store's own remote outbox, so a
   note's content and metadata eventually leave the device through that
@@ -433,7 +511,7 @@ Logging below.
   deleting it by id removes the row. Flushing pending saves shortens the
   window in which an edit exists only in memory and not yet on disk, but
   it is the caller's responsibility to invoke it (e.g. before
-  termination); nothing in these six sources calls it automatically.
+  termination); nothing in these sources calls it automatically.
 
 ## Logging
 
@@ -447,31 +525,33 @@ factory) | Category: the manager's name
 
 ## Platform Notes
 
-- **SwiftUI**: These six types are plain Swift/Foundation with no AppKit
+- **SwiftUI**: These types are plain Swift/Foundation with no AppKit
   dependency, so a SwiftUI host can wrap `NotesManager` in an
   `@Observable` or `ObservableObject` adapter (it is neither itself — see
   Design Decisions) and drive a `List`/`ForEach` from `notes`, observing
   `notesDidChangeNotification` and `storageDidFailNotification` the same
   way an AppKit host does.
 - **Compose**: Port `Note` as a `data class`, `NoteFolder` as a recursive
-  `data class`, and `NoteStorage` as a Kotlin `interface` of four
-  functions (suspend or blocking, matching the source's synchronous-and-throwing
-  shape). `NotesManager` becomes a `ViewModel` holding a
+  `data class`, and `NoteStorage` as a Kotlin `interface` of five
+  `suspend` functions, with the change stream as a `Flow<NoteChange>`. `NotesManager` becomes a `ViewModel` holding a
   `StateFlow<List<Note>>` in place of the notification pair, with the
   debounced save mapped onto a coroutine job keyed by note id (the role
   `KeyedDebouncer` plays here) and the storage-issue-ordering guarantee
   reproduced with a single-threaded dispatcher or a `Mutex`.
 - **React/Web**: `Note`/`NoteFolder` become plain TypeScript interfaces;
-  `NoteStorage` an interface of four `Promise`-returning methods.
+  `NoteStorage` an interface of five `Promise`-returning methods, with the change stream as an async iterable.
   `NotesManager` becomes a store (a hook backed by
   `useSyncExternalStore`, or a small class with subscribers in place of
   `NotificationCenter`), with the per-note debounce implemented via
   `setTimeout` keyed by note id and the write-ordering guarantee
   implemented as a per-instance promise chain, exactly mirroring
   `performStorage(_:)`'s `storageChain`.
-- **AppKit / UIKit**: The six sources given here — `Note.swift`,
-  `NoteFolder.swift`, `NoteStorage.swift`, `NoteTaxonomyProviding.swift`,
-  `MarkdownNoteStorage.swift`, and `NotesManager.swift`, all under
+- **AppKit / UIKit**: The sources given here — `Note.swift` and
+  `MarkdownNoteMapping.swift` under
+  `packages/apple/AgenticDeveloperHubSDK/Markdown/`, and `NoteFolder.swift`,
+  `NoteStorage.swift`, `NoteTaxonomyProviding.swift`,
+  `MarkdownNoteStorage.swift`, `NotesManager.swift` and
+  `NotesMarkdownReExports.swift` under
   `packages/apple/AgenticDeveloperHubSDK/macOS/Features/NotesWindow/` — are the
   source platform: a macOS-only target consumed by
   `NotesCoordinator`/`NotesSplitViewController` (out of scope for this
@@ -479,7 +559,7 @@ factory) | Category: the manager's name
   `Note`, `NoteFolder`, and `MarkdownNoteStorage` are `Sendable`;
   `NotesManager` is itself `@MainActor`, and every storage call it issues
   runs off the main actor through `Task.detached`, serialized into its
-  own `storageChain` (see `notesmanager-confined-to-primary-thread` and
+  own `storageChain`; the change stream is an `AsyncStream<NoteChange>` consumed by a `Task` the manager cancels in `deinit` (see `notesmanager-confined-to-primary-thread` and
   `notesmanager-storage-off-primary-thread`). `NoteFolder`'s explicit,
   non-accidental `Hashable` conformance exists because an `NSOutlineView`
   bridges a Swift value lacking that conformance to a boxed object whose
@@ -489,7 +569,7 @@ factory) | Category: the manager's name
   match one across a reload (see `notefolder-value-semantics`).
   `MarkdownNoteStorage` persists through SQLite via GRDB, and neither it
   nor `NotesManager` add Keychain storage or any protection beyond what
-  that store applies (see Privacy). Nothing in these six files is itself
+  that store applies (see Privacy). Nothing in these files is itself
   AppKit-specific — they import only `Foundation`, `os`,
   `AgenticDeveloperHubSDKCore`, `AgenticDeveloperHubSDKMarkdown`, and
   `AgenticDeveloperHubSDKDatabase` — so the same files would compile unchanged
@@ -514,6 +594,8 @@ factory) | Category: the manager's name
 | Platform | Location | Conformance |
 |----------|----------|-------------|
 | apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/NotesWindow/` | confirmed (1.1.3) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Markdown/Note.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Markdown/MarkdownNoteMapping.swift` | unverified |
 
 ## Design Decisions
 
@@ -545,6 +627,13 @@ factory) | Category: the manager's name
 **Rationale**: The cost is named directly in `MarkdownNoteStorage`'s own comments: once a remote writer exists, pinning appends a version on the server. That cost is accepted because the alternative — a local-only column — would silently vanish on the note's first sync.
 **Approved**: pending
 
+**Decision**: (AppKit/macOS) A stale save re-saves on top of the stored version when the stored text is still what the editor started from, and otherwise keeps the other writer's note and puts the editor's text in a new "(conflicted copy)" note (Decision 10 of the apps-suite design).
+**Rationale**: A version bump alone (a pin elsewhere, a no-op round trip) is not a conflict and should not produce a copy; a real text change elsewhere must never be overwritten, and the user's edit must never vanish. A copy keeps both texts visible with no merge UI.
+**Approved**: pending
+
+**Decision**: `Note` and `MarkdownNoteMapping` live in the Markdown framework, not the macOS feature tier, and `NoteStorage` is `async`.
+**Rationale**: A daemon or CLI serving notes must apply exactly the same pinning rules as the app without linking AppKit, and a daemon-backed storage answers over the network. Synchronous conformers still satisfy the async requirements, so the move cost existing storages nothing.
+**Approved**: pending
 ## Compliance
 
 | Check | Status | Category |
@@ -556,12 +645,13 @@ factory) | Category: the manager's name
 | [adc.check.reliability.data-integrity](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d773e5db-bb22-5da8-a6f1-953c35a3798d) | passed | reliability |
 | [adc.check.reliability.state-recovery](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/6e64e2f2-28ad-55d5-a8ed-cee075366674) | partial | reliability |
 
-Separation of concerns holds structurally: `NoteStorage` is a narrow, four-method persistence seam that knows nothing about markdown, frontmatter, or ownership; `MarkdownNoteStorage` is the only conformer that reaches into `MarkdownStore`, and it alone carries the entire frontmatter-ownership contract; `NotesManager` owns in-memory state, notification, debouncing, and failure surfacing without ever touching a document's bytes directly. Unit test coverage holds: `MarkdownNoteStorageTests`, `NoteFolderTests`, `NotesStorageFailureTests`, `NotesManagerStorageOrderingTests`, and `NotesManagerMarkdownStoreTests` between them exercise nearly every requirement above by name, including the concurrency-ordering and ownership-race cases. Explicit error handling holds: every one of the four `NoteStorage` methods is `throws`, and every `NotesManager` call site either propagates the failure to its caller (`createNote` returning `nil`) or records it as a typed `NotesStorageFailure` with a log line — nothing here discards an error silently. Error recovery holds for the debounced save path specifically: `KeyedDebouncer`'s contract keeps a note whose write threw pending and retries it with backoff, rather than dropping it once and logging. Data integrity holds: `MarkdownNoteStorage.note(from:)` skips a document whose id fails `UUID(uuidString:)` rather than crashing or corrupting the list, and `updateNote`'s single-transaction read-merge-write is what lets another writer's concurrent, in-transaction mark survive rather than being silently overwritten. State recovery is marked partial: `flushPendingSaves()` exists precisely to drain every pending debounced save before termination and to report which ones still failed, but nothing in the six sources given here calls it automatically — invoking it is a caller precondition (the host app's own termination handling, out of scope for this recipe), so a host that never calls it can still lose an in-flight edit to a crash or a forced quit.
+Separation of concerns holds structurally: `NoteStorage` is a narrow, five-method asynchronous persistence seam that knows nothing about markdown, frontmatter, or ownership; `MarkdownNoteStorage` is the only conformer that reaches into `MarkdownStore`, and it alone applies the entire frontmatter-ownership contract, whose rules live in the shared `MarkdownNoteMapping`; `NotesManager` owns in-memory state, notification, debouncing, and failure surfacing without ever touching a document's bytes directly. Unit test coverage holds: `MarkdownNoteStorageTests`, `NoteFolderTests`, `NotesStorageFailureTests`, `NotesManagerStorageOrderingTests`, and `NotesManagerMarkdownStoreTests` between them exercise nearly every requirement above by name, including the concurrency-ordering and ownership-race cases. Explicit error handling holds: every one of the five `NoteStorage` methods is `async throws`, and every `NotesManager` call site either propagates the failure to its caller (`createNote` returning `nil`) or records it as a typed `NotesStorageFailure` with a log line — nothing here discards an error silently. Error recovery holds for the debounced save path specifically: `KeyedDebouncer`'s contract keeps a note whose write threw pending and retries it with backoff, rather than dropping it once and logging. Data integrity holds: `MarkdownNoteMapping.note(from:ownedKeys:)` skips a document whose id fails `UUID(uuidString:)` rather than crashing or corrupting the list, and `updateNote`'s single-transaction read-merge-write is what lets another writer's concurrent, in-transaction mark survive rather than being silently overwritten. State recovery is marked partial: `flushPendingSaves()` exists precisely to drain every pending debounced save before termination and to report which ones still failed, but nothing in the sources given here calls it automatically — invoking it is a caller precondition (the host app's own termination handling, out of scope for this recipe), so a host that never calls it can still lose an in-flight edit to a crash or a forced quit.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.2.0 | 2026-11-21 | Mike Fullerton | Note and MarkdownNoteMapping move to the Markdown tier; Note carries a version; NoteStorage is async with fetchNote(id:), a stale(current:) error and an ObservableNoteStorage change stream; NotesManager applies other writers' changes live and turns a stale save into a (conflicted copy) note. |
 | 1.1.4 | 2026-11-13 | Mike Fullerton | The notes list shows modified dates through the shared relative-date formatter. |
 | 1.1.3 | 2026-10-04 | Mike Fullerton | Dropped the stray reference to the hub's notes client from the overview. |
 | 1.1.2 | 2026-10-04 | Mike Fullerton | Legacy recipe citations restored to the legacy recipes' own adhsdk://recipes/ domains; the adhsdk://recipes/ form named nothing. |

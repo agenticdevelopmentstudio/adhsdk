@@ -28,8 +28,8 @@
 - **keyword-label-uniqueness**: `keywords` MUST enforce a unique constraint over
   customer, ecosystem, and label together, so a label is unique per author within one
   ecosystem.
-- **migration-sequence**: The schema's migrator MUST apply its five migrations,
-  `markdown-v1` through `markdown-v5-outbox-claim`, in order, and the migration step
+- **migration-sequence**: The schema's migrator MUST apply its seven migrations,
+  `markdown-v1` through `markdown-v7-local-version`, in order, and the migration step
   MUST turn on foreign-key enforcement before migrating, so enforcement is active
   before any migrated row is written.
 - **frontmatter-owner-backfill**: The `markdown-v3-frontmatter-owner` migration MUST
@@ -39,6 +39,11 @@
 - **title-claim-release**: The `markdown-v4-release-title-claims` migration MUST
   delete every stale `title` claim, leaving an upgraded database with no `title`
   claim outstanding.
+- **local-version-column**: The `markdown-v7-local-version` migration MUST add a
+  local-only integer `local_version` column to `markdown`, setting every existing
+  row to 1 (a row at 0 would look like one never written); a host that only
+  prepares the schema without the migrator MUST get the same column, because the
+  document table's definition is frozen at its first shape.
 - **outbox-shape-frozen**: The `_markdown_outbox` table's original shape MUST stay
   frozen; ordering was added by a separate `seq` column in
   `markdown-v2-outbox-order` and in-flight tracking by a separate `claimed_at` column
@@ -106,6 +111,12 @@
   bound on upsert — a throwaway value on a partial patch that never lands on an
   existing row, or the real value on a full-row pull — so a column with no schema
   default can never be omitted from the write.
+- **local-version-never-travels**: `local_version` MUST be a known column of
+  `content.markdown` yet MUST never be read from or written to the wire; a pulled
+  upsert or tombstone of a `content.markdown` row that changed it MUST instead bump
+  its `local_version` by one and append the change (upsert or delete, with the new
+  version) to the sync store's change log inside the pull's transaction, so a pull
+  reaches every app watching the feed.
 - **schema-drift-guard**: The projection's hand-maintained per-resource column lists
   MUST match the live schema's column info at runtime, so the two cannot silently
   drift apart.
@@ -115,6 +126,25 @@
 - **tenancy-ids-required**: The store's initializer MUST take a customer id and an
   ecosystem id with no defaults, since an empty string is a value the schema can
   store, not an absence the store should silently substitute.
+- **shared-database-init**: The store MUST offer a second initializer over a
+  database and sync store the host already owns and shares with other stores,
+  taking the same required tenancy ids; it MUST run the markdown migrations on that
+  database and MUST NOT prepare the sync store, which the host prepared for every
+  family at once.
+- **local-version-bumped-by-every-write**: Every local document write — create,
+  update, mutate, publish/unpublish/finalize/definalize, and delete of a live
+  document — MUST, in the same transaction, set or bump the row's `local_version`
+  (a create starts it at 1) and log the change to the sync store's change log
+  under `content.markdown` with that version; the log is pruned and change
+  observers fire only once the transaction commits, never on a rollback.
+- **expected-version-check**: Updating, mutating, and deleting a document MUST
+  accept an optional expected version; when given, a stored `local_version` that
+  differs MUST refuse the write with a stale-version error carrying the current
+  version, and nothing is written. When omitted, the write is unconditional.
+  Deleting a document already gone MUST still succeed whatever version is quoted.
+- **document-carries-version**: Every document read MUST carry the row's
+  `local_version` as the document's version, distinct from the server's own
+  current version.
 - **db-path-shared-token**: The default database path MUST resolve under one
   token-named directory rather than a name derived from the token's display form, so
   this store and any other consumer of the same token agree on one database file and

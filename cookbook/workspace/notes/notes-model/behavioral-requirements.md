@@ -5,8 +5,18 @@
   for equality, MUST be safe to pass across concurrent contexts, and its
   id MUST be immutable once created.
 - **note-fields**: A note MUST carry exactly `content` (text),
-  `createdDate` (immutable), `modifiedDate`, and `isPinned` as its stored
-  state; it MUST have no stored `title` field.
+  `createdDate` (immutable), `modifiedDate`, `isPinned`, and `version` as
+  its stored state; it MUST have no stored `title` field.
+- **note-version**: A note's `version` MUST be the storage's concurrency
+  token for that note — a 64-bit integer defaulting to 0 — which a write
+  quotes to be accepted. A storage with no concurrency token MUST leave it
+  at 0 and ignore it; a storage backed by the markdown store's local row
+  version MUST return that value.
+- **note-markdown-tier**: The note value and its document mapping MUST
+  live in the markdown tier with no UI-framework dependency, so a daemon
+  or a command-line tool can build and map notes without linking the
+  desktop UI framework; the desktop feature tier MUST re-export the
+  markdown tier so its existing callers keep compiling unchanged.
 - **note-title-derivation**: A note's title MUST be computed on every
   access from its content via the shared markdown title-derivation
   utility, never stored, so it can never go stale against content
@@ -68,12 +78,27 @@
 ### NoteStorage & NoteTaxonomyProviding
 
 - **notestorage-contract**: The storage contract MUST declare exactly
-  four operations that can fail — fetch all notes, insert a note, update
-  a note, and delete a note by id — and MUST itself be safe to call from
-  multiple threads, since the manager calls these operations off the
+  five asynchronous operations that can fail — fetch all notes, fetch one
+  note by id (answering nothing when it no longer exists), insert a note,
+  update a note, and delete a note by id — and MUST itself be safe to call
+  from multiple threads, since the manager calls these operations off the
   primary thread; the thread safety of the concrete storage is the
   conformer's own responsibility, stated as a precondition, not enforced
-  by the contract itself.
+  by the contract itself. A synchronous throwing implementation MUST
+  still satisfy each operation.
+- **notestorage-fetch-one-fallback**: The contract MUST supply a default
+  single-note fetch built on fetching all notes and picking the one with
+  the matching id, so a storage with no cheaper single-note read conforms
+  without writing one.
+- **notestorage-stale-error**: Updating a note MUST fail with a stale
+  error when the storage holds a newer version than the note's `version`;
+  the error MUST carry the stored note when the storage can say what it
+  is, and nothing when the caller must re-read it. A storage with no
+  concurrency token MUST never raise it.
+- **notestorage-change-stream**: A storage MAY additionally be observable:
+  it then MUST expose a stream of changes made by any writer, each one
+  naming an upserted note id, a deleted note id, or a resync (the storage
+  lost track of what changed and the reader must re-read everything).
 - **notetaxonomyproviding-contract**: A storage implementation MAY
   additionally support a taxonomy-provider extension to expose its
   backing document store for taxonomy (folder) queries; the base storage
@@ -104,6 +129,19 @@
   respectively, so a note's original creation date is preserved
   distinctly from its last-modified date rather than both collapsing
   onto one write timestamp.
+- **notemapping-shared**: The rules turning a markdown document into a
+  note and a note back into document content (pin ownership, stripping
+  owned keys, claim and release) MUST live in one shared mapping in the
+  markdown tier, used by the markdown-backed conformer and by every other
+  notes storage, so there is only one answer to "is this note pinned?".
+  Mapping a document to a note MUST carry the document's local version
+  into the note's `version`.
+- **markdownnotestorage-version-ignored**: The markdown-backed conformer
+  MUST ignore a note's `version` on every write and MUST never fail with
+  the stale error.
+- **markdownnotestorage-fetch-one**: Fetching one note by id MUST read
+  that one document and its ownership record, and MUST answer nothing when
+  no document has that id.
 - **markdownnotestorage-frontmatter-ownership**: The markdown-backed
   conformer MUST record, per document, which frontmatter keys it itself
   wrote, and MUST use that recorded fact — never the key's value — to
@@ -153,7 +191,8 @@
 - **notesmanager-change-notification**: The manager MUST post a change
   notification (with the manager itself as the subject and no payload)
   after every operation that changes the notes list — a load, a create, a
-  content update, a pin toggle, or a delete — so an observer re-reads the
+  content update, a pin toggle, a delete, an applied change from another
+  writer, or a conflicted copy — so an observer re-reads the
   notes list from the posting manager rather than from a stale payload
   snapshot that could already be out of date by the time it is read.
 - **notesmanager-failure-surface**: The manager MUST record a failed
@@ -211,6 +250,27 @@
   resurrect superseded content. This ordering covers only calls issued by
   this one manager instance; a second, independent writer against the
   same storage contract is outside its scope.
+- **notesmanager-live-changes**: When its storage is observable, the
+  manager MUST subscribe to the storage's change stream at construction
+  and cancel the subscription when it is released, applying each change
+  on the primary thread: a resync reloads every note; a deletion of a
+  held note removes it; an upsert fetches that note and replaces the held
+  copy only when the fetched version is higher than the held one (a
+  version at or below it is the manager's own echo), appends it when not
+  held, and removes the held copy when the fetch answers nothing.
+- **notesmanager-live-changes-skip-dirty**: An upsert for a note with an
+  edit not yet saved MUST NOT be applied over the editor — checked both
+  before the fetch and again after it returns — so that note's next save
+  takes the stale-resolution path instead.
+- **notesmanager-stale-resolution**: When a save fails with the stale
+  error, the manager MUST obtain the stored note (from the error, or by
+  fetching it), then: if the stored content still equals the content the
+  note last had when it matched storage, it MUST re-save the edit on top
+  of the stored version; otherwise it MUST keep the other writer's note
+  in the list and put the edit's text into a new note whose content is
+  `"# <title> (conflicted copy)\n\n"` followed by the edited content. If
+  the note no longer exists in storage, the edit MUST likewise become a
+  conflicted-copy note rather than vanish.
 - **notesmanager-markdown-store-accessor**: The manager's markdown-store
   accessor MUST return the wrapped document store only when the storage
   implementation also supports the taxonomy-provider extension, and MUST

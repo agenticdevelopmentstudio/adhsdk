@@ -27,3 +27,10 @@
 **Rationale**: The cost is named directly in `MarkdownNoteStorage`'s own comments: once a remote writer exists, pinning appends a version on the server. That cost is accepted because the alternative — a local-only column — would silently vanish on the note's first sync.
 **Approved**: pending
 
+**Decision**: (AppKit/macOS) A stale save re-saves on top of the stored version when the stored text is still what the editor started from, and otherwise keeps the other writer's note and puts the editor's text in a new "(conflicted copy)" note (Decision 10 of the apps-suite design).
+**Rationale**: A version bump alone (a pin elsewhere, a no-op round trip) is not a conflict and should not produce a copy; a real text change elsewhere must never be overwritten, and the user's edit must never vanish. A copy keeps both texts visible with no merge UI.
+**Approved**: pending
+
+**Decision**: `Note` and `MarkdownNoteMapping` live in the Markdown framework, not the macOS feature tier, and `NoteStorage` is `async`.
+**Rationale**: A daemon or CLI serving notes must apply exactly the same pinning rules as the app without linking AppKit, and a daemon-backed storage answers over the network. Synchronous conformers still satisfy the async requirements, so the move cost existing storages nothing.
+**Approved**: pending
