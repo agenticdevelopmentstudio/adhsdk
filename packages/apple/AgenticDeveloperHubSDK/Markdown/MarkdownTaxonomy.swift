@@ -54,8 +54,21 @@ extension MarkdownStore {
         name: String, description: String = "", color: String = "",
         icon: String = "", sortOrder: Int = 0, now: Date = Date()
     ) throws -> MarkdownCategory {
-        let category = MarkdownCategory(
+        try createCategory(
             id: UUID().uuidString.lowercased(), name: name, description: description,
+            color: color, icon: icon, sortOrder: sortOrder, now: now)
+    }
+
+    /// `createCategory` with an id the caller chose. A client that applies the
+    /// new category to its own copy before the daemon answers mints the id
+    /// itself, so both sides name the category the same way. Lowercased, as
+    /// every minted id is.
+    public func createCategory(
+        id: String, name: String, description: String = "", color: String = "",
+        icon: String = "", sortOrder: Int = 0, now: Date = Date()
+    ) throws -> MarkdownCategory {
+        let category = MarkdownCategory(
+            id: id.lowercased(), name: name, description: description,
             color: color, icon: icon, sortOrder: sortOrder)
         let stamp = MarkdownTimestamp.string(now)
         try database.write { conn in
