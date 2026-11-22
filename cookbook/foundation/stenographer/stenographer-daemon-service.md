@@ -2,11 +2,11 @@
 id: 96f73261-cf32-42cc-92f3-f8b58542382a
 title: "Stenographer Daemon Service"
 type: ingredient
-version: 1.0.3
+version: 2.0.0
 status: review
 language: en
 created: 2026-11-14
-modified: 2026-11-18
+modified: 2026-11-22
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -110,7 +110,7 @@ The protocol is the contract that matters: what each operation asks, what it ans
 
 **Production implementation notes (StenographerHTTPClient)**
 
-- **impl-wire-spelling**: The HTTP implementation MUST send and read JSON in the shared wire spelling (snake_case keys, ISO-8601 dates) over the daemon's loopback API, with the base URL taken from the `STENOGRAPHER_URL` environment variable when it is a valid URL and the stenographer HTTP base URL constant otherwise.
+- **impl-wire-spelling**: The HTTP implementation MUST send and read JSON in the shared wire spelling (snake_case keys, ISO-8601 dates) to the base URL its caller passes, with no default address (the retired stenographerd's port is not assumed).
 - **impl-unreachable-mapping**: A failed connection, a non-2xx reply or a body that does not decode MUST all read as unreachable (nil or false); the one exception is a 404 on a single session, which answers inner nil (no such session).
 - **impl-summarize-errors**: `summarize` MUST throw a URL error `cannotConnectToHost` when no reply arrives, which includes the 605-second timeout expiring (the transport's own timeout error is discarded, so a timeout reads exactly like an unreachable daemon), and `SummarizeDaemonFailure` with the daemon's `error` message, or `HTTP <status>` when the body has none, on a non-2xx reply.
 - **impl-act-result**: `actOnOversightFinding` MUST answer a succeeded result with status from the decoded finding, or `acted` when the body does not decode, on a 2xx reply, and a failed result carrying the daemon's error message or `HTTP <status>` otherwise.
@@ -174,8 +174,7 @@ Not applicable — this is a protocol and its supporting value types, not a visu
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `STENOGRAPHER_URL` | environment variable | unset | Overrides the daemon base URL when it parses as a URL. |
-| stenographer HTTP base URL | URL constant | `http://127.0.0.1:22847` | The loopback address used when the variable is unset or invalid. |
+| `baseURL` | `URL` | none (required) | The HTTP implementation's daemon address, passed by its caller; there is no default. |
 | `healthPollInterval` | seconds | 30 | How often the implementation polls `/health` for restarts. |
 | `session` | `URLSession` | `.shared` | The injected transport of the HTTP implementation. |
 
@@ -204,7 +203,7 @@ Not applicable: this code emits no analytics events.
 
 - **Data collected**: The operations carry session identifiers, working directories, conversation entries, AI interaction records, oversight findings and scripts, and LLM provider registry data. `DaemonProviderConfig` carries no secrets and no model by documented design.
 - **Storage**: The protocol stores nothing; the daemon owns persistence. `setAIPreferences` replaces the daemon's provider registry with the pushed set.
-- **Transmission**: Over HTTP to the daemon's loopback address (`http://127.0.0.1:22847` unless overridden by `STENOGRAPHER_URL`); no authentication header is sent.
+- **Transmission**: Over HTTP to the base URL the HTTP implementation's caller passes; no authentication header is sent.
 - **Retention**: Not set by this protocol.
 
 ## Logging
@@ -217,7 +216,7 @@ Not applicable: neither the protocol nor the HTTP implementation makes log calls
 - **Compose**: Define a Kotlin interface with suspend functions returning nullable values; model the session result as a sealed type (Unreachable, NotFound, Found) rather than a doubly nullable. Implement the transport with `HttpURLConnection` or OkHttp, `kotlinx.serialization` for the wire spelling, and a coroutine polling `/health` for reconnect.
 - **React/Web**: A TypeScript interface of async functions returning `T | null`, with a discriminated result for the session lookup; `fetch` with `AbortController` timeouts of 10, 15 and 605 seconds. Poll `/health` with `setInterval` for reconnect.
 - **AppKit / UIKit**: The protocol is `Sendable` and the windows (sessions, oversight, AI log and the provider pickers) take it by initializer, with `StenographerHTTPClient` as production and a stub in tests. `onReconnect` takes an escaping `@Sendable` closure.
-- **WinUI 3**: Define `IStenographerDaemonService` in C# with `Task<T?>` returns for reads and for writes that return a value (`Task<HealthDto?> HealthAsync()`, `Task<OversightScript?> SaveOversightScriptAsync(OversightScript script)`), `Task<bool>` only for the writes that return a Bool, `Task SummarizeAsync(string sessionId)` that throws a `SummarizeDaemonFailure : Exception` (override `Message`) for a daemon refusal and an `HttpRequestException` for transport, and `void OnReconnect(Action handler)`. Represent the doubly optional session lookup as a small result type or a tuple of reachability and value, since C# has no nested optional. Implement with a single shared `HttpClient` (base address from the `STENOGRAPHER_URL` environment variable or `http://127.0.0.1:22847`), `System.Text.Json` with `JsonNamingPolicy.SnakeCaseLower` for reads and writes (use `PropertyNamingPolicy = null` for the camelCase `setAIPreferences` body), and `HttpClient.Timeout` or a `CancellationTokenSource` per request for the 10, 15 and 605 second limits. Return null on any `HttpRequestException`, non-success status or `JsonException`, with 404 on a single session as the not-found result. Drive reconnect with a `PeriodicTimer` polling `/health`, guarded by a `lock`.
+- **WinUI 3**: Define `IStenographerDaemonService` in C# with `Task<T?>` returns for reads and for writes that return a value (`Task<HealthDto?> HealthAsync()`, `Task<OversightScript?> SaveOversightScriptAsync(OversightScript script)`), `Task<bool>` only for the writes that return a Bool, `Task SummarizeAsync(string sessionId)` that throws a `SummarizeDaemonFailure : Exception` (override `Message`) for a daemon refusal and an `HttpRequestException` for transport, and `void OnReconnect(Action handler)`. Represent the doubly optional session lookup as a small result type or a tuple of reachability and value, since C# has no nested optional. Implement with a single shared `HttpClient` (base address passed by the caller), `System.Text.Json` with `JsonNamingPolicy.SnakeCaseLower` for reads and writes (use `PropertyNamingPolicy = null` for the camelCase `setAIPreferences` body), and `HttpClient.Timeout` or a `CancellationTokenSource` per request for the 10, 15 and 605 second limits. Return null on any `HttpRequestException`, non-success status or `JsonException`, with 404 on a single session as the not-found result. Drive reconnect with a `PeriodicTimer` polling `/health`, guarded by a `lock`.
 ## Reference Implementations
 
 | Platform | Location | Conformance |
@@ -267,11 +266,12 @@ Not applicable: neither the protocol nor the HTTP implementation makes log calls
 | [adc.check.security.secure-transport](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0a75f61f-9508-506e-b92e-0f5b29a91c95) | partial | Security |
 | [adc.check.security.secure-authentication](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/1d5c23d5-9a26-57fb-a23d-358271e4204a) | failed | Security |
 
-separation-of-concerns passes: the protocol is the seam, the HTTP client is one implementation, and the windows depend only on the protocol. unit-test-coverage passes: `StenographerHTTPClientTests` and `DaemonServiceConformanceTests.swift` between them cover every vector, including the default-argument overloads, `DaemonProviderConfig` decoding, the timeout table and the summarize and unreachable paths. timeout-configuration passes because each request class has a stated limit (10, 15 and 605 seconds). offline-behavior passes because an unreachable daemon yields nil or false and callers keep their current data, though there is no retry. secure-transport is partial because traffic is plain HTTP, acceptable only on the loopback address, and `STENOGRAPHER_URL` can point the client at any address. secure-authentication is marked failed because the client sends no authentication header and `setAIPreferences` replaces the daemon's provider registry over that unauthenticated loopback endpoint, so any local process can call it; that is a known and accepted limit of the loopback design (see impl-no-retry), not a defect in the protocol contract.
+separation-of-concerns passes: the protocol is the seam, the HTTP client is one implementation, and the windows depend only on the protocol. unit-test-coverage passes: `StenographerHTTPClientTests` and `DaemonServiceConformanceTests.swift` between them cover every vector, including the default-argument overloads, `DaemonProviderConfig` decoding, the timeout table and the summarize and unreachable paths. timeout-configuration passes because each request class has a stated limit (10, 15 and 605 seconds). offline-behavior passes because an unreachable daemon yields nil or false and callers keep their current data, though there is no retry. secure-transport is partial because traffic is plain HTTP, acceptable only on the loopback address, and the caller's base URL can name any address. secure-authentication is marked failed because the client sends no authentication header and `setAIPreferences` replaces the daemon's provider registry over that unauthenticated loopback endpoint, so any local process can call it; that is a known and accepted limit of the loopback design (see impl-no-retry), not a defect in the protocol contract.
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 2.0.0 | 2026-11-22 | Mike Fullerton | Retired the stenographerd port 22847: no default HTTP port, base URL or client address; a named instance may take 22847 (review f1). |
 | 1.0.3 | 2026-11-18 | Mike Fullerton | `summaryPreferences(feature:)`, with a default that reads Sessions'. |
 | 1.0.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (DaemonServiceConformanceTests.swift, 9 new vectors; the other 11 already covered by StenographerHTTPClientTests, 20 of 20 vectors); unit-test-coverage now passed. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Requirements given RFC keywords and split one per operation, four named requirements added for since-hours, reconnect, polling start and encoder split, vectors cite them and new vectors cover timeout, act fallback and defaults, silent-failure cost recorded as a pending Design Decision, configuration timeouts row dropped, WinUI 3 note made concrete, security compliance rows added, and depends-on and related linked. |

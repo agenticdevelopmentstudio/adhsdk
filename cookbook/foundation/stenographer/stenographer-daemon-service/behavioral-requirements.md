@@ -58,7 +58,7 @@
 
 **Production implementation notes (StenographerHTTPClient)**
 
-- **impl-wire-spelling**: The HTTP implementation MUST send and read JSON in the shared wire spelling (snake_case keys, ISO-8601 dates) over the daemon's loopback API, with the base URL taken from the `STENOGRAPHER_URL` environment variable when it is a valid URL and the stenographer HTTP base URL constant otherwise.
+- **impl-wire-spelling**: The HTTP implementation MUST send and read JSON in the shared wire spelling (snake_case keys, ISO-8601 dates) to the base URL its caller passes, with no default address (the retired stenographerd's port is not assumed).
 - **impl-unreachable-mapping**: A failed connection, a non-2xx reply or a body that does not decode MUST all read as unreachable (nil or false); the one exception is a 404 on a single session, which answers inner nil (no such session).
 - **impl-summarize-errors**: `summarize` MUST throw a URL error `cannotConnectToHost` when no reply arrives, which includes the 605-second timeout expiring (the transport's own timeout error is discarded, so a timeout reads exactly like an unreachable daemon), and `SummarizeDaemonFailure` with the daemon's `error` message, or `HTTP <status>` when the body has none, on a non-2xx reply.
 - **impl-act-result**: `actOnOversightFinding` MUST answer a succeeded result with status from the decoded finding, or `acted` when the body does not decode, on a 2xx reply, and a failed result carrying the daemon's error message or `HTTP <status>` otherwise.

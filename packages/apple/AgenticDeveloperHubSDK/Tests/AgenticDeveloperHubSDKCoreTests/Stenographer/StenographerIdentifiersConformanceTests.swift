@@ -12,15 +12,9 @@ final class StenographerIdentifiersConformanceTests: XCTestCase {
         StenographerPaths(home: home, exists: { existing.contains($0.path) })
     }
 
-    func testV1_httpPortAndBaseURL() {
-        XCTAssertEqual(StenographerIdentifiers.httpPort, 22847)
-        XCTAssertEqual(StenographerIdentifiers.httpBaseURL, "http://127.0.0.1:22847")
-    }
-
-    func testV2_routerPortDiffersFromHTTPPort() {
+    func testV2_routerPortAndBaseURL() {
         XCTAssertEqual(StenographerIdentifiers.routerPort, 22848)
         XCTAssertEqual(StenographerIdentifiers.routerBaseURL, "http://127.0.0.1:22848")
-        XCTAssertNotEqual(StenographerIdentifiers.routerPort, StenographerIdentifiers.httpPort)
     }
 
     func testV3_labelAndKeychainServices() {

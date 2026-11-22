@@ -1,6 +1,7 @@
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 2.0.0 | 2026-11-22 | Mike Fullerton | Retired the stenographerd port 22847: no default HTTP port, base URL or client address; a named instance may take 22847 (review f1). |
 | 1.0.4 | 2026-11-18 | Mike Fullerton | Reads a feature's summary preferences with `?feature=`. |
 | 1.0.3 | 2026-11-14 | Mike Fullerton | Conformance tests added (StenographerHTTPClientTests.swift, 20 of 20 vectors); unit-test-coverage now passed. |
 | 1.0.2 | 2026-11-14 | Mike Fullerton | Linked the daemon service, wire and identifiers specs, reconciled the lock wording, added a remote-base-URL edge case and four test vectors, and rewrote the platform notes as guidance. |

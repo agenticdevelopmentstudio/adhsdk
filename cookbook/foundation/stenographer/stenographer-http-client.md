@@ -2,11 +2,11 @@
 id: 9c7c78d3-23ca-4ca6-a519-9968b440b8c6
 title: "Stenographer HTTP Client"
 type: ingredient
-version: 1.0.4
+version: 2.0.0
 status: review
 language: en
 created: 2026-11-14
-modified: 2026-11-18
+modified: 2026-11-22
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -50,8 +50,8 @@ The daemon has no push channel to a client that is not an XPC subscriber, so the
 
 ## Behavioral Requirements
 
-- **default-base-url**: `StenographerHTTPClient.defaultBaseURL` MUST be the URL parsed from the `STENOGRAPHER_URL` environment variable when it is set and parses as a URL, and otherwise `StenographerIdentifiers.httpBaseURL` (`http://127.0.0.1:22847`).
-- **init-parameters**: `init(baseURL:session:healthPollInterval:)` MUST default `baseURL` to `defaultBaseURL`, `session` to `URLSession.shared` and `healthPollInterval` to 30 seconds.
+- **default-base-url**: The client MUST have no default base URL and MUST send every request to the `baseURL` its caller passed: the retired stenographerd's `http://127.0.0.1:22847` is no address to assume, and adhd serves Stenographer.
+- **init-parameters**: `init(baseURL:session:healthPollInterval:)` MUST require `baseURL`, and default `session` to `URLSession.shared` and `healthPollInterval` to 30 seconds.
 - **wire-coding**: The client MUST encode request bodies and decode replies with `StenographerWire.encoder()` and `StenographerWire.decoder()`.
 - **nil-on-failure**: Every read that returns an optional MUST return `nil` when the connection fails, when the status is outside 200 to 299, or when the body does not decode as the expected type.
 - **false-on-failure**: Every write that returns `Bool` MUST return `false` when the connection fails, when the body cannot be encoded, or (for the writes that read a status or a reply) when the status is outside 200 to 299 or the reply does not decode.
@@ -125,8 +125,8 @@ Not applicable — this is a network client, not a visual component.
 | stenographer-http-client-014 | summarize-daemon-failure | Reply 500 with a body that is not JSON; call `summarize(sessionId: "s1")`. | Throws `SummarizeDaemonFailure` with `reason` `HTTP 500` (derived from the source; no test). |
 | stenographer-http-client-015 | summarize-transport-error | No daemon; call `summarize(sessionId: "s1")`. | Throws `URLError` with code `cannotConnectToHost` (derived from the source; no test). |
 | stenographer-http-client-016 | reconnect-first-poll, reconnect-failed-poll | `/health` replies with a steady `uptime` of 500, or fails. | No handler fires (derived from the source; no test). |
-| stenographer-http-client-017 | default-base-url | `STENOGRAPHER_URL` set to `http://localhost:9999`; read `defaultBaseURL`. Then unset it and read again. | `http://localhost:9999`, then `http://127.0.0.1:22847` (derived from the source; no test). |
-| stenographer-http-client-018 | url-construction | Client with base URL `http://127.0.0.1:22847/ignored`; call `session(id: "s1", includeCounts: true)`. | The request URL is `http://127.0.0.1:22847/sessions/s1` with no query string (derived from the source; no test). |
+| stenographer-http-client-017 | default-base-url | Client with base URL `http://localhost:9999`; call `health()`. | The request URL is `http://localhost:9999/health`. |
+| stenographer-http-client-018 | url-construction | Client with base URL `http://127.0.0.1:22950/ignored`; call `session(id: "s1", includeCounts: true)`. | The request URL is `http://127.0.0.1:22950/sessions/s1` with no query string (derived from the source; no test). |
 | stenographer-http-client-019 | json-content-type | Call `actOnOversightFinding(findingId: 7)` and `health()`, and inspect each request. | The first request has `Content-Type: application/json`; the second has none (derived from the source; no test). |
 | stenographer-http-client-020 | act-on-finding-unreachable | No daemon; call `actOnOversightFinding(findingId: 7)`. | `nil` (derived from the source; no test). |
 ## Edge Cases
@@ -137,15 +137,14 @@ Not applicable — this is a network client, not a visual component.
 - **Error states**: A non-2xx status, an undecodable body and a refused connection are indistinguishable to the caller of a read (they all return `nil`); the client logs nothing. `summarize` and `actOnOversightFinding` are the two calls that carry the daemon's `error` text. A 2xx reply with a body that fails to decode is `nil` for a read, `acted` for an action, and true for `deleteOversightScript` and `setAIPreferences`.
 - **Offline / disconnected state**: While the daemon is down every read is `nil` and every write is `false`, and each call waits up to its timeout (10, 15 or 605 seconds) before failing; a refused loopback connection normally fails sooner. When the daemon comes back with a lower `uptime`, the registered handlers fire on the next poll, so up to `healthPollInterval` seconds pass before the client notices. A restart that is not observed by a successful poll before `uptime` climbs past its old value goes undetected.
 - **Path building**: Ids are placed into the route path as given. The client does not validate them, and it relies on `URLComponents` to encode characters that are illegal in a path.
-- **Remote base URL**: `STENOGRAPHER_URL` can name any host, and the client does not check that the host is loopback or that the scheme is secure. `setAIPreferences` posts the provider registry, including its secrets, to whatever base URL is set, in clear text when the scheme is `http`. The source does not refuse a non-loopback URL.
+- **Remote base URL**: The caller's `baseURL` can name any host, and the client does not check that the host is loopback or that the scheme is secure. `setAIPreferences` posts the provider registry, including its secrets, to whatever base URL is set, in clear text when the scheme is `http`. The source does not refuse a non-loopback URL.
 - **Cancellation**: The calls do not check for cancellation themselves; cancelling the calling task cancels the underlying `URLSession` request. The poll loop stops when its task is cancelled or the client is released.
 
 ## Configuration
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `STENOGRAPHER_URL` | environment variable | unset | Overrides the default base URL when it parses as a URL. |
-| `baseURL` | `URL` | `defaultBaseURL` | Daemon address; the default is `StenographerIdentifiers.httpBaseURL`. |
+| `baseURL` | `URL` | none (required) | Daemon address. There is no default: the retired stenographerd's `22847` is not assumed. |
 | `session` | `URLSession` | `.shared` | Injected for tests with a stub protocol. |
 | `healthPollInterval` | `TimeInterval` | 30 | Seconds between health polls once `onReconnect` has been called. |
 
@@ -173,7 +172,7 @@ Not applicable: the source contains no analytics call.
 
 - **Data handled**: Session metadata, conversation entries, AI interaction records and provider settings, all read from the local daemon. `setAIPreferences` posts the provider registry, which per its test includes provider `secrets` such as an API key.
 - **Storage**: None; the client keeps only the reconnect handlers, the last `uptime` and the poll task in memory.
-- **Transmission**: Plain HTTP to the loopback address `127.0.0.1` by default; nothing leaves the machine unless `STENOGRAPHER_URL` points elsewhere, and the client adds no authentication header.
+- **Transmission**: Plain HTTP to the base URL the caller passes; nothing leaves the machine unless that URL points off it, and the client adds no authentication header.
 - **Retention**: Not applicable: no data is kept after a call returns.
 
 ## Logging
@@ -185,7 +184,7 @@ Not applicable: the client calls no logging API; every failure is returned as `n
 - **SwiftUI**: Call the client from a view model with `async` functions: `await` each call off the main actor, publish the result on the main actor, and treat `nil` or `false` as "daemon unreachable" so the view shows an offline state instead of an error alert.
 - **Compose**: Use OkHttp or Ktor with kotlinx.serialization and `JsonNamingStrategy.SnakeCase`, a `suspend` function per route returning a nullable type, and a coroutine in a `CoroutineScope` for the health poll. Per-request timeouts map to `OkHttpClient.newBuilder().callTimeout(...)`.
 - **React/Web**: Use `fetch` with `AbortSignal.timeout(ms)` per request, convert keys between camelCase and snake_case in one place, and run the poll with `setInterval` (single-threaded, so the start race does not occur). A browser cannot reach the daemon unless the daemon allows the origin.
-- **AppKit / UIKit**: Use the same `Foundation` client from an AppKit controller or a UIKit view controller, and update the UI on the main thread after each await. The `STENOGRAPHER_URL` variable is read from the process environment, which a sandboxed macOS app may not receive from the shell; iOS has no local daemon, so the client has no use there.
+- **AppKit / UIKit**: Use the same `Foundation` client from an AppKit controller or a UIKit view controller, and update the UI on the main thread after each await. The caller passes the base URL; iOS has no local daemon, so the client has no use there.
 - **WinUI 3**: Use `System.Net.Http.HttpClient` (one shared instance) with a `CancellationTokenSource` timeout per call, and `System.Text.Json` with `JsonNamingPolicy.SnakeCaseLower` (and a converter for ISO-8601 dates). Return `Task<T?>` for reads and `Task<bool>` for writes, and throw a custom exception type for the summarize failure. Run the health poll with a `PeriodicTimer` in a `Task` that is cancelled on dispose, guard the handler list with a `lock`, read the base URL with `Environment.GetEnvironmentVariable`, and keep the `HttpClient` timeout infinite so the per-request 10, 15 and 605 second limits apply.
 
 ## Reference Implementations
@@ -234,12 +233,13 @@ Not applicable: the client calls no logging API; every failure is returned as `n
 | [adc.check.access-patterns.retry-with-backoff](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bcb17bfe-d2d6-53f3-b2af-06b7eea3da61) | failed | Access Patterns |
 | [adc.check.security.secure-transport](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0a75f61f-9508-506e-b92e-0f5b29a91c95) | partial | Security |
 
-`separation-of-concerns` passes because the client only moves requests and replies; the wire spelling, identifiers and DTOs live in their own types. `unit-test-coverage` passes because every vector has a test in `StenographerHTTPClientTests` (`Tests/AgenticDeveloperHubSDKCoreTests/Stenographer/StenographerHTTPClientTests.swift`): the failure mapping, query building, the 404, the summarize and action failures, both preference encoders, the reconnect trigger and its first-poll and failed-poll cases, `timeout(method:path:)`, URL construction, the content type and the default base URL. `timeout-configuration` passes because every request carries one of three explicit timeouts. `error-response-handling` is partial because the daemon's `error` text is surfaced only for summarize and finding actions; every other failure collapses to `nil` or `false` by design. `retry-with-backoff` is marked failed because the client never retries; that is deliberate (see the Design Decision "The client does not retry or back off"), since the caller decides and the daemon is on loopback, so the check is a known and accepted failure rather than a defect. `secure-transport` is partial because traffic is plain HTTP, which is acceptable only on the loopback address, and the base URL can be overridden to any address through `STENOGRAPHER_URL`.
+`separation-of-concerns` passes because the client only moves requests and replies; the wire spelling, identifiers and DTOs live in their own types. `unit-test-coverage` passes because every vector has a test in `StenographerHTTPClientTests` (`Tests/AgenticDeveloperHubSDKCoreTests/Stenographer/StenographerHTTPClientTests.swift`): the failure mapping, query building, the 404, the summarize and action failures, both preference encoders, the reconnect trigger and its first-poll and failed-poll cases, `timeout(method:path:)`, URL construction, the content type and the caller's base URL. `timeout-configuration` passes because every request carries one of three explicit timeouts. `error-response-handling` is partial because the daemon's `error` text is surfaced only for summarize and finding actions; every other failure collapses to `nil` or `false` by design. `retry-with-backoff` is marked failed because the client never retries; that is deliberate (see the Design Decision "The client does not retry or back off"), since the caller decides and the daemon is on loopback, so the check is a known and accepted failure rather than a defect. `secure-transport` is partial because traffic is plain HTTP, which is acceptable only on the loopback address, and the caller's base URL can name any address.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 2.0.0 | 2026-11-22 | Mike Fullerton | Retired the stenographerd port 22847: no default HTTP port, base URL or client address; a named instance may take 22847 (review f1). |
 | 1.0.4 | 2026-11-18 | Mike Fullerton | Reads a feature's summary preferences with `?feature=`. |
 | 1.0.3 | 2026-11-14 | Mike Fullerton | Conformance tests added (StenographerHTTPClientTests.swift, 20 of 20 vectors); unit-test-coverage now passed. |
 | 1.0.2 | 2026-11-14 | Mike Fullerton | Linked the daemon service, wire and identifiers specs, reconciled the lock wording, added a remote-base-URL edge case and four test vectors, and rewrote the platform notes as guidance. |

@@ -62,4 +62,23 @@ final class StenographerInstancePortTests: XCTestCase {
 
         XCTAssertEqual(try StenographerInstance.resolve(name: "alpha", home: home).httpPort, 22954)
     }
+
+    /// The default instance has no HTTP port: 22847 was the retired
+    /// stenographerd's, and nothing in the default instance uses it now.
+    func testTheDefaultInstanceHasNoHTTPPort() {
+        XCTAssertNil(StenographerInstance.default.httpPort)
+    }
+
+    /// 22847 is free for a named instance; the router's and adkd's are not.
+    func testTheRetiredStenographerdPortIsFreeButTheReservedOnesAreNot() throws {
+        XCTAssertEqual(StenographerInstance.reservedHTTPPorts, [22848, 22849])
+        let dev = StenographerInstance.Definition(name: "dev", dataRoot: dataRoot("dev"), httpPort: 22847)
+        XCTAssertNoThrow(try StenographerInstance.validate(dev, fileName: "dev", home: home))
+        for port in [22848, 22849] {
+            let taken = StenographerInstance.Definition(name: "dev", dataRoot: dataRoot("dev"), httpPort: port)
+            XCTAssertThrowsError(try StenographerInstance.validate(taken, fileName: "dev", home: home)) { error in
+                XCTAssertEqual(error as? StenographerInstance.ResolutionError, .invalidPort(port))
+            }
+        }
+    }
 }

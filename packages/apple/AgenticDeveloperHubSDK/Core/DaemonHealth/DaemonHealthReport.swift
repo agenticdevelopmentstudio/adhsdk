@@ -3,7 +3,7 @@ import Foundation
 // A client-side mirror of the `GET /health` wire format every DaemonKit daemon
 // serves (`DaemonHealthRouter`). Kept here, Foundation only, so a menu bar app
 // or any other client can read a daemon's health without linking DaemonKit —
-// the same arrangement `StenographerHTTPClient` uses for stenographerd. The
+// the same arrangement `StenographerHTTPClient` used for stenographerd. The
 // JSON keys are the contract; the Swift names are distinct from DaemonKit's
 // (`HealthStatus`, `StrategySnapshot`, `WorkUnitSnapshot`) so a file that
 // imports both never meets an ambiguity.

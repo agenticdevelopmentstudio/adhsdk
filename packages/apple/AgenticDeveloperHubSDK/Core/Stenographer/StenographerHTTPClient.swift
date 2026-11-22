@@ -1,6 +1,11 @@
 import Foundation
 
-/// ``StenographerDaemonService`` over the daemon's loopback HTTP API.
+/// ``StenographerDaemonService`` over a loopback HTTP API in the
+/// `StenographerWire` routes, at a base URL the caller names.
+///
+/// The retired stenographerd served these routes on 22847. It is gone and adhd
+/// serves Stenographer (through `DaemonStenographerService`), so this client
+/// has no default address and never assumes one.
 ///
 /// Same routes `steno` uses: everything is JSON in `StenographerWire` spelling
 /// (snake_case, ISO-8601). A failed connection, a non-2xx reply or a body that
@@ -11,13 +16,6 @@ import Foundation
 /// subscriber, so this polls `/health` and treats an `uptime` that went *down*
 /// as a restart, firing every registered handler once.
 public final class StenographerHTTPClient: StenographerDaemonService, @unchecked Sendable {
-
-    public static var defaultBaseURL: URL {
-        if let raw = ProcessInfo.processInfo.environment["STENOGRAPHER_URL"], let url = URL(string: raw) {
-            return url
-        }
-        return URL(string: StenographerIdentifiers.httpBaseURL)!
-    }
 
     private let baseURL: URL
     private let session: URLSession
@@ -43,7 +41,7 @@ public final class StenographerHTTPClient: StenographerDaemonService, @unchecked
     }()
 
     public init(
-        baseURL: URL = StenographerHTTPClient.defaultBaseURL,
+        baseURL: URL,
         session: URLSession = StenographerHTTPClient.uncachedSession,
         healthPollInterval: TimeInterval = 30
     ) {

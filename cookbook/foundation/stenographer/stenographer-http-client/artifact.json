@@ -4,11 +4,11 @@
     "id": "9c7c78d3-23ca-4ca6-a519-9968b440b8c6",
     "title": "Stenographer HTTP Client",
     "type": "ingredient",
-    "version": "1.0.4",
+    "version": "2.0.0",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
-    "modified": "2026-11-18",
+    "modified": "2026-11-22",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -39,7 +39,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "13812d9a63710a7b",
+  "synced": "5897012df5bd4491",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

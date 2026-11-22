@@ -7,7 +7,7 @@ import Foundation
 ///
 /// The non-legacy values follow this process's `StenographerInstance`: the
 /// default instance's are the literals Stenographer has always used, a named
-/// development instance's carry its name and port.
+/// development instance's carry its name.
 public enum StenographerIdentifiers {
     /// This process's launchd label and Mach service: the base label for the
     /// default instance, `<base>.<name>` for a named one (`StenographerInstance`).
@@ -19,11 +19,9 @@ public enum StenographerIdentifiers {
     public static let keychainService = label
     public static let daemonKeychainService = "\(label).daemon"
     public static let legacyDaemonKeychainService = "com.agentic-cookbook.stenographer.daemon"
-    /// The daemon's localhost HTTP port, and the base URL clients reach it at.
-    public static let httpPort = StenographerInstance.current.httpPort
-    public static let httpBaseURL = "http://127.0.0.1:\(httpPort)"
     /// The account router's loopback port: where `ANTHROPIC_BASE_URL` points
-    /// when routing is used. Beside `httpPort`, never the same listener.
+    /// when routing is used. (The retired stenographerd's own HTTP port, 22847,
+    /// is gone with it: adhd serves Stenographer.)
     public static let routerPort = 22848
     public static let routerBaseURL = "http://127.0.0.1:\(routerPort)"
 }

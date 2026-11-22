@@ -4,7 +4,7 @@
     "id": "fe798f91-076e-41fc-9713-907b744c5539",
     "title": "Stenographer Instance",
     "type": "ingredient",
-    "version": "1.1.0",
+    "version": "1.1.1",
     "status": "review",
     "language": "en",
     "created": "2026-11-21",
@@ -34,7 +34,7 @@
     "approved-date": ""
   },
   "names_hosts": "The installed copy's protected roots include the literal `~/.claude` directory (hook socket, drop directory, settings.json), named as path data.",
-  "synced": "6ebdcd5c712b4d4b",
+  "synced": "d20b5fa4e76b9c70",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

@@ -2,7 +2,7 @@
 id: fe798f91-076e-41fc-9713-907b744c5539
 title: "Stenographer Instance"
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: 2026-11-21
@@ -32,7 +32,7 @@ approved-date: ""
 
 ## Overview
 
-`StenographerInstance` says which Stenographer the current process belongs to. The **default** instance is the one a person installs: it is unnamed and resolves every value exactly as Stenographer always has (label `com.agenticdevelopmentstudio.stenographer`, HTTP port `22847`). A **named** instance (for example `dev-trimming`) is a development copy that runs beside the installed one, with its own data root, label and HTTP port, and the rules here keep it from touching anything the installed copy owns.
+`StenographerInstance` says which Stenographer the current process belongs to. The **default** instance is the one a person installs: it is unnamed and resolves every value exactly as Stenographer always has (label `com.agenticdevelopmentstudio.stenographer`), except that it has no HTTP port: the retired stenographerd's `22847` was its port. A **named** instance (for example `dev-trimming`) is a development copy that runs beside the installed one, with its own data root, label and HTTP port, and the rules here keep it from touching anything the installed copy owns.
 
 A named instance exists only if its definition file does: `~/Library/Application Support/com.agenticdevelopmentstudio.stenographer.instances/<name>.json`, which `scripts/stenographer_instance.py` writes. Asking for a name with no definition is a hard error, because creating an empty store for a typo would look like data loss.
 
@@ -45,7 +45,7 @@ The type is a `Sendable`, `Equatable` struct holding an optional `Definition`. I
 - **definition-fields**: `Definition` MUST carry exactly three fields, `name` (string), `dataRoot` (string) and `httpPort` (integer), and MUST decode from and encode to a JSON object with the keys `name`, `dataRoot` and `httpPort`.
 - **definition-unknown-keys**: Decoding a definition MUST ignore JSON keys other than the three fields.
 - **default-has-no-definition**: `StenographerInstance.default` MUST hold no definition, and `isDefault` MUST be true exactly when the definition is absent.
-- **default-values**: The default instance MUST report `name` as absent, `label` as `com.agenticdevelopmentstudio.stenographer`, `httpPort` as `22847` and `dataRoot` as absent.
+- **default-values**: The default instance MUST report `name` as absent, `label` as `com.agenticdevelopmentstudio.stenographer`, `httpPort` as absent and `dataRoot` as absent.
 - **named-label**: A named instance's `label` MUST be the base label, a dot and the instance name (`com.agenticdevelopmentstudio.stenographer.<name>`).
 - **named-port**: A named instance's `httpPort` MUST be the definition's `httpPort`.
 - **named-data-root**: A named instance's `dataRoot` MUST be a directory URL for the definition's `dataRoot` string.
@@ -55,7 +55,7 @@ The type is a `Sendable`, `Equatable` struct holding an optional `Definition`. I
 ### Constants
 
 - **base-label**: `baseLabel` MUST be `com.agenticdevelopmentstudio.stenographer`.
-- **default-port**: `defaultHTTPPort` MUST be `22847`.
+- **default-port**: The type MUST NOT declare a default HTTP port: the default instance's was the retired stenographerd's `22847`, and nothing in the default instance listens on it or connects to it.
 - **reserved-ports**: `reservedHTTPPorts` MUST be the set {22848, 22849}: the installed account router's port (`StenographerIdentifiers.routerPort`) and the retired Kitchen daemon adkd's port. The retired stenographerd's 22847 is not reserved: nothing listens there once adhd serves Stenographer.
 - **reserved-names**: `reservedNames` MUST be the set {`usagewidget`, `instances`, `daemon`}: the usage widget's bundle id suffix, the definitions directory's suffix and the installed daemon's launch-throttle identifier suffix.
 - **selection-keys**: The environment key MUST be `STENOGRAPHER_INSTANCE` and the argument flag MUST be `-instance`.
@@ -144,8 +144,8 @@ Vectors 041 to 044 are `StenographerInstancePortTests` (`Tests/AgenticDeveloperH
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
-| stenographer-instance-001 | default-has-no-definition, default-values | `StenographerInstance.default` | `isDefault` true; `name` absent; `label` `com.agenticdevelopmentstudio.stenographer`; `httpPort` 22847; `dataRoot` absent. |
-| stenographer-instance-002 | base-label, default-port, reserved-ports, reserved-names, selection-keys, socket-constants | The static constants. | `baseLabel` `com.agenticdevelopmentstudio.stenographer`; `defaultHTTPPort` 22847; `reservedHTTPPorts` {22848, 22849}; `reservedNames` {usagewidget, instances, daemon}; `environmentKey` `STENOGRAPHER_INSTANCE`; `argumentFlag` `-instance`; `socketFileName` `stenographer.sock`; `socketPathLimit` 104. |
+| stenographer-instance-001 | default-has-no-definition, default-values | `StenographerInstance.default` | `isDefault` true; `name` absent; `label` `com.agenticdevelopmentstudio.stenographer`; `httpPort` absent; `dataRoot` absent. |
+| stenographer-instance-002 | base-label, default-port, reserved-ports, reserved-names, selection-keys, socket-constants | The static constants. | `baseLabel` `com.agenticdevelopmentstudio.stenographer`; no `defaultHTTPPort`; `reservedHTTPPorts` {22848, 22849}; `reservedNames` {usagewidget, instances, daemon}; `environmentKey` `STENOGRAPHER_INSTANCE`; `argumentFlag` `-instance`; `socketFileName` `stenographer.sock`; `socketPathLimit` 104. |
 | stenographer-instance-003 | definitions-directory | `definitionsDirectory(home: /h)` | `/h/Library/Application Support/com.agenticdevelopmentstudio.stenographer.instances/`. |
 | stenographer-instance-004 | environment-wins | environment `{STENOGRAPHER_INSTANCE: "dev"}`, arguments `["app", "-instance", "other"]` | `"dev"`. |
 | stenographer-instance-005 | empty-environment-is-default | environment `{STENOGRAPHER_INSTANCE: ""}`, arguments `["app", "-instance", "other"]` | absent. |
@@ -283,7 +283,7 @@ a compiled doc or skill shows those rows as a derived section here. -->
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Stenographer/StenographerInstance.swift` | confirmed (1.0.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Stenographer/StenographerInstance.swift` | confirmed (1.1.0) |
 
 ## Design Decisions
 
@@ -340,5 +340,6 @@ a compiled doc or skill shows those rows as a derived section here. -->
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-11-22 | Mike Fullerton | Retired the stenographerd port 22847: no default HTTP port, base URL or client address; a named instance may take 22847 (review f1). |
 | 1.1.0 | 2026-11-22 | Mike Fullerton | The retired stenographerd's port 22847 is no longer reserved; reservedHTTPPorts is {22848, 22849}. |
 | 1.0.1 | 2026-11-21 | Mike Fullerton | Resolved port-unique-across-instances: validate throws portTakenByAnotherInstance for a port another definition holds, checked after the instance overlap; added its description and vectors 041 to 044. |

@@ -13,7 +13,7 @@ import AgenticDeveloperHubSDKCore
 /// Typical `main.swift`:
 ///
 ///     let delegate = StatusBarAppDelegate(
-///         healthProbe: DaemonHealthProbe.http(baseURL: "http://127.0.0.1:22847"),
+///         healthProbe: DaemonHealthProbe.http(baseURL: "http://127.0.0.1:<port>"),
 ///         menuIcon: "⚙",
 ///         composer: MenuComposer(sections: [
 ///             HealthMenuSection(daemonName: "mydaemon"),
