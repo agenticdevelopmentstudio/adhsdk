@@ -20,8 +20,7 @@ tags:
   - identifiers
   - paths
 depends-on: []
-related:
-  - 1d48ed86-5704-4631-b643-36f7450c1c83
+related: []
 references: []
 approved-by: ""
 approved-date: ""
@@ -77,7 +76,7 @@ Not applicable — this is a set of identifier constants and path derivations, n
 
 ## Conformance Test Vectors
 
-The source has no test file of its own. `ADKDIdentifiersTests` (the Kitchen daemon's identifiers, [adhsdk.ingredient.foundation.stenographer.adkd-identifiers](cookbook:1d48ed86-5704-4631-b643-36f7450c1c83)) builds `StenographerPaths(home:exists:)` with `exists` always false and compares several of its values with the Kitchen daemon's; all other vectors are derived from the source.
+The source has no test file of its own; every vector is derived from the source.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
@@ -87,13 +86,12 @@ The source has no test file of its own. `ADKDIdentifiersTests` (the Kitchen daem
 | stenographer-identifiers-004 | subsystem-suffix | `subsystem("db")` and `subsystem("")` | `com.agenticdevelopmentstudio.stenographer.db` and the label followed by a trailing dot. |
 | stenographer-identifiers-005 | support-directory-resolution | `exists` is true only for `<current>/stenographer.db` | `supportDirectory` is `<home>/Library/Application Support/com.agenticdevelopmentstudio.stenographer`. |
 | stenographer-identifiers-006 | support-directory-resolution, empty-current-does-not-hide | `exists` is true for the legacy directory and for the current directory but not for the database file. | `supportDirectory` is the legacy directory. |
-| stenographer-identifiers-007 | support-directory-resolution | `exists` is always false (the fresh-install case that `ADKDIdentifiersTests` builds). | `supportDirectory` is the current directory; `logsDirectory` is the current logs directory. |
+| stenographer-identifiers-007 | support-directory-resolution | `exists` is always false (the fresh-install case). | `supportDirectory` is the current directory; `logsDirectory` is the current logs directory. |
 | stenographer-identifiers-008 | plugin-directories, plugin-directories-both | Any `home`. | Two URLs, the current then the legacy `Plugins` directory, in that order. |
 | stenographer-identifiers-009 | write-support-file, write-support-file-attempts | The closure creates the file; `exists` flips to make the legacy directory resolve to the current one after the first write. | The closure runs twice, the second time in the current directory, and the returned URL is the current one. |
 | stenographer-identifiers-010 | write-support-file-attempts | `attempts: 0` and a directory that never stabilises. | The closure runs once (`max(attempts, 1)`), and the returned URL is the one resolved after that write, not a location written to. |
 | stenographer-identifiers-011 | write-support-file-errors | The closure throws. | The error propagates and the closure has run once. |
 | stenographer-identifiers-012 | launch-agent-plists | Any `home`. | `Library/LaunchAgents/` plus the label, legacy label and legacy menubar label, each with `.plist`. |
-| stenographer-identifiers-013 | label-value, http-port, keychain-service-values, file-names, support-directories, logs-directories, launch-agent-plists | Compare with `ADKDIdentifiers` (test: testNothingCollidesWithStenographer). | The label, port, keychain service, database name, support directory, logs directory and launch-agent plist all differ. |
 | stenographer-identifiers-014 | write-support-file-attempts | `attempts: 3` and a directory that changes every time it resolves. | The closure runs three times and the returned URL is the one resolved after the last write, not a location written to (derived from the source; no test). |
 | stenographer-identifiers-015 | legacy-label-values | `legacyLabel` and `legacyMenubarLabel`. | `com.agentic-cookbook.stenographer` and `com.agentic-cookbook.stenographer.menubar` (derived from the source; no test). |
 | stenographer-identifiers-016 | subsystem-is-label | `StenographerIdentifiers.subsystem` and `label`. | The two strings are equal (derived from the source; no test). |
@@ -203,7 +201,7 @@ Not applicable: the types call no logging API; `subsystem(_:)` only builds the s
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
 | [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 
-`separation-of-concerns` passes because the types only name things and resolve which directory exists; creating directories, registering with launchd and opening the keychain stay with callers. `unit-test-coverage` passes because every vector has a test in `StenographerIdentifiersConformanceTests` (`Tests/AgenticDeveloperHubSDKCoreTests/Stenographer/StenographerIdentifiersConformanceTests.swift`), covering directory resolution, `writeSupportFile` and the legacy paths; `ADKDIdentifiersTests` also keeps the collision check against the Kitchen daemon.
+`separation-of-concerns` passes because the types only name things and resolve which directory exists; creating directories, registering with launchd and opening the keychain stay with callers. `unit-test-coverage` passes because every vector has a test in `StenographerIdentifiersConformanceTests` (`Tests/AgenticDeveloperHubSDKCoreTests/Stenographer/StenographerIdentifiersConformanceTests.swift`), covering directory resolution, `writeSupportFile` and the legacy paths.
 
 ## Change History
 

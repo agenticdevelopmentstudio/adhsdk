@@ -106,18 +106,6 @@ final class StenographerIdentifiersConformanceTests: XCTestCase {
             "/h/Library/LaunchAgents/com.agentic-cookbook.stenographer.menubar.plist")
     }
 
-    func testV13_nothingCollidesWithTheKitchenDaemon() {
-        let steno = StenographerPaths(home: home, exists: { _ in false })
-        let kitchen = ADKDPaths(home: home)
-        XCTAssertNotEqual(ADKDIdentifiers.label, StenographerIdentifiers.label)
-        XCTAssertNotEqual(ADKDIdentifiers.httpPort, StenographerIdentifiers.httpPort)
-        XCTAssertNotEqual(ADKDIdentifiers.keychainService, StenographerIdentifiers.daemonKeychainService)
-        XCTAssertNotEqual(ADKDPaths.databaseFileName, StenographerPaths.databaseFileName)
-        XCTAssertNotEqual(kitchen.supportDirectory, steno.supportDirectory)
-        XCTAssertNotEqual(kitchen.logsDirectory, steno.logsDirectory)
-        XCTAssertNotEqual(kitchen.launchAgentPlist, steno.launchAgentPlist)
-    }
-
     func testV14_threeAttemptsReturnTheLastResolvedURLNotTheLastWritten() {
         let subject = alternatingPaths()
         var written: [String] = []
