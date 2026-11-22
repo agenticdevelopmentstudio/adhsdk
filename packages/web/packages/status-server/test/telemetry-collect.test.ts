@@ -24,7 +24,7 @@ import { collectTelemetry } from "../src/telemetry/server";
 import { emptySnapshot } from "../src/telemetry/types";
 import type { ErrorDTO } from "../src/telemetry/types";
 import type { StatusConfig } from "../src/config/port";
-import type { Storage } from "../src/storage/ports";
+import type { PlatformObservationInput, Storage } from "../src/storage/ports";
 
 function item(id: string): ErrorDTO {
   return {
@@ -63,7 +63,7 @@ function makeStorage() {
     load: vi.fn(async () => []),
   });
   const telemetry = { errors: save(), analytics: save(), runtimeErrors: save() };
-  const recordObservations = vi.fn(async () => {});
+  const recordObservations = vi.fn(async (_observations: PlatformObservationInput[]) => {});
   const storage = { telemetry, observations: { recordObservations } } as unknown as Storage;
   return { storage, telemetry, recordObservations };
 }
