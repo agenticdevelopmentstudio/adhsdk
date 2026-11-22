@@ -72,9 +72,11 @@ public struct StenographerInstance: Sendable, Equatable {
     public static let baseLabel = "com.agenticdevelopmentstudio.stenographer"
     public static let defaultHTTPPort = 22847
     /// Ports a named instance may never take: the installed daemon's HTTP port,
-    /// the installed account router's (the obvious "next port"), and adkd's.
+    /// the installed account router's (the obvious "next port"), and the
+    /// retired Kitchen daemon adkd's (22849), which an installed Kitchen may
+    /// still be running.
     public static let reservedHTTPPorts: Set<Int> = [
-        defaultHTTPPort, StenographerIdentifiers.routerPort, ADKDIdentifiers.httpPort
+        defaultHTTPPort, StenographerIdentifiers.routerPort, 22849
     ]
     /// Names whose label `<baseLabel>.<name>` is already taken: the usage
     /// widget's bundle id, the directory that holds the definitions, and the

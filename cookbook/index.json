@@ -2527,40 +2527,6 @@
       "path": "status/service/monitor/alerts",
       "rdid": "adhsdk.ingredient.status.service.monitor.alerts"
     },
-    "1d48ed86-5704-4631-b643-36f7450c1c83": {
-      "implementations": [
-        {
-          "conformance": {
-            "hash": "sha256:de674a07a3bad64d9c82292b585e6d6aca072a93508e4b6a6e1f6f0c64af1dbb",
-            "state": "confirmed",
-            "version": "1.0.2"
-          },
-          "location": "packages/apple/AgenticDeveloperHubSDK/Core/Stenographer/ADKDIdentifiers.swift",
-          "platform": "apple"
-        },
-        {
-          "conformance": {
-            "state": "planned"
-          },
-          "platform": "web"
-        },
-        {
-          "conformance": {
-            "state": "planned"
-          },
-          "platform": "android"
-        },
-        {
-          "conformance": {
-            "state": "planned"
-          },
-          "platform": "windows"
-        }
-      ],
-      "kind": "ingredient",
-      "path": "foundation/stenographer/adkd-identifiers",
-      "rdid": "adhsdk.ingredient.foundation.stenographer.adkd-identifiers"
-    },
     "1d701cc5-5822-4465-8ad5-413e6b0c31fc": {
       "implementations": [
         {
