@@ -5,6 +5,7 @@ import {
   PLACEHOLDER_TOPIC_IDS,
   PRODUCT_MEMBER_MOVES,
   PRODUCT_TOPIC_ALIASES,
+  visibleProductTopics,
 } from "../topics";
 import { PRODUCT_TOPIC_CONFIGS, productTopicPaneRenderer } from "../ProductsFeature";
 
@@ -142,6 +143,33 @@ describe("the old addresses", () => {
     expect(PRODUCT_MEMBER_MOVES.invitations).toBeUndefined();
     expect(PRODUCT_MEMBER_MOVES.authentication?.auth).toBeUndefined();
     expect(PRODUCT_MEMBER_MOVES.gaming?.levels).toBe("gamification");
+  });
+});
+
+// A product's admin site (phase 6) takes the people rows off the hub once it exists, and the
+// Admin site row is drawn only while the switch is on.
+describe("visibleProductTopics", () => {
+  const ids = (state: { enabled: boolean; hasSite: boolean }) =>
+    visibleProductTopics(PRODUCT_TOPICS, state).map((t) => t.id);
+  const MOVED = ["invitations", "roles", "signup-list", "sets"];
+  const all = PRODUCT_TOPICS.map((t) => t.id);
+
+  it("switch off, no site: every pane but the Admin site row", () => {
+    expect(ids({ enabled: false, hasSite: false })).toEqual(all.filter((id) => id !== "admin-site"));
+  });
+
+  it("switch off, a site: still every pane but the Admin site row", () => {
+    expect(ids({ enabled: false, hasSite: true })).toEqual(all.filter((id) => id !== "admin-site"));
+  });
+
+  it("switch on, no site yet: every pane, and the Admin site row to set one up", () => {
+    expect(ids({ enabled: true, hasSite: false })).toEqual(all);
+  });
+
+  it("switch on and a site: the people rows leave for the site, the Admin site row stays", () => {
+    const shown = ids({ enabled: true, hasSite: true });
+    expect(shown).toEqual(all.filter((id) => !MOVED.includes(id)));
+    expect(shown).toContain("admin-site");
   });
 });
 

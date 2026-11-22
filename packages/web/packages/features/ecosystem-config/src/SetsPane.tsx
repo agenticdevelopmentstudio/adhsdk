@@ -14,6 +14,7 @@ import {
   type SetRow,
   type SetValue,
 } from "@adh-sdk/data/sets";
+import { DEFAULT_QUOTA_BYTES } from "@adh-sdk/data/product-admin";
 import { FieldGroup } from "@adh-sdk/ui/blocks";
 import { Badge } from "@adh-sdk/ui/components/badge";
 import { Button } from "@adh-sdk/ui/components/button";
@@ -21,9 +22,15 @@ import { Checkbox } from "@adh-sdk/ui/components/checkbox";
 import { ErrorText } from "@adh-sdk/ui/components/error-text";
 import { Input } from "@adh-sdk/ui/components/input";
 import { List, ListItem } from "@adh-sdk/ui/components/list";
+import type { PaneCaller } from "./pane-caller";
 
 /** The cache key an ecosystem's sets are read under (the sign-up list's set picker shares it). */
 const setsKey = (ecosystemId: string) => `sets:${ecosystemId}`;
+
+/** The rate limit tier: a product admin may not write it (403 from `PUT /sets/:id/values`). */
+export const USAGE_TIER_LIMIT_KEY = "usage.tier";
+/** The storage quota: a product admin may not set it above `DEFAULT_QUOTA_BYTES`. */
+export const STORAGE_QUOTA_LIMIT_KEY = "storage.quota_bytes";
 
 /**
  * An ecosystem's SETS (phase 5): named bundles of the product's permissions and limits that its
@@ -39,11 +46,14 @@ const setsKey = (ecosystemId: string) => `sets:${ecosystemId}`;
 export function SetsPane({
   ecosystemId,
   help,
+  caller = "manager",
 }: {
   ecosystemId?: string;
   /** Unused: the breadcrumb names the pane (kept for the ScopedPane prop shape). */
   title?: ReactNode;
   help?: ReactNode;
+  /** `product_admin` hides the usage tier and caps the storage quota at the default. */
+  caller?: PaneCaller;
 }) {
   if (!ecosystemId) {
     return (
@@ -52,7 +62,7 @@ export function SetsPane({
       </div>
     );
   }
-  return <Sets key={ecosystemId} ecosystemId={ecosystemId} help={help} />;
+  return <Sets key={ecosystemId} ecosystemId={ecosystemId} help={help} caller={caller} />;
 }
 
 /** What a refusal says: the rule, its reason, and what it names. */
@@ -68,7 +78,15 @@ export function refusalText(e: unknown, setNames: ReadonlyMap<string, string>): 
   return parts.join(" ");
 }
 
-function Sets({ ecosystemId, help }: { ecosystemId: string; help?: ReactNode }) {
+function Sets({
+  ecosystemId,
+  help,
+  caller,
+}: {
+  ecosystemId: string;
+  help?: ReactNode;
+  caller: PaneCaller;
+}) {
   const loadSets = useCallback(() => setsApi.list(ecosystemId), [ecosystemId]);
   const { items: sets, reload, error: loadError } = useResourceList<SetRow>(setsKey(ecosystemId), loadSets);
 
@@ -77,7 +95,10 @@ function Sets({ ecosystemId, help }: { ecosystemId: string; help?: ReactNode }) 
     "feature-catalog",
     loadCatalog,
   );
-  const features = useMemo(() => setEntryFeatures(catalog ?? []), [catalog]);
+  const features = useMemo(
+    () => setEntryFeaturesFor(setEntryFeatures(catalog ?? []), caller),
+    [catalog, caller],
+  );
   const setNames = useMemo(() => new Map((sets ?? []).map((s) => [s.id, s.name])), [sets]);
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -194,6 +215,7 @@ function Sets({ ecosystemId, help }: { ecosystemId: string; help?: ReactNode }) 
             set={selected}
             others={(sets ?? []).filter((s) => s.id !== selected.id)}
             features={features}
+            caller={caller}
             catalogError={catalogError}
             busy={busy}
             onMakeDefault={() =>
@@ -212,6 +234,34 @@ function Sets({ ecosystemId, help }: { ecosystemId: string; help?: ReactNode }) 
       </div>
     </div>
   );
+}
+
+/** A limit field, with the ceiling a caller may enter when it has one. */
+type LimitField = SetLimitEntry & { max?: number };
+
+/**
+ * The set entries a caller may edit. A product admin does not see the usage tier, and the storage
+ * quota field carries the default as its ceiling, so the backend's refusals are never the first a
+ * product admin hears of either rule.
+ */
+export function setEntryFeaturesFor(
+  features: readonly SetEntryFeature[],
+  caller: PaneCaller,
+): SetEntryFeature[] {
+  if (caller !== "product_admin") return [...features];
+  return features.map((f) => {
+    const limits = f.setEntries.limits;
+    if (!limits) return f;
+    return {
+      ...f,
+      setEntries: {
+        ...f.setEntries,
+        limits: limits
+          .filter((l) => l.key !== USAGE_TIER_LIMIT_KEY)
+          .map((l): LimitField => (l.key === STORAGE_QUOTA_LIMIT_KEY ? { ...l, max: DEFAULT_QUOTA_BYTES } : l)),
+      },
+    };
+  });
 }
 
 interface SetDraft {
@@ -239,7 +289,7 @@ export function valuesOfDraft(
   features: readonly SetEntryFeature[],
 ): { values: SetValue[] } | { error: string } {
   const permissionKeys = new Set(features.filter((f) => f.setEntries.permission).map((f) => f.key));
-  const limitEntries = new Map<string, SetLimitEntry>(
+  const limitEntries = new Map<string, LimitField>(
     features.flatMap((f) => (f.setEntries.limits ?? []).map((l) => [l.key, l] as const)),
   );
   const values: SetValue[] = set.values.filter((v) =>
@@ -254,6 +304,9 @@ export function valuesOfDraft(
     if (entry.type === "tier") {
       values.push({ kind: "limit", key, value: text });
     } else if (/^\d+$/.test(text)) {
+      if (entry.max !== undefined && Number(text) > entry.max) {
+        return { error: `${entry.label} can be at most ${entry.max}.` };
+      }
       values.push({ kind: "limit", key, value: Number(text) });
     } else {
       return { error: `${entry.label} must be a whole number.` };
@@ -261,6 +314,9 @@ export function valuesOfDraft(
   }
   return { values };
 }
+
+const TIER_LOCKED =
+  "This set has a usage tier, which only the product's managers can change, so its permissions and limits are theirs to change too. What it contains is yours.";
 
 const sameValues = (a: readonly SetValue[], b: readonly SetValue[]) => {
   const norm = (vs: readonly SetValue[]) =>
@@ -275,6 +331,7 @@ function SetEditor({
   set,
   others,
   features,
+  caller,
   catalogError,
   busy,
   onMakeDefault,
@@ -283,6 +340,7 @@ function SetEditor({
   set: SetRow;
   others: SetRow[];
   features: SetEntryFeature[];
+  caller: PaneCaller;
   catalogError: string | null;
   busy: boolean;
   onMakeDefault: () => void;
@@ -291,6 +349,8 @@ function SetEditor({
 }) {
   const [draft, setDraft] = useState<SetDraft>(() => draftOf(set));
   const [error, setError] = useState<string | null>(null);
+  const tierLocked =
+    caller === "product_admin" && set.values.some((v) => v.key === USAGE_TIER_LIMIT_KEY);
 
   const toggle = (field: "permissions" | "contains", key: string, on: boolean) =>
     setDraft((d) => {
@@ -311,16 +371,23 @@ function SetEditor({
     const values = sameValues(out.values, set.values) ? null : out.values;
     const contains = sameMembers(set.contains, draft.contains) ? null : [...draft.contains];
     if (!values && !contains) return;
+    // The backend refuses a product admin any write that names the tier, and a set's values are
+    // written whole, so a set that has one is the managers' to change.
+    if (values && tierLocked) {
+      setError(TIER_LOCKED);
+      return;
+    }
     void onSave(values, contains);
   };
 
   const permissionFeatures = features.filter((f) => f.setEntries.permission);
-  const limits = features.flatMap((f) => f.setEntries.limits ?? []);
+  const limits: LimitField[] = features.flatMap((f) => f.setEntries.limits ?? []);
 
   return (
     <FieldGroup title={set.name}>
       <form className="flex flex-col gap-4" onSubmit={onSubmit} noValidate>
         {catalogError && <ErrorText error={`Couldn't load the feature catalog: ${catalogError}`} />}
+        {tierLocked && <p className="text-xs text-apt-text-muted">{TIER_LOCKED}</p>}
         {set.isDefault ? (
           <p className="text-xs text-apt-text-muted">
             The default set: a customer who holds no other set holds this one.
@@ -363,6 +430,7 @@ function SetEditor({
                   aria-label={l.label}
                   type={l.type === "tier" ? "text" : "number"}
                   min={l.type === "tier" ? undefined : 0}
+                  max={l.type === "tier" ? undefined : l.max}
                   step={l.type === "tier" ? undefined : 1}
                   placeholder={l.type === "tier" ? "tier slug" : l.type}
                   value={draft.limits[l.key] ?? ""}

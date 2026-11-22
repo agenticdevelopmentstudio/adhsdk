@@ -7,7 +7,7 @@ import {
   InvitationInvitesPane,
 } from "@adh-sdk/adh-ui/blocks";
 import { ErrorText } from "@adh-sdk/ui/components/error-text";
-import { useAuth } from "@adh-sdk/auth";
+import { useOptionalAuth } from "@adh-sdk/auth";
 import { FeatureTitle } from "@adh-sdk/resource";
 import { NotesAndHistory } from "./NotesAndHistory";
 import { AdminNotesModal } from "./AdminNotesModal";
@@ -22,14 +22,36 @@ import {
 
 // The notes author for staged admin notes: the signed-in owner's email (the handle
 // the backend records against each note). Empty until auth resolves — harmless, the
-// editor only reads it when composing a new note.
+// editor only reads it when composing a new note. Optional auth: the product admin site
+// mounts these panes under its own provider, not the hub's, and keeps no notes.
 function useNotesAuthor(): string {
-  const { user } = useAuth();
-  return user?.email ?? "";
+  return useOptionalAuth()?.user?.email ?? "";
+}
+
+/**
+ * Who sees the admin records. `hideAdminRecords` (the product admin site, phase 6): admin notes
+ * and entity history are the developer's records and stay at the hub, so the pane gets neither
+ * notes slot and shows no notes, no history and no "Admin notes" action.
+ */
+interface InvitationPaneProps {
+  ecosystemRdid: string;
+  hideAdminRecords?: boolean;
+}
+
+function notesSlots(ecosystemRdid: string, author: string, hideAdminRecords: boolean | undefined) {
+  if (hideAdminRecords) return {};
+  return {
+    renderNotesAndHistory: (s: { subjectTable: string; subjectId: string }) => (
+      <NotesAndHistory ecosystemRdid={ecosystemRdid} {...s} />
+    ),
+    renderNotesModal: (s: { subjectTable: string; subjectId: string; open: boolean; onClose: () => void }) => (
+      <AdminNotesModal ecosystemRdid={ecosystemRdid} author={author} {...s} />
+    ),
+  };
 }
 
 /** Invitation requests for the ecosystem. */
-export function EcoRequestsPane({ ecosystemRdid }: { ecosystemRdid: string }): ReactElement {
+export function EcoRequestsPane({ ecosystemRdid, hideAdminRecords }: InvitationPaneProps): ReactElement {
   const author = useNotesAuthor();
   const { data: requests = [], isPending, isError } = useEcoInvitationRequests(ecosystemRdid);
   const deleteRow = useEcoDeleteRow(ecosystemRdid, "request");
@@ -52,8 +74,7 @@ export function EcoRequestsPane({ ecosystemRdid }: { ecosystemRdid: string }): R
           rows={requests}
           loading={isPending}
           onDelete={(ids) => { for (const id of ids) deleteRow.mutate(id); }}
-          renderNotesAndHistory={(s) => <NotesAndHistory ecosystemRdid={ecosystemRdid} {...s} />}
-          renderNotesModal={(s) => <AdminNotesModal ecosystemRdid={ecosystemRdid} author={author} {...s} />}
+          {...notesSlots(ecosystemRdid, author, hideAdminRecords)}
         />
       </div>
     </div>
@@ -61,7 +82,7 @@ export function EcoRequestsPane({ ecosystemRdid }: { ecosystemRdid: string }): R
 }
 
 /** Pending users for the ecosystem, with send-invitation + add-users flows. */
-export function EcoPendingUsersPane({ ecosystemRdid }: { ecosystemRdid: string }): ReactElement {
+export function EcoPendingUsersPane({ ecosystemRdid, hideAdminRecords }: InvitationPaneProps): ReactElement {
   const author = useNotesAuthor();
   const { data: pendingUsers = [], isPending, isError } = useEcoPendingUsers(ecosystemRdid);
   const deleteRow = useEcoDeleteRow(ecosystemRdid, "pending");
@@ -105,8 +126,7 @@ export function EcoPendingUsersPane({ ecosystemRdid }: { ecosystemRdid: string }
           }
           sendBusy={sendInvitations.isPending}
           addBusy={addPendingUsers.isPending}
-          renderNotesAndHistory={(s) => <NotesAndHistory ecosystemRdid={ecosystemRdid} {...s} />}
-          renderNotesModal={(s) => <AdminNotesModal ecosystemRdid={ecosystemRdid} author={author} {...s} />}
+          {...notesSlots(ecosystemRdid, author, hideAdminRecords)}
         />
       </div>
     </div>
@@ -114,7 +134,7 @@ export function EcoPendingUsersPane({ ecosystemRdid }: { ecosystemRdid: string }
 }
 
 /** Sent invites for the ecosystem. */
-export function EcoInvitesPane({ ecosystemRdid }: { ecosystemRdid: string }): ReactElement {
+export function EcoInvitesPane({ ecosystemRdid, hideAdminRecords }: InvitationPaneProps): ReactElement {
   const author = useNotesAuthor();
   const { data: invites = [], isPending, isError } = useEcoInvites(ecosystemRdid);
   const deleteRow = useEcoDeleteRow(ecosystemRdid, "invite");
@@ -137,8 +157,7 @@ export function EcoInvitesPane({ ecosystemRdid }: { ecosystemRdid: string }): Re
           rows={invites}
           loading={isPending}
           onDelete={(ids) => { for (const id of ids) deleteRow.mutate(id); }}
-          renderNotesAndHistory={(s) => <NotesAndHistory ecosystemRdid={ecosystemRdid} {...s} />}
-          renderNotesModal={(s) => <AdminNotesModal ecosystemRdid={ecosystemRdid} author={author} {...s} />}
+          {...notesSlots(ecosystemRdid, author, hideAdminRecords)}
         />
       </div>
     </div>

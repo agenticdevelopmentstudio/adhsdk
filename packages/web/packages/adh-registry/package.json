@@ -36,7 +36,9 @@
     "lint": "tsc --noEmit",
     "test": "vitest run"
   },
+  "comment:devDependencies": "@adh-sdk/product-admin is for one test only (src/sites/__tests__/product-admin-topics.test.ts): its rail must match the product-admin share of the route table. The test lives here because product-admin is a portable package and may not import the registry; the registry may import it, and nothing it imports depends on the registry.",
   "devDependencies": {
+    "@adh-sdk/product-admin": "workspace:*",
     "next": "16.4.3",
     "tsup": "^8.3.5",
     "typescript": "^5.7.2",

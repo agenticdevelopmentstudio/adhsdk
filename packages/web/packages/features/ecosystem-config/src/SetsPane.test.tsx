@@ -13,7 +13,8 @@ vi.mock("@adh-sdk/data/ecosystems", () => ({ ecosystemFeaturesApi: { catalog: vi
 
 import { ecosystemFeaturesApi, type CatalogFeature } from "@adh-sdk/data/ecosystems";
 import { SetRefusedError, setsApi, type SetRow } from "@adh-sdk/data/sets";
-import { SetsPane, valuesOfDraft } from "./SetsPane";
+import { DEFAULT_QUOTA_BYTES } from "@adh-sdk/data/product-admin";
+import { SetsPane, setEntryFeaturesFor, valuesOfDraft } from "./SetsPane";
 
 const api = vi.mocked(setsApi);
 const catalogApi = vi.mocked(ecosystemFeaturesApi);
@@ -157,6 +158,76 @@ describe("SetsPane", () => {
     await waitFor(() => expect(api.edit).toHaveBeenCalledWith(eco(), "s-pro", { isDefault: true }));
     fireEvent.click(screen.getByRole("button", { name: "Delete Basic" }));
     await waitFor(() => expect(api.remove).toHaveBeenCalledWith(eco(), "s-basic"));
+  });
+});
+
+// The product admin site mounts the same pane (phase 6). The backend refuses a product admin the
+// usage tier and a quota above the default; the pane hides the one and caps the other.
+describe("SetsPane for a product admin", () => {
+  const QUOTA_CATALOG = [
+    ...CATALOG,
+    feature({
+      key: "quota",
+      label: "Quota",
+      setEntries: { limits: [{ key: "storage.quota_bytes", type: "bytes", label: "Storage quota" }] },
+    }),
+  ];
+  const PLAIN = set({ id: "s-plain", name: "Plain", values: [{ kind: "permission", key: "storage", value: true }] });
+
+  const openPlain = async () => {
+    catalogApi.catalog.mockResolvedValue(QUOTA_CATALOG);
+    api.list.mockResolvedValue([BASIC, PRO, PLAIN]);
+    render(<SetsPane ecosystemId={eco()} caller="product_admin" />);
+    fireEvent.click(await screen.findByRole("button", { name: "Plain" }));
+    await screen.findByRole("checkbox", { name: "Storage" });
+  };
+
+  it("hides the usage tier and caps the quota field at the default", async () => {
+    await openPlain();
+    expect(screen.queryByLabelText("Usage tier")).toBeNull();
+    expect(screen.getByLabelText("Storage quota")).toHaveAttribute("max", String(DEFAULT_QUOTA_BYTES));
+    expect(screen.getByLabelText("Storage space")).not.toHaveAttribute("max");
+  });
+
+  it("refuses a quota above the default and sends nothing, and saves one at it", async () => {
+    await openPlain();
+    fireEvent.change(screen.getByLabelText("Storage quota"), { target: { value: String(DEFAULT_QUOTA_BYTES + 1) } });
+    fireEvent.click(screen.getByRole("button", { name: "Save" }));
+    expect(await screen.findByText(`Storage quota can be at most ${DEFAULT_QUOTA_BYTES}.`)).toBeInTheDocument();
+    expect(api.setValues).not.toHaveBeenCalled();
+
+    fireEvent.change(screen.getByLabelText("Storage quota"), { target: { value: String(DEFAULT_QUOTA_BYTES) } });
+    fireEvent.click(screen.getByRole("button", { name: "Save" }));
+    await waitFor(() =>
+      expect(api.setValues).toHaveBeenCalledWith(eco(), "s-plain", [
+        { kind: "permission", key: "storage", value: true },
+        { kind: "limit", key: "storage.quota_bytes", value: DEFAULT_QUOTA_BYTES },
+      ]),
+    );
+  });
+
+  it("leaves a set with a tier to the managers, but still saves what it contains", async () => {
+    render(<SetsPane ecosystemId={eco()} caller="product_admin" />);
+    fireEvent.click(await screen.findByRole("button", { name: "Pro" }));
+    await screen.findByRole("checkbox", { name: "Storage" });
+    expect(screen.getAllByText(/only the product's managers can change/)).toHaveLength(1);
+    fireEvent.click(screen.getByRole("checkbox", { name: "Storage" }));
+    fireEvent.click(screen.getByRole("button", { name: "Save" }));
+    expect(await screen.findAllByText(/only the product's managers can change/)).toHaveLength(2);
+    expect(api.setValues).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByRole("checkbox", { name: "Storage" }));
+    fireEvent.click(screen.getByRole("checkbox", { name: "Basic" }));
+    fireEvent.click(screen.getByRole("button", { name: "Save" }));
+    await waitFor(() => expect(api.setMembers).toHaveBeenCalledWith(eco(), "s-pro", ["s-basic"]));
+  });
+
+  it("leaves a manager's fields alone", () => {
+    const features = [
+      { key: "usage", label: "Usage", setEntries: { limits: [{ key: "usage.tier", type: "tier" as const, label: "Tier" }] } },
+    ];
+    expect(setEntryFeaturesFor(features, "manager")).toEqual(features);
+    expect(setEntryFeaturesFor(features, "product_admin")[0]?.setEntries.limits).toEqual([]);
   });
 });
 

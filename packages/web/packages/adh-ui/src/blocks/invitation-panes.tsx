@@ -20,10 +20,20 @@ import {
  * notes/history views — the shared blocks never fetch. `renderNotesAndHistory`
  * fills a row's detail panel; `renderNotesModal` supplies the staged notes editor
  * opened from the toolbar (the caller keys it by subject so it re-seeds).
+ *
+ * Both are optional: a host that keeps no admin records (the product admin site, phase 6) passes
+ * neither, and the pane then shows no notes or history and no "Admin notes" action.
  */
 export interface NotesSlots {
-  renderNotesAndHistory: (s: { subjectTable: string; subjectId: string }) => React.ReactNode
-  renderNotesModal: (s: { subjectTable: string; subjectId: string; open: boolean; onClose: () => void }) => React.ReactNode
+  renderNotesAndHistory?: (s: { subjectTable: string; subjectId: string }) => React.ReactNode
+  renderNotesModal?: (s: { subjectTable: string; subjectId: string; open: boolean; onClose: () => void }) => React.ReactNode
+}
+
+/** The toolbar's "Admin notes" action, present only when the host supplies the notes editor. */
+function notesActions(renderNotesModal: NotesSlots["renderNotesModal"], open: (id: string | null) => void) {
+  return renderNotesModal
+    ? [{ id: "notes", label: "Admin notes", requiresSelection: true, onClick: (ids: string[]) => open(ids[0] ?? null) }]
+    : []
 }
 
 /**
@@ -103,16 +113,16 @@ export function InvitationRequestsPane({
         paramKey={paramKey}
         onDelete={onDelete}
         deleteConfirm={{ title: "Delete requests?", description: "This removes the selected invitation requests." }}
-        actions={[{ id: "notes", label: "Admin notes", requiresSelection: true, onClick: (ids) => setNotesForId(ids[0] ?? null) }]}
+        actions={notesActions(renderNotesModal, setNotesForId)}
         renderDetail={(r) => (
           <div className="text-sm text-apt-text">
             <div><span className="text-apt-text-muted">Source:</span> {r.source}</div>
             <div className="mt-1"><span className="text-apt-text-muted">Note to the team:</span> {r.note || "—"}</div>
-            {renderNotesAndHistory({ subjectTable: TABLE_INVITATION_REQUESTS, subjectId: r.id })}
+            {renderNotesAndHistory?.({ subjectTable: TABLE_INVITATION_REQUESTS, subjectId: r.id })}
           </div>
         )}
       />
-      {renderNotesModal({
+      {renderNotesModal?.({
         subjectTable: TABLE_INVITATION_REQUESTS,
         subjectId: notesForId ?? "",
         open: selectedRow != null,
@@ -178,7 +188,7 @@ export function InvitationPendingUsersPane({
         onDelete={onDelete}
         deleteConfirm={{ title: "Delete pending users?", description: "This removes the selected pending users." }}
         actions={[
-          { id: "notes", label: "Admin notes", requiresSelection: true, onClick: (ids) => setNotesForId(ids[0] ?? null) },
+          ...notesActions(renderNotesModal, setNotesForId),
           { id: "send", label: "Send invitation", requiresSelection: true, onClick: openSend },
           { id: "add", label: "Add users", dividerBefore: true, onClick: () => setAddOpen(true) },
         ]}
@@ -186,12 +196,12 @@ export function InvitationPendingUsersPane({
           <div className="text-sm text-apt-text">
             <div><span className="text-apt-text-muted">Source:</span> {u.lastSource}</div>
             <div className="mt-1"><span className="text-apt-text-muted">Note from user:</span> {u.lastNote ?? "—"}</div>
-            {renderNotesAndHistory({ subjectTable: TABLE_PENDING_USERS, subjectId: u.id })}
+            {renderNotesAndHistory?.({ subjectTable: TABLE_PENDING_USERS, subjectId: u.id })}
           </div>
         )}
       />
 
-      {renderNotesModal({
+      {renderNotesModal?.({
         subjectTable: TABLE_PENDING_USERS,
         subjectId: notesForId ?? "",
         open: selectedNotesRow != null,
@@ -256,10 +266,10 @@ export function InvitationInvitesPane({
         paramKey={paramKey}
         onDelete={onDelete}
         deleteConfirm={{ title: "Delete invites?", description: "This removes the selected sent invites." }}
-        actions={[{ id: "notes", label: "Admin notes", requiresSelection: true, onClick: (ids) => setNotesForId(ids[0] ?? null) }]}
-        renderDetail={(i) => renderNotesAndHistory({ subjectTable: TABLE_INVITATIONS, subjectId: i.id })}
+        actions={notesActions(renderNotesModal, setNotesForId)}
+        renderDetail={(i) => renderNotesAndHistory?.({ subjectTable: TABLE_INVITATIONS, subjectId: i.id })}
       />
-      {renderNotesModal({
+      {renderNotesModal?.({
         subjectTable: TABLE_INVITATIONS,
         subjectId: notesForId ?? "",
         open: selectedRow != null,

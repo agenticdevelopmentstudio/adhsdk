@@ -14,6 +14,7 @@ import { Input } from "@adh-sdk/ui/components/input";
 import { List, ListItem } from "@adh-sdk/ui/components/list";
 import { Select } from "@adh-sdk/ui/components/select";
 import { signupEmailError } from "./client-auth-model";
+import type { PaneCaller } from "./pane-caller";
 
 /** The cache key an ecosystem's sign-up list is read under. */
 const signupListKey = (ecosystemId: string) => `signup-list:${ecosystemId}`;
@@ -37,6 +38,9 @@ export function SignupListPane({
   /** Unused: the breadcrumb names the pane (kept for the ScopedPane prop shape). */
   title?: ReactNode;
   help?: ReactNode;
+  /** Who is editing. Accepted so the product admin site mounts every moved pane the same way;
+   *  the list itself is the same for both, as the backend applies one set of rules to it. */
+  caller?: PaneCaller;
 }) {
   if (!ecosystemId) {
     return (
