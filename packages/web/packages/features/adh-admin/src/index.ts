@@ -25,6 +25,7 @@ export { FeedbackPane, FeedbackDialog } from "./panes/FeedbackPane";
 export { InvitationsPane } from "./panes/InvitationsPane";
 export { LlmProvidersPane } from "./panes/LlmProvidersPane";
 export { MessagingPane } from "./panes/MessagingPane";
+export { OperatorAccessPane } from "./panes/OperatorAccessPane";
 export { OperatorsPane } from "./panes/OperatorsPane";
 export { ProcessingConfigsPane } from "./panes/ProcessingConfigsPane";
 export { ReservedIdentifiersPane } from "./panes/ReservedIdentifiersPane";

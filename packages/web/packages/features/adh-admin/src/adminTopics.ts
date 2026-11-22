@@ -24,6 +24,7 @@ import {
   MessagesSquare,
   Settings2,
   Wallet,
+  Eye,
   type LucideIcon,
 } from "lucide-react";
 
@@ -64,6 +65,7 @@ export type AdminTopicId =
   | "reserved-identifiers"
   | "ai-nodes"
   | "processing-configs"
+  | "operator-access"
   | "operators"
   | "security";
 
@@ -93,7 +95,7 @@ export const ADMIN_CATEGORIES: AdminCategory[] = [
   {
     id: "access",
     label: "Access",
-    description: "Accounts, operators, invitations, your sign-in security, and the audit trail",
+    description: "Accounts, operators, invitations, your sign-in security, and the audit trails",
     icon: UserCog,
   },
   {
@@ -195,6 +197,13 @@ export const ADMIN_TOPICS: AdminTopic[] = [
     label: "Messaging",
     description: "Send and track messages",
     icon: MessageSquare,
+  },
+  {
+    id: "operator-access",
+    category: "access",
+    label: "Operator access",
+    description: "Every request made with operator access, and who made it",
+    icon: Eye,
   },
   {
     id: "operators",

@@ -12240,6 +12240,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/system/operator_access": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Admin-only operator access log (newest first, cursor-paged)
+         * @description Replaces GET /system/operator-access.
+         */
+        get: operations["getV1SystemOperatorAccess"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/tasks": {
         parameters: {
             query?: never;
@@ -18170,6 +18190,29 @@ export interface components {
             page_size: number;
             /** @description Saturates at a 10,000-row count cap */
             total: number;
+        };
+        OperatorAccessEntry: {
+            /** Format: uuid */
+            id: string;
+            /** @description Postgres timestamptz text, the transaction's start */
+            at: string;
+            /** Format: uuid */
+            operator_account_id: string;
+            token_id: string | null;
+            method: string;
+            path: string;
+            /** @description The matched route pattern */
+            route: string | null;
+            /** Format: uuid */
+            target_ecosystem_id: string | null;
+            request_id: string | null;
+            ip: string | null;
+            user_agent: string | null;
+        };
+        OperatorAccessPage: {
+            items: components["schemas"]["OperatorAccessEntry"][];
+            /** @description More rows lie past this page (ask with `after`) */
+            has_more: boolean;
         };
         ReservedIdentifier: {
             rdid: string;
@@ -76843,6 +76886,81 @@ export interface operations {
             };
             /** @description Error */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+        };
+    };
+    getV1SystemOperatorAccess: {
+        parameters: {
+            query?: {
+                /** @description Only rows written by this operator account */
+                operator_account_id?: string;
+                /** @description Only rows whose request named this ecosystem */
+                target_ecosystem_id?: string;
+                /** @description Only rows at or after this time (inclusive) */
+                from?: string;
+                /** @description Only rows before this time (exclusive) */
+                to?: string;
+                /** @description Cursor: the id of the last row held; returns the older rows after it */
+                after?: string;
+                /** @description Page size, 1–100 (default 10). */
+                limit?: number;
+                /** @description Cursor: an object id; returns the page after it. */
+                starting_after?: string;
+                /** @description Cursor: an object id; returns the page before it. */
+                ending_before?: string;
+                /** @description Related objects to return in full instead of as an id. Up to four levels, e.g. `ecosystem_id`; on a list, `data.<field>`. */
+                "expand[]"?: string[];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Operator access page */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        object: "list";
+                        data: ({
+                            /** @constant */
+                            object?: "system.operator_access";
+                        } & components["schemas"]["OperatorAccessEntry"])[];
+                        has_more: boolean;
+                        url: string;
+                    };
+                };
+            };
+            /** @description Error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            403: {
                 headers: {
                     [name: string]: unknown;
                 };
