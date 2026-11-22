@@ -1598,6 +1598,11 @@ targets:
       # The key-command tests drive `KeyboardShortcuts` directly (chord
       # recording, registration), so the bundle links it itself.
       - package: KeyboardShortcuts
+    settings:
+      base:
+        # Turns off window animations before any test runs; why is in
+        # Tests/AgenticDeveloperHubSDKMacOSTests/TestBundleSetup.swift.
+        INFOPLIST_KEY_NSPrincipalClass: AgenticDeveloperHubSDKMacOSTestBundleSetup
 
   # A per-platform pair rather than one `supportedDestinations: [macOS, iOS]`
   # target, for the reason spelled out above AgenticDeveloperHubSDKMarkdown: this

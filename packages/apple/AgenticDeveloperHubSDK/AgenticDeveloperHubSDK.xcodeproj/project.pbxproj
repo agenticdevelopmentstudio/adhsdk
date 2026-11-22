@@ -1870,6 +1870,7 @@
 		632897ABE76E3C201BD6D0EC /* AgenticDeveloperHubSDKUI-macOS.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32A2D6DCF1DCC4BC4671793A /* AgenticDeveloperHubSDKUI-macOS.framework */; };
 		632F4300DCF768CE3C7F9E97 /* AgenticDeveloperHubSDKHubAuth-iOS.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 81976C76CEC8B5DB9D73AFF8 /* AgenticDeveloperHubSDKHubAuth-iOS.framework */; };
 		6336A2F20FCBD71B7B6DB6EB /* SecretsLockPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 869EC2D82318972FE1EC9586 /* SecretsLockPolicy.swift */; };
+		63550D3B6009C96079FC758E /* TestBundleSetup.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF32F75F1F2452511B2C85CA /* TestBundleSetup.swift */; };
 		6358A77D80E33E7B2B234EB1 /* ColorThemeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 413D54F6874016F79596C06D /* ColorThemeTests.swift */; };
 		6365E5AE6DBA35E3C2FFDCC6 /* SemanticSearchStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C620E8CDFB96895829322FF /* SemanticSearchStoreTests.swift */; };
 		636EB3D43D48D267B55CA4F1 /* LegacyDirectoryMigrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9B142162B00ED8C9052FC32 /* LegacyDirectoryMigrationTests.swift */; };
@@ -10680,6 +10681,7 @@
 		DED5ED21854C2CA68F3A4D7A /* PartnerToolSourceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PartnerToolSourceTests.swift; sourceTree = "<group>"; };
 		DEEE6A3A712C9662182BF133 /* GmailSettingsModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GmailSettingsModelTests.swift; sourceTree = "<group>"; };
 		DF136398CFBE41A4AF1A54C3 /* LineViewerScrollSync.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LineViewerScrollSync.swift; sourceTree = "<group>"; };
+		DF32F75F1F2452511B2C85CA /* TestBundleSetup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestBundleSetup.swift; sourceTree = "<group>"; };
 		DF4D6912B429A87CC6D8BFD9 /* FeedChatSessionReplaceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedChatSessionReplaceTests.swift; sourceTree = "<group>"; };
 		DF80279AE71334B70B415EAD /* CrawlPresenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CrawlPresenter.swift; sourceTree = "<group>"; };
 		DF912458EB0BFF5AB67BB348 /* KeyCommandBehaviourTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyCommandBehaviourTests.swift; sourceTree = "<group>"; };
@@ -12562,6 +12564,7 @@
 				23B4281C7FD30405C9E59650 /* PersonaTerminalChatToolsTests.swift */,
 				12C008A21C88FBE01267C100 /* RefusalRecorder.swift */,
 				20C3203CDBA3AD32CF5ABF04 /* SettingObservingTests.swift */,
+				DF32F75F1F2452511B2C85CA /* TestBundleSetup.swift */,
 			);
 			name = AgenticDeveloperHubSDKMacOSTests;
 			path = Tests/AgenticDeveloperHubSDKMacOSTests;
@@ -23419,6 +23422,7 @@
 				DD34E09A2E2270800C0CE166 /* TerminalPaneFamilyTests.swift in Sources */,
 				2D5FDB2847B951ABA0F5219D /* TerminalSessionGitBranchTests.swift in Sources */,
 				84D3BDFE1E03D78511B1E2CF /* TerminalShellEnvironmentTests.swift in Sources */,
+				63550D3B6009C96079FC758E /* TestBundleSetup.swift in Sources */,
 				AB84DE3885FBDDCBD4DFEC67 /* TextDocumentStorageTests.swift in Sources */,
 				350BFB0FFA184A5A29456234 /* TextGeometryTests.swift in Sources */,
 				E1DA4AD472511C5E5E37A2E0 /* ThemeContributionPointTests.swift in Sources */,
@@ -30725,6 +30729,7 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_KEY_NSPrincipalClass = AgenticDeveloperHubSDKMacOSTestBundleSetup;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
@@ -32682,6 +32687,7 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_KEY_NSPrincipalClass = AgenticDeveloperHubSDKMacOSTestBundleSetup;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
