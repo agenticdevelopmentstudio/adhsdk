@@ -93,14 +93,25 @@ public enum ClaudeAuthEvaluator {
     /// it. Concurrently, the round costs one refresh's worth of time no matter
     /// how many accounts are saved. Order is restored before folding, so the
     /// statuses come back in the order they were pushed.
+    ///
+    /// One login saved under two item keys carries one refresh token twice.
+    /// Refreshing it twice would let the second refresh find the token the
+    /// first one just spent and report a live login `.spent`, so within a round
+    /// a refresh token is spent **once**: every credential carrying it shares
+    /// that refresh's answer, and each one with an item key gets its own
+    /// rotation, so every copy the app holds is replaced.
     public static func evaluate(
         _ credentials: [Sessions.ClaudeCredentialDTO],
         now: Date = Date(),
         refresh: Refresher? = liveRefresher
     ) async -> Outcome {
+        let shared = refresh.map { refresh -> Refresher in
+            let once = OncePerRefreshToken(refresh)
+            return { try await once.refresh($0) }
+        }
         let judgments = await withTaskGroup(of: (Int, Judgment).self) { group in
             for (index, credential) in credentials.enumerated() {
-                group.addTask { (index, await judge(credential, now: now, refresh: refresh)) }
+                group.addTask { (index, await judge(credential, now: now, refresh: shared)) }
             }
             var collected: [(Int, Judgment)] = []
             for await judged in group { collected.append(judged) }
@@ -237,6 +248,27 @@ public enum ClaudeAuthEvaluator {
             secondsRemaining: expiry.map { $0 - now.timeIntervalSince1970 },
             detail: detail
         )
+    }
+}
+
+/// One round's refreshes, keyed by refresh token: the first credential to ask
+/// starts the refresh, and every later one carrying the same token awaits that
+/// same task instead of spending the token again.
+private actor OncePerRefreshToken {
+    private let refresher: ClaudeAuthEvaluator.Refresher
+    private var inFlight: [String: Task<ClaudeOAuthCredential, Error>] = [:]
+
+    init(_ refresher: @escaping ClaudeAuthEvaluator.Refresher) {
+        self.refresher = refresher
+    }
+
+    func refresh(_ oauth: ClaudeOAuthCredential) async throws -> ClaudeOAuthCredential {
+        if let task = inFlight[oauth.refreshToken] { return try await task.value }
+        let refresher = self.refresher
+        let task = Task { try await refresher(oauth) }
+        // Stored before the first suspension, so a second caller always finds it.
+        inFlight[oauth.refreshToken] = task
+        return try await task.value
     }
 }
 
