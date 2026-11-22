@@ -266,10 +266,12 @@ final class BillingRoutesTests: XCTestCase {
         ), database: db)
 
         let unknown = try await post("/billing/entries/\(entry.id)/status", json: "{\"status\":\"lost\"}")
-        let billed = try await post("/billing/entries/\(entry.id)/status", json: "{\"status\":\"billed\"}")
+        // Described before it is billed: a billed entry is locked, and the
+        // description route refuses a locked entry.
         let described = try await post(
             "/billing/entries/\(entry.id)/description", json: "{\"description\":\"Sprint 4\"}"
         )
+        let billed = try await post("/billing/entries/\(entry.id)/status", json: "{\"status\":\"billed\"}")
 
         XCTAssertEqual(unknown?.status, 400)
         XCTAssertEqual(try message(unknown), BillingRoutes.BillingWireError.unknownStatus("lost").errorDescription)
