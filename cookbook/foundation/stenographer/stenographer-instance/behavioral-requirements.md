@@ -42,14 +42,14 @@
 
 ### Validating a definition
 
-- **validate-order**: `validate` MUST check in this order and throw the first failure: name match, reserved name, absolute data root, port, overlap with installed state, overlap with another instance, socket path length.
+- **validate-order**: `validate` MUST check in this order and throw the first failure: name match, reserved name, absolute data root, port, overlap with installed state, overlap with another instance, port held by another instance, socket path length.
 - **name-match**: `validate` MUST throw `nameMismatch(file:declared:)` when the definition's `name` differs from `fileName`.
 - **name-reserved**: `validate` MUST throw `reservedName(name)` when the definition's `name` is in `reservedNames`.
 - **validate-no-pattern**: `validate` MUST NOT apply the name pattern itself; only `resolve` does.
 - **absolute-data-root**: `validate` MUST throw `relativeDataRoot(dataRoot)` when `dataRoot` does not begin with `/`.
 - **port-range**: `validate` MUST throw `invalidPort(port)` when `httpPort` is outside 1024 to 65535 inclusive.
 - **port-not-reserved**: `validate` MUST throw `invalidPort(port)` when `httpPort` is in `reservedHTTPPorts`.
-- **port-unique-across-instances**: NEEDS REVIEW: Not implemented in source. The type's doc comment says a named instance has its own port, but `validate` compares another definition's `dataRoot` only, never its `httpPort`, so two named definitions may declare the same port; settling it needs a decision on whether `validate` (and the script's `check_definition`) must refuse a port another definition already holds.
+- **port-unique-across-instances**: `validate` MUST throw `portTakenByAnotherInstance(port:instance:)`, naming the first other definition in file-name order whose `httpPort` equals this definition's, so a named instance's port is its own and two instances never contend for one port. It considers the same peers as `instance-overlap` (`other-definitions`), so a definition's own file never collides with it and an unreadable peer is skipped.
 - **protected-roots**: `protectedRoots(home:)` MUST return, in order, `<home>/Library/Application Support/<baseLabel>`, `<home>/Library/Logs/<baseLabel>`, `<home>/Library/Application Support/<legacyLabel>`, `<home>/Library/Logs/<legacyLabel>` and `<home>/.claude`, where `legacyLabel` is `com.agentic-cookbook.stenographer`.
 - **installed-overlap**: `validate` MUST throw `overlapsInstalledState(dataRoot:protected:)`, naming the first protected root in `protectedRoots` order, when the canonical data root equals, contains or lies inside that protected root.
 - **instance-overlap**: `validate` MUST throw `overlapsAnotherInstance(dataRoot:instance:otherRoot:)`, naming the first other definition in file-name order, when the canonical data root equals, contains or lies inside that definition's canonical data root.

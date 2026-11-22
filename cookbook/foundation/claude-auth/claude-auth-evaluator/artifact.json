@@ -4,7 +4,7 @@
     "id": "a2cb25cc-f3d1-4b82-8a32-52e727c317e1",
     "title": "Claude Auth Evaluator",
     "type": "ingredient",
-    "version": "1.1.0",
+    "version": "1.1.1",
     "status": "review",
     "language": "en",
     "created": "2026-11-21",
@@ -37,7 +37,7 @@
     "approved-date": ""
   },
   "names_hosts": "The subject is Claude account credentials and Claude Code's token endpoint; the product name is the thing being evaluated.",
-  "synced": "89ed0271195c3757",
+  "synced": "c5a4e68d171b60ee",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

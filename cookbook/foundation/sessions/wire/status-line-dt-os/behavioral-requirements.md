@@ -69,14 +69,14 @@
 
 - **reading-fields**: `AccountQuotaReadingDTO` MUST carry `account` (String) and the optionals `credentialKind`, `fiveHourStatus`, `sevenDayStatus`, `fableLimitStatus`, `errorText` (String), `fiveHourPct`, `sevenDayPct`, `fableLimitPct` (Double) and `fiveHourResetsAt`, `sevenDayResetsAt`, `fableLimitResetsAt` (Int). Only `account` is required on decode.
 - **reading-header-names**: The header initializer MUST read, for each window prefix `5h`, `7d` and `7d_oi`, the headers `anthropic-ratelimit-unified-<prefix>-utilization`, `-reset` and `-status`, by exact lower-case key; the caller MUST lower-case the keys first.
-- **reading-pct-times-100**: A utilization header that parses as a Double MUST become that value times 100, with no branch on its size, so `0.27` is 27 and `1.05` is 105.
+- **reading-pct-times-100**: A utilization header that parses as a Double MUST become that value times 100, with no branch on its size, so `0.27` is 27 and `1.05` is 105, as long as the product is finite (`reading-pct-non-finite`).
 - **reading-pct-unparsable**: A missing or non-numeric utilization header MUST leave its percentage nil.
 - **reading-reset-millis**: A reset header whose value is above 1e12 MUST be divided by 1000; the result MUST be truncated toward zero.
 - **reading-reset-unrepresentable**: A reset that is not an exactly representable Int after that step (`inf`, `-inf`, `nan`, `1e400`, `1e300`) MUST leave its reset nil rather than trap.
 - **reading-status-verbatim**: Each `-status` header MUST be carried verbatim, nil when absent.
 - **reading-fable-window**: The `7d_oi` window MUST fill `fableLimitPct`, `fableLimitResetsAt` and `fableLimitStatus`, which are nil when the response does not carry that window.
 - **reading-no-windows-error**: When neither the `5h` nor the `7d` utilization yields a percentage, `errorText` MUST be `"no usage readings in response"`; otherwise it MUST be nil. A `7d_oi` reading alone does not count.
-- **reading-pct-non-finite**: NEEDS REVIEW: Not implemented in source. A utilization of `nan` or `inf` parses as a Double and becomes a non-finite percentage with no guard, unlike the reset path, and it counts as a reading, so `errorText` stays nil. `StenographerWire.encoder()` keeps `JSONEncoder`'s default non-conforming-float strategy, which throws on a non-finite Double, so such a reading cannot be encoded by the wire coder; whether the parser should yield nil instead needs a decision from the toolkit owner.
+- **reading-pct-non-finite**: A utilization that parses as NaN or an infinity (`nan`, `inf`, `-inf`, `infinity`), or whose product with 100 overflows to an infinity (`1e308`), MUST leave its percentage nil, so a non-finite percentage never reaches the UI or the wire. Such a value MUST NOT count as a reading, so when neither the `5h` nor the `7d` window yields a finite percentage `errorText` is `"no usage readings in response"`. The memberwise initializer MUST drop a non-finite `fiveHourPct`, `sevenDayPct` or `fableLimitPct` to nil as well, so every `AccountQuotaReadingDTO` encodes with `StenographerWire.encoder()`.
 
 **ClaudeCredentialDTO**
 

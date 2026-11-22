@@ -39,7 +39,7 @@
 - **daily-metric-fields**: `DailyMetricDTO` MUST carry `day: String`, `metric: String`, `dimension: String`, `count: Int` and `valueSum: Double`.
 - **daily-metric-additive**: `count` and `valueSum` MUST be additive across days and dimensions, so a consumer MAY sum them over any set of rows.
 - **daily-metric-average**: A consumer computing an average MUST compute it as `valueSum / count`.
-- **daily-metric-value-sum-zero**: NEEDS REVIEW: Not implemented in source. The doc comment declares "`valueSum` is 0 in the current phase (counts only)", but `projectActivity` reads the `project` metric's `value_sum` as the day's distinct sessions and `testRecomputeEmitsProjectMetric` asserts `valueSum == 2`; the owner of the rollup must say whether the comment or the `project` metric is the contract.
+- **daily-metric-value-sum-zero**: The producer MUST write `valueSum` 0 on every metric except `project`, where it MUST be the number of distinct sessions with events in that project on that day (`count` being the project's events), which `projectActivity` reads as the session count. Summed across days it counts a session once per day it ran. The doc comments on `DailyMetricDTO` and the `daily_metric` migration say the same.
 
 **Cache misses**
 

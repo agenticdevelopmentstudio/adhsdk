@@ -2,7 +2,7 @@
 id: fc622208-1504-421f-8892-c5869820550c
 title: "Claude Hook Installer"
 type: ingredient
-version: 1.1.0
+version: 2.0.0
 status: review
 language: en
 created: 2026-11-14
@@ -118,7 +118,7 @@ An extension (`ClaudeHookInstaller+RouterPointer.swift`) manages the **router po
 - **router-suspended-marker**: `routerPointerSuspendedMarkerURL` MUST be `.<name>-router-pointer-suspended` beside `settings.json`, named after the configuration so two installers never share a suspension.
 - **router-set-locked**: `setRouterPointer(_:routerBaseURL:)` MUST do its read, decision and write inside one `modifySettings(_:)` call, so it is serialised with hook installs and other tools holding the settings lock.
 - **router-set-clears-suspension**: `setRouterPointer(_:routerBaseURL:)` MUST delete the suspension marker inside its `modifySettings(_:)` body on every call that acquires the lock and reads `settings.json`, whatever the decision, so the user's own choice replaces a suspension and nothing is put back later; this deletion happens before a conflict is thrown, so a refused enable also forgets the suspension.
-- **router-set-marker-failure**: NEEDS REVIEW: Not implemented in source. `setRouterPointer` and `uninstallHooks(removingRouterPointer: true)` delete the suspension marker with `try?`, so a failed deletion of an existing marker vanishes with no log or error, and a later `resumeRouterPointer` would put back a pointer the user just turned off; whether that failure must be logged or thrown needs the owner's decision.
+- **router-set-marker-failure**: Deleting the suspension marker MUST treat a marker that does not exist as already deleted. When an existing marker cannot be deleted, `setRouterPointer(_:routerBaseURL:)` MUST throw that error out of its `modifySettings(_:)` body before deciding, so `settings.json` is not written and the pointer keeps its state, and a later `resumeRouterPointer` cannot put back a pointer the user just turned off without the user having been told. `uninstallHooks(removingRouterPointer: true, routerBaseURL:)` MUST NOT throw on it: it MUST log "Could not forget the router pointer suspension: <error>" at error level and still remove a pointer that is `ours`.
 - **router-set-enable-absent**: Enabling when the pointer is `absent` MUST set `env.ANTHROPIC_BASE_URL` to `routerBaseURL`, creating `env` when missing, keep every other `env` key and top-level key, save, and return `ours`.
 - **router-set-enable-ours**: Enabling when the pointer is already `ours` MUST write nothing and return `ours`.
 - **router-set-enable-conflict**: Enabling when the pointer is `other(display)` MUST throw `RouterPointerError.routerPointerConflict(display)` and MUST leave `settings.json` unchanged; an `env` that is not an object counts as such a value.
@@ -240,8 +240,12 @@ Not applicable — this is a settings-file installer, not a visual component.
 | claude-hook-installer-052 | uninstall-keeps-router-pointer, install-keeps-router-pointer | Pointer `ours` and marker present; run `installHooks()`, then `uninstallHooks(removingRouterPointer: false)` | | `env.ANTHROPIC_BASE_URL` and the marker are untouched by both |
 | claude-hook-installer-053 | uninstall-removing-router-pointer | No hooks of this owner, `env.ANTHROPIC_BASE_URL` is another value; `uninstallHooks(removingRouterPointer: true)` | | Returns false; the other value stays |
 | claude-hook-installer-054 | router-set-errors | `settings.json` holds `[1]`; `setRouterPointer(true)` | | Throws `invalidFormat`; file unchanged |
+| claude-hook-installer-055 | router-set-marker-failure | Suspension marker that cannot be deleted, pointer `absent`; `setRouterPointer(true)` | `testEnableThrowsAndSavesNothingWhenTheMarkerCannotBeDeleted` | Throws; `settings.json` is unchanged and the marker still exists |
+| claude-hook-installer-056 | router-set-marker-failure | Suspension marker that cannot be deleted, pointer `ours`; `setRouterPointer(false)` | `testDisableThrowsAndKeepsThePointerWhenTheMarkerCannotBeDeleted` | Throws; `env.ANTHROPIC_BASE_URL` is still the router's |
+| claude-hook-installer-057 | router-set-marker-failure | No suspension marker, pointer `absent`; `setRouterPointer(true)` | `testAMissingMarkerIsNotAnError` | Returns `ours` without throwing |
+| claude-hook-installer-058 | router-set-marker-failure, uninstall-removing-router-pointer | Suspension marker that cannot be deleted, pointer `ours`; `uninstallHooks(removingRouterPointer: true)` | `testUninstallStillRemovesThePointerWhenTheMarkerCannotBeDeleted` | Does not throw; logs "Could not forget the router pointer suspension"; `env.ANTHROPIC_BASE_URL` is removed |
 
-Vectors 034 to 054 are derived from `ClaudeHookInstaller+RouterPointer.swift`; no test in `Tests/AgenticDeveloperHubSDKCoreTests` exercises the router pointer, so they name no test.
+Vectors 034 to 054 are derived from `ClaudeHookInstaller+RouterPointer.swift`; no test in `Tests/AgenticDeveloperHubSDKCoreTests` exercises them, so they name no test. Vectors 055 to 058 are `RouterPointerMarkerFailureTests` (`Tests/AgenticDeveloperHubSDKCoreTests/ClaudeHooks/RouterPointerMarkerFailureTests.swift`), which makes the marker undeletable by giving it a read-only child directory.
 
 ## Edge Cases
 
@@ -251,7 +255,7 @@ Vectors 034 to 054 are derived from `ClaudeHookInstaller+RouterPointer.swift`; n
 - Boundary values: `lockTimeout` defaults to 5 seconds and the lock is polled every 50 ms; the capture-script check reads at most 4096 bytes (MUST).
 - Concurrent access: two processes editing the file are serialised by the two `flock` locks taken in a fixed order, so two holders cannot deadlock; a holder that is stopped in a debugger makes others fail with `lockAcquireFailed` after the timeout instead of hanging (MUST). `resumeRouterPointer` checks the marker once outside the lock and again inside it, so a concurrent `setRouterPointer` that deleted the marker wins (MUST). `uninstallHooks(removingRouterPointer: true)` takes the lock twice, so another writer can run between the hooks removal and the pointer removal (MUST).
 - Suspension across failures: a suspend whose save fails leaves the marker and the pointer, and the next resume finds the pointer `ours`, restores nothing and drops the marker (MUST); a resume whose lock or save fails keeps the marker for the next start (MUST).
-- Error states: any thrown error in `installHooks()`, `uninstallHooks()`, `suspendRouterPointer` or `resumeRouterPointer` is logged and converted to `failed` or false, never thrown (MUST); `setStatusLineDisplay(_:)`, `setRouterPointer(_:routerBaseURL:)` and `modifySettings(_:)` throw to the caller (MUST). A failed deletion of the suspension marker is not reported; see the open question on `router-set-marker-failure`.
+- Error states: any thrown error in `installHooks()`, `uninstallHooks()`, `suspendRouterPointer` or `resumeRouterPointer` is logged and converted to `failed` or false, never thrown (MUST); `setStatusLineDisplay(_:)`, `setRouterPointer(_:routerBaseURL:)` and `modifySettings(_:)` throw to the caller (MUST). A suspension marker that exists but cannot be deleted makes `setRouterPointer(_:routerBaseURL:)` throw with `settings.json` unchanged, and makes `uninstallHooks(removingRouterPointer: true, routerBaseURL:)` log and carry on (MUST, `router-set-marker-failure`).
 - Foreign content: a foreign hook sharing a matcher group with a stale hook of this owner survives the rewrite (MUST); a foreign command that merely embeds the marker or the legacy `statusline.dispatcher` name as a substring is adopted, not dropped (MUST); another tool's `ANTHROPIC_BASE_URL` survives every router-pointer operation (MUST).
 - Offline or disconnected state: not applicable; the installer touches only local files and makes no network calls. Suspending the router pointer is how the caller keeps Claude Code working while the router's daemon is down, but the installer itself does not probe the port.
 - Status-line failure on install (no bundled dispatcher, unwritable `claudehelpers` directory, full disk): hooks are still installed and `statusLine` is left as it was (MUST).
@@ -345,11 +349,11 @@ Error text, paths and commands are logged with public privacy, so a command that
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/ClaudeHooks/ClaudeHookInstaller.swift` | confirmed (1.1.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/ClaudeHooks/ClaudeHookInstaller.swift` | confirmed (2.0.0) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/ClaudeHooks/ClaudeHookInstaller+RouterPointer.swift` | confirmed (1.1.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/ClaudeHooks/ClaudeHookInstaller+RouterPointer.swift` | confirmed (2.0.0) |
 
 ## Design Decisions
 
@@ -411,6 +415,6 @@ separation-of-concerns is partial: one type also owns hook registration, status-
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
-| 1.1.0 | 2026-11-21 | Mike Fullerton | Specified the router-pointer extension (RouterPointer states, display redaction, set/suspend/resume, uninstall removing the pointer, RouterPointerError), added the stenographer-identifiers dependency, twenty-one router vectors, a routerBaseURL option, three design decisions and an idempotent-operations check, marked unit-test-coverage partial, and dropped the Reference Implementations section. |
+| 2.0.0 | 2026-11-21 | Mike Fullerton | Specified the router-pointer extension (RouterPointer states, display redaction, set/suspend/resume, uninstall removing the pointer, RouterPointerError), added the stenographer-identifiers dependency, twenty-one router vectors, a routerBaseURL option, three design decisions and an idempotent-operations check, marked unit-test-coverage partial, and dropped the Reference Implementations section. Resolved router-set-marker-failure: an undeletable suspension marker makes setRouterPointer throw with settings.json unchanged, and uninstall logs it and still removes the pointer; added vectors 055 to 058 from RouterPointerMarkerFailureTests. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Added depends-on links and a status-line tag, merged the two rationale requirements into excluded-event-types, marked separation-of-concerns partial and secure-log-output failed, defined the dispatcher command, clarified install-result and disabling errors, split test names into their own vector column, added twelve vectors, dropped the test-fixture decision and gave concrete WinUI 3 paths. |
 | 1.0.0 | 2026-11-14 | Mike Fullerton | Initial creation |

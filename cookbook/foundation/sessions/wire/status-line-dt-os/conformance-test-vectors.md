@@ -29,4 +29,8 @@
 | status-line-dtos-026 | turn-aggregate-fields, active-hours-fields, claude-version-fields, dto-wire-spelling | Encode one of each with the snake_case encoder, remove one key from each, decode | Keys include `group_key`, `total_cost_usd`, `idle_threshold_s`, `fields_json`, `field_paths`; each decode with a removed key throws |
 | status-line-dtos-027 | dto-conformances | Pass each type to a generic function constrained to `Codable & Sendable` | Compiles |
 | status-line-dtos-028 | quota-row-labels, quota-row-min-projection | Read the static constants | `"fable quota"`, `"spend"`, `"7d quota"`, `"5h quota"`, 604800, 18000, 0.01 |
+| status-line-dtos-029 | reading-pct-non-finite, reading-no-windows-error | Header init with all three utilizations set to each of `"nan"`, `"NaN"`, `"inf"`, `"-inf"`, `"infinity"`, `"1e308"` (`AccountQuotaReadingNonFiniteTests.testNonFiniteUtilizationsYieldNilPercentages`) | All three percentages nil; `errorText` `"no usage readings in response"` |
+| status-line-dtos-030 | reading-pct-non-finite, reading-no-windows-error | Header init with `5h-utilization` `"nan"` and `7d-utilization` `"0.27"` (`testOneFiniteWindowStillCountsAsAReading`) | `fiveHourPct` nil; `sevenDayPct` 27; `errorText` nil |
+| status-line-dtos-031 | reading-pct-non-finite | Memberwise init with `fiveHourPct` NaN, `sevenDayPct` infinity, `fableLimitPct` minus infinity (`testMemberwiseInitDropsNonFinitePercentages`) | All three nil |
+| status-line-dtos-032 | reading-pct-non-finite | Header init with `5h-utilization` `"inf"` and `7d-utilization` `"nan"`, encoded with `StenographerWire.encoder()` (`testAReadingFromNonFiniteHeadersEncodesWithTheWireCoder`) | Encodes; the JSON contains neither `nan` nor `inf` |
 
