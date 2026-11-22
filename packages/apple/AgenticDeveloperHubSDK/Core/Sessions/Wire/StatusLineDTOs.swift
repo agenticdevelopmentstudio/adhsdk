@@ -496,16 +496,23 @@ extension Sessions {
         ) {
             self.account = account
             self.credentialKind = credentialKind
-            self.fiveHourPct = fiveHourPct
+            self.fiveHourPct = Self.finite(fiveHourPct)
             self.fiveHourResetsAt = fiveHourResetsAt
             self.fiveHourStatus = fiveHourStatus
-            self.sevenDayPct = sevenDayPct
+            self.sevenDayPct = Self.finite(sevenDayPct)
             self.sevenDayResetsAt = sevenDayResetsAt
             self.sevenDayStatus = sevenDayStatus
-            self.fableLimitPct = fableLimitPct
+            self.fableLimitPct = Self.finite(fableLimitPct)
             self.fableLimitResetsAt = fableLimitResetsAt
             self.fableLimitStatus = fableLimitStatus
             self.errorText = errorText
+        }
+
+        /// `value` when it is a finite number, else nil. A percentage that is NaN
+        /// or infinite is never stored, so it never reaches JSON or the UI.
+        static func finite(_ value: Double?) -> Double? {
+            guard let value, value.isFinite else { return nil }
+            return value
         }
 
         /// Reads one probe's `anthropic-ratelimit-unified-*` response headers (keys
@@ -524,7 +531,10 @@ extension Sessions {
             func pct(_ prefix: String) -> Double? {
                 guard let raw = headers["anthropic-ratelimit-unified-\(prefix)-utilization"],
                       let value = Double(raw) else { return nil }
-                return value * 100
+                // `nan`, `inf` and a value whose percentage overflows parse as
+                // Doubles but are no reading at all: the wire coder cannot
+                // encode them, and nothing can draw them.
+                return Self.finite(value * 100)
             }
             func reset(_ prefix: String) -> Int? {
                 guard let raw = headers["anthropic-ratelimit-unified-\(prefix)-reset"],
