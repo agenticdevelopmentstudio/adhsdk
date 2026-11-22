@@ -266,13 +266,20 @@ public enum BillingRoutes {
     /// change.
     ///
     /// A failed write is a 500, so the app's push is not counted as delivered
-    /// and is retried. An undecodable body writes nothing and answers the
-    /// snapshot: resending the same body cannot help.
+    /// and is retried. A body that is not one JSON object of scalars writes
+    /// nothing and is a 400, never a 200 with the old snapshot, which would
+    /// read as a delivered save. An empty body writes nothing and answers the
+    /// snapshot.
     private static func preferences(_ request: RouteRequest, database: DaemonDatabase) -> RouteResponse {
-        // `[String: String]`, not `[String: Any]`: the settings table stores
-        // strings anyway, and a JSON number arrives as `NSNumber`, where
-        // `as? Bool` succeeds for 1 and fails for 15.
-        let fields = (try? JSONDecoder().decode([String: String].self, from: request.body)) ?? [:]
+        let fields: [String: String]
+        if request.body.isEmpty {
+            fields = [:]
+        } else {
+            guard let values = try? JSONDecoder().decode([String: PreferenceValue].self, from: request.body) else {
+                return .error(BillingWireError.undecodable.localizedDescription, status: 400)
+            }
+            fields = values.mapValues(\.settingText)
+        }
         do {
             return .json(try BillingPrefs.apply(fields, database: database).wireForm)
         } catch {
@@ -326,6 +333,30 @@ public enum BillingRoutes {
     private struct AssignRepositoryRequest: Decodable { let projectRoot: String; let projectId: String }
     private struct EntryStatusRequest: Decodable { let status: String }
     private struct EntryDescriptionRequest: Decodable { let description: String }
+
+    /// One `POST /billing/preferences` value: a string, number or bool, kept as
+    /// the text the settings table stores (`RawSetting` reads it back). `null`,
+    /// an array or an object fails the decode, so the body is refused whole.
+    struct PreferenceValue: Decodable, Equatable {
+        let settingText: String
+
+        init(settingText: String) { self.settingText = settingText }
+
+        init(from decoder: Decoder) throws {
+            let container = try decoder.singleValueContainer()
+            // Bool before the numbers: JSONDecoder never reads a number as a
+            // Bool or a Bool as a number, so the order only names the cases.
+            if let flag = try? container.decode(Bool.self) {
+                settingText = flag ? "true" : "false"
+            } else if let whole = try? container.decode(Int.self) {
+                settingText = String(whole)
+            } else if let real = try? container.decode(Double.self) {
+                settingText = String(real)
+            } else {
+                settingText = try container.decode(String.self)
+            }
+        }
+    }
 
     /// The body as `type`, snake_case keys and ISO-8601 dates, or the
     /// version-mismatch refusal.
