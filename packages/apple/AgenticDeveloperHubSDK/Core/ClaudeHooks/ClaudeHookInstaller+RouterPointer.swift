@@ -51,7 +51,8 @@ extension ClaudeHookInstaller {
     /// overwritten or removed: turning on throws `routerPointerConflict` with
     /// its display form, turning off leaves it and returns `.other`. An `env`
     /// that is not a JSON object counts as such a value. Nothing is written
-    /// when nothing changes.
+    /// when nothing changes. A suspension marker that exists but cannot be
+    /// deleted is thrown, with `settings.json` left as it was.
     @discardableResult
     public func setRouterPointer(
         _ enabled: Bool, routerBaseURL: String = StenographerIdentifiers.routerBaseURL
@@ -60,7 +61,10 @@ extension ClaudeHookInstaller {
         var changed = false
         let result: RouterPointer = try modifySettings { settings in
             // The user's own choice replaces a suspension: nothing is put back later.
-            try? FileManager.default.removeItem(at: marker)
+            // A marker that cannot be deleted aborts the change with nothing
+            // saved, or a later resume would put back a pointer the user just
+            // turned off.
+            try Self.removeSuspensionMarker(at: marker)
             let current = Self.routerPointer(in: settings, routerBaseURL: routerBaseURL)
             switch (enabled, current) {
             case (true, .ours), (false, .absent), (false, .other):
@@ -146,7 +150,15 @@ extension ClaudeHookInstaller {
     ) -> Bool {
         let removedHooks = uninstallHooks()
         guard removingRouterPointer else { return removedHooks }
-        try? FileManager.default.removeItem(at: routerPointerSuspendedMarkerURL)
+        do {
+            try Self.removeSuspensionMarker(at: routerPointerSuspendedMarkerURL)
+        } catch {
+            // The pointer still goes: Claude Code must stop going through a
+            // router that is being removed. The marker left behind could only
+            // be acted on by a daemon that starts again.
+            Self.logger.error(
+                "Could not forget the router pointer suspension: \(error.localizedDescription, privacy: .public)")
+        }
         do {
             // Only our own router pointer; another ANTHROPIC_BASE_URL stays.
             let removedPointer = try modifySettings { settings -> Bool in
@@ -159,6 +171,16 @@ extension ClaudeHookInstaller {
         } catch {
             Self.logger.error("Router pointer removal failed: \(error.localizedDescription, privacy: .public)")
             return removedHooks
+        }
+    }
+
+    /// Deletes the suspension marker. A marker that is already gone is not an
+    /// error; any other failure to delete it is thrown.
+    static func removeSuspensionMarker(at marker: URL) throws {
+        do {
+            try FileManager.default.removeItem(at: marker)
+        } catch let error as CocoaError where error.code == .fileNoSuchFile {
+            return
         }
     }
 
