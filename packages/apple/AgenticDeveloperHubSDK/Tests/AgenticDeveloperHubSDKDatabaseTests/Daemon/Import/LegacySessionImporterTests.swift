@@ -358,7 +358,75 @@ final class LegacySessionImporterTests: XCTestCase {
         XCTAssertEqual(notThere?.status, 400)
     }
 
+    /// stenographerd lands, then adkd's store is unreadable: the reply is a
+    /// 500 that still carries stenographerd's report, adkd's error and one
+    /// sentence naming both, and stenographerd's rows stay committed.
+    func testAFailedSecondSourceKeepsTheFirstSourcesReport() async throws {
+        try makeStenographerSource()
+        let adkdDirectory = try makeUnreadableSource(named: "adkd.db")
+        let table = LegacyImportRoutes.table(importer: importer)
+        let body = try JSONEncoder().encode(LegacyImportRoutes.Request(
+            stenographer: sourceDirectory.path, adkd: adkdDirectory.path))
+
+        let response = await table.handle(RouteRequest(method: "POST", path: "/import-legacy", body: body))
+
+        XCTAssertEqual(response?.status, 500)
+        let object = try XCTUnwrap(
+            JSONSerialization.jsonObject(with: try XCTUnwrap(response?.body)) as? [String: Any])
+        XCTAssertNotNil(object["stenographer"] as? [String: Any], "the committed source's report")
+        XCTAssertNil(object["stenographer_error"] as? String)
+        XCTAssertNil(object["adkd"] as? [String: Any])
+        XCTAssertNotNil(object["adkd_error"] as? String)
+        let sentence = try XCTUnwrap(object["error"] as? String)
+        XCTAssertTrue(sentence.contains("The adkd import failed"), sentence)
+        XCTAssertTrue(sentence.contains("Imported and committed: stenographer"), sentence)
+
+        let again = try importer.importStores(kind: .stenographerd, directory: sourceDirectory)
+        XCTAssertEqual(again.totalInserted, 0, "stenographerd's rows were committed: \(again)")
+    }
+
+    /// A first source that fails stops the import: the second is reported
+    /// as not attempted, and nothing is said to have landed.
+    func testAFailedFirstSourceStopsTheImport() async throws {
+        let stenographerDirectory = try makeUnreadableSource(named: "stenographer.db")
+        let adkdDirectory = root.appendingPathComponent("adkd-empty", isDirectory: true)
+        try FileManager.default.createDirectory(at: adkdDirectory, withIntermediateDirectories: true)
+        let table = LegacyImportRoutes.table(importer: importer)
+        let body = try JSONEncoder().encode(LegacyImportRoutes.Request(
+            stenographer: stenographerDirectory.path, adkd: adkdDirectory.path))
+
+        let response = await table.handle(RouteRequest(method: "POST", path: "/import-legacy", body: body))
+
+        XCTAssertEqual(response?.status, 500)
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+        let reply = try decoder.decode(LegacyImportRoutes.Response.self, from: try XCTUnwrap(response?.body))
+        XCTAssertNil(reply.stenographer)
+        XCTAssertNil(reply.adkd)
+        XCTAssertNotNil(reply.stenographerError)
+        XCTAssertEqual(reply.adkdError, "Not attempted: an earlier source failed.")
+        let sentence = try XCTUnwrap(reply.error)
+        XCTAssertTrue(sentence.contains("Nothing was imported"), sentence)
+        XCTAssertTrue(sentence.contains("Not attempted: adkd"), sentence)
+    }
+
+    /// A reply written before the error fields still decodes.
+    func testAReplyWithoutErrorFieldsDecodes() throws {
+        let reply = try JSONDecoder().decode(LegacyImportRoutes.Response.self, from: Data("{}".utf8))
+        XCTAssertNil(reply.error)
+        XCTAssertNil(reply.stenographerError)
+    }
+
     // MARK: - Helpers
+
+    /// A source directory whose main database is not a database.
+    private func makeUnreadableSource(named name: String) throws -> URL {
+        let directory = root.appendingPathComponent("unreadable-\(name)", isDirectory: true)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        try Data(String(repeating: "not a database ", count: 512).utf8)
+            .write(to: directory.appendingPathComponent(name))
+        return directory
+    }
 
     private var archivePath: String {
         root.appendingPathComponent("target").appendingPathComponent(rawFileName).path
