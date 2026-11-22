@@ -25,9 +25,10 @@ final class SessionSchemaTests: XCTestCase {
         )
     }
 
-    /// 1-45 from Stenographer's move, then the shared steps added since, from 1001.
+    /// 1-45 from Stenographer's move, then the shared steps added since, from 1001:
+    /// 1001, and 1002-1007 (Stenographer's own 046-051, made shared).
     func testMigrationsAreNumberedOneThroughFortyFiveThenFromOneThousandOne() {
-        XCTAssertEqual(SessionSchema.migrations.map(\.version), Array(1...45) + [1001])
+        XCTAssertEqual(SessionSchema.migrations.map(\.version), Array(1...45) + Array(1001...1007))
     }
 
     /// 46-1000 are each daemon's own; a shared migration is 1-45 or 1001 and up.
@@ -35,10 +36,12 @@ final class SessionSchemaTests: XCTestCase {
         XCTAssertTrue(SessionSchema.migrations.map(\.version).allSatisfy { $0 <= 45 || $0 >= 1001 })
     }
 
+    /// The head, the feature ensures that run between, the tail, then the rest.
     func testPostMigrationIsTheHeadThenTheTail() {
         XCTAssertEqual(
             SessionSchema.postMigration.count,
-            SessionSchema.postMigrationHead.count + SessionSchema.postMigrationTail.count
+            SessionSchema.postMigrationHead.count + SessionSchema.featureEnsuresHead.count
+                + SessionSchema.postMigrationTail.count + SessionSchema.featureEnsuresTail.count
         )
     }
 
@@ -47,7 +50,7 @@ final class SessionSchemaTests: XCTestCase {
         XCTAssertTrue(store.isReady)
         var newest = 0
         try store.query("SELECT MAX(version) FROM schema_migrations") { row in newest = store.int(row, 0) }
-        XCTAssertEqual(newest, 1001)
+        XCTAssertEqual(newest, 1007)
         for table in ["sessions", "event_log", "settings", "transcript_turns", "ingestion_errors"] {
             XCTAssertTrue(try store.tableExists(table), "\(table) should exist")
         }
