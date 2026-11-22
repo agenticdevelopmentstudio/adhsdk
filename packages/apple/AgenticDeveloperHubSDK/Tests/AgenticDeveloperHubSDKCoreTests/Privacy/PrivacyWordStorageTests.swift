@@ -2,11 +2,15 @@ import Foundation
 import Testing
 @testable import AgenticDeveloperHubSDKCore
 
-@Suite("JSON file privacy word store") struct JSONFilePrivacyWordStoreTests {
+@Suite("JSON file privacy word store") final class JSONFilePrivacyWordStoreTests {
+    /// One directory per test (Swift Testing makes an instance per test), removed with it.
+    private let directory = FileManager.default.temporaryDirectory
+        .appendingPathComponent("PrivacyWordStorageTests-\(UUID().uuidString)", isDirectory: true)
+
+    deinit { try? FileManager.default.removeItem(at: directory) }
+
     private func scratchFile() -> URL {
-        FileManager.default.temporaryDirectory
-            .appendingPathComponent("PrivacyWordStorageTests-\(UUID().uuidString)", isDirectory: true)
-            .appendingPathComponent("nested/words.json")
+        directory.appendingPathComponent("nested/words.json")
     }
 
     @Test("F1: a missing file is no words")
@@ -95,7 +99,13 @@ import Testing
 }
 
 @MainActor
-@Suite("Privacy testing words") struct PrivacyTestingWordsTests {
+@Suite("Privacy testing words") final class PrivacyTestingWordsTests {
+    /// One directory per test (Swift Testing makes an instance per test), removed with it.
+    private let directory = FileManager.default.temporaryDirectory
+        .appendingPathComponent("PrivacyTestingWordsTests-\(UUID().uuidString)", isDirectory: true)
+
+    deinit { try? FileManager.default.removeItem(at: directory) }
+
     private let real = InMemoryPrivacyWordStore(words: [PrivacyWord(alias: "RealAlias", real: "RealSecret")])
 
     private func settings() -> SettingsStore {
@@ -104,8 +114,7 @@ import Testing
     }
 
     private func testingFile(_ words: [PrivacyWord]) throws -> URL {
-        let url = FileManager.default.temporaryDirectory
-            .appendingPathComponent("PrivacyTestingWordsTests-\(UUID().uuidString).json")
+        let url = directory.appendingPathComponent("words-\(UUID().uuidString).json")
         try JSONFilePrivacyWordStore(fileURL: url).save(words)
         return url
     }
