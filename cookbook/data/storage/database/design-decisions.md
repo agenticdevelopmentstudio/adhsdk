@@ -71,3 +71,10 @@
 **Rationale**: The current-connection slot is one per-thread value shared by all instances, so the second instance never gets its own connection. Closing it would take rejecting cross-instance nesting, routing the call to the second instance's own pool, or documenting it as unsupported at the API.
 **Approved**: pending
 
+**Decision**: The credential relay route evaluates classify-only (`takeCredentials(_:refreshing: false)`) and answers only `changed`.
+**Rationale**: An HTTP reply that carries no token has nowhere to put a rotated login, so spending a refresh token in this route would kill the login it was asked about. Going through `takeCredentials` rather than calling `setCredentials` directly keeps the probe-half stripping and the serial evaluation gate, so no refresh token is ever stored.
+**Approved**: pending
+
+**Decision**: The relay route does no caller check of its own.
+**Rationale**: Who may post credentials is the hosting daemon's front-door decision (its client token), not the route set's; the route trusts what reaches it, as the other shared route sets do.
+**Approved**: pending

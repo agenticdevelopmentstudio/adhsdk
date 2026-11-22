@@ -2,11 +2,11 @@
 id: ea580796-8b16-4832-b11d-ad3cae991ecd
 title: "Database"
 type: ingredient
-version: 1.2.2
+version: 1.3.0
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-11-19
+modified: 2026-11-21
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -65,6 +65,23 @@ which names its file inside the storage-location helper's directory.
 
 `summaryAIProviderSettings(for:)` resolves a `SummaryFeature`'s provider. Sessions reads the global selection. AI Conversations and Coding Projects read their own selection key: absent inherits the global one, an empty string means the command-line provider sentinel, and an id picks that configuration.
 
+The daemon half of the module (`Database/Daemon`) also carries the Claude
+account router, moved out of stenographerd so any daemon can host it:
+
+- `AccountCredentialStore` keeps the Claude credentials a client relays to the
+  daemon, as each credential's probe half. `KeychainAccountCredentialStore`
+  holds the set as JSON in one Keychain generic-password item;
+  `InMemoryAccountCredentialStore` is for tests and for a daemon that must not
+  touch the Keychain.
+- `AccountQuotaProbe` is the daemon's one custodian of those credentials and
+  its live per-account quota cache: it judges a relayed set, keeps the probe
+  halves, and measures each account's rate-limit headers on demand.
+- `AccountRouterServer`, configured by `AccountRouterConfiguration`, is the
+  local proxy that routes Claude Code's API traffic across the saved accounts
+  and records each exchange; `RouterHistoryRetentionTask` trims that history.
+- `AccountRouterRoutes` is the route set a daemon mounts for the router's read
+  surface (`GET /router/status`, `GET /router/report`, `GET /router/exchanges`)
+  and the credential relay (`POST /accounts/credentials`).
 ## Behavioral Requirements
 
 ### Storage Location
@@ -153,6 +170,41 @@ which names its file inside the storage-location helper's directory.
 - **sendable-class**: The bounded database MUST be safe to call concurrently from multiple threads and tasks, relying on the underlying database library's own thread safety for connections, a lock around the metrics, and per-thread state for the current operation's deadline and connection.
 - **per-thread-state**: The armed deadline and the current connection MUST be stored per thread, so operations on different threads never observe each other's deadline or connection.
 
+### Account Credential Store
+
+- **credential-store-contract**: An `AccountCredentialStore` MUST offer `load()`, returning the set saved last or an empty list when none is, and `save(_:)`, replacing the saved set; both may throw.
+- **credential-store-empty-save**: Saving an empty set MUST remove the saved set: the Keychain store deletes its item rather than writing an empty list.
+- **keychain-store-item**: `KeychainAccountCredentialStore(service:)` MUST keep the whole set as JSON in one generic-password item named `claude-credentials` (`itemKey`) under the injected service, through AIPluginKit's `SecretStoring`.
+- **keychain-store-write-failure**: A write the secret store refuses MUST throw `AccountCredentialStoreError.writeFailed`.
+- **in-memory-store**: `InMemoryAccountCredentialStore` MUST keep the set in memory only, under a lock, and count every `save(_:)` in `saves`.
+
+### Account Quota Probe
+
+- **probe-one-per-daemon**: A daemon MUST build exactly one `AccountQuotaProbe` and hand it to both the database (as its quota source) and the account router (as its credential source), because a Claude refresh token is single-use and two evaluators spending one void each other's rotation.
+- **probe-load-once**: The probe MUST load its store once, at init; a store that cannot be read MUST be logged and the probe MUST start with an empty set.
+- **take-credentials**: `takeCredentials(_:refreshing:now:)` MUST evaluate the pushed set, keep only each probeable credential's probe half through `setCredentials(_:)`, record the secret-free token statuses, and return a `ClaudeCredentialEvaluationDTO` carrying `changed` and the logins it rotated.
+- **take-credentials-serial**: Evaluations MUST run one at a time, so two relays can never both spend the same refresh token.
+- **classify-only**: With `refreshing: false` the evaluation MUST NOT refresh any login; it only classifies the set.
+- **set-credentials-change**: `setCredentials(_:)` MUST compare the new set to the held one by account, credential kind and token fingerprint, in any order; on a change it MUST replace the set, invalidate the quota cache and save the set to the store, and return `true`; otherwise it MUST do nothing and return `false`.
+- **set-credentials-save-failure**: A store that throws on save MUST be logged; the in-memory set still changes.
+- **held-token**: `heldToken(itemKey:)` MUST be the only read of a secret the probe allows, for the account router; it returns nil when nothing probeable is held under that key.
+- **probe-on-demand**: Probes MUST run on a private utility queue and only when a consumer asks while the cache is past its TTL (`refreshIfStale`); the default TTL is 300 seconds (`defaultTTL`).
+
+### Account Router Routes
+
+- **router-routes-table**: `AccountRouterRoutes.table(router:probe:)` MUST return a route table that claims `GET /router/<sub>` (exactly two path components) and `POST /accounts/credentials`, and nothing else.
+- **router-routes-endpoints**: `AccountRouterRoutes.endpoints` MUST list `GET /router/status`, `GET /router/report`, `GET /router/exchanges` and `POST /accounts/credentials`, for a daemon's endpoint index.
+- **router-unavailable**: When the table was built with no router, every `GET /router/<sub>` MUST answer 503 with `{"status":"unavailable","error":"no account router on this daemon"}`.
+- **router-status**: `GET /router/status` MUST answer 200 with the router's status in snake_case; the status names saved credentials by item key only.
+- **router-report**: `GET /router/report` MUST answer the router's report for `since_hours` hours, defaulting to 24 (`defaultReportHours`); `0` means all time.
+- **router-report-window**: `since_hours` MUST be ASCII digits only and MUST be clamped to `AccountRouterServer.maxReportHours` (a century), a run of digits too long for an integer included; anything else MUST answer 400 "since_hours must be a whole number of hours (0 for all time)".
+- **router-exchanges**: `GET /router/exchanges` MUST pass `account` through unchanged and accept `after_id`, `before_id`, `limit` and `since_hours` as ASCII digits, a run too long for an integer reading as the largest integer; a malformed number MUST answer 400 naming the parameter.
+- **router-exchanges-rule**: `rule` MUST be one of `AccountRouterRuleFilter`'s raw values; any other value MUST answer 400 listing the valid ones.
+- **router-store-error**: A report or exchange query that throws MUST answer 500 with the error's description scrubbed by `AccountRouterLog.scrub`.
+- **router-unknown-path**: Any other `GET /router/<sub>` MUST answer 404.
+- **credential-relay**: `POST /accounts/credentials` MUST decode the body as a snake_case JSON array of `ClaudeCredentialDTO`, hand it to the probe classify-only (`takeCredentials(_:refreshing: false)`, which stores through `setCredentials(_:)`), and answer 200 with `{"changed": <Bool>}`.
+- **credential-relay-no-echo**: The relay's reply MUST carry no token, and an undecodable body MUST answer 400 "the body must be a JSON array of credentials" without quoting the body or the decoding error.
+- **credential-relay-router-free**: The relay MUST work whether or not the table has a router.
 ## Appearance
 
 Not applicable — this is a database access layer and storage-path helper, not a visual component.
@@ -192,7 +244,16 @@ Not applicable — this is a database access layer and storage-path helper, not 
 | sed-021 | other-errors-unrecorded | a read whose body raises a custom error | the custom error propagates; the read lane's completed and evicted counts are unchanged; its in-flight count is `0` |
 | sed-022 | percentile-empty | a freshly opened database, reading the metrics snapshot | both lanes report a completed count of `0` and both percentile durations of `0`; lane order is `["write", "read"]` |
 | sed-023 | write-transaction | a write whose body inserts a row then raises | the error propagates; a later read does not see the row |
-
+| sed-024 | router-unavailable | `GET /router/status`, `/router/report` and `/router/exchanges` on a table with no router | 503 each, `status` is `"unavailable"` (`AccountRouterRoutesTests.testNoRouterIs503NotAnEmptyAnswer`) |
+| sed-025 | router-report | `GET /router/report` with no query | 200, `since_hours` is `24` (`testReportDefaultsToTwentyFourHours`) |
+| sed-026 | router-report-window | `since_hours` of `abc`, `-1`, `1.5`, `+5`, `%20` | 400 each (`testAMalformedWindowIs400`) |
+| sed-027 | router-report-window | `since_hours` of `99999999999999999999` and `Int.max` | 200, `since_hours` is `maxReportHours` (`testAHugeWindowIsClampedToACentury`) |
+| sed-028 | router-exchanges | three exchanges; `?before_id=3&limit=1` | ids `[2]` (`testExchangesFilterByEveryParameter`) |
+| sed-029 | router-exchanges-rule | `?rule=bogus` | 400 whose message names every `AccountRouterRuleFilter` value (`testAnUnknownRuleIs400ListingTheValidOnes`) |
+| sed-030 | router-status | a saved account `oauth:a@x.com` whose token is `sk-ant-...` | 200, `saved_credentials` is `["oauth:a@x.com"]`, the body never contains `sk-ant` (`testStatusIsSnakeCaseAndNamesNoSecret`) |
+| sed-031 | credential-relay, credential-relay-no-echo | one long-lived credential posted to an empty in-memory store | 200, `changed` is `true`, the store holds the token and saved once, the reply does not contain it (`testRelayStoresTheSetAndEchoesNoToken`) |
+| sed-032 | set-credentials-change | the same body posted twice | the second reply has `changed: false`; `saves` stays `1` (`testRelayingTheSameSetAgainChangesNothing`) |
+| sed-033 | credential-relay-no-echo | a truncated array carrying a token, an empty body, a JSON object | 400 each, no token or account in the reply, nothing saved (`testAnUndecodableBodyIs400AndEchoesNothing`) |
 ## Edge Cases
 
 - **Empty display name**: The token-deriving operation applied to an empty string, or to a name made only of spaces or punctuation, MUST return `"AgenticDeveloperHubSDK"`; a missing or empty declared display name MUST make the display-name reader return `"AgenticDeveloperHubSDK"`.
@@ -214,7 +275,13 @@ Not applicable — this is a database access layer and storage-path helper, not 
 - **Cancellation**: There is no cancellation interface; an external cancellation signal does not interrupt a running call, and the deadline is the only way a statement is stopped.
 - **Offline or network loss**: Not applicable; the component performs only local file I/O.
 - **Direct writer access**: Statements run through direct writer access MUST NOT be ejected or metered, because no deadline is armed on that thread.
-
+- **Relayed empty set**: A relay of `[]` MUST count as a change when credentials were held and MUST clear the store (the Keychain item is deleted).
+- **Repeated relay**: Relaying the same set again MUST answer `changed: false` and MUST NOT save.
+- **Malformed relay body**: An empty body, a truncated array, or a JSON object instead of an array MUST answer 400 and save nothing.
+- **Unreadable credential store**: A probe whose store throws on load MUST start empty and log the failure; the client's next relay fills it.
+- **No router configured**: The credential relay still works; only `/router/*` answers 503.
+- **Oversized report window**: `since_hours=99999999999999999999` MUST clamp to `maxReportHours` rather than fail.
+- **Empty exchange parameter**: `limit=` (empty) MUST answer 400 naming `limit`.
 ## Configuration
 
 | Option | Type | Default | Description |
@@ -231,7 +298,14 @@ Not applicable — this is a database access layer and storage-path helper, not 
 | `token` (storage-directory operation) | string | the default token | Name folded to lowercase for the dotfolder. |
 | Progress-check interval | constant | 1000 execution steps | Not configurable. |
 | Percentile window | constant | 128 durations per lane | Not configurable. |
-
+| `service` (`KeychainAccountCredentialStore`) | string | required | Keychain service the credential item lives under; a daemon passes `<its label>.accounts`. |
+| `label` (`AccountQuotaProbe`, `AccountRouterConfiguration`) | string | required | The daemon's label; names the probe queue and the router's log subsystem and queues. |
+| `credentials` (`AccountQuotaProbe`) | `AccountCredentialStore` | required | Where the held credential set is saved. |
+| `userAgent` (`AccountQuotaProbe`) | string | `ClaudeTokenRefresher.userAgent` | The `User-Agent` every probe sends. |
+| `dataDirectory`, `fingerprintsPath`, `upstream`, `templateDirectory`, `providerSecret` (`AccountRouterConfiguration`) | various | `upstream` is `https://api.anthropic.com`; templates go in the data directory's template subdirectory; provider keys come from the shared Keychain namespace | Where the router keeps its files, where it sends requests and how it reads provider keys. |
+| `router` (`AccountRouterRoutes.table`) | optional `AccountRouterServer` | required | The daemon's router; nil makes `/router/*` answer 503. |
+| `probe` (`AccountRouterRoutes.table`) | `AccountQuotaProbe` | required | The probe that takes custody of relayed credentials. |
+| `since_hours` default | constant | `24` (`AccountRouterRoutes.defaultReportHours`) | The report window when the query omits it. |
 ## Deep Linking
 
 Not applicable: neither component handles URLs or routes; the only location value is the filesystem location the storage-directory operation returns.
@@ -258,15 +332,14 @@ Not applicable: neither component emits events; the metrics snapshot is an in-pr
 
 ## Privacy
 
-- **Data collected**: None by this module; it stores whatever rows its caller writes.
+- **Data collected**: The storage floor collects nothing; it stores whatever rows its caller writes. The account router's credential store holds the Claude account tokens a client relays (probe halves only, never a refresh token) and the router records each routed exchange's metadata.
 - **Storage**: A plain, unencrypted SQLite database file (plus its companion write-ahead-log and shared-memory files) at the caller's configured path, typically inside a per-app dotfolder in the home directory; an in-memory database is never written to disk.
-- **Transmission**: None; the module performs no network I/O.
+- **Transmission**: The storage floor performs no network I/O. The quota probe sends one `max_tokens=1` request per held account to the Anthropic API, and the router relays Claude Code's requests upstream; no route reply carries a token.
 - **Retention**: Data persists until the caller deletes it or the file; the module deletes nothing.
-
+- **Credential storage**: `KeychainAccountCredentialStore` keeps the relayed set in the Keychain, one item under the daemon's service; `InMemoryAccountCredentialStore` keeps nothing past the process.
 ## Logging
 
-Not applicable: neither component performs its own logging; ejections surface as raised deadline-exceeded errors and as the evicted counters in the metrics snapshot.
-
+The bounded database and the storage-location helper do not log; ejections surface as raised deadline-exceeded errors and as the evicted counters in the metrics snapshot. The quota probe logs through the unified logging system: a store it cannot read or write, the count of credentials a client relayed, and a one-time warning when no credentials are held. It never logs a token. The router's errors are scrubbed by `AccountRouterLog.scrub` before they reach a log or a route reply.
 ## Platform Notes
 
 - **SwiftUI**: Source platform (`Database/BoundedDatabase.swift`, `Database/AppStorageLocation.swift`, module `AgenticDeveloperHubSDKDatabase`). It imports `Foundation`, `SQLite3` (for `sqlite3_progress_handler`) and GRDB; the per-op deadline and current connection live in `Thread.current.threadDictionary`, which works because GRDB runs each sync op on one thread; the handler is a capture-free `@convention(c)` closure; `DispatchTime` supplies the monotonic clock and `NSLock` guards the metrics. A SwiftUI app owns one instance per database file and should call it off the main actor, since every call blocks.
@@ -279,7 +352,7 @@ Not applicable: neither component performs its own logging; ejections surface as
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Database/` | confirmed (1.2.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Database/` | confirmed (1.3.0) |
 
 ## Design Decisions
 
@@ -355,6 +428,13 @@ Not applicable: neither component performs its own logging; ejections surface as
 **Rationale**: The current-connection slot is one per-thread value shared by all instances, so the second instance never gets its own connection. Closing it would take rejecting cross-instance nesting, routing the call to the second instance's own pool, or documenting it as unsupported at the API.
 **Approved**: pending
 
+**Decision**: The credential relay route evaluates classify-only (`takeCredentials(_:refreshing: false)`) and answers only `changed`.
+**Rationale**: An HTTP reply that carries no token has nowhere to put a rotated login, so spending a refresh token in this route would kill the login it was asked about. Going through `takeCredentials` rather than calling `setCredentials` directly keeps the probe-half stripping and the serial evaluation gate, so no refresh token is ever stored.
+**Approved**: pending
+
+**Decision**: The relay route does no caller check of its own.
+**Rationale**: Who may post credentials is the hosting daemon's front-door decision (its client token), not the route set's; the route trusts what reaches it, as the other shared route sets do.
+**Approved**: pending
 ## Compliance
 
 | Check | Status | Category |
@@ -374,6 +454,7 @@ The module keeps storage mechanics (pool, deadlines, metrics) and storage naming
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.3.0 | 2026-11-21 | Mike Fullerton | Account credential store, quota probe, account router and its routes (credential relay) moved into Database/Daemon. |
 | 1.2.2 | 2026-11-19 | Mike Fullerton | Name the CLI sentinel without the host's name |
 | 1.2.1 | 2026-11-18 | Mike Fullerton | Per-feature summary provider resolution (`summaryAIProviderSettings(for:)`). |
 | 1.2.0 | 2026-10-04 | Mike Fullerton | Restate rollback-failure and cross-instance-reentrancy as current behavior with pending decisions. |

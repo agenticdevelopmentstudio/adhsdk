@@ -21356,9 +21356,9 @@
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:f82bf8fd8dbff4135104030f0d09719e2da80ef703474ac1086a66519790d555",
+            "hash": "sha256:b282e7c875cc6e9ba13fe736ff57788751d3b48fa66434373766017a7016e84c",
             "state": "confirmed",
-            "version": "1.2.1"
+            "version": "1.3.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Database/",
           "platform": "apple"
