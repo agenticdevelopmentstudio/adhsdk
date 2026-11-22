@@ -10,8 +10,17 @@ private let hasOnlineDisplay: Bool = {
     return CGGetOnlineDisplayList(0, nil, &count) == .success && count > 0
 }()
 
+/// True when at least one display is active. `onlineDisplays()` lists active
+/// displays only (see `DisplaySystem`), and a display that is asleep is online
+/// but not active, so while every screen sleeps it rightly lists none. The
+/// tests that read the list need this, not `hasOnlineDisplay`.
+private var hasActiveDisplay: Bool {
+    var count: UInt32 = 0
+    return CGGetActiveDisplayList(0, nil, &count) == .success && count > 0
+}
+
 @MainActor @Suite struct CoreGraphicsDisplaySystemTests {
-    @Test(.enabled(if: hasOnlineDisplay, "needs a real display"))
+    @Test(.enabled(if: hasActiveDisplay, "needs an awake display"))
     func listsTheMainDisplayAtOrigin() throws {
         let displays = CoreGraphicsDisplaySystem().onlineDisplays()
         let main = try #require(displays.first { $0.isMain })
@@ -20,7 +29,7 @@ private let hasOnlineDisplay: Bool = {
         #expect(main.frame.size == main.bounds.size)
     }
 
-    @Test(.enabled(if: hasOnlineDisplay, "needs a real display"))
+    @Test(.enabled(if: hasActiveDisplay, "needs an awake display"))
     func listsModesIncludingTheCurrentOne() throws {
         let system = CoreGraphicsDisplaySystem()
         let main = try #require(system.onlineDisplays().first { $0.isMain })
