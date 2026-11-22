@@ -2,11 +2,11 @@
 id: a2cb25cc-f3d1-4b82-8a32-52e727c317e1
 title: "Claude Auth Evaluator"
 type: ingredient
-version: 1.1.1
+version: 1.1.2
 status: review
 language: en
 created: 2026-11-21
-modified: 2026-11-21
+modified: 2026-11-22
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -69,6 +69,7 @@ The terms used throughout: a **credential** is one `Sessions.ClaudeCredentialDTO
 - **refresh-precondition**: `evaluate` MUST invoke the refresher for a credential only when all four hold: its state is `.expired`, it carries a login, a refresher was supplied, and it carries an `itemKey`.
 - **refresh-at-most-once**: `evaluate` MUST invoke the refresher at most once per credential per round.
 - **refresh-once-per-token**: Within one `evaluate` call, the refresher MUST be invoked at most once per distinct refresh token. Credentials carrying the same refresh token (one login pushed under several item keys) MUST share that one refresh's result: on success each is reported `.refreshed`, each gets its own `Outcome.rotated` entry under its own `itemKey` with the same fresh login, and none is reported `.spent`; on failure each is reported with the same failure state.
+- **rotate-every-copy**: When a refresh token is spent in a round, every other credential carrying that same refresh token and an `itemKey` not already rotated MUST also get the fresh login, whatever its own state (copies can carry different `refreshWithin` margins, so one may be `.expired` while another is `.usable`): an `Outcome.rotated` entry under its `itemKey`, a `.refreshed` status and a probeable credential carrying the fresh login. A copy with no `itemKey` keeps its own judgment.
 - **classify-only-mode**: A caller MAY pass `nil` as `refresh`; `evaluate` MUST then invoke no refresher and MUST classify every credential with `state(of:now:)` alone.
 - **unrefreshed-probeability**: For a credential that is not refreshed, the credential MUST appear in `Outcome.probeable` unchanged exactly when its state's `isProbeable` is true (`.usable` and `.unknown` are probeable; `.expired` is not).
 - **unrefreshed-status**: For a credential that is not refreshed, the status MUST carry its classified state and no `detail`.
@@ -290,7 +291,7 @@ Rows 057 to 062 are tested beside the toolkit copy, in `Tests/AgenticDeveloperHu
 - **raw-transport-error-from-injected-refresher**: An injected refresher that throws a bare `URLError`, even one proving the request never left, MUST be treated as a foreign error: `.inconclusive`, and in `renew` `tokenUntouched` false. Only `ClaudeTokenRefresher.refresh` translates transport errors into `.unsent`.
 - **caller-abandons-round**: When the caller stops waiting, rotations already produced MUST still be in the returned `Outcome`, but a caller that never reads it loses them; there is no other route back. The evaluator MUST NOT check task cancellation itself; a cancellation reaches the live refresher as a `URLError` that is not in never-sent-codes, so it is reported `.inconclusive` with the token possibly spent.
 - **concurrent-rounds**: Nothing here MUST serialize separate calls to `evaluate` or `renew`; two calls judging the same expired login would each spend its refresh token. Serializing rounds is the caller's job, and `AccountQuotaProbe` does it with a `SerialAsyncGate` around `takeCredentials`.
-- **duplicate-login-in-one-round**: Two credentials in one `evaluate` call carrying the same refresh token MUST NOT spend it twice: the refresher runs once and both share its result (`refresh-once-per-token`), so neither copy is reported `.spent` by the other's rotation and both item keys receive the fresh login. Two separate `evaluate` calls are still the caller's to serialize (`concurrent-rounds`).
+- **duplicate-login-in-one-round**: Two credentials in one `evaluate` call carrying the same refresh token MUST NOT spend it twice: the refresher runs once and both share its result (`refresh-once-per-token`), so neither copy is reported `.spent` by the other's rotation and both item keys receive the fresh login, even when one copy's `refreshWithin` margin judged it `.usable` (`rotate-every-copy`). Two separate `evaluate` calls are still the caller's to serialize (`concurrent-rounds`).
 - **unknown-state-from-older-client**: Statuses store state as a raw string so an older reader decodes unknown future states as `.unknown` (`ClaudeAccountTokenStatusDTO.tokenState`); this ingredient MUST only emit the seven states `Sessions.ClaudeTokenState` defines.
 - **offline**: When the machine is offline, every expired login in a round MUST be reported `.inconclusive` and kept probeable; usable and unknown logins MUST be unaffected because classification does no I/O.
 - **redirect-or-informational-status**: A final status outside 2xx that is not 401, 429 or a 400 naming `invalid_grant` (for example an unfollowed 3xx) MUST be reported `.inconclusive("HTTP <status>")`.
@@ -507,6 +508,7 @@ The account and reason are interpolated with `privacy: .public`, so the account 
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.2 | 2026-11-22 | Mike Fullerton | rotate-every-copy: a copy of a refreshed login judged usable by its own margin also gets the rotation |
 | 1.1.1 | 2026-11-21 | Mike Fullerton | Resolved duplicate-login-in-one-round (new refresh-once-per-token: one refresh per distinct refresh token per round, shared by every copy) and publish-permissions-failure (0600 is set on a temporary file before it replaces the old one, and a failure throws and publishes nothing); added vectors 057 to 062. |
 | 1.1.0 | 2026-11-21 | Mike Fullerton | Covers ClaudeTokenRefresher and AccountFingerprints alongside the evaluator; drops the authored Reference Implementations section |
 | 1.0.0 | 2026-11-21 | Mike Fullerton | Initial creation |

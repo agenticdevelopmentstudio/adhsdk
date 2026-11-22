@@ -99,7 +99,11 @@ public enum ClaudeAuthEvaluator {
     /// first one just spent and report a live login `.spent`, so within a round
     /// a refresh token is spent **once**: every credential carrying it shares
     /// that refresh's answer, and each one with an item key gets its own
-    /// rotation, so every copy the app holds is replaced.
+    /// rotation, so every copy the app holds is replaced. That includes a copy
+    /// the round judged usable — copies can carry different `refreshWithin`
+    /// margins, so one can be refreshed while another is not — because once
+    /// the shared token is spent, a copy left holding it is a dead login
+    /// waiting for its access token to expire.
     public static func evaluate(
         _ credentials: [Sessions.ClaudeCredentialDTO],
         now: Date = Date(),
@@ -109,7 +113,7 @@ public enum ClaudeAuthEvaluator {
             let once = OncePerRefreshToken(refresh)
             return { try await once.refresh($0) }
         }
-        let judgments = await withTaskGroup(of: (Int, Judgment).self) { group in
+        let rawJudgments = await withTaskGroup(of: (Int, Judgment).self) { group in
             for (index, credential) in credentials.enumerated() {
                 group.addTask { (index, await judge(credential, now: now, refresh: shared)) }
             }
@@ -117,6 +121,7 @@ public enum ClaudeAuthEvaluator {
             for await judged in group { collected.append(judged) }
             return collected.sorted { $0.0 < $1.0 }.map(\.1)
         }
+        let judgments = replacingSpentCopies(credentials, judgments: rawJudgments, now: now)
 
         var outcome = Outcome(probeable: [], rotated: [], statuses: [])
         for judgment in judgments {
@@ -125,6 +130,43 @@ public enum ClaudeAuthEvaluator {
             outcome.statuses.append(judgment.status)
         }
         return outcome
+    }
+
+    /// Gives every other copy of a login refreshed this round the same rotation.
+    ///
+    /// `judge` refreshes only copies it classifies `.expired`, by each copy's own
+    /// margin. A copy of the same login judged `.usable` (or `.unknown`) still
+    /// holds the refresh token the round just spent, so it gets the fresh pair:
+    /// probed with it, reported `.refreshed`, and rotated when it has an item key
+    /// to be stored under. A copy with no item key has nowhere to put the pair
+    /// and keeps its own judgment. An item key already rotated is not rotated
+    /// twice.
+    private static func replacingSpentCopies(
+        _ credentials: [Sessions.ClaudeCredentialDTO], judgments: [Judgment], now: Date
+    ) -> [Judgment] {
+        var fresh: [String: ClaudeOAuthCredential] = [:]
+        var rotatedKeys: Set<String> = []
+        for (credential, judgment) in zip(credentials, judgments) {
+            guard let rotation = judgment.rotated, let spent = credential.oauth?.refreshToken else { continue }
+            fresh[spent] = rotation.oauth
+            rotatedKeys.insert(rotation.itemKey)
+        }
+        guard !fresh.isEmpty else { return judgments }
+
+        return zip(credentials, judgments).map { credential, judgment in
+            guard judgment.rotated == nil,
+                  let spent = credential.oauth?.refreshToken,
+                  let replacement = fresh[spent],
+                  let itemKey = credential.itemKey,
+                  rotatedKeys.insert(itemKey).inserted
+            else { return judgment }
+            let updated = credential.carrying(replacement)
+            return Judgment(
+                probeable: updated,
+                rotated: Sessions.ClaudeRotatedCredentialDTO(
+                    itemKey: itemKey, account: credential.account, oauth: replacement),
+                status: status(updated, state: .refreshed, oauth: replacement, now: now))
+        }
     }
 
     /// One credential's half of the round.

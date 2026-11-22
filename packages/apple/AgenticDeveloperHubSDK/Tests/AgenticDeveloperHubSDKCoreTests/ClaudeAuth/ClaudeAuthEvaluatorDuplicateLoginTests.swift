@@ -49,6 +49,33 @@ final class ClaudeAuthEvaluatorDuplicateLoginTests: XCTestCase {
         XCTAssertEqual(outcome.probeable.count, 2)
     }
 
+    func testACopyJudgedUsableByItsOwnMarginIsRotatedWithTheRefreshedCopy() async throws {
+        let endpoint = FakeEndpoint()
+        // Twenty minutes left: expired by the first copy's thirty-minute margin,
+        // usable by the default five-minute one the other two copies carry.
+        let expiresAt = (Date().timeIntervalSince1970 + 20 * 60) * 1000
+        let login = ClaudeOAuthCredential(
+            accessToken: "old-access", refreshToken: "shared-refresh", expiresAt: expiresAt)
+        let credentials = [
+            Sessions.ClaudeCredentialDTO(
+                account: "a", token: login.accessToken, itemKey: "oauth:a", oauth: login,
+                refreshWithin: 30 * 60),
+            Sessions.ClaudeCredentialDTO(
+                account: "a", token: login.accessToken, itemKey: "claude-code:a", oauth: login),
+            Sessions.ClaudeCredentialDTO(account: "a", token: login.accessToken, oauth: login)
+        ]
+
+        let outcome = await ClaudeAuthEvaluator.evaluate(credentials, refresh: { try await endpoint.refresh($0) })
+
+        let calls = await endpoint.calls
+        XCTAssertEqual(calls, 1, "the shared refresh token is spent once")
+        XCTAssertEqual(outcome.statuses.map(\.state), ["refreshed", "refreshed", "usable"],
+                       "the usable copy with an item key takes the fresh pair; the keyless one cannot store it")
+        XCTAssertEqual(outcome.rotated.map(\.itemKey), ["oauth:a", "claude-code:a"])
+        XCTAssertEqual(Set(outcome.rotated.map(\.oauth.refreshToken)).count, 1, "both items get the same fresh pair")
+        XCTAssertEqual(outcome.probeable.map(\.token), ["access-1", "access-1", "old-access"])
+    }
+
     func testDifferentLoginsAreEachRefreshed() async throws {
         let endpoint = FakeEndpoint()
         let first = expiredLogin(refreshToken: "refresh-a")
