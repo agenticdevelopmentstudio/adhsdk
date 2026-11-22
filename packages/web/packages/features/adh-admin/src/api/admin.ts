@@ -629,6 +629,13 @@ function toAuditEvent(w: AuditWire): AccessAuditEvent {
 }
 
 /**
+ * A log row's identity, for `useWindowedList`. Module-level, never an inline arrow: `getRowId` is a
+ * dependency of the window's deduped `rows` memo, so a new function each render would rebuild (and
+ * make every list downstream re-filter and re-sort) the whole window on every keystroke.
+ */
+const logRowId = (e: { id: string }): string => e.id;
+
+/**
  * The audit trail as a GROWING WINDOW rather than a page at a time.
  *
  * The trail is append-only and unbounded, so it is the one admin list that cannot be fetched
@@ -638,7 +645,7 @@ function toAuditEvent(w: AuditWire): AccessAuditEvent {
 export function useAccessAudit() {
   return useWindowedList<AccessAuditEvent>({
     key: ["admin", "access-audit"],
-    getRowId: (e) => e.id,
+    getRowId: logRowId,
     pageSize: 100,
     fetchPage: async (after, pageSize) => {
       const page = await fetchV1WindowPage<AuditWire>("/api/v1/system/access_audit", after, pageSize);
@@ -741,7 +748,7 @@ export function useOperatorAccess(
   const applied = normalizeOperatorAccessFilters(filters);
   return useWindowedList<OperatorAccessEvent>({
     key: ["admin", "operator-access", applied],
-    getRowId: (e) => e.id,
+    getRowId: logRowId,
     pageSize: 100,
     fetchPage: async (after, pageSize) => {
       const page = await fetchV1WindowPage<OperatorAccessWire>(
