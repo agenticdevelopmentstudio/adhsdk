@@ -3,6 +3,17 @@
 export { AuthProvider, useAuth, useOptionalAuth } from './context'
 export type { AuthContextValue, AuthProviderProps } from './context'
 export type { MfaChallenge, MfaMethod, MfaCodeMethod } from './mfa'
+export {
+  ProductAdminAuthProvider,
+  useProductAdminAuth,
+  PRODUCT_ADMIN_REFRESH_LEAD_MS,
+} from './ProductAdminAuthProvider'
+export type {
+  ProductAdminAccount,
+  ProductAdminAuthStatus,
+  ProductAdminAuthValue,
+  ProductAdminAuthProviderProps,
+} from './ProductAdminAuthProvider'
 export { RequireAuth } from './RequireAuth'
 export type { RequireAuthProps } from './RequireAuth'
 export { RequireAuthSkeleton } from './RequireAuthSkeleton'

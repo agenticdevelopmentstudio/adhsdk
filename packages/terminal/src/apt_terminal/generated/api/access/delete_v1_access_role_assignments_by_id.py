@@ -59,6 +59,11 @@ def _parse_response(
 
         return response_404
 
+    if response.status_code == 422:
+        response_422 = StripeError.from_dict(response.json())
+
+        return response_422
+
     if client.raise_on_unexpected_status:
         raise errors.UnexpectedStatus(response.status_code, response.content)
     else:
@@ -85,7 +90,10 @@ def sync_detailed(
 ) -> Response[Deleted | StripeError]:
     """Revoke an assignment (requires M at its scope)
 
-     Replaces DELETE /access/assignments/{id}.
+     A product admin revoking an `admin` seat, their own or another, is 422 with code
+    `admin_seat_protected`.
+
+    Replaces DELETE /access/assignments/{id}.
 
     Args:
         id (str):
@@ -122,7 +130,10 @@ def sync(
 ) -> Deleted | StripeError | None:
     """Revoke an assignment (requires M at its scope)
 
-     Replaces DELETE /access/assignments/{id}.
+     A product admin revoking an `admin` seat, their own or another, is 422 with code
+    `admin_seat_protected`.
+
+    Replaces DELETE /access/assignments/{id}.
 
     Args:
         id (str):
@@ -154,7 +165,10 @@ async def asyncio_detailed(
 ) -> Response[Deleted | StripeError]:
     """Revoke an assignment (requires M at its scope)
 
-     Replaces DELETE /access/assignments/{id}.
+     A product admin revoking an `admin` seat, their own or another, is 422 with code
+    `admin_seat_protected`.
+
+    Replaces DELETE /access/assignments/{id}.
 
     Args:
         id (str):
@@ -189,7 +203,10 @@ async def asyncio(
 ) -> Deleted | StripeError | None:
     """Revoke an assignment (requires M at its scope)
 
-     Replaces DELETE /access/assignments/{id}.
+     A product admin revoking an `admin` seat, their own or another, is 422 with code
+    `admin_seat_protected`.
+
+    Replaces DELETE /access/assignments/{id}.
 
     Args:
         id (str):

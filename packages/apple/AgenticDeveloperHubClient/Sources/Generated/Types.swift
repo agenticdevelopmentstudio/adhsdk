@@ -50,12 +50,16 @@ public protocol APIProtocol: Sendable {
     func getV1AccessRoleAssignments(_ input: Operations.GetV1AccessRoleAssignments.Input) async throws -> Operations.GetV1AccessRoleAssignments.Output
     /// Grant (or replace) a role for a subject at a scope — requires M + no-escalation
     ///
+    /// A product admin replacing an `admin` seat, their own or another, is 422 with code `admin_seat_protected`.
+    ///
     /// Replaces PUT /access/assignments.
     ///
     /// - Remark: HTTP `POST /v1/access/role_assignments`.
     /// - Remark: Generated from `#/paths//v1/access/role_assignments/post(postV1AccessRoleAssignments)`.
     func postV1AccessRoleAssignments(_ input: Operations.PostV1AccessRoleAssignments.Input) async throws -> Operations.PostV1AccessRoleAssignments.Output
     /// Revoke an assignment (requires M at its scope)
+    ///
+    /// A product admin revoking an `admin` seat, their own or another, is 422 with code `admin_seat_protected`.
     ///
     /// Replaces DELETE /access/assignments/{id}.
     ///
@@ -362,6 +366,31 @@ public protocol APIProtocol: Sendable {
     /// - Remark: HTTP `POST /v1/admin_notes`.
     /// - Remark: Generated from `#/paths//v1/admin_notes/post(postV1AdminNotes)`.
     func postV1AdminNotes(_ input: Operations.PostV1AdminNotes.Input) async throws -> Operations.PostV1AdminNotes.Output
+    /// A product's admin site and whether admin sites are switched on
+    ///
+    /// Replaces GET /ecosystem/admin-site.
+    ///
+    /// - Remark: HTTP `GET /v1/admin_site`.
+    /// - Remark: Generated from `#/paths//v1/admin_site/get(getV1AdminSite)`.
+    func getV1AdminSite(_ input: Operations.GetV1AdminSite.Input) async throws -> Operations.GetV1AdminSite.Output
+    /// Set up or move a product's admin site
+    ///
+    /// Makes (or reuses, or revives) the product's staff `admin-site` application and gives it a login registration whose one return origin is `https://<host>` and whose one redirect is `https://<host>/auth/callback`. 409 when the product has its own `admin-site` application, or another product's site already uses the host.
+    ///
+    /// Replaces PUT /ecosystem/admin-site.
+    ///
+    /// - Remark: HTTP `POST /v1/admin_site`.
+    /// - Remark: Generated from `#/paths//v1/admin_site/post(postV1AdminSite)`.
+    func postV1AdminSite(_ input: Operations.PostV1AdminSite.Input) async throws -> Operations.PostV1AdminSite.Output
+    /// Take a product's admin site down
+    ///
+    /// Removes the site, soft-deletes its application and removes its registration.
+    ///
+    /// Replaces DELETE /ecosystem/admin-site.
+    ///
+    /// - Remark: HTTP `DELETE /v1/admin_site`.
+    /// - Remark: Generated from `#/paths//v1/admin_site/delete(deleteV1AdminSite)`.
+    func deleteV1AdminSite(_ input: Operations.DeleteV1AdminSite.Input) async throws -> Operations.DeleteV1AdminSite.Output
     /// List the caller's LLM provider connections
     ///
     /// Replaces GET /persona/services.
@@ -4936,7 +4965,7 @@ public protocol APIProtocol: Sendable {
     func deleteV1OauthProvidersById(_ input: Operations.DeleteV1OauthProvidersById.Input) async throws -> Operations.DeleteV1OauthProvidersById.Output
     /// Set the set an offer sells
     ///
-    /// null stops the offer granting a set. Refused (rule 9) when the set conflicts with another live offer's set; a personal set is never sold (400).
+    /// null stops the offer granting a set. Refused (rule 9) when the set conflicts with another live offer's set; a personal set is never sold (400). A product admin, signed in through the product's admin site, is refused (403): what an offer sells is billing.
     ///
     /// Replaces PUT /sets/offers/{offerId}.
     ///
@@ -5673,6 +5702,63 @@ public protocol APIProtocol: Sendable {
     /// - Remark: HTTP `DELETE /v1/processing/worker_tokens/{id}`.
     /// - Remark: Generated from `#/paths//v1/processing/worker_tokens/{id}/delete(deleteV1ProcessingWorkerTokensById)`.
     func deleteV1ProcessingWorkerTokensById(_ input: Operations.DeleteV1ProcessingWorkerTokensById.Input) async throws -> Operations.DeleteV1ProcessingWorkerTokensById.Output
+    /// A product's live customers, newest first, 50 a page
+    ///
+    /// Product admins only; a manager is 403.
+    ///
+    /// Replaces GET /product-admin/customers.
+    ///
+    /// - Remark: HTTP `GET /v1/product_admin/customers`.
+    /// - Remark: Generated from `#/paths//v1/product_admin/customers/get(getV1ProductAdminCustomers)`.
+    func getV1ProductAdminCustomers(_ input: Operations.GetV1ProductAdminCustomers.Input) async throws -> Operations.GetV1ProductAdminCustomers.Output
+    /// Delete a customer
+    ///
+    /// Tombstones the customer and revokes their tokens and sessions. 409 while they still own data; 422 for the caller or another admin.
+    ///
+    /// Replaces DELETE /product-admin/customers/{id}.
+    ///
+    /// - Remark: HTTP `DELETE /v1/product_admin/customers/{id}`.
+    /// - Remark: Generated from `#/paths//v1/product_admin/customers/{id}/delete(deleteV1ProductAdminCustomersById)`.
+    func deleteV1ProductAdminCustomersById(_ input: Operations.DeleteV1ProductAdminCustomersById.Input) async throws -> Operations.DeleteV1ProductAdminCustomersById.Output
+    /// Pause a customer
+    ///
+    /// Refuses their sign-in and every request from the next one, and revokes their sign-in sessions. 422 for the caller or another admin.
+    ///
+    /// Replaces POST /product-admin/customers/{id}/pause.
+    ///
+    /// - Remark: HTTP `POST /v1/product_admin/customers/{id}/pause`.
+    /// - Remark: Generated from `#/paths//v1/product_admin/customers/{id}/pause/post(postV1ProductAdminCustomersByIdPause)`.
+    func postV1ProductAdminCustomersByIdPause(_ input: Operations.PostV1ProductAdminCustomersByIdPause.Input) async throws -> Operations.PostV1ProductAdminCustomersByIdPause.Output
+    /// Lift a customer's pause
+    ///
+    /// Replaces DELETE /product-admin/customers/{id}/pause.
+    ///
+    /// - Remark: HTTP `DELETE /v1/product_admin/customers/{id}/pause`.
+    /// - Remark: Generated from `#/paths//v1/product_admin/customers/{id}/pause/delete(deleteV1ProductAdminCustomersByIdPause)`.
+    func deleteV1ProductAdminCustomersByIdPause(_ input: Operations.DeleteV1ProductAdminCustomersByIdPause.Input) async throws -> Operations.DeleteV1ProductAdminCustomersByIdPause.Output
+    /// Set a customer's storage quota
+    ///
+    /// Replaces PUT /product-admin/customers/{id}/quota.
+    ///
+    /// - Remark: HTTP `POST /v1/product_admin/customers/{id}/quota`.
+    /// - Remark: Generated from `#/paths//v1/product_admin/customers/{id}/quota/post(postV1ProductAdminCustomersByIdQuota)`.
+    func postV1ProductAdminCustomersByIdQuota(_ input: Operations.PostV1ProductAdminCustomersByIdQuota.Input) async throws -> Operations.PostV1ProductAdminCustomersByIdQuota.Output
+    /// A product's totals
+    ///
+    /// Counts only. Admits a manager of the product and a product admin alike.
+    ///
+    /// Replaces GET /product-admin/totals.
+    ///
+    /// - Remark: HTTP `GET /v1/product_admin/totals`.
+    /// - Remark: Generated from `#/paths//v1/product_admin/totals/get(getV1ProductAdminTotals)`.
+    func getV1ProductAdminTotals(_ input: Operations.GetV1ProductAdminTotals.Input) async throws -> Operations.GetV1ProductAdminTotals.Output
+    /// Which product an admin site host belongs to (unauthenticated)
+    ///
+    /// Replaces GET /public/product-admin-sites/{host}.
+    ///
+    /// - Remark: HTTP `GET /v1/product_admin_sites/{host}`.
+    /// - Remark: Generated from `#/paths//v1/product_admin_sites/{host}/get(getV1ProductAdminSitesByHost)`.
+    func getV1ProductAdminSitesByHost(_ input: Operations.GetV1ProductAdminSitesByHost.Input) async throws -> Operations.GetV1ProductAdminSitesByHost.Output
     /// List the programs in the caller's reach (non-deleted, by name)
     ///
     /// Ordered by name, case-folded — a program list is a picker, and a byte-wise sort would put "Zebra" before "apple". NOT by date: most programs have none.
@@ -6402,7 +6488,7 @@ public protocol APIProtocol: Sendable {
     func postV1SetsByIdMembers(_ input: Operations.PostV1SetsByIdMembers.Input) async throws -> Operations.PostV1SetsByIdMembers.Output
     /// Replace a set's permissions and limits
     ///
-    /// Every key must be one the catalog's `setEntries` declares, with a value of its type (400 otherwise).
+    /// Every key must be one the catalog's `setEntries` declares, with a value of its type (400 otherwise). A product admin, signed in through the product's admin site, may not write `usage.tier`, nor a `storage.quota_bytes` above the default quota (403).
     ///
     /// Replaces PUT /sets/{id}/values.
     ///
@@ -7614,6 +7700,8 @@ extension APIProtocol {
     }
     /// Grant (or replace) a role for a subject at a scope — requires M + no-escalation
     ///
+    /// A product admin replacing an `admin` seat, their own or another, is 422 with code `admin_seat_protected`.
+    ///
     /// Replaces PUT /access/assignments.
     ///
     /// - Remark: HTTP `POST /v1/access/role_assignments`.
@@ -7630,6 +7718,8 @@ extension APIProtocol {
         ))
     }
     /// Revoke an assignment (requires M at its scope)
+    ///
+    /// A product admin revoking an `admin` seat, their own or another, is 422 with code `admin_seat_protected`.
     ///
     /// Replaces DELETE /access/assignments/{id}.
     ///
@@ -8281,6 +8371,49 @@ extension APIProtocol {
             headers: headers,
             body: body
         ))
+    }
+    /// A product's admin site and whether admin sites are switched on
+    ///
+    /// Replaces GET /ecosystem/admin-site.
+    ///
+    /// - Remark: HTTP `GET /v1/admin_site`.
+    /// - Remark: Generated from `#/paths//v1/admin_site/get(getV1AdminSite)`.
+    public func getV1AdminSite(
+        query: Operations.GetV1AdminSite.Input.Query = .init(),
+        headers: Operations.GetV1AdminSite.Input.Headers = .init()
+    ) async throws -> Operations.GetV1AdminSite.Output {
+        try await getV1AdminSite(Operations.GetV1AdminSite.Input(
+            query: query,
+            headers: headers
+        ))
+    }
+    /// Set up or move a product's admin site
+    ///
+    /// Makes (or reuses, or revives) the product's staff `admin-site` application and gives it a login registration whose one return origin is `https://<host>` and whose one redirect is `https://<host>/auth/callback`. 409 when the product has its own `admin-site` application, or another product's site already uses the host.
+    ///
+    /// Replaces PUT /ecosystem/admin-site.
+    ///
+    /// - Remark: HTTP `POST /v1/admin_site`.
+    /// - Remark: Generated from `#/paths//v1/admin_site/post(postV1AdminSite)`.
+    public func postV1AdminSite(
+        headers: Operations.PostV1AdminSite.Input.Headers = .init(),
+        body: Operations.PostV1AdminSite.Input.Body
+    ) async throws -> Operations.PostV1AdminSite.Output {
+        try await postV1AdminSite(Operations.PostV1AdminSite.Input(
+            headers: headers,
+            body: body
+        ))
+    }
+    /// Take a product's admin site down
+    ///
+    /// Removes the site, soft-deletes its application and removes its registration.
+    ///
+    /// Replaces DELETE /ecosystem/admin-site.
+    ///
+    /// - Remark: HTTP `DELETE /v1/admin_site`.
+    /// - Remark: Generated from `#/paths//v1/admin_site/delete(deleteV1AdminSite)`.
+    public func deleteV1AdminSite(headers: Operations.DeleteV1AdminSite.Input.Headers = .init()) async throws -> Operations.DeleteV1AdminSite.Output {
+        try await deleteV1AdminSite(Operations.DeleteV1AdminSite.Input(headers: headers))
     }
     /// List the caller's LLM provider connections
     ///
@@ -18248,7 +18381,7 @@ extension APIProtocol {
     }
     /// Set the set an offer sells
     ///
-    /// null stops the offer granting a set. Refused (rule 9) when the set conflicts with another live offer's set; a personal set is never sold (400).
+    /// null stops the offer granting a set. Refused (rule 9) when the set conflicts with another live offer's set; a personal set is never sold (400). A product admin, signed in through the product's admin site, is refused (403): what an offer sells is billing.
     ///
     /// Replaces PUT /sets/offers/{offerId}.
     ///
@@ -19802,6 +19935,125 @@ extension APIProtocol {
     ) async throws -> Operations.DeleteV1ProcessingWorkerTokensById.Output {
         try await deleteV1ProcessingWorkerTokensById(Operations.DeleteV1ProcessingWorkerTokensById.Input(
             path: path,
+            headers: headers
+        ))
+    }
+    /// A product's live customers, newest first, 50 a page
+    ///
+    /// Product admins only; a manager is 403.
+    ///
+    /// Replaces GET /product-admin/customers.
+    ///
+    /// - Remark: HTTP `GET /v1/product_admin/customers`.
+    /// - Remark: Generated from `#/paths//v1/product_admin/customers/get(getV1ProductAdminCustomers)`.
+    public func getV1ProductAdminCustomers(
+        query: Operations.GetV1ProductAdminCustomers.Input.Query = .init(),
+        headers: Operations.GetV1ProductAdminCustomers.Input.Headers = .init()
+    ) async throws -> Operations.GetV1ProductAdminCustomers.Output {
+        try await getV1ProductAdminCustomers(Operations.GetV1ProductAdminCustomers.Input(
+            query: query,
+            headers: headers
+        ))
+    }
+    /// Delete a customer
+    ///
+    /// Tombstones the customer and revokes their tokens and sessions. 409 while they still own data; 422 for the caller or another admin.
+    ///
+    /// Replaces DELETE /product-admin/customers/{id}.
+    ///
+    /// - Remark: HTTP `DELETE /v1/product_admin/customers/{id}`.
+    /// - Remark: Generated from `#/paths//v1/product_admin/customers/{id}/delete(deleteV1ProductAdminCustomersById)`.
+    public func deleteV1ProductAdminCustomersById(
+        path: Operations.DeleteV1ProductAdminCustomersById.Input.Path,
+        headers: Operations.DeleteV1ProductAdminCustomersById.Input.Headers = .init()
+    ) async throws -> Operations.DeleteV1ProductAdminCustomersById.Output {
+        try await deleteV1ProductAdminCustomersById(Operations.DeleteV1ProductAdminCustomersById.Input(
+            path: path,
+            headers: headers
+        ))
+    }
+    /// Pause a customer
+    ///
+    /// Refuses their sign-in and every request from the next one, and revokes their sign-in sessions. 422 for the caller or another admin.
+    ///
+    /// Replaces POST /product-admin/customers/{id}/pause.
+    ///
+    /// - Remark: HTTP `POST /v1/product_admin/customers/{id}/pause`.
+    /// - Remark: Generated from `#/paths//v1/product_admin/customers/{id}/pause/post(postV1ProductAdminCustomersByIdPause)`.
+    public func postV1ProductAdminCustomersByIdPause(
+        path: Operations.PostV1ProductAdminCustomersByIdPause.Input.Path,
+        headers: Operations.PostV1ProductAdminCustomersByIdPause.Input.Headers = .init(),
+        body: Operations.PostV1ProductAdminCustomersByIdPause.Input.Body
+    ) async throws -> Operations.PostV1ProductAdminCustomersByIdPause.Output {
+        try await postV1ProductAdminCustomersByIdPause(Operations.PostV1ProductAdminCustomersByIdPause.Input(
+            path: path,
+            headers: headers,
+            body: body
+        ))
+    }
+    /// Lift a customer's pause
+    ///
+    /// Replaces DELETE /product-admin/customers/{id}/pause.
+    ///
+    /// - Remark: HTTP `DELETE /v1/product_admin/customers/{id}/pause`.
+    /// - Remark: Generated from `#/paths//v1/product_admin/customers/{id}/pause/delete(deleteV1ProductAdminCustomersByIdPause)`.
+    public func deleteV1ProductAdminCustomersByIdPause(
+        path: Operations.DeleteV1ProductAdminCustomersByIdPause.Input.Path,
+        headers: Operations.DeleteV1ProductAdminCustomersByIdPause.Input.Headers = .init()
+    ) async throws -> Operations.DeleteV1ProductAdminCustomersByIdPause.Output {
+        try await deleteV1ProductAdminCustomersByIdPause(Operations.DeleteV1ProductAdminCustomersByIdPause.Input(
+            path: path,
+            headers: headers
+        ))
+    }
+    /// Set a customer's storage quota
+    ///
+    /// Replaces PUT /product-admin/customers/{id}/quota.
+    ///
+    /// - Remark: HTTP `POST /v1/product_admin/customers/{id}/quota`.
+    /// - Remark: Generated from `#/paths//v1/product_admin/customers/{id}/quota/post(postV1ProductAdminCustomersByIdQuota)`.
+    public func postV1ProductAdminCustomersByIdQuota(
+        path: Operations.PostV1ProductAdminCustomersByIdQuota.Input.Path,
+        headers: Operations.PostV1ProductAdminCustomersByIdQuota.Input.Headers = .init(),
+        body: Operations.PostV1ProductAdminCustomersByIdQuota.Input.Body
+    ) async throws -> Operations.PostV1ProductAdminCustomersByIdQuota.Output {
+        try await postV1ProductAdminCustomersByIdQuota(Operations.PostV1ProductAdminCustomersByIdQuota.Input(
+            path: path,
+            headers: headers,
+            body: body
+        ))
+    }
+    /// A product's totals
+    ///
+    /// Counts only. Admits a manager of the product and a product admin alike.
+    ///
+    /// Replaces GET /product-admin/totals.
+    ///
+    /// - Remark: HTTP `GET /v1/product_admin/totals`.
+    /// - Remark: Generated from `#/paths//v1/product_admin/totals/get(getV1ProductAdminTotals)`.
+    public func getV1ProductAdminTotals(
+        query: Operations.GetV1ProductAdminTotals.Input.Query = .init(),
+        headers: Operations.GetV1ProductAdminTotals.Input.Headers = .init()
+    ) async throws -> Operations.GetV1ProductAdminTotals.Output {
+        try await getV1ProductAdminTotals(Operations.GetV1ProductAdminTotals.Input(
+            query: query,
+            headers: headers
+        ))
+    }
+    /// Which product an admin site host belongs to (unauthenticated)
+    ///
+    /// Replaces GET /public/product-admin-sites/{host}.
+    ///
+    /// - Remark: HTTP `GET /v1/product_admin_sites/{host}`.
+    /// - Remark: Generated from `#/paths//v1/product_admin_sites/{host}/get(getV1ProductAdminSitesByHost)`.
+    public func getV1ProductAdminSitesByHost(
+        path: Operations.GetV1ProductAdminSitesByHost.Input.Path,
+        query: Operations.GetV1ProductAdminSitesByHost.Input.Query = .init(),
+        headers: Operations.GetV1ProductAdminSitesByHost.Input.Headers = .init()
+    ) async throws -> Operations.GetV1ProductAdminSitesByHost.Output {
+        try await getV1ProductAdminSitesByHost(Operations.GetV1ProductAdminSitesByHost.Input(
+            path: path,
+            query: query,
             headers: headers
         ))
     }
@@ -21418,7 +21670,7 @@ extension APIProtocol {
     }
     /// Replace a set's permissions and limits
     ///
-    /// Every key must be one the catalog's `setEntries` declares, with a value of its type (400 otherwise).
+    /// Every key must be one the catalog's `setEntries` declares, with a value of its type (400 otherwise). A product admin, signed in through the product's admin site, may not write `usage.tier`, nor a `storage.quota_bytes` above the default quota (403).
     ///
     /// Replaces PUT /sets/{id}/values.
     ///
@@ -50578,6 +50830,469 @@ public enum Components {
                 case setId = "set_id"
             }
         }
+        /// - Remark: Generated from `#/components/schemas/AdminSite`.
+        public struct AdminSite: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/AdminSite/id`.
+            public var id: Swift.String
+            /// The lower-case host the site answers on.
+            ///
+            /// - Remark: Generated from `#/components/schemas/AdminSite/host`.
+            public var host: Swift.String
+            /// The product's staff `admin-site` application.
+            ///
+            /// - Remark: Generated from `#/components/schemas/AdminSite/application_id`.
+            public var applicationId: Swift.String
+            /// That application's login registration.
+            ///
+            /// - Remark: Generated from `#/components/schemas/AdminSite/client_id`.
+            public var clientId: Swift.String
+            /// Unix timestamp, in seconds.
+            ///
+            /// - Remark: Generated from `#/components/schemas/AdminSite/created`.
+            public var created: Swift.Int
+            /// Unix timestamp, in seconds.
+            ///
+            /// - Remark: Generated from `#/components/schemas/AdminSite/updated`.
+            public var updated: Swift.Int
+            /// Creates a new `AdminSite`.
+            ///
+            /// - Parameters:
+            ///   - id:
+            ///   - host: The lower-case host the site answers on.
+            ///   - applicationId: The product's staff `admin-site` application.
+            ///   - clientId: That application's login registration.
+            ///   - created: Unix timestamp, in seconds.
+            ///   - updated: Unix timestamp, in seconds.
+            public init(
+                id: Swift.String,
+                host: Swift.String,
+                applicationId: Swift.String,
+                clientId: Swift.String,
+                created: Swift.Int,
+                updated: Swift.Int
+            ) {
+                self.id = id
+                self.host = host
+                self.applicationId = applicationId
+                self.clientId = clientId
+                self.created = created
+                self.updated = updated
+            }
+            public enum CodingKeys: String, CodingKey {
+                case id
+                case host
+                case applicationId = "application_id"
+                case clientId = "client_id"
+                case created
+                case updated
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/AdminSiteState`.
+        public struct AdminSiteState: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/AdminSiteState/site`.
+            public struct SitePayload: Codable, Hashable, Sendable {
+                /// - Remark: Generated from `#/components/schemas/AdminSiteState/site/value1`.
+                public var value1: Components.Schemas.AdminSite
+                /// Creates a new `SitePayload`.
+                ///
+                /// - Parameters:
+                ///   - value1:
+                public init(value1: Components.Schemas.AdminSite) {
+                    self.value1 = value1
+                }
+                public init(from decoder: any Swift.Decoder) throws {
+                    self.value1 = try .init(from: decoder)
+                }
+                public func encode(to encoder: any Swift.Encoder) throws {
+                    try self.value1.encode(to: encoder)
+                }
+            }
+            /// - Remark: Generated from `#/components/schemas/AdminSiteState/site`.
+            public var site: Components.Schemas.AdminSiteState.SitePayload?
+            /// Whether the `product_admin_site` switch is on (sites answer and sign in).
+            ///
+            /// - Remark: Generated from `#/components/schemas/AdminSiteState/enabled`.
+            public var enabled: Swift.Bool
+            /// Creates a new `AdminSiteState`.
+            ///
+            /// - Parameters:
+            ///   - site:
+            ///   - enabled: Whether the `product_admin_site` switch is on (sites answer and sign in).
+            public init(
+                site: Components.Schemas.AdminSiteState.SitePayload? = nil,
+                enabled: Swift.Bool
+            ) {
+                self.site = site
+                self.enabled = enabled
+            }
+            public enum CodingKeys: String, CodingKey {
+                case site
+                case enabled
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/AdminSitePut`.
+        public struct AdminSitePut: Codable, Hashable, Sendable {
+            /// A DNS name with at least two labels; no scheme, port or path.
+            ///
+            /// - Remark: Generated from `#/components/schemas/AdminSitePut/host`.
+            public var host: Swift.String
+            /// Creates a new `AdminSitePut`.
+            ///
+            /// - Parameters:
+            ///   - host: A DNS name with at least two labels; no scheme, port or path.
+            public init(host: Swift.String) {
+                self.host = host
+            }
+            public enum CodingKeys: String, CodingKey {
+                case host
+            }
+            public init(from decoder: any Swift.Decoder) throws {
+                let container = try decoder.container(keyedBy: CodingKeys.self)
+                self.host = try container.decode(
+                    Swift.String.self,
+                    forKey: .host
+                )
+                try decoder.ensureNoAdditionalProperties(knownKeys: [
+                    "host"
+                ])
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/ProductAdminSiteLookup`.
+        public struct ProductAdminSiteLookup: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/ProductAdminSiteLookup/ecosystem_id`.
+            public var ecosystemId: Swift.String
+            /// The product's name.
+            ///
+            /// - Remark: Generated from `#/components/schemas/ProductAdminSiteLookup/name`.
+            public var name: Swift.String
+            /// The client the site starts a sign-in with.
+            ///
+            /// - Remark: Generated from `#/components/schemas/ProductAdminSiteLookup/client_id`.
+            public var clientId: Swift.String
+            /// The Hydra issuer URL.
+            ///
+            /// - Remark: Generated from `#/components/schemas/ProductAdminSiteLookup/issuer`.
+            public var issuer: Swift.String?
+            /// Creates a new `ProductAdminSiteLookup`.
+            ///
+            /// - Parameters:
+            ///   - ecosystemId:
+            ///   - name: The product's name.
+            ///   - clientId: The client the site starts a sign-in with.
+            ///   - issuer: The Hydra issuer URL.
+            public init(
+                ecosystemId: Swift.String,
+                name: Swift.String,
+                clientId: Swift.String,
+                issuer: Swift.String? = nil
+            ) {
+                self.ecosystemId = ecosystemId
+                self.name = name
+                self.clientId = clientId
+                self.issuer = issuer
+            }
+            public enum CodingKeys: String, CodingKey {
+                case ecosystemId = "ecosystem_id"
+                case name
+                case clientId = "client_id"
+                case issuer
+            }
+            public init(from decoder: any Swift.Decoder) throws {
+                let container = try decoder.container(keyedBy: CodingKeys.self)
+                self.ecosystemId = try container.decode(
+                    Swift.String.self,
+                    forKey: .ecosystemId
+                )
+                self.name = try container.decode(
+                    Swift.String.self,
+                    forKey: .name
+                )
+                self.clientId = try container.decode(
+                    Swift.String.self,
+                    forKey: .clientId
+                )
+                self.issuer = try container.decodeIfPresent(
+                    Swift.String.self,
+                    forKey: .issuer
+                )
+                try decoder.ensureNoAdditionalProperties(knownKeys: [
+                    "ecosystem_id",
+                    "name",
+                    "client_id",
+                    "issuer"
+                ])
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/ProductTotals`.
+        public struct ProductTotals: Codable, Hashable, Sendable {
+            /// Live customers.
+            ///
+            /// - Remark: Generated from `#/components/schemas/ProductTotals/customers`.
+            public var customers: Swift.Int
+            /// Customers made in the last 7 days.
+            ///
+            /// - Remark: Generated from `#/components/schemas/ProductTotals/new7d`.
+            public var new7d: Swift.Int
+            /// Customers made in the last 30 days.
+            ///
+            /// - Remark: Generated from `#/components/schemas/ProductTotals/new30d`.
+            public var new30d: Swift.Int
+            /// Customers with usage in the last 7 days.
+            ///
+            /// - Remark: Generated from `#/components/schemas/ProductTotals/active7d`.
+            public var active7d: Swift.Int
+            /// Customers with usage in the last 30 days.
+            ///
+            /// - Remark: Generated from `#/components/schemas/ProductTotals/active30d`.
+            public var active30d: Swift.Int
+            /// Bytes in the customers' ready attachments.
+            ///
+            /// - Remark: Generated from `#/components/schemas/ProductTotals/storage_bytes`.
+            public var storageBytes: Swift.Int
+            /// Invitations sent and not yet used.
+            ///
+            /// - Remark: Generated from `#/components/schemas/ProductTotals/pending_invitations`.
+            public var pendingInvitations: Swift.Int
+            /// Requests for an invitation.
+            ///
+            /// - Remark: Generated from `#/components/schemas/ProductTotals/pending_requests`.
+            public var pendingRequests: Swift.Int
+            /// Creates a new `ProductTotals`.
+            ///
+            /// - Parameters:
+            ///   - customers: Live customers.
+            ///   - new7d: Customers made in the last 7 days.
+            ///   - new30d: Customers made in the last 30 days.
+            ///   - active7d: Customers with usage in the last 7 days.
+            ///   - active30d: Customers with usage in the last 30 days.
+            ///   - storageBytes: Bytes in the customers' ready attachments.
+            ///   - pendingInvitations: Invitations sent and not yet used.
+            ///   - pendingRequests: Requests for an invitation.
+            public init(
+                customers: Swift.Int,
+                new7d: Swift.Int,
+                new30d: Swift.Int,
+                active7d: Swift.Int,
+                active30d: Swift.Int,
+                storageBytes: Swift.Int,
+                pendingInvitations: Swift.Int,
+                pendingRequests: Swift.Int
+            ) {
+                self.customers = customers
+                self.new7d = new7d
+                self.new30d = new30d
+                self.active7d = active7d
+                self.active30d = active30d
+                self.storageBytes = storageBytes
+                self.pendingInvitations = pendingInvitations
+                self.pendingRequests = pendingRequests
+            }
+            public enum CodingKeys: String, CodingKey {
+                case customers
+                case new7d
+                case new30d
+                case active7d
+                case active30d
+                case storageBytes = "storage_bytes"
+                case pendingInvitations = "pending_invitations"
+                case pendingRequests = "pending_requests"
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/ProductCustomerRole`.
+        public struct ProductCustomerRole: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/ProductCustomerRole/id`.
+            public var id: Swift.String
+            /// - Remark: Generated from `#/components/schemas/ProductCustomerRole/slug`.
+            public var slug: Swift.String
+            /// - Remark: Generated from `#/components/schemas/ProductCustomerRole/name`.
+            public var name: Swift.String
+            /// Creates a new `ProductCustomerRole`.
+            ///
+            /// - Parameters:
+            ///   - id:
+            ///   - slug:
+            ///   - name:
+            public init(
+                id: Swift.String,
+                slug: Swift.String,
+                name: Swift.String
+            ) {
+                self.id = id
+                self.slug = slug
+                self.name = name
+            }
+            public enum CodingKeys: String, CodingKey {
+                case id
+                case slug
+                case name
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/ProductCustomer`.
+        public struct ProductCustomer: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/ProductCustomer/id`.
+            public var id: Swift.String
+            /// - Remark: Generated from `#/components/schemas/ProductCustomer/email`.
+            public var email: Swift.String?
+            /// - Remark: Generated from `#/components/schemas/ProductCustomer/display_name`.
+            public var displayName: Swift.String?
+            /// - Remark: Generated from `#/components/schemas/ProductCustomer/avatar_url`.
+            public var avatarUrl: Swift.String
+            /// - Remark: Generated from `#/components/schemas/ProductCustomer/external_id`.
+            public var externalId: Swift.String?
+            /// Unix timestamp, in seconds.
+            ///
+            /// - Remark: Generated from `#/components/schemas/ProductCustomer/created`.
+            public var created: Swift.Int
+            /// The last UTC day with usage in this product.
+            ///
+            /// - Remark: Generated from `#/components/schemas/ProductCustomer/last_active_day`.
+            public var lastActiveDay: Swift.String?
+            /// The product roles held product-wide.
+            ///
+            /// - Remark: Generated from `#/components/schemas/ProductCustomer/roles`.
+            public var roles: [Components.Schemas.ProductCustomerRole]
+            /// The ids of the sets granted and not revoked.
+            ///
+            /// - Remark: Generated from `#/components/schemas/ProductCustomer/sets`.
+            public var sets: [Swift.String]
+            /// - Remark: Generated from `#/components/schemas/ProductCustomer/storage_bytes`.
+            public var storageBytes: Swift.Int
+            /// - Remark: Generated from `#/components/schemas/ProductCustomer/quota_bytes`.
+            public var quotaBytes: Swift.Int
+            /// - Remark: Generated from `#/components/schemas/ProductCustomer/paused`.
+            public var paused: Swift.Bool
+            /// Creates a new `ProductCustomer`.
+            ///
+            /// - Parameters:
+            ///   - id:
+            ///   - email:
+            ///   - displayName:
+            ///   - avatarUrl:
+            ///   - externalId:
+            ///   - created: Unix timestamp, in seconds.
+            ///   - lastActiveDay: The last UTC day with usage in this product.
+            ///   - roles: The product roles held product-wide.
+            ///   - sets: The ids of the sets granted and not revoked.
+            ///   - storageBytes:
+            ///   - quotaBytes:
+            ///   - paused:
+            public init(
+                id: Swift.String,
+                email: Swift.String? = nil,
+                displayName: Swift.String? = nil,
+                avatarUrl: Swift.String,
+                externalId: Swift.String? = nil,
+                created: Swift.Int,
+                lastActiveDay: Swift.String? = nil,
+                roles: [Components.Schemas.ProductCustomerRole],
+                sets: [Swift.String],
+                storageBytes: Swift.Int,
+                quotaBytes: Swift.Int,
+                paused: Swift.Bool
+            ) {
+                self.id = id
+                self.email = email
+                self.displayName = displayName
+                self.avatarUrl = avatarUrl
+                self.externalId = externalId
+                self.created = created
+                self.lastActiveDay = lastActiveDay
+                self.roles = roles
+                self.sets = sets
+                self.storageBytes = storageBytes
+                self.quotaBytes = quotaBytes
+                self.paused = paused
+            }
+            public enum CodingKeys: String, CodingKey {
+                case id
+                case email
+                case displayName = "display_name"
+                case avatarUrl = "avatar_url"
+                case externalId = "external_id"
+                case created
+                case lastActiveDay = "last_active_day"
+                case roles
+                case sets
+                case storageBytes = "storage_bytes"
+                case quotaBytes = "quota_bytes"
+                case paused
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/ProductCustomerPage`.
+        public struct ProductCustomerPage: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/ProductCustomerPage/items`.
+            public var items: [Components.Schemas.ProductCustomer]
+            /// - Remark: Generated from `#/components/schemas/ProductCustomerPage/next_cursor`.
+            public var nextCursor: Swift.String?
+            /// Creates a new `ProductCustomerPage`.
+            ///
+            /// - Parameters:
+            ///   - items:
+            ///   - nextCursor:
+            public init(
+                items: [Components.Schemas.ProductCustomer],
+                nextCursor: Swift.String? = nil
+            ) {
+                self.items = items
+                self.nextCursor = nextCursor
+            }
+            public enum CodingKeys: String, CodingKey {
+                case items
+                case nextCursor = "next_cursor"
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/ProductCustomerPause`.
+        public struct ProductCustomerPause: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/ProductCustomerPause/reason`.
+            public var reason: Swift.String?
+            /// Creates a new `ProductCustomerPause`.
+            ///
+            /// - Parameters:
+            ///   - reason:
+            public init(reason: Swift.String? = nil) {
+                self.reason = reason
+            }
+            public enum CodingKeys: String, CodingKey {
+                case reason
+            }
+            public init(from decoder: any Swift.Decoder) throws {
+                let container = try decoder.container(keyedBy: CodingKeys.self)
+                self.reason = try container.decodeIfPresent(
+                    Swift.String.self,
+                    forKey: .reason
+                )
+                try decoder.ensureNoAdditionalProperties(knownKeys: [
+                    "reason"
+                ])
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/ProductCustomerQuota`.
+        public struct ProductCustomerQuota: Codable, Hashable, Sendable {
+            /// At most the default quota (403 above it).
+            ///
+            /// - Remark: Generated from `#/components/schemas/ProductCustomerQuota/bytes`.
+            public var bytes: Swift.Int
+            /// Creates a new `ProductCustomerQuota`.
+            ///
+            /// - Parameters:
+            ///   - bytes: At most the default quota (403 above it).
+            public init(bytes: Swift.Int) {
+                self.bytes = bytes
+            }
+            public enum CodingKeys: String, CodingKey {
+                case bytes
+            }
+            public init(from decoder: any Swift.Decoder) throws {
+                let container = try decoder.container(keyedBy: CodingKeys.self)
+                self.bytes = try container.decode(
+                    Swift.Int.self,
+                    forKey: .bytes
+                )
+                try decoder.ensureNoAdditionalProperties(knownKeys: [
+                    "bytes"
+                ])
+            }
+        }
         /// - Remark: Generated from `#/components/schemas/TeamReachGrant`.
         public struct TeamReachGrant: Codable, Hashable, Sendable {
             /// - Remark: Generated from `#/components/schemas/TeamReachGrant/id`.
@@ -54072,7 +54787,7 @@ public enum Operations {
                 ///
                 /// - Remark: Generated from `#/paths/v1/access/effective_permissions/GET/query/workspace`.
                 public var workspace: Swift.String?
-                /// An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem (403 otherwise).
+                /// An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise).
                 ///
                 /// - Remark: Generated from `#/paths/v1/access/effective_permissions/GET/query/ecosystem`.
                 public var ecosystem: Swift.String?
@@ -54092,7 +54807,7 @@ public enum Operations {
                 ///
                 /// - Parameters:
                 ///   - workspace: The hub workspace (slug). Exactly one of `workspace` and `ecosystem`.
-                ///   - ecosystem: An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem (403 otherwise).
+                ///   - ecosystem: An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise).
                 ///   - feature:
                 ///   - subjectKind:
                 ///   - subjectId:
@@ -54492,7 +55207,7 @@ public enum Operations {
                 ///
                 /// - Remark: Generated from `#/paths/v1/access/features/GET/query/workspace`.
                 public var workspace: Swift.String?
-                /// An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem (403 otherwise).
+                /// An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise).
                 ///
                 /// - Remark: Generated from `#/paths/v1/access/features/GET/query/ecosystem`.
                 public var ecosystem: Swift.String?
@@ -54516,7 +55231,7 @@ public enum Operations {
                 ///
                 /// - Parameters:
                 ///   - workspace: The hub workspace (slug). Exactly one of `workspace` and `ecosystem`.
-                ///   - ecosystem: An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem (403 otherwise).
+                ///   - ecosystem: An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise).
                 ///   - limit: Page size, 1–100 (default 10).
                 ///   - startingAfter: Cursor: an object id; returns the page after it.
                 ///   - endingBefore: Cursor: an object id; returns the page before it.
@@ -54901,7 +55616,7 @@ public enum Operations {
                 ///
                 /// - Remark: Generated from `#/paths/v1/access/items/restore/POST/query/workspace`.
                 public var workspace: Swift.String?
-                /// An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem (403 otherwise).
+                /// An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise).
                 ///
                 /// - Remark: Generated from `#/paths/v1/access/items/restore/POST/query/ecosystem`.
                 public var ecosystem: Swift.String?
@@ -54909,7 +55624,7 @@ public enum Operations {
                 ///
                 /// - Parameters:
                 ///   - workspace: The hub workspace (slug). Exactly one of `workspace` and `ecosystem`.
-                ///   - ecosystem: An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem (403 otherwise).
+                ///   - ecosystem: An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise).
                 public init(
                     workspace: Swift.String? = nil,
                     ecosystem: Swift.String? = nil
@@ -55324,7 +56039,7 @@ public enum Operations {
                 ///
                 /// - Remark: Generated from `#/paths/v1/access/items/restrict/POST/query/workspace`.
                 public var workspace: Swift.String?
-                /// An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem (403 otherwise).
+                /// An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise).
                 ///
                 /// - Remark: Generated from `#/paths/v1/access/items/restrict/POST/query/ecosystem`.
                 public var ecosystem: Swift.String?
@@ -55332,7 +56047,7 @@ public enum Operations {
                 ///
                 /// - Parameters:
                 ///   - workspace: The hub workspace (slug). Exactly one of `workspace` and `ecosystem`.
-                ///   - ecosystem: An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem (403 otherwise).
+                ///   - ecosystem: An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise).
                 public init(
                     workspace: Swift.String? = nil,
                     ecosystem: Swift.String? = nil
@@ -55747,7 +56462,7 @@ public enum Operations {
                 ///
                 /// - Remark: Generated from `#/paths/v1/access/role_assignments/GET/query/workspace`.
                 public var workspace: Swift.String?
-                /// An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem (403 otherwise).
+                /// An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise).
                 ///
                 /// - Remark: Generated from `#/paths/v1/access/role_assignments/GET/query/ecosystem`.
                 public var ecosystem: Swift.String?
@@ -55763,7 +56478,7 @@ public enum Operations {
                 ///
                 /// - Parameters:
                 ///   - workspace: The hub workspace (slug). Exactly one of `workspace` and `ecosystem`.
-                ///   - ecosystem: An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem (403 otherwise).
+                ///   - ecosystem: An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise).
                 ///   - feature:
                 ///   - itemId:
                 ///   - expand_lbrack__rbrack_: Related objects to return in full instead of as an id. Up to four levels, e.g. `ecosystem_id`; on a list, `data.<field>`.
@@ -56142,6 +56857,8 @@ public enum Operations {
     }
     /// Grant (or replace) a role for a subject at a scope — requires M + no-escalation
     ///
+    /// A product admin replacing an `admin` seat, their own or another, is 422 with code `admin_seat_protected`.
+    ///
     /// Replaces PUT /access/assignments.
     ///
     /// - Remark: HTTP `POST /v1/access/role_assignments`.
@@ -56155,7 +56872,7 @@ public enum Operations {
                 ///
                 /// - Remark: Generated from `#/paths/v1/access/role_assignments/POST/query/workspace`.
                 public var workspace: Swift.String?
-                /// An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem (403 otherwise).
+                /// An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise).
                 ///
                 /// - Remark: Generated from `#/paths/v1/access/role_assignments/POST/query/ecosystem`.
                 public var ecosystem: Swift.String?
@@ -56163,7 +56880,7 @@ public enum Operations {
                 ///
                 /// - Parameters:
                 ///   - workspace: The hub workspace (slug). Exactly one of `workspace` and `ecosystem`.
-                ///   - ecosystem: An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem (403 otherwise).
+                ///   - ecosystem: An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise).
                 public init(
                     workspace: Swift.String? = nil,
                     ecosystem: Swift.String? = nil
@@ -56558,6 +57275,57 @@ public enum Operations {
                     }
                 }
             }
+            public struct UnprocessableContent: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/access/role_assignments/POST/responses/422/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/access/role_assignments/POST/responses/422/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostV1AccessRoleAssignments.Output.UnprocessableContent.Body
+                /// Creates a new `UnprocessableContent`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostV1AccessRoleAssignments.Output.UnprocessableContent.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/access/role_assignments/post(postV1AccessRoleAssignments)/responses/422`.
+            ///
+            /// HTTP response code: `422 unprocessableContent`.
+            case unprocessableContent(Operations.PostV1AccessRoleAssignments.Output.UnprocessableContent)
+            /// The associated value of the enum case if `self` is `.unprocessableContent`.
+            ///
+            /// - Throws: An error if `self` is not `.unprocessableContent`.
+            /// - SeeAlso: `.unprocessableContent`.
+            public var unprocessableContent: Operations.PostV1AccessRoleAssignments.Output.UnprocessableContent {
+                get throws {
+                    switch self {
+                    case let .unprocessableContent(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "unprocessableContent",
+                            response: self
+                        )
+                    }
+                }
+            }
             /// Undocumented response.
             ///
             /// A response with a code that is not documented in the OpenAPI document.
@@ -56591,6 +57359,8 @@ public enum Operations {
     }
     /// Revoke an assignment (requires M at its scope)
     ///
+    /// A product admin revoking an `admin` seat, their own or another, is 422 with code `admin_seat_protected`.
+    ///
     /// Replaces DELETE /access/assignments/{id}.
     ///
     /// - Remark: HTTP `DELETE /v1/access/role_assignments/{id}`.
@@ -56617,7 +57387,7 @@ public enum Operations {
                 ///
                 /// - Remark: Generated from `#/paths/v1/access/role_assignments/{id}/DELETE/query/workspace`.
                 public var workspace: Swift.String?
-                /// An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem (403 otherwise).
+                /// An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise).
                 ///
                 /// - Remark: Generated from `#/paths/v1/access/role_assignments/{id}/DELETE/query/ecosystem`.
                 public var ecosystem: Swift.String?
@@ -56625,7 +57395,7 @@ public enum Operations {
                 ///
                 /// - Parameters:
                 ///   - workspace: The hub workspace (slug). Exactly one of `workspace` and `ecosystem`.
-                ///   - ecosystem: An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem (403 otherwise).
+                ///   - ecosystem: An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise).
                 public init(
                     workspace: Swift.String? = nil,
                     ecosystem: Swift.String? = nil
@@ -56868,6 +57638,57 @@ public enum Operations {
                     }
                 }
             }
+            public struct UnprocessableContent: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/access/role_assignments/{id}/DELETE/responses/422/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/access/role_assignments/{id}/DELETE/responses/422/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.DeleteV1AccessRoleAssignmentsById.Output.UnprocessableContent.Body
+                /// Creates a new `UnprocessableContent`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.DeleteV1AccessRoleAssignmentsById.Output.UnprocessableContent.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/access/role_assignments/{id}/delete(deleteV1AccessRoleAssignmentsById)/responses/422`.
+            ///
+            /// HTTP response code: `422 unprocessableContent`.
+            case unprocessableContent(Operations.DeleteV1AccessRoleAssignmentsById.Output.UnprocessableContent)
+            /// The associated value of the enum case if `self` is `.unprocessableContent`.
+            ///
+            /// - Throws: An error if `self` is not `.unprocessableContent`.
+            /// - SeeAlso: `.unprocessableContent`.
+            public var unprocessableContent: Operations.DeleteV1AccessRoleAssignmentsById.Output.UnprocessableContent {
+                get throws {
+                    switch self {
+                    case let .unprocessableContent(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "unprocessableContent",
+                            response: self
+                        )
+                    }
+                }
+            }
             /// Undocumented response.
             ///
             /// A response with a code that is not documented in the OpenAPI document.
@@ -56914,7 +57735,7 @@ public enum Operations {
                 ///
                 /// - Remark: Generated from `#/paths/v1/access/roles/GET/query/workspace`.
                 public var workspace: Swift.String?
-                /// An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem (403 otherwise).
+                /// An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise).
                 ///
                 /// - Remark: Generated from `#/paths/v1/access/roles/GET/query/ecosystem`.
                 public var ecosystem: Swift.String?
@@ -56938,7 +57759,7 @@ public enum Operations {
                 ///
                 /// - Parameters:
                 ///   - workspace: The hub workspace (slug). Exactly one of `workspace` and `ecosystem`.
-                ///   - ecosystem: An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem (403 otherwise).
+                ///   - ecosystem: An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise).
                 ///   - limit: Page size, 1–100 (default 10).
                 ///   - startingAfter: Cursor: an object id; returns the page after it.
                 ///   - endingBefore: Cursor: an object id; returns the page before it.
@@ -57323,7 +58144,7 @@ public enum Operations {
                 ///
                 /// - Remark: Generated from `#/paths/v1/access/roles/POST/query/workspace`.
                 public var workspace: Swift.String?
-                /// An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem (403 otherwise).
+                /// An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise).
                 ///
                 /// - Remark: Generated from `#/paths/v1/access/roles/POST/query/ecosystem`.
                 public var ecosystem: Swift.String?
@@ -57331,7 +58152,7 @@ public enum Operations {
                 ///
                 /// - Parameters:
                 ///   - workspace: The hub workspace (slug). Exactly one of `workspace` and `ecosystem`.
-                ///   - ecosystem: An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem (403 otherwise).
+                ///   - ecosystem: An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise).
                 public init(
                     workspace: Swift.String? = nil,
                     ecosystem: Swift.String? = nil
@@ -57834,7 +58655,7 @@ public enum Operations {
                 ///
                 /// - Remark: Generated from `#/paths/v1/access/roles/{id}/POST/query/workspace`.
                 public var workspace: Swift.String?
-                /// An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem (403 otherwise).
+                /// An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise).
                 ///
                 /// - Remark: Generated from `#/paths/v1/access/roles/{id}/POST/query/ecosystem`.
                 public var ecosystem: Swift.String?
@@ -57842,7 +58663,7 @@ public enum Operations {
                 ///
                 /// - Parameters:
                 ///   - workspace: The hub workspace (slug). Exactly one of `workspace` and `ecosystem`.
-                ///   - ecosystem: An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem (403 otherwise).
+                ///   - ecosystem: An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise).
                 public init(
                     workspace: Swift.String? = nil,
                     ecosystem: Swift.String? = nil
@@ -58342,7 +59163,7 @@ public enum Operations {
                 ///
                 /// - Remark: Generated from `#/paths/v1/access/roles/{id}/DELETE/query/workspace`.
                 public var workspace: Swift.String?
-                /// An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem (403 otherwise).
+                /// An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise).
                 ///
                 /// - Remark: Generated from `#/paths/v1/access/roles/{id}/DELETE/query/ecosystem`.
                 public var ecosystem: Swift.String?
@@ -58350,7 +59171,7 @@ public enum Operations {
                 ///
                 /// - Parameters:
                 ///   - workspace: The hub workspace (slug). Exactly one of `workspace` and `ecosystem`.
-                ///   - ecosystem: An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem (403 otherwise).
+                ///   - ecosystem: An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise).
                 public init(
                     workspace: Swift.String? = nil,
                     ecosystem: Swift.String? = nil
@@ -58692,7 +59513,7 @@ public enum Operations {
                 ///
                 /// - Remark: Generated from `#/paths/v1/access/subjects/GET/query/workspace`.
                 public var workspace: Swift.String?
-                /// An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem (403 otherwise).
+                /// An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise).
                 ///
                 /// - Remark: Generated from `#/paths/v1/access/subjects/GET/query/ecosystem`.
                 public var ecosystem: Swift.String?
@@ -58720,7 +59541,7 @@ public enum Operations {
                 ///
                 /// - Parameters:
                 ///   - workspace: The hub workspace (slug). Exactly one of `workspace` and `ecosystem`.
-                ///   - ecosystem: An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem (403 otherwise).
+                ///   - ecosystem: An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise).
                 ///   - q:
                 ///   - after:
                 ///   - limit: Page size, 1–100 (default 10).
@@ -72449,6 +73270,1132 @@ public enum Operations {
             /// - Throws: An error if `self` is not `.notFound`.
             /// - SeeAlso: `.notFound`.
             public var notFound: Operations.PostV1AdminNotes.Output.NotFound {
+                get throws {
+                    switch self {
+                    case let .notFound(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "notFound",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        @frozen public enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            public init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            public var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            public static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// A product's admin site and whether admin sites are switched on
+    ///
+    /// Replaces GET /ecosystem/admin-site.
+    ///
+    /// - Remark: HTTP `GET /v1/admin_site`.
+    /// - Remark: Generated from `#/paths//v1/admin_site/get(getV1AdminSite)`.
+    public enum GetV1AdminSite {
+        public static let id: Swift.String = "getV1AdminSite"
+        public struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/v1/admin_site/GET/query`.
+            public struct Query: Sendable, Hashable {
+                /// Related objects to return in full instead of as an id. Up to four levels, e.g. `ecosystem_id`; on a list, `data.<field>`.
+                ///
+                /// - Remark: Generated from `#/paths/v1/admin_site/GET/query/expand[]`.
+                public var expand_lbrack__rbrack_: [Swift.String]?
+                /// Creates a new `Query`.
+                ///
+                /// - Parameters:
+                ///   - expand_lbrack__rbrack_: Related objects to return in full instead of as an id. Up to four levels, e.g. `ecosystem_id`; on a list, `data.<field>`.
+                public init(expand_lbrack__rbrack_: [Swift.String]? = nil) {
+                    self.expand_lbrack__rbrack_ = expand_lbrack__rbrack_
+                }
+            }
+            public var query: Operations.GetV1AdminSite.Input.Query
+            /// - Remark: Generated from `#/paths/v1/admin_site/GET/header`.
+            public struct Headers: Sendable, Hashable {
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.GetV1AdminSite.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.GetV1AdminSite.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            public var headers: Operations.GetV1AdminSite.Input.Headers
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - query:
+            ///   - headers:
+            public init(
+                query: Operations.GetV1AdminSite.Input.Query = .init(),
+                headers: Operations.GetV1AdminSite.Input.Headers = .init()
+            ) {
+                self.query = query
+                self.headers = headers
+            }
+        }
+        @frozen public enum Output: Sendable, Hashable {
+            public struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/admin_site/GET/responses/200/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/admin_site/GET/responses/200/content/json`.
+                    public struct JsonPayload: Codable, Hashable, Sendable {
+                        /// - Remark: Generated from `#/paths/v1/admin_site/GET/responses/200/content/json/value1`.
+                        public struct Value1Payload: Codable, Hashable, Sendable {
+                            /// - Remark: Generated from `#/paths/v1/admin_site/GET/responses/200/content/json/value1/object`.
+                            @frozen public enum ObjectPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                                case adminSite = "admin_site"
+                            }
+                            /// - Remark: Generated from `#/paths/v1/admin_site/GET/responses/200/content/json/value1/object`.
+                            public var object: Operations.GetV1AdminSite.Output.Ok.Body.JsonPayload.Value1Payload.ObjectPayload?
+                            /// Creates a new `Value1Payload`.
+                            ///
+                            /// - Parameters:
+                            ///   - object:
+                            public init(object: Operations.GetV1AdminSite.Output.Ok.Body.JsonPayload.Value1Payload.ObjectPayload? = nil) {
+                                self.object = object
+                            }
+                            public enum CodingKeys: String, CodingKey {
+                                case object
+                            }
+                        }
+                        /// - Remark: Generated from `#/paths/v1/admin_site/GET/responses/200/content/json/value1`.
+                        public var value1: Operations.GetV1AdminSite.Output.Ok.Body.JsonPayload.Value1Payload
+                        /// - Remark: Generated from `#/paths/v1/admin_site/GET/responses/200/content/json/value2`.
+                        public var value2: Components.Schemas.AdminSiteState
+                        /// Creates a new `JsonPayload`.
+                        ///
+                        /// - Parameters:
+                        ///   - value1:
+                        ///   - value2:
+                        public init(
+                            value1: Operations.GetV1AdminSite.Output.Ok.Body.JsonPayload.Value1Payload,
+                            value2: Components.Schemas.AdminSiteState
+                        ) {
+                            self.value1 = value1
+                            self.value2 = value2
+                        }
+                        public init(from decoder: any Swift.Decoder) throws {
+                            self.value1 = try .init(from: decoder)
+                            self.value2 = try .init(from: decoder)
+                        }
+                        public func encode(to encoder: any Swift.Encoder) throws {
+                            try self.value1.encode(to: encoder)
+                            try self.value2.encode(to: encoder)
+                        }
+                    }
+                    /// - Remark: Generated from `#/paths/v1/admin_site/GET/responses/200/content/application\/json`.
+                    case json(Operations.GetV1AdminSite.Output.Ok.Body.JsonPayload)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Operations.GetV1AdminSite.Output.Ok.Body.JsonPayload {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.GetV1AdminSite.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.GetV1AdminSite.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// The site, or null when it has none
+            ///
+            /// - Remark: Generated from `#/paths//v1/admin_site/get(getV1AdminSite)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.GetV1AdminSite.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            public var ok: Operations.GetV1AdminSite.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct BadRequest: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/admin_site/GET/responses/400/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/admin_site/GET/responses/400/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.GetV1AdminSite.Output.BadRequest.Body
+                /// Creates a new `BadRequest`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.GetV1AdminSite.Output.BadRequest.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/admin_site/get(getV1AdminSite)/responses/400`.
+            ///
+            /// HTTP response code: `400 badRequest`.
+            case badRequest(Operations.GetV1AdminSite.Output.BadRequest)
+            /// The associated value of the enum case if `self` is `.badRequest`.
+            ///
+            /// - Throws: An error if `self` is not `.badRequest`.
+            /// - SeeAlso: `.badRequest`.
+            public var badRequest: Operations.GetV1AdminSite.Output.BadRequest {
+                get throws {
+                    switch self {
+                    case let .badRequest(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "badRequest",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct Unauthorized: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/admin_site/GET/responses/401/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/admin_site/GET/responses/401/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.GetV1AdminSite.Output.Unauthorized.Body
+                /// Creates a new `Unauthorized`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.GetV1AdminSite.Output.Unauthorized.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/admin_site/get(getV1AdminSite)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            case unauthorized(Operations.GetV1AdminSite.Output.Unauthorized)
+            /// The associated value of the enum case if `self` is `.unauthorized`.
+            ///
+            /// - Throws: An error if `self` is not `.unauthorized`.
+            /// - SeeAlso: `.unauthorized`.
+            public var unauthorized: Operations.GetV1AdminSite.Output.Unauthorized {
+                get throws {
+                    switch self {
+                    case let .unauthorized(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "unauthorized",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct Forbidden: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/admin_site/GET/responses/403/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/admin_site/GET/responses/403/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.GetV1AdminSite.Output.Forbidden.Body
+                /// Creates a new `Forbidden`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.GetV1AdminSite.Output.Forbidden.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/admin_site/get(getV1AdminSite)/responses/403`.
+            ///
+            /// HTTP response code: `403 forbidden`.
+            case forbidden(Operations.GetV1AdminSite.Output.Forbidden)
+            /// The associated value of the enum case if `self` is `.forbidden`.
+            ///
+            /// - Throws: An error if `self` is not `.forbidden`.
+            /// - SeeAlso: `.forbidden`.
+            public var forbidden: Operations.GetV1AdminSite.Output.Forbidden {
+                get throws {
+                    switch self {
+                    case let .forbidden(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "forbidden",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct NotFound: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/admin_site/GET/responses/404/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/admin_site/GET/responses/404/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.GetV1AdminSite.Output.NotFound.Body
+                /// Creates a new `NotFound`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.GetV1AdminSite.Output.NotFound.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/admin_site/get(getV1AdminSite)/responses/404`.
+            ///
+            /// HTTP response code: `404 notFound`.
+            case notFound(Operations.GetV1AdminSite.Output.NotFound)
+            /// The associated value of the enum case if `self` is `.notFound`.
+            ///
+            /// - Throws: An error if `self` is not `.notFound`.
+            /// - SeeAlso: `.notFound`.
+            public var notFound: Operations.GetV1AdminSite.Output.NotFound {
+                get throws {
+                    switch self {
+                    case let .notFound(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "notFound",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        @frozen public enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            public init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            public var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            public static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// Set up or move a product's admin site
+    ///
+    /// Makes (or reuses, or revives) the product's staff `admin-site` application and gives it a login registration whose one return origin is `https://<host>` and whose one redirect is `https://<host>/auth/callback`. 409 when the product has its own `admin-site` application, or another product's site already uses the host.
+    ///
+    /// Replaces PUT /ecosystem/admin-site.
+    ///
+    /// - Remark: HTTP `POST /v1/admin_site`.
+    /// - Remark: Generated from `#/paths//v1/admin_site/post(postV1AdminSite)`.
+    public enum PostV1AdminSite {
+        public static let id: Swift.String = "postV1AdminSite"
+        public struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/v1/admin_site/POST/header`.
+            public struct Headers: Sendable, Hashable {
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.PostV1AdminSite.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.PostV1AdminSite.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            public var headers: Operations.PostV1AdminSite.Input.Headers
+            /// - Remark: Generated from `#/paths/v1/admin_site/POST/requestBody`.
+            @frozen public enum Body: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/admin_site/POST/requestBody/content/application\/json`.
+                case json(Components.Schemas.AdminSitePut)
+            }
+            public var body: Operations.PostV1AdminSite.Input.Body
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - headers:
+            ///   - body:
+            public init(
+                headers: Operations.PostV1AdminSite.Input.Headers = .init(),
+                body: Operations.PostV1AdminSite.Input.Body
+            ) {
+                self.headers = headers
+                self.body = body
+            }
+        }
+        @frozen public enum Output: Sendable, Hashable {
+            public struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/admin_site/POST/responses/200/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/admin_site/POST/responses/200/content/json`.
+                    public struct JsonPayload: Codable, Hashable, Sendable {
+                        /// - Remark: Generated from `#/paths/v1/admin_site/POST/responses/200/content/json/value1`.
+                        public struct Value1Payload: Codable, Hashable, Sendable {
+                            /// - Remark: Generated from `#/paths/v1/admin_site/POST/responses/200/content/json/value1/object`.
+                            @frozen public enum ObjectPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                                case adminSite = "admin_site"
+                            }
+                            /// - Remark: Generated from `#/paths/v1/admin_site/POST/responses/200/content/json/value1/object`.
+                            public var object: Operations.PostV1AdminSite.Output.Ok.Body.JsonPayload.Value1Payload.ObjectPayload?
+                            /// Creates a new `Value1Payload`.
+                            ///
+                            /// - Parameters:
+                            ///   - object:
+                            public init(object: Operations.PostV1AdminSite.Output.Ok.Body.JsonPayload.Value1Payload.ObjectPayload? = nil) {
+                                self.object = object
+                            }
+                            public enum CodingKeys: String, CodingKey {
+                                case object
+                            }
+                        }
+                        /// - Remark: Generated from `#/paths/v1/admin_site/POST/responses/200/content/json/value1`.
+                        public var value1: Operations.PostV1AdminSite.Output.Ok.Body.JsonPayload.Value1Payload
+                        /// - Remark: Generated from `#/paths/v1/admin_site/POST/responses/200/content/json/value2`.
+                        public var value2: Components.Schemas.AdminSiteState
+                        /// Creates a new `JsonPayload`.
+                        ///
+                        /// - Parameters:
+                        ///   - value1:
+                        ///   - value2:
+                        public init(
+                            value1: Operations.PostV1AdminSite.Output.Ok.Body.JsonPayload.Value1Payload,
+                            value2: Components.Schemas.AdminSiteState
+                        ) {
+                            self.value1 = value1
+                            self.value2 = value2
+                        }
+                        public init(from decoder: any Swift.Decoder) throws {
+                            self.value1 = try .init(from: decoder)
+                            self.value2 = try .init(from: decoder)
+                        }
+                        public func encode(to encoder: any Swift.Encoder) throws {
+                            try self.value1.encode(to: encoder)
+                            try self.value2.encode(to: encoder)
+                        }
+                    }
+                    /// - Remark: Generated from `#/paths/v1/admin_site/POST/responses/200/content/application\/json`.
+                    case json(Operations.PostV1AdminSite.Output.Ok.Body.JsonPayload)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Operations.PostV1AdminSite.Output.Ok.Body.JsonPayload {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostV1AdminSite.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostV1AdminSite.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// The site after the change
+            ///
+            /// - Remark: Generated from `#/paths//v1/admin_site/post(postV1AdminSite)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.PostV1AdminSite.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            public var ok: Operations.PostV1AdminSite.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct BadRequest: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/admin_site/POST/responses/400/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/admin_site/POST/responses/400/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostV1AdminSite.Output.BadRequest.Body
+                /// Creates a new `BadRequest`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostV1AdminSite.Output.BadRequest.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/admin_site/post(postV1AdminSite)/responses/400`.
+            ///
+            /// HTTP response code: `400 badRequest`.
+            case badRequest(Operations.PostV1AdminSite.Output.BadRequest)
+            /// The associated value of the enum case if `self` is `.badRequest`.
+            ///
+            /// - Throws: An error if `self` is not `.badRequest`.
+            /// - SeeAlso: `.badRequest`.
+            public var badRequest: Operations.PostV1AdminSite.Output.BadRequest {
+                get throws {
+                    switch self {
+                    case let .badRequest(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "badRequest",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct Unauthorized: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/admin_site/POST/responses/401/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/admin_site/POST/responses/401/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostV1AdminSite.Output.Unauthorized.Body
+                /// Creates a new `Unauthorized`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostV1AdminSite.Output.Unauthorized.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/admin_site/post(postV1AdminSite)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            case unauthorized(Operations.PostV1AdminSite.Output.Unauthorized)
+            /// The associated value of the enum case if `self` is `.unauthorized`.
+            ///
+            /// - Throws: An error if `self` is not `.unauthorized`.
+            /// - SeeAlso: `.unauthorized`.
+            public var unauthorized: Operations.PostV1AdminSite.Output.Unauthorized {
+                get throws {
+                    switch self {
+                    case let .unauthorized(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "unauthorized",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct Forbidden: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/admin_site/POST/responses/403/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/admin_site/POST/responses/403/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostV1AdminSite.Output.Forbidden.Body
+                /// Creates a new `Forbidden`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostV1AdminSite.Output.Forbidden.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/admin_site/post(postV1AdminSite)/responses/403`.
+            ///
+            /// HTTP response code: `403 forbidden`.
+            case forbidden(Operations.PostV1AdminSite.Output.Forbidden)
+            /// The associated value of the enum case if `self` is `.forbidden`.
+            ///
+            /// - Throws: An error if `self` is not `.forbidden`.
+            /// - SeeAlso: `.forbidden`.
+            public var forbidden: Operations.PostV1AdminSite.Output.Forbidden {
+                get throws {
+                    switch self {
+                    case let .forbidden(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "forbidden",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct NotFound: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/admin_site/POST/responses/404/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/admin_site/POST/responses/404/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostV1AdminSite.Output.NotFound.Body
+                /// Creates a new `NotFound`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostV1AdminSite.Output.NotFound.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/admin_site/post(postV1AdminSite)/responses/404`.
+            ///
+            /// HTTP response code: `404 notFound`.
+            case notFound(Operations.PostV1AdminSite.Output.NotFound)
+            /// The associated value of the enum case if `self` is `.notFound`.
+            ///
+            /// - Throws: An error if `self` is not `.notFound`.
+            /// - SeeAlso: `.notFound`.
+            public var notFound: Operations.PostV1AdminSite.Output.NotFound {
+                get throws {
+                    switch self {
+                    case let .notFound(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "notFound",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct Conflict: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/admin_site/POST/responses/409/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/admin_site/POST/responses/409/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostV1AdminSite.Output.Conflict.Body
+                /// Creates a new `Conflict`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostV1AdminSite.Output.Conflict.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/admin_site/post(postV1AdminSite)/responses/409`.
+            ///
+            /// HTTP response code: `409 conflict`.
+            case conflict(Operations.PostV1AdminSite.Output.Conflict)
+            /// The associated value of the enum case if `self` is `.conflict`.
+            ///
+            /// - Throws: An error if `self` is not `.conflict`.
+            /// - SeeAlso: `.conflict`.
+            public var conflict: Operations.PostV1AdminSite.Output.Conflict {
+                get throws {
+                    switch self {
+                    case let .conflict(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "conflict",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        @frozen public enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            public init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            public var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            public static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// Take a product's admin site down
+    ///
+    /// Removes the site, soft-deletes its application and removes its registration.
+    ///
+    /// Replaces DELETE /ecosystem/admin-site.
+    ///
+    /// - Remark: HTTP `DELETE /v1/admin_site`.
+    /// - Remark: Generated from `#/paths//v1/admin_site/delete(deleteV1AdminSite)`.
+    public enum DeleteV1AdminSite {
+        public static let id: Swift.String = "deleteV1AdminSite"
+        public struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/v1/admin_site/DELETE/header`.
+            public struct Headers: Sendable, Hashable {
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.DeleteV1AdminSite.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.DeleteV1AdminSite.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            public var headers: Operations.DeleteV1AdminSite.Input.Headers
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - headers:
+            public init(headers: Operations.DeleteV1AdminSite.Input.Headers = .init()) {
+                self.headers = headers
+            }
+        }
+        @frozen public enum Output: Sendable, Hashable {
+            public struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/admin_site/DELETE/responses/200/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/admin_site/DELETE/responses/200/content/application\/json`.
+                    case json(Components.Schemas.Deleted)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.Deleted {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.DeleteV1AdminSite.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.DeleteV1AdminSite.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// Deleted
+            ///
+            /// - Remark: Generated from `#/paths//v1/admin_site/delete(deleteV1AdminSite)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.DeleteV1AdminSite.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            public var ok: Operations.DeleteV1AdminSite.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct BadRequest: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/admin_site/DELETE/responses/400/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/admin_site/DELETE/responses/400/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.DeleteV1AdminSite.Output.BadRequest.Body
+                /// Creates a new `BadRequest`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.DeleteV1AdminSite.Output.BadRequest.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/admin_site/delete(deleteV1AdminSite)/responses/400`.
+            ///
+            /// HTTP response code: `400 badRequest`.
+            case badRequest(Operations.DeleteV1AdminSite.Output.BadRequest)
+            /// The associated value of the enum case if `self` is `.badRequest`.
+            ///
+            /// - Throws: An error if `self` is not `.badRequest`.
+            /// - SeeAlso: `.badRequest`.
+            public var badRequest: Operations.DeleteV1AdminSite.Output.BadRequest {
+                get throws {
+                    switch self {
+                    case let .badRequest(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "badRequest",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct Unauthorized: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/admin_site/DELETE/responses/401/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/admin_site/DELETE/responses/401/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.DeleteV1AdminSite.Output.Unauthorized.Body
+                /// Creates a new `Unauthorized`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.DeleteV1AdminSite.Output.Unauthorized.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/admin_site/delete(deleteV1AdminSite)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            case unauthorized(Operations.DeleteV1AdminSite.Output.Unauthorized)
+            /// The associated value of the enum case if `self` is `.unauthorized`.
+            ///
+            /// - Throws: An error if `self` is not `.unauthorized`.
+            /// - SeeAlso: `.unauthorized`.
+            public var unauthorized: Operations.DeleteV1AdminSite.Output.Unauthorized {
+                get throws {
+                    switch self {
+                    case let .unauthorized(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "unauthorized",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct Forbidden: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/admin_site/DELETE/responses/403/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/admin_site/DELETE/responses/403/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.DeleteV1AdminSite.Output.Forbidden.Body
+                /// Creates a new `Forbidden`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.DeleteV1AdminSite.Output.Forbidden.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/admin_site/delete(deleteV1AdminSite)/responses/403`.
+            ///
+            /// HTTP response code: `403 forbidden`.
+            case forbidden(Operations.DeleteV1AdminSite.Output.Forbidden)
+            /// The associated value of the enum case if `self` is `.forbidden`.
+            ///
+            /// - Throws: An error if `self` is not `.forbidden`.
+            /// - SeeAlso: `.forbidden`.
+            public var forbidden: Operations.DeleteV1AdminSite.Output.Forbidden {
+                get throws {
+                    switch self {
+                    case let .forbidden(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "forbidden",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct NotFound: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/admin_site/DELETE/responses/404/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/admin_site/DELETE/responses/404/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.DeleteV1AdminSite.Output.NotFound.Body
+                /// Creates a new `NotFound`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.DeleteV1AdminSite.Output.NotFound.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/admin_site/delete(deleteV1AdminSite)/responses/404`.
+            ///
+            /// HTTP response code: `404 notFound`.
+            case notFound(Operations.DeleteV1AdminSite.Output.NotFound)
+            /// The associated value of the enum case if `self` is `.notFound`.
+            ///
+            /// - Throws: An error if `self` is not `.notFound`.
+            /// - SeeAlso: `.notFound`.
+            public var notFound: Operations.DeleteV1AdminSite.Output.NotFound {
                 get throws {
                     switch self {
                     case let .notFound(response):
@@ -329896,7 +331843,7 @@ public enum Operations {
     }
     /// Set the set an offer sells
     ///
-    /// null stops the offer granting a set. Refused (rule 9) when the set conflicts with another live offer's set; a personal set is never sold (400).
+    /// null stops the offer granting a set. Refused (rule 9) when the set conflicts with another live offer's set; a personal set is never sold (400). A product admin, signed in through the product's admin site, is refused (403): what an offer sells is billing.
     ///
     /// Replaces PUT /sets/offers/{offerId}.
     ///
@@ -366310,6 +368257,2584 @@ public enum Operations {
             /// - Throws: An error if `self` is not `.notFound`.
             /// - SeeAlso: `.notFound`.
             public var notFound: Operations.DeleteV1ProcessingWorkerTokensById.Output.NotFound {
+                get throws {
+                    switch self {
+                    case let .notFound(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "notFound",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        @frozen public enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            public init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            public var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            public static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// A product's live customers, newest first, 50 a page
+    ///
+    /// Product admins only; a manager is 403.
+    ///
+    /// Replaces GET /product-admin/customers.
+    ///
+    /// - Remark: HTTP `GET /v1/product_admin/customers`.
+    /// - Remark: Generated from `#/paths//v1/product_admin/customers/get(getV1ProductAdminCustomers)`.
+    public enum GetV1ProductAdminCustomers {
+        public static let id: Swift.String = "getV1ProductAdminCustomers"
+        public struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/v1/product_admin/customers/GET/query`.
+            public struct Query: Sendable, Hashable {
+                /// Related objects to return in full instead of as an id. Up to four levels, e.g. `ecosystem_id`; on a list, `data.<field>`.
+                ///
+                /// - Remark: Generated from `#/paths/v1/product_admin/customers/GET/query/expand[]`.
+                public var expand_lbrack__rbrack_: [Swift.String]?
+                /// Creates a new `Query`.
+                ///
+                /// - Parameters:
+                ///   - expand_lbrack__rbrack_: Related objects to return in full instead of as an id. Up to four levels, e.g. `ecosystem_id`; on a list, `data.<field>`.
+                public init(expand_lbrack__rbrack_: [Swift.String]? = nil) {
+                    self.expand_lbrack__rbrack_ = expand_lbrack__rbrack_
+                }
+            }
+            public var query: Operations.GetV1ProductAdminCustomers.Input.Query
+            /// - Remark: Generated from `#/paths/v1/product_admin/customers/GET/header`.
+            public struct Headers: Sendable, Hashable {
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.GetV1ProductAdminCustomers.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.GetV1ProductAdminCustomers.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            public var headers: Operations.GetV1ProductAdminCustomers.Input.Headers
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - query:
+            ///   - headers:
+            public init(
+                query: Operations.GetV1ProductAdminCustomers.Input.Query = .init(),
+                headers: Operations.GetV1ProductAdminCustomers.Input.Headers = .init()
+            ) {
+                self.query = query
+                self.headers = headers
+            }
+        }
+        @frozen public enum Output: Sendable, Hashable {
+            public struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/product_admin/customers/GET/responses/200/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/product_admin/customers/GET/responses/200/content/json`.
+                    public struct JsonPayload: Codable, Hashable, Sendable {
+                        /// - Remark: Generated from `#/paths/v1/product_admin/customers/GET/responses/200/content/json/value1`.
+                        public struct Value1Payload: Codable, Hashable, Sendable {
+                            /// - Remark: Generated from `#/paths/v1/product_admin/customers/GET/responses/200/content/json/value1/object`.
+                            @frozen public enum ObjectPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                                case productAdmin_customer = "product_admin.customer"
+                            }
+                            /// - Remark: Generated from `#/paths/v1/product_admin/customers/GET/responses/200/content/json/value1/object`.
+                            public var object: Operations.GetV1ProductAdminCustomers.Output.Ok.Body.JsonPayload.Value1Payload.ObjectPayload?
+                            /// Creates a new `Value1Payload`.
+                            ///
+                            /// - Parameters:
+                            ///   - object:
+                            public init(object: Operations.GetV1ProductAdminCustomers.Output.Ok.Body.JsonPayload.Value1Payload.ObjectPayload? = nil) {
+                                self.object = object
+                            }
+                            public enum CodingKeys: String, CodingKey {
+                                case object
+                            }
+                        }
+                        /// - Remark: Generated from `#/paths/v1/product_admin/customers/GET/responses/200/content/json/value1`.
+                        public var value1: Operations.GetV1ProductAdminCustomers.Output.Ok.Body.JsonPayload.Value1Payload
+                        /// - Remark: Generated from `#/paths/v1/product_admin/customers/GET/responses/200/content/json/value2`.
+                        public var value2: Components.Schemas.ProductCustomerPage
+                        /// Creates a new `JsonPayload`.
+                        ///
+                        /// - Parameters:
+                        ///   - value1:
+                        ///   - value2:
+                        public init(
+                            value1: Operations.GetV1ProductAdminCustomers.Output.Ok.Body.JsonPayload.Value1Payload,
+                            value2: Components.Schemas.ProductCustomerPage
+                        ) {
+                            self.value1 = value1
+                            self.value2 = value2
+                        }
+                        public init(from decoder: any Swift.Decoder) throws {
+                            self.value1 = try .init(from: decoder)
+                            self.value2 = try .init(from: decoder)
+                        }
+                        public func encode(to encoder: any Swift.Encoder) throws {
+                            try self.value1.encode(to: encoder)
+                            try self.value2.encode(to: encoder)
+                        }
+                    }
+                    /// - Remark: Generated from `#/paths/v1/product_admin/customers/GET/responses/200/content/application\/json`.
+                    case json(Operations.GetV1ProductAdminCustomers.Output.Ok.Body.JsonPayload)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Operations.GetV1ProductAdminCustomers.Output.Ok.Body.JsonPayload {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.GetV1ProductAdminCustomers.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.GetV1ProductAdminCustomers.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// One page
+            ///
+            /// - Remark: Generated from `#/paths//v1/product_admin/customers/get(getV1ProductAdminCustomers)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.GetV1ProductAdminCustomers.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            public var ok: Operations.GetV1ProductAdminCustomers.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct BadRequest: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/product_admin/customers/GET/responses/400/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/product_admin/customers/GET/responses/400/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.GetV1ProductAdminCustomers.Output.BadRequest.Body
+                /// Creates a new `BadRequest`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.GetV1ProductAdminCustomers.Output.BadRequest.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/product_admin/customers/get(getV1ProductAdminCustomers)/responses/400`.
+            ///
+            /// HTTP response code: `400 badRequest`.
+            case badRequest(Operations.GetV1ProductAdminCustomers.Output.BadRequest)
+            /// The associated value of the enum case if `self` is `.badRequest`.
+            ///
+            /// - Throws: An error if `self` is not `.badRequest`.
+            /// - SeeAlso: `.badRequest`.
+            public var badRequest: Operations.GetV1ProductAdminCustomers.Output.BadRequest {
+                get throws {
+                    switch self {
+                    case let .badRequest(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "badRequest",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct Unauthorized: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/product_admin/customers/GET/responses/401/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/product_admin/customers/GET/responses/401/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.GetV1ProductAdminCustomers.Output.Unauthorized.Body
+                /// Creates a new `Unauthorized`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.GetV1ProductAdminCustomers.Output.Unauthorized.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/product_admin/customers/get(getV1ProductAdminCustomers)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            case unauthorized(Operations.GetV1ProductAdminCustomers.Output.Unauthorized)
+            /// The associated value of the enum case if `self` is `.unauthorized`.
+            ///
+            /// - Throws: An error if `self` is not `.unauthorized`.
+            /// - SeeAlso: `.unauthorized`.
+            public var unauthorized: Operations.GetV1ProductAdminCustomers.Output.Unauthorized {
+                get throws {
+                    switch self {
+                    case let .unauthorized(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "unauthorized",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct Forbidden: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/product_admin/customers/GET/responses/403/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/product_admin/customers/GET/responses/403/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.GetV1ProductAdminCustomers.Output.Forbidden.Body
+                /// Creates a new `Forbidden`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.GetV1ProductAdminCustomers.Output.Forbidden.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/product_admin/customers/get(getV1ProductAdminCustomers)/responses/403`.
+            ///
+            /// HTTP response code: `403 forbidden`.
+            case forbidden(Operations.GetV1ProductAdminCustomers.Output.Forbidden)
+            /// The associated value of the enum case if `self` is `.forbidden`.
+            ///
+            /// - Throws: An error if `self` is not `.forbidden`.
+            /// - SeeAlso: `.forbidden`.
+            public var forbidden: Operations.GetV1ProductAdminCustomers.Output.Forbidden {
+                get throws {
+                    switch self {
+                    case let .forbidden(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "forbidden",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct NotFound: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/product_admin/customers/GET/responses/404/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/product_admin/customers/GET/responses/404/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.GetV1ProductAdminCustomers.Output.NotFound.Body
+                /// Creates a new `NotFound`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.GetV1ProductAdminCustomers.Output.NotFound.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/product_admin/customers/get(getV1ProductAdminCustomers)/responses/404`.
+            ///
+            /// HTTP response code: `404 notFound`.
+            case notFound(Operations.GetV1ProductAdminCustomers.Output.NotFound)
+            /// The associated value of the enum case if `self` is `.notFound`.
+            ///
+            /// - Throws: An error if `self` is not `.notFound`.
+            /// - SeeAlso: `.notFound`.
+            public var notFound: Operations.GetV1ProductAdminCustomers.Output.NotFound {
+                get throws {
+                    switch self {
+                    case let .notFound(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "notFound",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        @frozen public enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            public init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            public var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            public static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// Delete a customer
+    ///
+    /// Tombstones the customer and revokes their tokens and sessions. 409 while they still own data; 422 for the caller or another admin.
+    ///
+    /// Replaces DELETE /product-admin/customers/{id}.
+    ///
+    /// - Remark: HTTP `DELETE /v1/product_admin/customers/{id}`.
+    /// - Remark: Generated from `#/paths//v1/product_admin/customers/{id}/delete(deleteV1ProductAdminCustomersById)`.
+    public enum DeleteV1ProductAdminCustomersById {
+        public static let id: Swift.String = "deleteV1ProductAdminCustomersById"
+        public struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/v1/product_admin/customers/{id}/DELETE/path`.
+            public struct Path: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/product_admin/customers/{id}/DELETE/path/id`.
+                public var id: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - id:
+                public init(id: Swift.String) {
+                    self.id = id
+                }
+            }
+            public var path: Operations.DeleteV1ProductAdminCustomersById.Input.Path
+            /// - Remark: Generated from `#/paths/v1/product_admin/customers/{id}/DELETE/header`.
+            public struct Headers: Sendable, Hashable {
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.DeleteV1ProductAdminCustomersById.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.DeleteV1ProductAdminCustomersById.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            public var headers: Operations.DeleteV1ProductAdminCustomersById.Input.Headers
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            ///   - headers:
+            public init(
+                path: Operations.DeleteV1ProductAdminCustomersById.Input.Path,
+                headers: Operations.DeleteV1ProductAdminCustomersById.Input.Headers = .init()
+            ) {
+                self.path = path
+                self.headers = headers
+            }
+        }
+        @frozen public enum Output: Sendable, Hashable {
+            public struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/product_admin/customers/{id}/DELETE/responses/200/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/product_admin/customers/{id}/DELETE/responses/200/content/application\/json`.
+                    case json(Components.Schemas.Deleted)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.Deleted {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.DeleteV1ProductAdminCustomersById.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.DeleteV1ProductAdminCustomersById.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// Deleted
+            ///
+            /// - Remark: Generated from `#/paths//v1/product_admin/customers/{id}/delete(deleteV1ProductAdminCustomersById)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.DeleteV1ProductAdminCustomersById.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            public var ok: Operations.DeleteV1ProductAdminCustomersById.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct BadRequest: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/product_admin/customers/{id}/DELETE/responses/400/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/product_admin/customers/{id}/DELETE/responses/400/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.DeleteV1ProductAdminCustomersById.Output.BadRequest.Body
+                /// Creates a new `BadRequest`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.DeleteV1ProductAdminCustomersById.Output.BadRequest.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/product_admin/customers/{id}/delete(deleteV1ProductAdminCustomersById)/responses/400`.
+            ///
+            /// HTTP response code: `400 badRequest`.
+            case badRequest(Operations.DeleteV1ProductAdminCustomersById.Output.BadRequest)
+            /// The associated value of the enum case if `self` is `.badRequest`.
+            ///
+            /// - Throws: An error if `self` is not `.badRequest`.
+            /// - SeeAlso: `.badRequest`.
+            public var badRequest: Operations.DeleteV1ProductAdminCustomersById.Output.BadRequest {
+                get throws {
+                    switch self {
+                    case let .badRequest(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "badRequest",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct Unauthorized: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/product_admin/customers/{id}/DELETE/responses/401/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/product_admin/customers/{id}/DELETE/responses/401/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.DeleteV1ProductAdminCustomersById.Output.Unauthorized.Body
+                /// Creates a new `Unauthorized`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.DeleteV1ProductAdminCustomersById.Output.Unauthorized.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/product_admin/customers/{id}/delete(deleteV1ProductAdminCustomersById)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            case unauthorized(Operations.DeleteV1ProductAdminCustomersById.Output.Unauthorized)
+            /// The associated value of the enum case if `self` is `.unauthorized`.
+            ///
+            /// - Throws: An error if `self` is not `.unauthorized`.
+            /// - SeeAlso: `.unauthorized`.
+            public var unauthorized: Operations.DeleteV1ProductAdminCustomersById.Output.Unauthorized {
+                get throws {
+                    switch self {
+                    case let .unauthorized(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "unauthorized",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct Forbidden: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/product_admin/customers/{id}/DELETE/responses/403/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/product_admin/customers/{id}/DELETE/responses/403/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.DeleteV1ProductAdminCustomersById.Output.Forbidden.Body
+                /// Creates a new `Forbidden`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.DeleteV1ProductAdminCustomersById.Output.Forbidden.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/product_admin/customers/{id}/delete(deleteV1ProductAdminCustomersById)/responses/403`.
+            ///
+            /// HTTP response code: `403 forbidden`.
+            case forbidden(Operations.DeleteV1ProductAdminCustomersById.Output.Forbidden)
+            /// The associated value of the enum case if `self` is `.forbidden`.
+            ///
+            /// - Throws: An error if `self` is not `.forbidden`.
+            /// - SeeAlso: `.forbidden`.
+            public var forbidden: Operations.DeleteV1ProductAdminCustomersById.Output.Forbidden {
+                get throws {
+                    switch self {
+                    case let .forbidden(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "forbidden",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct NotFound: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/product_admin/customers/{id}/DELETE/responses/404/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/product_admin/customers/{id}/DELETE/responses/404/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.DeleteV1ProductAdminCustomersById.Output.NotFound.Body
+                /// Creates a new `NotFound`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.DeleteV1ProductAdminCustomersById.Output.NotFound.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/product_admin/customers/{id}/delete(deleteV1ProductAdminCustomersById)/responses/404`.
+            ///
+            /// HTTP response code: `404 notFound`.
+            case notFound(Operations.DeleteV1ProductAdminCustomersById.Output.NotFound)
+            /// The associated value of the enum case if `self` is `.notFound`.
+            ///
+            /// - Throws: An error if `self` is not `.notFound`.
+            /// - SeeAlso: `.notFound`.
+            public var notFound: Operations.DeleteV1ProductAdminCustomersById.Output.NotFound {
+                get throws {
+                    switch self {
+                    case let .notFound(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "notFound",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct Conflict: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/product_admin/customers/{id}/DELETE/responses/409/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/product_admin/customers/{id}/DELETE/responses/409/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.DeleteV1ProductAdminCustomersById.Output.Conflict.Body
+                /// Creates a new `Conflict`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.DeleteV1ProductAdminCustomersById.Output.Conflict.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/product_admin/customers/{id}/delete(deleteV1ProductAdminCustomersById)/responses/409`.
+            ///
+            /// HTTP response code: `409 conflict`.
+            case conflict(Operations.DeleteV1ProductAdminCustomersById.Output.Conflict)
+            /// The associated value of the enum case if `self` is `.conflict`.
+            ///
+            /// - Throws: An error if `self` is not `.conflict`.
+            /// - SeeAlso: `.conflict`.
+            public var conflict: Operations.DeleteV1ProductAdminCustomersById.Output.Conflict {
+                get throws {
+                    switch self {
+                    case let .conflict(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "conflict",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct UnprocessableContent: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/product_admin/customers/{id}/DELETE/responses/422/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/product_admin/customers/{id}/DELETE/responses/422/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.DeleteV1ProductAdminCustomersById.Output.UnprocessableContent.Body
+                /// Creates a new `UnprocessableContent`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.DeleteV1ProductAdminCustomersById.Output.UnprocessableContent.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/product_admin/customers/{id}/delete(deleteV1ProductAdminCustomersById)/responses/422`.
+            ///
+            /// HTTP response code: `422 unprocessableContent`.
+            case unprocessableContent(Operations.DeleteV1ProductAdminCustomersById.Output.UnprocessableContent)
+            /// The associated value of the enum case if `self` is `.unprocessableContent`.
+            ///
+            /// - Throws: An error if `self` is not `.unprocessableContent`.
+            /// - SeeAlso: `.unprocessableContent`.
+            public var unprocessableContent: Operations.DeleteV1ProductAdminCustomersById.Output.UnprocessableContent {
+                get throws {
+                    switch self {
+                    case let .unprocessableContent(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "unprocessableContent",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        @frozen public enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            public init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            public var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            public static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// Pause a customer
+    ///
+    /// Refuses their sign-in and every request from the next one, and revokes their sign-in sessions. 422 for the caller or another admin.
+    ///
+    /// Replaces POST /product-admin/customers/{id}/pause.
+    ///
+    /// - Remark: HTTP `POST /v1/product_admin/customers/{id}/pause`.
+    /// - Remark: Generated from `#/paths//v1/product_admin/customers/{id}/pause/post(postV1ProductAdminCustomersByIdPause)`.
+    public enum PostV1ProductAdminCustomersByIdPause {
+        public static let id: Swift.String = "postV1ProductAdminCustomersByIdPause"
+        public struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/v1/product_admin/customers/{id}/pause/POST/path`.
+            public struct Path: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/product_admin/customers/{id}/pause/POST/path/id`.
+                public var id: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - id:
+                public init(id: Swift.String) {
+                    self.id = id
+                }
+            }
+            public var path: Operations.PostV1ProductAdminCustomersByIdPause.Input.Path
+            /// - Remark: Generated from `#/paths/v1/product_admin/customers/{id}/pause/POST/header`.
+            public struct Headers: Sendable, Hashable {
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.PostV1ProductAdminCustomersByIdPause.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.PostV1ProductAdminCustomersByIdPause.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            public var headers: Operations.PostV1ProductAdminCustomersByIdPause.Input.Headers
+            /// - Remark: Generated from `#/paths/v1/product_admin/customers/{id}/pause/POST/requestBody`.
+            @frozen public enum Body: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/product_admin/customers/{id}/pause/POST/requestBody/content/application\/json`.
+                case json(Components.Schemas.ProductCustomerPause)
+            }
+            public var body: Operations.PostV1ProductAdminCustomersByIdPause.Input.Body
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            ///   - headers:
+            ///   - body:
+            public init(
+                path: Operations.PostV1ProductAdminCustomersByIdPause.Input.Path,
+                headers: Operations.PostV1ProductAdminCustomersByIdPause.Input.Headers = .init(),
+                body: Operations.PostV1ProductAdminCustomersByIdPause.Input.Body
+            ) {
+                self.path = path
+                self.headers = headers
+                self.body = body
+            }
+        }
+        @frozen public enum Output: Sendable, Hashable {
+            public struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/product_admin/customers/{id}/pause/POST/responses/200/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/product_admin/customers/{id}/pause/POST/responses/200/content/json`.
+                    public struct JsonPayload: Codable, Hashable, Sendable {
+                        /// - Remark: Generated from `#/paths/v1/product_admin/customers/{id}/pause/POST/responses/200/content/json/object`.
+                        @frozen public enum ObjectPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                            case productAdmin_customer = "product_admin.customer"
+                        }
+                        /// - Remark: Generated from `#/paths/v1/product_admin/customers/{id}/pause/POST/responses/200/content/json/object`.
+                        public var object: Operations.PostV1ProductAdminCustomersByIdPause.Output.Ok.Body.JsonPayload.ObjectPayload?
+                        /// - Remark: Generated from `#/paths/v1/product_admin/customers/{id}/pause/POST/responses/200/content/json/paused`.
+                        public var paused: Swift.Bool
+                        /// Creates a new `JsonPayload`.
+                        ///
+                        /// - Parameters:
+                        ///   - object:
+                        ///   - paused:
+                        public init(
+                            object: Operations.PostV1ProductAdminCustomersByIdPause.Output.Ok.Body.JsonPayload.ObjectPayload? = nil,
+                            paused: Swift.Bool
+                        ) {
+                            self.object = object
+                            self.paused = paused
+                        }
+                        public enum CodingKeys: String, CodingKey {
+                            case object
+                            case paused
+                        }
+                    }
+                    /// - Remark: Generated from `#/paths/v1/product_admin/customers/{id}/pause/POST/responses/200/content/application\/json`.
+                    case json(Operations.PostV1ProductAdminCustomersByIdPause.Output.Ok.Body.JsonPayload)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Operations.PostV1ProductAdminCustomersByIdPause.Output.Ok.Body.JsonPayload {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostV1ProductAdminCustomersByIdPause.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostV1ProductAdminCustomersByIdPause.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// Paused
+            ///
+            /// - Remark: Generated from `#/paths//v1/product_admin/customers/{id}/pause/post(postV1ProductAdminCustomersByIdPause)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.PostV1ProductAdminCustomersByIdPause.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            public var ok: Operations.PostV1ProductAdminCustomersByIdPause.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct BadRequest: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/product_admin/customers/{id}/pause/POST/responses/400/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/product_admin/customers/{id}/pause/POST/responses/400/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostV1ProductAdminCustomersByIdPause.Output.BadRequest.Body
+                /// Creates a new `BadRequest`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostV1ProductAdminCustomersByIdPause.Output.BadRequest.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/product_admin/customers/{id}/pause/post(postV1ProductAdminCustomersByIdPause)/responses/400`.
+            ///
+            /// HTTP response code: `400 badRequest`.
+            case badRequest(Operations.PostV1ProductAdminCustomersByIdPause.Output.BadRequest)
+            /// The associated value of the enum case if `self` is `.badRequest`.
+            ///
+            /// - Throws: An error if `self` is not `.badRequest`.
+            /// - SeeAlso: `.badRequest`.
+            public var badRequest: Operations.PostV1ProductAdminCustomersByIdPause.Output.BadRequest {
+                get throws {
+                    switch self {
+                    case let .badRequest(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "badRequest",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct Unauthorized: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/product_admin/customers/{id}/pause/POST/responses/401/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/product_admin/customers/{id}/pause/POST/responses/401/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostV1ProductAdminCustomersByIdPause.Output.Unauthorized.Body
+                /// Creates a new `Unauthorized`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostV1ProductAdminCustomersByIdPause.Output.Unauthorized.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/product_admin/customers/{id}/pause/post(postV1ProductAdminCustomersByIdPause)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            case unauthorized(Operations.PostV1ProductAdminCustomersByIdPause.Output.Unauthorized)
+            /// The associated value of the enum case if `self` is `.unauthorized`.
+            ///
+            /// - Throws: An error if `self` is not `.unauthorized`.
+            /// - SeeAlso: `.unauthorized`.
+            public var unauthorized: Operations.PostV1ProductAdminCustomersByIdPause.Output.Unauthorized {
+                get throws {
+                    switch self {
+                    case let .unauthorized(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "unauthorized",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct Forbidden: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/product_admin/customers/{id}/pause/POST/responses/403/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/product_admin/customers/{id}/pause/POST/responses/403/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostV1ProductAdminCustomersByIdPause.Output.Forbidden.Body
+                /// Creates a new `Forbidden`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostV1ProductAdminCustomersByIdPause.Output.Forbidden.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/product_admin/customers/{id}/pause/post(postV1ProductAdminCustomersByIdPause)/responses/403`.
+            ///
+            /// HTTP response code: `403 forbidden`.
+            case forbidden(Operations.PostV1ProductAdminCustomersByIdPause.Output.Forbidden)
+            /// The associated value of the enum case if `self` is `.forbidden`.
+            ///
+            /// - Throws: An error if `self` is not `.forbidden`.
+            /// - SeeAlso: `.forbidden`.
+            public var forbidden: Operations.PostV1ProductAdminCustomersByIdPause.Output.Forbidden {
+                get throws {
+                    switch self {
+                    case let .forbidden(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "forbidden",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct NotFound: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/product_admin/customers/{id}/pause/POST/responses/404/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/product_admin/customers/{id}/pause/POST/responses/404/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostV1ProductAdminCustomersByIdPause.Output.NotFound.Body
+                /// Creates a new `NotFound`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostV1ProductAdminCustomersByIdPause.Output.NotFound.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/product_admin/customers/{id}/pause/post(postV1ProductAdminCustomersByIdPause)/responses/404`.
+            ///
+            /// HTTP response code: `404 notFound`.
+            case notFound(Operations.PostV1ProductAdminCustomersByIdPause.Output.NotFound)
+            /// The associated value of the enum case if `self` is `.notFound`.
+            ///
+            /// - Throws: An error if `self` is not `.notFound`.
+            /// - SeeAlso: `.notFound`.
+            public var notFound: Operations.PostV1ProductAdminCustomersByIdPause.Output.NotFound {
+                get throws {
+                    switch self {
+                    case let .notFound(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "notFound",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct UnprocessableContent: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/product_admin/customers/{id}/pause/POST/responses/422/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/product_admin/customers/{id}/pause/POST/responses/422/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostV1ProductAdminCustomersByIdPause.Output.UnprocessableContent.Body
+                /// Creates a new `UnprocessableContent`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostV1ProductAdminCustomersByIdPause.Output.UnprocessableContent.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/product_admin/customers/{id}/pause/post(postV1ProductAdminCustomersByIdPause)/responses/422`.
+            ///
+            /// HTTP response code: `422 unprocessableContent`.
+            case unprocessableContent(Operations.PostV1ProductAdminCustomersByIdPause.Output.UnprocessableContent)
+            /// The associated value of the enum case if `self` is `.unprocessableContent`.
+            ///
+            /// - Throws: An error if `self` is not `.unprocessableContent`.
+            /// - SeeAlso: `.unprocessableContent`.
+            public var unprocessableContent: Operations.PostV1ProductAdminCustomersByIdPause.Output.UnprocessableContent {
+                get throws {
+                    switch self {
+                    case let .unprocessableContent(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "unprocessableContent",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        @frozen public enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            public init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            public var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            public static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// Lift a customer's pause
+    ///
+    /// Replaces DELETE /product-admin/customers/{id}/pause.
+    ///
+    /// - Remark: HTTP `DELETE /v1/product_admin/customers/{id}/pause`.
+    /// - Remark: Generated from `#/paths//v1/product_admin/customers/{id}/pause/delete(deleteV1ProductAdminCustomersByIdPause)`.
+    public enum DeleteV1ProductAdminCustomersByIdPause {
+        public static let id: Swift.String = "deleteV1ProductAdminCustomersByIdPause"
+        public struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/v1/product_admin/customers/{id}/pause/DELETE/path`.
+            public struct Path: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/product_admin/customers/{id}/pause/DELETE/path/id`.
+                public var id: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - id:
+                public init(id: Swift.String) {
+                    self.id = id
+                }
+            }
+            public var path: Operations.DeleteV1ProductAdminCustomersByIdPause.Input.Path
+            /// - Remark: Generated from `#/paths/v1/product_admin/customers/{id}/pause/DELETE/header`.
+            public struct Headers: Sendable, Hashable {
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.DeleteV1ProductAdminCustomersByIdPause.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.DeleteV1ProductAdminCustomersByIdPause.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            public var headers: Operations.DeleteV1ProductAdminCustomersByIdPause.Input.Headers
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            ///   - headers:
+            public init(
+                path: Operations.DeleteV1ProductAdminCustomersByIdPause.Input.Path,
+                headers: Operations.DeleteV1ProductAdminCustomersByIdPause.Input.Headers = .init()
+            ) {
+                self.path = path
+                self.headers = headers
+            }
+        }
+        @frozen public enum Output: Sendable, Hashable {
+            public struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/product_admin/customers/{id}/pause/DELETE/responses/200/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/product_admin/customers/{id}/pause/DELETE/responses/200/content/application\/json`.
+                    case json(Components.Schemas.Deleted)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.Deleted {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.DeleteV1ProductAdminCustomersByIdPause.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.DeleteV1ProductAdminCustomersByIdPause.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// Deleted
+            ///
+            /// - Remark: Generated from `#/paths//v1/product_admin/customers/{id}/pause/delete(deleteV1ProductAdminCustomersByIdPause)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.DeleteV1ProductAdminCustomersByIdPause.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            public var ok: Operations.DeleteV1ProductAdminCustomersByIdPause.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct BadRequest: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/product_admin/customers/{id}/pause/DELETE/responses/400/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/product_admin/customers/{id}/pause/DELETE/responses/400/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.DeleteV1ProductAdminCustomersByIdPause.Output.BadRequest.Body
+                /// Creates a new `BadRequest`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.DeleteV1ProductAdminCustomersByIdPause.Output.BadRequest.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/product_admin/customers/{id}/pause/delete(deleteV1ProductAdminCustomersByIdPause)/responses/400`.
+            ///
+            /// HTTP response code: `400 badRequest`.
+            case badRequest(Operations.DeleteV1ProductAdminCustomersByIdPause.Output.BadRequest)
+            /// The associated value of the enum case if `self` is `.badRequest`.
+            ///
+            /// - Throws: An error if `self` is not `.badRequest`.
+            /// - SeeAlso: `.badRequest`.
+            public var badRequest: Operations.DeleteV1ProductAdminCustomersByIdPause.Output.BadRequest {
+                get throws {
+                    switch self {
+                    case let .badRequest(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "badRequest",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct Unauthorized: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/product_admin/customers/{id}/pause/DELETE/responses/401/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/product_admin/customers/{id}/pause/DELETE/responses/401/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.DeleteV1ProductAdminCustomersByIdPause.Output.Unauthorized.Body
+                /// Creates a new `Unauthorized`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.DeleteV1ProductAdminCustomersByIdPause.Output.Unauthorized.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/product_admin/customers/{id}/pause/delete(deleteV1ProductAdminCustomersByIdPause)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            case unauthorized(Operations.DeleteV1ProductAdminCustomersByIdPause.Output.Unauthorized)
+            /// The associated value of the enum case if `self` is `.unauthorized`.
+            ///
+            /// - Throws: An error if `self` is not `.unauthorized`.
+            /// - SeeAlso: `.unauthorized`.
+            public var unauthorized: Operations.DeleteV1ProductAdminCustomersByIdPause.Output.Unauthorized {
+                get throws {
+                    switch self {
+                    case let .unauthorized(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "unauthorized",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct Forbidden: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/product_admin/customers/{id}/pause/DELETE/responses/403/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/product_admin/customers/{id}/pause/DELETE/responses/403/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.DeleteV1ProductAdminCustomersByIdPause.Output.Forbidden.Body
+                /// Creates a new `Forbidden`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.DeleteV1ProductAdminCustomersByIdPause.Output.Forbidden.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/product_admin/customers/{id}/pause/delete(deleteV1ProductAdminCustomersByIdPause)/responses/403`.
+            ///
+            /// HTTP response code: `403 forbidden`.
+            case forbidden(Operations.DeleteV1ProductAdminCustomersByIdPause.Output.Forbidden)
+            /// The associated value of the enum case if `self` is `.forbidden`.
+            ///
+            /// - Throws: An error if `self` is not `.forbidden`.
+            /// - SeeAlso: `.forbidden`.
+            public var forbidden: Operations.DeleteV1ProductAdminCustomersByIdPause.Output.Forbidden {
+                get throws {
+                    switch self {
+                    case let .forbidden(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "forbidden",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct NotFound: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/product_admin/customers/{id}/pause/DELETE/responses/404/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/product_admin/customers/{id}/pause/DELETE/responses/404/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.DeleteV1ProductAdminCustomersByIdPause.Output.NotFound.Body
+                /// Creates a new `NotFound`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.DeleteV1ProductAdminCustomersByIdPause.Output.NotFound.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/product_admin/customers/{id}/pause/delete(deleteV1ProductAdminCustomersByIdPause)/responses/404`.
+            ///
+            /// HTTP response code: `404 notFound`.
+            case notFound(Operations.DeleteV1ProductAdminCustomersByIdPause.Output.NotFound)
+            /// The associated value of the enum case if `self` is `.notFound`.
+            ///
+            /// - Throws: An error if `self` is not `.notFound`.
+            /// - SeeAlso: `.notFound`.
+            public var notFound: Operations.DeleteV1ProductAdminCustomersByIdPause.Output.NotFound {
+                get throws {
+                    switch self {
+                    case let .notFound(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "notFound",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        @frozen public enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            public init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            public var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            public static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// Set a customer's storage quota
+    ///
+    /// Replaces PUT /product-admin/customers/{id}/quota.
+    ///
+    /// - Remark: HTTP `POST /v1/product_admin/customers/{id}/quota`.
+    /// - Remark: Generated from `#/paths//v1/product_admin/customers/{id}/quota/post(postV1ProductAdminCustomersByIdQuota)`.
+    public enum PostV1ProductAdminCustomersByIdQuota {
+        public static let id: Swift.String = "postV1ProductAdminCustomersByIdQuota"
+        public struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/v1/product_admin/customers/{id}/quota/POST/path`.
+            public struct Path: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/product_admin/customers/{id}/quota/POST/path/id`.
+                public var id: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - id:
+                public init(id: Swift.String) {
+                    self.id = id
+                }
+            }
+            public var path: Operations.PostV1ProductAdminCustomersByIdQuota.Input.Path
+            /// - Remark: Generated from `#/paths/v1/product_admin/customers/{id}/quota/POST/header`.
+            public struct Headers: Sendable, Hashable {
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.PostV1ProductAdminCustomersByIdQuota.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.PostV1ProductAdminCustomersByIdQuota.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            public var headers: Operations.PostV1ProductAdminCustomersByIdQuota.Input.Headers
+            /// - Remark: Generated from `#/paths/v1/product_admin/customers/{id}/quota/POST/requestBody`.
+            @frozen public enum Body: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/product_admin/customers/{id}/quota/POST/requestBody/content/application\/json`.
+                case json(Components.Schemas.ProductCustomerQuota)
+            }
+            public var body: Operations.PostV1ProductAdminCustomersByIdQuota.Input.Body
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            ///   - headers:
+            ///   - body:
+            public init(
+                path: Operations.PostV1ProductAdminCustomersByIdQuota.Input.Path,
+                headers: Operations.PostV1ProductAdminCustomersByIdQuota.Input.Headers = .init(),
+                body: Operations.PostV1ProductAdminCustomersByIdQuota.Input.Body
+            ) {
+                self.path = path
+                self.headers = headers
+                self.body = body
+            }
+        }
+        @frozen public enum Output: Sendable, Hashable {
+            public struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/product_admin/customers/{id}/quota/POST/responses/200/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/product_admin/customers/{id}/quota/POST/responses/200/content/json`.
+                    public struct JsonPayload: Codable, Hashable, Sendable {
+                        /// - Remark: Generated from `#/paths/v1/product_admin/customers/{id}/quota/POST/responses/200/content/json/object`.
+                        @frozen public enum ObjectPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                            case productAdmin_customer = "product_admin.customer"
+                        }
+                        /// - Remark: Generated from `#/paths/v1/product_admin/customers/{id}/quota/POST/responses/200/content/json/object`.
+                        public var object: Operations.PostV1ProductAdminCustomersByIdQuota.Output.Ok.Body.JsonPayload.ObjectPayload?
+                        /// - Remark: Generated from `#/paths/v1/product_admin/customers/{id}/quota/POST/responses/200/content/json/quota_bytes`.
+                        public var quotaBytes: Swift.Int
+                        /// Creates a new `JsonPayload`.
+                        ///
+                        /// - Parameters:
+                        ///   - object:
+                        ///   - quotaBytes:
+                        public init(
+                            object: Operations.PostV1ProductAdminCustomersByIdQuota.Output.Ok.Body.JsonPayload.ObjectPayload? = nil,
+                            quotaBytes: Swift.Int
+                        ) {
+                            self.object = object
+                            self.quotaBytes = quotaBytes
+                        }
+                        public enum CodingKeys: String, CodingKey {
+                            case object
+                            case quotaBytes = "quota_bytes"
+                        }
+                    }
+                    /// - Remark: Generated from `#/paths/v1/product_admin/customers/{id}/quota/POST/responses/200/content/application\/json`.
+                    case json(Operations.PostV1ProductAdminCustomersByIdQuota.Output.Ok.Body.JsonPayload)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Operations.PostV1ProductAdminCustomersByIdQuota.Output.Ok.Body.JsonPayload {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostV1ProductAdminCustomersByIdQuota.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostV1ProductAdminCustomersByIdQuota.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// The quota now
+            ///
+            /// - Remark: Generated from `#/paths//v1/product_admin/customers/{id}/quota/post(postV1ProductAdminCustomersByIdQuota)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.PostV1ProductAdminCustomersByIdQuota.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            public var ok: Operations.PostV1ProductAdminCustomersByIdQuota.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct BadRequest: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/product_admin/customers/{id}/quota/POST/responses/400/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/product_admin/customers/{id}/quota/POST/responses/400/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostV1ProductAdminCustomersByIdQuota.Output.BadRequest.Body
+                /// Creates a new `BadRequest`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostV1ProductAdminCustomersByIdQuota.Output.BadRequest.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/product_admin/customers/{id}/quota/post(postV1ProductAdminCustomersByIdQuota)/responses/400`.
+            ///
+            /// HTTP response code: `400 badRequest`.
+            case badRequest(Operations.PostV1ProductAdminCustomersByIdQuota.Output.BadRequest)
+            /// The associated value of the enum case if `self` is `.badRequest`.
+            ///
+            /// - Throws: An error if `self` is not `.badRequest`.
+            /// - SeeAlso: `.badRequest`.
+            public var badRequest: Operations.PostV1ProductAdminCustomersByIdQuota.Output.BadRequest {
+                get throws {
+                    switch self {
+                    case let .badRequest(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "badRequest",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct Unauthorized: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/product_admin/customers/{id}/quota/POST/responses/401/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/product_admin/customers/{id}/quota/POST/responses/401/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostV1ProductAdminCustomersByIdQuota.Output.Unauthorized.Body
+                /// Creates a new `Unauthorized`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostV1ProductAdminCustomersByIdQuota.Output.Unauthorized.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/product_admin/customers/{id}/quota/post(postV1ProductAdminCustomersByIdQuota)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            case unauthorized(Operations.PostV1ProductAdminCustomersByIdQuota.Output.Unauthorized)
+            /// The associated value of the enum case if `self` is `.unauthorized`.
+            ///
+            /// - Throws: An error if `self` is not `.unauthorized`.
+            /// - SeeAlso: `.unauthorized`.
+            public var unauthorized: Operations.PostV1ProductAdminCustomersByIdQuota.Output.Unauthorized {
+                get throws {
+                    switch self {
+                    case let .unauthorized(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "unauthorized",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct Forbidden: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/product_admin/customers/{id}/quota/POST/responses/403/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/product_admin/customers/{id}/quota/POST/responses/403/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostV1ProductAdminCustomersByIdQuota.Output.Forbidden.Body
+                /// Creates a new `Forbidden`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostV1ProductAdminCustomersByIdQuota.Output.Forbidden.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/product_admin/customers/{id}/quota/post(postV1ProductAdminCustomersByIdQuota)/responses/403`.
+            ///
+            /// HTTP response code: `403 forbidden`.
+            case forbidden(Operations.PostV1ProductAdminCustomersByIdQuota.Output.Forbidden)
+            /// The associated value of the enum case if `self` is `.forbidden`.
+            ///
+            /// - Throws: An error if `self` is not `.forbidden`.
+            /// - SeeAlso: `.forbidden`.
+            public var forbidden: Operations.PostV1ProductAdminCustomersByIdQuota.Output.Forbidden {
+                get throws {
+                    switch self {
+                    case let .forbidden(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "forbidden",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct NotFound: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/product_admin/customers/{id}/quota/POST/responses/404/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/product_admin/customers/{id}/quota/POST/responses/404/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostV1ProductAdminCustomersByIdQuota.Output.NotFound.Body
+                /// Creates a new `NotFound`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostV1ProductAdminCustomersByIdQuota.Output.NotFound.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/product_admin/customers/{id}/quota/post(postV1ProductAdminCustomersByIdQuota)/responses/404`.
+            ///
+            /// HTTP response code: `404 notFound`.
+            case notFound(Operations.PostV1ProductAdminCustomersByIdQuota.Output.NotFound)
+            /// The associated value of the enum case if `self` is `.notFound`.
+            ///
+            /// - Throws: An error if `self` is not `.notFound`.
+            /// - SeeAlso: `.notFound`.
+            public var notFound: Operations.PostV1ProductAdminCustomersByIdQuota.Output.NotFound {
+                get throws {
+                    switch self {
+                    case let .notFound(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "notFound",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        @frozen public enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            public init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            public var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            public static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// A product's totals
+    ///
+    /// Counts only. Admits a manager of the product and a product admin alike.
+    ///
+    /// Replaces GET /product-admin/totals.
+    ///
+    /// - Remark: HTTP `GET /v1/product_admin/totals`.
+    /// - Remark: Generated from `#/paths//v1/product_admin/totals/get(getV1ProductAdminTotals)`.
+    public enum GetV1ProductAdminTotals {
+        public static let id: Swift.String = "getV1ProductAdminTotals"
+        public struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/v1/product_admin/totals/GET/query`.
+            public struct Query: Sendable, Hashable {
+                /// Related objects to return in full instead of as an id. Up to four levels, e.g. `ecosystem_id`; on a list, `data.<field>`.
+                ///
+                /// - Remark: Generated from `#/paths/v1/product_admin/totals/GET/query/expand[]`.
+                public var expand_lbrack__rbrack_: [Swift.String]?
+                /// Creates a new `Query`.
+                ///
+                /// - Parameters:
+                ///   - expand_lbrack__rbrack_: Related objects to return in full instead of as an id. Up to four levels, e.g. `ecosystem_id`; on a list, `data.<field>`.
+                public init(expand_lbrack__rbrack_: [Swift.String]? = nil) {
+                    self.expand_lbrack__rbrack_ = expand_lbrack__rbrack_
+                }
+            }
+            public var query: Operations.GetV1ProductAdminTotals.Input.Query
+            /// - Remark: Generated from `#/paths/v1/product_admin/totals/GET/header`.
+            public struct Headers: Sendable, Hashable {
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.GetV1ProductAdminTotals.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.GetV1ProductAdminTotals.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            public var headers: Operations.GetV1ProductAdminTotals.Input.Headers
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - query:
+            ///   - headers:
+            public init(
+                query: Operations.GetV1ProductAdminTotals.Input.Query = .init(),
+                headers: Operations.GetV1ProductAdminTotals.Input.Headers = .init()
+            ) {
+                self.query = query
+                self.headers = headers
+            }
+        }
+        @frozen public enum Output: Sendable, Hashable {
+            public struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/product_admin/totals/GET/responses/200/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/product_admin/totals/GET/responses/200/content/json`.
+                    public struct JsonPayload: Codable, Hashable, Sendable {
+                        /// - Remark: Generated from `#/paths/v1/product_admin/totals/GET/responses/200/content/json/value1`.
+                        public struct Value1Payload: Codable, Hashable, Sendable {
+                            /// - Remark: Generated from `#/paths/v1/product_admin/totals/GET/responses/200/content/json/value1/object`.
+                            @frozen public enum ObjectPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                                case productAdmin_total = "product_admin.total"
+                            }
+                            /// - Remark: Generated from `#/paths/v1/product_admin/totals/GET/responses/200/content/json/value1/object`.
+                            public var object: Operations.GetV1ProductAdminTotals.Output.Ok.Body.JsonPayload.Value1Payload.ObjectPayload?
+                            /// Creates a new `Value1Payload`.
+                            ///
+                            /// - Parameters:
+                            ///   - object:
+                            public init(object: Operations.GetV1ProductAdminTotals.Output.Ok.Body.JsonPayload.Value1Payload.ObjectPayload? = nil) {
+                                self.object = object
+                            }
+                            public enum CodingKeys: String, CodingKey {
+                                case object
+                            }
+                        }
+                        /// - Remark: Generated from `#/paths/v1/product_admin/totals/GET/responses/200/content/json/value1`.
+                        public var value1: Operations.GetV1ProductAdminTotals.Output.Ok.Body.JsonPayload.Value1Payload
+                        /// - Remark: Generated from `#/paths/v1/product_admin/totals/GET/responses/200/content/json/value2`.
+                        public var value2: Components.Schemas.ProductTotals
+                        /// Creates a new `JsonPayload`.
+                        ///
+                        /// - Parameters:
+                        ///   - value1:
+                        ///   - value2:
+                        public init(
+                            value1: Operations.GetV1ProductAdminTotals.Output.Ok.Body.JsonPayload.Value1Payload,
+                            value2: Components.Schemas.ProductTotals
+                        ) {
+                            self.value1 = value1
+                            self.value2 = value2
+                        }
+                        public init(from decoder: any Swift.Decoder) throws {
+                            self.value1 = try .init(from: decoder)
+                            self.value2 = try .init(from: decoder)
+                        }
+                        public func encode(to encoder: any Swift.Encoder) throws {
+                            try self.value1.encode(to: encoder)
+                            try self.value2.encode(to: encoder)
+                        }
+                    }
+                    /// - Remark: Generated from `#/paths/v1/product_admin/totals/GET/responses/200/content/application\/json`.
+                    case json(Operations.GetV1ProductAdminTotals.Output.Ok.Body.JsonPayload)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Operations.GetV1ProductAdminTotals.Output.Ok.Body.JsonPayload {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.GetV1ProductAdminTotals.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.GetV1ProductAdminTotals.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// The totals
+            ///
+            /// - Remark: Generated from `#/paths//v1/product_admin/totals/get(getV1ProductAdminTotals)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.GetV1ProductAdminTotals.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            public var ok: Operations.GetV1ProductAdminTotals.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct BadRequest: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/product_admin/totals/GET/responses/400/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/product_admin/totals/GET/responses/400/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.GetV1ProductAdminTotals.Output.BadRequest.Body
+                /// Creates a new `BadRequest`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.GetV1ProductAdminTotals.Output.BadRequest.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/product_admin/totals/get(getV1ProductAdminTotals)/responses/400`.
+            ///
+            /// HTTP response code: `400 badRequest`.
+            case badRequest(Operations.GetV1ProductAdminTotals.Output.BadRequest)
+            /// The associated value of the enum case if `self` is `.badRequest`.
+            ///
+            /// - Throws: An error if `self` is not `.badRequest`.
+            /// - SeeAlso: `.badRequest`.
+            public var badRequest: Operations.GetV1ProductAdminTotals.Output.BadRequest {
+                get throws {
+                    switch self {
+                    case let .badRequest(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "badRequest",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct Unauthorized: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/product_admin/totals/GET/responses/401/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/product_admin/totals/GET/responses/401/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.GetV1ProductAdminTotals.Output.Unauthorized.Body
+                /// Creates a new `Unauthorized`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.GetV1ProductAdminTotals.Output.Unauthorized.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/product_admin/totals/get(getV1ProductAdminTotals)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            case unauthorized(Operations.GetV1ProductAdminTotals.Output.Unauthorized)
+            /// The associated value of the enum case if `self` is `.unauthorized`.
+            ///
+            /// - Throws: An error if `self` is not `.unauthorized`.
+            /// - SeeAlso: `.unauthorized`.
+            public var unauthorized: Operations.GetV1ProductAdminTotals.Output.Unauthorized {
+                get throws {
+                    switch self {
+                    case let .unauthorized(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "unauthorized",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct Forbidden: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/product_admin/totals/GET/responses/403/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/product_admin/totals/GET/responses/403/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.GetV1ProductAdminTotals.Output.Forbidden.Body
+                /// Creates a new `Forbidden`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.GetV1ProductAdminTotals.Output.Forbidden.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/product_admin/totals/get(getV1ProductAdminTotals)/responses/403`.
+            ///
+            /// HTTP response code: `403 forbidden`.
+            case forbidden(Operations.GetV1ProductAdminTotals.Output.Forbidden)
+            /// The associated value of the enum case if `self` is `.forbidden`.
+            ///
+            /// - Throws: An error if `self` is not `.forbidden`.
+            /// - SeeAlso: `.forbidden`.
+            public var forbidden: Operations.GetV1ProductAdminTotals.Output.Forbidden {
+                get throws {
+                    switch self {
+                    case let .forbidden(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "forbidden",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct NotFound: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/product_admin/totals/GET/responses/404/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/product_admin/totals/GET/responses/404/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.GetV1ProductAdminTotals.Output.NotFound.Body
+                /// Creates a new `NotFound`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.GetV1ProductAdminTotals.Output.NotFound.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/product_admin/totals/get(getV1ProductAdminTotals)/responses/404`.
+            ///
+            /// HTTP response code: `404 notFound`.
+            case notFound(Operations.GetV1ProductAdminTotals.Output.NotFound)
+            /// The associated value of the enum case if `self` is `.notFound`.
+            ///
+            /// - Throws: An error if `self` is not `.notFound`.
+            /// - SeeAlso: `.notFound`.
+            public var notFound: Operations.GetV1ProductAdminTotals.Output.NotFound {
+                get throws {
+                    switch self {
+                    case let .notFound(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "notFound",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        @frozen public enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            public init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            public var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            public static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// Which product an admin site host belongs to (unauthenticated)
+    ///
+    /// Replaces GET /public/product-admin-sites/{host}.
+    ///
+    /// - Remark: HTTP `GET /v1/product_admin_sites/{host}`.
+    /// - Remark: Generated from `#/paths//v1/product_admin_sites/{host}/get(getV1ProductAdminSitesByHost)`.
+    public enum GetV1ProductAdminSitesByHost {
+        public static let id: Swift.String = "getV1ProductAdminSitesByHost"
+        public struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/v1/product_admin_sites/{host}/GET/path`.
+            public struct Path: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/product_admin_sites/{host}/GET/path/host`.
+                public var host: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - host:
+                public init(host: Swift.String) {
+                    self.host = host
+                }
+            }
+            public var path: Operations.GetV1ProductAdminSitesByHost.Input.Path
+            /// - Remark: Generated from `#/paths/v1/product_admin_sites/{host}/GET/query`.
+            public struct Query: Sendable, Hashable {
+                /// Related objects to return in full instead of as an id. Up to four levels, e.g. `ecosystem_id`; on a list, `data.<field>`.
+                ///
+                /// - Remark: Generated from `#/paths/v1/product_admin_sites/{host}/GET/query/expand[]`.
+                public var expand_lbrack__rbrack_: [Swift.String]?
+                /// Creates a new `Query`.
+                ///
+                /// - Parameters:
+                ///   - expand_lbrack__rbrack_: Related objects to return in full instead of as an id. Up to four levels, e.g. `ecosystem_id`; on a list, `data.<field>`.
+                public init(expand_lbrack__rbrack_: [Swift.String]? = nil) {
+                    self.expand_lbrack__rbrack_ = expand_lbrack__rbrack_
+                }
+            }
+            public var query: Operations.GetV1ProductAdminSitesByHost.Input.Query
+            /// - Remark: Generated from `#/paths/v1/product_admin_sites/{host}/GET/header`.
+            public struct Headers: Sendable, Hashable {
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.GetV1ProductAdminSitesByHost.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.GetV1ProductAdminSitesByHost.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            public var headers: Operations.GetV1ProductAdminSitesByHost.Input.Headers
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            ///   - query:
+            ///   - headers:
+            public init(
+                path: Operations.GetV1ProductAdminSitesByHost.Input.Path,
+                query: Operations.GetV1ProductAdminSitesByHost.Input.Query = .init(),
+                headers: Operations.GetV1ProductAdminSitesByHost.Input.Headers = .init()
+            ) {
+                self.path = path
+                self.query = query
+                self.headers = headers
+            }
+        }
+        @frozen public enum Output: Sendable, Hashable {
+            public struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/product_admin_sites/{host}/GET/responses/200/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/product_admin_sites/{host}/GET/responses/200/content/json`.
+                    public struct JsonPayload: Codable, Hashable, Sendable {
+                        /// - Remark: Generated from `#/paths/v1/product_admin_sites/{host}/GET/responses/200/content/json/value1`.
+                        public struct Value1Payload: Codable, Hashable, Sendable {
+                            /// - Remark: Generated from `#/paths/v1/product_admin_sites/{host}/GET/responses/200/content/json/value1/object`.
+                            @frozen public enum ObjectPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                                case productAdminSite = "product_admin_site"
+                            }
+                            /// - Remark: Generated from `#/paths/v1/product_admin_sites/{host}/GET/responses/200/content/json/value1/object`.
+                            public var object: Operations.GetV1ProductAdminSitesByHost.Output.Ok.Body.JsonPayload.Value1Payload.ObjectPayload?
+                            /// Creates a new `Value1Payload`.
+                            ///
+                            /// - Parameters:
+                            ///   - object:
+                            public init(object: Operations.GetV1ProductAdminSitesByHost.Output.Ok.Body.JsonPayload.Value1Payload.ObjectPayload? = nil) {
+                                self.object = object
+                            }
+                            public enum CodingKeys: String, CodingKey {
+                                case object
+                            }
+                        }
+                        /// - Remark: Generated from `#/paths/v1/product_admin_sites/{host}/GET/responses/200/content/json/value1`.
+                        public var value1: Operations.GetV1ProductAdminSitesByHost.Output.Ok.Body.JsonPayload.Value1Payload
+                        /// - Remark: Generated from `#/paths/v1/product_admin_sites/{host}/GET/responses/200/content/json/value2`.
+                        public var value2: Components.Schemas.ProductAdminSiteLookup
+                        /// Creates a new `JsonPayload`.
+                        ///
+                        /// - Parameters:
+                        ///   - value1:
+                        ///   - value2:
+                        public init(
+                            value1: Operations.GetV1ProductAdminSitesByHost.Output.Ok.Body.JsonPayload.Value1Payload,
+                            value2: Components.Schemas.ProductAdminSiteLookup
+                        ) {
+                            self.value1 = value1
+                            self.value2 = value2
+                        }
+                        public init(from decoder: any Swift.Decoder) throws {
+                            self.value1 = try .init(from: decoder)
+                            self.value2 = try .init(from: decoder)
+                        }
+                        public func encode(to encoder: any Swift.Encoder) throws {
+                            try self.value1.encode(to: encoder)
+                            try self.value2.encode(to: encoder)
+                        }
+                    }
+                    /// - Remark: Generated from `#/paths/v1/product_admin_sites/{host}/GET/responses/200/content/application\/json`.
+                    case json(Operations.GetV1ProductAdminSitesByHost.Output.Ok.Body.JsonPayload)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Operations.GetV1ProductAdminSitesByHost.Output.Ok.Body.JsonPayload {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.GetV1ProductAdminSitesByHost.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.GetV1ProductAdminSitesByHost.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// The product and the client to sign in with
+            ///
+            /// - Remark: Generated from `#/paths//v1/product_admin_sites/{host}/get(getV1ProductAdminSitesByHost)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.GetV1ProductAdminSitesByHost.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            public var ok: Operations.GetV1ProductAdminSitesByHost.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct NotFound: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/product_admin_sites/{host}/GET/responses/404/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/product_admin_sites/{host}/GET/responses/404/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.GetV1ProductAdminSitesByHost.Output.NotFound.Body
+                /// Creates a new `NotFound`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.GetV1ProductAdminSitesByHost.Output.NotFound.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/product_admin_sites/{host}/get(getV1ProductAdminSitesByHost)/responses/404`.
+            ///
+            /// HTTP response code: `404 notFound`.
+            case notFound(Operations.GetV1ProductAdminSitesByHost.Output.NotFound)
+            /// The associated value of the enum case if `self` is `.notFound`.
+            ///
+            /// - Throws: An error if `self` is not `.notFound`.
+            /// - SeeAlso: `.notFound`.
+            public var notFound: Operations.GetV1ProductAdminSitesByHost.Output.NotFound {
                 get throws {
                     switch self {
                     case let .notFound(response):
@@ -404938,7 +409463,7 @@ public enum Operations {
     }
     /// Replace a set's permissions and limits
     ///
-    /// Every key must be one the catalog's `setEntries` declares, with a value of its type (400 otherwise).
+    /// Every key must be one the catalog's `setEntries` declares, with a value of its type (400 otherwise). A product admin, signed in through the product's admin site, may not write `usage.tier`, nor a `storage.quota_bytes` above the default quota (403).
     ///
     /// Replaces PUT /sets/{id}/values.
     ///

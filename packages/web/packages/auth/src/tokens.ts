@@ -54,7 +54,9 @@ const sessionListeners = new Set<() => void>()
 
 // Copy before iterating: a listener may unsubscribe itself (or another) from inside the callback,
 // and mutating a Set mid-iteration silently skips entries.
-function announceSessionChange(): void {
+// Exported for this package's own in-memory token source (ProductAdminAuthProvider), which
+// swaps the session without touching storage; not part of the package's public surface.
+export function announceSessionChange(): void {
   for (const fn of [...sessionListeners]) fn()
 }
 
@@ -102,7 +104,36 @@ export function clearTokens(): void {
   announceSessionChange()
 }
 
+/**
+ * A place other than localStorage that holds the access token: `read` answers the current
+ * token, `refresh` gets a new one (or null when the session is gone).
+ *
+ * The product admin site keeps its token in memory only (its refresh token is an HttpOnly cookie
+ * on the site's own origin), so it cannot use the storage key every other site shares. With a
+ * source set, {@link readAccessToken} and `refreshAccessToken` ask it instead of storage, and
+ * `authedJson` / `authedFetch` (and through them every `@adh-sdk/data` client) send its bearer
+ * with no change of their own. Unset, the default, nothing differs.
+ */
+export interface AccessTokenSource {
+  read(): string | null
+  refresh(): Promise<string | null>
+}
+
+let tokenSource: AccessTokenSource | null = null
+
+/** Install, or with null remove, the {@link AccessTokenSource}. Announces a session change,
+ *  since the token every request sends has just moved. */
+export function setAccessTokenSource(source: AccessTokenSource | null): void {
+  tokenSource = source
+  announceSessionChange()
+}
+
+export function accessTokenSource(): AccessTokenSource | null {
+  return tokenSource
+}
+
 export function readAccessToken(): string | null {
+  if (tokenSource) return tokenSource.read()
   return readTokens()?.accessToken ?? null
 }
 

@@ -71,6 +71,11 @@ def _parse_response(
 
         return response_404
 
+    if response.status_code == 422:
+        response_422 = StripeError.from_dict(response.json())
+
+        return response_422
+
     if client.raise_on_unexpected_status:
         raise errors.UnexpectedStatus(response.status_code, response.content)
     else:
@@ -97,7 +102,10 @@ def sync_detailed(
 ) -> Response[PostV1AccessRoleAssignmentsResponse200 | StripeError]:
     """Grant (or replace) a role for a subject at a scope — requires M + no-escalation
 
-     Replaces PUT /access/assignments.
+     A product admin replacing an `admin` seat, their own or another, is 422 with code
+    `admin_seat_protected`.
+
+    Replaces PUT /access/assignments.
 
     Args:
         workspace (str | Unset):
@@ -134,7 +142,10 @@ def sync(
 ) -> PostV1AccessRoleAssignmentsResponse200 | StripeError | None:
     """Grant (or replace) a role for a subject at a scope — requires M + no-escalation
 
-     Replaces PUT /access/assignments.
+     A product admin replacing an `admin` seat, their own or another, is 422 with code
+    `admin_seat_protected`.
+
+    Replaces PUT /access/assignments.
 
     Args:
         workspace (str | Unset):
@@ -166,7 +177,10 @@ async def asyncio_detailed(
 ) -> Response[PostV1AccessRoleAssignmentsResponse200 | StripeError]:
     """Grant (or replace) a role for a subject at a scope — requires M + no-escalation
 
-     Replaces PUT /access/assignments.
+     A product admin replacing an `admin` seat, their own or another, is 422 with code
+    `admin_seat_protected`.
+
+    Replaces PUT /access/assignments.
 
     Args:
         workspace (str | Unset):
@@ -201,7 +215,10 @@ async def asyncio(
 ) -> PostV1AccessRoleAssignmentsResponse200 | StripeError | None:
     """Grant (or replace) a role for a subject at a scope — requires M + no-escalation
 
-     Replaces PUT /access/assignments.
+     A product admin replacing an `admin` seat, their own or another, is 422 with code
+    `admin_seat_protected`.
+
+    Replaces PUT /access/assignments.
 
     Args:
         workspace (str | Unset):
