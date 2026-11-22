@@ -100,6 +100,18 @@ final class ComposableTabsActivePaneConformanceTests: XCTestCase {
         }
     }
 
+    /// Runs the run loop in `.eventTracking` mode only, until `condition`
+    /// holds or `timeout` passes — the mode a main-queue sink must still be
+    /// served in during a drag. One `run(mode:before:)` call returns after the
+    /// first source it handles, which on a cold or loaded run is often not the
+    /// main queue's, so a single call cannot stand for "the queue drained".
+    private func drainEventTracking(until condition: () -> Bool, timeout: TimeInterval = 5) {
+        let deadline = Date().addingTimeInterval(timeout)
+        while !condition(), Date() < deadline {
+            RunLoop.current.run(mode: .eventTracking, before: Date().addingTimeInterval(0.01))
+        }
+    }
+
     private func setFollows(_ enabled: Bool) {
         UserSettings.shared.set(enabled, for: UserSettings.activePaneFollowsMouse)
         drain()
@@ -676,13 +688,13 @@ final class ComposableTabsActivePaneConformanceTests: XCTestCase {
     func testCTA51_closeAndHighlightChangesDispatchThroughTheMainQueue() {
         let rig = makeRig()
         rig.window.close()
-        RunLoop.current.run(mode: .eventTracking, before: Date().addingTimeInterval(0.2))
+        drainEventTracking(until: { tracker.activeNodeID(in: rig.window) == nil })
         XCTAssertNil(tracker.activeNodeID(in: rig.window))
 
         let other = makeRig(panes: 1)
         other.panes[0].layer?.borderWidth = 7
         UserSettings.shared.set(false, for: UserSettings.highlightActivePane)
-        RunLoop.current.run(mode: .eventTracking, before: Date().addingTimeInterval(0.2))
+        drainEventTracking(until: { other.panes[0].layer?.borderWidth == 2 })
         XCTAssertEqual(other.panes[0].layer?.borderWidth, 2)
     }
 
