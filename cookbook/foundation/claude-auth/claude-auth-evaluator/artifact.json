@@ -1,0 +1,63 @@
+{
+  "format": 2,
+  "meta": {
+    "id": "a2cb25cc-f3d1-4b82-8a32-52e727c317e1",
+    "title": "Claude Auth Evaluator",
+    "type": "ingredient",
+    "version": "1.1.0",
+    "status": "review",
+    "language": "en",
+    "created": "2026-11-21",
+    "modified": "2026-11-21",
+    "author": "Mike Fullerton",
+    "copyright": "2026 Mike Fullerton",
+    "license": "MIT",
+    "summary": "Judges saved Claude credentials, refreshes expired logins at Claude Code's token endpoint, and maps token digests to the accounts they bill.",
+    "platforms": [
+      "swift",
+      "macos"
+    ],
+    "tags": [
+      "foundation",
+      "claude-auth",
+      "oauth",
+      "credentials"
+    ],
+    "depends-on": [
+      "2b552bde-d0bd-425a-9e79-fc624b52f516",
+      "0de17653-f56d-418f-b212-33e9017972cd",
+      "81fb66c5-e31d-4817-ba36-5ccace191e8f",
+      "b6d96b0b-3ca0-48ac-8e94-a25a8ee68e43",
+      "3f1efb26-3dfb-4e6c-bbbc-32609151ce78",
+      "94bac7a5-3fc6-463d-86d1-7c59350cd7cb"
+    ],
+    "related": [],
+    "references": [],
+    "approved-by": "",
+    "approved-date": ""
+  },
+  "names_hosts": "The subject is Claude account credentials and Claude Code's token endpoint; the product name is the thing being evaluated.",
+  "synced": "89ed0271195c3757",
+  "parts": [
+    {"part": "intro"},
+    {"part": "overview", "heading": "Overview"},
+    {"part": "behavioral-requirements", "heading": "Behavioral Requirements"},
+    {"part": "appearance", "heading": "Appearance"},
+    {"part": "states", "heading": "States"},
+    {"part": "accessibility", "heading": "Accessibility"},
+    {"part": "conformance-test-vectors", "heading": "Conformance Test Vectors"},
+    {"part": "edge-cases", "heading": "Edge Cases"},
+    {"part": "configuration", "heading": "Configuration"},
+    {"part": "deep-linking", "heading": "Deep Linking"},
+    {"part": "localization", "heading": "Localization"},
+    {"part": "accessibility-options", "heading": "Accessibility Options"},
+    {"part": "feature-flags", "heading": "Feature Flags"},
+    {"part": "analytics", "heading": "Analytics"},
+    {"part": "privacy", "heading": "Privacy"},
+    {"part": "logging", "heading": "Logging"},
+    {"part": "platform-notes", "heading": "Platform Notes"},
+    {"part": "design-decisions", "heading": "Design Decisions"},
+    {"part": "compliance", "heading": "Compliance"},
+    {"part": "history", "heading": "Change History"}
+  ]
+}

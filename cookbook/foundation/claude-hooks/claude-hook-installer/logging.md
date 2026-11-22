@@ -15,6 +15,13 @@ Subsystem: the main bundle identifier | Category: `ClaudeHookInstaller` (`Loggab
 | Uninstall failed | error | `Uninstall failed: <error>` |
 | Display toggled | info | `Status-line display turned on` and `Status-line display turned off; the capture tap stays` |
 | Capture script removed or not | info or error | `Removed retired capture script at <path>` and `Could not remove capture script: <error>` |
+| Router pointer set | info | `Pointed Claude Code at the account router` |
+| Router pointer removed | info | `Claude Code no longer points at the account router` |
+| Router pointer suspended | info | `Router pointer suspended while the daemon is down` |
+| Suspend failed | error | `Could not suspend the router pointer: <error>` |
+| Router pointer restored | info | `Router pointer restored` |
+| Resume failed | error | `Could not restore the router pointer: <error>` |
+| Router pointer removal failed | error | `Router pointer removal failed: <error>` |
 
-Error text, paths and commands are logged with public privacy, so a command that embeds a secret would appear in the log; a port MUST log commands and paths with private privacy instead.
+Error text, paths and commands are logged with public privacy, so a command that embeds a secret would appear in the log; a port MUST log commands and paths with private privacy instead. The router-pointer lines log no URL value.
 

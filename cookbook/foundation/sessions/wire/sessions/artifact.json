@@ -1,0 +1,123 @@
+{
+  "format": 2,
+  "meta": {
+    "id": "de98aa67-83a3-41d1-907f-86713a7a6e10",
+    "title": "Sessions",
+    "type": "ingredient",
+    "version": "1.1.0",
+    "status": "review",
+    "language": "en",
+    "created": "2026-11-21",
+    "modified": "2026-11-21",
+    "author": "Mike Fullerton",
+    "copyright": "2026 Mike Fullerton",
+    "license": "MIT",
+    "summary": "The Sessions namespace for session daemon wire types, its VisibleText scalar allowlist, and Stenographer's billing settings key prefix.",
+    "platforms": [
+      "swift",
+      "macos"
+    ],
+    "tags": [
+      "foundation",
+      "sessions",
+      "dto",
+      "wire"
+    ],
+    "depends-on": [],
+    "related": [
+      "e8286557-84ee-4f45-b78c-f1d184c51a37",
+      "94bac7a5-3fc6-463d-86d1-7c59350cd7cb",
+      "fcbf09d9-5555-4278-9940-2be920de49d3",
+      "c5231579-d9c0-412d-8ae0-4c9bfb7937d3",
+      "3f1efb26-3dfb-4e6c-bbbc-32609151ce78",
+      "dfdb871e-bca1-45a7-a64d-9ab6af0c0917",
+      "ed610aa4-2717-4242-a8b9-c4616377dbd9"
+    ],
+    "references": [],
+    "approved-by": "",
+    "approved-date": ""
+  },
+  "synced": "eb761338ded90dc3",
+  "parts": [
+    {
+      "part": "intro"
+    },
+    {
+      "part": "overview",
+      "heading": "Overview"
+    },
+    {
+      "part": "behavioral-requirements",
+      "heading": "Behavioral Requirements"
+    },
+    {
+      "part": "appearance",
+      "heading": "Appearance"
+    },
+    {
+      "part": "states",
+      "heading": "States"
+    },
+    {
+      "part": "accessibility",
+      "heading": "Accessibility"
+    },
+    {
+      "part": "conformance-test-vectors",
+      "heading": "Conformance Test Vectors"
+    },
+    {
+      "part": "edge-cases",
+      "heading": "Edge Cases"
+    },
+    {
+      "part": "configuration",
+      "heading": "Configuration"
+    },
+    {
+      "part": "deep-linking",
+      "heading": "Deep Linking"
+    },
+    {
+      "part": "localization",
+      "heading": "Localization"
+    },
+    {
+      "part": "accessibility-options",
+      "heading": "Accessibility Options"
+    },
+    {
+      "part": "feature-flags",
+      "heading": "Feature Flags"
+    },
+    {
+      "part": "analytics",
+      "heading": "Analytics"
+    },
+    {
+      "part": "privacy",
+      "heading": "Privacy"
+    },
+    {
+      "part": "logging",
+      "heading": "Logging"
+    },
+    {
+      "part": "platform-notes",
+      "heading": "Platform Notes"
+    },
+    {
+      "part": "design-decisions",
+      "heading": "Design Decisions"
+    },
+    {
+      "part": "compliance",
+      "heading": "Compliance"
+    },
+    {
+      "part": "history",
+      "heading": "Change History"
+    }
+  ],
+  "names_hosts": "The subject is the Claude Code session wire namespace: its members are named for Claude accounts and credentials, and the visible-text vectors use Claude model names (Haiku) the source tests store."
+}

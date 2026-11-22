@@ -1,0 +1,29 @@
+
+- **Empty tier-target text**: `ModelTierTarget("")` has neither prefix and MUST yield nil.
+- **`claude:` with nothing after it**: The empty remainder is not a family raw value, so parsing MUST yield nil.
+- **Provider text with no UUID**: `provider:` or `provider:/model` gives an empty UUID string, which MUST yield nil.
+- **Provider text with trailing characters on the UUID**: `provider:<uuid>x` makes the UUID part `<uuid>x`, which does not parse, so the result MUST be nil.
+- **Lowercase UUID**: A lowercase UUID MUST parse and MUST print back uppercase, so the round trip normalizes case rather than returning the original text.
+- **Model at the length boundary**: exactly 200 characters MUST parse; 201 MUST yield nil. 200 emoji built from several scalars each still count 200.
+- **Request id boundaries**: a 1-character id and a 64-character id MUST be valid; an empty id, a 65-character id, a leading dash, an uppercase letter, an underscore, a space or a non-ASCII letter MUST make the id invalid.
+- **Retired keys in stored data**: `writes`, `max_tokens`, `tier`, `about`, format 1's `provider`, `model`, `rules` and `models`, and format 2's `unclassified_tier` MUST be ignored or converted on decode and MUST NOT reappear on encode.
+- **Unknown thread string**: a `thread` value outside the four raw strings MUST fail the decode of the enclosing `ModelRouteConditionsDTO`; inside format-2 requests that drops only the one element, and inside format-3 requests it fails the `requests` section (`unreadableSection("requests")`).
+- **Version text edge forms**: `"2."`, `".1"` and `"2..1"` have an empty piece and MUST yield nil; a piece too large for `Int` MUST yield nil; `"02.1"` MUST parse equal to `"2.1"` while keeping `"02.1"` as its description.
+- **User agent with two markers**: only the first `claude-cli/` MUST be read.
+- **Version text equal but spelled differently**: a range `2.1`–`2.1.0` MUST show `versionText` as `2.1 – 2.1.0`, because `versionText` compares strings, while selection treats the two ends as equal.
+- **Format 0 or negative**: MUST decode through the format-1 branch and come back as format 3.
+- **Stored format above 3 through the plain decoder**: MUST decode as format 3 does and keep its number; only `decodeFile` refuses it (`newerFormat`), so a re-encoded format-4 template is refused when read back as a file.
+- **Missing `format`, `id`, `name` or range**: the plain decoder MUST throw; `decodeFile` MUST return `unreadable`.
+- **Malformed `claude_code`**: a present but undecodable `claude_code` MUST throw a decoding error without trying `claudeCode`; `decodeFile` MUST return `unreadable`.
+- **Format-2 duplicate request ids**: both requests MUST be kept and the later element's tier MUST win in `requestTiers`; validation then returns `duplicateRequestId`.
+- **Format-3 request tiers absent but requests present**: `requestTiers` MUST default from the decoded requests, not from the built-in requests.
+- **Non-JSON or array data**: `decodeFile` MUST return `unreadable`.
+- **Encoding failure**: `encodedFile()` MUST return empty data; no member of the template is a floating-point value, so the synthesized encoder has no failing input in practice.
+- **Removal of an unknown tier**: `removalProblem` MUST name the tier by its id when no tier has that id and something still maps to it.
+- **Validation short-circuit**: `problem` MUST report only the first problem; a template with several problems needs several fixes and re-checks.
+- **Name comparisons differ**: the template name clash MUST use case-insensitive comparison against `others`, while tier and request name clashes MUST compare `lowercased()` forms within the template.
+- **No templates or no parseable range**: `select` MUST return nil.
+- **Preferred template outside the version**: a preferred template MUST win only among templates that cover the version, or among those reaching the latest version in a fallback; a preferred but older template MUST NOT be selected over a later-reaching one in a fallback.
+- **Concurrent access**: every type is a `Sendable` value type or a caseless namespace of pure static functions over immutable `static let` data, so concurrent calls MUST be safe without locking; mutating a `var` field affects only that copy.
+- **Missing file, unreachable server, timeouts, cancellation**: not applicable; the files do no I/O and have no long-running operation. Reading template files and their failures belong to `ModelRouterTemplateStore`; transport belongs to the daemon client and server.
+

@@ -1,0 +1,9 @@
+
+- **Data collected**: Account names (emails) in `account`, `itemKey`, the summary's `name` and the status's `account`; bearer tokens in the request's `token` (for `saveToken`) and the response's `token` (for `token`); whole OAuth logins, access and refresh token together, in `ClaudeRotatedCredentialDTO.oauth` and `ClaudeLoginRenewalDTO.oauth`.
+- **Secret-free surfaces**: `ClaudeSavedAccountSummaryDTO` and `ClaudeAccountTokenStatusDTO` carry no secret by design, and `detail` on the status and the renewal is documented never to contain a token. The status is kept a separate type from the token-bearing `ClaudeCredentialDTO` because one shared type "would be one field rename away from serving a refresh token over HTTP".
+- **Storage**: None in these types. The saved credentials live in keychain items the app keeps custody of; the summary's `location` names which keychain (`login` or `shared`).
+- **Transmission**: The values cross process boundaries between `steno`, the daemon and the app as encoded payloads; the types themselves perform no transmission. A rotated login goes back only down the connection that supplied it, "the one path that hands it to nobody else".
+- **Retention**: None beyond the lifetime of the value the caller holds.
+- **Secret exposure**: The request, response, rotated-credential and renewal structs declare no redacting description, so their default reflection (`print`, string interpolation, `dump`) includes any token in clear; code that logs one would log the token.
+- **Token lifetime**: A token handed out for `token` carries at least `minimumLifetime` seconds of life when the daemon honors the request. A refresh token is single-use: once the token endpoint answers, the pair in a rotation or renewal is the only working copy and the caller stores it first. Expiry, refresh and revocation themselves are owned by the app's keychain code and the daemon's credential evaluator, outside these files.
+

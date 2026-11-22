@@ -4,15 +4,15 @@
     "id": "fc622208-1504-421f-8892-c5869820550c",
     "title": "Claude Hook Installer",
     "type": "ingredient",
-    "version": "1.0.1",
+    "version": "1.1.0",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
-    "modified": "2026-11-14",
+    "modified": "2026-11-21",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
-    "summary": "Installs and removes one daemon's Claude Code command hooks and status-line registration in settings.json under a shared lock, beside other tools' entries.",
+    "summary": "Installs and removes one daemon's Claude Code hooks, status-line registration and router pointer in settings.json under a shared lock, beside other tools.",
     "platforms": [
       "swift",
       "macos"
@@ -25,7 +25,8 @@
     "depends-on": [
       "9eb46f78-0ceb-455f-9584-b6b43ddf0871",
       "517adfce-44e7-404e-8a7b-b1e304da32e7",
-      "9c81ac1c-ee1e-45b1-824c-deee1850037c"
+      "9c81ac1c-ee1e-45b1-824c-deee1850037c",
+      "b6d96b0b-3ca0-48ac-8e94-a25a8ee68e43"
     ],
     "related": [],
     "references": [],
@@ -33,7 +34,7 @@
     "approved-date": ""
   },
   "names_hosts": "The component integrates with Claude Code's hooks and status line; the host's name, events and paths are its subject.",
-  "synced": "2875668b212d9eee",
+  "synced": "1971b5791b6f00f0",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
