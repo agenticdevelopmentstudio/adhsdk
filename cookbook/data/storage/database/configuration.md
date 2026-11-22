@@ -13,4 +13,11 @@
 | `token` (storage-directory operation) | string | the default token | Name folded to lowercase for the dotfolder. |
 | Progress-check interval | constant | 1000 execution steps | Not configurable. |
 | Percentile window | constant | 128 durations per lane | Not configurable. |
-
+| `service` (`KeychainAccountCredentialStore`) | string | required | Keychain service the credential item lives under; a daemon passes `<its label>.accounts`. |
+| `label` (`AccountQuotaProbe`, `AccountRouterConfiguration`) | string | required | The daemon's label; names the probe queue and the router's log subsystem and queues. |
+| `credentials` (`AccountQuotaProbe`) | `AccountCredentialStore` | required | Where the held credential set is saved. |
+| `userAgent` (`AccountQuotaProbe`) | string | `ClaudeTokenRefresher.userAgent` | The `User-Agent` every probe sends. |
+| `dataDirectory`, `fingerprintsPath`, `upstream`, `templateDirectory`, `providerSecret` (`AccountRouterConfiguration`) | various | `upstream` is `https://api.anthropic.com`; templates go in the data directory's template subdirectory; provider keys come from the shared Keychain namespace | Where the router keeps its files, where it sends requests and how it reads provider keys. |
+| `router` (`AccountRouterRoutes.table`) | optional `AccountRouterServer` | required | The daemon's router; nil makes `/router/*` answer 503. |
+| `probe` (`AccountRouterRoutes.table`) | `AccountQuotaProbe` | required | The probe that takes custody of relayed credentials. |
+| `since_hours` default | constant | `24` (`AccountRouterRoutes.defaultReportHours`) | The report window when the query omits it. |

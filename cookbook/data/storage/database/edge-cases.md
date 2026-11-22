@@ -18,4 +18,10 @@
 - **Cancellation**: There is no cancellation interface; an external cancellation signal does not interrupt a running call, and the deadline is the only way a statement is stopped.
 - **Offline or network loss**: Not applicable; the component performs only local file I/O.
 - **Direct writer access**: Statements run through direct writer access MUST NOT be ejected or metered, because no deadline is armed on that thread.
-
+- **Relayed empty set**: A relay of `[]` MUST count as a change when credentials were held and MUST clear the store (the Keychain item is deleted).
+- **Repeated relay**: Relaying the same set again MUST answer `changed: false` and MUST NOT save.
+- **Malformed relay body**: An empty body, a truncated array, or a JSON object instead of an array MUST answer 400 and save nothing.
+- **Unreadable credential store**: A probe whose store throws on load MUST start empty and log the failure; the client's next relay fills it.
+- **No router configured**: The credential relay still works; only `/router/*` answers 503.
+- **Oversized report window**: `since_hours=99999999999999999999` MUST clamp to `maxReportHours` rather than fail.
+- **Empty exchange parameter**: `limit=` (empty) MUST answer 400 naming `limit`.

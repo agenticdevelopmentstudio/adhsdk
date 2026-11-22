@@ -85,3 +85,38 @@
 - **sendable-class**: The bounded database MUST be safe to call concurrently from multiple threads and tasks, relying on the underlying database library's own thread safety for connections, a lock around the metrics, and per-thread state for the current operation's deadline and connection.
 - **per-thread-state**: The armed deadline and the current connection MUST be stored per thread, so operations on different threads never observe each other's deadline or connection.
 
+### Account Credential Store
+
+- **credential-store-contract**: An `AccountCredentialStore` MUST offer `load()`, returning the set saved last or an empty list when none is, and `save(_:)`, replacing the saved set; both may throw.
+- **credential-store-empty-save**: Saving an empty set MUST remove the saved set: the Keychain store deletes its item rather than writing an empty list.
+- **keychain-store-item**: `KeychainAccountCredentialStore(service:)` MUST keep the whole set as JSON in one generic-password item named `claude-credentials` (`itemKey`) under the injected service, through AIPluginKit's `SecretStoring`.
+- **keychain-store-write-failure**: A write the secret store refuses MUST throw `AccountCredentialStoreError.writeFailed`.
+- **in-memory-store**: `InMemoryAccountCredentialStore` MUST keep the set in memory only, under a lock, and count every `save(_:)` in `saves`.
+
+### Account Quota Probe
+
+- **probe-one-per-daemon**: A daemon MUST build exactly one `AccountQuotaProbe` and hand it to both the database (as its quota source) and the account router (as its credential source), because a Claude refresh token is single-use and two evaluators spending one void each other's rotation.
+- **probe-load-once**: The probe MUST load its store once, at init; a store that cannot be read MUST be logged and the probe MUST start with an empty set.
+- **take-credentials**: `takeCredentials(_:refreshing:now:)` MUST evaluate the pushed set, keep only each probeable credential's probe half through `setCredentials(_:)`, record the secret-free token statuses, and return a `ClaudeCredentialEvaluationDTO` carrying `changed` and the logins it rotated.
+- **take-credentials-serial**: Evaluations MUST run one at a time, so two relays can never both spend the same refresh token.
+- **classify-only**: With `refreshing: false` the evaluation MUST NOT refresh any login; it only classifies the set.
+- **set-credentials-change**: `setCredentials(_:)` MUST compare the new set to the held one by account, credential kind and token fingerprint, in any order; on a change it MUST replace the set, invalidate the quota cache and save the set to the store, and return `true`; otherwise it MUST do nothing and return `false`.
+- **set-credentials-save-failure**: A store that throws on save MUST be logged; the in-memory set still changes.
+- **held-token**: `heldToken(itemKey:)` MUST be the only read of a secret the probe allows, for the account router; it returns nil when nothing probeable is held under that key.
+- **probe-on-demand**: Probes MUST run on a private utility queue and only when a consumer asks while the cache is past its TTL (`refreshIfStale`); the default TTL is 300 seconds (`defaultTTL`).
+
+### Account Router Routes
+
+- **router-routes-table**: `AccountRouterRoutes.table(router:probe:)` MUST return a route table that claims `GET /router/<sub>` (exactly two path components) and `POST /accounts/credentials`, and nothing else.
+- **router-routes-endpoints**: `AccountRouterRoutes.endpoints` MUST list `GET /router/status`, `GET /router/report`, `GET /router/exchanges` and `POST /accounts/credentials`, for a daemon's endpoint index.
+- **router-unavailable**: When the table was built with no router, every `GET /router/<sub>` MUST answer 503 with `{"status":"unavailable","error":"no account router on this daemon"}`.
+- **router-status**: `GET /router/status` MUST answer 200 with the router's status in snake_case; the status names saved credentials by item key only.
+- **router-report**: `GET /router/report` MUST answer the router's report for `since_hours` hours, defaulting to 24 (`defaultReportHours`); `0` means all time.
+- **router-report-window**: `since_hours` MUST be ASCII digits only and MUST be clamped to `AccountRouterServer.maxReportHours` (a century), a run of digits too long for an integer included; anything else MUST answer 400 "since_hours must be a whole number of hours (0 for all time)".
+- **router-exchanges**: `GET /router/exchanges` MUST pass `account` through unchanged and accept `after_id`, `before_id`, `limit` and `since_hours` as ASCII digits, a run too long for an integer reading as the largest integer; a malformed number MUST answer 400 naming the parameter.
+- **router-exchanges-rule**: `rule` MUST be one of `AccountRouterRuleFilter`'s raw values; any other value MUST answer 400 listing the valid ones.
+- **router-store-error**: A report or exchange query that throws MUST answer 500 with the error's description scrubbed by `AccountRouterLog.scrub`.
+- **router-unknown-path**: Any other `GET /router/<sub>` MUST answer 404.
+- **credential-relay**: `POST /accounts/credentials` MUST decode the body as a snake_case JSON array of `ClaudeCredentialDTO`, hand it to the probe classify-only (`takeCredentials(_:refreshing: false)`, which stores through `setCredentials(_:)`), and answer 200 with `{"changed": <Bool>}`.
+- **credential-relay-no-echo**: The relay's reply MUST carry no token, and an undecodable body MUST answer 400 "the body must be a JSON array of credentials" without quoting the body or the decoding error.
+- **credential-relay-router-free**: The relay MUST work whether or not the table has a router.

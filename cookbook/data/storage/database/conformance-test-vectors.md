@@ -24,4 +24,13 @@
 | sed-021 | other-errors-unrecorded | a read whose body raises a custom error | the custom error propagates; the read lane's completed and evicted counts are unchanged; its in-flight count is `0` |
 | sed-022 | percentile-empty | a freshly opened database, reading the metrics snapshot | both lanes report a completed count of `0` and both percentile durations of `0`; lane order is `["write", "read"]` |
 | sed-023 | write-transaction | a write whose body inserts a row then raises | the error propagates; a later read does not see the row |
-
+| sed-024 | router-unavailable | `GET /router/status`, `/router/report` and `/router/exchanges` on a table with no router | 503 each, `status` is `"unavailable"` (`AccountRouterRoutesTests.testNoRouterIs503NotAnEmptyAnswer`) |
+| sed-025 | router-report | `GET /router/report` with no query | 200, `since_hours` is `24` (`testReportDefaultsToTwentyFourHours`) |
+| sed-026 | router-report-window | `since_hours` of `abc`, `-1`, `1.5`, `+5`, `%20` | 400 each (`testAMalformedWindowIs400`) |
+| sed-027 | router-report-window | `since_hours` of `99999999999999999999` and `Int.max` | 200, `since_hours` is `maxReportHours` (`testAHugeWindowIsClampedToACentury`) |
+| sed-028 | router-exchanges | three exchanges; `?before_id=3&limit=1` | ids `[2]` (`testExchangesFilterByEveryParameter`) |
+| sed-029 | router-exchanges-rule | `?rule=bogus` | 400 whose message names every `AccountRouterRuleFilter` value (`testAnUnknownRuleIs400ListingTheValidOnes`) |
+| sed-030 | router-status | a saved account `oauth:a@x.com` whose token is `sk-ant-...` | 200, `saved_credentials` is `["oauth:a@x.com"]`, the body never contains `sk-ant` (`testStatusIsSnakeCaseAndNamesNoSecret`) |
+| sed-031 | credential-relay, credential-relay-no-echo | one long-lived credential posted to an empty in-memory store | 200, `changed` is `true`, the store holds the token and saved once, the reply does not contain it (`testRelayStoresTheSetAndEchoesNoToken`) |
+| sed-032 | set-credentials-change | the same body posted twice | the second reply has `changed: false`; `saves` stays `1` (`testRelayingTheSameSetAgainChangesNothing`) |
+| sed-033 | credential-relay-no-echo | a truncated array carrying a token, an empty body, a JSON object | 400 each, no token or account in the reply, nothing saved (`testAnUndecodableBodyIs400AndEchoesNothing`) |

@@ -26,3 +26,20 @@ which names its file inside the storage-location helper's directory.
 
 `summaryAIProviderSettings(for:)` resolves a `SummaryFeature`'s provider. Sessions reads the global selection. AI Conversations and Coding Projects read their own selection key: absent inherits the global one, an empty string means the command-line provider sentinel, and an id picks that configuration.
 
+The daemon half of the module (`Database/Daemon`) also carries the Claude
+account router, moved out of stenographerd so any daemon can host it:
+
+- `AccountCredentialStore` keeps the Claude credentials a client relays to the
+  daemon, as each credential's probe half. `KeychainAccountCredentialStore`
+  holds the set as JSON in one Keychain generic-password item;
+  `InMemoryAccountCredentialStore` is for tests and for a daemon that must not
+  touch the Keychain.
+- `AccountQuotaProbe` is the daemon's one custodian of those credentials and
+  its live per-account quota cache: it judges a relayed set, keeps the probe
+  halves, and measures each account's rate-limit headers on demand.
+- `AccountRouterServer`, configured by `AccountRouterConfiguration`, is the
+  local proxy that routes Claude Code's API traffic across the saved accounts
+  and records each exchange; `RouterHistoryRetentionTask` trims that history.
+- `AccountRouterRoutes` is the route set a daemon mounts for the router's read
+  surface (`GET /router/status`, `GET /router/report`, `GET /router/exchanges`)
+  and the credential relay (`POST /accounts/credentials`).
