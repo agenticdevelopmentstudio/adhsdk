@@ -748,8 +748,9 @@ public enum SessionSchema {
     /// so analytics (events/day, tool/subagent/notification/compaction
     /// breakdowns) persist after the raw rows are deleted. Counts and
     /// `value_sum` are additive — averages are computed at read time as
-    /// `value_sum / count`. `value_sum` is reserved (0 in this phase) for
-    /// future additive measures like tool durations.
+    /// `value_sum / count`. `value_sum` was reserved (0) here for future
+    /// additive measures; the later `project` metric stores the day's distinct
+    /// sessions in it, and every other metric still writes 0.
     private static func migration020(_ db: DaemonDatabase) throws {
         logger.info("migration020: creating daily_metric + source timestamp indexes…")
         try db.migrationTransaction {
