@@ -1,6 +1,8 @@
 #if canImport(AgenticDeveloperHubSDKCore)
 import AgenticDeveloperHubSDKCore
 import Foundation
+import GRDB
+import OSLog
 
 // swiftlint:disable multiple_closures_with_trailing_closure
 
@@ -19,8 +21,11 @@ import Foundation
 /// Writes are `POST`s: `POST /billing/<things>` saves (an empty id inserts),
 /// `POST /billing/<things>/:id/delete` deletes, and the rest name their verb.
 /// Bodies are snake_case JSON. A store's refusal answers 400 with its sentence,
-/// which is written to be shown verbatim in an alert; a count write that
-/// threw answers 500, never a count of 0, which would read as "nothing to do".
+/// which is written to be shown verbatim in an alert, and only a refusal does:
+/// the app treats a 400 as final. A database that was busy answers 503 (try
+/// again) and any other failure 500, each with a sentence of its own, never
+/// SQLite's text, which goes to the log. A count write that threw answers a
+/// 500 or 503, never a count of 0, which would read as "nothing to do".
 /// A daemon must mount these behind its client token, never on an
 /// unauthenticated path. Any method but `GET` and `POST` is a 405.
 public enum BillingRoutes {
@@ -124,7 +129,7 @@ public enum BillingRoutes {
                 return unknown(path)
             }
         } catch {
-            return .failure(error)
+            return storeFailure(error)
         }
     }
 
@@ -177,7 +182,7 @@ public enum BillingRoutes {
             do {
                 return .json(try database.billingAppNames(sessionIds: Array(body.sessionIds.prefix(maxAppNameIds))))
             } catch {
-                return .failure(error)
+                return storeFailure(error)
             }
         case "backfill":
             guard let body = try? decode(BackfillRequest.self, request) else {
@@ -265,8 +270,8 @@ public enum BillingRoutes {
     /// owns the rules: one transaction, clamp on read, re-derive on a cutoff
     /// change.
     ///
-    /// A failed write is a 500, so the app's push is not counted as delivered
-    /// and is retried. A body that is not one JSON object of scalars writes
+    /// A failed write is a 500 (a 503 when the database was busy), so the
+    /// app's push is not counted as delivered and is retried. A body that is not one JSON object of scalars writes
     /// nothing and is a 400, never a 200 with the old snapshot, which would
     /// read as a delivered save. An empty body writes nothing and answers the
     /// snapshot.
@@ -283,41 +288,77 @@ public enum BillingRoutes {
         do {
             return .json(try BillingPrefs.apply(fields, database: database).wireForm)
         } catch {
-            return .failure(error)
+            return storeFailure(error)
         }
     }
 
     // MARK: - Replies
 
-    /// One write's reply: the stored value, or 400 with the sentence that
-    /// refused it. The stores' errors are `LocalizedError`s written to be shown
-    /// verbatim.
+    /// One write's reply: the stored value, or ``storeFailure(_:)``.
     private static func stored<T: Encodable>(_ write: () throws -> T) -> RouteResponse {
         do {
             return .json(try write())
         } catch {
-            return .error(error.localizedDescription, status: 400)
+            return storeFailure(error)
         }
     }
 
-    /// A delete's reply: 204, or 400 with the refusal.
+    /// A delete's reply: 204, or ``storeFailure(_:)``.
     private static func deleted(_ delete: () throws -> Void) -> RouteResponse {
         do {
             try delete()
             return .noContent
         } catch {
-            return .error(error.localizedDescription, status: 400)
+            return storeFailure(error)
         }
     }
 
-    /// A count write's reply: `{"count": n}`, or a 500 when it threw.
+    /// A count write's reply: `{"count": n}`, or ``storeFailure(_:)``.
     private static func counted(_ write: () throws -> Int) -> RouteResponse {
         do {
             let count = try write()
             return .json(["count": count])
         } catch {
-            return .failure(error)
+            return storeFailure(error)
         }
+    }
+
+    /// The reply to a store write that threw. A store's refusal is a 400 with
+    /// its sentence, which the stores write to be shown verbatim; a database
+    /// that was busy or locked (a deadline counts) is a 503 the app may retry;
+    /// anything else is a 500. Neither carries the database's own text, which
+    /// is logged instead: it names files and SQL, and it is no sentence for an
+    /// alert.
+    static func storeFailure(_ error: Error) -> RouteResponse {
+        switch error {
+        case is BillingStore.BillingError, is BillingRollup.RollupError, is BillingTimer.TimerError,
+             is BillingWireError:
+            return .error(error.localizedDescription, status: 400)
+        default:
+            let busy = isBusy(error)
+            logger.error("""
+                Billing write failed\(busy ? " (busy)" : "", privacy: .public): \
+                \(error.localizedDescription, privacy: .public)
+                """)
+            return busy ? .error(busyMessage, status: 503) : .error(failedMessage, status: 500)
+        }
+    }
+
+    static let busyMessage = "The billing database is busy. Try again in a moment."
+    static let failedMessage = "The billing database couldn't complete the request."
+
+    /// SQLITE_BUSY or SQLITE_LOCKED, extended forms included, whether it
+    /// arrives mapped (`DaemonDatabaseError`, as the write lane throws it, a
+    /// deadline included) or raw (`GRDB.DatabaseError`, from a nested write).
+    private static func isBusy(_ error: Error) -> Bool {
+        let code: Int32?
+        switch error {
+        case let mapped as DaemonDatabaseError: code = mapped.sqliteCode
+        case let raw as GRDB.DatabaseError: code = raw.extendedResultCode.rawValue
+        default: code = nil
+        }
+        guard let code else { return false }
+        return [ResultCode.SQLITE_BUSY.rawValue, ResultCode.SQLITE_LOCKED.rawValue].contains(code & 0xFF)
     }
 
     private static func unknown(_ path: [String]) -> RouteResponse {
@@ -413,3 +454,9 @@ public enum BillingRoutes {
 #endif
 
 // swiftlint:enable multiple_closures_with_trailing_closure
+
+#if canImport(AgenticDeveloperHubSDKCore)
+extension BillingRoutes: Loggable {
+    public static nonisolated let logger = makeLogger()
+}
+#endif
