@@ -1,12 +1,13 @@
 // @vitest-environment jsdom
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi, type Mock } from "vitest";
 import { createElement, type ReactNode } from "react";
 import { act, renderHook, waitFor } from "@testing-library/react";
-import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider, useQuery, type UseQueryResult } from "@tanstack/react-query";
 import { StatusApiProvider, createStatusApiClient } from "../api/client";
 import { dashboardPollMs, useAnalyticsDashboard, useErrorsDashboard } from "./use-dashboards";
 
-type Stub = ReturnType<typeof vi.fn>;
+type FetchFn = (input: string, init?: RequestInit) => Promise<unknown>;
+type Stub = Mock<FetchFn>;
 
 function setup(fetchStub: Stub | null) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -17,7 +18,7 @@ function setup(fetchStub: Stub | null) {
     createElement(
       QueryClientProvider,
       { client: queryClient },
-      client ? createElement(StatusApiProvider, { client }, children) : children,
+      client ? createElement(StatusApiProvider, { client, children }) : children,
     );
   return { wrapper, queryClient };
 }
@@ -38,7 +39,7 @@ const fillingBody = { refreshing: true };
 /** A stub answering each call from a queue, repeating the last answer once it runs out. */
 function queued(...answers: Array<() => Response | Promise<Response>>): Stub {
   let i = 0;
-  return vi.fn(async () => answers[Math.min(i++, answers.length - 1)]());
+  return vi.fn<FetchFn>(async () => answers[Math.min(i++, answers.length - 1)]!());
 }
 
 async function advance(ms: number): Promise<void> {
@@ -96,7 +97,7 @@ describe("use-dashboards", () => {
   });
 
   it("dash-005 reads the analytics dashboard for a range through the default client", async () => {
-    const f = vi.fn(async () => ok(settledBody));
+    const f = vi.fn<FetchFn>(async () => ok(settledBody));
     vi.stubGlobal("fetch", f);
     const { wrapper } = setup(null);
     const { result } = renderHook(() => useAnalyticsDashboard("7d"), { wrapper });
@@ -107,7 +108,7 @@ describe("use-dashboards", () => {
   });
 
   it("dash-006 reads the errors dashboard and caches it under errors-dashboard", async () => {
-    const f = vi.fn(async () => ok(settledBody));
+    const f = vi.fn<FetchFn>(async () => ok(settledBody));
     const { wrapper, queryClient } = setup(f);
     const { result } = renderHook(() => useErrorsDashboard(), { wrapper });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
@@ -118,7 +119,7 @@ describe("use-dashboards", () => {
 
   it("dash-007 issues no fetch while disabled, even after 60 seconds", async () => {
     vi.useFakeTimers();
-    const f = vi.fn(async () => ok(settledBody));
+    const f = vi.fn<FetchFn>(async () => ok(settledBody));
     const { wrapper } = setup(f);
     renderHook(() => useAnalyticsDashboard("7d", { enabled: false }), { wrapper });
     renderHook(() => useErrorsDashboard({ enabled: false }), { wrapper });
@@ -153,7 +154,7 @@ describe("use-dashboards", () => {
   });
 
   it("dash-009 carries the nested error message of a non-ok response", async () => {
-    const f = vi.fn(async () => failing(500, '{"error":{"message":"Unauthorized"}}'));
+    const f = vi.fn<FetchFn>(async () => failing(500, '{"error":{"message":"Unauthorized"}}'));
     const { wrapper } = setup(f);
     const { result } = renderHook(() => useErrorsDashboard(), { wrapper });
     await waitFor(() => expect(result.current.isError).toBe(true));
@@ -161,7 +162,7 @@ describe("use-dashboards", () => {
   });
 
   it("dash-010 carries the plain-string error message of a non-ok response", async () => {
-    const f = vi.fn(async () => failing(500, '{"error":"invalid range"}'));
+    const f = vi.fn<FetchFn>(async () => failing(500, '{"error":"invalid range"}'));
     const { wrapper } = setup(f);
     const { result } = renderHook(() => useAnalyticsDashboard("7d"), { wrapper });
     await waitFor(() => expect(result.current.isError).toBe(true));
@@ -169,19 +170,19 @@ describe("use-dashboards", () => {
   });
 
   it("dash-011 falls back to the status when the body has no message", async () => {
-    const html = setup(vi.fn(async () => failing(502, "<html>Bad Gateway</html>")));
+    const html = setup(vi.fn<FetchFn>(async () => failing(502, "<html>Bad Gateway</html>")));
     const a = renderHook(() => useErrorsDashboard(), { wrapper: html.wrapper });
     await waitFor(() => expect(a.result.current.isError).toBe(true));
     expect(a.result.current.error?.message).toBe("status 502");
 
-    const empty = setup(vi.fn(async () => failing(500, '{"error":{}}')));
+    const empty = setup(vi.fn<FetchFn>(async () => failing(500, '{"error":{}}')));
     const b = renderHook(() => useErrorsDashboard(), { wrapper: empty.wrapper });
     await waitFor(() => expect(b.result.current.isError).toBe(true));
     expect(b.result.current.error?.message).toBe("status 500");
   });
 
   it("dash-012 errors with the JSON parse rejection on a 200 that is not JSON", async () => {
-    const f = vi.fn(async () => answer(200, "not json"));
+    const f = vi.fn<FetchFn>(async () => answer(200, "not json"));
     const { wrapper } = setup(f);
     const { result } = renderHook(() => useErrorsDashboard(), { wrapper });
     await waitFor(() => expect(result.current.isError).toBe(true));
@@ -190,7 +191,7 @@ describe("use-dashboards", () => {
 
   it("dash-013 surfaces a network failure unchanged", async () => {
     const failure = new TypeError("Failed to fetch");
-    const f = vi.fn(async () => {
+    const f = vi.fn<FetchFn>(async () => {
       throw failure;
     });
     const { wrapper } = setup(f);
@@ -200,7 +201,7 @@ describe("use-dashboards", () => {
   });
 
   it("dash-014 sends one request for two callers of the same range under one cache", async () => {
-    const f = vi.fn(async () => ok(settledBody));
+    const f = vi.fn<FetchFn>(async () => ok(settledBody));
     const { wrapper } = setup(f);
     const a = renderHook(() => useAnalyticsDashboard("30d"), { wrapper });
     const b = renderHook(() => useAnalyticsDashboard("30d"), { wrapper });
@@ -236,7 +237,7 @@ describe("use-dashboards", () => {
   });
 
   it("dash-016 refetches the analytics dashboard when the window regains focus", async () => {
-    const f = vi.fn(async () => ok(settledBody));
+    const f = vi.fn<FetchFn>(async () => ok(settledBody));
     const { wrapper } = setup(f);
     const { result } = renderHook(() => useAnalyticsDashboard("7d"), { wrapper });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
@@ -244,11 +245,11 @@ describe("use-dashboards", () => {
     setVisibility("hidden");
     setVisibility("visible");
     await waitFor(() => expect(f).toHaveBeenCalledTimes(2));
-    expect(f.mock.calls[1][0]).toBe("/api/analytics/dashboard?range=7d");
+    expect(f.mock.calls[1]![0]).toBe("/api/analytics/dashboard?range=7d");
   });
 
   it("dash-017 refetches the errors dashboard when the window regains focus", async () => {
-    const f = vi.fn(async () => ok(settledBody));
+    const f = vi.fn<FetchFn>(async () => ok(settledBody));
     const { wrapper } = setup(f);
     const { result } = renderHook(() => useErrorsDashboard(), { wrapper });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
@@ -256,7 +257,7 @@ describe("use-dashboards", () => {
     setVisibility("hidden");
     setVisibility("visible");
     await waitFor(() => expect(f).toHaveBeenCalledTimes(2));
-    expect(f.mock.calls[1][0]).toBe("/api/errors/dashboard");
+    expect(f.mock.calls[1]![0]).toBe("/api/errors/dashboard");
   });
 
   it("dash-018 shows no previous data to a fresh errors caller under a cleared cache", async () => {
@@ -281,14 +282,15 @@ describe("use-dashboards", () => {
   });
 
   it("dash-019 returns the plain read result with the parsed body", async () => {
-    const f = vi.fn(async () => ok(settledBody));
+    const f = vi.fn<FetchFn>(async () => ok(settledBody));
     const { wrapper } = setup(f);
     const plain = renderHook(
       () => useQuery({ queryKey: ["plain"], queryFn: async () => settledBody }),
       { wrapper },
     );
     await waitFor(() => expect(plain.result.current.isSuccess).toBe(true));
-    for (const hook of [() => useAnalyticsDashboard("7d"), () => useErrorsDashboard()]) {
+    const hooks: Array<() => UseQueryResult<unknown>> = [() => useAnalyticsDashboard("7d"), () => useErrorsDashboard()];
+    for (const hook of hooks) {
       const { result } = renderHook(hook, { wrapper });
       await waitFor(() => expect(result.current.isSuccess).toBe(true));
       expect(result.current.data).toEqual(settledBody);
@@ -298,7 +300,7 @@ describe("use-dashboards", () => {
 
   it("dash-020 starts one fetch and polling when enabled switches on", async () => {
     vi.useFakeTimers();
-    const f = vi.fn(async () => ok(settledBody));
+    const f = vi.fn<FetchFn>(async () => ok(settledBody));
     const { wrapper } = setup(f);
     const { rerender } = renderHook(
       ({ enabled }: { enabled: boolean }) => useErrorsDashboard({ enabled }),

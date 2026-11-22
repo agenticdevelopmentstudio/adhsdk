@@ -80,6 +80,6 @@ describe("buildSublabel", () => {
     const problems = Object.freeze([Object.freeze(row("down")), Object.freeze(row("expired"))]) as unknown as Row[];
     expect(() => buildSublabel("warn", 0, 0, problems)).not.toThrow();
     expect(problems).toHaveLength(2);
-    expect(problems[0].statusWord).toBe("down");
+    expect(problems[0]!.statusWord).toBe("down");
   });
 });

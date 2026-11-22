@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import type { ReactNode } from "react";
@@ -11,7 +11,7 @@ import { useResponseHistory } from "./use-response-history";
 const BODY = { hours: 24, points: [120, null, 95] };
 const json = (body: unknown, status = 200): Response => new Response(JSON.stringify(body), { status });
 
-let fetchMock: ReturnType<typeof vi.fn>;
+let fetchMock: Mock<typeof fetch>;
 
 function wrapperFor(client: QueryClient, basePath?: string) {
   return ({ children }: { children: ReactNode }) => (
@@ -23,7 +23,7 @@ function wrapperFor(client: QueryClient, basePath?: string) {
 const newClient = (): QueryClient => new QueryClient({ defaultOptions: { queries: { retry: false } } });
 
 beforeEach(() => {
-  fetchMock = vi.fn(async () => json(BODY));
+  fetchMock = vi.fn<typeof fetch>(async () => json(BODY));
   vi.stubGlobal("fetch", fetchMock);
 });
 afterEach(() => {
@@ -38,7 +38,7 @@ describe("useResponseHistory", () => {
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(fetchMock).toHaveBeenCalledWith("/api/response-history?hours=24", undefined);
-    expect(String(fetchMock.mock.calls[0][0])).not.toContain("buckets");
+    expect(String(fetchMock.mock.calls[0]![0])).not.toContain("buckets");
   });
 
   it("use-response-history-002 returns the body with the null kept in position", async () => {
@@ -50,13 +50,13 @@ describe("useResponseHistory", () => {
   it("use-response-history-003 joins a custom base path", async () => {
     const { result } = renderHook(() => useResponseHistory(168), { wrapper: wrapperFor(newClient(), "/proxy") });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(fetchMock.mock.calls[0][0]).toBe("/proxy/response-history?hours=168");
+    expect(fetchMock.mock.calls[0]![0]).toBe("/proxy/response-history?hours=168");
   });
 
   it("use-response-history-004 interpolates a fractional hours value as-is", async () => {
     const { result } = renderHook(() => useResponseHistory(1.5), { wrapper: wrapperFor(newClient()) });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(fetchMock.mock.calls[0][0]).toBe("/api/response-history?hours=1.5");
+    expect(fetchMock.mock.calls[0]![0]).toBe("/api/response-history?hours=1.5");
   });
 
   it("use-response-history-005 a non-ok status becomes 'response-history N' without the body detail", async () => {
@@ -91,12 +91,12 @@ describe("useResponseHistory", () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
     await vi.advanceTimersByTimeAsync(1);
     expect(fetchMock).toHaveBeenCalledTimes(2);
-    expect(fetchMock.mock.calls[1][0]).toBe("/api/response-history?hours=24");
+    expect(fetchMock.mock.calls[1]![0]).toBe("/api/response-history?hours=24");
   });
 
   it("use-response-history-009 keys the cache by hours", async () => {
-    fetchMock.mockImplementation(async (url: string) => {
-      const hours = Number(new URL(url, "http://x").searchParams.get("hours"));
+    fetchMock.mockImplementation(async (url) => {
+      const hours = Number(new URL(String(url), "http://x").searchParams.get("hours"));
       return json({ hours, points: [hours] });
     });
     const { result, rerender } = renderHook(({ h }) => useResponseHistory(h), {
@@ -114,7 +114,7 @@ describe("useResponseHistory", () => {
   it("use-response-history-010 adds no Content-Type header", async () => {
     const { result } = renderHook(() => useResponseHistory(24), { wrapper: wrapperFor(newClient()) });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    const init = fetchMock.mock.calls[0][1] as RequestInit | undefined;
+    const init = fetchMock.mock.calls[0]![1] as RequestInit | undefined;
     expect(init?.headers).toBeUndefined();
   });
 
@@ -129,6 +129,6 @@ describe("useResponseHistory", () => {
 
   it("use-response-history-012 the module is marked client-only", () => {
     const source = readFileSync(resolve(process.cwd(), "src/hooks/use-response-history.ts"), "utf8");
-    expect(source.split("\n")[0].trim()).toBe('"use client";');
+    expect(source.split("\n")[0]!.trim()).toBe('"use client";');
   });
 });

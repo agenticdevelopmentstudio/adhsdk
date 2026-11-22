@@ -265,8 +265,8 @@ describe("useRefreshAll conformance vectors", () => {
     result.current.refreshAll();
     expect(spy).toHaveBeenCalledTimes(1);
     expect(spy.mock.calls[0]).toHaveLength(1);
-    expect(Object.keys(spy.mock.calls[0][0] as object).sort()).toEqual(["predicate", "type"]);
-    expect((spy.mock.calls[0][0] as { type: string }).type).toBe("active");
+    expect(Object.keys(spy.mock.calls[0]![0] as object).sort()).toEqual(["predicate", "type"]);
+    expect((spy.mock.calls[0]![0] as { type: string }).type).toBe("active");
   });
 
   it("refresh-all-013 each mount runs its own timer", () => {
@@ -281,6 +281,6 @@ describe("useRefreshAll conformance vectors", () => {
 
   it("refresh-all-014 the module is marked client-only", () => {
     const source = readFileSync(resolve(process.cwd(), "src/hooks/use-refresh-all.ts"), "utf8");
-    expect(source.split("\n")[0].trim()).toBe('"use client";');
+    expect(source.split("\n")[0]!.trim()).toBe('"use client";');
   });
 });
