@@ -17,6 +17,11 @@ export type {
 // draws the same button on its /home rail: the user's own features live on the user's ecosystem,
 // so every features list adds and removes through this one dialog rather than each growing
 // its own.
+// The ecosystem's three invitation panes (Requests, Pending users, Invites). The feature mounts
+// them on its own Users rail; the product admin site (phase 6) mounts them on its own pages, with
+// `hideAdminRecords`, so they are exported for that host.
+export { EcoRequestsPane, EcoPendingUsersPane, EcoInvitesPane } from "./EcosystemInvitationPanes";
+
 export { FeaturePickerDialog } from "./FeaturePickerDialog";
 export type { FeaturePickerDialogProps } from "./FeaturePickerDialog";
 export { ManageFeaturesDialog } from "./ManageFeaturesDialog";
