@@ -405,7 +405,13 @@ final class ProjectPaneStateStoreTests: XCTestCase {
 
         mountAsTab(recorder)
 
-        XCTAssertEqual(recorder.events, ["will-appear", "layout", "appear"],
+        // Only the events up to the first `appear` carry the claim: a layout
+        // pass AppKit runs after the appearance (a later display cycle, which
+        // a loaded run lands inside the mount's run-loop turns) says nothing
+        // about which side of `viewDidAppear` the first one fell on.
+        let throughAppear = Array(recorder.events.prefix { $0 != "appear" })
+            + (recorder.events.contains("appear") ? ["appear"] : [])
+        XCTAssertEqual(throughAppear, ["will-appear", "layout", "appear"],
                        "a tab is laid out before it is told it appeared")
     }
 
