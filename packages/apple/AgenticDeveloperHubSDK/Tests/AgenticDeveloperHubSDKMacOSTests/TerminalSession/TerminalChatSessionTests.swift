@@ -78,9 +78,8 @@ final class TerminalChatSessionTests: XCTestCase {
         let (chat, terminal) = try await connectedShell()
         defer { withExtendedLifetime(terminal) {} }
         // Reads two raw chunks and prints them, putting the tty back first.
-        let reader = #"/usr/bin/python3 -c 'import os,termios,tty; o=termios.tcgetattr(0); tty.setraw(0); "#
-            + #"a=os.read(0,99); b=os.read(0,99); termios.tcsetattr(0,termios.TCSADRAIN,o); print("CHUNKS",a,b)'"#
-        _ = await chat.run(reader, settle: .seconds(1), timeout: .seconds(3))
+        try await startRawReader(in: chat, #"a=os.read(0,99); b=os.read(0,99); "#
+            + #"termios.tcsetattr(0,termios.TCSADRAIN,o); print("CHUNKS",a,b)"#)
         let reply = await chat.run("hello", settle: .milliseconds(800), timeout: .seconds(5))
         XCTAssertTrue(reply.contains(#"CHUNKS b'hello' b'\r'"#), reply)
     }
@@ -101,10 +100,8 @@ final class TerminalChatSessionTests: XCTestCase {
         let (chat, terminal) = try await connectedShell()
         defer { withExtendedLifetime(terminal) {} }
         // Reads raw input until two Returns have arrived, then prints everything it read.
-        let reader = #"/usr/bin/python3 -c 'import os,termios,tty; o=termios.tcgetattr(0); tty.setraw(0); "#
-            + #"d=b""; exec("while d.count(13) < 2: d += os.read(0,99)"); "#
-            + #"termios.tcsetattr(0,termios.TCSADRAIN,o); print("GOT",d)'"#
-        _ = await chat.run(reader, settle: .seconds(1), timeout: .seconds(3))
+        try await startRawReader(in: chat, #"d=b""; exec("while d.count(13) < 2: d += os.read(0,99)"); "#
+            + #"termios.tcsetattr(0,termios.TCSADRAIN,o); print("GOT",d)"#)
         chat.send("one")
         chat.send("two")
         let reply = await chat.waitForOutput(settle: .milliseconds(800), timeout: .seconds(5))
@@ -158,5 +155,23 @@ final class TerminalChatSessionTests: XCTestCase {
         return (chat, terminal)
     }
 
+    /// Starts a Python program that puts the tty in raw mode and then runs `body`,
+    /// and returns once raw mode is on. `tty.setraw` flushes pending input
+    /// (`TCSAFLUSH`), so text sent before it switches is discarded; a fixed settle
+    /// cannot promise the switch has happened, because Python's start-up on a
+    /// loaded machine outlasts it. The program announces raw mode itself, and the
+    /// marker is spelled split so the echoed command line cannot match it.
+    private func startRawReader(in chat: TerminalChatSession, _ body: String) async throws {
+        let reader = #"/usr/bin/python3 -c 'import os,termios,tty; o=termios.tcgetattr(0); tty.setraw(0); "#
+            + #"print("RAW"+"READY",flush=True); "# + body + "'"
+        var seen = await chat.run(reader, settle: .milliseconds(300), timeout: .seconds(3))
+        let deadline = ContinuousClock.now + .seconds(20)
+        while !seen.contains("RAWREADY") {
+            guard ContinuousClock.now < deadline else { throw RawReaderNeverStarted(output: seen) }
+            seen += await chat.waitForOutput(settle: .milliseconds(300), timeout: .seconds(2))
+        }
+    }
+
     private struct ShellNeverStarted: Error {}
+    private struct RawReaderNeverStarted: Error { let output: String }
 }
