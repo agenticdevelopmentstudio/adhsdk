@@ -36,6 +36,21 @@ public struct RouterHistoryRetentionTask: SessionDaemonTask {
         )
     }
 
+    /// Reads the window from the router's own settings row
+    /// (``AccountRouterSettings/retentionDays``) on every run.
+    public init(
+        database: DaemonDatabase,
+        checkInterval: TimeInterval = 86400,
+        now: @escaping @Sendable () -> Date = Date.init
+    ) {
+        self.init(
+            database: database,
+            retentionDays: { AccountRouterSettings.load($0).retentionDays },
+            checkInterval: checkInterval,
+            now: now
+        )
+    }
+
     public func execute(context: SessionTaskContext) async throws -> SessionTaskResult {
         let days = retentionDays(database)
         guard days > 0 else { return .empty }
