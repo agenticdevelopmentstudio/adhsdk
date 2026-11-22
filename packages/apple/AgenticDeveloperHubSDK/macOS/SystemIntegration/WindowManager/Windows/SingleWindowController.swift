@@ -255,6 +255,12 @@ open class SingleWindowController: NSWindowController, NSWindowDelegate {
         // window (subclasses previously duplicated this guard at every call
         // site).
         if window == nil { loadWindow() }
+        // Sunk before `super.showWindow` orders it in, not after: ordered in at
+        // the normal level first, the window would be briefly visible, and its
+        // open animation would already be running — behind the desktop that
+        // animation never finishes and holds a worker thread for good (see
+        // `sinkBehindDesktop()`).
+        if !Self.forcesWindowFront { window?.sinkBehindDesktop() }
         super.showWindow(sender)
         // Window-scoped front-ordering. `super.showWindow` calls
         // `makeKeyAndOrderFront`, which respects app-activation state — a
@@ -274,8 +280,8 @@ open class SingleWindowController: NSWindowController, NSWindowDelegate {
             // the desktop picture instead: still a real, laid-out, visible
             // window to AppKit, invisible to whoever is using the machine.
             // The suite's own bare `NSWindow`s take the same treatment, which
-            // is why it is `sinkBehindDesktop()` and not two lines here.
-            window.sinkBehindDesktop()
+            // is why it is `sinkBehindDesktop()` and not two lines here. It
+            // already ran above, before the window was ordered in.
             window.orderBack(nil)
         }
         WindowManager.shared.frames.saveVisibility(true, for: windowID)

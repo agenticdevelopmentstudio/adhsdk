@@ -24,10 +24,24 @@ public extension NSWindow {
     /// below the desktop leaves a real, laid-out, visible window to AppKit and
     /// nothing at all to whoever is at the keyboard.
     ///
-    /// Level only, deliberately: key status and ordering within the level stay
-    /// the caller's to set, because a test that needs `makeFirstResponder` to
-    /// take needs a key window.
+    /// The ordering animation goes too. AppKit plays a window's open animation
+    /// (`_NSWindowTransformAnimation`) on a GCD worker thread of its own, and
+    /// that animation only finishes as the window server shows its frames. A
+    /// window behind the desktop is occluded, so they are never shown: the
+    /// animation never ends and its worker stays parked in
+    /// `-[NSAnimation _runBlocking]` for good — one per window sunk. A test run
+    /// opens hundreds of windows; once the parked workers exhausted the pool,
+    /// subprocess exit and pipe callbacks waited behind them and every git call
+    /// in the Git window suites overran its budget. There is nothing behind the
+    /// desktop to see animate, so a sunk window simply does not animate. Call
+    /// this *before* ordering the window in: an animation already started is not
+    /// stopped by turning the behavior off.
+    ///
+    /// Otherwise level only, deliberately: key status and ordering within the
+    /// level stay the caller's to set, because a test that needs
+    /// `makeFirstResponder` to take needs a key window.
     func sinkBehindDesktop() {
+        animationBehavior = .none
         level = NSWindow.Level(Int(CGWindowLevelForKey(.desktopWindow)))
     }
 
