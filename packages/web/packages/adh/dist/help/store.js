@@ -13,6 +13,7 @@ var help_en_default = {
   "ecosystems/users": "End-users who authenticate to this ecosystem (its customer identities).",
   "ecosystems/roles": "The roles this product's users hold: what each role lets them do in the product's features, and which users hold it. Every user holds the default role.",
   "ecosystems/signup-list": "The people who may sign up for this product, each with the role they get the first time they prove their email address. While Users \u25B8 Authentication limits sign-in to listed people, only these people can sign in.",
+  "ecosystems/sets": "Sets bundle what this product's users may use: the features a set grants and the limits it sets, such as a usage tier or an amount of storage. A user holds a set by buying an offer that sells it, through the sign-up list, or by a direct grant, and a set can contain other sets.",
   teams: "Teams group people and the permissions they share. Pick a team to manage it.",
   "teams/settings": "The team's identifier and display name.",
   "teams/members": "The people in this team.",

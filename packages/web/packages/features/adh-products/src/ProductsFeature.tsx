@@ -29,6 +29,7 @@ import {
   RefreshCw,
   ShieldCheck,
   ListChecks,
+  Layers,
 } from "lucide-react";
 import { useDetailTitle } from "@adh-sdk/ui/blocks/detail-title";
 import type { TopicLeaf } from "@adh-sdk/resource";
@@ -54,6 +55,7 @@ import {
   SyncTablesPane,
   ProductRolesPane,
   SignupListPane,
+  SetsPane,
 } from "@adh-sdk/ecosystem-config";
 import { AccessPane } from "@adh-sdk/authentication";
 import { helpFor } from "@adh-sdk/adh/help/store";
@@ -107,6 +109,7 @@ const ICONS: Record<string, ReactNode> = {
   invitations: <UsersRound size={16} aria-hidden />,
   roles: <ShieldCheck size={16} aria-hidden />,
   "signup-list": <ListChecks size={16} aria-hidden />,
+  sets: <Layers size={16} aria-hidden />,
   gaming: <Gamepad2 size={16} aria-hidden />,
   gamification: <Trophy size={16} aria-hidden />,
   "feature-flags": <Flag size={16} aria-hidden />,
@@ -327,6 +330,16 @@ export function productTopicPaneRenderer({
             ecosystemId={ctx.ecosystemId}
             title={ctx.title}
             help={helpFor("ecosystems/signup-list")}
+          />
+        );
+      case "sets":
+        // The product's sets: what each grants, generated from the catalog's setEntries.
+        return (
+          <SetsPane
+            key={ctx.ecosystemId}
+            ecosystemId={ctx.ecosystemId}
+            title={ctx.title}
+            help={helpFor("ecosystems/sets")}
           />
         );
       // Users ▸ Authentication: the ecosystem's client auth — how its customers sign in and sign up.

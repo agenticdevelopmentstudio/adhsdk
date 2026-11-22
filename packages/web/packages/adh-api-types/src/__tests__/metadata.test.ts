@@ -228,7 +228,7 @@ describe.skipIf(!ADH_SPEC_PATH)('generated table metadata ↔ openapi.v1.json dr
   // 'owner') can't pass the drift test above by being wrong identically on both sides.
   it('spot-checks a table of each exposure tier', () => {
     expect(CRUD_TABLES['system/audit-events']?.exposure).toBe('admin')
-    expect(CRUD_TABLES['billing/subscription-tiers']?.exposure).toBe('catalog')
+    expect(CRUD_TABLES['usage/rate-limit-tiers']?.exposure).toBe('catalog')
     expect(CRUD_TABLES['persona/personas']?.exposure).toBe('owner')
   })
 
@@ -238,17 +238,29 @@ describe.skipIf(!ADH_SPEC_PATH)('generated table metadata ↔ openapi.v1.json dr
     expect(id?.serverManaged).toBe(false)
   })
 
-  it('spot-checks billing/subscription-tiers shapes (snake_case, unix-second created)', () => {
-    const tiers = CRUD_TABLES['billing/subscription-tiers']!
+  // The legacy billing subscription tables left generic CRUD in phase 5 (sets replace them), so the
+  // shape spot-check reads the rate-limit tiers, the catalog table that took their place here.
+  it('spot-checks usage/rate-limit-tiers shapes (snake_case, unix-second created)', () => {
+    const tiers = CRUD_TABLES['usage/rate-limit-tiers']!
     const byName = new Map(tiers.columns.map((c) => [c.name, c]))
-    expect(byName.get('key')?.required).toBe(true)
+    expect(byName.get('slug')?.required).toBe(true)
     expect(byName.get('name')?.required).toBe(true)
     expect(byName.get('id')?.serverManaged).toBe(true)
     expect(byName.get('created')?.serverManaged).toBe(true)
     expect(byName.get('created')?.type).toBe('integer')
     expect(byName.get('is_active')?.type).toBe('boolean')
-    expect(byName.get('display_order')?.type).toBe('integer')
-    expect(byName.get('description')?.nullable).toBe(true)
+    expect(byName.get('rate_capacity')?.type).toBe('integer')
+    expect(byName.get('quota_requests')?.nullable).toBe(true)
+  })
+
+  it('keeps the legacy subscription tables out (phase 5: sets replace them)', () => {
+    for (const key of [
+      'billing/subscription-tiers',
+      'billing/subscriptions',
+      'billing/tier-entitlements',
+    ]) {
+      expect(CRUD_TABLES[key], `${key} must not be CRUD-exposed`).toBeUndefined()
+    }
   })
 
   it('keeps policy-excluded tables out (services, attachments, owner-scoped feed, sessions)', () => {

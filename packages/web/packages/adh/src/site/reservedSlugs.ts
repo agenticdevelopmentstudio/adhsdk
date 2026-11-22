@@ -300,6 +300,7 @@ export const RESERVED_HANDLE_WORDS: readonly string[] = [
   'research',
   'roles',
   'server-bags',
+  'sets',
   'signin-apps',
   'signup-list',
   'storage',

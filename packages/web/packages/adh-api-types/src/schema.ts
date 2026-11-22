@@ -1908,162 +1908,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/v1/billing/subscription_tiers": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List subscription_tiers
-         * @description Replaces GET /billing/subscription-tiers.
-         */
-        get: operations["getV1BillingSubscriptionTiers"];
-        put?: never;
-        /**
-         * Create subscription_tiers
-         * @description Replaces POST /billing/subscription-tiers.
-         */
-        post: operations["postV1BillingSubscriptionTiers"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/billing/subscription_tiers/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get subscription_tiers by id
-         * @description Replaces GET /billing/subscription-tiers/{id}.
-         */
-        get: operations["getV1BillingSubscriptionTiersById"];
-        put?: never;
-        /**
-         * Update subscription_tiers
-         * @description Replaces PUT /billing/subscription-tiers/{id}.
-         */
-        post: operations["postV1BillingSubscriptionTiersById"];
-        /**
-         * Delete subscription_tiers
-         * @description Replaces DELETE /billing/subscription-tiers/{id}.
-         */
-        delete: operations["deleteV1BillingSubscriptionTiersById"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/billing/subscriptions": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List subscriptions
-         * @description Replaces GET /billing/subscriptions.
-         */
-        get: operations["getV1BillingSubscriptions"];
-        put?: never;
-        /**
-         * Create subscriptions
-         * @description Replaces POST /billing/subscriptions.
-         */
-        post: operations["postV1BillingSubscriptions"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/billing/subscriptions/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get subscriptions by id
-         * @description Replaces GET /billing/subscriptions/{id}.
-         */
-        get: operations["getV1BillingSubscriptionsById"];
-        put?: never;
-        /**
-         * Update subscriptions
-         * @description Replaces PUT /billing/subscriptions/{id}.
-         */
-        post: operations["postV1BillingSubscriptionsById"];
-        /**
-         * Delete subscriptions
-         * @description Replaces DELETE /billing/subscriptions/{id}.
-         */
-        delete: operations["deleteV1BillingSubscriptionsById"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/billing/tier_entitlements": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List tier_entitlements
-         * @description Replaces GET /billing/tier-entitlements.
-         */
-        get: operations["getV1BillingTierEntitlements"];
-        put?: never;
-        /**
-         * Create tier_entitlements
-         * @description Replaces POST /billing/tier-entitlements.
-         */
-        post: operations["postV1BillingTierEntitlements"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/billing/tier_entitlements/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get tier_entitlements by id
-         * @description Replaces GET /billing/tier-entitlements/{id}.
-         */
-        get: operations["getV1BillingTierEntitlementsById"];
-        put?: never;
-        /**
-         * Update tier_entitlements
-         * @description Replaces PUT /billing/tier-entitlements/{id}.
-         */
-        post: operations["postV1BillingTierEntitlementsById"];
-        /**
-         * Delete tier_entitlements
-         * @description Replaces DELETE /billing/tier-entitlements/{id}.
-         */
-        delete: operations["deleteV1BillingTierEntitlementsById"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/v1/blocks": {
         parameters: {
             query?: never;
@@ -9050,6 +8894,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/offers/{offer_id}/set": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Set the set an offer sells
+         * @description null stops the offer granting a set. Refused (rule 9) when the set conflicts with another live offer's set; a personal set is never sold (400).
+         *
+         *     Replaces PUT /sets/offers/{offerId}.
+         */
+        post: operations["postV1OffersByOfferIdSet"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/organizations": {
         parameters: {
             query?: never;
@@ -11632,6 +11498,170 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/set_grants": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List a customer's set grants
+         * @description Revoked grants are listed with their reason; newest first.
+         *
+         *     Replaces GET /sets/grants.
+         */
+        get: operations["getV1SetGrants"];
+        put?: never;
+        /**
+         * Grant a set to a customer
+         * @description A direct grant. Refused (rule 4) when it conflicts with a set the customer holds; granting a set already held returns that grant.
+         *
+         *     Replaces POST /sets/grants.
+         */
+        post: operations["postV1SetGrants"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/set_grants/effective/{customer_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read a customer's effective sets
+         * @description Replaces GET /sets/effective/{customerId}.
+         */
+        get: operations["getV1SetGrantsEffectiveByCustomerId"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/set_grants/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Revoke a set grant
+         * @description The row stays, with `revokeReason` `direct`.
+         *
+         *     Replaces DELETE /sets/grants/{id}.
+         */
+        delete: operations["deleteV1SetGrantsById"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/sets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List an ecosystem's sets
+         * @description Replaces GET /sets.
+         */
+        get: operations["getV1Sets"];
+        put?: never;
+        /**
+         * Create a set
+         * @description Replaces POST /sets.
+         */
+        post: operations["postV1Sets"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/sets/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Edit a set
+         * @description Making a set the default clears the flag on the previous default.
+         *
+         *     Replaces PATCH /sets/{id}.
+         */
+        post: operations["postV1SetsById"];
+        /**
+         * Delete a set
+         * @description Its containment goes, an offer selling it stops granting a set, and its grants stop counting. Refused (rule 8) when that unsettles a container or puts a holder in conflict.
+         *
+         *     Replaces DELETE /sets/{id}.
+         */
+        delete: operations["deleteV1SetsById"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/sets/{id}/members": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Replace the sets a set contains
+         * @description Replaces PUT /sets/{id}/members.
+         */
+        post: operations["postV1SetsByIdMembers"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/sets/{id}/values": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Replace a set's permissions and limits
+         * @description Every key must be one the catalog's `setEntries` declares, with a value of its type (400 otherwise).
+         *
+         *     Replaces PUT /sets/{id}/values.
+         */
+        post: operations["postV1SetsByIdValues"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/shipr/connections": {
         parameters: {
             query?: never;
@@ -13811,6 +13841,18 @@ export interface components {
             };
             /** @description The slugs of the roles the customer holds in its realm, sorted. Absent with `access`. */
             roles?: string[];
+            /** @description The customer's effective sets in its realm: null when the realm has no sets; the held set ids, the features they grant (all or read-only) and their limits; or { error: 'unresolved' } when the answer could not be computed while set enforcement is off (with it on, the request is refused 403). */
+            sets?: {
+                /** @description Held set ids. */
+                held?: string[];
+                permissions?: string[];
+                read_only?: string[];
+                limits?: {
+                    [key: string]: unknown;
+                };
+                /** @enum {string} */
+                error?: "unresolved";
+            } | null;
         };
         AuthResult: {
             /** @description JWT access token (Bearer credential) */
@@ -17900,7 +17942,7 @@ export interface components {
             role_id: string | null;
             /**
              * Format: uuid
-             * @description Reserved for sets; always null for now
+             * @description The set granted at the first proven session; null grants none
              */
             set_id: string | null;
             /** @description Unix timestamp, in seconds. */
@@ -17922,7 +17964,7 @@ export interface components {
             role_id?: string | null;
             /**
              * Format: uuid
-             * @description Refused with 422 until sets are available
+             * @description A set of this ecosystem (422 otherwise); null grants none
              */
             set_id?: string | null;
         };
@@ -18582,6 +18624,146 @@ export interface components {
             decided_by: {
                 [key: string]: unknown;
             };
+        };
+        SetValue: {
+            /** @enum {string} */
+            kind: "permission" | "limit";
+            /** @description A feature key for a permission, a limit key (e.g. `usage.tier`) for a limit; both from the catalog's `setEntries`. */
+            key: string;
+            /** @description true for a permission; for a limit, a tier slug (string) or a byte or count (integer). */
+            value: unknown;
+        };
+        Set: {
+            /** Format: uuid */
+            id: string;
+            slug: string;
+            name: string;
+            description: string;
+            /** @description Applies to a customer who holds no live grant; one per ecosystem. */
+            is_default: boolean;
+            /** @description A one-customer exception, hidden from the list and from offers. */
+            is_personal: boolean;
+            /** Format: uuid */
+            personal_customer_id: string | null;
+            /** @description The sets it directly contains. */
+            contains: string[];
+            /** @description Its own values. */
+            values: components["schemas"]["SetValue"][];
+        };
+        SetList: {
+            sets: components["schemas"]["Set"][];
+        };
+        SetCreate: {
+            slug: string;
+            name: string;
+            description?: string;
+            is_default?: boolean;
+            /**
+             * Format: uuid
+             * @description Makes a personal set for this customer of the ecosystem; fixed once made.
+             */
+            personal_customer_id?: string | null;
+        };
+        SetEdit: {
+            slug?: string;
+            name?: string;
+            description?: string;
+            is_default?: boolean;
+        };
+        SetMembersPut: {
+            contains: string[];
+        };
+        SetValuesPut: {
+            values: components["schemas"]["SetValue"][];
+        };
+        /** @description A refusal under a set rule, in the house error shape: `code` is always `set_refused`, and `rule` names the rule. */
+        SetRefusal: {
+            error: components["schemas"]["SetRefusalError"];
+        };
+        SetRefusalError: {
+            /** @enum {string} */
+            code: "set_refused";
+            message: string;
+            /**
+             * @description 3: the set must define a limit its contained sets disagree on; 4: the customer holds a conflicting set; 6: a containment loop; 8: the edit unsettles a container or puts a holder in conflict; 9: the set conflicts with another live offer's set.
+             * @enum {integer}
+             */
+            rule: 1 | 2 | 3 | 4 | 6 | 8 | 9;
+            /** @description The limits at issue. */
+            limits?: string[];
+            /** @description Rule 8: the containers left unsettled. */
+            containers?: string[];
+            /** @description Rule 8: how many holders would conflict. */
+            customers?: number;
+        };
+        SetGrant: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            ecosystem_id: string;
+            /**
+             * Format: uuid
+             * @description The customer.
+             */
+            owner_id: string;
+            /** Format: uuid */
+            set_id: string;
+            /** @enum {string} */
+            source: "offer" | "direct" | "signup";
+            /** Format: uuid */
+            billing_account_id: string | null;
+            granted_by: string;
+            /** Format: date-time */
+            granted_at: string;
+            /** Format: date-time */
+            revoked_at: string | null;
+            /** @description e.g. `direct`, `refund`, `offer_changed`, `purchase_conflict`. */
+            revoke_reason: string | null;
+        };
+        SetGrantList: {
+            grants: components["schemas"]["SetGrant"][];
+        };
+        SetGrantCreate: {
+            /** Format: uuid */
+            customer_id: string;
+            /** Format: uuid */
+            set_id: string;
+        };
+        SetGrantResult: {
+            /**
+             * Format: uuid
+             * @description The new grant, or the live one when the set was already held.
+             */
+            grant_id: string;
+            revoked: string[];
+        };
+        SetEffective: {
+            /** @description The customer's answer before the ecosystem's ceiling: null when the ecosystem has no sets; the held set ids, features and limits; or { error: 'unresolved' }. */
+            effective: {
+                held?: string[];
+                permissions?: string[];
+                read_only?: string[];
+                limits?: {
+                    [key: string]: unknown;
+                };
+                /**
+                 * Format: date-time
+                 * @description When the answer next changes (a grant lapsing).
+                 */
+                valid_until?: string | null;
+                /** @enum {string} */
+                error?: "unresolved";
+            } | null;
+        };
+        OfferSetPut: {
+            /** Format: uuid */
+            set_id: string | null;
+        };
+        OfferSet: {
+            /** Format: uuid */
+            offer_id: string;
+            /** Format: uuid */
+            set_id: string | null;
         };
         TeamReachGrant: {
             id: string;
@@ -27240,856 +27422,6 @@ export interface operations {
             };
             /** @description Error */
             409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["StripeError"];
-                };
-            };
-        };
-    };
-    getV1BillingSubscriptionTiers: {
-        parameters: {
-            query?: {
-                /** @description Page size, 1–100 (default 10). */
-                limit?: number;
-                /** @description Cursor: an object id; returns the page after it. */
-                starting_after?: string;
-                /** @description Cursor: an object id; returns the page before it. */
-                ending_before?: string;
-                /** @description Related objects to return in full instead of as an id. Up to four levels, e.g. `ecosystem_id`; on a list, `data.<field>`. */
-                "expand[]"?: string[];
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description List */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @constant */
-                        object: "list";
-                        data: {
-                            /** @constant */
-                            object?: "billing.subscription_tier";
-                            id: string;
-                            key: string;
-                            name: string;
-                            description: string | null;
-                            display_order: number;
-                            is_active: boolean;
-                            /** @description Unix timestamp, in seconds. */
-                            created: number;
-                            /** @description Unix timestamp, in seconds. */
-                            updated: number;
-                        }[];
-                        has_more: boolean;
-                        url: string;
-                    };
-                };
-            };
-            /** @description Error */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["StripeError"];
-                };
-            };
-        };
-    };
-    postV1BillingSubscriptionTiers: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    key: string;
-                    name: string;
-                    description?: string | null;
-                    display_order?: number;
-                    is_active?: boolean;
-                };
-            };
-        };
-        responses: {
-            /** @description subscription_tiers */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @constant */
-                        object?: "billing.subscription_tier";
-                        id: string;
-                        key: string;
-                        name: string;
-                        description: string | null;
-                        display_order: number;
-                        is_active: boolean;
-                        /** @description Unix timestamp, in seconds. */
-                        created: number;
-                        /** @description Unix timestamp, in seconds. */
-                        updated: number;
-                    };
-                };
-            };
-            /** @description Error */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["StripeError"];
-                };
-            };
-            /** @description Error */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["StripeError"];
-                };
-            };
-        };
-    };
-    getV1BillingSubscriptionTiersById: {
-        parameters: {
-            query?: {
-                /** @description Related objects to return in full instead of as an id. Up to four levels, e.g. `ecosystem_id`; on a list, `data.<field>`. */
-                "expand[]"?: string[];
-            };
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description subscription_tiers */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @constant */
-                        object?: "billing.subscription_tier";
-                        id: string;
-                        key: string;
-                        name: string;
-                        description: string | null;
-                        display_order: number;
-                        is_active: boolean;
-                        /** @description Unix timestamp, in seconds. */
-                        created: number;
-                        /** @description Unix timestamp, in seconds. */
-                        updated: number;
-                    };
-                };
-            };
-            /** @description Error */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["StripeError"];
-                };
-            };
-            /** @description Error */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["StripeError"];
-                };
-            };
-        };
-    };
-    postV1BillingSubscriptionTiersById: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    key?: string;
-                    name?: string;
-                    description?: string | null;
-                    display_order?: number;
-                    is_active?: boolean;
-                };
-            };
-        };
-        responses: {
-            /** @description subscription_tiers */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @constant */
-                        object?: "billing.subscription_tier";
-                        id: string;
-                        key: string;
-                        name: string;
-                        description: string | null;
-                        display_order: number;
-                        is_active: boolean;
-                        /** @description Unix timestamp, in seconds. */
-                        created: number;
-                        /** @description Unix timestamp, in seconds. */
-                        updated: number;
-                    };
-                };
-            };
-            /** @description Error */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["StripeError"];
-                };
-            };
-            /** @description Error */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["StripeError"];
-                };
-            };
-            /** @description Error */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["StripeError"];
-                };
-            };
-        };
-    };
-    deleteV1BillingSubscriptionTiersById: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Deleted */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Deleted"];
-                };
-            };
-            /** @description Error */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["StripeError"];
-                };
-            };
-            /** @description Error */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["StripeError"];
-                };
-            };
-        };
-    };
-    getV1BillingSubscriptions: {
-        parameters: {
-            query?: {
-                /** @description Page size, 1–100 (default 10). */
-                limit?: number;
-                /** @description Cursor: an object id; returns the page after it. */
-                starting_after?: string;
-                /** @description Cursor: an object id; returns the page before it. */
-                ending_before?: string;
-                /** @description Related objects to return in full instead of as an id. Up to four levels, e.g. `ecosystem_id`; on a list, `data.<field>`. */
-                "expand[]"?: string[];
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description List */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @constant */
-                        object: "list";
-                        data: {
-                            /** @constant */
-                            object?: "billing.subscription";
-                            id: string;
-                            user_id: string;
-                            ecosystem_id: string;
-                            tier_id: string;
-                            status: string;
-                            source: string;
-                            started_at: string;
-                            expires_at: string | null;
-                            assigned_by: string | null;
-                            /** @description Unix timestamp, in seconds. */
-                            created: number;
-                            /** @description Unix timestamp, in seconds. */
-                            updated: number;
-                        }[];
-                        has_more: boolean;
-                        url: string;
-                    };
-                };
-            };
-            /** @description Error */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["StripeError"];
-                };
-            };
-        };
-    };
-    postV1BillingSubscriptions: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    ecosystem_id?: string;
-                    tier_id: string;
-                    status?: string;
-                    source?: string;
-                    started_at: string;
-                    expires_at?: string | null;
-                };
-            };
-        };
-        responses: {
-            /** @description subscriptions */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @constant */
-                        object?: "billing.subscription";
-                        id: string;
-                        user_id: string;
-                        ecosystem_id: string;
-                        tier_id: string;
-                        status: string;
-                        source: string;
-                        started_at: string;
-                        expires_at: string | null;
-                        assigned_by: string | null;
-                        /** @description Unix timestamp, in seconds. */
-                        created: number;
-                        /** @description Unix timestamp, in seconds. */
-                        updated: number;
-                    };
-                };
-            };
-            /** @description Error */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["StripeError"];
-                };
-            };
-            /** @description Error */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["StripeError"];
-                };
-            };
-        };
-    };
-    getV1BillingSubscriptionsById: {
-        parameters: {
-            query?: {
-                /** @description Related objects to return in full instead of as an id. Up to four levels, e.g. `ecosystem_id`; on a list, `data.<field>`. */
-                "expand[]"?: string[];
-            };
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description subscriptions */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @constant */
-                        object?: "billing.subscription";
-                        id: string;
-                        user_id: string;
-                        ecosystem_id: string;
-                        tier_id: string;
-                        status: string;
-                        source: string;
-                        started_at: string;
-                        expires_at: string | null;
-                        assigned_by: string | null;
-                        /** @description Unix timestamp, in seconds. */
-                        created: number;
-                        /** @description Unix timestamp, in seconds. */
-                        updated: number;
-                    };
-                };
-            };
-            /** @description Error */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["StripeError"];
-                };
-            };
-            /** @description Error */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["StripeError"];
-                };
-            };
-        };
-    };
-    postV1BillingSubscriptionsById: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    ecosystem_id?: string;
-                    tier_id?: string;
-                    status?: string;
-                    source?: string;
-                    started_at?: string;
-                    expires_at?: string | null;
-                };
-            };
-        };
-        responses: {
-            /** @description subscriptions */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @constant */
-                        object?: "billing.subscription";
-                        id: string;
-                        user_id: string;
-                        ecosystem_id: string;
-                        tier_id: string;
-                        status: string;
-                        source: string;
-                        started_at: string;
-                        expires_at: string | null;
-                        assigned_by: string | null;
-                        /** @description Unix timestamp, in seconds. */
-                        created: number;
-                        /** @description Unix timestamp, in seconds. */
-                        updated: number;
-                    };
-                };
-            };
-            /** @description Error */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["StripeError"];
-                };
-            };
-            /** @description Error */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["StripeError"];
-                };
-            };
-            /** @description Error */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["StripeError"];
-                };
-            };
-        };
-    };
-    deleteV1BillingSubscriptionsById: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Deleted */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Deleted"];
-                };
-            };
-            /** @description Error */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["StripeError"];
-                };
-            };
-            /** @description Error */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["StripeError"];
-                };
-            };
-        };
-    };
-    getV1BillingTierEntitlements: {
-        parameters: {
-            query?: {
-                /** @description Page size, 1–100 (default 10). */
-                limit?: number;
-                /** @description Cursor: an object id; returns the page after it. */
-                starting_after?: string;
-                /** @description Cursor: an object id; returns the page before it. */
-                ending_before?: string;
-                /** @description Related objects to return in full instead of as an id. Up to four levels, e.g. `ecosystem_id`; on a list, `data.<field>`. */
-                "expand[]"?: string[];
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description List */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @constant */
-                        object: "list";
-                        data: {
-                            /** @constant */
-                            object?: "billing.tier_entitlement";
-                            id: string;
-                            tier_id: string;
-                            entitlement_key: string;
-                            value_type: string;
-                            value: string;
-                        }[];
-                        has_more: boolean;
-                        url: string;
-                    };
-                };
-            };
-            /** @description Error */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["StripeError"];
-                };
-            };
-        };
-    };
-    postV1BillingTierEntitlements: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    tier_id: string;
-                    entitlement_key: string;
-                    value_type: string;
-                    value: string;
-                };
-            };
-        };
-        responses: {
-            /** @description tier_entitlements */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @constant */
-                        object?: "billing.tier_entitlement";
-                        id: string;
-                        tier_id: string;
-                        entitlement_key: string;
-                        value_type: string;
-                        value: string;
-                    };
-                };
-            };
-            /** @description Error */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["StripeError"];
-                };
-            };
-            /** @description Error */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["StripeError"];
-                };
-            };
-        };
-    };
-    getV1BillingTierEntitlementsById: {
-        parameters: {
-            query?: {
-                /** @description Related objects to return in full instead of as an id. Up to four levels, e.g. `ecosystem_id`; on a list, `data.<field>`. */
-                "expand[]"?: string[];
-            };
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description tier_entitlements */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @constant */
-                        object?: "billing.tier_entitlement";
-                        id: string;
-                        tier_id: string;
-                        entitlement_key: string;
-                        value_type: string;
-                        value: string;
-                    };
-                };
-            };
-            /** @description Error */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["StripeError"];
-                };
-            };
-            /** @description Error */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["StripeError"];
-                };
-            };
-        };
-    };
-    postV1BillingTierEntitlementsById: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    tier_id?: string;
-                    entitlement_key?: string;
-                    value_type?: string;
-                    value?: string;
-                };
-            };
-        };
-        responses: {
-            /** @description tier_entitlements */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @constant */
-                        object?: "billing.tier_entitlement";
-                        id: string;
-                        tier_id: string;
-                        entitlement_key: string;
-                        value_type: string;
-                        value: string;
-                    };
-                };
-            };
-            /** @description Error */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["StripeError"];
-                };
-            };
-            /** @description Error */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["StripeError"];
-                };
-            };
-            /** @description Error */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["StripeError"];
-                };
-            };
-        };
-    };
-    deleteV1BillingTierEntitlementsById: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Deleted */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Deleted"];
-                };
-            };
-            /** @description Error */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["StripeError"];
-                };
-            };
-            /** @description Error */
-            404: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -63082,6 +62414,80 @@ export interface operations {
             };
         };
     };
+    postV1OffersByOfferIdSet: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                offer_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OfferSetPut"];
+            };
+        };
+        responses: {
+            /** @description The offer and its set */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        object?: "offer";
+                    } & components["schemas"]["OfferSet"];
+                };
+            };
+            /** @description Error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+        };
+    };
     getV1Organizations: {
         parameters: {
             query: {
@@ -74709,6 +74115,718 @@ export interface operations {
             };
             /** @description Error */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+        };
+    };
+    getV1SetGrants: {
+        parameters: {
+            query: {
+                /** @description An owner-made ecosystem's id (uuid or rdid); the caller must manage it (403 otherwise). */
+                ecosystem: string;
+                /** @description The customer id */
+                customer: string;
+                /** @description Page size, 1–100 (default 10). */
+                limit?: number;
+                /** @description Cursor: an object id; returns the page after it. */
+                starting_after?: string;
+                /** @description Cursor: an object id; returns the page before it. */
+                ending_before?: string;
+                /** @description Related objects to return in full instead of as an id. Up to four levels, e.g. `ecosystem_id`; on a list, `data.<field>`. */
+                "expand[]"?: string[];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The grants */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        object: "list";
+                        data: ({
+                            /** @constant */
+                            object?: "set_grant";
+                        } & components["schemas"]["SetGrant"])[];
+                        has_more: boolean;
+                        url: string;
+                    };
+                };
+            };
+            /** @description Error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+        };
+    };
+    postV1SetGrants: {
+        parameters: {
+            query: {
+                /** @description An owner-made ecosystem's id (uuid or rdid); the caller must manage it (403 otherwise). */
+                ecosystem: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetGrantCreate"];
+            };
+        };
+        responses: {
+            /** @description The grant */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        object?: "set_grant";
+                    } & components["schemas"]["SetGrantResult"];
+                };
+            };
+            /** @description Error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+        };
+    };
+    getV1SetGrantsEffectiveByCustomerId: {
+        parameters: {
+            query?: {
+                /** @description Related objects to return in full instead of as an id. Up to four levels, e.g. `ecosystem_id`; on a list, `data.<field>`. */
+                "expand[]"?: string[];
+            };
+            header?: never;
+            path: {
+                customer_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The effective answer */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        object?: "set_grants.effective";
+                        held?: string[];
+                        permissions?: string[];
+                        read_only?: string[];
+                        limits?: {
+                            [key: string]: unknown;
+                        };
+                        /**
+                         * Format: date-time
+                         * @description When the answer next changes (a grant lapsing).
+                         */
+                        valid_until?: string | null;
+                        /** @enum {string} */
+                        error?: "unresolved";
+                    } | null;
+                };
+            };
+            /** @description Error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+        };
+    };
+    deleteV1SetGrantsById: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deleted */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Deleted"];
+                };
+            };
+            /** @description Error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+        };
+    };
+    getV1Sets: {
+        parameters: {
+            query: {
+                /** @description An owner-made ecosystem's id (uuid or rdid); the caller must manage it (403 otherwise). */
+                ecosystem: string;
+                /** @description `true` includes personal sets. */
+                personal?: string;
+                /** @description Page size, 1–100 (default 10). */
+                limit?: number;
+                /** @description Cursor: an object id; returns the page after it. */
+                starting_after?: string;
+                /** @description Cursor: an object id; returns the page before it. */
+                ending_before?: string;
+                /** @description Related objects to return in full instead of as an id. Up to four levels, e.g. `ecosystem_id`; on a list, `data.<field>`. */
+                "expand[]"?: string[];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The sets, by slug */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        object: "list";
+                        data: ({
+                            /** @constant */
+                            object?: "set";
+                        } & components["schemas"]["Set"])[];
+                        has_more: boolean;
+                        url: string;
+                    };
+                };
+            };
+            /** @description Error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+        };
+    };
+    postV1Sets: {
+        parameters: {
+            query: {
+                /** @description An owner-made ecosystem's id (uuid or rdid); the caller must manage it (403 otherwise). */
+                ecosystem: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetCreate"];
+            };
+        };
+        responses: {
+            /** @description The new set */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        object?: "set";
+                    } & components["schemas"]["Set"];
+                };
+            };
+            /** @description Error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+        };
+    };
+    postV1SetsById: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetEdit"];
+            };
+        };
+        responses: {
+            /** @description The set after the edit */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        object?: "set";
+                    } & components["schemas"]["Set"];
+                };
+            };
+            /** @description Error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+        };
+    };
+    deleteV1SetsById: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deleted */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Deleted"];
+                };
+            };
+            /** @description Error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+        };
+    };
+    postV1SetsByIdMembers: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetMembersPut"];
+            };
+        };
+        responses: {
+            /** @description The set after the edit */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        object?: "member";
+                    } & components["schemas"]["Set"];
+                };
+            };
+            /** @description Error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+        };
+    };
+    postV1SetsByIdValues: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetValuesPut"];
+            };
+        };
+        responses: {
+            /** @description The set after the edit */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        object?: "value";
+                    } & components["schemas"]["Set"];
+                };
+            };
+            /** @description Error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            422: {
                 headers: {
                     [name: string]: unknown;
                 };

@@ -961,111 +961,6 @@ public protocol APIProtocol: Sendable {
     /// - Remark: HTTP `GET /v1/billing/prices`.
     /// - Remark: Generated from `#/paths//v1/billing/prices/get(getV1BillingPrices)`.
     func getV1BillingPrices(_ input: Operations.GetV1BillingPrices.Input) async throws -> Operations.GetV1BillingPrices.Output
-    /// List subscription_tiers
-    ///
-    /// Replaces GET /billing/subscription-tiers.
-    ///
-    /// - Remark: HTTP `GET /v1/billing/subscription_tiers`.
-    /// - Remark: Generated from `#/paths//v1/billing/subscription_tiers/get(getV1BillingSubscriptionTiers)`.
-    func getV1BillingSubscriptionTiers(_ input: Operations.GetV1BillingSubscriptionTiers.Input) async throws -> Operations.GetV1BillingSubscriptionTiers.Output
-    /// Create subscription_tiers
-    ///
-    /// Replaces POST /billing/subscription-tiers.
-    ///
-    /// - Remark: HTTP `POST /v1/billing/subscription_tiers`.
-    /// - Remark: Generated from `#/paths//v1/billing/subscription_tiers/post(postV1BillingSubscriptionTiers)`.
-    func postV1BillingSubscriptionTiers(_ input: Operations.PostV1BillingSubscriptionTiers.Input) async throws -> Operations.PostV1BillingSubscriptionTiers.Output
-    /// Get subscription_tiers by id
-    ///
-    /// Replaces GET /billing/subscription-tiers/{id}.
-    ///
-    /// - Remark: HTTP `GET /v1/billing/subscription_tiers/{id}`.
-    /// - Remark: Generated from `#/paths//v1/billing/subscription_tiers/{id}/get(getV1BillingSubscriptionTiersById)`.
-    func getV1BillingSubscriptionTiersById(_ input: Operations.GetV1BillingSubscriptionTiersById.Input) async throws -> Operations.GetV1BillingSubscriptionTiersById.Output
-    /// Update subscription_tiers
-    ///
-    /// Replaces PUT /billing/subscription-tiers/{id}.
-    ///
-    /// - Remark: HTTP `POST /v1/billing/subscription_tiers/{id}`.
-    /// - Remark: Generated from `#/paths//v1/billing/subscription_tiers/{id}/post(postV1BillingSubscriptionTiersById)`.
-    func postV1BillingSubscriptionTiersById(_ input: Operations.PostV1BillingSubscriptionTiersById.Input) async throws -> Operations.PostV1BillingSubscriptionTiersById.Output
-    /// Delete subscription_tiers
-    ///
-    /// Replaces DELETE /billing/subscription-tiers/{id}.
-    ///
-    /// - Remark: HTTP `DELETE /v1/billing/subscription_tiers/{id}`.
-    /// - Remark: Generated from `#/paths//v1/billing/subscription_tiers/{id}/delete(deleteV1BillingSubscriptionTiersById)`.
-    func deleteV1BillingSubscriptionTiersById(_ input: Operations.DeleteV1BillingSubscriptionTiersById.Input) async throws -> Operations.DeleteV1BillingSubscriptionTiersById.Output
-    /// List subscriptions
-    ///
-    /// Replaces GET /billing/subscriptions.
-    ///
-    /// - Remark: HTTP `GET /v1/billing/subscriptions`.
-    /// - Remark: Generated from `#/paths//v1/billing/subscriptions/get(getV1BillingSubscriptions)`.
-    func getV1BillingSubscriptions(_ input: Operations.GetV1BillingSubscriptions.Input) async throws -> Operations.GetV1BillingSubscriptions.Output
-    /// Create subscriptions
-    ///
-    /// Replaces POST /billing/subscriptions.
-    ///
-    /// - Remark: HTTP `POST /v1/billing/subscriptions`.
-    /// - Remark: Generated from `#/paths//v1/billing/subscriptions/post(postV1BillingSubscriptions)`.
-    func postV1BillingSubscriptions(_ input: Operations.PostV1BillingSubscriptions.Input) async throws -> Operations.PostV1BillingSubscriptions.Output
-    /// Get subscriptions by id
-    ///
-    /// Replaces GET /billing/subscriptions/{id}.
-    ///
-    /// - Remark: HTTP `GET /v1/billing/subscriptions/{id}`.
-    /// - Remark: Generated from `#/paths//v1/billing/subscriptions/{id}/get(getV1BillingSubscriptionsById)`.
-    func getV1BillingSubscriptionsById(_ input: Operations.GetV1BillingSubscriptionsById.Input) async throws -> Operations.GetV1BillingSubscriptionsById.Output
-    /// Update subscriptions
-    ///
-    /// Replaces PUT /billing/subscriptions/{id}.
-    ///
-    /// - Remark: HTTP `POST /v1/billing/subscriptions/{id}`.
-    /// - Remark: Generated from `#/paths//v1/billing/subscriptions/{id}/post(postV1BillingSubscriptionsById)`.
-    func postV1BillingSubscriptionsById(_ input: Operations.PostV1BillingSubscriptionsById.Input) async throws -> Operations.PostV1BillingSubscriptionsById.Output
-    /// Delete subscriptions
-    ///
-    /// Replaces DELETE /billing/subscriptions/{id}.
-    ///
-    /// - Remark: HTTP `DELETE /v1/billing/subscriptions/{id}`.
-    /// - Remark: Generated from `#/paths//v1/billing/subscriptions/{id}/delete(deleteV1BillingSubscriptionsById)`.
-    func deleteV1BillingSubscriptionsById(_ input: Operations.DeleteV1BillingSubscriptionsById.Input) async throws -> Operations.DeleteV1BillingSubscriptionsById.Output
-    /// List tier_entitlements
-    ///
-    /// Replaces GET /billing/tier-entitlements.
-    ///
-    /// - Remark: HTTP `GET /v1/billing/tier_entitlements`.
-    /// - Remark: Generated from `#/paths//v1/billing/tier_entitlements/get(getV1BillingTierEntitlements)`.
-    func getV1BillingTierEntitlements(_ input: Operations.GetV1BillingTierEntitlements.Input) async throws -> Operations.GetV1BillingTierEntitlements.Output
-    /// Create tier_entitlements
-    ///
-    /// Replaces POST /billing/tier-entitlements.
-    ///
-    /// - Remark: HTTP `POST /v1/billing/tier_entitlements`.
-    /// - Remark: Generated from `#/paths//v1/billing/tier_entitlements/post(postV1BillingTierEntitlements)`.
-    func postV1BillingTierEntitlements(_ input: Operations.PostV1BillingTierEntitlements.Input) async throws -> Operations.PostV1BillingTierEntitlements.Output
-    /// Get tier_entitlements by id
-    ///
-    /// Replaces GET /billing/tier-entitlements/{id}.
-    ///
-    /// - Remark: HTTP `GET /v1/billing/tier_entitlements/{id}`.
-    /// - Remark: Generated from `#/paths//v1/billing/tier_entitlements/{id}/get(getV1BillingTierEntitlementsById)`.
-    func getV1BillingTierEntitlementsById(_ input: Operations.GetV1BillingTierEntitlementsById.Input) async throws -> Operations.GetV1BillingTierEntitlementsById.Output
-    /// Update tier_entitlements
-    ///
-    /// Replaces PUT /billing/tier-entitlements/{id}.
-    ///
-    /// - Remark: HTTP `POST /v1/billing/tier_entitlements/{id}`.
-    /// - Remark: Generated from `#/paths//v1/billing/tier_entitlements/{id}/post(postV1BillingTierEntitlementsById)`.
-    func postV1BillingTierEntitlementsById(_ input: Operations.PostV1BillingTierEntitlementsById.Input) async throws -> Operations.PostV1BillingTierEntitlementsById.Output
-    /// Delete tier_entitlements
-    ///
-    /// Replaces DELETE /billing/tier-entitlements/{id}.
-    ///
-    /// - Remark: HTTP `DELETE /v1/billing/tier_entitlements/{id}`.
-    /// - Remark: Generated from `#/paths//v1/billing/tier_entitlements/{id}/delete(deleteV1BillingTierEntitlementsById)`.
-    func deleteV1BillingTierEntitlementsById(_ input: Operations.DeleteV1BillingTierEntitlementsById.Input) async throws -> Operations.DeleteV1BillingTierEntitlementsById.Output
     /// Users the caller has blocked (paginated)
     ///
     /// Replaces GET /blocks.
@@ -5039,6 +4934,15 @@ public protocol APIProtocol: Sendable {
     /// - Remark: HTTP `DELETE /v1/oauth/providers/{id}`.
     /// - Remark: Generated from `#/paths//v1/oauth/providers/{id}/delete(deleteV1OauthProvidersById)`.
     func deleteV1OauthProvidersById(_ input: Operations.DeleteV1OauthProvidersById.Input) async throws -> Operations.DeleteV1OauthProvidersById.Output
+    /// Set the set an offer sells
+    ///
+    /// null stops the offer granting a set. Refused (rule 9) when the set conflicts with another live offer's set; a personal set is never sold (400).
+    ///
+    /// Replaces PUT /sets/offers/{offerId}.
+    ///
+    /// - Remark: HTTP `POST /v1/offers/{offer_id}/set`.
+    /// - Remark: Generated from `#/paths//v1/offers/{offer_id}/set/post(postV1OffersByOfferIdSet)`.
+    func postV1OffersByOfferIdSet(_ input: Operations.PostV1OffersByOfferIdSet.Input) async throws -> Operations.PostV1OffersByOfferIdSet.Output
     /// List the organizations a workspace owns (personal workspaces also include the ones you belong to)
     ///
     /// Scoped by `workspace`, which is REQUIRED — an unscoped organizations list is the same answer in every workspace, which is the bug this replaced. A PERSONAL workspace answers with the orgs you own UNION the orgs you belong to; an ORGANIZATION workspace answers with the orgs that org owns, never including itself. A workspace slug the caller neither owns nor reaches is a 404, the same answer as one that does not exist. Ordered by name (case-insensitively, ties broken by id) and capped at 500 rows.
@@ -6423,6 +6327,88 @@ public protocol APIProtocol: Sendable {
     /// - Remark: HTTP `DELETE /v1/server_bag/{key}`.
     /// - Remark: Generated from `#/paths//v1/server_bag/{key}/delete(deleteV1ServerBagByKey)`.
     func deleteV1ServerBagByKey(_ input: Operations.DeleteV1ServerBagByKey.Input) async throws -> Operations.DeleteV1ServerBagByKey.Output
+    /// List a customer's set grants
+    ///
+    /// Revoked grants are listed with their reason; newest first.
+    ///
+    /// Replaces GET /sets/grants.
+    ///
+    /// - Remark: HTTP `GET /v1/set_grants`.
+    /// - Remark: Generated from `#/paths//v1/set_grants/get(getV1SetGrants)`.
+    func getV1SetGrants(_ input: Operations.GetV1SetGrants.Input) async throws -> Operations.GetV1SetGrants.Output
+    /// Grant a set to a customer
+    ///
+    /// A direct grant. Refused (rule 4) when it conflicts with a set the customer holds; granting a set already held returns that grant.
+    ///
+    /// Replaces POST /sets/grants.
+    ///
+    /// - Remark: HTTP `POST /v1/set_grants`.
+    /// - Remark: Generated from `#/paths//v1/set_grants/post(postV1SetGrants)`.
+    func postV1SetGrants(_ input: Operations.PostV1SetGrants.Input) async throws -> Operations.PostV1SetGrants.Output
+    /// Read a customer's effective sets
+    ///
+    /// Replaces GET /sets/effective/{customerId}.
+    ///
+    /// - Remark: HTTP `GET /v1/set_grants/effective/{customer_id}`.
+    /// - Remark: Generated from `#/paths//v1/set_grants/effective/{customer_id}/get(getV1SetGrantsEffectiveByCustomerId)`.
+    func getV1SetGrantsEffectiveByCustomerId(_ input: Operations.GetV1SetGrantsEffectiveByCustomerId.Input) async throws -> Operations.GetV1SetGrantsEffectiveByCustomerId.Output
+    /// Revoke a set grant
+    ///
+    /// The row stays, with `revokeReason` `direct`.
+    ///
+    /// Replaces DELETE /sets/grants/{id}.
+    ///
+    /// - Remark: HTTP `DELETE /v1/set_grants/{id}`.
+    /// - Remark: Generated from `#/paths//v1/set_grants/{id}/delete(deleteV1SetGrantsById)`.
+    func deleteV1SetGrantsById(_ input: Operations.DeleteV1SetGrantsById.Input) async throws -> Operations.DeleteV1SetGrantsById.Output
+    /// List an ecosystem's sets
+    ///
+    /// Replaces GET /sets.
+    ///
+    /// - Remark: HTTP `GET /v1/sets`.
+    /// - Remark: Generated from `#/paths//v1/sets/get(getV1Sets)`.
+    func getV1Sets(_ input: Operations.GetV1Sets.Input) async throws -> Operations.GetV1Sets.Output
+    /// Create a set
+    ///
+    /// Replaces POST /sets.
+    ///
+    /// - Remark: HTTP `POST /v1/sets`.
+    /// - Remark: Generated from `#/paths//v1/sets/post(postV1Sets)`.
+    func postV1Sets(_ input: Operations.PostV1Sets.Input) async throws -> Operations.PostV1Sets.Output
+    /// Edit a set
+    ///
+    /// Making a set the default clears the flag on the previous default.
+    ///
+    /// Replaces PATCH /sets/{id}.
+    ///
+    /// - Remark: HTTP `POST /v1/sets/{id}`.
+    /// - Remark: Generated from `#/paths//v1/sets/{id}/post(postV1SetsById)`.
+    func postV1SetsById(_ input: Operations.PostV1SetsById.Input) async throws -> Operations.PostV1SetsById.Output
+    /// Delete a set
+    ///
+    /// Its containment goes, an offer selling it stops granting a set, and its grants stop counting. Refused (rule 8) when that unsettles a container or puts a holder in conflict.
+    ///
+    /// Replaces DELETE /sets/{id}.
+    ///
+    /// - Remark: HTTP `DELETE /v1/sets/{id}`.
+    /// - Remark: Generated from `#/paths//v1/sets/{id}/delete(deleteV1SetsById)`.
+    func deleteV1SetsById(_ input: Operations.DeleteV1SetsById.Input) async throws -> Operations.DeleteV1SetsById.Output
+    /// Replace the sets a set contains
+    ///
+    /// Replaces PUT /sets/{id}/members.
+    ///
+    /// - Remark: HTTP `POST /v1/sets/{id}/members`.
+    /// - Remark: Generated from `#/paths//v1/sets/{id}/members/post(postV1SetsByIdMembers)`.
+    func postV1SetsByIdMembers(_ input: Operations.PostV1SetsByIdMembers.Input) async throws -> Operations.PostV1SetsByIdMembers.Output
+    /// Replace a set's permissions and limits
+    ///
+    /// Every key must be one the catalog's `setEntries` declares, with a value of its type (400 otherwise).
+    ///
+    /// Replaces PUT /sets/{id}/values.
+    ///
+    /// - Remark: HTTP `POST /v1/sets/{id}/values`.
+    /// - Remark: Generated from `#/paths//v1/sets/{id}/values/post(postV1SetsByIdValues)`.
+    func postV1SetsByIdValues(_ input: Operations.PostV1SetsByIdValues.Input) async throws -> Operations.PostV1SetsByIdValues.Output
     /// The caller’s own forge connections, for the register form
     ///
     /// GitHub App installations belonging to the caller, active and not deleted — the only credential kind that can fast-forward a branch. Deliberately not `/integrations`’ list: that one is keyed on the ecosystem and carries every provider, so on an org workspace it offers rows `register` answers 404 to.
@@ -9568,243 +9554,6 @@ extension APIProtocol {
     ) async throws -> Operations.GetV1BillingPrices.Output {
         try await getV1BillingPrices(Operations.GetV1BillingPrices.Input(
             query: query,
-            headers: headers
-        ))
-    }
-    /// List subscription_tiers
-    ///
-    /// Replaces GET /billing/subscription-tiers.
-    ///
-    /// - Remark: HTTP `GET /v1/billing/subscription_tiers`.
-    /// - Remark: Generated from `#/paths//v1/billing/subscription_tiers/get(getV1BillingSubscriptionTiers)`.
-    public func getV1BillingSubscriptionTiers(
-        query: Operations.GetV1BillingSubscriptionTiers.Input.Query = .init(),
-        headers: Operations.GetV1BillingSubscriptionTiers.Input.Headers = .init()
-    ) async throws -> Operations.GetV1BillingSubscriptionTiers.Output {
-        try await getV1BillingSubscriptionTiers(Operations.GetV1BillingSubscriptionTiers.Input(
-            query: query,
-            headers: headers
-        ))
-    }
-    /// Create subscription_tiers
-    ///
-    /// Replaces POST /billing/subscription-tiers.
-    ///
-    /// - Remark: HTTP `POST /v1/billing/subscription_tiers`.
-    /// - Remark: Generated from `#/paths//v1/billing/subscription_tiers/post(postV1BillingSubscriptionTiers)`.
-    public func postV1BillingSubscriptionTiers(
-        headers: Operations.PostV1BillingSubscriptionTiers.Input.Headers = .init(),
-        body: Operations.PostV1BillingSubscriptionTiers.Input.Body
-    ) async throws -> Operations.PostV1BillingSubscriptionTiers.Output {
-        try await postV1BillingSubscriptionTiers(Operations.PostV1BillingSubscriptionTiers.Input(
-            headers: headers,
-            body: body
-        ))
-    }
-    /// Get subscription_tiers by id
-    ///
-    /// Replaces GET /billing/subscription-tiers/{id}.
-    ///
-    /// - Remark: HTTP `GET /v1/billing/subscription_tiers/{id}`.
-    /// - Remark: Generated from `#/paths//v1/billing/subscription_tiers/{id}/get(getV1BillingSubscriptionTiersById)`.
-    public func getV1BillingSubscriptionTiersById(
-        path: Operations.GetV1BillingSubscriptionTiersById.Input.Path,
-        query: Operations.GetV1BillingSubscriptionTiersById.Input.Query = .init(),
-        headers: Operations.GetV1BillingSubscriptionTiersById.Input.Headers = .init()
-    ) async throws -> Operations.GetV1BillingSubscriptionTiersById.Output {
-        try await getV1BillingSubscriptionTiersById(Operations.GetV1BillingSubscriptionTiersById.Input(
-            path: path,
-            query: query,
-            headers: headers
-        ))
-    }
-    /// Update subscription_tiers
-    ///
-    /// Replaces PUT /billing/subscription-tiers/{id}.
-    ///
-    /// - Remark: HTTP `POST /v1/billing/subscription_tiers/{id}`.
-    /// - Remark: Generated from `#/paths//v1/billing/subscription_tiers/{id}/post(postV1BillingSubscriptionTiersById)`.
-    public func postV1BillingSubscriptionTiersById(
-        path: Operations.PostV1BillingSubscriptionTiersById.Input.Path,
-        headers: Operations.PostV1BillingSubscriptionTiersById.Input.Headers = .init(),
-        body: Operations.PostV1BillingSubscriptionTiersById.Input.Body
-    ) async throws -> Operations.PostV1BillingSubscriptionTiersById.Output {
-        try await postV1BillingSubscriptionTiersById(Operations.PostV1BillingSubscriptionTiersById.Input(
-            path: path,
-            headers: headers,
-            body: body
-        ))
-    }
-    /// Delete subscription_tiers
-    ///
-    /// Replaces DELETE /billing/subscription-tiers/{id}.
-    ///
-    /// - Remark: HTTP `DELETE /v1/billing/subscription_tiers/{id}`.
-    /// - Remark: Generated from `#/paths//v1/billing/subscription_tiers/{id}/delete(deleteV1BillingSubscriptionTiersById)`.
-    public func deleteV1BillingSubscriptionTiersById(
-        path: Operations.DeleteV1BillingSubscriptionTiersById.Input.Path,
-        headers: Operations.DeleteV1BillingSubscriptionTiersById.Input.Headers = .init()
-    ) async throws -> Operations.DeleteV1BillingSubscriptionTiersById.Output {
-        try await deleteV1BillingSubscriptionTiersById(Operations.DeleteV1BillingSubscriptionTiersById.Input(
-            path: path,
-            headers: headers
-        ))
-    }
-    /// List subscriptions
-    ///
-    /// Replaces GET /billing/subscriptions.
-    ///
-    /// - Remark: HTTP `GET /v1/billing/subscriptions`.
-    /// - Remark: Generated from `#/paths//v1/billing/subscriptions/get(getV1BillingSubscriptions)`.
-    public func getV1BillingSubscriptions(
-        query: Operations.GetV1BillingSubscriptions.Input.Query = .init(),
-        headers: Operations.GetV1BillingSubscriptions.Input.Headers = .init()
-    ) async throws -> Operations.GetV1BillingSubscriptions.Output {
-        try await getV1BillingSubscriptions(Operations.GetV1BillingSubscriptions.Input(
-            query: query,
-            headers: headers
-        ))
-    }
-    /// Create subscriptions
-    ///
-    /// Replaces POST /billing/subscriptions.
-    ///
-    /// - Remark: HTTP `POST /v1/billing/subscriptions`.
-    /// - Remark: Generated from `#/paths//v1/billing/subscriptions/post(postV1BillingSubscriptions)`.
-    public func postV1BillingSubscriptions(
-        headers: Operations.PostV1BillingSubscriptions.Input.Headers = .init(),
-        body: Operations.PostV1BillingSubscriptions.Input.Body
-    ) async throws -> Operations.PostV1BillingSubscriptions.Output {
-        try await postV1BillingSubscriptions(Operations.PostV1BillingSubscriptions.Input(
-            headers: headers,
-            body: body
-        ))
-    }
-    /// Get subscriptions by id
-    ///
-    /// Replaces GET /billing/subscriptions/{id}.
-    ///
-    /// - Remark: HTTP `GET /v1/billing/subscriptions/{id}`.
-    /// - Remark: Generated from `#/paths//v1/billing/subscriptions/{id}/get(getV1BillingSubscriptionsById)`.
-    public func getV1BillingSubscriptionsById(
-        path: Operations.GetV1BillingSubscriptionsById.Input.Path,
-        query: Operations.GetV1BillingSubscriptionsById.Input.Query = .init(),
-        headers: Operations.GetV1BillingSubscriptionsById.Input.Headers = .init()
-    ) async throws -> Operations.GetV1BillingSubscriptionsById.Output {
-        try await getV1BillingSubscriptionsById(Operations.GetV1BillingSubscriptionsById.Input(
-            path: path,
-            query: query,
-            headers: headers
-        ))
-    }
-    /// Update subscriptions
-    ///
-    /// Replaces PUT /billing/subscriptions/{id}.
-    ///
-    /// - Remark: HTTP `POST /v1/billing/subscriptions/{id}`.
-    /// - Remark: Generated from `#/paths//v1/billing/subscriptions/{id}/post(postV1BillingSubscriptionsById)`.
-    public func postV1BillingSubscriptionsById(
-        path: Operations.PostV1BillingSubscriptionsById.Input.Path,
-        headers: Operations.PostV1BillingSubscriptionsById.Input.Headers = .init(),
-        body: Operations.PostV1BillingSubscriptionsById.Input.Body
-    ) async throws -> Operations.PostV1BillingSubscriptionsById.Output {
-        try await postV1BillingSubscriptionsById(Operations.PostV1BillingSubscriptionsById.Input(
-            path: path,
-            headers: headers,
-            body: body
-        ))
-    }
-    /// Delete subscriptions
-    ///
-    /// Replaces DELETE /billing/subscriptions/{id}.
-    ///
-    /// - Remark: HTTP `DELETE /v1/billing/subscriptions/{id}`.
-    /// - Remark: Generated from `#/paths//v1/billing/subscriptions/{id}/delete(deleteV1BillingSubscriptionsById)`.
-    public func deleteV1BillingSubscriptionsById(
-        path: Operations.DeleteV1BillingSubscriptionsById.Input.Path,
-        headers: Operations.DeleteV1BillingSubscriptionsById.Input.Headers = .init()
-    ) async throws -> Operations.DeleteV1BillingSubscriptionsById.Output {
-        try await deleteV1BillingSubscriptionsById(Operations.DeleteV1BillingSubscriptionsById.Input(
-            path: path,
-            headers: headers
-        ))
-    }
-    /// List tier_entitlements
-    ///
-    /// Replaces GET /billing/tier-entitlements.
-    ///
-    /// - Remark: HTTP `GET /v1/billing/tier_entitlements`.
-    /// - Remark: Generated from `#/paths//v1/billing/tier_entitlements/get(getV1BillingTierEntitlements)`.
-    public func getV1BillingTierEntitlements(
-        query: Operations.GetV1BillingTierEntitlements.Input.Query = .init(),
-        headers: Operations.GetV1BillingTierEntitlements.Input.Headers = .init()
-    ) async throws -> Operations.GetV1BillingTierEntitlements.Output {
-        try await getV1BillingTierEntitlements(Operations.GetV1BillingTierEntitlements.Input(
-            query: query,
-            headers: headers
-        ))
-    }
-    /// Create tier_entitlements
-    ///
-    /// Replaces POST /billing/tier-entitlements.
-    ///
-    /// - Remark: HTTP `POST /v1/billing/tier_entitlements`.
-    /// - Remark: Generated from `#/paths//v1/billing/tier_entitlements/post(postV1BillingTierEntitlements)`.
-    public func postV1BillingTierEntitlements(
-        headers: Operations.PostV1BillingTierEntitlements.Input.Headers = .init(),
-        body: Operations.PostV1BillingTierEntitlements.Input.Body
-    ) async throws -> Operations.PostV1BillingTierEntitlements.Output {
-        try await postV1BillingTierEntitlements(Operations.PostV1BillingTierEntitlements.Input(
-            headers: headers,
-            body: body
-        ))
-    }
-    /// Get tier_entitlements by id
-    ///
-    /// Replaces GET /billing/tier-entitlements/{id}.
-    ///
-    /// - Remark: HTTP `GET /v1/billing/tier_entitlements/{id}`.
-    /// - Remark: Generated from `#/paths//v1/billing/tier_entitlements/{id}/get(getV1BillingTierEntitlementsById)`.
-    public func getV1BillingTierEntitlementsById(
-        path: Operations.GetV1BillingTierEntitlementsById.Input.Path,
-        query: Operations.GetV1BillingTierEntitlementsById.Input.Query = .init(),
-        headers: Operations.GetV1BillingTierEntitlementsById.Input.Headers = .init()
-    ) async throws -> Operations.GetV1BillingTierEntitlementsById.Output {
-        try await getV1BillingTierEntitlementsById(Operations.GetV1BillingTierEntitlementsById.Input(
-            path: path,
-            query: query,
-            headers: headers
-        ))
-    }
-    /// Update tier_entitlements
-    ///
-    /// Replaces PUT /billing/tier-entitlements/{id}.
-    ///
-    /// - Remark: HTTP `POST /v1/billing/tier_entitlements/{id}`.
-    /// - Remark: Generated from `#/paths//v1/billing/tier_entitlements/{id}/post(postV1BillingTierEntitlementsById)`.
-    public func postV1BillingTierEntitlementsById(
-        path: Operations.PostV1BillingTierEntitlementsById.Input.Path,
-        headers: Operations.PostV1BillingTierEntitlementsById.Input.Headers = .init(),
-        body: Operations.PostV1BillingTierEntitlementsById.Input.Body
-    ) async throws -> Operations.PostV1BillingTierEntitlementsById.Output {
-        try await postV1BillingTierEntitlementsById(Operations.PostV1BillingTierEntitlementsById.Input(
-            path: path,
-            headers: headers,
-            body: body
-        ))
-    }
-    /// Delete tier_entitlements
-    ///
-    /// Replaces DELETE /billing/tier-entitlements/{id}.
-    ///
-    /// - Remark: HTTP `DELETE /v1/billing/tier_entitlements/{id}`.
-    /// - Remark: Generated from `#/paths//v1/billing/tier_entitlements/{id}/delete(deleteV1BillingTierEntitlementsById)`.
-    public func deleteV1BillingTierEntitlementsById(
-        path: Operations.DeleteV1BillingTierEntitlementsById.Input.Path,
-        headers: Operations.DeleteV1BillingTierEntitlementsById.Input.Headers = .init()
-    ) async throws -> Operations.DeleteV1BillingTierEntitlementsById.Output {
-        try await deleteV1BillingTierEntitlementsById(Operations.DeleteV1BillingTierEntitlementsById.Input(
-            path: path,
             headers: headers
         ))
     }
@@ -18497,6 +18246,25 @@ extension APIProtocol {
             headers: headers
         ))
     }
+    /// Set the set an offer sells
+    ///
+    /// null stops the offer granting a set. Refused (rule 9) when the set conflicts with another live offer's set; a personal set is never sold (400).
+    ///
+    /// Replaces PUT /sets/offers/{offerId}.
+    ///
+    /// - Remark: HTTP `POST /v1/offers/{offer_id}/set`.
+    /// - Remark: Generated from `#/paths//v1/offers/{offer_id}/set/post(postV1OffersByOfferIdSet)`.
+    public func postV1OffersByOfferIdSet(
+        path: Operations.PostV1OffersByOfferIdSet.Input.Path,
+        headers: Operations.PostV1OffersByOfferIdSet.Input.Headers = .init(),
+        body: Operations.PostV1OffersByOfferIdSet.Input.Body
+    ) async throws -> Operations.PostV1OffersByOfferIdSet.Output {
+        try await postV1OffersByOfferIdSet(Operations.PostV1OffersByOfferIdSet.Input(
+            path: path,
+            headers: headers,
+            body: body
+        ))
+    }
     /// List the organizations a workspace owns (personal workspaces also include the ones you belong to)
     ///
     /// Scoped by `workspace`, which is REQUIRED — an unscoped organizations list is the same answer in every workspace, which is the bug this replaced. A PERSONAL workspace answers with the orgs you own UNION the orgs you belong to; an ORGANIZATION workspace answers with the orgs that org owns, never including itself. A workspace slug the caller neither owns nor reaches is a 404, the same answer as one that does not exist. Ordered by name (case-insensitively, ties broken by id) and capped at 500 rows.
@@ -21493,6 +21261,180 @@ extension APIProtocol {
             headers: headers
         ))
     }
+    /// List a customer's set grants
+    ///
+    /// Revoked grants are listed with their reason; newest first.
+    ///
+    /// Replaces GET /sets/grants.
+    ///
+    /// - Remark: HTTP `GET /v1/set_grants`.
+    /// - Remark: Generated from `#/paths//v1/set_grants/get(getV1SetGrants)`.
+    public func getV1SetGrants(
+        query: Operations.GetV1SetGrants.Input.Query,
+        headers: Operations.GetV1SetGrants.Input.Headers = .init()
+    ) async throws -> Operations.GetV1SetGrants.Output {
+        try await getV1SetGrants(Operations.GetV1SetGrants.Input(
+            query: query,
+            headers: headers
+        ))
+    }
+    /// Grant a set to a customer
+    ///
+    /// A direct grant. Refused (rule 4) when it conflicts with a set the customer holds; granting a set already held returns that grant.
+    ///
+    /// Replaces POST /sets/grants.
+    ///
+    /// - Remark: HTTP `POST /v1/set_grants`.
+    /// - Remark: Generated from `#/paths//v1/set_grants/post(postV1SetGrants)`.
+    public func postV1SetGrants(
+        query: Operations.PostV1SetGrants.Input.Query,
+        headers: Operations.PostV1SetGrants.Input.Headers = .init(),
+        body: Operations.PostV1SetGrants.Input.Body
+    ) async throws -> Operations.PostV1SetGrants.Output {
+        try await postV1SetGrants(Operations.PostV1SetGrants.Input(
+            query: query,
+            headers: headers,
+            body: body
+        ))
+    }
+    /// Read a customer's effective sets
+    ///
+    /// Replaces GET /sets/effective/{customerId}.
+    ///
+    /// - Remark: HTTP `GET /v1/set_grants/effective/{customer_id}`.
+    /// - Remark: Generated from `#/paths//v1/set_grants/effective/{customer_id}/get(getV1SetGrantsEffectiveByCustomerId)`.
+    public func getV1SetGrantsEffectiveByCustomerId(
+        path: Operations.GetV1SetGrantsEffectiveByCustomerId.Input.Path,
+        query: Operations.GetV1SetGrantsEffectiveByCustomerId.Input.Query = .init(),
+        headers: Operations.GetV1SetGrantsEffectiveByCustomerId.Input.Headers = .init()
+    ) async throws -> Operations.GetV1SetGrantsEffectiveByCustomerId.Output {
+        try await getV1SetGrantsEffectiveByCustomerId(Operations.GetV1SetGrantsEffectiveByCustomerId.Input(
+            path: path,
+            query: query,
+            headers: headers
+        ))
+    }
+    /// Revoke a set grant
+    ///
+    /// The row stays, with `revokeReason` `direct`.
+    ///
+    /// Replaces DELETE /sets/grants/{id}.
+    ///
+    /// - Remark: HTTP `DELETE /v1/set_grants/{id}`.
+    /// - Remark: Generated from `#/paths//v1/set_grants/{id}/delete(deleteV1SetGrantsById)`.
+    public func deleteV1SetGrantsById(
+        path: Operations.DeleteV1SetGrantsById.Input.Path,
+        headers: Operations.DeleteV1SetGrantsById.Input.Headers = .init()
+    ) async throws -> Operations.DeleteV1SetGrantsById.Output {
+        try await deleteV1SetGrantsById(Operations.DeleteV1SetGrantsById.Input(
+            path: path,
+            headers: headers
+        ))
+    }
+    /// List an ecosystem's sets
+    ///
+    /// Replaces GET /sets.
+    ///
+    /// - Remark: HTTP `GET /v1/sets`.
+    /// - Remark: Generated from `#/paths//v1/sets/get(getV1Sets)`.
+    public func getV1Sets(
+        query: Operations.GetV1Sets.Input.Query,
+        headers: Operations.GetV1Sets.Input.Headers = .init()
+    ) async throws -> Operations.GetV1Sets.Output {
+        try await getV1Sets(Operations.GetV1Sets.Input(
+            query: query,
+            headers: headers
+        ))
+    }
+    /// Create a set
+    ///
+    /// Replaces POST /sets.
+    ///
+    /// - Remark: HTTP `POST /v1/sets`.
+    /// - Remark: Generated from `#/paths//v1/sets/post(postV1Sets)`.
+    public func postV1Sets(
+        query: Operations.PostV1Sets.Input.Query,
+        headers: Operations.PostV1Sets.Input.Headers = .init(),
+        body: Operations.PostV1Sets.Input.Body
+    ) async throws -> Operations.PostV1Sets.Output {
+        try await postV1Sets(Operations.PostV1Sets.Input(
+            query: query,
+            headers: headers,
+            body: body
+        ))
+    }
+    /// Edit a set
+    ///
+    /// Making a set the default clears the flag on the previous default.
+    ///
+    /// Replaces PATCH /sets/{id}.
+    ///
+    /// - Remark: HTTP `POST /v1/sets/{id}`.
+    /// - Remark: Generated from `#/paths//v1/sets/{id}/post(postV1SetsById)`.
+    public func postV1SetsById(
+        path: Operations.PostV1SetsById.Input.Path,
+        headers: Operations.PostV1SetsById.Input.Headers = .init(),
+        body: Operations.PostV1SetsById.Input.Body
+    ) async throws -> Operations.PostV1SetsById.Output {
+        try await postV1SetsById(Operations.PostV1SetsById.Input(
+            path: path,
+            headers: headers,
+            body: body
+        ))
+    }
+    /// Delete a set
+    ///
+    /// Its containment goes, an offer selling it stops granting a set, and its grants stop counting. Refused (rule 8) when that unsettles a container or puts a holder in conflict.
+    ///
+    /// Replaces DELETE /sets/{id}.
+    ///
+    /// - Remark: HTTP `DELETE /v1/sets/{id}`.
+    /// - Remark: Generated from `#/paths//v1/sets/{id}/delete(deleteV1SetsById)`.
+    public func deleteV1SetsById(
+        path: Operations.DeleteV1SetsById.Input.Path,
+        headers: Operations.DeleteV1SetsById.Input.Headers = .init()
+    ) async throws -> Operations.DeleteV1SetsById.Output {
+        try await deleteV1SetsById(Operations.DeleteV1SetsById.Input(
+            path: path,
+            headers: headers
+        ))
+    }
+    /// Replace the sets a set contains
+    ///
+    /// Replaces PUT /sets/{id}/members.
+    ///
+    /// - Remark: HTTP `POST /v1/sets/{id}/members`.
+    /// - Remark: Generated from `#/paths//v1/sets/{id}/members/post(postV1SetsByIdMembers)`.
+    public func postV1SetsByIdMembers(
+        path: Operations.PostV1SetsByIdMembers.Input.Path,
+        headers: Operations.PostV1SetsByIdMembers.Input.Headers = .init(),
+        body: Operations.PostV1SetsByIdMembers.Input.Body
+    ) async throws -> Operations.PostV1SetsByIdMembers.Output {
+        try await postV1SetsByIdMembers(Operations.PostV1SetsByIdMembers.Input(
+            path: path,
+            headers: headers,
+            body: body
+        ))
+    }
+    /// Replace a set's permissions and limits
+    ///
+    /// Every key must be one the catalog's `setEntries` declares, with a value of its type (400 otherwise).
+    ///
+    /// Replaces PUT /sets/{id}/values.
+    ///
+    /// - Remark: HTTP `POST /v1/sets/{id}/values`.
+    /// - Remark: Generated from `#/paths//v1/sets/{id}/values/post(postV1SetsByIdValues)`.
+    public func postV1SetsByIdValues(
+        path: Operations.PostV1SetsByIdValues.Input.Path,
+        headers: Operations.PostV1SetsByIdValues.Input.Headers = .init(),
+        body: Operations.PostV1SetsByIdValues.Input.Body
+    ) async throws -> Operations.PostV1SetsByIdValues.Output {
+        try await postV1SetsByIdValues(Operations.PostV1SetsByIdValues.Input(
+            path: path,
+            headers: headers,
+            body: body
+        ))
+    }
     /// The caller’s own forge connections, for the register form
     ///
     /// GitHub App installations belonging to the caller, active and not deleted — the only credential kind that can fast-forward a branch. Deliberately not `/integrations`’ list: that one is keyed on the ecosystem and carries every provider, so on an org workspace it offers rows `register` answers 404 to.
@@ -24103,6 +24045,77 @@ public enum Components {
             ///
             /// - Remark: Generated from `#/components/schemas/CustomerMe/roles`.
             public var roles: [Swift.String]?
+            /// The customer's effective sets in its realm: null when the realm has no sets; the held set ids, the features they grant (all or read-only) and their limits; or { error: 'unresolved' } when the answer could not be computed while set enforcement is off (with it on, the request is refused 403).
+            ///
+            /// - Remark: Generated from `#/components/schemas/CustomerMe/sets`.
+            public struct SetsPayload: Codable, Hashable, Sendable {
+                /// Held set ids.
+                ///
+                /// - Remark: Generated from `#/components/schemas/CustomerMe/sets/held`.
+                public var held: [Swift.String]?
+                /// - Remark: Generated from `#/components/schemas/CustomerMe/sets/permissions`.
+                public var permissions: [Swift.String]?
+                /// - Remark: Generated from `#/components/schemas/CustomerMe/sets/read_only`.
+                public var readOnly: [Swift.String]?
+                /// - Remark: Generated from `#/components/schemas/CustomerMe/sets/limits`.
+                public struct LimitsPayload: Codable, Hashable, Sendable {
+                    /// A container of undocumented properties.
+                    public var additionalProperties: OpenAPIRuntime.OpenAPIObjectContainer
+                    /// Creates a new `LimitsPayload`.
+                    ///
+                    /// - Parameters:
+                    ///   - additionalProperties: A container of undocumented properties.
+                    public init(additionalProperties: OpenAPIRuntime.OpenAPIObjectContainer = .init()) {
+                        self.additionalProperties = additionalProperties
+                    }
+                    public init(from decoder: any Swift.Decoder) throws {
+                        additionalProperties = try decoder.decodeAdditionalProperties(knownKeys: [])
+                    }
+                    public func encode(to encoder: any Swift.Encoder) throws {
+                        try encoder.encodeAdditionalProperties(additionalProperties)
+                    }
+                }
+                /// - Remark: Generated from `#/components/schemas/CustomerMe/sets/limits`.
+                public var limits: Components.Schemas.CustomerMe.SetsPayload.LimitsPayload?
+                /// - Remark: Generated from `#/components/schemas/CustomerMe/sets/error`.
+                @frozen public enum _ErrorPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case unresolved = "unresolved"
+                }
+                /// - Remark: Generated from `#/components/schemas/CustomerMe/sets/error`.
+                public var error: Components.Schemas.CustomerMe.SetsPayload._ErrorPayload?
+                /// Creates a new `SetsPayload`.
+                ///
+                /// - Parameters:
+                ///   - held: Held set ids.
+                ///   - permissions:
+                ///   - readOnly:
+                ///   - limits:
+                ///   - error:
+                public init(
+                    held: [Swift.String]? = nil,
+                    permissions: [Swift.String]? = nil,
+                    readOnly: [Swift.String]? = nil,
+                    limits: Components.Schemas.CustomerMe.SetsPayload.LimitsPayload? = nil,
+                    error: Components.Schemas.CustomerMe.SetsPayload._ErrorPayload? = nil
+                ) {
+                    self.held = held
+                    self.permissions = permissions
+                    self.readOnly = readOnly
+                    self.limits = limits
+                    self.error = error
+                }
+                public enum CodingKeys: String, CodingKey {
+                    case held
+                    case permissions
+                    case readOnly = "read_only"
+                    case limits
+                    case error
+                }
+            }
+            /// The customer's effective sets in its realm: null when the realm has no sets; the held set ids, the features they grant (all or read-only) and their limits; or { error: 'unresolved' } when the answer could not be computed while set enforcement is off (with it on, the request is refused 403).
+            ///
+            /// - Remark: Generated from `#/components/schemas/CustomerMe/sets`.
+            public var sets: Components.Schemas.CustomerMe.SetsPayload?
             /// Creates a new `CustomerMe`.
             ///
             /// - Parameters:
@@ -24111,18 +24124,21 @@ public enum Components {
             ///   - realm:
             ///   - access: The customer's product roles in its realm: each product feature area's item verbs as letters, e.g. { notes: 'CRUD' }. Absent where product roles do not apply.
             ///   - roles: The slugs of the roles the customer holds in its realm, sorted. Absent with `access`.
+            ///   - sets: The customer's effective sets in its realm: null when the realm has no sets; the held set ids, the features they grant (all or read-only) and their limits; or { error: 'unresolved' } when the answer could not be computed while set enforcement is off (with it on, the request is refused 403).
             public init(
                 user: Components.Schemas.CustomerMe.UserPayload,
                 ecosystemId: Swift.String,
                 realm: Components.Schemas.CustomerMe.RealmPayload,
                 access: Components.Schemas.CustomerMe.AccessPayload? = nil,
-                roles: [Swift.String]? = nil
+                roles: [Swift.String]? = nil,
+                sets: Components.Schemas.CustomerMe.SetsPayload? = nil
             ) {
                 self.user = user
                 self.ecosystemId = ecosystemId
                 self.realm = realm
                 self.access = access
                 self.roles = roles
+                self.sets = sets
             }
             public enum CodingKeys: String, CodingKey {
                 case user
@@ -24130,6 +24146,7 @@ public enum Components {
                 case realm
                 case access
                 case roles
+                case sets
             }
         }
         /// - Remark: Generated from `#/components/schemas/AuthResult`.
@@ -35054,6 +35071,72 @@ public enum Components {
             ///
             /// - Remark: Generated from `#/components/schemas/CatalogFeature/allowed_in`.
             public var allowedIn: Components.Schemas.CatalogFeature.AllowedInPayload?
+            /// What the feature contributes to sets: `permission` when the feature itself can be in a set, and the typed limits a set may define under it. Limit keys are unique across the catalog. The Sets screen is generated from these.
+            ///
+            /// - Remark: Generated from `#/components/schemas/CatalogFeature/set_entries`.
+            public struct SetEntriesPayload: Codable, Hashable, Sendable {
+                /// - Remark: Generated from `#/components/schemas/CatalogFeature/set_entries/permission`.
+                public var permission: Swift.Bool?
+                /// - Remark: Generated from `#/components/schemas/CatalogFeature/set_entries/LimitsPayload`.
+                public struct LimitsPayloadPayload: Codable, Hashable, Sendable {
+                    /// - Remark: Generated from `#/components/schemas/CatalogFeature/set_entries/LimitsPayload/key`.
+                    public var key: Swift.String
+                    /// - Remark: Generated from `#/components/schemas/CatalogFeature/set_entries/LimitsPayload/type`.
+                    @frozen public enum _TypePayload: String, Codable, Hashable, Sendable, CaseIterable {
+                        case tier = "tier"
+                        case bytes = "bytes"
+                        case count = "count"
+                    }
+                    /// - Remark: Generated from `#/components/schemas/CatalogFeature/set_entries/LimitsPayload/type`.
+                    public var _type: Components.Schemas.CatalogFeature.SetEntriesPayload.LimitsPayloadPayload._TypePayload
+                    /// - Remark: Generated from `#/components/schemas/CatalogFeature/set_entries/LimitsPayload/label`.
+                    public var label: Swift.String
+                    /// Creates a new `LimitsPayloadPayload`.
+                    ///
+                    /// - Parameters:
+                    ///   - key:
+                    ///   - _type:
+                    ///   - label:
+                    public init(
+                        key: Swift.String,
+                        _type: Components.Schemas.CatalogFeature.SetEntriesPayload.LimitsPayloadPayload._TypePayload,
+                        label: Swift.String
+                    ) {
+                        self.key = key
+                        self._type = _type
+                        self.label = label
+                    }
+                    public enum CodingKeys: String, CodingKey {
+                        case key
+                        case _type = "type"
+                        case label
+                    }
+                }
+                /// - Remark: Generated from `#/components/schemas/CatalogFeature/set_entries/limits`.
+                public typealias LimitsPayload = [Components.Schemas.CatalogFeature.SetEntriesPayload.LimitsPayloadPayload]
+                /// - Remark: Generated from `#/components/schemas/CatalogFeature/set_entries/limits`.
+                public var limits: Components.Schemas.CatalogFeature.SetEntriesPayload.LimitsPayload?
+                /// Creates a new `SetEntriesPayload`.
+                ///
+                /// - Parameters:
+                ///   - permission:
+                ///   - limits:
+                public init(
+                    permission: Swift.Bool? = nil,
+                    limits: Components.Schemas.CatalogFeature.SetEntriesPayload.LimitsPayload? = nil
+                ) {
+                    self.permission = permission
+                    self.limits = limits
+                }
+                public enum CodingKeys: String, CodingKey {
+                    case permission
+                    case limits
+                }
+            }
+            /// What the feature contributes to sets: `permission` when the feature itself can be in a set, and the typed limits a set may define under it. Limit keys are unique across the catalog. The Sets screen is generated from these.
+            ///
+            /// - Remark: Generated from `#/components/schemas/CatalogFeature/set_entries`.
+            public var setEntries: Components.Schemas.CatalogFeature.SetEntriesPayload?
             /// - Remark: Generated from `#/components/schemas/CatalogFeature/WorkspaceOwnerKindsPayload`.
             @frozen public enum WorkspaceOwnerKindsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
                 case customer = "customer"
@@ -35099,6 +35182,7 @@ public enum Components {
             ///   - comingSoon: Not built yet. Listed so the picker can say it is coming; provisioning it is refused (400).
             ///   - requiresFeatures: Feature keys this one needs. Adding it provisions them too; they cannot be removed while it is active (409 feature_required).
             ///   - allowedIn: The ecosystem types that may hold it; absent means every type except workspace, personal and organization. Adding it elsewhere is refused (400). GET /ecosystem/features/{id}/availability names these per ecosystem.
+            ///   - setEntries: What the feature contributes to sets: `permission` when the feature itself can be in a set, and the typed limits a set may define under it. Limit keys are unique across the catalog. The Sets screen is generated from these.
             ///   - workspaceOwnerKinds: Narrows allowedIn for a workspace by who owns it: Teams is allowed only in an organization workspace. Absent means either owner kind.
             ///   - automaticIn: The ecosystem types that get it when provisioned, with no owner opt-in (a workspace gets Personas; a Personal or Organization ecosystem gets its hub data).
             ///   - includedWith: The feature this one comes with (the Users Settings, the Applications Client Auth panel). The picker does not list it: adding the parent adds it, removing the parent removes it, adding it adds the parent, and removing it on its own is refused (400).
@@ -35111,6 +35195,7 @@ public enum Components {
                 comingSoon: Swift.Bool? = nil,
                 requiresFeatures: [Swift.String]? = nil,
                 allowedIn: Components.Schemas.CatalogFeature.AllowedInPayload? = nil,
+                setEntries: Components.Schemas.CatalogFeature.SetEntriesPayload? = nil,
                 workspaceOwnerKinds: Components.Schemas.CatalogFeature.WorkspaceOwnerKindsPayload? = nil,
                 automaticIn: Components.Schemas.CatalogFeature.AutomaticInPayload? = nil,
                 includedWith: Swift.String? = nil
@@ -35123,6 +35208,7 @@ public enum Components {
                 self.comingSoon = comingSoon
                 self.requiresFeatures = requiresFeatures
                 self.allowedIn = allowedIn
+                self.setEntries = setEntries
                 self.workspaceOwnerKinds = workspaceOwnerKinds
                 self.automaticIn = automaticIn
                 self.includedWith = includedWith
@@ -35136,6 +35222,7 @@ public enum Components {
                 case comingSoon = "coming_soon"
                 case requiresFeatures = "requires_features"
                 case allowedIn = "allowed_in"
+                case setEntries = "set_entries"
                 case workspaceOwnerKinds = "workspace_owner_kinds"
                 case automaticIn = "automatic_in"
                 case includedWith = "included_with"
@@ -46365,7 +46452,7 @@ public enum Components {
             ///
             /// - Remark: Generated from `#/components/schemas/SignupListEntry/role_id`.
             public var roleId: Swift.String?
-            /// Reserved for sets; always null for now
+            /// The set granted at the first proven session; null grants none
             ///
             /// - Remark: Generated from `#/components/schemas/SignupListEntry/set_id`.
             public var setId: Swift.String?
@@ -46385,7 +46472,7 @@ public enum Components {
             ///   - id:
             ///   - email: Trimmed and lower-cased
             ///   - roleId: The role granted at the first proven session; null grants none
-            ///   - setId: Reserved for sets; always null for now
+            ///   - setId: The set granted at the first proven session; null grants none
             ///   - created: Unix timestamp, in seconds.
             ///   - grantedAt: When the entry was applied; null while it waits
             ///   - grantedCustomerId:
@@ -46439,7 +46526,7 @@ public enum Components {
             public var email: Swift.String
             /// - Remark: Generated from `#/components/schemas/SignupListEntryPut/role_id`.
             public var roleId: Swift.String?
-            /// Refused with 422 until sets are available
+            /// A set of this ecosystem (422 otherwise); null grants none
             ///
             /// - Remark: Generated from `#/components/schemas/SignupListEntryPut/set_id`.
             public var setId: Swift.String?
@@ -46448,7 +46535,7 @@ public enum Components {
             /// - Parameters:
             ///   - email: Stored trimmed and lower-cased
             ///   - roleId:
-            ///   - setId: Refused with 422 until sets are available
+            ///   - setId: A set of this ecosystem (422 otherwise); null grants none
             public init(
                 email: Swift.String,
                 roleId: Swift.String? = nil,
@@ -49775,6 +49862,720 @@ public enum Components {
                 case subitemVerbs = "subitem_verbs"
                 case restricted
                 case decidedBy = "decided_by"
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/SetValue`.
+        public struct SetValue: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/SetValue/kind`.
+            @frozen public enum KindPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                case permission = "permission"
+                case limit = "limit"
+            }
+            /// - Remark: Generated from `#/components/schemas/SetValue/kind`.
+            public var kind: Components.Schemas.SetValue.KindPayload
+            /// A feature key for a permission, a limit key (e.g. `usage.tier`) for a limit; both from the catalog's `setEntries`.
+            ///
+            /// - Remark: Generated from `#/components/schemas/SetValue/key`.
+            public var key: Swift.String
+            /// true for a permission; for a limit, a tier slug (string) or a byte or count (integer).
+            ///
+            /// - Remark: Generated from `#/components/schemas/SetValue/value`.
+            public var value: OpenAPIRuntime.OpenAPIValueContainer
+            /// Creates a new `SetValue`.
+            ///
+            /// - Parameters:
+            ///   - kind:
+            ///   - key: A feature key for a permission, a limit key (e.g. `usage.tier`) for a limit; both from the catalog's `setEntries`.
+            ///   - value: true for a permission; for a limit, a tier slug (string) or a byte or count (integer).
+            public init(
+                kind: Components.Schemas.SetValue.KindPayload,
+                key: Swift.String,
+                value: OpenAPIRuntime.OpenAPIValueContainer
+            ) {
+                self.kind = kind
+                self.key = key
+                self.value = value
+            }
+            public enum CodingKeys: String, CodingKey {
+                case kind
+                case key
+                case value
+            }
+            public init(from decoder: any Swift.Decoder) throws {
+                let container = try decoder.container(keyedBy: CodingKeys.self)
+                self.kind = try container.decode(
+                    Components.Schemas.SetValue.KindPayload.self,
+                    forKey: .kind
+                )
+                self.key = try container.decode(
+                    Swift.String.self,
+                    forKey: .key
+                )
+                self.value = try container.decode(
+                    OpenAPIRuntime.OpenAPIValueContainer.self,
+                    forKey: .value
+                )
+                try decoder.ensureNoAdditionalProperties(knownKeys: [
+                    "kind",
+                    "key",
+                    "value"
+                ])
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/Set`.
+        public struct Set: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/Set/id`.
+            public var id: Swift.String
+            /// - Remark: Generated from `#/components/schemas/Set/slug`.
+            public var slug: Swift.String
+            /// - Remark: Generated from `#/components/schemas/Set/name`.
+            public var name: Swift.String
+            /// - Remark: Generated from `#/components/schemas/Set/description`.
+            public var description: Swift.String
+            /// Applies to a customer who holds no live grant; one per ecosystem.
+            ///
+            /// - Remark: Generated from `#/components/schemas/Set/is_default`.
+            public var isDefault: Swift.Bool
+            /// A one-customer exception, hidden from the list and from offers.
+            ///
+            /// - Remark: Generated from `#/components/schemas/Set/is_personal`.
+            public var isPersonal: Swift.Bool
+            /// - Remark: Generated from `#/components/schemas/Set/personal_customer_id`.
+            public var personalCustomerId: Swift.String?
+            /// The sets it directly contains.
+            ///
+            /// - Remark: Generated from `#/components/schemas/Set/contains`.
+            public var contains: [Swift.String]
+            /// Its own values.
+            ///
+            /// - Remark: Generated from `#/components/schemas/Set/values`.
+            public var values: [Components.Schemas.SetValue]
+            /// Creates a new `Set`.
+            ///
+            /// - Parameters:
+            ///   - id:
+            ///   - slug:
+            ///   - name:
+            ///   - description:
+            ///   - isDefault: Applies to a customer who holds no live grant; one per ecosystem.
+            ///   - isPersonal: A one-customer exception, hidden from the list and from offers.
+            ///   - personalCustomerId:
+            ///   - contains: The sets it directly contains.
+            ///   - values: Its own values.
+            public init(
+                id: Swift.String,
+                slug: Swift.String,
+                name: Swift.String,
+                description: Swift.String,
+                isDefault: Swift.Bool,
+                isPersonal: Swift.Bool,
+                personalCustomerId: Swift.String? = nil,
+                contains: [Swift.String],
+                values: [Components.Schemas.SetValue]
+            ) {
+                self.id = id
+                self.slug = slug
+                self.name = name
+                self.description = description
+                self.isDefault = isDefault
+                self.isPersonal = isPersonal
+                self.personalCustomerId = personalCustomerId
+                self.contains = contains
+                self.values = values
+            }
+            public enum CodingKeys: String, CodingKey {
+                case id
+                case slug
+                case name
+                case description
+                case isDefault = "is_default"
+                case isPersonal = "is_personal"
+                case personalCustomerId = "personal_customer_id"
+                case contains
+                case values
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/SetList`.
+        public struct SetList: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/SetList/sets`.
+            public var sets: [Components.Schemas.Set]
+            /// Creates a new `SetList`.
+            ///
+            /// - Parameters:
+            ///   - sets:
+            public init(sets: [Components.Schemas.Set]) {
+                self.sets = sets
+            }
+            public enum CodingKeys: String, CodingKey {
+                case sets
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/SetCreate`.
+        public struct SetCreate: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/SetCreate/slug`.
+            public var slug: Swift.String
+            /// - Remark: Generated from `#/components/schemas/SetCreate/name`.
+            public var name: Swift.String
+            /// - Remark: Generated from `#/components/schemas/SetCreate/description`.
+            public var description: Swift.String?
+            /// - Remark: Generated from `#/components/schemas/SetCreate/is_default`.
+            public var isDefault: Swift.Bool?
+            /// Makes a personal set for this customer of the ecosystem; fixed once made.
+            ///
+            /// - Remark: Generated from `#/components/schemas/SetCreate/personal_customer_id`.
+            public var personalCustomerId: Swift.String?
+            /// Creates a new `SetCreate`.
+            ///
+            /// - Parameters:
+            ///   - slug:
+            ///   - name:
+            ///   - description:
+            ///   - isDefault:
+            ///   - personalCustomerId: Makes a personal set for this customer of the ecosystem; fixed once made.
+            public init(
+                slug: Swift.String,
+                name: Swift.String,
+                description: Swift.String? = nil,
+                isDefault: Swift.Bool? = nil,
+                personalCustomerId: Swift.String? = nil
+            ) {
+                self.slug = slug
+                self.name = name
+                self.description = description
+                self.isDefault = isDefault
+                self.personalCustomerId = personalCustomerId
+            }
+            public enum CodingKeys: String, CodingKey {
+                case slug
+                case name
+                case description
+                case isDefault = "is_default"
+                case personalCustomerId = "personal_customer_id"
+            }
+            public init(from decoder: any Swift.Decoder) throws {
+                let container = try decoder.container(keyedBy: CodingKeys.self)
+                self.slug = try container.decode(
+                    Swift.String.self,
+                    forKey: .slug
+                )
+                self.name = try container.decode(
+                    Swift.String.self,
+                    forKey: .name
+                )
+                self.description = try container.decodeIfPresent(
+                    Swift.String.self,
+                    forKey: .description
+                )
+                self.isDefault = try container.decodeIfPresent(
+                    Swift.Bool.self,
+                    forKey: .isDefault
+                )
+                self.personalCustomerId = try container.decodeIfPresent(
+                    Swift.String.self,
+                    forKey: .personalCustomerId
+                )
+                try decoder.ensureNoAdditionalProperties(knownKeys: [
+                    "slug",
+                    "name",
+                    "description",
+                    "is_default",
+                    "personal_customer_id"
+                ])
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/SetEdit`.
+        public struct SetEdit: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/SetEdit/slug`.
+            public var slug: Swift.String?
+            /// - Remark: Generated from `#/components/schemas/SetEdit/name`.
+            public var name: Swift.String?
+            /// - Remark: Generated from `#/components/schemas/SetEdit/description`.
+            public var description: Swift.String?
+            /// - Remark: Generated from `#/components/schemas/SetEdit/is_default`.
+            public var isDefault: Swift.Bool?
+            /// Creates a new `SetEdit`.
+            ///
+            /// - Parameters:
+            ///   - slug:
+            ///   - name:
+            ///   - description:
+            ///   - isDefault:
+            public init(
+                slug: Swift.String? = nil,
+                name: Swift.String? = nil,
+                description: Swift.String? = nil,
+                isDefault: Swift.Bool? = nil
+            ) {
+                self.slug = slug
+                self.name = name
+                self.description = description
+                self.isDefault = isDefault
+            }
+            public enum CodingKeys: String, CodingKey {
+                case slug
+                case name
+                case description
+                case isDefault = "is_default"
+            }
+            public init(from decoder: any Swift.Decoder) throws {
+                let container = try decoder.container(keyedBy: CodingKeys.self)
+                self.slug = try container.decodeIfPresent(
+                    Swift.String.self,
+                    forKey: .slug
+                )
+                self.name = try container.decodeIfPresent(
+                    Swift.String.self,
+                    forKey: .name
+                )
+                self.description = try container.decodeIfPresent(
+                    Swift.String.self,
+                    forKey: .description
+                )
+                self.isDefault = try container.decodeIfPresent(
+                    Swift.Bool.self,
+                    forKey: .isDefault
+                )
+                try decoder.ensureNoAdditionalProperties(knownKeys: [
+                    "slug",
+                    "name",
+                    "description",
+                    "is_default"
+                ])
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/SetMembersPut`.
+        public struct SetMembersPut: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/SetMembersPut/contains`.
+            public var contains: [Swift.String]
+            /// Creates a new `SetMembersPut`.
+            ///
+            /// - Parameters:
+            ///   - contains:
+            public init(contains: [Swift.String]) {
+                self.contains = contains
+            }
+            public enum CodingKeys: String, CodingKey {
+                case contains
+            }
+            public init(from decoder: any Swift.Decoder) throws {
+                let container = try decoder.container(keyedBy: CodingKeys.self)
+                self.contains = try container.decode(
+                    [Swift.String].self,
+                    forKey: .contains
+                )
+                try decoder.ensureNoAdditionalProperties(knownKeys: [
+                    "contains"
+                ])
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/SetValuesPut`.
+        public struct SetValuesPut: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/SetValuesPut/values`.
+            public var values: [Components.Schemas.SetValue]
+            /// Creates a new `SetValuesPut`.
+            ///
+            /// - Parameters:
+            ///   - values:
+            public init(values: [Components.Schemas.SetValue]) {
+                self.values = values
+            }
+            public enum CodingKeys: String, CodingKey {
+                case values
+            }
+            public init(from decoder: any Swift.Decoder) throws {
+                let container = try decoder.container(keyedBy: CodingKeys.self)
+                self.values = try container.decode(
+                    [Components.Schemas.SetValue].self,
+                    forKey: .values
+                )
+                try decoder.ensureNoAdditionalProperties(knownKeys: [
+                    "values"
+                ])
+            }
+        }
+        /// A refusal under a set rule, in the house error shape: `code` is always `set_refused`, and `rule` names the rule.
+        ///
+        /// - Remark: Generated from `#/components/schemas/SetRefusal`.
+        public struct SetRefusal: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/SetRefusal/error`.
+            public var error: Components.Schemas.SetRefusalError
+            /// Creates a new `SetRefusal`.
+            ///
+            /// - Parameters:
+            ///   - error:
+            public init(error: Components.Schemas.SetRefusalError) {
+                self.error = error
+            }
+            public enum CodingKeys: String, CodingKey {
+                case error
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/SetRefusalError`.
+        public struct SetRefusalError: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/SetRefusalError/code`.
+            @frozen public enum CodePayload: String, Codable, Hashable, Sendable, CaseIterable {
+                case setRefused = "set_refused"
+            }
+            /// - Remark: Generated from `#/components/schemas/SetRefusalError/code`.
+            public var code: Components.Schemas.SetRefusalError.CodePayload
+            /// - Remark: Generated from `#/components/schemas/SetRefusalError/message`.
+            public var message: Swift.String
+            /// 3: the set must define a limit its contained sets disagree on; 4: the customer holds a conflicting set; 6: a containment loop; 8: the edit unsettles a container or puts a holder in conflict; 9: the set conflicts with another live offer's set.
+            ///
+            /// - Remark: Generated from `#/components/schemas/SetRefusalError/rule`.
+            @frozen public enum RulePayload: Int, Codable, Hashable, Sendable, CaseIterable {
+                case _1 = 1
+                case _2 = 2
+                case _3 = 3
+                case _4 = 4
+                case _6 = 6
+                case _8 = 8
+                case _9 = 9
+            }
+            /// 3: the set must define a limit its contained sets disagree on; 4: the customer holds a conflicting set; 6: a containment loop; 8: the edit unsettles a container or puts a holder in conflict; 9: the set conflicts with another live offer's set.
+            ///
+            /// - Remark: Generated from `#/components/schemas/SetRefusalError/rule`.
+            public var rule: Components.Schemas.SetRefusalError.RulePayload
+            /// The limits at issue.
+            ///
+            /// - Remark: Generated from `#/components/schemas/SetRefusalError/limits`.
+            public var limits: [Swift.String]?
+            /// Rule 8: the containers left unsettled.
+            ///
+            /// - Remark: Generated from `#/components/schemas/SetRefusalError/containers`.
+            public var containers: [Swift.String]?
+            /// Rule 8: how many holders would conflict.
+            ///
+            /// - Remark: Generated from `#/components/schemas/SetRefusalError/customers`.
+            public var customers: Swift.Int?
+            /// Creates a new `SetRefusalError`.
+            ///
+            /// - Parameters:
+            ///   - code:
+            ///   - message:
+            ///   - rule: 3: the set must define a limit its contained sets disagree on; 4: the customer holds a conflicting set; 6: a containment loop; 8: the edit unsettles a container or puts a holder in conflict; 9: the set conflicts with another live offer's set.
+            ///   - limits: The limits at issue.
+            ///   - containers: Rule 8: the containers left unsettled.
+            ///   - customers: Rule 8: how many holders would conflict.
+            public init(
+                code: Components.Schemas.SetRefusalError.CodePayload,
+                message: Swift.String,
+                rule: Components.Schemas.SetRefusalError.RulePayload,
+                limits: [Swift.String]? = nil,
+                containers: [Swift.String]? = nil,
+                customers: Swift.Int? = nil
+            ) {
+                self.code = code
+                self.message = message
+                self.rule = rule
+                self.limits = limits
+                self.containers = containers
+                self.customers = customers
+            }
+            public enum CodingKeys: String, CodingKey {
+                case code
+                case message
+                case rule
+                case limits
+                case containers
+                case customers
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/SetGrant`.
+        public struct SetGrant: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/SetGrant/id`.
+            public var id: Swift.String
+            /// - Remark: Generated from `#/components/schemas/SetGrant/ecosystem_id`.
+            public var ecosystemId: Swift.String
+            /// The customer.
+            ///
+            /// - Remark: Generated from `#/components/schemas/SetGrant/owner_id`.
+            public var ownerId: Swift.String
+            /// - Remark: Generated from `#/components/schemas/SetGrant/set_id`.
+            public var setId: Swift.String
+            /// - Remark: Generated from `#/components/schemas/SetGrant/source`.
+            @frozen public enum SourcePayload: String, Codable, Hashable, Sendable, CaseIterable {
+                case offer = "offer"
+                case direct = "direct"
+                case signup = "signup"
+            }
+            /// - Remark: Generated from `#/components/schemas/SetGrant/source`.
+            public var source: Components.Schemas.SetGrant.SourcePayload
+            /// - Remark: Generated from `#/components/schemas/SetGrant/billing_account_id`.
+            public var billingAccountId: Swift.String?
+            /// - Remark: Generated from `#/components/schemas/SetGrant/granted_by`.
+            public var grantedBy: Swift.String
+            /// - Remark: Generated from `#/components/schemas/SetGrant/granted_at`.
+            public var grantedAt: Foundation.Date
+            /// - Remark: Generated from `#/components/schemas/SetGrant/revoked_at`.
+            public var revokedAt: Foundation.Date?
+            /// e.g. `direct`, `refund`, `offer_changed`, `purchase_conflict`.
+            ///
+            /// - Remark: Generated from `#/components/schemas/SetGrant/revoke_reason`.
+            public var revokeReason: Swift.String?
+            /// Creates a new `SetGrant`.
+            ///
+            /// - Parameters:
+            ///   - id:
+            ///   - ecosystemId:
+            ///   - ownerId: The customer.
+            ///   - setId:
+            ///   - source:
+            ///   - billingAccountId:
+            ///   - grantedBy:
+            ///   - grantedAt:
+            ///   - revokedAt:
+            ///   - revokeReason: e.g. `direct`, `refund`, `offer_changed`, `purchase_conflict`.
+            public init(
+                id: Swift.String,
+                ecosystemId: Swift.String,
+                ownerId: Swift.String,
+                setId: Swift.String,
+                source: Components.Schemas.SetGrant.SourcePayload,
+                billingAccountId: Swift.String? = nil,
+                grantedBy: Swift.String,
+                grantedAt: Foundation.Date,
+                revokedAt: Foundation.Date? = nil,
+                revokeReason: Swift.String? = nil
+            ) {
+                self.id = id
+                self.ecosystemId = ecosystemId
+                self.ownerId = ownerId
+                self.setId = setId
+                self.source = source
+                self.billingAccountId = billingAccountId
+                self.grantedBy = grantedBy
+                self.grantedAt = grantedAt
+                self.revokedAt = revokedAt
+                self.revokeReason = revokeReason
+            }
+            public enum CodingKeys: String, CodingKey {
+                case id
+                case ecosystemId = "ecosystem_id"
+                case ownerId = "owner_id"
+                case setId = "set_id"
+                case source
+                case billingAccountId = "billing_account_id"
+                case grantedBy = "granted_by"
+                case grantedAt = "granted_at"
+                case revokedAt = "revoked_at"
+                case revokeReason = "revoke_reason"
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/SetGrantList`.
+        public struct SetGrantList: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/SetGrantList/grants`.
+            public var grants: [Components.Schemas.SetGrant]
+            /// Creates a new `SetGrantList`.
+            ///
+            /// - Parameters:
+            ///   - grants:
+            public init(grants: [Components.Schemas.SetGrant]) {
+                self.grants = grants
+            }
+            public enum CodingKeys: String, CodingKey {
+                case grants
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/SetGrantCreate`.
+        public struct SetGrantCreate: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/SetGrantCreate/customer_id`.
+            public var customerId: Swift.String
+            /// - Remark: Generated from `#/components/schemas/SetGrantCreate/set_id`.
+            public var setId: Swift.String
+            /// Creates a new `SetGrantCreate`.
+            ///
+            /// - Parameters:
+            ///   - customerId:
+            ///   - setId:
+            public init(
+                customerId: Swift.String,
+                setId: Swift.String
+            ) {
+                self.customerId = customerId
+                self.setId = setId
+            }
+            public enum CodingKeys: String, CodingKey {
+                case customerId = "customer_id"
+                case setId = "set_id"
+            }
+            public init(from decoder: any Swift.Decoder) throws {
+                let container = try decoder.container(keyedBy: CodingKeys.self)
+                self.customerId = try container.decode(
+                    Swift.String.self,
+                    forKey: .customerId
+                )
+                self.setId = try container.decode(
+                    Swift.String.self,
+                    forKey: .setId
+                )
+                try decoder.ensureNoAdditionalProperties(knownKeys: [
+                    "customer_id",
+                    "set_id"
+                ])
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/SetGrantResult`.
+        public struct SetGrantResult: Codable, Hashable, Sendable {
+            /// The new grant, or the live one when the set was already held.
+            ///
+            /// - Remark: Generated from `#/components/schemas/SetGrantResult/grant_id`.
+            public var grantId: Swift.String
+            /// - Remark: Generated from `#/components/schemas/SetGrantResult/revoked`.
+            public var revoked: [Swift.String]
+            /// Creates a new `SetGrantResult`.
+            ///
+            /// - Parameters:
+            ///   - grantId: The new grant, or the live one when the set was already held.
+            ///   - revoked:
+            public init(
+                grantId: Swift.String,
+                revoked: [Swift.String]
+            ) {
+                self.grantId = grantId
+                self.revoked = revoked
+            }
+            public enum CodingKeys: String, CodingKey {
+                case grantId = "grant_id"
+                case revoked
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/SetEffective`.
+        public struct SetEffective: Codable, Hashable, Sendable {
+            /// The customer's answer before the ecosystem's ceiling: null when the ecosystem has no sets; the held set ids, features and limits; or { error: 'unresolved' }.
+            ///
+            /// - Remark: Generated from `#/components/schemas/SetEffective/effective`.
+            public struct EffectivePayload: Codable, Hashable, Sendable {
+                /// - Remark: Generated from `#/components/schemas/SetEffective/effective/held`.
+                public var held: [Swift.String]?
+                /// - Remark: Generated from `#/components/schemas/SetEffective/effective/permissions`.
+                public var permissions: [Swift.String]?
+                /// - Remark: Generated from `#/components/schemas/SetEffective/effective/read_only`.
+                public var readOnly: [Swift.String]?
+                /// - Remark: Generated from `#/components/schemas/SetEffective/effective/limits`.
+                public struct LimitsPayload: Codable, Hashable, Sendable {
+                    /// A container of undocumented properties.
+                    public var additionalProperties: OpenAPIRuntime.OpenAPIObjectContainer
+                    /// Creates a new `LimitsPayload`.
+                    ///
+                    /// - Parameters:
+                    ///   - additionalProperties: A container of undocumented properties.
+                    public init(additionalProperties: OpenAPIRuntime.OpenAPIObjectContainer = .init()) {
+                        self.additionalProperties = additionalProperties
+                    }
+                    public init(from decoder: any Swift.Decoder) throws {
+                        additionalProperties = try decoder.decodeAdditionalProperties(knownKeys: [])
+                    }
+                    public func encode(to encoder: any Swift.Encoder) throws {
+                        try encoder.encodeAdditionalProperties(additionalProperties)
+                    }
+                }
+                /// - Remark: Generated from `#/components/schemas/SetEffective/effective/limits`.
+                public var limits: Components.Schemas.SetEffective.EffectivePayload.LimitsPayload?
+                /// When the answer next changes (a grant lapsing).
+                ///
+                /// - Remark: Generated from `#/components/schemas/SetEffective/effective/valid_until`.
+                public var validUntil: Foundation.Date?
+                /// - Remark: Generated from `#/components/schemas/SetEffective/effective/error`.
+                @frozen public enum _ErrorPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case unresolved = "unresolved"
+                }
+                /// - Remark: Generated from `#/components/schemas/SetEffective/effective/error`.
+                public var error: Components.Schemas.SetEffective.EffectivePayload._ErrorPayload?
+                /// Creates a new `EffectivePayload`.
+                ///
+                /// - Parameters:
+                ///   - held:
+                ///   - permissions:
+                ///   - readOnly:
+                ///   - limits:
+                ///   - validUntil: When the answer next changes (a grant lapsing).
+                ///   - error:
+                public init(
+                    held: [Swift.String]? = nil,
+                    permissions: [Swift.String]? = nil,
+                    readOnly: [Swift.String]? = nil,
+                    limits: Components.Schemas.SetEffective.EffectivePayload.LimitsPayload? = nil,
+                    validUntil: Foundation.Date? = nil,
+                    error: Components.Schemas.SetEffective.EffectivePayload._ErrorPayload? = nil
+                ) {
+                    self.held = held
+                    self.permissions = permissions
+                    self.readOnly = readOnly
+                    self.limits = limits
+                    self.validUntil = validUntil
+                    self.error = error
+                }
+                public enum CodingKeys: String, CodingKey {
+                    case held
+                    case permissions
+                    case readOnly = "read_only"
+                    case limits
+                    case validUntil = "valid_until"
+                    case error
+                }
+            }
+            /// The customer's answer before the ecosystem's ceiling: null when the ecosystem has no sets; the held set ids, features and limits; or { error: 'unresolved' }.
+            ///
+            /// - Remark: Generated from `#/components/schemas/SetEffective/effective`.
+            public var effective: Components.Schemas.SetEffective.EffectivePayload?
+            /// Creates a new `SetEffective`.
+            ///
+            /// - Parameters:
+            ///   - effective: The customer's answer before the ecosystem's ceiling: null when the ecosystem has no sets; the held set ids, features and limits; or { error: 'unresolved' }.
+            public init(effective: Components.Schemas.SetEffective.EffectivePayload? = nil) {
+                self.effective = effective
+            }
+            public enum CodingKeys: String, CodingKey {
+                case effective
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/OfferSetPut`.
+        public struct OfferSetPut: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/OfferSetPut/set_id`.
+            public var setId: Swift.String?
+            /// Creates a new `OfferSetPut`.
+            ///
+            /// - Parameters:
+            ///   - setId:
+            public init(setId: Swift.String? = nil) {
+                self.setId = setId
+            }
+            public enum CodingKeys: String, CodingKey {
+                case setId = "set_id"
+            }
+            public init(from decoder: any Swift.Decoder) throws {
+                let container = try decoder.container(keyedBy: CodingKeys.self)
+                self.setId = try container.decodeIfPresent(
+                    Swift.String.self,
+                    forKey: .setId
+                )
+                try decoder.ensureNoAdditionalProperties(knownKeys: [
+                    "set_id"
+                ])
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/OfferSet`.
+        public struct OfferSet: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/OfferSet/offer_id`.
+            public var offerId: Swift.String
+            /// - Remark: Generated from `#/components/schemas/OfferSet/set_id`.
+            public var setId: Swift.String?
+            /// Creates a new `OfferSet`.
+            ///
+            /// - Parameters:
+            ///   - offerId:
+            ///   - setId:
+            public init(
+                offerId: Swift.String,
+                setId: Swift.String? = nil
+            ) {
+                self.offerId = offerId
+                self.setId = setId
+            }
+            public enum CodingKeys: String, CodingKey {
+                case offerId = "offer_id"
+                case setId = "set_id"
             }
         }
         /// - Remark: Generated from `#/components/schemas/TeamReachGrant`.
@@ -102277,5586 +103078,6 @@ public enum Operations {
                     default:
                         try throwUnexpectedResponseStatus(
                             expectedStatus: "conflict",
-                            response: self
-                        )
-                    }
-                }
-            }
-            /// Undocumented response.
-            ///
-            /// A response with a code that is not documented in the OpenAPI document.
-            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
-        }
-        @frozen public enum AcceptableContentType: AcceptableProtocol {
-            case json
-            case other(Swift.String)
-            public init?(rawValue: Swift.String) {
-                switch rawValue.lowercased() {
-                case "application/json":
-                    self = .json
-                default:
-                    self = .other(rawValue)
-                }
-            }
-            public var rawValue: Swift.String {
-                switch self {
-                case let .other(string):
-                    return string
-                case .json:
-                    return "application/json"
-                }
-            }
-            public static var allCases: [Self] {
-                [
-                    .json
-                ]
-            }
-        }
-    }
-    /// List subscription_tiers
-    ///
-    /// Replaces GET /billing/subscription-tiers.
-    ///
-    /// - Remark: HTTP `GET /v1/billing/subscription_tiers`.
-    /// - Remark: Generated from `#/paths//v1/billing/subscription_tiers/get(getV1BillingSubscriptionTiers)`.
-    public enum GetV1BillingSubscriptionTiers {
-        public static let id: Swift.String = "getV1BillingSubscriptionTiers"
-        public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/GET/query`.
-            public struct Query: Sendable, Hashable {
-                /// Page size, 1–100 (default 10).
-                ///
-                /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/GET/query/limit`.
-                public var limit: Swift.Int?
-                /// Cursor: an object id; returns the page after it.
-                ///
-                /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/GET/query/starting_after`.
-                public var startingAfter: Swift.String?
-                /// Cursor: an object id; returns the page before it.
-                ///
-                /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/GET/query/ending_before`.
-                public var endingBefore: Swift.String?
-                /// Related objects to return in full instead of as an id. Up to four levels, e.g. `ecosystem_id`; on a list, `data.<field>`.
-                ///
-                /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/GET/query/expand[]`.
-                public var expand_lbrack__rbrack_: [Swift.String]?
-                /// Creates a new `Query`.
-                ///
-                /// - Parameters:
-                ///   - limit: Page size, 1–100 (default 10).
-                ///   - startingAfter: Cursor: an object id; returns the page after it.
-                ///   - endingBefore: Cursor: an object id; returns the page before it.
-                ///   - expand_lbrack__rbrack_: Related objects to return in full instead of as an id. Up to four levels, e.g. `ecosystem_id`; on a list, `data.<field>`.
-                public init(
-                    limit: Swift.Int? = nil,
-                    startingAfter: Swift.String? = nil,
-                    endingBefore: Swift.String? = nil,
-                    expand_lbrack__rbrack_: [Swift.String]? = nil
-                ) {
-                    self.limit = limit
-                    self.startingAfter = startingAfter
-                    self.endingBefore = endingBefore
-                    self.expand_lbrack__rbrack_ = expand_lbrack__rbrack_
-                }
-            }
-            public var query: Operations.GetV1BillingSubscriptionTiers.Input.Query
-            /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/GET/header`.
-            public struct Headers: Sendable, Hashable {
-                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.GetV1BillingSubscriptionTiers.AcceptableContentType>]
-                /// Creates a new `Headers`.
-                ///
-                /// - Parameters:
-                ///   - accept:
-                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.GetV1BillingSubscriptionTiers.AcceptableContentType>] = .defaultValues()) {
-                    self.accept = accept
-                }
-            }
-            public var headers: Operations.GetV1BillingSubscriptionTiers.Input.Headers
-            /// Creates a new `Input`.
-            ///
-            /// - Parameters:
-            ///   - query:
-            ///   - headers:
-            public init(
-                query: Operations.GetV1BillingSubscriptionTiers.Input.Query = .init(),
-                headers: Operations.GetV1BillingSubscriptionTiers.Input.Headers = .init()
-            ) {
-                self.query = query
-                self.headers = headers
-            }
-        }
-        @frozen public enum Output: Sendable, Hashable {
-            public struct Ok: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/GET/responses/200/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/GET/responses/200/content/json`.
-                    public struct JsonPayload: Codable, Hashable, Sendable {
-                        /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/GET/responses/200/content/json/object`.
-                        @frozen public enum ObjectPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                            case list = "list"
-                        }
-                        /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/GET/responses/200/content/json/object`.
-                        public var object: Operations.GetV1BillingSubscriptionTiers.Output.Ok.Body.JsonPayload.ObjectPayload
-                        /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/GET/responses/200/content/json/DataPayload`.
-                        public struct DataPayloadPayload: Codable, Hashable, Sendable {
-                            /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/GET/responses/200/content/json/DataPayload/object`.
-                            @frozen public enum ObjectPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                                case billing_subscriptionTier = "billing.subscription_tier"
-                            }
-                            /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/GET/responses/200/content/json/DataPayload/object`.
-                            public var object: Operations.GetV1BillingSubscriptionTiers.Output.Ok.Body.JsonPayload.DataPayloadPayload.ObjectPayload?
-                            /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/GET/responses/200/content/json/DataPayload/id`.
-                            public var id: Swift.String
-                            /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/GET/responses/200/content/json/DataPayload/key`.
-                            public var key: Swift.String
-                            /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/GET/responses/200/content/json/DataPayload/name`.
-                            public var name: Swift.String
-                            /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/GET/responses/200/content/json/DataPayload/description`.
-                            public var description: Swift.String?
-                            /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/GET/responses/200/content/json/DataPayload/display_order`.
-                            public var displayOrder: Swift.Int
-                            /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/GET/responses/200/content/json/DataPayload/is_active`.
-                            public var isActive: Swift.Bool
-                            /// Unix timestamp, in seconds.
-                            ///
-                            /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/GET/responses/200/content/json/DataPayload/created`.
-                            public var created: Swift.Int
-                            /// Unix timestamp, in seconds.
-                            ///
-                            /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/GET/responses/200/content/json/DataPayload/updated`.
-                            public var updated: Swift.Int
-                            /// Creates a new `DataPayloadPayload`.
-                            ///
-                            /// - Parameters:
-                            ///   - object:
-                            ///   - id:
-                            ///   - key:
-                            ///   - name:
-                            ///   - description:
-                            ///   - displayOrder:
-                            ///   - isActive:
-                            ///   - created: Unix timestamp, in seconds.
-                            ///   - updated: Unix timestamp, in seconds.
-                            public init(
-                                object: Operations.GetV1BillingSubscriptionTiers.Output.Ok.Body.JsonPayload.DataPayloadPayload.ObjectPayload? = nil,
-                                id: Swift.String,
-                                key: Swift.String,
-                                name: Swift.String,
-                                description: Swift.String? = nil,
-                                displayOrder: Swift.Int,
-                                isActive: Swift.Bool,
-                                created: Swift.Int,
-                                updated: Swift.Int
-                            ) {
-                                self.object = object
-                                self.id = id
-                                self.key = key
-                                self.name = name
-                                self.description = description
-                                self.displayOrder = displayOrder
-                                self.isActive = isActive
-                                self.created = created
-                                self.updated = updated
-                            }
-                            public enum CodingKeys: String, CodingKey {
-                                case object
-                                case id
-                                case key
-                                case name
-                                case description
-                                case displayOrder = "display_order"
-                                case isActive = "is_active"
-                                case created
-                                case updated
-                            }
-                            public init(from decoder: any Swift.Decoder) throws {
-                                let container = try decoder.container(keyedBy: CodingKeys.self)
-                                self.object = try container.decodeIfPresent(
-                                    Operations.GetV1BillingSubscriptionTiers.Output.Ok.Body.JsonPayload.DataPayloadPayload.ObjectPayload.self,
-                                    forKey: .object
-                                )
-                                self.id = try container.decode(
-                                    Swift.String.self,
-                                    forKey: .id
-                                )
-                                self.key = try container.decode(
-                                    Swift.String.self,
-                                    forKey: .key
-                                )
-                                self.name = try container.decode(
-                                    Swift.String.self,
-                                    forKey: .name
-                                )
-                                self.description = try container.decodeIfPresent(
-                                    Swift.String.self,
-                                    forKey: .description
-                                )
-                                self.displayOrder = try container.decode(
-                                    Swift.Int.self,
-                                    forKey: .displayOrder
-                                )
-                                self.isActive = try container.decode(
-                                    Swift.Bool.self,
-                                    forKey: .isActive
-                                )
-                                self.created = try container.decode(
-                                    Swift.Int.self,
-                                    forKey: .created
-                                )
-                                self.updated = try container.decode(
-                                    Swift.Int.self,
-                                    forKey: .updated
-                                )
-                                try decoder.ensureNoAdditionalProperties(knownKeys: [
-                                    "object",
-                                    "id",
-                                    "key",
-                                    "name",
-                                    "description",
-                                    "display_order",
-                                    "is_active",
-                                    "created",
-                                    "updated"
-                                ])
-                            }
-                        }
-                        /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/GET/responses/200/content/json/data`.
-                        public typealias DataPayload = [Operations.GetV1BillingSubscriptionTiers.Output.Ok.Body.JsonPayload.DataPayloadPayload]
-                        /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/GET/responses/200/content/json/data`.
-                        public var data: Operations.GetV1BillingSubscriptionTiers.Output.Ok.Body.JsonPayload.DataPayload
-                        /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/GET/responses/200/content/json/has_more`.
-                        public var hasMore: Swift.Bool
-                        /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/GET/responses/200/content/json/url`.
-                        public var url: Swift.String
-                        /// Creates a new `JsonPayload`.
-                        ///
-                        /// - Parameters:
-                        ///   - object:
-                        ///   - data:
-                        ///   - hasMore:
-                        ///   - url:
-                        public init(
-                            object: Operations.GetV1BillingSubscriptionTiers.Output.Ok.Body.JsonPayload.ObjectPayload,
-                            data: Operations.GetV1BillingSubscriptionTiers.Output.Ok.Body.JsonPayload.DataPayload,
-                            hasMore: Swift.Bool,
-                            url: Swift.String
-                        ) {
-                            self.object = object
-                            self.data = data
-                            self.hasMore = hasMore
-                            self.url = url
-                        }
-                        public enum CodingKeys: String, CodingKey {
-                            case object
-                            case data
-                            case hasMore = "has_more"
-                            case url
-                        }
-                    }
-                    /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/GET/responses/200/content/application\/json`.
-                    case json(Operations.GetV1BillingSubscriptionTiers.Output.Ok.Body.JsonPayload)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Operations.GetV1BillingSubscriptionTiers.Output.Ok.Body.JsonPayload {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.GetV1BillingSubscriptionTiers.Output.Ok.Body
-                /// Creates a new `Ok`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.GetV1BillingSubscriptionTiers.Output.Ok.Body) {
-                    self.body = body
-                }
-            }
-            /// List
-            ///
-            /// - Remark: Generated from `#/paths//v1/billing/subscription_tiers/get(getV1BillingSubscriptionTiers)/responses/200`.
-            ///
-            /// HTTP response code: `200 ok`.
-            case ok(Operations.GetV1BillingSubscriptionTiers.Output.Ok)
-            /// The associated value of the enum case if `self` is `.ok`.
-            ///
-            /// - Throws: An error if `self` is not `.ok`.
-            /// - SeeAlso: `.ok`.
-            public var ok: Operations.GetV1BillingSubscriptionTiers.Output.Ok {
-                get throws {
-                    switch self {
-                    case let .ok(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "ok",
-                            response: self
-                        )
-                    }
-                }
-            }
-            public struct Unauthorized: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/GET/responses/401/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/GET/responses/401/content/application\/json`.
-                    case json(Components.Schemas.StripeError)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.StripeError {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.GetV1BillingSubscriptionTiers.Output.Unauthorized.Body
-                /// Creates a new `Unauthorized`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.GetV1BillingSubscriptionTiers.Output.Unauthorized.Body) {
-                    self.body = body
-                }
-            }
-            /// Error
-            ///
-            /// - Remark: Generated from `#/paths//v1/billing/subscription_tiers/get(getV1BillingSubscriptionTiers)/responses/401`.
-            ///
-            /// HTTP response code: `401 unauthorized`.
-            case unauthorized(Operations.GetV1BillingSubscriptionTiers.Output.Unauthorized)
-            /// The associated value of the enum case if `self` is `.unauthorized`.
-            ///
-            /// - Throws: An error if `self` is not `.unauthorized`.
-            /// - SeeAlso: `.unauthorized`.
-            public var unauthorized: Operations.GetV1BillingSubscriptionTiers.Output.Unauthorized {
-                get throws {
-                    switch self {
-                    case let .unauthorized(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "unauthorized",
-                            response: self
-                        )
-                    }
-                }
-            }
-            /// Undocumented response.
-            ///
-            /// A response with a code that is not documented in the OpenAPI document.
-            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
-        }
-        @frozen public enum AcceptableContentType: AcceptableProtocol {
-            case json
-            case other(Swift.String)
-            public init?(rawValue: Swift.String) {
-                switch rawValue.lowercased() {
-                case "application/json":
-                    self = .json
-                default:
-                    self = .other(rawValue)
-                }
-            }
-            public var rawValue: Swift.String {
-                switch self {
-                case let .other(string):
-                    return string
-                case .json:
-                    return "application/json"
-                }
-            }
-            public static var allCases: [Self] {
-                [
-                    .json
-                ]
-            }
-        }
-    }
-    /// Create subscription_tiers
-    ///
-    /// Replaces POST /billing/subscription-tiers.
-    ///
-    /// - Remark: HTTP `POST /v1/billing/subscription_tiers`.
-    /// - Remark: Generated from `#/paths//v1/billing/subscription_tiers/post(postV1BillingSubscriptionTiers)`.
-    public enum PostV1BillingSubscriptionTiers {
-        public static let id: Swift.String = "postV1BillingSubscriptionTiers"
-        public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/POST/header`.
-            public struct Headers: Sendable, Hashable {
-                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.PostV1BillingSubscriptionTiers.AcceptableContentType>]
-                /// Creates a new `Headers`.
-                ///
-                /// - Parameters:
-                ///   - accept:
-                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.PostV1BillingSubscriptionTiers.AcceptableContentType>] = .defaultValues()) {
-                    self.accept = accept
-                }
-            }
-            public var headers: Operations.PostV1BillingSubscriptionTiers.Input.Headers
-            /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/POST/requestBody`.
-            @frozen public enum Body: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/POST/requestBody/json`.
-                public struct JsonPayload: Codable, Hashable, Sendable {
-                    /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/POST/requestBody/json/key`.
-                    public var key: Swift.String
-                    /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/POST/requestBody/json/name`.
-                    public var name: Swift.String
-                    /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/POST/requestBody/json/description`.
-                    public var description: Swift.String?
-                    /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/POST/requestBody/json/display_order`.
-                    public var displayOrder: Swift.Int?
-                    /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/POST/requestBody/json/is_active`.
-                    public var isActive: Swift.Bool?
-                    /// Creates a new `JsonPayload`.
-                    ///
-                    /// - Parameters:
-                    ///   - key:
-                    ///   - name:
-                    ///   - description:
-                    ///   - displayOrder:
-                    ///   - isActive:
-                    public init(
-                        key: Swift.String,
-                        name: Swift.String,
-                        description: Swift.String? = nil,
-                        displayOrder: Swift.Int? = nil,
-                        isActive: Swift.Bool? = nil
-                    ) {
-                        self.key = key
-                        self.name = name
-                        self.description = description
-                        self.displayOrder = displayOrder
-                        self.isActive = isActive
-                    }
-                    public enum CodingKeys: String, CodingKey {
-                        case key
-                        case name
-                        case description
-                        case displayOrder = "display_order"
-                        case isActive = "is_active"
-                    }
-                    public init(from decoder: any Swift.Decoder) throws {
-                        let container = try decoder.container(keyedBy: CodingKeys.self)
-                        self.key = try container.decode(
-                            Swift.String.self,
-                            forKey: .key
-                        )
-                        self.name = try container.decode(
-                            Swift.String.self,
-                            forKey: .name
-                        )
-                        self.description = try container.decodeIfPresent(
-                            Swift.String.self,
-                            forKey: .description
-                        )
-                        self.displayOrder = try container.decodeIfPresent(
-                            Swift.Int.self,
-                            forKey: .displayOrder
-                        )
-                        self.isActive = try container.decodeIfPresent(
-                            Swift.Bool.self,
-                            forKey: .isActive
-                        )
-                        try decoder.ensureNoAdditionalProperties(knownKeys: [
-                            "key",
-                            "name",
-                            "description",
-                            "display_order",
-                            "is_active"
-                        ])
-                    }
-                }
-                /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/POST/requestBody/content/application\/json`.
-                case json(Operations.PostV1BillingSubscriptionTiers.Input.Body.JsonPayload)
-            }
-            public var body: Operations.PostV1BillingSubscriptionTiers.Input.Body
-            /// Creates a new `Input`.
-            ///
-            /// - Parameters:
-            ///   - headers:
-            ///   - body:
-            public init(
-                headers: Operations.PostV1BillingSubscriptionTiers.Input.Headers = .init(),
-                body: Operations.PostV1BillingSubscriptionTiers.Input.Body
-            ) {
-                self.headers = headers
-                self.body = body
-            }
-        }
-        @frozen public enum Output: Sendable, Hashable {
-            public struct Created: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/POST/responses/201/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/POST/responses/201/content/json`.
-                    public struct JsonPayload: Codable, Hashable, Sendable {
-                        /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/POST/responses/201/content/json/object`.
-                        @frozen public enum ObjectPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                            case billing_subscriptionTier = "billing.subscription_tier"
-                        }
-                        /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/POST/responses/201/content/json/object`.
-                        public var object: Operations.PostV1BillingSubscriptionTiers.Output.Created.Body.JsonPayload.ObjectPayload?
-                        /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/POST/responses/201/content/json/id`.
-                        public var id: Swift.String
-                        /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/POST/responses/201/content/json/key`.
-                        public var key: Swift.String
-                        /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/POST/responses/201/content/json/name`.
-                        public var name: Swift.String
-                        /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/POST/responses/201/content/json/description`.
-                        public var description: Swift.String?
-                        /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/POST/responses/201/content/json/display_order`.
-                        public var displayOrder: Swift.Int
-                        /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/POST/responses/201/content/json/is_active`.
-                        public var isActive: Swift.Bool
-                        /// Unix timestamp, in seconds.
-                        ///
-                        /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/POST/responses/201/content/json/created`.
-                        public var created: Swift.Int
-                        /// Unix timestamp, in seconds.
-                        ///
-                        /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/POST/responses/201/content/json/updated`.
-                        public var updated: Swift.Int
-                        /// Creates a new `JsonPayload`.
-                        ///
-                        /// - Parameters:
-                        ///   - object:
-                        ///   - id:
-                        ///   - key:
-                        ///   - name:
-                        ///   - description:
-                        ///   - displayOrder:
-                        ///   - isActive:
-                        ///   - created: Unix timestamp, in seconds.
-                        ///   - updated: Unix timestamp, in seconds.
-                        public init(
-                            object: Operations.PostV1BillingSubscriptionTiers.Output.Created.Body.JsonPayload.ObjectPayload? = nil,
-                            id: Swift.String,
-                            key: Swift.String,
-                            name: Swift.String,
-                            description: Swift.String? = nil,
-                            displayOrder: Swift.Int,
-                            isActive: Swift.Bool,
-                            created: Swift.Int,
-                            updated: Swift.Int
-                        ) {
-                            self.object = object
-                            self.id = id
-                            self.key = key
-                            self.name = name
-                            self.description = description
-                            self.displayOrder = displayOrder
-                            self.isActive = isActive
-                            self.created = created
-                            self.updated = updated
-                        }
-                        public enum CodingKeys: String, CodingKey {
-                            case object
-                            case id
-                            case key
-                            case name
-                            case description
-                            case displayOrder = "display_order"
-                            case isActive = "is_active"
-                            case created
-                            case updated
-                        }
-                        public init(from decoder: any Swift.Decoder) throws {
-                            let container = try decoder.container(keyedBy: CodingKeys.self)
-                            self.object = try container.decodeIfPresent(
-                                Operations.PostV1BillingSubscriptionTiers.Output.Created.Body.JsonPayload.ObjectPayload.self,
-                                forKey: .object
-                            )
-                            self.id = try container.decode(
-                                Swift.String.self,
-                                forKey: .id
-                            )
-                            self.key = try container.decode(
-                                Swift.String.self,
-                                forKey: .key
-                            )
-                            self.name = try container.decode(
-                                Swift.String.self,
-                                forKey: .name
-                            )
-                            self.description = try container.decodeIfPresent(
-                                Swift.String.self,
-                                forKey: .description
-                            )
-                            self.displayOrder = try container.decode(
-                                Swift.Int.self,
-                                forKey: .displayOrder
-                            )
-                            self.isActive = try container.decode(
-                                Swift.Bool.self,
-                                forKey: .isActive
-                            )
-                            self.created = try container.decode(
-                                Swift.Int.self,
-                                forKey: .created
-                            )
-                            self.updated = try container.decode(
-                                Swift.Int.self,
-                                forKey: .updated
-                            )
-                            try decoder.ensureNoAdditionalProperties(knownKeys: [
-                                "object",
-                                "id",
-                                "key",
-                                "name",
-                                "description",
-                                "display_order",
-                                "is_active",
-                                "created",
-                                "updated"
-                            ])
-                        }
-                    }
-                    /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/POST/responses/201/content/application\/json`.
-                    case json(Operations.PostV1BillingSubscriptionTiers.Output.Created.Body.JsonPayload)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Operations.PostV1BillingSubscriptionTiers.Output.Created.Body.JsonPayload {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.PostV1BillingSubscriptionTiers.Output.Created.Body
-                /// Creates a new `Created`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.PostV1BillingSubscriptionTiers.Output.Created.Body) {
-                    self.body = body
-                }
-            }
-            /// subscription_tiers
-            ///
-            /// - Remark: Generated from `#/paths//v1/billing/subscription_tiers/post(postV1BillingSubscriptionTiers)/responses/201`.
-            ///
-            /// HTTP response code: `201 created`.
-            case created(Operations.PostV1BillingSubscriptionTiers.Output.Created)
-            /// The associated value of the enum case if `self` is `.created`.
-            ///
-            /// - Throws: An error if `self` is not `.created`.
-            /// - SeeAlso: `.created`.
-            public var created: Operations.PostV1BillingSubscriptionTiers.Output.Created {
-                get throws {
-                    switch self {
-                    case let .created(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "created",
-                            response: self
-                        )
-                    }
-                }
-            }
-            public struct BadRequest: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/POST/responses/400/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/POST/responses/400/content/application\/json`.
-                    case json(Components.Schemas.StripeError)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.StripeError {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.PostV1BillingSubscriptionTiers.Output.BadRequest.Body
-                /// Creates a new `BadRequest`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.PostV1BillingSubscriptionTiers.Output.BadRequest.Body) {
-                    self.body = body
-                }
-            }
-            /// Error
-            ///
-            /// - Remark: Generated from `#/paths//v1/billing/subscription_tiers/post(postV1BillingSubscriptionTiers)/responses/400`.
-            ///
-            /// HTTP response code: `400 badRequest`.
-            case badRequest(Operations.PostV1BillingSubscriptionTiers.Output.BadRequest)
-            /// The associated value of the enum case if `self` is `.badRequest`.
-            ///
-            /// - Throws: An error if `self` is not `.badRequest`.
-            /// - SeeAlso: `.badRequest`.
-            public var badRequest: Operations.PostV1BillingSubscriptionTiers.Output.BadRequest {
-                get throws {
-                    switch self {
-                    case let .badRequest(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "badRequest",
-                            response: self
-                        )
-                    }
-                }
-            }
-            public struct Unauthorized: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/POST/responses/401/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/POST/responses/401/content/application\/json`.
-                    case json(Components.Schemas.StripeError)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.StripeError {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.PostV1BillingSubscriptionTiers.Output.Unauthorized.Body
-                /// Creates a new `Unauthorized`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.PostV1BillingSubscriptionTiers.Output.Unauthorized.Body) {
-                    self.body = body
-                }
-            }
-            /// Error
-            ///
-            /// - Remark: Generated from `#/paths//v1/billing/subscription_tiers/post(postV1BillingSubscriptionTiers)/responses/401`.
-            ///
-            /// HTTP response code: `401 unauthorized`.
-            case unauthorized(Operations.PostV1BillingSubscriptionTiers.Output.Unauthorized)
-            /// The associated value of the enum case if `self` is `.unauthorized`.
-            ///
-            /// - Throws: An error if `self` is not `.unauthorized`.
-            /// - SeeAlso: `.unauthorized`.
-            public var unauthorized: Operations.PostV1BillingSubscriptionTiers.Output.Unauthorized {
-                get throws {
-                    switch self {
-                    case let .unauthorized(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "unauthorized",
-                            response: self
-                        )
-                    }
-                }
-            }
-            /// Undocumented response.
-            ///
-            /// A response with a code that is not documented in the OpenAPI document.
-            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
-        }
-        @frozen public enum AcceptableContentType: AcceptableProtocol {
-            case json
-            case other(Swift.String)
-            public init?(rawValue: Swift.String) {
-                switch rawValue.lowercased() {
-                case "application/json":
-                    self = .json
-                default:
-                    self = .other(rawValue)
-                }
-            }
-            public var rawValue: Swift.String {
-                switch self {
-                case let .other(string):
-                    return string
-                case .json:
-                    return "application/json"
-                }
-            }
-            public static var allCases: [Self] {
-                [
-                    .json
-                ]
-            }
-        }
-    }
-    /// Get subscription_tiers by id
-    ///
-    /// Replaces GET /billing/subscription-tiers/{id}.
-    ///
-    /// - Remark: HTTP `GET /v1/billing/subscription_tiers/{id}`.
-    /// - Remark: Generated from `#/paths//v1/billing/subscription_tiers/{id}/get(getV1BillingSubscriptionTiersById)`.
-    public enum GetV1BillingSubscriptionTiersById {
-        public static let id: Swift.String = "getV1BillingSubscriptionTiersById"
-        public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/{id}/GET/path`.
-            public struct Path: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/{id}/GET/path/id`.
-                public var id: Swift.String
-                /// Creates a new `Path`.
-                ///
-                /// - Parameters:
-                ///   - id:
-                public init(id: Swift.String) {
-                    self.id = id
-                }
-            }
-            public var path: Operations.GetV1BillingSubscriptionTiersById.Input.Path
-            /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/{id}/GET/query`.
-            public struct Query: Sendable, Hashable {
-                /// Related objects to return in full instead of as an id. Up to four levels, e.g. `ecosystem_id`; on a list, `data.<field>`.
-                ///
-                /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/{id}/GET/query/expand[]`.
-                public var expand_lbrack__rbrack_: [Swift.String]?
-                /// Creates a new `Query`.
-                ///
-                /// - Parameters:
-                ///   - expand_lbrack__rbrack_: Related objects to return in full instead of as an id. Up to four levels, e.g. `ecosystem_id`; on a list, `data.<field>`.
-                public init(expand_lbrack__rbrack_: [Swift.String]? = nil) {
-                    self.expand_lbrack__rbrack_ = expand_lbrack__rbrack_
-                }
-            }
-            public var query: Operations.GetV1BillingSubscriptionTiersById.Input.Query
-            /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/{id}/GET/header`.
-            public struct Headers: Sendable, Hashable {
-                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.GetV1BillingSubscriptionTiersById.AcceptableContentType>]
-                /// Creates a new `Headers`.
-                ///
-                /// - Parameters:
-                ///   - accept:
-                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.GetV1BillingSubscriptionTiersById.AcceptableContentType>] = .defaultValues()) {
-                    self.accept = accept
-                }
-            }
-            public var headers: Operations.GetV1BillingSubscriptionTiersById.Input.Headers
-            /// Creates a new `Input`.
-            ///
-            /// - Parameters:
-            ///   - path:
-            ///   - query:
-            ///   - headers:
-            public init(
-                path: Operations.GetV1BillingSubscriptionTiersById.Input.Path,
-                query: Operations.GetV1BillingSubscriptionTiersById.Input.Query = .init(),
-                headers: Operations.GetV1BillingSubscriptionTiersById.Input.Headers = .init()
-            ) {
-                self.path = path
-                self.query = query
-                self.headers = headers
-            }
-        }
-        @frozen public enum Output: Sendable, Hashable {
-            public struct Ok: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/{id}/GET/responses/200/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/{id}/GET/responses/200/content/json`.
-                    public struct JsonPayload: Codable, Hashable, Sendable {
-                        /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/{id}/GET/responses/200/content/json/object`.
-                        @frozen public enum ObjectPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                            case billing_subscriptionTier = "billing.subscription_tier"
-                        }
-                        /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/{id}/GET/responses/200/content/json/object`.
-                        public var object: Operations.GetV1BillingSubscriptionTiersById.Output.Ok.Body.JsonPayload.ObjectPayload?
-                        /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/{id}/GET/responses/200/content/json/id`.
-                        public var id: Swift.String
-                        /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/{id}/GET/responses/200/content/json/key`.
-                        public var key: Swift.String
-                        /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/{id}/GET/responses/200/content/json/name`.
-                        public var name: Swift.String
-                        /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/{id}/GET/responses/200/content/json/description`.
-                        public var description: Swift.String?
-                        /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/{id}/GET/responses/200/content/json/display_order`.
-                        public var displayOrder: Swift.Int
-                        /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/{id}/GET/responses/200/content/json/is_active`.
-                        public var isActive: Swift.Bool
-                        /// Unix timestamp, in seconds.
-                        ///
-                        /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/{id}/GET/responses/200/content/json/created`.
-                        public var created: Swift.Int
-                        /// Unix timestamp, in seconds.
-                        ///
-                        /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/{id}/GET/responses/200/content/json/updated`.
-                        public var updated: Swift.Int
-                        /// Creates a new `JsonPayload`.
-                        ///
-                        /// - Parameters:
-                        ///   - object:
-                        ///   - id:
-                        ///   - key:
-                        ///   - name:
-                        ///   - description:
-                        ///   - displayOrder:
-                        ///   - isActive:
-                        ///   - created: Unix timestamp, in seconds.
-                        ///   - updated: Unix timestamp, in seconds.
-                        public init(
-                            object: Operations.GetV1BillingSubscriptionTiersById.Output.Ok.Body.JsonPayload.ObjectPayload? = nil,
-                            id: Swift.String,
-                            key: Swift.String,
-                            name: Swift.String,
-                            description: Swift.String? = nil,
-                            displayOrder: Swift.Int,
-                            isActive: Swift.Bool,
-                            created: Swift.Int,
-                            updated: Swift.Int
-                        ) {
-                            self.object = object
-                            self.id = id
-                            self.key = key
-                            self.name = name
-                            self.description = description
-                            self.displayOrder = displayOrder
-                            self.isActive = isActive
-                            self.created = created
-                            self.updated = updated
-                        }
-                        public enum CodingKeys: String, CodingKey {
-                            case object
-                            case id
-                            case key
-                            case name
-                            case description
-                            case displayOrder = "display_order"
-                            case isActive = "is_active"
-                            case created
-                            case updated
-                        }
-                        public init(from decoder: any Swift.Decoder) throws {
-                            let container = try decoder.container(keyedBy: CodingKeys.self)
-                            self.object = try container.decodeIfPresent(
-                                Operations.GetV1BillingSubscriptionTiersById.Output.Ok.Body.JsonPayload.ObjectPayload.self,
-                                forKey: .object
-                            )
-                            self.id = try container.decode(
-                                Swift.String.self,
-                                forKey: .id
-                            )
-                            self.key = try container.decode(
-                                Swift.String.self,
-                                forKey: .key
-                            )
-                            self.name = try container.decode(
-                                Swift.String.self,
-                                forKey: .name
-                            )
-                            self.description = try container.decodeIfPresent(
-                                Swift.String.self,
-                                forKey: .description
-                            )
-                            self.displayOrder = try container.decode(
-                                Swift.Int.self,
-                                forKey: .displayOrder
-                            )
-                            self.isActive = try container.decode(
-                                Swift.Bool.self,
-                                forKey: .isActive
-                            )
-                            self.created = try container.decode(
-                                Swift.Int.self,
-                                forKey: .created
-                            )
-                            self.updated = try container.decode(
-                                Swift.Int.self,
-                                forKey: .updated
-                            )
-                            try decoder.ensureNoAdditionalProperties(knownKeys: [
-                                "object",
-                                "id",
-                                "key",
-                                "name",
-                                "description",
-                                "display_order",
-                                "is_active",
-                                "created",
-                                "updated"
-                            ])
-                        }
-                    }
-                    /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/{id}/GET/responses/200/content/application\/json`.
-                    case json(Operations.GetV1BillingSubscriptionTiersById.Output.Ok.Body.JsonPayload)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Operations.GetV1BillingSubscriptionTiersById.Output.Ok.Body.JsonPayload {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.GetV1BillingSubscriptionTiersById.Output.Ok.Body
-                /// Creates a new `Ok`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.GetV1BillingSubscriptionTiersById.Output.Ok.Body) {
-                    self.body = body
-                }
-            }
-            /// subscription_tiers
-            ///
-            /// - Remark: Generated from `#/paths//v1/billing/subscription_tiers/{id}/get(getV1BillingSubscriptionTiersById)/responses/200`.
-            ///
-            /// HTTP response code: `200 ok`.
-            case ok(Operations.GetV1BillingSubscriptionTiersById.Output.Ok)
-            /// The associated value of the enum case if `self` is `.ok`.
-            ///
-            /// - Throws: An error if `self` is not `.ok`.
-            /// - SeeAlso: `.ok`.
-            public var ok: Operations.GetV1BillingSubscriptionTiersById.Output.Ok {
-                get throws {
-                    switch self {
-                    case let .ok(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "ok",
-                            response: self
-                        )
-                    }
-                }
-            }
-            public struct Unauthorized: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/{id}/GET/responses/401/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/{id}/GET/responses/401/content/application\/json`.
-                    case json(Components.Schemas.StripeError)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.StripeError {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.GetV1BillingSubscriptionTiersById.Output.Unauthorized.Body
-                /// Creates a new `Unauthorized`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.GetV1BillingSubscriptionTiersById.Output.Unauthorized.Body) {
-                    self.body = body
-                }
-            }
-            /// Error
-            ///
-            /// - Remark: Generated from `#/paths//v1/billing/subscription_tiers/{id}/get(getV1BillingSubscriptionTiersById)/responses/401`.
-            ///
-            /// HTTP response code: `401 unauthorized`.
-            case unauthorized(Operations.GetV1BillingSubscriptionTiersById.Output.Unauthorized)
-            /// The associated value of the enum case if `self` is `.unauthorized`.
-            ///
-            /// - Throws: An error if `self` is not `.unauthorized`.
-            /// - SeeAlso: `.unauthorized`.
-            public var unauthorized: Operations.GetV1BillingSubscriptionTiersById.Output.Unauthorized {
-                get throws {
-                    switch self {
-                    case let .unauthorized(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "unauthorized",
-                            response: self
-                        )
-                    }
-                }
-            }
-            public struct NotFound: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/{id}/GET/responses/404/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/{id}/GET/responses/404/content/application\/json`.
-                    case json(Components.Schemas.StripeError)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.StripeError {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.GetV1BillingSubscriptionTiersById.Output.NotFound.Body
-                /// Creates a new `NotFound`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.GetV1BillingSubscriptionTiersById.Output.NotFound.Body) {
-                    self.body = body
-                }
-            }
-            /// Error
-            ///
-            /// - Remark: Generated from `#/paths//v1/billing/subscription_tiers/{id}/get(getV1BillingSubscriptionTiersById)/responses/404`.
-            ///
-            /// HTTP response code: `404 notFound`.
-            case notFound(Operations.GetV1BillingSubscriptionTiersById.Output.NotFound)
-            /// The associated value of the enum case if `self` is `.notFound`.
-            ///
-            /// - Throws: An error if `self` is not `.notFound`.
-            /// - SeeAlso: `.notFound`.
-            public var notFound: Operations.GetV1BillingSubscriptionTiersById.Output.NotFound {
-                get throws {
-                    switch self {
-                    case let .notFound(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "notFound",
-                            response: self
-                        )
-                    }
-                }
-            }
-            /// Undocumented response.
-            ///
-            /// A response with a code that is not documented in the OpenAPI document.
-            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
-        }
-        @frozen public enum AcceptableContentType: AcceptableProtocol {
-            case json
-            case other(Swift.String)
-            public init?(rawValue: Swift.String) {
-                switch rawValue.lowercased() {
-                case "application/json":
-                    self = .json
-                default:
-                    self = .other(rawValue)
-                }
-            }
-            public var rawValue: Swift.String {
-                switch self {
-                case let .other(string):
-                    return string
-                case .json:
-                    return "application/json"
-                }
-            }
-            public static var allCases: [Self] {
-                [
-                    .json
-                ]
-            }
-        }
-    }
-    /// Update subscription_tiers
-    ///
-    /// Replaces PUT /billing/subscription-tiers/{id}.
-    ///
-    /// - Remark: HTTP `POST /v1/billing/subscription_tiers/{id}`.
-    /// - Remark: Generated from `#/paths//v1/billing/subscription_tiers/{id}/post(postV1BillingSubscriptionTiersById)`.
-    public enum PostV1BillingSubscriptionTiersById {
-        public static let id: Swift.String = "postV1BillingSubscriptionTiersById"
-        public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/{id}/POST/path`.
-            public struct Path: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/{id}/POST/path/id`.
-                public var id: Swift.String
-                /// Creates a new `Path`.
-                ///
-                /// - Parameters:
-                ///   - id:
-                public init(id: Swift.String) {
-                    self.id = id
-                }
-            }
-            public var path: Operations.PostV1BillingSubscriptionTiersById.Input.Path
-            /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/{id}/POST/header`.
-            public struct Headers: Sendable, Hashable {
-                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.PostV1BillingSubscriptionTiersById.AcceptableContentType>]
-                /// Creates a new `Headers`.
-                ///
-                /// - Parameters:
-                ///   - accept:
-                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.PostV1BillingSubscriptionTiersById.AcceptableContentType>] = .defaultValues()) {
-                    self.accept = accept
-                }
-            }
-            public var headers: Operations.PostV1BillingSubscriptionTiersById.Input.Headers
-            /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/{id}/POST/requestBody`.
-            @frozen public enum Body: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/{id}/POST/requestBody/json`.
-                public struct JsonPayload: Codable, Hashable, Sendable {
-                    /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/{id}/POST/requestBody/json/key`.
-                    public var key: Swift.String?
-                    /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/{id}/POST/requestBody/json/name`.
-                    public var name: Swift.String?
-                    /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/{id}/POST/requestBody/json/description`.
-                    public var description: Swift.String?
-                    /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/{id}/POST/requestBody/json/display_order`.
-                    public var displayOrder: Swift.Int?
-                    /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/{id}/POST/requestBody/json/is_active`.
-                    public var isActive: Swift.Bool?
-                    /// Creates a new `JsonPayload`.
-                    ///
-                    /// - Parameters:
-                    ///   - key:
-                    ///   - name:
-                    ///   - description:
-                    ///   - displayOrder:
-                    ///   - isActive:
-                    public init(
-                        key: Swift.String? = nil,
-                        name: Swift.String? = nil,
-                        description: Swift.String? = nil,
-                        displayOrder: Swift.Int? = nil,
-                        isActive: Swift.Bool? = nil
-                    ) {
-                        self.key = key
-                        self.name = name
-                        self.description = description
-                        self.displayOrder = displayOrder
-                        self.isActive = isActive
-                    }
-                    public enum CodingKeys: String, CodingKey {
-                        case key
-                        case name
-                        case description
-                        case displayOrder = "display_order"
-                        case isActive = "is_active"
-                    }
-                    public init(from decoder: any Swift.Decoder) throws {
-                        let container = try decoder.container(keyedBy: CodingKeys.self)
-                        self.key = try container.decodeIfPresent(
-                            Swift.String.self,
-                            forKey: .key
-                        )
-                        self.name = try container.decodeIfPresent(
-                            Swift.String.self,
-                            forKey: .name
-                        )
-                        self.description = try container.decodeIfPresent(
-                            Swift.String.self,
-                            forKey: .description
-                        )
-                        self.displayOrder = try container.decodeIfPresent(
-                            Swift.Int.self,
-                            forKey: .displayOrder
-                        )
-                        self.isActive = try container.decodeIfPresent(
-                            Swift.Bool.self,
-                            forKey: .isActive
-                        )
-                        try decoder.ensureNoAdditionalProperties(knownKeys: [
-                            "key",
-                            "name",
-                            "description",
-                            "display_order",
-                            "is_active"
-                        ])
-                    }
-                }
-                /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/{id}/POST/requestBody/content/application\/json`.
-                case json(Operations.PostV1BillingSubscriptionTiersById.Input.Body.JsonPayload)
-            }
-            public var body: Operations.PostV1BillingSubscriptionTiersById.Input.Body
-            /// Creates a new `Input`.
-            ///
-            /// - Parameters:
-            ///   - path:
-            ///   - headers:
-            ///   - body:
-            public init(
-                path: Operations.PostV1BillingSubscriptionTiersById.Input.Path,
-                headers: Operations.PostV1BillingSubscriptionTiersById.Input.Headers = .init(),
-                body: Operations.PostV1BillingSubscriptionTiersById.Input.Body
-            ) {
-                self.path = path
-                self.headers = headers
-                self.body = body
-            }
-        }
-        @frozen public enum Output: Sendable, Hashable {
-            public struct Ok: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/{id}/POST/responses/200/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/{id}/POST/responses/200/content/json`.
-                    public struct JsonPayload: Codable, Hashable, Sendable {
-                        /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/{id}/POST/responses/200/content/json/object`.
-                        @frozen public enum ObjectPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                            case billing_subscriptionTier = "billing.subscription_tier"
-                        }
-                        /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/{id}/POST/responses/200/content/json/object`.
-                        public var object: Operations.PostV1BillingSubscriptionTiersById.Output.Ok.Body.JsonPayload.ObjectPayload?
-                        /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/{id}/POST/responses/200/content/json/id`.
-                        public var id: Swift.String
-                        /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/{id}/POST/responses/200/content/json/key`.
-                        public var key: Swift.String
-                        /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/{id}/POST/responses/200/content/json/name`.
-                        public var name: Swift.String
-                        /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/{id}/POST/responses/200/content/json/description`.
-                        public var description: Swift.String?
-                        /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/{id}/POST/responses/200/content/json/display_order`.
-                        public var displayOrder: Swift.Int
-                        /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/{id}/POST/responses/200/content/json/is_active`.
-                        public var isActive: Swift.Bool
-                        /// Unix timestamp, in seconds.
-                        ///
-                        /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/{id}/POST/responses/200/content/json/created`.
-                        public var created: Swift.Int
-                        /// Unix timestamp, in seconds.
-                        ///
-                        /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/{id}/POST/responses/200/content/json/updated`.
-                        public var updated: Swift.Int
-                        /// Creates a new `JsonPayload`.
-                        ///
-                        /// - Parameters:
-                        ///   - object:
-                        ///   - id:
-                        ///   - key:
-                        ///   - name:
-                        ///   - description:
-                        ///   - displayOrder:
-                        ///   - isActive:
-                        ///   - created: Unix timestamp, in seconds.
-                        ///   - updated: Unix timestamp, in seconds.
-                        public init(
-                            object: Operations.PostV1BillingSubscriptionTiersById.Output.Ok.Body.JsonPayload.ObjectPayload? = nil,
-                            id: Swift.String,
-                            key: Swift.String,
-                            name: Swift.String,
-                            description: Swift.String? = nil,
-                            displayOrder: Swift.Int,
-                            isActive: Swift.Bool,
-                            created: Swift.Int,
-                            updated: Swift.Int
-                        ) {
-                            self.object = object
-                            self.id = id
-                            self.key = key
-                            self.name = name
-                            self.description = description
-                            self.displayOrder = displayOrder
-                            self.isActive = isActive
-                            self.created = created
-                            self.updated = updated
-                        }
-                        public enum CodingKeys: String, CodingKey {
-                            case object
-                            case id
-                            case key
-                            case name
-                            case description
-                            case displayOrder = "display_order"
-                            case isActive = "is_active"
-                            case created
-                            case updated
-                        }
-                        public init(from decoder: any Swift.Decoder) throws {
-                            let container = try decoder.container(keyedBy: CodingKeys.self)
-                            self.object = try container.decodeIfPresent(
-                                Operations.PostV1BillingSubscriptionTiersById.Output.Ok.Body.JsonPayload.ObjectPayload.self,
-                                forKey: .object
-                            )
-                            self.id = try container.decode(
-                                Swift.String.self,
-                                forKey: .id
-                            )
-                            self.key = try container.decode(
-                                Swift.String.self,
-                                forKey: .key
-                            )
-                            self.name = try container.decode(
-                                Swift.String.self,
-                                forKey: .name
-                            )
-                            self.description = try container.decodeIfPresent(
-                                Swift.String.self,
-                                forKey: .description
-                            )
-                            self.displayOrder = try container.decode(
-                                Swift.Int.self,
-                                forKey: .displayOrder
-                            )
-                            self.isActive = try container.decode(
-                                Swift.Bool.self,
-                                forKey: .isActive
-                            )
-                            self.created = try container.decode(
-                                Swift.Int.self,
-                                forKey: .created
-                            )
-                            self.updated = try container.decode(
-                                Swift.Int.self,
-                                forKey: .updated
-                            )
-                            try decoder.ensureNoAdditionalProperties(knownKeys: [
-                                "object",
-                                "id",
-                                "key",
-                                "name",
-                                "description",
-                                "display_order",
-                                "is_active",
-                                "created",
-                                "updated"
-                            ])
-                        }
-                    }
-                    /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/{id}/POST/responses/200/content/application\/json`.
-                    case json(Operations.PostV1BillingSubscriptionTiersById.Output.Ok.Body.JsonPayload)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Operations.PostV1BillingSubscriptionTiersById.Output.Ok.Body.JsonPayload {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.PostV1BillingSubscriptionTiersById.Output.Ok.Body
-                /// Creates a new `Ok`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.PostV1BillingSubscriptionTiersById.Output.Ok.Body) {
-                    self.body = body
-                }
-            }
-            /// subscription_tiers
-            ///
-            /// - Remark: Generated from `#/paths//v1/billing/subscription_tiers/{id}/post(postV1BillingSubscriptionTiersById)/responses/200`.
-            ///
-            /// HTTP response code: `200 ok`.
-            case ok(Operations.PostV1BillingSubscriptionTiersById.Output.Ok)
-            /// The associated value of the enum case if `self` is `.ok`.
-            ///
-            /// - Throws: An error if `self` is not `.ok`.
-            /// - SeeAlso: `.ok`.
-            public var ok: Operations.PostV1BillingSubscriptionTiersById.Output.Ok {
-                get throws {
-                    switch self {
-                    case let .ok(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "ok",
-                            response: self
-                        )
-                    }
-                }
-            }
-            public struct BadRequest: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/{id}/POST/responses/400/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/{id}/POST/responses/400/content/application\/json`.
-                    case json(Components.Schemas.StripeError)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.StripeError {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.PostV1BillingSubscriptionTiersById.Output.BadRequest.Body
-                /// Creates a new `BadRequest`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.PostV1BillingSubscriptionTiersById.Output.BadRequest.Body) {
-                    self.body = body
-                }
-            }
-            /// Error
-            ///
-            /// - Remark: Generated from `#/paths//v1/billing/subscription_tiers/{id}/post(postV1BillingSubscriptionTiersById)/responses/400`.
-            ///
-            /// HTTP response code: `400 badRequest`.
-            case badRequest(Operations.PostV1BillingSubscriptionTiersById.Output.BadRequest)
-            /// The associated value of the enum case if `self` is `.badRequest`.
-            ///
-            /// - Throws: An error if `self` is not `.badRequest`.
-            /// - SeeAlso: `.badRequest`.
-            public var badRequest: Operations.PostV1BillingSubscriptionTiersById.Output.BadRequest {
-                get throws {
-                    switch self {
-                    case let .badRequest(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "badRequest",
-                            response: self
-                        )
-                    }
-                }
-            }
-            public struct Unauthorized: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/{id}/POST/responses/401/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/{id}/POST/responses/401/content/application\/json`.
-                    case json(Components.Schemas.StripeError)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.StripeError {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.PostV1BillingSubscriptionTiersById.Output.Unauthorized.Body
-                /// Creates a new `Unauthorized`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.PostV1BillingSubscriptionTiersById.Output.Unauthorized.Body) {
-                    self.body = body
-                }
-            }
-            /// Error
-            ///
-            /// - Remark: Generated from `#/paths//v1/billing/subscription_tiers/{id}/post(postV1BillingSubscriptionTiersById)/responses/401`.
-            ///
-            /// HTTP response code: `401 unauthorized`.
-            case unauthorized(Operations.PostV1BillingSubscriptionTiersById.Output.Unauthorized)
-            /// The associated value of the enum case if `self` is `.unauthorized`.
-            ///
-            /// - Throws: An error if `self` is not `.unauthorized`.
-            /// - SeeAlso: `.unauthorized`.
-            public var unauthorized: Operations.PostV1BillingSubscriptionTiersById.Output.Unauthorized {
-                get throws {
-                    switch self {
-                    case let .unauthorized(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "unauthorized",
-                            response: self
-                        )
-                    }
-                }
-            }
-            public struct NotFound: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/{id}/POST/responses/404/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/{id}/POST/responses/404/content/application\/json`.
-                    case json(Components.Schemas.StripeError)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.StripeError {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.PostV1BillingSubscriptionTiersById.Output.NotFound.Body
-                /// Creates a new `NotFound`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.PostV1BillingSubscriptionTiersById.Output.NotFound.Body) {
-                    self.body = body
-                }
-            }
-            /// Error
-            ///
-            /// - Remark: Generated from `#/paths//v1/billing/subscription_tiers/{id}/post(postV1BillingSubscriptionTiersById)/responses/404`.
-            ///
-            /// HTTP response code: `404 notFound`.
-            case notFound(Operations.PostV1BillingSubscriptionTiersById.Output.NotFound)
-            /// The associated value of the enum case if `self` is `.notFound`.
-            ///
-            /// - Throws: An error if `self` is not `.notFound`.
-            /// - SeeAlso: `.notFound`.
-            public var notFound: Operations.PostV1BillingSubscriptionTiersById.Output.NotFound {
-                get throws {
-                    switch self {
-                    case let .notFound(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "notFound",
-                            response: self
-                        )
-                    }
-                }
-            }
-            /// Undocumented response.
-            ///
-            /// A response with a code that is not documented in the OpenAPI document.
-            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
-        }
-        @frozen public enum AcceptableContentType: AcceptableProtocol {
-            case json
-            case other(Swift.String)
-            public init?(rawValue: Swift.String) {
-                switch rawValue.lowercased() {
-                case "application/json":
-                    self = .json
-                default:
-                    self = .other(rawValue)
-                }
-            }
-            public var rawValue: Swift.String {
-                switch self {
-                case let .other(string):
-                    return string
-                case .json:
-                    return "application/json"
-                }
-            }
-            public static var allCases: [Self] {
-                [
-                    .json
-                ]
-            }
-        }
-    }
-    /// Delete subscription_tiers
-    ///
-    /// Replaces DELETE /billing/subscription-tiers/{id}.
-    ///
-    /// - Remark: HTTP `DELETE /v1/billing/subscription_tiers/{id}`.
-    /// - Remark: Generated from `#/paths//v1/billing/subscription_tiers/{id}/delete(deleteV1BillingSubscriptionTiersById)`.
-    public enum DeleteV1BillingSubscriptionTiersById {
-        public static let id: Swift.String = "deleteV1BillingSubscriptionTiersById"
-        public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/{id}/DELETE/path`.
-            public struct Path: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/{id}/DELETE/path/id`.
-                public var id: Swift.String
-                /// Creates a new `Path`.
-                ///
-                /// - Parameters:
-                ///   - id:
-                public init(id: Swift.String) {
-                    self.id = id
-                }
-            }
-            public var path: Operations.DeleteV1BillingSubscriptionTiersById.Input.Path
-            /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/{id}/DELETE/header`.
-            public struct Headers: Sendable, Hashable {
-                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.DeleteV1BillingSubscriptionTiersById.AcceptableContentType>]
-                /// Creates a new `Headers`.
-                ///
-                /// - Parameters:
-                ///   - accept:
-                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.DeleteV1BillingSubscriptionTiersById.AcceptableContentType>] = .defaultValues()) {
-                    self.accept = accept
-                }
-            }
-            public var headers: Operations.DeleteV1BillingSubscriptionTiersById.Input.Headers
-            /// Creates a new `Input`.
-            ///
-            /// - Parameters:
-            ///   - path:
-            ///   - headers:
-            public init(
-                path: Operations.DeleteV1BillingSubscriptionTiersById.Input.Path,
-                headers: Operations.DeleteV1BillingSubscriptionTiersById.Input.Headers = .init()
-            ) {
-                self.path = path
-                self.headers = headers
-            }
-        }
-        @frozen public enum Output: Sendable, Hashable {
-            public struct Ok: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/{id}/DELETE/responses/200/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/{id}/DELETE/responses/200/content/application\/json`.
-                    case json(Components.Schemas.Deleted)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.Deleted {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.DeleteV1BillingSubscriptionTiersById.Output.Ok.Body
-                /// Creates a new `Ok`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.DeleteV1BillingSubscriptionTiersById.Output.Ok.Body) {
-                    self.body = body
-                }
-            }
-            /// Deleted
-            ///
-            /// - Remark: Generated from `#/paths//v1/billing/subscription_tiers/{id}/delete(deleteV1BillingSubscriptionTiersById)/responses/200`.
-            ///
-            /// HTTP response code: `200 ok`.
-            case ok(Operations.DeleteV1BillingSubscriptionTiersById.Output.Ok)
-            /// The associated value of the enum case if `self` is `.ok`.
-            ///
-            /// - Throws: An error if `self` is not `.ok`.
-            /// - SeeAlso: `.ok`.
-            public var ok: Operations.DeleteV1BillingSubscriptionTiersById.Output.Ok {
-                get throws {
-                    switch self {
-                    case let .ok(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "ok",
-                            response: self
-                        )
-                    }
-                }
-            }
-            public struct Unauthorized: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/{id}/DELETE/responses/401/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/{id}/DELETE/responses/401/content/application\/json`.
-                    case json(Components.Schemas.StripeError)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.StripeError {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.DeleteV1BillingSubscriptionTiersById.Output.Unauthorized.Body
-                /// Creates a new `Unauthorized`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.DeleteV1BillingSubscriptionTiersById.Output.Unauthorized.Body) {
-                    self.body = body
-                }
-            }
-            /// Error
-            ///
-            /// - Remark: Generated from `#/paths//v1/billing/subscription_tiers/{id}/delete(deleteV1BillingSubscriptionTiersById)/responses/401`.
-            ///
-            /// HTTP response code: `401 unauthorized`.
-            case unauthorized(Operations.DeleteV1BillingSubscriptionTiersById.Output.Unauthorized)
-            /// The associated value of the enum case if `self` is `.unauthorized`.
-            ///
-            /// - Throws: An error if `self` is not `.unauthorized`.
-            /// - SeeAlso: `.unauthorized`.
-            public var unauthorized: Operations.DeleteV1BillingSubscriptionTiersById.Output.Unauthorized {
-                get throws {
-                    switch self {
-                    case let .unauthorized(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "unauthorized",
-                            response: self
-                        )
-                    }
-                }
-            }
-            public struct NotFound: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/{id}/DELETE/responses/404/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v1/billing/subscription_tiers/{id}/DELETE/responses/404/content/application\/json`.
-                    case json(Components.Schemas.StripeError)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.StripeError {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.DeleteV1BillingSubscriptionTiersById.Output.NotFound.Body
-                /// Creates a new `NotFound`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.DeleteV1BillingSubscriptionTiersById.Output.NotFound.Body) {
-                    self.body = body
-                }
-            }
-            /// Error
-            ///
-            /// - Remark: Generated from `#/paths//v1/billing/subscription_tiers/{id}/delete(deleteV1BillingSubscriptionTiersById)/responses/404`.
-            ///
-            /// HTTP response code: `404 notFound`.
-            case notFound(Operations.DeleteV1BillingSubscriptionTiersById.Output.NotFound)
-            /// The associated value of the enum case if `self` is `.notFound`.
-            ///
-            /// - Throws: An error if `self` is not `.notFound`.
-            /// - SeeAlso: `.notFound`.
-            public var notFound: Operations.DeleteV1BillingSubscriptionTiersById.Output.NotFound {
-                get throws {
-                    switch self {
-                    case let .notFound(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "notFound",
-                            response: self
-                        )
-                    }
-                }
-            }
-            /// Undocumented response.
-            ///
-            /// A response with a code that is not documented in the OpenAPI document.
-            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
-        }
-        @frozen public enum AcceptableContentType: AcceptableProtocol {
-            case json
-            case other(Swift.String)
-            public init?(rawValue: Swift.String) {
-                switch rawValue.lowercased() {
-                case "application/json":
-                    self = .json
-                default:
-                    self = .other(rawValue)
-                }
-            }
-            public var rawValue: Swift.String {
-                switch self {
-                case let .other(string):
-                    return string
-                case .json:
-                    return "application/json"
-                }
-            }
-            public static var allCases: [Self] {
-                [
-                    .json
-                ]
-            }
-        }
-    }
-    /// List subscriptions
-    ///
-    /// Replaces GET /billing/subscriptions.
-    ///
-    /// - Remark: HTTP `GET /v1/billing/subscriptions`.
-    /// - Remark: Generated from `#/paths//v1/billing/subscriptions/get(getV1BillingSubscriptions)`.
-    public enum GetV1BillingSubscriptions {
-        public static let id: Swift.String = "getV1BillingSubscriptions"
-        public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/v1/billing/subscriptions/GET/query`.
-            public struct Query: Sendable, Hashable {
-                /// Page size, 1–100 (default 10).
-                ///
-                /// - Remark: Generated from `#/paths/v1/billing/subscriptions/GET/query/limit`.
-                public var limit: Swift.Int?
-                /// Cursor: an object id; returns the page after it.
-                ///
-                /// - Remark: Generated from `#/paths/v1/billing/subscriptions/GET/query/starting_after`.
-                public var startingAfter: Swift.String?
-                /// Cursor: an object id; returns the page before it.
-                ///
-                /// - Remark: Generated from `#/paths/v1/billing/subscriptions/GET/query/ending_before`.
-                public var endingBefore: Swift.String?
-                /// Related objects to return in full instead of as an id. Up to four levels, e.g. `ecosystem_id`; on a list, `data.<field>`.
-                ///
-                /// - Remark: Generated from `#/paths/v1/billing/subscriptions/GET/query/expand[]`.
-                public var expand_lbrack__rbrack_: [Swift.String]?
-                /// Creates a new `Query`.
-                ///
-                /// - Parameters:
-                ///   - limit: Page size, 1–100 (default 10).
-                ///   - startingAfter: Cursor: an object id; returns the page after it.
-                ///   - endingBefore: Cursor: an object id; returns the page before it.
-                ///   - expand_lbrack__rbrack_: Related objects to return in full instead of as an id. Up to four levels, e.g. `ecosystem_id`; on a list, `data.<field>`.
-                public init(
-                    limit: Swift.Int? = nil,
-                    startingAfter: Swift.String? = nil,
-                    endingBefore: Swift.String? = nil,
-                    expand_lbrack__rbrack_: [Swift.String]? = nil
-                ) {
-                    self.limit = limit
-                    self.startingAfter = startingAfter
-                    self.endingBefore = endingBefore
-                    self.expand_lbrack__rbrack_ = expand_lbrack__rbrack_
-                }
-            }
-            public var query: Operations.GetV1BillingSubscriptions.Input.Query
-            /// - Remark: Generated from `#/paths/v1/billing/subscriptions/GET/header`.
-            public struct Headers: Sendable, Hashable {
-                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.GetV1BillingSubscriptions.AcceptableContentType>]
-                /// Creates a new `Headers`.
-                ///
-                /// - Parameters:
-                ///   - accept:
-                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.GetV1BillingSubscriptions.AcceptableContentType>] = .defaultValues()) {
-                    self.accept = accept
-                }
-            }
-            public var headers: Operations.GetV1BillingSubscriptions.Input.Headers
-            /// Creates a new `Input`.
-            ///
-            /// - Parameters:
-            ///   - query:
-            ///   - headers:
-            public init(
-                query: Operations.GetV1BillingSubscriptions.Input.Query = .init(),
-                headers: Operations.GetV1BillingSubscriptions.Input.Headers = .init()
-            ) {
-                self.query = query
-                self.headers = headers
-            }
-        }
-        @frozen public enum Output: Sendable, Hashable {
-            public struct Ok: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/billing/subscriptions/GET/responses/200/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v1/billing/subscriptions/GET/responses/200/content/json`.
-                    public struct JsonPayload: Codable, Hashable, Sendable {
-                        /// - Remark: Generated from `#/paths/v1/billing/subscriptions/GET/responses/200/content/json/object`.
-                        @frozen public enum ObjectPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                            case list = "list"
-                        }
-                        /// - Remark: Generated from `#/paths/v1/billing/subscriptions/GET/responses/200/content/json/object`.
-                        public var object: Operations.GetV1BillingSubscriptions.Output.Ok.Body.JsonPayload.ObjectPayload
-                        /// - Remark: Generated from `#/paths/v1/billing/subscriptions/GET/responses/200/content/json/DataPayload`.
-                        public struct DataPayloadPayload: Codable, Hashable, Sendable {
-                            /// - Remark: Generated from `#/paths/v1/billing/subscriptions/GET/responses/200/content/json/DataPayload/object`.
-                            @frozen public enum ObjectPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                                case billing_subscription = "billing.subscription"
-                            }
-                            /// - Remark: Generated from `#/paths/v1/billing/subscriptions/GET/responses/200/content/json/DataPayload/object`.
-                            public var object: Operations.GetV1BillingSubscriptions.Output.Ok.Body.JsonPayload.DataPayloadPayload.ObjectPayload?
-                            /// - Remark: Generated from `#/paths/v1/billing/subscriptions/GET/responses/200/content/json/DataPayload/id`.
-                            public var id: Swift.String
-                            /// - Remark: Generated from `#/paths/v1/billing/subscriptions/GET/responses/200/content/json/DataPayload/user_id`.
-                            public var userId: Swift.String
-                            /// - Remark: Generated from `#/paths/v1/billing/subscriptions/GET/responses/200/content/json/DataPayload/ecosystem_id`.
-                            public var ecosystemId: Swift.String
-                            /// - Remark: Generated from `#/paths/v1/billing/subscriptions/GET/responses/200/content/json/DataPayload/tier_id`.
-                            public var tierId: Swift.String
-                            /// - Remark: Generated from `#/paths/v1/billing/subscriptions/GET/responses/200/content/json/DataPayload/status`.
-                            public var status: Swift.String
-                            /// - Remark: Generated from `#/paths/v1/billing/subscriptions/GET/responses/200/content/json/DataPayload/source`.
-                            public var source: Swift.String
-                            /// - Remark: Generated from `#/paths/v1/billing/subscriptions/GET/responses/200/content/json/DataPayload/started_at`.
-                            public var startedAt: Swift.String
-                            /// - Remark: Generated from `#/paths/v1/billing/subscriptions/GET/responses/200/content/json/DataPayload/expires_at`.
-                            public var expiresAt: Swift.String?
-                            /// Unix timestamp, in seconds.
-                            ///
-                            /// - Remark: Generated from `#/paths/v1/billing/subscriptions/GET/responses/200/content/json/DataPayload/created`.
-                            public var created: Swift.Int
-                            /// Unix timestamp, in seconds.
-                            ///
-                            /// - Remark: Generated from `#/paths/v1/billing/subscriptions/GET/responses/200/content/json/DataPayload/updated`.
-                            public var updated: Swift.Int
-                            /// Creates a new `DataPayloadPayload`.
-                            ///
-                            /// - Parameters:
-                            ///   - object:
-                            ///   - id:
-                            ///   - userId:
-                            ///   - ecosystemId:
-                            ///   - tierId:
-                            ///   - status:
-                            ///   - source:
-                            ///   - startedAt:
-                            ///   - expiresAt:
-                            ///   - created: Unix timestamp, in seconds.
-                            ///   - updated: Unix timestamp, in seconds.
-                            public init(
-                                object: Operations.GetV1BillingSubscriptions.Output.Ok.Body.JsonPayload.DataPayloadPayload.ObjectPayload? = nil,
-                                id: Swift.String,
-                                userId: Swift.String,
-                                ecosystemId: Swift.String,
-                                tierId: Swift.String,
-                                status: Swift.String,
-                                source: Swift.String,
-                                startedAt: Swift.String,
-                                expiresAt: Swift.String? = nil,
-                                created: Swift.Int,
-                                updated: Swift.Int
-                            ) {
-                                self.object = object
-                                self.id = id
-                                self.userId = userId
-                                self.ecosystemId = ecosystemId
-                                self.tierId = tierId
-                                self.status = status
-                                self.source = source
-                                self.startedAt = startedAt
-                                self.expiresAt = expiresAt
-                                self.created = created
-                                self.updated = updated
-                            }
-                            public enum CodingKeys: String, CodingKey {
-                                case object
-                                case id
-                                case userId = "user_id"
-                                case ecosystemId = "ecosystem_id"
-                                case tierId = "tier_id"
-                                case status
-                                case source
-                                case startedAt = "started_at"
-                                case expiresAt = "expires_at"
-                                case created
-                                case updated
-                            }
-                            public init(from decoder: any Swift.Decoder) throws {
-                                let container = try decoder.container(keyedBy: CodingKeys.self)
-                                self.object = try container.decodeIfPresent(
-                                    Operations.GetV1BillingSubscriptions.Output.Ok.Body.JsonPayload.DataPayloadPayload.ObjectPayload.self,
-                                    forKey: .object
-                                )
-                                self.id = try container.decode(
-                                    Swift.String.self,
-                                    forKey: .id
-                                )
-                                self.userId = try container.decode(
-                                    Swift.String.self,
-                                    forKey: .userId
-                                )
-                                self.ecosystemId = try container.decode(
-                                    Swift.String.self,
-                                    forKey: .ecosystemId
-                                )
-                                self.tierId = try container.decode(
-                                    Swift.String.self,
-                                    forKey: .tierId
-                                )
-                                self.status = try container.decode(
-                                    Swift.String.self,
-                                    forKey: .status
-                                )
-                                self.source = try container.decode(
-                                    Swift.String.self,
-                                    forKey: .source
-                                )
-                                self.startedAt = try container.decode(
-                                    Swift.String.self,
-                                    forKey: .startedAt
-                                )
-                                self.expiresAt = try container.decodeIfPresent(
-                                    Swift.String.self,
-                                    forKey: .expiresAt
-                                )
-                                self.created = try container.decode(
-                                    Swift.Int.self,
-                                    forKey: .created
-                                )
-                                self.updated = try container.decode(
-                                    Swift.Int.self,
-                                    forKey: .updated
-                                )
-                                try decoder.ensureNoAdditionalProperties(knownKeys: [
-                                    "object",
-                                    "id",
-                                    "user_id",
-                                    "ecosystem_id",
-                                    "tier_id",
-                                    "status",
-                                    "source",
-                                    "started_at",
-                                    "expires_at",
-                                    "created",
-                                    "updated"
-                                ])
-                            }
-                        }
-                        /// - Remark: Generated from `#/paths/v1/billing/subscriptions/GET/responses/200/content/json/data`.
-                        public typealias DataPayload = [Operations.GetV1BillingSubscriptions.Output.Ok.Body.JsonPayload.DataPayloadPayload]
-                        /// - Remark: Generated from `#/paths/v1/billing/subscriptions/GET/responses/200/content/json/data`.
-                        public var data: Operations.GetV1BillingSubscriptions.Output.Ok.Body.JsonPayload.DataPayload
-                        /// - Remark: Generated from `#/paths/v1/billing/subscriptions/GET/responses/200/content/json/has_more`.
-                        public var hasMore: Swift.Bool
-                        /// - Remark: Generated from `#/paths/v1/billing/subscriptions/GET/responses/200/content/json/url`.
-                        public var url: Swift.String
-                        /// Creates a new `JsonPayload`.
-                        ///
-                        /// - Parameters:
-                        ///   - object:
-                        ///   - data:
-                        ///   - hasMore:
-                        ///   - url:
-                        public init(
-                            object: Operations.GetV1BillingSubscriptions.Output.Ok.Body.JsonPayload.ObjectPayload,
-                            data: Operations.GetV1BillingSubscriptions.Output.Ok.Body.JsonPayload.DataPayload,
-                            hasMore: Swift.Bool,
-                            url: Swift.String
-                        ) {
-                            self.object = object
-                            self.data = data
-                            self.hasMore = hasMore
-                            self.url = url
-                        }
-                        public enum CodingKeys: String, CodingKey {
-                            case object
-                            case data
-                            case hasMore = "has_more"
-                            case url
-                        }
-                    }
-                    /// - Remark: Generated from `#/paths/v1/billing/subscriptions/GET/responses/200/content/application\/json`.
-                    case json(Operations.GetV1BillingSubscriptions.Output.Ok.Body.JsonPayload)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Operations.GetV1BillingSubscriptions.Output.Ok.Body.JsonPayload {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.GetV1BillingSubscriptions.Output.Ok.Body
-                /// Creates a new `Ok`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.GetV1BillingSubscriptions.Output.Ok.Body) {
-                    self.body = body
-                }
-            }
-            /// List
-            ///
-            /// - Remark: Generated from `#/paths//v1/billing/subscriptions/get(getV1BillingSubscriptions)/responses/200`.
-            ///
-            /// HTTP response code: `200 ok`.
-            case ok(Operations.GetV1BillingSubscriptions.Output.Ok)
-            /// The associated value of the enum case if `self` is `.ok`.
-            ///
-            /// - Throws: An error if `self` is not `.ok`.
-            /// - SeeAlso: `.ok`.
-            public var ok: Operations.GetV1BillingSubscriptions.Output.Ok {
-                get throws {
-                    switch self {
-                    case let .ok(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "ok",
-                            response: self
-                        )
-                    }
-                }
-            }
-            public struct Unauthorized: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/billing/subscriptions/GET/responses/401/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v1/billing/subscriptions/GET/responses/401/content/application\/json`.
-                    case json(Components.Schemas.StripeError)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.StripeError {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.GetV1BillingSubscriptions.Output.Unauthorized.Body
-                /// Creates a new `Unauthorized`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.GetV1BillingSubscriptions.Output.Unauthorized.Body) {
-                    self.body = body
-                }
-            }
-            /// Error
-            ///
-            /// - Remark: Generated from `#/paths//v1/billing/subscriptions/get(getV1BillingSubscriptions)/responses/401`.
-            ///
-            /// HTTP response code: `401 unauthorized`.
-            case unauthorized(Operations.GetV1BillingSubscriptions.Output.Unauthorized)
-            /// The associated value of the enum case if `self` is `.unauthorized`.
-            ///
-            /// - Throws: An error if `self` is not `.unauthorized`.
-            /// - SeeAlso: `.unauthorized`.
-            public var unauthorized: Operations.GetV1BillingSubscriptions.Output.Unauthorized {
-                get throws {
-                    switch self {
-                    case let .unauthorized(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "unauthorized",
-                            response: self
-                        )
-                    }
-                }
-            }
-            /// Undocumented response.
-            ///
-            /// A response with a code that is not documented in the OpenAPI document.
-            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
-        }
-        @frozen public enum AcceptableContentType: AcceptableProtocol {
-            case json
-            case other(Swift.String)
-            public init?(rawValue: Swift.String) {
-                switch rawValue.lowercased() {
-                case "application/json":
-                    self = .json
-                default:
-                    self = .other(rawValue)
-                }
-            }
-            public var rawValue: Swift.String {
-                switch self {
-                case let .other(string):
-                    return string
-                case .json:
-                    return "application/json"
-                }
-            }
-            public static var allCases: [Self] {
-                [
-                    .json
-                ]
-            }
-        }
-    }
-    /// Create subscriptions
-    ///
-    /// Replaces POST /billing/subscriptions.
-    ///
-    /// - Remark: HTTP `POST /v1/billing/subscriptions`.
-    /// - Remark: Generated from `#/paths//v1/billing/subscriptions/post(postV1BillingSubscriptions)`.
-    public enum PostV1BillingSubscriptions {
-        public static let id: Swift.String = "postV1BillingSubscriptions"
-        public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/v1/billing/subscriptions/POST/header`.
-            public struct Headers: Sendable, Hashable {
-                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.PostV1BillingSubscriptions.AcceptableContentType>]
-                /// Creates a new `Headers`.
-                ///
-                /// - Parameters:
-                ///   - accept:
-                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.PostV1BillingSubscriptions.AcceptableContentType>] = .defaultValues()) {
-                    self.accept = accept
-                }
-            }
-            public var headers: Operations.PostV1BillingSubscriptions.Input.Headers
-            /// - Remark: Generated from `#/paths/v1/billing/subscriptions/POST/requestBody`.
-            @frozen public enum Body: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/billing/subscriptions/POST/requestBody/json`.
-                public struct JsonPayload: Codable, Hashable, Sendable {
-                    /// - Remark: Generated from `#/paths/v1/billing/subscriptions/POST/requestBody/json/ecosystem_id`.
-                    public var ecosystemId: Swift.String?
-                    /// - Remark: Generated from `#/paths/v1/billing/subscriptions/POST/requestBody/json/tier_id`.
-                    public var tierId: Swift.String
-                    /// - Remark: Generated from `#/paths/v1/billing/subscriptions/POST/requestBody/json/status`.
-                    public var status: Swift.String?
-                    /// - Remark: Generated from `#/paths/v1/billing/subscriptions/POST/requestBody/json/source`.
-                    public var source: Swift.String?
-                    /// - Remark: Generated from `#/paths/v1/billing/subscriptions/POST/requestBody/json/started_at`.
-                    public var startedAt: Swift.String
-                    /// - Remark: Generated from `#/paths/v1/billing/subscriptions/POST/requestBody/json/expires_at`.
-                    public var expiresAt: Swift.String?
-                    /// Creates a new `JsonPayload`.
-                    ///
-                    /// - Parameters:
-                    ///   - ecosystemId:
-                    ///   - tierId:
-                    ///   - status:
-                    ///   - source:
-                    ///   - startedAt:
-                    ///   - expiresAt:
-                    public init(
-                        ecosystemId: Swift.String? = nil,
-                        tierId: Swift.String,
-                        status: Swift.String? = nil,
-                        source: Swift.String? = nil,
-                        startedAt: Swift.String,
-                        expiresAt: Swift.String? = nil
-                    ) {
-                        self.ecosystemId = ecosystemId
-                        self.tierId = tierId
-                        self.status = status
-                        self.source = source
-                        self.startedAt = startedAt
-                        self.expiresAt = expiresAt
-                    }
-                    public enum CodingKeys: String, CodingKey {
-                        case ecosystemId = "ecosystem_id"
-                        case tierId = "tier_id"
-                        case status
-                        case source
-                        case startedAt = "started_at"
-                        case expiresAt = "expires_at"
-                    }
-                    public init(from decoder: any Swift.Decoder) throws {
-                        let container = try decoder.container(keyedBy: CodingKeys.self)
-                        self.ecosystemId = try container.decodeIfPresent(
-                            Swift.String.self,
-                            forKey: .ecosystemId
-                        )
-                        self.tierId = try container.decode(
-                            Swift.String.self,
-                            forKey: .tierId
-                        )
-                        self.status = try container.decodeIfPresent(
-                            Swift.String.self,
-                            forKey: .status
-                        )
-                        self.source = try container.decodeIfPresent(
-                            Swift.String.self,
-                            forKey: .source
-                        )
-                        self.startedAt = try container.decode(
-                            Swift.String.self,
-                            forKey: .startedAt
-                        )
-                        self.expiresAt = try container.decodeIfPresent(
-                            Swift.String.self,
-                            forKey: .expiresAt
-                        )
-                        try decoder.ensureNoAdditionalProperties(knownKeys: [
-                            "ecosystem_id",
-                            "tier_id",
-                            "status",
-                            "source",
-                            "started_at",
-                            "expires_at"
-                        ])
-                    }
-                }
-                /// - Remark: Generated from `#/paths/v1/billing/subscriptions/POST/requestBody/content/application\/json`.
-                case json(Operations.PostV1BillingSubscriptions.Input.Body.JsonPayload)
-            }
-            public var body: Operations.PostV1BillingSubscriptions.Input.Body
-            /// Creates a new `Input`.
-            ///
-            /// - Parameters:
-            ///   - headers:
-            ///   - body:
-            public init(
-                headers: Operations.PostV1BillingSubscriptions.Input.Headers = .init(),
-                body: Operations.PostV1BillingSubscriptions.Input.Body
-            ) {
-                self.headers = headers
-                self.body = body
-            }
-        }
-        @frozen public enum Output: Sendable, Hashable {
-            public struct Created: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/billing/subscriptions/POST/responses/201/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v1/billing/subscriptions/POST/responses/201/content/json`.
-                    public struct JsonPayload: Codable, Hashable, Sendable {
-                        /// - Remark: Generated from `#/paths/v1/billing/subscriptions/POST/responses/201/content/json/object`.
-                        @frozen public enum ObjectPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                            case billing_subscription = "billing.subscription"
-                        }
-                        /// - Remark: Generated from `#/paths/v1/billing/subscriptions/POST/responses/201/content/json/object`.
-                        public var object: Operations.PostV1BillingSubscriptions.Output.Created.Body.JsonPayload.ObjectPayload?
-                        /// - Remark: Generated from `#/paths/v1/billing/subscriptions/POST/responses/201/content/json/id`.
-                        public var id: Swift.String
-                        /// - Remark: Generated from `#/paths/v1/billing/subscriptions/POST/responses/201/content/json/user_id`.
-                        public var userId: Swift.String
-                        /// - Remark: Generated from `#/paths/v1/billing/subscriptions/POST/responses/201/content/json/ecosystem_id`.
-                        public var ecosystemId: Swift.String
-                        /// - Remark: Generated from `#/paths/v1/billing/subscriptions/POST/responses/201/content/json/tier_id`.
-                        public var tierId: Swift.String
-                        /// - Remark: Generated from `#/paths/v1/billing/subscriptions/POST/responses/201/content/json/status`.
-                        public var status: Swift.String
-                        /// - Remark: Generated from `#/paths/v1/billing/subscriptions/POST/responses/201/content/json/source`.
-                        public var source: Swift.String
-                        /// - Remark: Generated from `#/paths/v1/billing/subscriptions/POST/responses/201/content/json/started_at`.
-                        public var startedAt: Swift.String
-                        /// - Remark: Generated from `#/paths/v1/billing/subscriptions/POST/responses/201/content/json/expires_at`.
-                        public var expiresAt: Swift.String?
-                        /// Unix timestamp, in seconds.
-                        ///
-                        /// - Remark: Generated from `#/paths/v1/billing/subscriptions/POST/responses/201/content/json/created`.
-                        public var created: Swift.Int
-                        /// Unix timestamp, in seconds.
-                        ///
-                        /// - Remark: Generated from `#/paths/v1/billing/subscriptions/POST/responses/201/content/json/updated`.
-                        public var updated: Swift.Int
-                        /// Creates a new `JsonPayload`.
-                        ///
-                        /// - Parameters:
-                        ///   - object:
-                        ///   - id:
-                        ///   - userId:
-                        ///   - ecosystemId:
-                        ///   - tierId:
-                        ///   - status:
-                        ///   - source:
-                        ///   - startedAt:
-                        ///   - expiresAt:
-                        ///   - created: Unix timestamp, in seconds.
-                        ///   - updated: Unix timestamp, in seconds.
-                        public init(
-                            object: Operations.PostV1BillingSubscriptions.Output.Created.Body.JsonPayload.ObjectPayload? = nil,
-                            id: Swift.String,
-                            userId: Swift.String,
-                            ecosystemId: Swift.String,
-                            tierId: Swift.String,
-                            status: Swift.String,
-                            source: Swift.String,
-                            startedAt: Swift.String,
-                            expiresAt: Swift.String? = nil,
-                            created: Swift.Int,
-                            updated: Swift.Int
-                        ) {
-                            self.object = object
-                            self.id = id
-                            self.userId = userId
-                            self.ecosystemId = ecosystemId
-                            self.tierId = tierId
-                            self.status = status
-                            self.source = source
-                            self.startedAt = startedAt
-                            self.expiresAt = expiresAt
-                            self.created = created
-                            self.updated = updated
-                        }
-                        public enum CodingKeys: String, CodingKey {
-                            case object
-                            case id
-                            case userId = "user_id"
-                            case ecosystemId = "ecosystem_id"
-                            case tierId = "tier_id"
-                            case status
-                            case source
-                            case startedAt = "started_at"
-                            case expiresAt = "expires_at"
-                            case created
-                            case updated
-                        }
-                        public init(from decoder: any Swift.Decoder) throws {
-                            let container = try decoder.container(keyedBy: CodingKeys.self)
-                            self.object = try container.decodeIfPresent(
-                                Operations.PostV1BillingSubscriptions.Output.Created.Body.JsonPayload.ObjectPayload.self,
-                                forKey: .object
-                            )
-                            self.id = try container.decode(
-                                Swift.String.self,
-                                forKey: .id
-                            )
-                            self.userId = try container.decode(
-                                Swift.String.self,
-                                forKey: .userId
-                            )
-                            self.ecosystemId = try container.decode(
-                                Swift.String.self,
-                                forKey: .ecosystemId
-                            )
-                            self.tierId = try container.decode(
-                                Swift.String.self,
-                                forKey: .tierId
-                            )
-                            self.status = try container.decode(
-                                Swift.String.self,
-                                forKey: .status
-                            )
-                            self.source = try container.decode(
-                                Swift.String.self,
-                                forKey: .source
-                            )
-                            self.startedAt = try container.decode(
-                                Swift.String.self,
-                                forKey: .startedAt
-                            )
-                            self.expiresAt = try container.decodeIfPresent(
-                                Swift.String.self,
-                                forKey: .expiresAt
-                            )
-                            self.created = try container.decode(
-                                Swift.Int.self,
-                                forKey: .created
-                            )
-                            self.updated = try container.decode(
-                                Swift.Int.self,
-                                forKey: .updated
-                            )
-                            try decoder.ensureNoAdditionalProperties(knownKeys: [
-                                "object",
-                                "id",
-                                "user_id",
-                                "ecosystem_id",
-                                "tier_id",
-                                "status",
-                                "source",
-                                "started_at",
-                                "expires_at",
-                                "created",
-                                "updated"
-                            ])
-                        }
-                    }
-                    /// - Remark: Generated from `#/paths/v1/billing/subscriptions/POST/responses/201/content/application\/json`.
-                    case json(Operations.PostV1BillingSubscriptions.Output.Created.Body.JsonPayload)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Operations.PostV1BillingSubscriptions.Output.Created.Body.JsonPayload {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.PostV1BillingSubscriptions.Output.Created.Body
-                /// Creates a new `Created`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.PostV1BillingSubscriptions.Output.Created.Body) {
-                    self.body = body
-                }
-            }
-            /// subscriptions
-            ///
-            /// - Remark: Generated from `#/paths//v1/billing/subscriptions/post(postV1BillingSubscriptions)/responses/201`.
-            ///
-            /// HTTP response code: `201 created`.
-            case created(Operations.PostV1BillingSubscriptions.Output.Created)
-            /// The associated value of the enum case if `self` is `.created`.
-            ///
-            /// - Throws: An error if `self` is not `.created`.
-            /// - SeeAlso: `.created`.
-            public var created: Operations.PostV1BillingSubscriptions.Output.Created {
-                get throws {
-                    switch self {
-                    case let .created(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "created",
-                            response: self
-                        )
-                    }
-                }
-            }
-            public struct BadRequest: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/billing/subscriptions/POST/responses/400/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v1/billing/subscriptions/POST/responses/400/content/application\/json`.
-                    case json(Components.Schemas.StripeError)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.StripeError {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.PostV1BillingSubscriptions.Output.BadRequest.Body
-                /// Creates a new `BadRequest`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.PostV1BillingSubscriptions.Output.BadRequest.Body) {
-                    self.body = body
-                }
-            }
-            /// Error
-            ///
-            /// - Remark: Generated from `#/paths//v1/billing/subscriptions/post(postV1BillingSubscriptions)/responses/400`.
-            ///
-            /// HTTP response code: `400 badRequest`.
-            case badRequest(Operations.PostV1BillingSubscriptions.Output.BadRequest)
-            /// The associated value of the enum case if `self` is `.badRequest`.
-            ///
-            /// - Throws: An error if `self` is not `.badRequest`.
-            /// - SeeAlso: `.badRequest`.
-            public var badRequest: Operations.PostV1BillingSubscriptions.Output.BadRequest {
-                get throws {
-                    switch self {
-                    case let .badRequest(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "badRequest",
-                            response: self
-                        )
-                    }
-                }
-            }
-            public struct Unauthorized: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/billing/subscriptions/POST/responses/401/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v1/billing/subscriptions/POST/responses/401/content/application\/json`.
-                    case json(Components.Schemas.StripeError)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.StripeError {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.PostV1BillingSubscriptions.Output.Unauthorized.Body
-                /// Creates a new `Unauthorized`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.PostV1BillingSubscriptions.Output.Unauthorized.Body) {
-                    self.body = body
-                }
-            }
-            /// Error
-            ///
-            /// - Remark: Generated from `#/paths//v1/billing/subscriptions/post(postV1BillingSubscriptions)/responses/401`.
-            ///
-            /// HTTP response code: `401 unauthorized`.
-            case unauthorized(Operations.PostV1BillingSubscriptions.Output.Unauthorized)
-            /// The associated value of the enum case if `self` is `.unauthorized`.
-            ///
-            /// - Throws: An error if `self` is not `.unauthorized`.
-            /// - SeeAlso: `.unauthorized`.
-            public var unauthorized: Operations.PostV1BillingSubscriptions.Output.Unauthorized {
-                get throws {
-                    switch self {
-                    case let .unauthorized(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "unauthorized",
-                            response: self
-                        )
-                    }
-                }
-            }
-            /// Undocumented response.
-            ///
-            /// A response with a code that is not documented in the OpenAPI document.
-            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
-        }
-        @frozen public enum AcceptableContentType: AcceptableProtocol {
-            case json
-            case other(Swift.String)
-            public init?(rawValue: Swift.String) {
-                switch rawValue.lowercased() {
-                case "application/json":
-                    self = .json
-                default:
-                    self = .other(rawValue)
-                }
-            }
-            public var rawValue: Swift.String {
-                switch self {
-                case let .other(string):
-                    return string
-                case .json:
-                    return "application/json"
-                }
-            }
-            public static var allCases: [Self] {
-                [
-                    .json
-                ]
-            }
-        }
-    }
-    /// Get subscriptions by id
-    ///
-    /// Replaces GET /billing/subscriptions/{id}.
-    ///
-    /// - Remark: HTTP `GET /v1/billing/subscriptions/{id}`.
-    /// - Remark: Generated from `#/paths//v1/billing/subscriptions/{id}/get(getV1BillingSubscriptionsById)`.
-    public enum GetV1BillingSubscriptionsById {
-        public static let id: Swift.String = "getV1BillingSubscriptionsById"
-        public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/v1/billing/subscriptions/{id}/GET/path`.
-            public struct Path: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/billing/subscriptions/{id}/GET/path/id`.
-                public var id: Swift.String
-                /// Creates a new `Path`.
-                ///
-                /// - Parameters:
-                ///   - id:
-                public init(id: Swift.String) {
-                    self.id = id
-                }
-            }
-            public var path: Operations.GetV1BillingSubscriptionsById.Input.Path
-            /// - Remark: Generated from `#/paths/v1/billing/subscriptions/{id}/GET/query`.
-            public struct Query: Sendable, Hashable {
-                /// Related objects to return in full instead of as an id. Up to four levels, e.g. `ecosystem_id`; on a list, `data.<field>`.
-                ///
-                /// - Remark: Generated from `#/paths/v1/billing/subscriptions/{id}/GET/query/expand[]`.
-                public var expand_lbrack__rbrack_: [Swift.String]?
-                /// Creates a new `Query`.
-                ///
-                /// - Parameters:
-                ///   - expand_lbrack__rbrack_: Related objects to return in full instead of as an id. Up to four levels, e.g. `ecosystem_id`; on a list, `data.<field>`.
-                public init(expand_lbrack__rbrack_: [Swift.String]? = nil) {
-                    self.expand_lbrack__rbrack_ = expand_lbrack__rbrack_
-                }
-            }
-            public var query: Operations.GetV1BillingSubscriptionsById.Input.Query
-            /// - Remark: Generated from `#/paths/v1/billing/subscriptions/{id}/GET/header`.
-            public struct Headers: Sendable, Hashable {
-                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.GetV1BillingSubscriptionsById.AcceptableContentType>]
-                /// Creates a new `Headers`.
-                ///
-                /// - Parameters:
-                ///   - accept:
-                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.GetV1BillingSubscriptionsById.AcceptableContentType>] = .defaultValues()) {
-                    self.accept = accept
-                }
-            }
-            public var headers: Operations.GetV1BillingSubscriptionsById.Input.Headers
-            /// Creates a new `Input`.
-            ///
-            /// - Parameters:
-            ///   - path:
-            ///   - query:
-            ///   - headers:
-            public init(
-                path: Operations.GetV1BillingSubscriptionsById.Input.Path,
-                query: Operations.GetV1BillingSubscriptionsById.Input.Query = .init(),
-                headers: Operations.GetV1BillingSubscriptionsById.Input.Headers = .init()
-            ) {
-                self.path = path
-                self.query = query
-                self.headers = headers
-            }
-        }
-        @frozen public enum Output: Sendable, Hashable {
-            public struct Ok: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/billing/subscriptions/{id}/GET/responses/200/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v1/billing/subscriptions/{id}/GET/responses/200/content/json`.
-                    public struct JsonPayload: Codable, Hashable, Sendable {
-                        /// - Remark: Generated from `#/paths/v1/billing/subscriptions/{id}/GET/responses/200/content/json/object`.
-                        @frozen public enum ObjectPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                            case billing_subscription = "billing.subscription"
-                        }
-                        /// - Remark: Generated from `#/paths/v1/billing/subscriptions/{id}/GET/responses/200/content/json/object`.
-                        public var object: Operations.GetV1BillingSubscriptionsById.Output.Ok.Body.JsonPayload.ObjectPayload?
-                        /// - Remark: Generated from `#/paths/v1/billing/subscriptions/{id}/GET/responses/200/content/json/id`.
-                        public var id: Swift.String
-                        /// - Remark: Generated from `#/paths/v1/billing/subscriptions/{id}/GET/responses/200/content/json/user_id`.
-                        public var userId: Swift.String
-                        /// - Remark: Generated from `#/paths/v1/billing/subscriptions/{id}/GET/responses/200/content/json/ecosystem_id`.
-                        public var ecosystemId: Swift.String
-                        /// - Remark: Generated from `#/paths/v1/billing/subscriptions/{id}/GET/responses/200/content/json/tier_id`.
-                        public var tierId: Swift.String
-                        /// - Remark: Generated from `#/paths/v1/billing/subscriptions/{id}/GET/responses/200/content/json/status`.
-                        public var status: Swift.String
-                        /// - Remark: Generated from `#/paths/v1/billing/subscriptions/{id}/GET/responses/200/content/json/source`.
-                        public var source: Swift.String
-                        /// - Remark: Generated from `#/paths/v1/billing/subscriptions/{id}/GET/responses/200/content/json/started_at`.
-                        public var startedAt: Swift.String
-                        /// - Remark: Generated from `#/paths/v1/billing/subscriptions/{id}/GET/responses/200/content/json/expires_at`.
-                        public var expiresAt: Swift.String?
-                        /// Unix timestamp, in seconds.
-                        ///
-                        /// - Remark: Generated from `#/paths/v1/billing/subscriptions/{id}/GET/responses/200/content/json/created`.
-                        public var created: Swift.Int
-                        /// Unix timestamp, in seconds.
-                        ///
-                        /// - Remark: Generated from `#/paths/v1/billing/subscriptions/{id}/GET/responses/200/content/json/updated`.
-                        public var updated: Swift.Int
-                        /// Creates a new `JsonPayload`.
-                        ///
-                        /// - Parameters:
-                        ///   - object:
-                        ///   - id:
-                        ///   - userId:
-                        ///   - ecosystemId:
-                        ///   - tierId:
-                        ///   - status:
-                        ///   - source:
-                        ///   - startedAt:
-                        ///   - expiresAt:
-                        ///   - created: Unix timestamp, in seconds.
-                        ///   - updated: Unix timestamp, in seconds.
-                        public init(
-                            object: Operations.GetV1BillingSubscriptionsById.Output.Ok.Body.JsonPayload.ObjectPayload? = nil,
-                            id: Swift.String,
-                            userId: Swift.String,
-                            ecosystemId: Swift.String,
-                            tierId: Swift.String,
-                            status: Swift.String,
-                            source: Swift.String,
-                            startedAt: Swift.String,
-                            expiresAt: Swift.String? = nil,
-                            created: Swift.Int,
-                            updated: Swift.Int
-                        ) {
-                            self.object = object
-                            self.id = id
-                            self.userId = userId
-                            self.ecosystemId = ecosystemId
-                            self.tierId = tierId
-                            self.status = status
-                            self.source = source
-                            self.startedAt = startedAt
-                            self.expiresAt = expiresAt
-                            self.created = created
-                            self.updated = updated
-                        }
-                        public enum CodingKeys: String, CodingKey {
-                            case object
-                            case id
-                            case userId = "user_id"
-                            case ecosystemId = "ecosystem_id"
-                            case tierId = "tier_id"
-                            case status
-                            case source
-                            case startedAt = "started_at"
-                            case expiresAt = "expires_at"
-                            case created
-                            case updated
-                        }
-                        public init(from decoder: any Swift.Decoder) throws {
-                            let container = try decoder.container(keyedBy: CodingKeys.self)
-                            self.object = try container.decodeIfPresent(
-                                Operations.GetV1BillingSubscriptionsById.Output.Ok.Body.JsonPayload.ObjectPayload.self,
-                                forKey: .object
-                            )
-                            self.id = try container.decode(
-                                Swift.String.self,
-                                forKey: .id
-                            )
-                            self.userId = try container.decode(
-                                Swift.String.self,
-                                forKey: .userId
-                            )
-                            self.ecosystemId = try container.decode(
-                                Swift.String.self,
-                                forKey: .ecosystemId
-                            )
-                            self.tierId = try container.decode(
-                                Swift.String.self,
-                                forKey: .tierId
-                            )
-                            self.status = try container.decode(
-                                Swift.String.self,
-                                forKey: .status
-                            )
-                            self.source = try container.decode(
-                                Swift.String.self,
-                                forKey: .source
-                            )
-                            self.startedAt = try container.decode(
-                                Swift.String.self,
-                                forKey: .startedAt
-                            )
-                            self.expiresAt = try container.decodeIfPresent(
-                                Swift.String.self,
-                                forKey: .expiresAt
-                            )
-                            self.created = try container.decode(
-                                Swift.Int.self,
-                                forKey: .created
-                            )
-                            self.updated = try container.decode(
-                                Swift.Int.self,
-                                forKey: .updated
-                            )
-                            try decoder.ensureNoAdditionalProperties(knownKeys: [
-                                "object",
-                                "id",
-                                "user_id",
-                                "ecosystem_id",
-                                "tier_id",
-                                "status",
-                                "source",
-                                "started_at",
-                                "expires_at",
-                                "created",
-                                "updated"
-                            ])
-                        }
-                    }
-                    /// - Remark: Generated from `#/paths/v1/billing/subscriptions/{id}/GET/responses/200/content/application\/json`.
-                    case json(Operations.GetV1BillingSubscriptionsById.Output.Ok.Body.JsonPayload)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Operations.GetV1BillingSubscriptionsById.Output.Ok.Body.JsonPayload {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.GetV1BillingSubscriptionsById.Output.Ok.Body
-                /// Creates a new `Ok`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.GetV1BillingSubscriptionsById.Output.Ok.Body) {
-                    self.body = body
-                }
-            }
-            /// subscriptions
-            ///
-            /// - Remark: Generated from `#/paths//v1/billing/subscriptions/{id}/get(getV1BillingSubscriptionsById)/responses/200`.
-            ///
-            /// HTTP response code: `200 ok`.
-            case ok(Operations.GetV1BillingSubscriptionsById.Output.Ok)
-            /// The associated value of the enum case if `self` is `.ok`.
-            ///
-            /// - Throws: An error if `self` is not `.ok`.
-            /// - SeeAlso: `.ok`.
-            public var ok: Operations.GetV1BillingSubscriptionsById.Output.Ok {
-                get throws {
-                    switch self {
-                    case let .ok(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "ok",
-                            response: self
-                        )
-                    }
-                }
-            }
-            public struct Unauthorized: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/billing/subscriptions/{id}/GET/responses/401/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v1/billing/subscriptions/{id}/GET/responses/401/content/application\/json`.
-                    case json(Components.Schemas.StripeError)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.StripeError {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.GetV1BillingSubscriptionsById.Output.Unauthorized.Body
-                /// Creates a new `Unauthorized`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.GetV1BillingSubscriptionsById.Output.Unauthorized.Body) {
-                    self.body = body
-                }
-            }
-            /// Error
-            ///
-            /// - Remark: Generated from `#/paths//v1/billing/subscriptions/{id}/get(getV1BillingSubscriptionsById)/responses/401`.
-            ///
-            /// HTTP response code: `401 unauthorized`.
-            case unauthorized(Operations.GetV1BillingSubscriptionsById.Output.Unauthorized)
-            /// The associated value of the enum case if `self` is `.unauthorized`.
-            ///
-            /// - Throws: An error if `self` is not `.unauthorized`.
-            /// - SeeAlso: `.unauthorized`.
-            public var unauthorized: Operations.GetV1BillingSubscriptionsById.Output.Unauthorized {
-                get throws {
-                    switch self {
-                    case let .unauthorized(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "unauthorized",
-                            response: self
-                        )
-                    }
-                }
-            }
-            public struct NotFound: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/billing/subscriptions/{id}/GET/responses/404/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v1/billing/subscriptions/{id}/GET/responses/404/content/application\/json`.
-                    case json(Components.Schemas.StripeError)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.StripeError {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.GetV1BillingSubscriptionsById.Output.NotFound.Body
-                /// Creates a new `NotFound`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.GetV1BillingSubscriptionsById.Output.NotFound.Body) {
-                    self.body = body
-                }
-            }
-            /// Error
-            ///
-            /// - Remark: Generated from `#/paths//v1/billing/subscriptions/{id}/get(getV1BillingSubscriptionsById)/responses/404`.
-            ///
-            /// HTTP response code: `404 notFound`.
-            case notFound(Operations.GetV1BillingSubscriptionsById.Output.NotFound)
-            /// The associated value of the enum case if `self` is `.notFound`.
-            ///
-            /// - Throws: An error if `self` is not `.notFound`.
-            /// - SeeAlso: `.notFound`.
-            public var notFound: Operations.GetV1BillingSubscriptionsById.Output.NotFound {
-                get throws {
-                    switch self {
-                    case let .notFound(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "notFound",
-                            response: self
-                        )
-                    }
-                }
-            }
-            /// Undocumented response.
-            ///
-            /// A response with a code that is not documented in the OpenAPI document.
-            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
-        }
-        @frozen public enum AcceptableContentType: AcceptableProtocol {
-            case json
-            case other(Swift.String)
-            public init?(rawValue: Swift.String) {
-                switch rawValue.lowercased() {
-                case "application/json":
-                    self = .json
-                default:
-                    self = .other(rawValue)
-                }
-            }
-            public var rawValue: Swift.String {
-                switch self {
-                case let .other(string):
-                    return string
-                case .json:
-                    return "application/json"
-                }
-            }
-            public static var allCases: [Self] {
-                [
-                    .json
-                ]
-            }
-        }
-    }
-    /// Update subscriptions
-    ///
-    /// Replaces PUT /billing/subscriptions/{id}.
-    ///
-    /// - Remark: HTTP `POST /v1/billing/subscriptions/{id}`.
-    /// - Remark: Generated from `#/paths//v1/billing/subscriptions/{id}/post(postV1BillingSubscriptionsById)`.
-    public enum PostV1BillingSubscriptionsById {
-        public static let id: Swift.String = "postV1BillingSubscriptionsById"
-        public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/v1/billing/subscriptions/{id}/POST/path`.
-            public struct Path: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/billing/subscriptions/{id}/POST/path/id`.
-                public var id: Swift.String
-                /// Creates a new `Path`.
-                ///
-                /// - Parameters:
-                ///   - id:
-                public init(id: Swift.String) {
-                    self.id = id
-                }
-            }
-            public var path: Operations.PostV1BillingSubscriptionsById.Input.Path
-            /// - Remark: Generated from `#/paths/v1/billing/subscriptions/{id}/POST/header`.
-            public struct Headers: Sendable, Hashable {
-                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.PostV1BillingSubscriptionsById.AcceptableContentType>]
-                /// Creates a new `Headers`.
-                ///
-                /// - Parameters:
-                ///   - accept:
-                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.PostV1BillingSubscriptionsById.AcceptableContentType>] = .defaultValues()) {
-                    self.accept = accept
-                }
-            }
-            public var headers: Operations.PostV1BillingSubscriptionsById.Input.Headers
-            /// - Remark: Generated from `#/paths/v1/billing/subscriptions/{id}/POST/requestBody`.
-            @frozen public enum Body: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/billing/subscriptions/{id}/POST/requestBody/json`.
-                public struct JsonPayload: Codable, Hashable, Sendable {
-                    /// - Remark: Generated from `#/paths/v1/billing/subscriptions/{id}/POST/requestBody/json/ecosystem_id`.
-                    public var ecosystemId: Swift.String?
-                    /// - Remark: Generated from `#/paths/v1/billing/subscriptions/{id}/POST/requestBody/json/tier_id`.
-                    public var tierId: Swift.String?
-                    /// - Remark: Generated from `#/paths/v1/billing/subscriptions/{id}/POST/requestBody/json/status`.
-                    public var status: Swift.String?
-                    /// - Remark: Generated from `#/paths/v1/billing/subscriptions/{id}/POST/requestBody/json/source`.
-                    public var source: Swift.String?
-                    /// - Remark: Generated from `#/paths/v1/billing/subscriptions/{id}/POST/requestBody/json/started_at`.
-                    public var startedAt: Swift.String?
-                    /// - Remark: Generated from `#/paths/v1/billing/subscriptions/{id}/POST/requestBody/json/expires_at`.
-                    public var expiresAt: Swift.String?
-                    /// Creates a new `JsonPayload`.
-                    ///
-                    /// - Parameters:
-                    ///   - ecosystemId:
-                    ///   - tierId:
-                    ///   - status:
-                    ///   - source:
-                    ///   - startedAt:
-                    ///   - expiresAt:
-                    public init(
-                        ecosystemId: Swift.String? = nil,
-                        tierId: Swift.String? = nil,
-                        status: Swift.String? = nil,
-                        source: Swift.String? = nil,
-                        startedAt: Swift.String? = nil,
-                        expiresAt: Swift.String? = nil
-                    ) {
-                        self.ecosystemId = ecosystemId
-                        self.tierId = tierId
-                        self.status = status
-                        self.source = source
-                        self.startedAt = startedAt
-                        self.expiresAt = expiresAt
-                    }
-                    public enum CodingKeys: String, CodingKey {
-                        case ecosystemId = "ecosystem_id"
-                        case tierId = "tier_id"
-                        case status
-                        case source
-                        case startedAt = "started_at"
-                        case expiresAt = "expires_at"
-                    }
-                    public init(from decoder: any Swift.Decoder) throws {
-                        let container = try decoder.container(keyedBy: CodingKeys.self)
-                        self.ecosystemId = try container.decodeIfPresent(
-                            Swift.String.self,
-                            forKey: .ecosystemId
-                        )
-                        self.tierId = try container.decodeIfPresent(
-                            Swift.String.self,
-                            forKey: .tierId
-                        )
-                        self.status = try container.decodeIfPresent(
-                            Swift.String.self,
-                            forKey: .status
-                        )
-                        self.source = try container.decodeIfPresent(
-                            Swift.String.self,
-                            forKey: .source
-                        )
-                        self.startedAt = try container.decodeIfPresent(
-                            Swift.String.self,
-                            forKey: .startedAt
-                        )
-                        self.expiresAt = try container.decodeIfPresent(
-                            Swift.String.self,
-                            forKey: .expiresAt
-                        )
-                        try decoder.ensureNoAdditionalProperties(knownKeys: [
-                            "ecosystem_id",
-                            "tier_id",
-                            "status",
-                            "source",
-                            "started_at",
-                            "expires_at"
-                        ])
-                    }
-                }
-                /// - Remark: Generated from `#/paths/v1/billing/subscriptions/{id}/POST/requestBody/content/application\/json`.
-                case json(Operations.PostV1BillingSubscriptionsById.Input.Body.JsonPayload)
-            }
-            public var body: Operations.PostV1BillingSubscriptionsById.Input.Body
-            /// Creates a new `Input`.
-            ///
-            /// - Parameters:
-            ///   - path:
-            ///   - headers:
-            ///   - body:
-            public init(
-                path: Operations.PostV1BillingSubscriptionsById.Input.Path,
-                headers: Operations.PostV1BillingSubscriptionsById.Input.Headers = .init(),
-                body: Operations.PostV1BillingSubscriptionsById.Input.Body
-            ) {
-                self.path = path
-                self.headers = headers
-                self.body = body
-            }
-        }
-        @frozen public enum Output: Sendable, Hashable {
-            public struct Ok: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/billing/subscriptions/{id}/POST/responses/200/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v1/billing/subscriptions/{id}/POST/responses/200/content/json`.
-                    public struct JsonPayload: Codable, Hashable, Sendable {
-                        /// - Remark: Generated from `#/paths/v1/billing/subscriptions/{id}/POST/responses/200/content/json/object`.
-                        @frozen public enum ObjectPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                            case billing_subscription = "billing.subscription"
-                        }
-                        /// - Remark: Generated from `#/paths/v1/billing/subscriptions/{id}/POST/responses/200/content/json/object`.
-                        public var object: Operations.PostV1BillingSubscriptionsById.Output.Ok.Body.JsonPayload.ObjectPayload?
-                        /// - Remark: Generated from `#/paths/v1/billing/subscriptions/{id}/POST/responses/200/content/json/id`.
-                        public var id: Swift.String
-                        /// - Remark: Generated from `#/paths/v1/billing/subscriptions/{id}/POST/responses/200/content/json/user_id`.
-                        public var userId: Swift.String
-                        /// - Remark: Generated from `#/paths/v1/billing/subscriptions/{id}/POST/responses/200/content/json/ecosystem_id`.
-                        public var ecosystemId: Swift.String
-                        /// - Remark: Generated from `#/paths/v1/billing/subscriptions/{id}/POST/responses/200/content/json/tier_id`.
-                        public var tierId: Swift.String
-                        /// - Remark: Generated from `#/paths/v1/billing/subscriptions/{id}/POST/responses/200/content/json/status`.
-                        public var status: Swift.String
-                        /// - Remark: Generated from `#/paths/v1/billing/subscriptions/{id}/POST/responses/200/content/json/source`.
-                        public var source: Swift.String
-                        /// - Remark: Generated from `#/paths/v1/billing/subscriptions/{id}/POST/responses/200/content/json/started_at`.
-                        public var startedAt: Swift.String
-                        /// - Remark: Generated from `#/paths/v1/billing/subscriptions/{id}/POST/responses/200/content/json/expires_at`.
-                        public var expiresAt: Swift.String?
-                        /// Unix timestamp, in seconds.
-                        ///
-                        /// - Remark: Generated from `#/paths/v1/billing/subscriptions/{id}/POST/responses/200/content/json/created`.
-                        public var created: Swift.Int
-                        /// Unix timestamp, in seconds.
-                        ///
-                        /// - Remark: Generated from `#/paths/v1/billing/subscriptions/{id}/POST/responses/200/content/json/updated`.
-                        public var updated: Swift.Int
-                        /// Creates a new `JsonPayload`.
-                        ///
-                        /// - Parameters:
-                        ///   - object:
-                        ///   - id:
-                        ///   - userId:
-                        ///   - ecosystemId:
-                        ///   - tierId:
-                        ///   - status:
-                        ///   - source:
-                        ///   - startedAt:
-                        ///   - expiresAt:
-                        ///   - created: Unix timestamp, in seconds.
-                        ///   - updated: Unix timestamp, in seconds.
-                        public init(
-                            object: Operations.PostV1BillingSubscriptionsById.Output.Ok.Body.JsonPayload.ObjectPayload? = nil,
-                            id: Swift.String,
-                            userId: Swift.String,
-                            ecosystemId: Swift.String,
-                            tierId: Swift.String,
-                            status: Swift.String,
-                            source: Swift.String,
-                            startedAt: Swift.String,
-                            expiresAt: Swift.String? = nil,
-                            created: Swift.Int,
-                            updated: Swift.Int
-                        ) {
-                            self.object = object
-                            self.id = id
-                            self.userId = userId
-                            self.ecosystemId = ecosystemId
-                            self.tierId = tierId
-                            self.status = status
-                            self.source = source
-                            self.startedAt = startedAt
-                            self.expiresAt = expiresAt
-                            self.created = created
-                            self.updated = updated
-                        }
-                        public enum CodingKeys: String, CodingKey {
-                            case object
-                            case id
-                            case userId = "user_id"
-                            case ecosystemId = "ecosystem_id"
-                            case tierId = "tier_id"
-                            case status
-                            case source
-                            case startedAt = "started_at"
-                            case expiresAt = "expires_at"
-                            case created
-                            case updated
-                        }
-                        public init(from decoder: any Swift.Decoder) throws {
-                            let container = try decoder.container(keyedBy: CodingKeys.self)
-                            self.object = try container.decodeIfPresent(
-                                Operations.PostV1BillingSubscriptionsById.Output.Ok.Body.JsonPayload.ObjectPayload.self,
-                                forKey: .object
-                            )
-                            self.id = try container.decode(
-                                Swift.String.self,
-                                forKey: .id
-                            )
-                            self.userId = try container.decode(
-                                Swift.String.self,
-                                forKey: .userId
-                            )
-                            self.ecosystemId = try container.decode(
-                                Swift.String.self,
-                                forKey: .ecosystemId
-                            )
-                            self.tierId = try container.decode(
-                                Swift.String.self,
-                                forKey: .tierId
-                            )
-                            self.status = try container.decode(
-                                Swift.String.self,
-                                forKey: .status
-                            )
-                            self.source = try container.decode(
-                                Swift.String.self,
-                                forKey: .source
-                            )
-                            self.startedAt = try container.decode(
-                                Swift.String.self,
-                                forKey: .startedAt
-                            )
-                            self.expiresAt = try container.decodeIfPresent(
-                                Swift.String.self,
-                                forKey: .expiresAt
-                            )
-                            self.created = try container.decode(
-                                Swift.Int.self,
-                                forKey: .created
-                            )
-                            self.updated = try container.decode(
-                                Swift.Int.self,
-                                forKey: .updated
-                            )
-                            try decoder.ensureNoAdditionalProperties(knownKeys: [
-                                "object",
-                                "id",
-                                "user_id",
-                                "ecosystem_id",
-                                "tier_id",
-                                "status",
-                                "source",
-                                "started_at",
-                                "expires_at",
-                                "created",
-                                "updated"
-                            ])
-                        }
-                    }
-                    /// - Remark: Generated from `#/paths/v1/billing/subscriptions/{id}/POST/responses/200/content/application\/json`.
-                    case json(Operations.PostV1BillingSubscriptionsById.Output.Ok.Body.JsonPayload)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Operations.PostV1BillingSubscriptionsById.Output.Ok.Body.JsonPayload {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.PostV1BillingSubscriptionsById.Output.Ok.Body
-                /// Creates a new `Ok`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.PostV1BillingSubscriptionsById.Output.Ok.Body) {
-                    self.body = body
-                }
-            }
-            /// subscriptions
-            ///
-            /// - Remark: Generated from `#/paths//v1/billing/subscriptions/{id}/post(postV1BillingSubscriptionsById)/responses/200`.
-            ///
-            /// HTTP response code: `200 ok`.
-            case ok(Operations.PostV1BillingSubscriptionsById.Output.Ok)
-            /// The associated value of the enum case if `self` is `.ok`.
-            ///
-            /// - Throws: An error if `self` is not `.ok`.
-            /// - SeeAlso: `.ok`.
-            public var ok: Operations.PostV1BillingSubscriptionsById.Output.Ok {
-                get throws {
-                    switch self {
-                    case let .ok(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "ok",
-                            response: self
-                        )
-                    }
-                }
-            }
-            public struct BadRequest: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/billing/subscriptions/{id}/POST/responses/400/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v1/billing/subscriptions/{id}/POST/responses/400/content/application\/json`.
-                    case json(Components.Schemas.StripeError)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.StripeError {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.PostV1BillingSubscriptionsById.Output.BadRequest.Body
-                /// Creates a new `BadRequest`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.PostV1BillingSubscriptionsById.Output.BadRequest.Body) {
-                    self.body = body
-                }
-            }
-            /// Error
-            ///
-            /// - Remark: Generated from `#/paths//v1/billing/subscriptions/{id}/post(postV1BillingSubscriptionsById)/responses/400`.
-            ///
-            /// HTTP response code: `400 badRequest`.
-            case badRequest(Operations.PostV1BillingSubscriptionsById.Output.BadRequest)
-            /// The associated value of the enum case if `self` is `.badRequest`.
-            ///
-            /// - Throws: An error if `self` is not `.badRequest`.
-            /// - SeeAlso: `.badRequest`.
-            public var badRequest: Operations.PostV1BillingSubscriptionsById.Output.BadRequest {
-                get throws {
-                    switch self {
-                    case let .badRequest(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "badRequest",
-                            response: self
-                        )
-                    }
-                }
-            }
-            public struct Unauthorized: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/billing/subscriptions/{id}/POST/responses/401/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v1/billing/subscriptions/{id}/POST/responses/401/content/application\/json`.
-                    case json(Components.Schemas.StripeError)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.StripeError {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.PostV1BillingSubscriptionsById.Output.Unauthorized.Body
-                /// Creates a new `Unauthorized`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.PostV1BillingSubscriptionsById.Output.Unauthorized.Body) {
-                    self.body = body
-                }
-            }
-            /// Error
-            ///
-            /// - Remark: Generated from `#/paths//v1/billing/subscriptions/{id}/post(postV1BillingSubscriptionsById)/responses/401`.
-            ///
-            /// HTTP response code: `401 unauthorized`.
-            case unauthorized(Operations.PostV1BillingSubscriptionsById.Output.Unauthorized)
-            /// The associated value of the enum case if `self` is `.unauthorized`.
-            ///
-            /// - Throws: An error if `self` is not `.unauthorized`.
-            /// - SeeAlso: `.unauthorized`.
-            public var unauthorized: Operations.PostV1BillingSubscriptionsById.Output.Unauthorized {
-                get throws {
-                    switch self {
-                    case let .unauthorized(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "unauthorized",
-                            response: self
-                        )
-                    }
-                }
-            }
-            public struct NotFound: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/billing/subscriptions/{id}/POST/responses/404/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v1/billing/subscriptions/{id}/POST/responses/404/content/application\/json`.
-                    case json(Components.Schemas.StripeError)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.StripeError {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.PostV1BillingSubscriptionsById.Output.NotFound.Body
-                /// Creates a new `NotFound`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.PostV1BillingSubscriptionsById.Output.NotFound.Body) {
-                    self.body = body
-                }
-            }
-            /// Error
-            ///
-            /// - Remark: Generated from `#/paths//v1/billing/subscriptions/{id}/post(postV1BillingSubscriptionsById)/responses/404`.
-            ///
-            /// HTTP response code: `404 notFound`.
-            case notFound(Operations.PostV1BillingSubscriptionsById.Output.NotFound)
-            /// The associated value of the enum case if `self` is `.notFound`.
-            ///
-            /// - Throws: An error if `self` is not `.notFound`.
-            /// - SeeAlso: `.notFound`.
-            public var notFound: Operations.PostV1BillingSubscriptionsById.Output.NotFound {
-                get throws {
-                    switch self {
-                    case let .notFound(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "notFound",
-                            response: self
-                        )
-                    }
-                }
-            }
-            /// Undocumented response.
-            ///
-            /// A response with a code that is not documented in the OpenAPI document.
-            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
-        }
-        @frozen public enum AcceptableContentType: AcceptableProtocol {
-            case json
-            case other(Swift.String)
-            public init?(rawValue: Swift.String) {
-                switch rawValue.lowercased() {
-                case "application/json":
-                    self = .json
-                default:
-                    self = .other(rawValue)
-                }
-            }
-            public var rawValue: Swift.String {
-                switch self {
-                case let .other(string):
-                    return string
-                case .json:
-                    return "application/json"
-                }
-            }
-            public static var allCases: [Self] {
-                [
-                    .json
-                ]
-            }
-        }
-    }
-    /// Delete subscriptions
-    ///
-    /// Replaces DELETE /billing/subscriptions/{id}.
-    ///
-    /// - Remark: HTTP `DELETE /v1/billing/subscriptions/{id}`.
-    /// - Remark: Generated from `#/paths//v1/billing/subscriptions/{id}/delete(deleteV1BillingSubscriptionsById)`.
-    public enum DeleteV1BillingSubscriptionsById {
-        public static let id: Swift.String = "deleteV1BillingSubscriptionsById"
-        public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/v1/billing/subscriptions/{id}/DELETE/path`.
-            public struct Path: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/billing/subscriptions/{id}/DELETE/path/id`.
-                public var id: Swift.String
-                /// Creates a new `Path`.
-                ///
-                /// - Parameters:
-                ///   - id:
-                public init(id: Swift.String) {
-                    self.id = id
-                }
-            }
-            public var path: Operations.DeleteV1BillingSubscriptionsById.Input.Path
-            /// - Remark: Generated from `#/paths/v1/billing/subscriptions/{id}/DELETE/header`.
-            public struct Headers: Sendable, Hashable {
-                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.DeleteV1BillingSubscriptionsById.AcceptableContentType>]
-                /// Creates a new `Headers`.
-                ///
-                /// - Parameters:
-                ///   - accept:
-                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.DeleteV1BillingSubscriptionsById.AcceptableContentType>] = .defaultValues()) {
-                    self.accept = accept
-                }
-            }
-            public var headers: Operations.DeleteV1BillingSubscriptionsById.Input.Headers
-            /// Creates a new `Input`.
-            ///
-            /// - Parameters:
-            ///   - path:
-            ///   - headers:
-            public init(
-                path: Operations.DeleteV1BillingSubscriptionsById.Input.Path,
-                headers: Operations.DeleteV1BillingSubscriptionsById.Input.Headers = .init()
-            ) {
-                self.path = path
-                self.headers = headers
-            }
-        }
-        @frozen public enum Output: Sendable, Hashable {
-            public struct Ok: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/billing/subscriptions/{id}/DELETE/responses/200/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v1/billing/subscriptions/{id}/DELETE/responses/200/content/application\/json`.
-                    case json(Components.Schemas.Deleted)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.Deleted {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.DeleteV1BillingSubscriptionsById.Output.Ok.Body
-                /// Creates a new `Ok`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.DeleteV1BillingSubscriptionsById.Output.Ok.Body) {
-                    self.body = body
-                }
-            }
-            /// Deleted
-            ///
-            /// - Remark: Generated from `#/paths//v1/billing/subscriptions/{id}/delete(deleteV1BillingSubscriptionsById)/responses/200`.
-            ///
-            /// HTTP response code: `200 ok`.
-            case ok(Operations.DeleteV1BillingSubscriptionsById.Output.Ok)
-            /// The associated value of the enum case if `self` is `.ok`.
-            ///
-            /// - Throws: An error if `self` is not `.ok`.
-            /// - SeeAlso: `.ok`.
-            public var ok: Operations.DeleteV1BillingSubscriptionsById.Output.Ok {
-                get throws {
-                    switch self {
-                    case let .ok(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "ok",
-                            response: self
-                        )
-                    }
-                }
-            }
-            public struct Unauthorized: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/billing/subscriptions/{id}/DELETE/responses/401/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v1/billing/subscriptions/{id}/DELETE/responses/401/content/application\/json`.
-                    case json(Components.Schemas.StripeError)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.StripeError {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.DeleteV1BillingSubscriptionsById.Output.Unauthorized.Body
-                /// Creates a new `Unauthorized`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.DeleteV1BillingSubscriptionsById.Output.Unauthorized.Body) {
-                    self.body = body
-                }
-            }
-            /// Error
-            ///
-            /// - Remark: Generated from `#/paths//v1/billing/subscriptions/{id}/delete(deleteV1BillingSubscriptionsById)/responses/401`.
-            ///
-            /// HTTP response code: `401 unauthorized`.
-            case unauthorized(Operations.DeleteV1BillingSubscriptionsById.Output.Unauthorized)
-            /// The associated value of the enum case if `self` is `.unauthorized`.
-            ///
-            /// - Throws: An error if `self` is not `.unauthorized`.
-            /// - SeeAlso: `.unauthorized`.
-            public var unauthorized: Operations.DeleteV1BillingSubscriptionsById.Output.Unauthorized {
-                get throws {
-                    switch self {
-                    case let .unauthorized(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "unauthorized",
-                            response: self
-                        )
-                    }
-                }
-            }
-            public struct NotFound: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/billing/subscriptions/{id}/DELETE/responses/404/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v1/billing/subscriptions/{id}/DELETE/responses/404/content/application\/json`.
-                    case json(Components.Schemas.StripeError)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.StripeError {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.DeleteV1BillingSubscriptionsById.Output.NotFound.Body
-                /// Creates a new `NotFound`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.DeleteV1BillingSubscriptionsById.Output.NotFound.Body) {
-                    self.body = body
-                }
-            }
-            /// Error
-            ///
-            /// - Remark: Generated from `#/paths//v1/billing/subscriptions/{id}/delete(deleteV1BillingSubscriptionsById)/responses/404`.
-            ///
-            /// HTTP response code: `404 notFound`.
-            case notFound(Operations.DeleteV1BillingSubscriptionsById.Output.NotFound)
-            /// The associated value of the enum case if `self` is `.notFound`.
-            ///
-            /// - Throws: An error if `self` is not `.notFound`.
-            /// - SeeAlso: `.notFound`.
-            public var notFound: Operations.DeleteV1BillingSubscriptionsById.Output.NotFound {
-                get throws {
-                    switch self {
-                    case let .notFound(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "notFound",
-                            response: self
-                        )
-                    }
-                }
-            }
-            /// Undocumented response.
-            ///
-            /// A response with a code that is not documented in the OpenAPI document.
-            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
-        }
-        @frozen public enum AcceptableContentType: AcceptableProtocol {
-            case json
-            case other(Swift.String)
-            public init?(rawValue: Swift.String) {
-                switch rawValue.lowercased() {
-                case "application/json":
-                    self = .json
-                default:
-                    self = .other(rawValue)
-                }
-            }
-            public var rawValue: Swift.String {
-                switch self {
-                case let .other(string):
-                    return string
-                case .json:
-                    return "application/json"
-                }
-            }
-            public static var allCases: [Self] {
-                [
-                    .json
-                ]
-            }
-        }
-    }
-    /// List tier_entitlements
-    ///
-    /// Replaces GET /billing/tier-entitlements.
-    ///
-    /// - Remark: HTTP `GET /v1/billing/tier_entitlements`.
-    /// - Remark: Generated from `#/paths//v1/billing/tier_entitlements/get(getV1BillingTierEntitlements)`.
-    public enum GetV1BillingTierEntitlements {
-        public static let id: Swift.String = "getV1BillingTierEntitlements"
-        public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/v1/billing/tier_entitlements/GET/query`.
-            public struct Query: Sendable, Hashable {
-                /// Page size, 1–100 (default 10).
-                ///
-                /// - Remark: Generated from `#/paths/v1/billing/tier_entitlements/GET/query/limit`.
-                public var limit: Swift.Int?
-                /// Cursor: an object id; returns the page after it.
-                ///
-                /// - Remark: Generated from `#/paths/v1/billing/tier_entitlements/GET/query/starting_after`.
-                public var startingAfter: Swift.String?
-                /// Cursor: an object id; returns the page before it.
-                ///
-                /// - Remark: Generated from `#/paths/v1/billing/tier_entitlements/GET/query/ending_before`.
-                public var endingBefore: Swift.String?
-                /// Related objects to return in full instead of as an id. Up to four levels, e.g. `ecosystem_id`; on a list, `data.<field>`.
-                ///
-                /// - Remark: Generated from `#/paths/v1/billing/tier_entitlements/GET/query/expand[]`.
-                public var expand_lbrack__rbrack_: [Swift.String]?
-                /// Creates a new `Query`.
-                ///
-                /// - Parameters:
-                ///   - limit: Page size, 1–100 (default 10).
-                ///   - startingAfter: Cursor: an object id; returns the page after it.
-                ///   - endingBefore: Cursor: an object id; returns the page before it.
-                ///   - expand_lbrack__rbrack_: Related objects to return in full instead of as an id. Up to four levels, e.g. `ecosystem_id`; on a list, `data.<field>`.
-                public init(
-                    limit: Swift.Int? = nil,
-                    startingAfter: Swift.String? = nil,
-                    endingBefore: Swift.String? = nil,
-                    expand_lbrack__rbrack_: [Swift.String]? = nil
-                ) {
-                    self.limit = limit
-                    self.startingAfter = startingAfter
-                    self.endingBefore = endingBefore
-                    self.expand_lbrack__rbrack_ = expand_lbrack__rbrack_
-                }
-            }
-            public var query: Operations.GetV1BillingTierEntitlements.Input.Query
-            /// - Remark: Generated from `#/paths/v1/billing/tier_entitlements/GET/header`.
-            public struct Headers: Sendable, Hashable {
-                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.GetV1BillingTierEntitlements.AcceptableContentType>]
-                /// Creates a new `Headers`.
-                ///
-                /// - Parameters:
-                ///   - accept:
-                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.GetV1BillingTierEntitlements.AcceptableContentType>] = .defaultValues()) {
-                    self.accept = accept
-                }
-            }
-            public var headers: Operations.GetV1BillingTierEntitlements.Input.Headers
-            /// Creates a new `Input`.
-            ///
-            /// - Parameters:
-            ///   - query:
-            ///   - headers:
-            public init(
-                query: Operations.GetV1BillingTierEntitlements.Input.Query = .init(),
-                headers: Operations.GetV1BillingTierEntitlements.Input.Headers = .init()
-            ) {
-                self.query = query
-                self.headers = headers
-            }
-        }
-        @frozen public enum Output: Sendable, Hashable {
-            public struct Ok: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/billing/tier_entitlements/GET/responses/200/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v1/billing/tier_entitlements/GET/responses/200/content/json`.
-                    public struct JsonPayload: Codable, Hashable, Sendable {
-                        /// - Remark: Generated from `#/paths/v1/billing/tier_entitlements/GET/responses/200/content/json/object`.
-                        @frozen public enum ObjectPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                            case list = "list"
-                        }
-                        /// - Remark: Generated from `#/paths/v1/billing/tier_entitlements/GET/responses/200/content/json/object`.
-                        public var object: Operations.GetV1BillingTierEntitlements.Output.Ok.Body.JsonPayload.ObjectPayload
-                        /// - Remark: Generated from `#/paths/v1/billing/tier_entitlements/GET/responses/200/content/json/DataPayload`.
-                        public struct DataPayloadPayload: Codable, Hashable, Sendable {
-                            /// - Remark: Generated from `#/paths/v1/billing/tier_entitlements/GET/responses/200/content/json/DataPayload/object`.
-                            @frozen public enum ObjectPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                                case billing_tierEntitlement = "billing.tier_entitlement"
-                            }
-                            /// - Remark: Generated from `#/paths/v1/billing/tier_entitlements/GET/responses/200/content/json/DataPayload/object`.
-                            public var object: Operations.GetV1BillingTierEntitlements.Output.Ok.Body.JsonPayload.DataPayloadPayload.ObjectPayload?
-                            /// - Remark: Generated from `#/paths/v1/billing/tier_entitlements/GET/responses/200/content/json/DataPayload/id`.
-                            public var id: Swift.String
-                            /// - Remark: Generated from `#/paths/v1/billing/tier_entitlements/GET/responses/200/content/json/DataPayload/tier_id`.
-                            public var tierId: Swift.String
-                            /// - Remark: Generated from `#/paths/v1/billing/tier_entitlements/GET/responses/200/content/json/DataPayload/entitlement_key`.
-                            public var entitlementKey: Swift.String
-                            /// - Remark: Generated from `#/paths/v1/billing/tier_entitlements/GET/responses/200/content/json/DataPayload/value_type`.
-                            public var valueType: Swift.String
-                            /// - Remark: Generated from `#/paths/v1/billing/tier_entitlements/GET/responses/200/content/json/DataPayload/value`.
-                            public var value: Swift.String
-                            /// Creates a new `DataPayloadPayload`.
-                            ///
-                            /// - Parameters:
-                            ///   - object:
-                            ///   - id:
-                            ///   - tierId:
-                            ///   - entitlementKey:
-                            ///   - valueType:
-                            ///   - value:
-                            public init(
-                                object: Operations.GetV1BillingTierEntitlements.Output.Ok.Body.JsonPayload.DataPayloadPayload.ObjectPayload? = nil,
-                                id: Swift.String,
-                                tierId: Swift.String,
-                                entitlementKey: Swift.String,
-                                valueType: Swift.String,
-                                value: Swift.String
-                            ) {
-                                self.object = object
-                                self.id = id
-                                self.tierId = tierId
-                                self.entitlementKey = entitlementKey
-                                self.valueType = valueType
-                                self.value = value
-                            }
-                            public enum CodingKeys: String, CodingKey {
-                                case object
-                                case id
-                                case tierId = "tier_id"
-                                case entitlementKey = "entitlement_key"
-                                case valueType = "value_type"
-                                case value
-                            }
-                            public init(from decoder: any Swift.Decoder) throws {
-                                let container = try decoder.container(keyedBy: CodingKeys.self)
-                                self.object = try container.decodeIfPresent(
-                                    Operations.GetV1BillingTierEntitlements.Output.Ok.Body.JsonPayload.DataPayloadPayload.ObjectPayload.self,
-                                    forKey: .object
-                                )
-                                self.id = try container.decode(
-                                    Swift.String.self,
-                                    forKey: .id
-                                )
-                                self.tierId = try container.decode(
-                                    Swift.String.self,
-                                    forKey: .tierId
-                                )
-                                self.entitlementKey = try container.decode(
-                                    Swift.String.self,
-                                    forKey: .entitlementKey
-                                )
-                                self.valueType = try container.decode(
-                                    Swift.String.self,
-                                    forKey: .valueType
-                                )
-                                self.value = try container.decode(
-                                    Swift.String.self,
-                                    forKey: .value
-                                )
-                                try decoder.ensureNoAdditionalProperties(knownKeys: [
-                                    "object",
-                                    "id",
-                                    "tier_id",
-                                    "entitlement_key",
-                                    "value_type",
-                                    "value"
-                                ])
-                            }
-                        }
-                        /// - Remark: Generated from `#/paths/v1/billing/tier_entitlements/GET/responses/200/content/json/data`.
-                        public typealias DataPayload = [Operations.GetV1BillingTierEntitlements.Output.Ok.Body.JsonPayload.DataPayloadPayload]
-                        /// - Remark: Generated from `#/paths/v1/billing/tier_entitlements/GET/responses/200/content/json/data`.
-                        public var data: Operations.GetV1BillingTierEntitlements.Output.Ok.Body.JsonPayload.DataPayload
-                        /// - Remark: Generated from `#/paths/v1/billing/tier_entitlements/GET/responses/200/content/json/has_more`.
-                        public var hasMore: Swift.Bool
-                        /// - Remark: Generated from `#/paths/v1/billing/tier_entitlements/GET/responses/200/content/json/url`.
-                        public var url: Swift.String
-                        /// Creates a new `JsonPayload`.
-                        ///
-                        /// - Parameters:
-                        ///   - object:
-                        ///   - data:
-                        ///   - hasMore:
-                        ///   - url:
-                        public init(
-                            object: Operations.GetV1BillingTierEntitlements.Output.Ok.Body.JsonPayload.ObjectPayload,
-                            data: Operations.GetV1BillingTierEntitlements.Output.Ok.Body.JsonPayload.DataPayload,
-                            hasMore: Swift.Bool,
-                            url: Swift.String
-                        ) {
-                            self.object = object
-                            self.data = data
-                            self.hasMore = hasMore
-                            self.url = url
-                        }
-                        public enum CodingKeys: String, CodingKey {
-                            case object
-                            case data
-                            case hasMore = "has_more"
-                            case url
-                        }
-                    }
-                    /// - Remark: Generated from `#/paths/v1/billing/tier_entitlements/GET/responses/200/content/application\/json`.
-                    case json(Operations.GetV1BillingTierEntitlements.Output.Ok.Body.JsonPayload)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Operations.GetV1BillingTierEntitlements.Output.Ok.Body.JsonPayload {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.GetV1BillingTierEntitlements.Output.Ok.Body
-                /// Creates a new `Ok`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.GetV1BillingTierEntitlements.Output.Ok.Body) {
-                    self.body = body
-                }
-            }
-            /// List
-            ///
-            /// - Remark: Generated from `#/paths//v1/billing/tier_entitlements/get(getV1BillingTierEntitlements)/responses/200`.
-            ///
-            /// HTTP response code: `200 ok`.
-            case ok(Operations.GetV1BillingTierEntitlements.Output.Ok)
-            /// The associated value of the enum case if `self` is `.ok`.
-            ///
-            /// - Throws: An error if `self` is not `.ok`.
-            /// - SeeAlso: `.ok`.
-            public var ok: Operations.GetV1BillingTierEntitlements.Output.Ok {
-                get throws {
-                    switch self {
-                    case let .ok(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "ok",
-                            response: self
-                        )
-                    }
-                }
-            }
-            public struct Unauthorized: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/billing/tier_entitlements/GET/responses/401/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v1/billing/tier_entitlements/GET/responses/401/content/application\/json`.
-                    case json(Components.Schemas.StripeError)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.StripeError {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.GetV1BillingTierEntitlements.Output.Unauthorized.Body
-                /// Creates a new `Unauthorized`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.GetV1BillingTierEntitlements.Output.Unauthorized.Body) {
-                    self.body = body
-                }
-            }
-            /// Error
-            ///
-            /// - Remark: Generated from `#/paths//v1/billing/tier_entitlements/get(getV1BillingTierEntitlements)/responses/401`.
-            ///
-            /// HTTP response code: `401 unauthorized`.
-            case unauthorized(Operations.GetV1BillingTierEntitlements.Output.Unauthorized)
-            /// The associated value of the enum case if `self` is `.unauthorized`.
-            ///
-            /// - Throws: An error if `self` is not `.unauthorized`.
-            /// - SeeAlso: `.unauthorized`.
-            public var unauthorized: Operations.GetV1BillingTierEntitlements.Output.Unauthorized {
-                get throws {
-                    switch self {
-                    case let .unauthorized(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "unauthorized",
-                            response: self
-                        )
-                    }
-                }
-            }
-            /// Undocumented response.
-            ///
-            /// A response with a code that is not documented in the OpenAPI document.
-            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
-        }
-        @frozen public enum AcceptableContentType: AcceptableProtocol {
-            case json
-            case other(Swift.String)
-            public init?(rawValue: Swift.String) {
-                switch rawValue.lowercased() {
-                case "application/json":
-                    self = .json
-                default:
-                    self = .other(rawValue)
-                }
-            }
-            public var rawValue: Swift.String {
-                switch self {
-                case let .other(string):
-                    return string
-                case .json:
-                    return "application/json"
-                }
-            }
-            public static var allCases: [Self] {
-                [
-                    .json
-                ]
-            }
-        }
-    }
-    /// Create tier_entitlements
-    ///
-    /// Replaces POST /billing/tier-entitlements.
-    ///
-    /// - Remark: HTTP `POST /v1/billing/tier_entitlements`.
-    /// - Remark: Generated from `#/paths//v1/billing/tier_entitlements/post(postV1BillingTierEntitlements)`.
-    public enum PostV1BillingTierEntitlements {
-        public static let id: Swift.String = "postV1BillingTierEntitlements"
-        public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/v1/billing/tier_entitlements/POST/header`.
-            public struct Headers: Sendable, Hashable {
-                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.PostV1BillingTierEntitlements.AcceptableContentType>]
-                /// Creates a new `Headers`.
-                ///
-                /// - Parameters:
-                ///   - accept:
-                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.PostV1BillingTierEntitlements.AcceptableContentType>] = .defaultValues()) {
-                    self.accept = accept
-                }
-            }
-            public var headers: Operations.PostV1BillingTierEntitlements.Input.Headers
-            /// - Remark: Generated from `#/paths/v1/billing/tier_entitlements/POST/requestBody`.
-            @frozen public enum Body: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/billing/tier_entitlements/POST/requestBody/json`.
-                public struct JsonPayload: Codable, Hashable, Sendable {
-                    /// - Remark: Generated from `#/paths/v1/billing/tier_entitlements/POST/requestBody/json/tier_id`.
-                    public var tierId: Swift.String
-                    /// - Remark: Generated from `#/paths/v1/billing/tier_entitlements/POST/requestBody/json/entitlement_key`.
-                    public var entitlementKey: Swift.String
-                    /// - Remark: Generated from `#/paths/v1/billing/tier_entitlements/POST/requestBody/json/value_type`.
-                    public var valueType: Swift.String
-                    /// - Remark: Generated from `#/paths/v1/billing/tier_entitlements/POST/requestBody/json/value`.
-                    public var value: Swift.String
-                    /// Creates a new `JsonPayload`.
-                    ///
-                    /// - Parameters:
-                    ///   - tierId:
-                    ///   - entitlementKey:
-                    ///   - valueType:
-                    ///   - value:
-                    public init(
-                        tierId: Swift.String,
-                        entitlementKey: Swift.String,
-                        valueType: Swift.String,
-                        value: Swift.String
-                    ) {
-                        self.tierId = tierId
-                        self.entitlementKey = entitlementKey
-                        self.valueType = valueType
-                        self.value = value
-                    }
-                    public enum CodingKeys: String, CodingKey {
-                        case tierId = "tier_id"
-                        case entitlementKey = "entitlement_key"
-                        case valueType = "value_type"
-                        case value
-                    }
-                    public init(from decoder: any Swift.Decoder) throws {
-                        let container = try decoder.container(keyedBy: CodingKeys.self)
-                        self.tierId = try container.decode(
-                            Swift.String.self,
-                            forKey: .tierId
-                        )
-                        self.entitlementKey = try container.decode(
-                            Swift.String.self,
-                            forKey: .entitlementKey
-                        )
-                        self.valueType = try container.decode(
-                            Swift.String.self,
-                            forKey: .valueType
-                        )
-                        self.value = try container.decode(
-                            Swift.String.self,
-                            forKey: .value
-                        )
-                        try decoder.ensureNoAdditionalProperties(knownKeys: [
-                            "tier_id",
-                            "entitlement_key",
-                            "value_type",
-                            "value"
-                        ])
-                    }
-                }
-                /// - Remark: Generated from `#/paths/v1/billing/tier_entitlements/POST/requestBody/content/application\/json`.
-                case json(Operations.PostV1BillingTierEntitlements.Input.Body.JsonPayload)
-            }
-            public var body: Operations.PostV1BillingTierEntitlements.Input.Body
-            /// Creates a new `Input`.
-            ///
-            /// - Parameters:
-            ///   - headers:
-            ///   - body:
-            public init(
-                headers: Operations.PostV1BillingTierEntitlements.Input.Headers = .init(),
-                body: Operations.PostV1BillingTierEntitlements.Input.Body
-            ) {
-                self.headers = headers
-                self.body = body
-            }
-        }
-        @frozen public enum Output: Sendable, Hashable {
-            public struct Created: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/billing/tier_entitlements/POST/responses/201/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v1/billing/tier_entitlements/POST/responses/201/content/json`.
-                    public struct JsonPayload: Codable, Hashable, Sendable {
-                        /// - Remark: Generated from `#/paths/v1/billing/tier_entitlements/POST/responses/201/content/json/object`.
-                        @frozen public enum ObjectPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                            case billing_tierEntitlement = "billing.tier_entitlement"
-                        }
-                        /// - Remark: Generated from `#/paths/v1/billing/tier_entitlements/POST/responses/201/content/json/object`.
-                        public var object: Operations.PostV1BillingTierEntitlements.Output.Created.Body.JsonPayload.ObjectPayload?
-                        /// - Remark: Generated from `#/paths/v1/billing/tier_entitlements/POST/responses/201/content/json/id`.
-                        public var id: Swift.String
-                        /// - Remark: Generated from `#/paths/v1/billing/tier_entitlements/POST/responses/201/content/json/tier_id`.
-                        public var tierId: Swift.String
-                        /// - Remark: Generated from `#/paths/v1/billing/tier_entitlements/POST/responses/201/content/json/entitlement_key`.
-                        public var entitlementKey: Swift.String
-                        /// - Remark: Generated from `#/paths/v1/billing/tier_entitlements/POST/responses/201/content/json/value_type`.
-                        public var valueType: Swift.String
-                        /// - Remark: Generated from `#/paths/v1/billing/tier_entitlements/POST/responses/201/content/json/value`.
-                        public var value: Swift.String
-                        /// Creates a new `JsonPayload`.
-                        ///
-                        /// - Parameters:
-                        ///   - object:
-                        ///   - id:
-                        ///   - tierId:
-                        ///   - entitlementKey:
-                        ///   - valueType:
-                        ///   - value:
-                        public init(
-                            object: Operations.PostV1BillingTierEntitlements.Output.Created.Body.JsonPayload.ObjectPayload? = nil,
-                            id: Swift.String,
-                            tierId: Swift.String,
-                            entitlementKey: Swift.String,
-                            valueType: Swift.String,
-                            value: Swift.String
-                        ) {
-                            self.object = object
-                            self.id = id
-                            self.tierId = tierId
-                            self.entitlementKey = entitlementKey
-                            self.valueType = valueType
-                            self.value = value
-                        }
-                        public enum CodingKeys: String, CodingKey {
-                            case object
-                            case id
-                            case tierId = "tier_id"
-                            case entitlementKey = "entitlement_key"
-                            case valueType = "value_type"
-                            case value
-                        }
-                        public init(from decoder: any Swift.Decoder) throws {
-                            let container = try decoder.container(keyedBy: CodingKeys.self)
-                            self.object = try container.decodeIfPresent(
-                                Operations.PostV1BillingTierEntitlements.Output.Created.Body.JsonPayload.ObjectPayload.self,
-                                forKey: .object
-                            )
-                            self.id = try container.decode(
-                                Swift.String.self,
-                                forKey: .id
-                            )
-                            self.tierId = try container.decode(
-                                Swift.String.self,
-                                forKey: .tierId
-                            )
-                            self.entitlementKey = try container.decode(
-                                Swift.String.self,
-                                forKey: .entitlementKey
-                            )
-                            self.valueType = try container.decode(
-                                Swift.String.self,
-                                forKey: .valueType
-                            )
-                            self.value = try container.decode(
-                                Swift.String.self,
-                                forKey: .value
-                            )
-                            try decoder.ensureNoAdditionalProperties(knownKeys: [
-                                "object",
-                                "id",
-                                "tier_id",
-                                "entitlement_key",
-                                "value_type",
-                                "value"
-                            ])
-                        }
-                    }
-                    /// - Remark: Generated from `#/paths/v1/billing/tier_entitlements/POST/responses/201/content/application\/json`.
-                    case json(Operations.PostV1BillingTierEntitlements.Output.Created.Body.JsonPayload)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Operations.PostV1BillingTierEntitlements.Output.Created.Body.JsonPayload {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.PostV1BillingTierEntitlements.Output.Created.Body
-                /// Creates a new `Created`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.PostV1BillingTierEntitlements.Output.Created.Body) {
-                    self.body = body
-                }
-            }
-            /// tier_entitlements
-            ///
-            /// - Remark: Generated from `#/paths//v1/billing/tier_entitlements/post(postV1BillingTierEntitlements)/responses/201`.
-            ///
-            /// HTTP response code: `201 created`.
-            case created(Operations.PostV1BillingTierEntitlements.Output.Created)
-            /// The associated value of the enum case if `self` is `.created`.
-            ///
-            /// - Throws: An error if `self` is not `.created`.
-            /// - SeeAlso: `.created`.
-            public var created: Operations.PostV1BillingTierEntitlements.Output.Created {
-                get throws {
-                    switch self {
-                    case let .created(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "created",
-                            response: self
-                        )
-                    }
-                }
-            }
-            public struct BadRequest: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/billing/tier_entitlements/POST/responses/400/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v1/billing/tier_entitlements/POST/responses/400/content/application\/json`.
-                    case json(Components.Schemas.StripeError)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.StripeError {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.PostV1BillingTierEntitlements.Output.BadRequest.Body
-                /// Creates a new `BadRequest`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.PostV1BillingTierEntitlements.Output.BadRequest.Body) {
-                    self.body = body
-                }
-            }
-            /// Error
-            ///
-            /// - Remark: Generated from `#/paths//v1/billing/tier_entitlements/post(postV1BillingTierEntitlements)/responses/400`.
-            ///
-            /// HTTP response code: `400 badRequest`.
-            case badRequest(Operations.PostV1BillingTierEntitlements.Output.BadRequest)
-            /// The associated value of the enum case if `self` is `.badRequest`.
-            ///
-            /// - Throws: An error if `self` is not `.badRequest`.
-            /// - SeeAlso: `.badRequest`.
-            public var badRequest: Operations.PostV1BillingTierEntitlements.Output.BadRequest {
-                get throws {
-                    switch self {
-                    case let .badRequest(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "badRequest",
-                            response: self
-                        )
-                    }
-                }
-            }
-            public struct Unauthorized: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/billing/tier_entitlements/POST/responses/401/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v1/billing/tier_entitlements/POST/responses/401/content/application\/json`.
-                    case json(Components.Schemas.StripeError)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.StripeError {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.PostV1BillingTierEntitlements.Output.Unauthorized.Body
-                /// Creates a new `Unauthorized`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.PostV1BillingTierEntitlements.Output.Unauthorized.Body) {
-                    self.body = body
-                }
-            }
-            /// Error
-            ///
-            /// - Remark: Generated from `#/paths//v1/billing/tier_entitlements/post(postV1BillingTierEntitlements)/responses/401`.
-            ///
-            /// HTTP response code: `401 unauthorized`.
-            case unauthorized(Operations.PostV1BillingTierEntitlements.Output.Unauthorized)
-            /// The associated value of the enum case if `self` is `.unauthorized`.
-            ///
-            /// - Throws: An error if `self` is not `.unauthorized`.
-            /// - SeeAlso: `.unauthorized`.
-            public var unauthorized: Operations.PostV1BillingTierEntitlements.Output.Unauthorized {
-                get throws {
-                    switch self {
-                    case let .unauthorized(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "unauthorized",
-                            response: self
-                        )
-                    }
-                }
-            }
-            /// Undocumented response.
-            ///
-            /// A response with a code that is not documented in the OpenAPI document.
-            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
-        }
-        @frozen public enum AcceptableContentType: AcceptableProtocol {
-            case json
-            case other(Swift.String)
-            public init?(rawValue: Swift.String) {
-                switch rawValue.lowercased() {
-                case "application/json":
-                    self = .json
-                default:
-                    self = .other(rawValue)
-                }
-            }
-            public var rawValue: Swift.String {
-                switch self {
-                case let .other(string):
-                    return string
-                case .json:
-                    return "application/json"
-                }
-            }
-            public static var allCases: [Self] {
-                [
-                    .json
-                ]
-            }
-        }
-    }
-    /// Get tier_entitlements by id
-    ///
-    /// Replaces GET /billing/tier-entitlements/{id}.
-    ///
-    /// - Remark: HTTP `GET /v1/billing/tier_entitlements/{id}`.
-    /// - Remark: Generated from `#/paths//v1/billing/tier_entitlements/{id}/get(getV1BillingTierEntitlementsById)`.
-    public enum GetV1BillingTierEntitlementsById {
-        public static let id: Swift.String = "getV1BillingTierEntitlementsById"
-        public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/v1/billing/tier_entitlements/{id}/GET/path`.
-            public struct Path: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/billing/tier_entitlements/{id}/GET/path/id`.
-                public var id: Swift.String
-                /// Creates a new `Path`.
-                ///
-                /// - Parameters:
-                ///   - id:
-                public init(id: Swift.String) {
-                    self.id = id
-                }
-            }
-            public var path: Operations.GetV1BillingTierEntitlementsById.Input.Path
-            /// - Remark: Generated from `#/paths/v1/billing/tier_entitlements/{id}/GET/query`.
-            public struct Query: Sendable, Hashable {
-                /// Related objects to return in full instead of as an id. Up to four levels, e.g. `ecosystem_id`; on a list, `data.<field>`.
-                ///
-                /// - Remark: Generated from `#/paths/v1/billing/tier_entitlements/{id}/GET/query/expand[]`.
-                public var expand_lbrack__rbrack_: [Swift.String]?
-                /// Creates a new `Query`.
-                ///
-                /// - Parameters:
-                ///   - expand_lbrack__rbrack_: Related objects to return in full instead of as an id. Up to four levels, e.g. `ecosystem_id`; on a list, `data.<field>`.
-                public init(expand_lbrack__rbrack_: [Swift.String]? = nil) {
-                    self.expand_lbrack__rbrack_ = expand_lbrack__rbrack_
-                }
-            }
-            public var query: Operations.GetV1BillingTierEntitlementsById.Input.Query
-            /// - Remark: Generated from `#/paths/v1/billing/tier_entitlements/{id}/GET/header`.
-            public struct Headers: Sendable, Hashable {
-                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.GetV1BillingTierEntitlementsById.AcceptableContentType>]
-                /// Creates a new `Headers`.
-                ///
-                /// - Parameters:
-                ///   - accept:
-                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.GetV1BillingTierEntitlementsById.AcceptableContentType>] = .defaultValues()) {
-                    self.accept = accept
-                }
-            }
-            public var headers: Operations.GetV1BillingTierEntitlementsById.Input.Headers
-            /// Creates a new `Input`.
-            ///
-            /// - Parameters:
-            ///   - path:
-            ///   - query:
-            ///   - headers:
-            public init(
-                path: Operations.GetV1BillingTierEntitlementsById.Input.Path,
-                query: Operations.GetV1BillingTierEntitlementsById.Input.Query = .init(),
-                headers: Operations.GetV1BillingTierEntitlementsById.Input.Headers = .init()
-            ) {
-                self.path = path
-                self.query = query
-                self.headers = headers
-            }
-        }
-        @frozen public enum Output: Sendable, Hashable {
-            public struct Ok: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/billing/tier_entitlements/{id}/GET/responses/200/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v1/billing/tier_entitlements/{id}/GET/responses/200/content/json`.
-                    public struct JsonPayload: Codable, Hashable, Sendable {
-                        /// - Remark: Generated from `#/paths/v1/billing/tier_entitlements/{id}/GET/responses/200/content/json/object`.
-                        @frozen public enum ObjectPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                            case billing_tierEntitlement = "billing.tier_entitlement"
-                        }
-                        /// - Remark: Generated from `#/paths/v1/billing/tier_entitlements/{id}/GET/responses/200/content/json/object`.
-                        public var object: Operations.GetV1BillingTierEntitlementsById.Output.Ok.Body.JsonPayload.ObjectPayload?
-                        /// - Remark: Generated from `#/paths/v1/billing/tier_entitlements/{id}/GET/responses/200/content/json/id`.
-                        public var id: Swift.String
-                        /// - Remark: Generated from `#/paths/v1/billing/tier_entitlements/{id}/GET/responses/200/content/json/tier_id`.
-                        public var tierId: Swift.String
-                        /// - Remark: Generated from `#/paths/v1/billing/tier_entitlements/{id}/GET/responses/200/content/json/entitlement_key`.
-                        public var entitlementKey: Swift.String
-                        /// - Remark: Generated from `#/paths/v1/billing/tier_entitlements/{id}/GET/responses/200/content/json/value_type`.
-                        public var valueType: Swift.String
-                        /// - Remark: Generated from `#/paths/v1/billing/tier_entitlements/{id}/GET/responses/200/content/json/value`.
-                        public var value: Swift.String
-                        /// Creates a new `JsonPayload`.
-                        ///
-                        /// - Parameters:
-                        ///   - object:
-                        ///   - id:
-                        ///   - tierId:
-                        ///   - entitlementKey:
-                        ///   - valueType:
-                        ///   - value:
-                        public init(
-                            object: Operations.GetV1BillingTierEntitlementsById.Output.Ok.Body.JsonPayload.ObjectPayload? = nil,
-                            id: Swift.String,
-                            tierId: Swift.String,
-                            entitlementKey: Swift.String,
-                            valueType: Swift.String,
-                            value: Swift.String
-                        ) {
-                            self.object = object
-                            self.id = id
-                            self.tierId = tierId
-                            self.entitlementKey = entitlementKey
-                            self.valueType = valueType
-                            self.value = value
-                        }
-                        public enum CodingKeys: String, CodingKey {
-                            case object
-                            case id
-                            case tierId = "tier_id"
-                            case entitlementKey = "entitlement_key"
-                            case valueType = "value_type"
-                            case value
-                        }
-                        public init(from decoder: any Swift.Decoder) throws {
-                            let container = try decoder.container(keyedBy: CodingKeys.self)
-                            self.object = try container.decodeIfPresent(
-                                Operations.GetV1BillingTierEntitlementsById.Output.Ok.Body.JsonPayload.ObjectPayload.self,
-                                forKey: .object
-                            )
-                            self.id = try container.decode(
-                                Swift.String.self,
-                                forKey: .id
-                            )
-                            self.tierId = try container.decode(
-                                Swift.String.self,
-                                forKey: .tierId
-                            )
-                            self.entitlementKey = try container.decode(
-                                Swift.String.self,
-                                forKey: .entitlementKey
-                            )
-                            self.valueType = try container.decode(
-                                Swift.String.self,
-                                forKey: .valueType
-                            )
-                            self.value = try container.decode(
-                                Swift.String.self,
-                                forKey: .value
-                            )
-                            try decoder.ensureNoAdditionalProperties(knownKeys: [
-                                "object",
-                                "id",
-                                "tier_id",
-                                "entitlement_key",
-                                "value_type",
-                                "value"
-                            ])
-                        }
-                    }
-                    /// - Remark: Generated from `#/paths/v1/billing/tier_entitlements/{id}/GET/responses/200/content/application\/json`.
-                    case json(Operations.GetV1BillingTierEntitlementsById.Output.Ok.Body.JsonPayload)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Operations.GetV1BillingTierEntitlementsById.Output.Ok.Body.JsonPayload {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.GetV1BillingTierEntitlementsById.Output.Ok.Body
-                /// Creates a new `Ok`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.GetV1BillingTierEntitlementsById.Output.Ok.Body) {
-                    self.body = body
-                }
-            }
-            /// tier_entitlements
-            ///
-            /// - Remark: Generated from `#/paths//v1/billing/tier_entitlements/{id}/get(getV1BillingTierEntitlementsById)/responses/200`.
-            ///
-            /// HTTP response code: `200 ok`.
-            case ok(Operations.GetV1BillingTierEntitlementsById.Output.Ok)
-            /// The associated value of the enum case if `self` is `.ok`.
-            ///
-            /// - Throws: An error if `self` is not `.ok`.
-            /// - SeeAlso: `.ok`.
-            public var ok: Operations.GetV1BillingTierEntitlementsById.Output.Ok {
-                get throws {
-                    switch self {
-                    case let .ok(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "ok",
-                            response: self
-                        )
-                    }
-                }
-            }
-            public struct Unauthorized: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/billing/tier_entitlements/{id}/GET/responses/401/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v1/billing/tier_entitlements/{id}/GET/responses/401/content/application\/json`.
-                    case json(Components.Schemas.StripeError)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.StripeError {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.GetV1BillingTierEntitlementsById.Output.Unauthorized.Body
-                /// Creates a new `Unauthorized`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.GetV1BillingTierEntitlementsById.Output.Unauthorized.Body) {
-                    self.body = body
-                }
-            }
-            /// Error
-            ///
-            /// - Remark: Generated from `#/paths//v1/billing/tier_entitlements/{id}/get(getV1BillingTierEntitlementsById)/responses/401`.
-            ///
-            /// HTTP response code: `401 unauthorized`.
-            case unauthorized(Operations.GetV1BillingTierEntitlementsById.Output.Unauthorized)
-            /// The associated value of the enum case if `self` is `.unauthorized`.
-            ///
-            /// - Throws: An error if `self` is not `.unauthorized`.
-            /// - SeeAlso: `.unauthorized`.
-            public var unauthorized: Operations.GetV1BillingTierEntitlementsById.Output.Unauthorized {
-                get throws {
-                    switch self {
-                    case let .unauthorized(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "unauthorized",
-                            response: self
-                        )
-                    }
-                }
-            }
-            public struct NotFound: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/billing/tier_entitlements/{id}/GET/responses/404/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v1/billing/tier_entitlements/{id}/GET/responses/404/content/application\/json`.
-                    case json(Components.Schemas.StripeError)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.StripeError {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.GetV1BillingTierEntitlementsById.Output.NotFound.Body
-                /// Creates a new `NotFound`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.GetV1BillingTierEntitlementsById.Output.NotFound.Body) {
-                    self.body = body
-                }
-            }
-            /// Error
-            ///
-            /// - Remark: Generated from `#/paths//v1/billing/tier_entitlements/{id}/get(getV1BillingTierEntitlementsById)/responses/404`.
-            ///
-            /// HTTP response code: `404 notFound`.
-            case notFound(Operations.GetV1BillingTierEntitlementsById.Output.NotFound)
-            /// The associated value of the enum case if `self` is `.notFound`.
-            ///
-            /// - Throws: An error if `self` is not `.notFound`.
-            /// - SeeAlso: `.notFound`.
-            public var notFound: Operations.GetV1BillingTierEntitlementsById.Output.NotFound {
-                get throws {
-                    switch self {
-                    case let .notFound(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "notFound",
-                            response: self
-                        )
-                    }
-                }
-            }
-            /// Undocumented response.
-            ///
-            /// A response with a code that is not documented in the OpenAPI document.
-            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
-        }
-        @frozen public enum AcceptableContentType: AcceptableProtocol {
-            case json
-            case other(Swift.String)
-            public init?(rawValue: Swift.String) {
-                switch rawValue.lowercased() {
-                case "application/json":
-                    self = .json
-                default:
-                    self = .other(rawValue)
-                }
-            }
-            public var rawValue: Swift.String {
-                switch self {
-                case let .other(string):
-                    return string
-                case .json:
-                    return "application/json"
-                }
-            }
-            public static var allCases: [Self] {
-                [
-                    .json
-                ]
-            }
-        }
-    }
-    /// Update tier_entitlements
-    ///
-    /// Replaces PUT /billing/tier-entitlements/{id}.
-    ///
-    /// - Remark: HTTP `POST /v1/billing/tier_entitlements/{id}`.
-    /// - Remark: Generated from `#/paths//v1/billing/tier_entitlements/{id}/post(postV1BillingTierEntitlementsById)`.
-    public enum PostV1BillingTierEntitlementsById {
-        public static let id: Swift.String = "postV1BillingTierEntitlementsById"
-        public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/v1/billing/tier_entitlements/{id}/POST/path`.
-            public struct Path: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/billing/tier_entitlements/{id}/POST/path/id`.
-                public var id: Swift.String
-                /// Creates a new `Path`.
-                ///
-                /// - Parameters:
-                ///   - id:
-                public init(id: Swift.String) {
-                    self.id = id
-                }
-            }
-            public var path: Operations.PostV1BillingTierEntitlementsById.Input.Path
-            /// - Remark: Generated from `#/paths/v1/billing/tier_entitlements/{id}/POST/header`.
-            public struct Headers: Sendable, Hashable {
-                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.PostV1BillingTierEntitlementsById.AcceptableContentType>]
-                /// Creates a new `Headers`.
-                ///
-                /// - Parameters:
-                ///   - accept:
-                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.PostV1BillingTierEntitlementsById.AcceptableContentType>] = .defaultValues()) {
-                    self.accept = accept
-                }
-            }
-            public var headers: Operations.PostV1BillingTierEntitlementsById.Input.Headers
-            /// - Remark: Generated from `#/paths/v1/billing/tier_entitlements/{id}/POST/requestBody`.
-            @frozen public enum Body: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/billing/tier_entitlements/{id}/POST/requestBody/json`.
-                public struct JsonPayload: Codable, Hashable, Sendable {
-                    /// - Remark: Generated from `#/paths/v1/billing/tier_entitlements/{id}/POST/requestBody/json/tier_id`.
-                    public var tierId: Swift.String?
-                    /// - Remark: Generated from `#/paths/v1/billing/tier_entitlements/{id}/POST/requestBody/json/entitlement_key`.
-                    public var entitlementKey: Swift.String?
-                    /// - Remark: Generated from `#/paths/v1/billing/tier_entitlements/{id}/POST/requestBody/json/value_type`.
-                    public var valueType: Swift.String?
-                    /// - Remark: Generated from `#/paths/v1/billing/tier_entitlements/{id}/POST/requestBody/json/value`.
-                    public var value: Swift.String?
-                    /// Creates a new `JsonPayload`.
-                    ///
-                    /// - Parameters:
-                    ///   - tierId:
-                    ///   - entitlementKey:
-                    ///   - valueType:
-                    ///   - value:
-                    public init(
-                        tierId: Swift.String? = nil,
-                        entitlementKey: Swift.String? = nil,
-                        valueType: Swift.String? = nil,
-                        value: Swift.String? = nil
-                    ) {
-                        self.tierId = tierId
-                        self.entitlementKey = entitlementKey
-                        self.valueType = valueType
-                        self.value = value
-                    }
-                    public enum CodingKeys: String, CodingKey {
-                        case tierId = "tier_id"
-                        case entitlementKey = "entitlement_key"
-                        case valueType = "value_type"
-                        case value
-                    }
-                    public init(from decoder: any Swift.Decoder) throws {
-                        let container = try decoder.container(keyedBy: CodingKeys.self)
-                        self.tierId = try container.decodeIfPresent(
-                            Swift.String.self,
-                            forKey: .tierId
-                        )
-                        self.entitlementKey = try container.decodeIfPresent(
-                            Swift.String.self,
-                            forKey: .entitlementKey
-                        )
-                        self.valueType = try container.decodeIfPresent(
-                            Swift.String.self,
-                            forKey: .valueType
-                        )
-                        self.value = try container.decodeIfPresent(
-                            Swift.String.self,
-                            forKey: .value
-                        )
-                        try decoder.ensureNoAdditionalProperties(knownKeys: [
-                            "tier_id",
-                            "entitlement_key",
-                            "value_type",
-                            "value"
-                        ])
-                    }
-                }
-                /// - Remark: Generated from `#/paths/v1/billing/tier_entitlements/{id}/POST/requestBody/content/application\/json`.
-                case json(Operations.PostV1BillingTierEntitlementsById.Input.Body.JsonPayload)
-            }
-            public var body: Operations.PostV1BillingTierEntitlementsById.Input.Body
-            /// Creates a new `Input`.
-            ///
-            /// - Parameters:
-            ///   - path:
-            ///   - headers:
-            ///   - body:
-            public init(
-                path: Operations.PostV1BillingTierEntitlementsById.Input.Path,
-                headers: Operations.PostV1BillingTierEntitlementsById.Input.Headers = .init(),
-                body: Operations.PostV1BillingTierEntitlementsById.Input.Body
-            ) {
-                self.path = path
-                self.headers = headers
-                self.body = body
-            }
-        }
-        @frozen public enum Output: Sendable, Hashable {
-            public struct Ok: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/billing/tier_entitlements/{id}/POST/responses/200/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v1/billing/tier_entitlements/{id}/POST/responses/200/content/json`.
-                    public struct JsonPayload: Codable, Hashable, Sendable {
-                        /// - Remark: Generated from `#/paths/v1/billing/tier_entitlements/{id}/POST/responses/200/content/json/object`.
-                        @frozen public enum ObjectPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                            case billing_tierEntitlement = "billing.tier_entitlement"
-                        }
-                        /// - Remark: Generated from `#/paths/v1/billing/tier_entitlements/{id}/POST/responses/200/content/json/object`.
-                        public var object: Operations.PostV1BillingTierEntitlementsById.Output.Ok.Body.JsonPayload.ObjectPayload?
-                        /// - Remark: Generated from `#/paths/v1/billing/tier_entitlements/{id}/POST/responses/200/content/json/id`.
-                        public var id: Swift.String
-                        /// - Remark: Generated from `#/paths/v1/billing/tier_entitlements/{id}/POST/responses/200/content/json/tier_id`.
-                        public var tierId: Swift.String
-                        /// - Remark: Generated from `#/paths/v1/billing/tier_entitlements/{id}/POST/responses/200/content/json/entitlement_key`.
-                        public var entitlementKey: Swift.String
-                        /// - Remark: Generated from `#/paths/v1/billing/tier_entitlements/{id}/POST/responses/200/content/json/value_type`.
-                        public var valueType: Swift.String
-                        /// - Remark: Generated from `#/paths/v1/billing/tier_entitlements/{id}/POST/responses/200/content/json/value`.
-                        public var value: Swift.String
-                        /// Creates a new `JsonPayload`.
-                        ///
-                        /// - Parameters:
-                        ///   - object:
-                        ///   - id:
-                        ///   - tierId:
-                        ///   - entitlementKey:
-                        ///   - valueType:
-                        ///   - value:
-                        public init(
-                            object: Operations.PostV1BillingTierEntitlementsById.Output.Ok.Body.JsonPayload.ObjectPayload? = nil,
-                            id: Swift.String,
-                            tierId: Swift.String,
-                            entitlementKey: Swift.String,
-                            valueType: Swift.String,
-                            value: Swift.String
-                        ) {
-                            self.object = object
-                            self.id = id
-                            self.tierId = tierId
-                            self.entitlementKey = entitlementKey
-                            self.valueType = valueType
-                            self.value = value
-                        }
-                        public enum CodingKeys: String, CodingKey {
-                            case object
-                            case id
-                            case tierId = "tier_id"
-                            case entitlementKey = "entitlement_key"
-                            case valueType = "value_type"
-                            case value
-                        }
-                        public init(from decoder: any Swift.Decoder) throws {
-                            let container = try decoder.container(keyedBy: CodingKeys.self)
-                            self.object = try container.decodeIfPresent(
-                                Operations.PostV1BillingTierEntitlementsById.Output.Ok.Body.JsonPayload.ObjectPayload.self,
-                                forKey: .object
-                            )
-                            self.id = try container.decode(
-                                Swift.String.self,
-                                forKey: .id
-                            )
-                            self.tierId = try container.decode(
-                                Swift.String.self,
-                                forKey: .tierId
-                            )
-                            self.entitlementKey = try container.decode(
-                                Swift.String.self,
-                                forKey: .entitlementKey
-                            )
-                            self.valueType = try container.decode(
-                                Swift.String.self,
-                                forKey: .valueType
-                            )
-                            self.value = try container.decode(
-                                Swift.String.self,
-                                forKey: .value
-                            )
-                            try decoder.ensureNoAdditionalProperties(knownKeys: [
-                                "object",
-                                "id",
-                                "tier_id",
-                                "entitlement_key",
-                                "value_type",
-                                "value"
-                            ])
-                        }
-                    }
-                    /// - Remark: Generated from `#/paths/v1/billing/tier_entitlements/{id}/POST/responses/200/content/application\/json`.
-                    case json(Operations.PostV1BillingTierEntitlementsById.Output.Ok.Body.JsonPayload)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Operations.PostV1BillingTierEntitlementsById.Output.Ok.Body.JsonPayload {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.PostV1BillingTierEntitlementsById.Output.Ok.Body
-                /// Creates a new `Ok`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.PostV1BillingTierEntitlementsById.Output.Ok.Body) {
-                    self.body = body
-                }
-            }
-            /// tier_entitlements
-            ///
-            /// - Remark: Generated from `#/paths//v1/billing/tier_entitlements/{id}/post(postV1BillingTierEntitlementsById)/responses/200`.
-            ///
-            /// HTTP response code: `200 ok`.
-            case ok(Operations.PostV1BillingTierEntitlementsById.Output.Ok)
-            /// The associated value of the enum case if `self` is `.ok`.
-            ///
-            /// - Throws: An error if `self` is not `.ok`.
-            /// - SeeAlso: `.ok`.
-            public var ok: Operations.PostV1BillingTierEntitlementsById.Output.Ok {
-                get throws {
-                    switch self {
-                    case let .ok(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "ok",
-                            response: self
-                        )
-                    }
-                }
-            }
-            public struct BadRequest: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/billing/tier_entitlements/{id}/POST/responses/400/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v1/billing/tier_entitlements/{id}/POST/responses/400/content/application\/json`.
-                    case json(Components.Schemas.StripeError)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.StripeError {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.PostV1BillingTierEntitlementsById.Output.BadRequest.Body
-                /// Creates a new `BadRequest`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.PostV1BillingTierEntitlementsById.Output.BadRequest.Body) {
-                    self.body = body
-                }
-            }
-            /// Error
-            ///
-            /// - Remark: Generated from `#/paths//v1/billing/tier_entitlements/{id}/post(postV1BillingTierEntitlementsById)/responses/400`.
-            ///
-            /// HTTP response code: `400 badRequest`.
-            case badRequest(Operations.PostV1BillingTierEntitlementsById.Output.BadRequest)
-            /// The associated value of the enum case if `self` is `.badRequest`.
-            ///
-            /// - Throws: An error if `self` is not `.badRequest`.
-            /// - SeeAlso: `.badRequest`.
-            public var badRequest: Operations.PostV1BillingTierEntitlementsById.Output.BadRequest {
-                get throws {
-                    switch self {
-                    case let .badRequest(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "badRequest",
-                            response: self
-                        )
-                    }
-                }
-            }
-            public struct Unauthorized: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/billing/tier_entitlements/{id}/POST/responses/401/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v1/billing/tier_entitlements/{id}/POST/responses/401/content/application\/json`.
-                    case json(Components.Schemas.StripeError)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.StripeError {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.PostV1BillingTierEntitlementsById.Output.Unauthorized.Body
-                /// Creates a new `Unauthorized`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.PostV1BillingTierEntitlementsById.Output.Unauthorized.Body) {
-                    self.body = body
-                }
-            }
-            /// Error
-            ///
-            /// - Remark: Generated from `#/paths//v1/billing/tier_entitlements/{id}/post(postV1BillingTierEntitlementsById)/responses/401`.
-            ///
-            /// HTTP response code: `401 unauthorized`.
-            case unauthorized(Operations.PostV1BillingTierEntitlementsById.Output.Unauthorized)
-            /// The associated value of the enum case if `self` is `.unauthorized`.
-            ///
-            /// - Throws: An error if `self` is not `.unauthorized`.
-            /// - SeeAlso: `.unauthorized`.
-            public var unauthorized: Operations.PostV1BillingTierEntitlementsById.Output.Unauthorized {
-                get throws {
-                    switch self {
-                    case let .unauthorized(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "unauthorized",
-                            response: self
-                        )
-                    }
-                }
-            }
-            public struct NotFound: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/billing/tier_entitlements/{id}/POST/responses/404/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v1/billing/tier_entitlements/{id}/POST/responses/404/content/application\/json`.
-                    case json(Components.Schemas.StripeError)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.StripeError {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.PostV1BillingTierEntitlementsById.Output.NotFound.Body
-                /// Creates a new `NotFound`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.PostV1BillingTierEntitlementsById.Output.NotFound.Body) {
-                    self.body = body
-                }
-            }
-            /// Error
-            ///
-            /// - Remark: Generated from `#/paths//v1/billing/tier_entitlements/{id}/post(postV1BillingTierEntitlementsById)/responses/404`.
-            ///
-            /// HTTP response code: `404 notFound`.
-            case notFound(Operations.PostV1BillingTierEntitlementsById.Output.NotFound)
-            /// The associated value of the enum case if `self` is `.notFound`.
-            ///
-            /// - Throws: An error if `self` is not `.notFound`.
-            /// - SeeAlso: `.notFound`.
-            public var notFound: Operations.PostV1BillingTierEntitlementsById.Output.NotFound {
-                get throws {
-                    switch self {
-                    case let .notFound(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "notFound",
-                            response: self
-                        )
-                    }
-                }
-            }
-            /// Undocumented response.
-            ///
-            /// A response with a code that is not documented in the OpenAPI document.
-            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
-        }
-        @frozen public enum AcceptableContentType: AcceptableProtocol {
-            case json
-            case other(Swift.String)
-            public init?(rawValue: Swift.String) {
-                switch rawValue.lowercased() {
-                case "application/json":
-                    self = .json
-                default:
-                    self = .other(rawValue)
-                }
-            }
-            public var rawValue: Swift.String {
-                switch self {
-                case let .other(string):
-                    return string
-                case .json:
-                    return "application/json"
-                }
-            }
-            public static var allCases: [Self] {
-                [
-                    .json
-                ]
-            }
-        }
-    }
-    /// Delete tier_entitlements
-    ///
-    /// Replaces DELETE /billing/tier-entitlements/{id}.
-    ///
-    /// - Remark: HTTP `DELETE /v1/billing/tier_entitlements/{id}`.
-    /// - Remark: Generated from `#/paths//v1/billing/tier_entitlements/{id}/delete(deleteV1BillingTierEntitlementsById)`.
-    public enum DeleteV1BillingTierEntitlementsById {
-        public static let id: Swift.String = "deleteV1BillingTierEntitlementsById"
-        public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/v1/billing/tier_entitlements/{id}/DELETE/path`.
-            public struct Path: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/billing/tier_entitlements/{id}/DELETE/path/id`.
-                public var id: Swift.String
-                /// Creates a new `Path`.
-                ///
-                /// - Parameters:
-                ///   - id:
-                public init(id: Swift.String) {
-                    self.id = id
-                }
-            }
-            public var path: Operations.DeleteV1BillingTierEntitlementsById.Input.Path
-            /// - Remark: Generated from `#/paths/v1/billing/tier_entitlements/{id}/DELETE/header`.
-            public struct Headers: Sendable, Hashable {
-                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.DeleteV1BillingTierEntitlementsById.AcceptableContentType>]
-                /// Creates a new `Headers`.
-                ///
-                /// - Parameters:
-                ///   - accept:
-                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.DeleteV1BillingTierEntitlementsById.AcceptableContentType>] = .defaultValues()) {
-                    self.accept = accept
-                }
-            }
-            public var headers: Operations.DeleteV1BillingTierEntitlementsById.Input.Headers
-            /// Creates a new `Input`.
-            ///
-            /// - Parameters:
-            ///   - path:
-            ///   - headers:
-            public init(
-                path: Operations.DeleteV1BillingTierEntitlementsById.Input.Path,
-                headers: Operations.DeleteV1BillingTierEntitlementsById.Input.Headers = .init()
-            ) {
-                self.path = path
-                self.headers = headers
-            }
-        }
-        @frozen public enum Output: Sendable, Hashable {
-            public struct Ok: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/billing/tier_entitlements/{id}/DELETE/responses/200/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v1/billing/tier_entitlements/{id}/DELETE/responses/200/content/application\/json`.
-                    case json(Components.Schemas.Deleted)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.Deleted {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.DeleteV1BillingTierEntitlementsById.Output.Ok.Body
-                /// Creates a new `Ok`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.DeleteV1BillingTierEntitlementsById.Output.Ok.Body) {
-                    self.body = body
-                }
-            }
-            /// Deleted
-            ///
-            /// - Remark: Generated from `#/paths//v1/billing/tier_entitlements/{id}/delete(deleteV1BillingTierEntitlementsById)/responses/200`.
-            ///
-            /// HTTP response code: `200 ok`.
-            case ok(Operations.DeleteV1BillingTierEntitlementsById.Output.Ok)
-            /// The associated value of the enum case if `self` is `.ok`.
-            ///
-            /// - Throws: An error if `self` is not `.ok`.
-            /// - SeeAlso: `.ok`.
-            public var ok: Operations.DeleteV1BillingTierEntitlementsById.Output.Ok {
-                get throws {
-                    switch self {
-                    case let .ok(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "ok",
-                            response: self
-                        )
-                    }
-                }
-            }
-            public struct Unauthorized: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/billing/tier_entitlements/{id}/DELETE/responses/401/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v1/billing/tier_entitlements/{id}/DELETE/responses/401/content/application\/json`.
-                    case json(Components.Schemas.StripeError)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.StripeError {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.DeleteV1BillingTierEntitlementsById.Output.Unauthorized.Body
-                /// Creates a new `Unauthorized`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.DeleteV1BillingTierEntitlementsById.Output.Unauthorized.Body) {
-                    self.body = body
-                }
-            }
-            /// Error
-            ///
-            /// - Remark: Generated from `#/paths//v1/billing/tier_entitlements/{id}/delete(deleteV1BillingTierEntitlementsById)/responses/401`.
-            ///
-            /// HTTP response code: `401 unauthorized`.
-            case unauthorized(Operations.DeleteV1BillingTierEntitlementsById.Output.Unauthorized)
-            /// The associated value of the enum case if `self` is `.unauthorized`.
-            ///
-            /// - Throws: An error if `self` is not `.unauthorized`.
-            /// - SeeAlso: `.unauthorized`.
-            public var unauthorized: Operations.DeleteV1BillingTierEntitlementsById.Output.Unauthorized {
-                get throws {
-                    switch self {
-                    case let .unauthorized(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "unauthorized",
-                            response: self
-                        )
-                    }
-                }
-            }
-            public struct NotFound: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/billing/tier_entitlements/{id}/DELETE/responses/404/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v1/billing/tier_entitlements/{id}/DELETE/responses/404/content/application\/json`.
-                    case json(Components.Schemas.StripeError)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.StripeError {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.DeleteV1BillingTierEntitlementsById.Output.NotFound.Body
-                /// Creates a new `NotFound`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.DeleteV1BillingTierEntitlementsById.Output.NotFound.Body) {
-                    self.body = body
-                }
-            }
-            /// Error
-            ///
-            /// - Remark: Generated from `#/paths//v1/billing/tier_entitlements/{id}/delete(deleteV1BillingTierEntitlementsById)/responses/404`.
-            ///
-            /// HTTP response code: `404 notFound`.
-            case notFound(Operations.DeleteV1BillingTierEntitlementsById.Output.NotFound)
-            /// The associated value of the enum case if `self` is `.notFound`.
-            ///
-            /// - Throws: An error if `self` is not `.notFound`.
-            /// - SeeAlso: `.notFound`.
-            public var notFound: Operations.DeleteV1BillingTierEntitlementsById.Output.NotFound {
-                get throws {
-                    switch self {
-                    case let .notFound(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "notFound",
                             response: self
                         )
                     }
@@ -334673,6 +329894,448 @@ public enum Operations {
             }
         }
     }
+    /// Set the set an offer sells
+    ///
+    /// null stops the offer granting a set. Refused (rule 9) when the set conflicts with another live offer's set; a personal set is never sold (400).
+    ///
+    /// Replaces PUT /sets/offers/{offerId}.
+    ///
+    /// - Remark: HTTP `POST /v1/offers/{offer_id}/set`.
+    /// - Remark: Generated from `#/paths//v1/offers/{offer_id}/set/post(postV1OffersByOfferIdSet)`.
+    public enum PostV1OffersByOfferIdSet {
+        public static let id: Swift.String = "postV1OffersByOfferIdSet"
+        public struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/v1/offers/{offer_id}/set/POST/path`.
+            public struct Path: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/offers/{offer_id}/set/POST/path/offer_id`.
+                public var offerId: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - offerId:
+                public init(offerId: Swift.String) {
+                    self.offerId = offerId
+                }
+            }
+            public var path: Operations.PostV1OffersByOfferIdSet.Input.Path
+            /// - Remark: Generated from `#/paths/v1/offers/{offer_id}/set/POST/header`.
+            public struct Headers: Sendable, Hashable {
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.PostV1OffersByOfferIdSet.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.PostV1OffersByOfferIdSet.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            public var headers: Operations.PostV1OffersByOfferIdSet.Input.Headers
+            /// - Remark: Generated from `#/paths/v1/offers/{offer_id}/set/POST/requestBody`.
+            @frozen public enum Body: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/offers/{offer_id}/set/POST/requestBody/content/application\/json`.
+                case json(Components.Schemas.OfferSetPut)
+            }
+            public var body: Operations.PostV1OffersByOfferIdSet.Input.Body
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            ///   - headers:
+            ///   - body:
+            public init(
+                path: Operations.PostV1OffersByOfferIdSet.Input.Path,
+                headers: Operations.PostV1OffersByOfferIdSet.Input.Headers = .init(),
+                body: Operations.PostV1OffersByOfferIdSet.Input.Body
+            ) {
+                self.path = path
+                self.headers = headers
+                self.body = body
+            }
+        }
+        @frozen public enum Output: Sendable, Hashable {
+            public struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/offers/{offer_id}/set/POST/responses/200/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/offers/{offer_id}/set/POST/responses/200/content/json`.
+                    public struct JsonPayload: Codable, Hashable, Sendable {
+                        /// - Remark: Generated from `#/paths/v1/offers/{offer_id}/set/POST/responses/200/content/json/value1`.
+                        public struct Value1Payload: Codable, Hashable, Sendable {
+                            /// - Remark: Generated from `#/paths/v1/offers/{offer_id}/set/POST/responses/200/content/json/value1/object`.
+                            @frozen public enum ObjectPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                                case offer = "offer"
+                            }
+                            /// - Remark: Generated from `#/paths/v1/offers/{offer_id}/set/POST/responses/200/content/json/value1/object`.
+                            public var object: Operations.PostV1OffersByOfferIdSet.Output.Ok.Body.JsonPayload.Value1Payload.ObjectPayload?
+                            /// Creates a new `Value1Payload`.
+                            ///
+                            /// - Parameters:
+                            ///   - object:
+                            public init(object: Operations.PostV1OffersByOfferIdSet.Output.Ok.Body.JsonPayload.Value1Payload.ObjectPayload? = nil) {
+                                self.object = object
+                            }
+                            public enum CodingKeys: String, CodingKey {
+                                case object
+                            }
+                        }
+                        /// - Remark: Generated from `#/paths/v1/offers/{offer_id}/set/POST/responses/200/content/json/value1`.
+                        public var value1: Operations.PostV1OffersByOfferIdSet.Output.Ok.Body.JsonPayload.Value1Payload
+                        /// - Remark: Generated from `#/paths/v1/offers/{offer_id}/set/POST/responses/200/content/json/value2`.
+                        public var value2: Components.Schemas.OfferSet
+                        /// Creates a new `JsonPayload`.
+                        ///
+                        /// - Parameters:
+                        ///   - value1:
+                        ///   - value2:
+                        public init(
+                            value1: Operations.PostV1OffersByOfferIdSet.Output.Ok.Body.JsonPayload.Value1Payload,
+                            value2: Components.Schemas.OfferSet
+                        ) {
+                            self.value1 = value1
+                            self.value2 = value2
+                        }
+                        public init(from decoder: any Swift.Decoder) throws {
+                            self.value1 = try .init(from: decoder)
+                            self.value2 = try .init(from: decoder)
+                        }
+                        public func encode(to encoder: any Swift.Encoder) throws {
+                            try self.value1.encode(to: encoder)
+                            try self.value2.encode(to: encoder)
+                        }
+                    }
+                    /// - Remark: Generated from `#/paths/v1/offers/{offer_id}/set/POST/responses/200/content/application\/json`.
+                    case json(Operations.PostV1OffersByOfferIdSet.Output.Ok.Body.JsonPayload)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Operations.PostV1OffersByOfferIdSet.Output.Ok.Body.JsonPayload {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostV1OffersByOfferIdSet.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostV1OffersByOfferIdSet.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// The offer and its set
+            ///
+            /// - Remark: Generated from `#/paths//v1/offers/{offer_id}/set/post(postV1OffersByOfferIdSet)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.PostV1OffersByOfferIdSet.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            public var ok: Operations.PostV1OffersByOfferIdSet.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct BadRequest: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/offers/{offer_id}/set/POST/responses/400/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/offers/{offer_id}/set/POST/responses/400/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostV1OffersByOfferIdSet.Output.BadRequest.Body
+                /// Creates a new `BadRequest`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostV1OffersByOfferIdSet.Output.BadRequest.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/offers/{offer_id}/set/post(postV1OffersByOfferIdSet)/responses/400`.
+            ///
+            /// HTTP response code: `400 badRequest`.
+            case badRequest(Operations.PostV1OffersByOfferIdSet.Output.BadRequest)
+            /// The associated value of the enum case if `self` is `.badRequest`.
+            ///
+            /// - Throws: An error if `self` is not `.badRequest`.
+            /// - SeeAlso: `.badRequest`.
+            public var badRequest: Operations.PostV1OffersByOfferIdSet.Output.BadRequest {
+                get throws {
+                    switch self {
+                    case let .badRequest(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "badRequest",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct Unauthorized: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/offers/{offer_id}/set/POST/responses/401/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/offers/{offer_id}/set/POST/responses/401/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostV1OffersByOfferIdSet.Output.Unauthorized.Body
+                /// Creates a new `Unauthorized`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostV1OffersByOfferIdSet.Output.Unauthorized.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/offers/{offer_id}/set/post(postV1OffersByOfferIdSet)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            case unauthorized(Operations.PostV1OffersByOfferIdSet.Output.Unauthorized)
+            /// The associated value of the enum case if `self` is `.unauthorized`.
+            ///
+            /// - Throws: An error if `self` is not `.unauthorized`.
+            /// - SeeAlso: `.unauthorized`.
+            public var unauthorized: Operations.PostV1OffersByOfferIdSet.Output.Unauthorized {
+                get throws {
+                    switch self {
+                    case let .unauthorized(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "unauthorized",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct Forbidden: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/offers/{offer_id}/set/POST/responses/403/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/offers/{offer_id}/set/POST/responses/403/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostV1OffersByOfferIdSet.Output.Forbidden.Body
+                /// Creates a new `Forbidden`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostV1OffersByOfferIdSet.Output.Forbidden.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/offers/{offer_id}/set/post(postV1OffersByOfferIdSet)/responses/403`.
+            ///
+            /// HTTP response code: `403 forbidden`.
+            case forbidden(Operations.PostV1OffersByOfferIdSet.Output.Forbidden)
+            /// The associated value of the enum case if `self` is `.forbidden`.
+            ///
+            /// - Throws: An error if `self` is not `.forbidden`.
+            /// - SeeAlso: `.forbidden`.
+            public var forbidden: Operations.PostV1OffersByOfferIdSet.Output.Forbidden {
+                get throws {
+                    switch self {
+                    case let .forbidden(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "forbidden",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct NotFound: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/offers/{offer_id}/set/POST/responses/404/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/offers/{offer_id}/set/POST/responses/404/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostV1OffersByOfferIdSet.Output.NotFound.Body
+                /// Creates a new `NotFound`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostV1OffersByOfferIdSet.Output.NotFound.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/offers/{offer_id}/set/post(postV1OffersByOfferIdSet)/responses/404`.
+            ///
+            /// HTTP response code: `404 notFound`.
+            case notFound(Operations.PostV1OffersByOfferIdSet.Output.NotFound)
+            /// The associated value of the enum case if `self` is `.notFound`.
+            ///
+            /// - Throws: An error if `self` is not `.notFound`.
+            /// - SeeAlso: `.notFound`.
+            public var notFound: Operations.PostV1OffersByOfferIdSet.Output.NotFound {
+                get throws {
+                    switch self {
+                    case let .notFound(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "notFound",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct UnprocessableContent: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/offers/{offer_id}/set/POST/responses/422/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/offers/{offer_id}/set/POST/responses/422/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostV1OffersByOfferIdSet.Output.UnprocessableContent.Body
+                /// Creates a new `UnprocessableContent`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostV1OffersByOfferIdSet.Output.UnprocessableContent.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/offers/{offer_id}/set/post(postV1OffersByOfferIdSet)/responses/422`.
+            ///
+            /// HTTP response code: `422 unprocessableContent`.
+            case unprocessableContent(Operations.PostV1OffersByOfferIdSet.Output.UnprocessableContent)
+            /// The associated value of the enum case if `self` is `.unprocessableContent`.
+            ///
+            /// - Throws: An error if `self` is not `.unprocessableContent`.
+            /// - SeeAlso: `.unprocessableContent`.
+            public var unprocessableContent: Operations.PostV1OffersByOfferIdSet.Output.UnprocessableContent {
+                get throws {
+                    switch self {
+                    case let .unprocessableContent(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "unprocessableContent",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        @frozen public enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            public init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            public var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            public static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
     /// List the organizations a workspace owns (personal workspaces also include the ones you belong to)
     ///
     /// Scoped by `workspace`, which is REQUIRED — an unscoped organizations list is the same answer in every workspace, which is the bug this replaced. A PERSONAL workspace answers with the orgs you own UNION the orgs you belong to; an ORGANIZATION workspace answers with the orgs that org owns, never including itself. A workspace slug the caller neither owns nor reaches is a 404, the same answer as one that does not exist. Ordered by name (case-insensitively, ties broken by id) and capped at 500 rows.
@@ -405491,6 +401154,4194 @@ public enum Operations {
                     default:
                         try throwUnexpectedResponseStatus(
                             expectedStatus: "notFound",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        @frozen public enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            public init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            public var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            public static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// List a customer's set grants
+    ///
+    /// Revoked grants are listed with their reason; newest first.
+    ///
+    /// Replaces GET /sets/grants.
+    ///
+    /// - Remark: HTTP `GET /v1/set_grants`.
+    /// - Remark: Generated from `#/paths//v1/set_grants/get(getV1SetGrants)`.
+    public enum GetV1SetGrants {
+        public static let id: Swift.String = "getV1SetGrants"
+        public struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/v1/set_grants/GET/query`.
+            public struct Query: Sendable, Hashable {
+                /// An owner-made ecosystem's id (uuid or rdid); the caller must manage it (403 otherwise).
+                ///
+                /// - Remark: Generated from `#/paths/v1/set_grants/GET/query/ecosystem`.
+                public var ecosystem: Swift.String
+                /// The customer id
+                ///
+                /// - Remark: Generated from `#/paths/v1/set_grants/GET/query/customer`.
+                public var customer: Swift.String
+                /// Page size, 1–100 (default 10).
+                ///
+                /// - Remark: Generated from `#/paths/v1/set_grants/GET/query/limit`.
+                public var limit: Swift.Int?
+                /// Cursor: an object id; returns the page after it.
+                ///
+                /// - Remark: Generated from `#/paths/v1/set_grants/GET/query/starting_after`.
+                public var startingAfter: Swift.String?
+                /// Cursor: an object id; returns the page before it.
+                ///
+                /// - Remark: Generated from `#/paths/v1/set_grants/GET/query/ending_before`.
+                public var endingBefore: Swift.String?
+                /// Related objects to return in full instead of as an id. Up to four levels, e.g. `ecosystem_id`; on a list, `data.<field>`.
+                ///
+                /// - Remark: Generated from `#/paths/v1/set_grants/GET/query/expand[]`.
+                public var expand_lbrack__rbrack_: [Swift.String]?
+                /// Creates a new `Query`.
+                ///
+                /// - Parameters:
+                ///   - ecosystem: An owner-made ecosystem's id (uuid or rdid); the caller must manage it (403 otherwise).
+                ///   - customer: The customer id
+                ///   - limit: Page size, 1–100 (default 10).
+                ///   - startingAfter: Cursor: an object id; returns the page after it.
+                ///   - endingBefore: Cursor: an object id; returns the page before it.
+                ///   - expand_lbrack__rbrack_: Related objects to return in full instead of as an id. Up to four levels, e.g. `ecosystem_id`; on a list, `data.<field>`.
+                public init(
+                    ecosystem: Swift.String,
+                    customer: Swift.String,
+                    limit: Swift.Int? = nil,
+                    startingAfter: Swift.String? = nil,
+                    endingBefore: Swift.String? = nil,
+                    expand_lbrack__rbrack_: [Swift.String]? = nil
+                ) {
+                    self.ecosystem = ecosystem
+                    self.customer = customer
+                    self.limit = limit
+                    self.startingAfter = startingAfter
+                    self.endingBefore = endingBefore
+                    self.expand_lbrack__rbrack_ = expand_lbrack__rbrack_
+                }
+            }
+            public var query: Operations.GetV1SetGrants.Input.Query
+            /// - Remark: Generated from `#/paths/v1/set_grants/GET/header`.
+            public struct Headers: Sendable, Hashable {
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.GetV1SetGrants.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.GetV1SetGrants.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            public var headers: Operations.GetV1SetGrants.Input.Headers
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - query:
+            ///   - headers:
+            public init(
+                query: Operations.GetV1SetGrants.Input.Query,
+                headers: Operations.GetV1SetGrants.Input.Headers = .init()
+            ) {
+                self.query = query
+                self.headers = headers
+            }
+        }
+        @frozen public enum Output: Sendable, Hashable {
+            public struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/set_grants/GET/responses/200/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/set_grants/GET/responses/200/content/json`.
+                    public struct JsonPayload: Codable, Hashable, Sendable {
+                        /// - Remark: Generated from `#/paths/v1/set_grants/GET/responses/200/content/json/object`.
+                        @frozen public enum ObjectPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                            case list = "list"
+                        }
+                        /// - Remark: Generated from `#/paths/v1/set_grants/GET/responses/200/content/json/object`.
+                        public var object: Operations.GetV1SetGrants.Output.Ok.Body.JsonPayload.ObjectPayload
+                        /// - Remark: Generated from `#/paths/v1/set_grants/GET/responses/200/content/json/DataPayload`.
+                        public struct DataPayloadPayload: Codable, Hashable, Sendable {
+                            /// - Remark: Generated from `#/paths/v1/set_grants/GET/responses/200/content/json/DataPayload/value1`.
+                            public struct Value1Payload: Codable, Hashable, Sendable {
+                                /// - Remark: Generated from `#/paths/v1/set_grants/GET/responses/200/content/json/DataPayload/value1/object`.
+                                @frozen public enum ObjectPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                                    case setGrant = "set_grant"
+                                }
+                                /// - Remark: Generated from `#/paths/v1/set_grants/GET/responses/200/content/json/DataPayload/value1/object`.
+                                public var object: Operations.GetV1SetGrants.Output.Ok.Body.JsonPayload.DataPayloadPayload.Value1Payload.ObjectPayload?
+                                /// Creates a new `Value1Payload`.
+                                ///
+                                /// - Parameters:
+                                ///   - object:
+                                public init(object: Operations.GetV1SetGrants.Output.Ok.Body.JsonPayload.DataPayloadPayload.Value1Payload.ObjectPayload? = nil) {
+                                    self.object = object
+                                }
+                                public enum CodingKeys: String, CodingKey {
+                                    case object
+                                }
+                            }
+                            /// - Remark: Generated from `#/paths/v1/set_grants/GET/responses/200/content/json/DataPayload/value1`.
+                            public var value1: Operations.GetV1SetGrants.Output.Ok.Body.JsonPayload.DataPayloadPayload.Value1Payload
+                            /// - Remark: Generated from `#/paths/v1/set_grants/GET/responses/200/content/json/DataPayload/value2`.
+                            public var value2: Components.Schemas.SetGrant
+                            /// Creates a new `DataPayloadPayload`.
+                            ///
+                            /// - Parameters:
+                            ///   - value1:
+                            ///   - value2:
+                            public init(
+                                value1: Operations.GetV1SetGrants.Output.Ok.Body.JsonPayload.DataPayloadPayload.Value1Payload,
+                                value2: Components.Schemas.SetGrant
+                            ) {
+                                self.value1 = value1
+                                self.value2 = value2
+                            }
+                            public init(from decoder: any Swift.Decoder) throws {
+                                self.value1 = try .init(from: decoder)
+                                self.value2 = try .init(from: decoder)
+                            }
+                            public func encode(to encoder: any Swift.Encoder) throws {
+                                try self.value1.encode(to: encoder)
+                                try self.value2.encode(to: encoder)
+                            }
+                        }
+                        /// - Remark: Generated from `#/paths/v1/set_grants/GET/responses/200/content/json/data`.
+                        public typealias DataPayload = [Operations.GetV1SetGrants.Output.Ok.Body.JsonPayload.DataPayloadPayload]
+                        /// - Remark: Generated from `#/paths/v1/set_grants/GET/responses/200/content/json/data`.
+                        public var data: Operations.GetV1SetGrants.Output.Ok.Body.JsonPayload.DataPayload
+                        /// - Remark: Generated from `#/paths/v1/set_grants/GET/responses/200/content/json/has_more`.
+                        public var hasMore: Swift.Bool
+                        /// - Remark: Generated from `#/paths/v1/set_grants/GET/responses/200/content/json/url`.
+                        public var url: Swift.String
+                        /// Creates a new `JsonPayload`.
+                        ///
+                        /// - Parameters:
+                        ///   - object:
+                        ///   - data:
+                        ///   - hasMore:
+                        ///   - url:
+                        public init(
+                            object: Operations.GetV1SetGrants.Output.Ok.Body.JsonPayload.ObjectPayload,
+                            data: Operations.GetV1SetGrants.Output.Ok.Body.JsonPayload.DataPayload,
+                            hasMore: Swift.Bool,
+                            url: Swift.String
+                        ) {
+                            self.object = object
+                            self.data = data
+                            self.hasMore = hasMore
+                            self.url = url
+                        }
+                        public enum CodingKeys: String, CodingKey {
+                            case object
+                            case data
+                            case hasMore = "has_more"
+                            case url
+                        }
+                    }
+                    /// - Remark: Generated from `#/paths/v1/set_grants/GET/responses/200/content/application\/json`.
+                    case json(Operations.GetV1SetGrants.Output.Ok.Body.JsonPayload)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Operations.GetV1SetGrants.Output.Ok.Body.JsonPayload {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.GetV1SetGrants.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.GetV1SetGrants.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// The grants
+            ///
+            /// - Remark: Generated from `#/paths//v1/set_grants/get(getV1SetGrants)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.GetV1SetGrants.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            public var ok: Operations.GetV1SetGrants.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct BadRequest: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/set_grants/GET/responses/400/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/set_grants/GET/responses/400/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.GetV1SetGrants.Output.BadRequest.Body
+                /// Creates a new `BadRequest`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.GetV1SetGrants.Output.BadRequest.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/set_grants/get(getV1SetGrants)/responses/400`.
+            ///
+            /// HTTP response code: `400 badRequest`.
+            case badRequest(Operations.GetV1SetGrants.Output.BadRequest)
+            /// The associated value of the enum case if `self` is `.badRequest`.
+            ///
+            /// - Throws: An error if `self` is not `.badRequest`.
+            /// - SeeAlso: `.badRequest`.
+            public var badRequest: Operations.GetV1SetGrants.Output.BadRequest {
+                get throws {
+                    switch self {
+                    case let .badRequest(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "badRequest",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct Unauthorized: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/set_grants/GET/responses/401/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/set_grants/GET/responses/401/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.GetV1SetGrants.Output.Unauthorized.Body
+                /// Creates a new `Unauthorized`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.GetV1SetGrants.Output.Unauthorized.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/set_grants/get(getV1SetGrants)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            case unauthorized(Operations.GetV1SetGrants.Output.Unauthorized)
+            /// The associated value of the enum case if `self` is `.unauthorized`.
+            ///
+            /// - Throws: An error if `self` is not `.unauthorized`.
+            /// - SeeAlso: `.unauthorized`.
+            public var unauthorized: Operations.GetV1SetGrants.Output.Unauthorized {
+                get throws {
+                    switch self {
+                    case let .unauthorized(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "unauthorized",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct Forbidden: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/set_grants/GET/responses/403/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/set_grants/GET/responses/403/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.GetV1SetGrants.Output.Forbidden.Body
+                /// Creates a new `Forbidden`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.GetV1SetGrants.Output.Forbidden.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/set_grants/get(getV1SetGrants)/responses/403`.
+            ///
+            /// HTTP response code: `403 forbidden`.
+            case forbidden(Operations.GetV1SetGrants.Output.Forbidden)
+            /// The associated value of the enum case if `self` is `.forbidden`.
+            ///
+            /// - Throws: An error if `self` is not `.forbidden`.
+            /// - SeeAlso: `.forbidden`.
+            public var forbidden: Operations.GetV1SetGrants.Output.Forbidden {
+                get throws {
+                    switch self {
+                    case let .forbidden(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "forbidden",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct NotFound: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/set_grants/GET/responses/404/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/set_grants/GET/responses/404/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.GetV1SetGrants.Output.NotFound.Body
+                /// Creates a new `NotFound`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.GetV1SetGrants.Output.NotFound.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/set_grants/get(getV1SetGrants)/responses/404`.
+            ///
+            /// HTTP response code: `404 notFound`.
+            case notFound(Operations.GetV1SetGrants.Output.NotFound)
+            /// The associated value of the enum case if `self` is `.notFound`.
+            ///
+            /// - Throws: An error if `self` is not `.notFound`.
+            /// - SeeAlso: `.notFound`.
+            public var notFound: Operations.GetV1SetGrants.Output.NotFound {
+                get throws {
+                    switch self {
+                    case let .notFound(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "notFound",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        @frozen public enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            public init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            public var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            public static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// Grant a set to a customer
+    ///
+    /// A direct grant. Refused (rule 4) when it conflicts with a set the customer holds; granting a set already held returns that grant.
+    ///
+    /// Replaces POST /sets/grants.
+    ///
+    /// - Remark: HTTP `POST /v1/set_grants`.
+    /// - Remark: Generated from `#/paths//v1/set_grants/post(postV1SetGrants)`.
+    public enum PostV1SetGrants {
+        public static let id: Swift.String = "postV1SetGrants"
+        public struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/v1/set_grants/POST/query`.
+            public struct Query: Sendable, Hashable {
+                /// An owner-made ecosystem's id (uuid or rdid); the caller must manage it (403 otherwise).
+                ///
+                /// - Remark: Generated from `#/paths/v1/set_grants/POST/query/ecosystem`.
+                public var ecosystem: Swift.String
+                /// Creates a new `Query`.
+                ///
+                /// - Parameters:
+                ///   - ecosystem: An owner-made ecosystem's id (uuid or rdid); the caller must manage it (403 otherwise).
+                public init(ecosystem: Swift.String) {
+                    self.ecosystem = ecosystem
+                }
+            }
+            public var query: Operations.PostV1SetGrants.Input.Query
+            /// - Remark: Generated from `#/paths/v1/set_grants/POST/header`.
+            public struct Headers: Sendable, Hashable {
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.PostV1SetGrants.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.PostV1SetGrants.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            public var headers: Operations.PostV1SetGrants.Input.Headers
+            /// - Remark: Generated from `#/paths/v1/set_grants/POST/requestBody`.
+            @frozen public enum Body: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/set_grants/POST/requestBody/content/application\/json`.
+                case json(Components.Schemas.SetGrantCreate)
+            }
+            public var body: Operations.PostV1SetGrants.Input.Body
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - query:
+            ///   - headers:
+            ///   - body:
+            public init(
+                query: Operations.PostV1SetGrants.Input.Query,
+                headers: Operations.PostV1SetGrants.Input.Headers = .init(),
+                body: Operations.PostV1SetGrants.Input.Body
+            ) {
+                self.query = query
+                self.headers = headers
+                self.body = body
+            }
+        }
+        @frozen public enum Output: Sendable, Hashable {
+            public struct Created: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/set_grants/POST/responses/201/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/set_grants/POST/responses/201/content/json`.
+                    public struct JsonPayload: Codable, Hashable, Sendable {
+                        /// - Remark: Generated from `#/paths/v1/set_grants/POST/responses/201/content/json/value1`.
+                        public struct Value1Payload: Codable, Hashable, Sendable {
+                            /// - Remark: Generated from `#/paths/v1/set_grants/POST/responses/201/content/json/value1/object`.
+                            @frozen public enum ObjectPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                                case setGrant = "set_grant"
+                            }
+                            /// - Remark: Generated from `#/paths/v1/set_grants/POST/responses/201/content/json/value1/object`.
+                            public var object: Operations.PostV1SetGrants.Output.Created.Body.JsonPayload.Value1Payload.ObjectPayload?
+                            /// Creates a new `Value1Payload`.
+                            ///
+                            /// - Parameters:
+                            ///   - object:
+                            public init(object: Operations.PostV1SetGrants.Output.Created.Body.JsonPayload.Value1Payload.ObjectPayload? = nil) {
+                                self.object = object
+                            }
+                            public enum CodingKeys: String, CodingKey {
+                                case object
+                            }
+                        }
+                        /// - Remark: Generated from `#/paths/v1/set_grants/POST/responses/201/content/json/value1`.
+                        public var value1: Operations.PostV1SetGrants.Output.Created.Body.JsonPayload.Value1Payload
+                        /// - Remark: Generated from `#/paths/v1/set_grants/POST/responses/201/content/json/value2`.
+                        public var value2: Components.Schemas.SetGrantResult
+                        /// Creates a new `JsonPayload`.
+                        ///
+                        /// - Parameters:
+                        ///   - value1:
+                        ///   - value2:
+                        public init(
+                            value1: Operations.PostV1SetGrants.Output.Created.Body.JsonPayload.Value1Payload,
+                            value2: Components.Schemas.SetGrantResult
+                        ) {
+                            self.value1 = value1
+                            self.value2 = value2
+                        }
+                        public init(from decoder: any Swift.Decoder) throws {
+                            self.value1 = try .init(from: decoder)
+                            self.value2 = try .init(from: decoder)
+                        }
+                        public func encode(to encoder: any Swift.Encoder) throws {
+                            try self.value1.encode(to: encoder)
+                            try self.value2.encode(to: encoder)
+                        }
+                    }
+                    /// - Remark: Generated from `#/paths/v1/set_grants/POST/responses/201/content/application\/json`.
+                    case json(Operations.PostV1SetGrants.Output.Created.Body.JsonPayload)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Operations.PostV1SetGrants.Output.Created.Body.JsonPayload {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostV1SetGrants.Output.Created.Body
+                /// Creates a new `Created`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostV1SetGrants.Output.Created.Body) {
+                    self.body = body
+                }
+            }
+            /// The grant
+            ///
+            /// - Remark: Generated from `#/paths//v1/set_grants/post(postV1SetGrants)/responses/201`.
+            ///
+            /// HTTP response code: `201 created`.
+            case created(Operations.PostV1SetGrants.Output.Created)
+            /// The associated value of the enum case if `self` is `.created`.
+            ///
+            /// - Throws: An error if `self` is not `.created`.
+            /// - SeeAlso: `.created`.
+            public var created: Operations.PostV1SetGrants.Output.Created {
+                get throws {
+                    switch self {
+                    case let .created(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "created",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct BadRequest: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/set_grants/POST/responses/400/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/set_grants/POST/responses/400/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostV1SetGrants.Output.BadRequest.Body
+                /// Creates a new `BadRequest`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostV1SetGrants.Output.BadRequest.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/set_grants/post(postV1SetGrants)/responses/400`.
+            ///
+            /// HTTP response code: `400 badRequest`.
+            case badRequest(Operations.PostV1SetGrants.Output.BadRequest)
+            /// The associated value of the enum case if `self` is `.badRequest`.
+            ///
+            /// - Throws: An error if `self` is not `.badRequest`.
+            /// - SeeAlso: `.badRequest`.
+            public var badRequest: Operations.PostV1SetGrants.Output.BadRequest {
+                get throws {
+                    switch self {
+                    case let .badRequest(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "badRequest",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct Unauthorized: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/set_grants/POST/responses/401/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/set_grants/POST/responses/401/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostV1SetGrants.Output.Unauthorized.Body
+                /// Creates a new `Unauthorized`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostV1SetGrants.Output.Unauthorized.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/set_grants/post(postV1SetGrants)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            case unauthorized(Operations.PostV1SetGrants.Output.Unauthorized)
+            /// The associated value of the enum case if `self` is `.unauthorized`.
+            ///
+            /// - Throws: An error if `self` is not `.unauthorized`.
+            /// - SeeAlso: `.unauthorized`.
+            public var unauthorized: Operations.PostV1SetGrants.Output.Unauthorized {
+                get throws {
+                    switch self {
+                    case let .unauthorized(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "unauthorized",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct Forbidden: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/set_grants/POST/responses/403/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/set_grants/POST/responses/403/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostV1SetGrants.Output.Forbidden.Body
+                /// Creates a new `Forbidden`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostV1SetGrants.Output.Forbidden.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/set_grants/post(postV1SetGrants)/responses/403`.
+            ///
+            /// HTTP response code: `403 forbidden`.
+            case forbidden(Operations.PostV1SetGrants.Output.Forbidden)
+            /// The associated value of the enum case if `self` is `.forbidden`.
+            ///
+            /// - Throws: An error if `self` is not `.forbidden`.
+            /// - SeeAlso: `.forbidden`.
+            public var forbidden: Operations.PostV1SetGrants.Output.Forbidden {
+                get throws {
+                    switch self {
+                    case let .forbidden(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "forbidden",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct NotFound: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/set_grants/POST/responses/404/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/set_grants/POST/responses/404/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostV1SetGrants.Output.NotFound.Body
+                /// Creates a new `NotFound`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostV1SetGrants.Output.NotFound.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/set_grants/post(postV1SetGrants)/responses/404`.
+            ///
+            /// HTTP response code: `404 notFound`.
+            case notFound(Operations.PostV1SetGrants.Output.NotFound)
+            /// The associated value of the enum case if `self` is `.notFound`.
+            ///
+            /// - Throws: An error if `self` is not `.notFound`.
+            /// - SeeAlso: `.notFound`.
+            public var notFound: Operations.PostV1SetGrants.Output.NotFound {
+                get throws {
+                    switch self {
+                    case let .notFound(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "notFound",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct UnprocessableContent: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/set_grants/POST/responses/422/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/set_grants/POST/responses/422/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostV1SetGrants.Output.UnprocessableContent.Body
+                /// Creates a new `UnprocessableContent`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostV1SetGrants.Output.UnprocessableContent.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/set_grants/post(postV1SetGrants)/responses/422`.
+            ///
+            /// HTTP response code: `422 unprocessableContent`.
+            case unprocessableContent(Operations.PostV1SetGrants.Output.UnprocessableContent)
+            /// The associated value of the enum case if `self` is `.unprocessableContent`.
+            ///
+            /// - Throws: An error if `self` is not `.unprocessableContent`.
+            /// - SeeAlso: `.unprocessableContent`.
+            public var unprocessableContent: Operations.PostV1SetGrants.Output.UnprocessableContent {
+                get throws {
+                    switch self {
+                    case let .unprocessableContent(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "unprocessableContent",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        @frozen public enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            public init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            public var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            public static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// Read a customer's effective sets
+    ///
+    /// Replaces GET /sets/effective/{customerId}.
+    ///
+    /// - Remark: HTTP `GET /v1/set_grants/effective/{customer_id}`.
+    /// - Remark: Generated from `#/paths//v1/set_grants/effective/{customer_id}/get(getV1SetGrantsEffectiveByCustomerId)`.
+    public enum GetV1SetGrantsEffectiveByCustomerId {
+        public static let id: Swift.String = "getV1SetGrantsEffectiveByCustomerId"
+        public struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/v1/set_grants/effective/{customer_id}/GET/path`.
+            public struct Path: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/set_grants/effective/{customer_id}/GET/path/customer_id`.
+                public var customerId: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - customerId:
+                public init(customerId: Swift.String) {
+                    self.customerId = customerId
+                }
+            }
+            public var path: Operations.GetV1SetGrantsEffectiveByCustomerId.Input.Path
+            /// - Remark: Generated from `#/paths/v1/set_grants/effective/{customer_id}/GET/query`.
+            public struct Query: Sendable, Hashable {
+                /// Related objects to return in full instead of as an id. Up to four levels, e.g. `ecosystem_id`; on a list, `data.<field>`.
+                ///
+                /// - Remark: Generated from `#/paths/v1/set_grants/effective/{customer_id}/GET/query/expand[]`.
+                public var expand_lbrack__rbrack_: [Swift.String]?
+                /// Creates a new `Query`.
+                ///
+                /// - Parameters:
+                ///   - expand_lbrack__rbrack_: Related objects to return in full instead of as an id. Up to four levels, e.g. `ecosystem_id`; on a list, `data.<field>`.
+                public init(expand_lbrack__rbrack_: [Swift.String]? = nil) {
+                    self.expand_lbrack__rbrack_ = expand_lbrack__rbrack_
+                }
+            }
+            public var query: Operations.GetV1SetGrantsEffectiveByCustomerId.Input.Query
+            /// - Remark: Generated from `#/paths/v1/set_grants/effective/{customer_id}/GET/header`.
+            public struct Headers: Sendable, Hashable {
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.GetV1SetGrantsEffectiveByCustomerId.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.GetV1SetGrantsEffectiveByCustomerId.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            public var headers: Operations.GetV1SetGrantsEffectiveByCustomerId.Input.Headers
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            ///   - query:
+            ///   - headers:
+            public init(
+                path: Operations.GetV1SetGrantsEffectiveByCustomerId.Input.Path,
+                query: Operations.GetV1SetGrantsEffectiveByCustomerId.Input.Query = .init(),
+                headers: Operations.GetV1SetGrantsEffectiveByCustomerId.Input.Headers = .init()
+            ) {
+                self.path = path
+                self.query = query
+                self.headers = headers
+            }
+        }
+        @frozen public enum Output: Sendable, Hashable {
+            public struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/set_grants/effective/{customer_id}/GET/responses/200/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// The customer's answer before the ecosystem's ceiling: null when the ecosystem has no sets; the held set ids, features and limits; or { error: 'unresolved' }.
+                    ///
+                    /// - Remark: Generated from `#/paths/v1/set_grants/effective/{customer_id}/GET/responses/200/content/json`.
+                    public struct JsonPayload: Codable, Hashable, Sendable {
+                        /// - Remark: Generated from `#/paths/v1/set_grants/effective/{customer_id}/GET/responses/200/content/json/object`.
+                        @frozen public enum ObjectPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                            case setGrants_effective = "set_grants.effective"
+                        }
+                        /// - Remark: Generated from `#/paths/v1/set_grants/effective/{customer_id}/GET/responses/200/content/json/object`.
+                        public var object: Operations.GetV1SetGrantsEffectiveByCustomerId.Output.Ok.Body.JsonPayload.ObjectPayload?
+                        /// - Remark: Generated from `#/paths/v1/set_grants/effective/{customer_id}/GET/responses/200/content/json/held`.
+                        public var held: [Swift.String]?
+                        /// - Remark: Generated from `#/paths/v1/set_grants/effective/{customer_id}/GET/responses/200/content/json/permissions`.
+                        public var permissions: [Swift.String]?
+                        /// - Remark: Generated from `#/paths/v1/set_grants/effective/{customer_id}/GET/responses/200/content/json/read_only`.
+                        public var readOnly: [Swift.String]?
+                        /// - Remark: Generated from `#/paths/v1/set_grants/effective/{customer_id}/GET/responses/200/content/json/limits`.
+                        public struct LimitsPayload: Codable, Hashable, Sendable {
+                            /// A container of undocumented properties.
+                            public var additionalProperties: OpenAPIRuntime.OpenAPIObjectContainer
+                            /// Creates a new `LimitsPayload`.
+                            ///
+                            /// - Parameters:
+                            ///   - additionalProperties: A container of undocumented properties.
+                            public init(additionalProperties: OpenAPIRuntime.OpenAPIObjectContainer = .init()) {
+                                self.additionalProperties = additionalProperties
+                            }
+                            public init(from decoder: any Swift.Decoder) throws {
+                                additionalProperties = try decoder.decodeAdditionalProperties(knownKeys: [])
+                            }
+                            public func encode(to encoder: any Swift.Encoder) throws {
+                                try encoder.encodeAdditionalProperties(additionalProperties)
+                            }
+                        }
+                        /// - Remark: Generated from `#/paths/v1/set_grants/effective/{customer_id}/GET/responses/200/content/json/limits`.
+                        public var limits: Operations.GetV1SetGrantsEffectiveByCustomerId.Output.Ok.Body.JsonPayload.LimitsPayload?
+                        /// When the answer next changes (a grant lapsing).
+                        ///
+                        /// - Remark: Generated from `#/paths/v1/set_grants/effective/{customer_id}/GET/responses/200/content/json/valid_until`.
+                        public var validUntil: Foundation.Date?
+                        /// - Remark: Generated from `#/paths/v1/set_grants/effective/{customer_id}/GET/responses/200/content/json/error`.
+                        @frozen public enum _ErrorPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                            case unresolved = "unresolved"
+                        }
+                        /// - Remark: Generated from `#/paths/v1/set_grants/effective/{customer_id}/GET/responses/200/content/json/error`.
+                        public var error: Operations.GetV1SetGrantsEffectiveByCustomerId.Output.Ok.Body.JsonPayload._ErrorPayload?
+                        /// Creates a new `JsonPayload`.
+                        ///
+                        /// - Parameters:
+                        ///   - object:
+                        ///   - held:
+                        ///   - permissions:
+                        ///   - readOnly:
+                        ///   - limits:
+                        ///   - validUntil: When the answer next changes (a grant lapsing).
+                        ///   - error:
+                        public init(
+                            object: Operations.GetV1SetGrantsEffectiveByCustomerId.Output.Ok.Body.JsonPayload.ObjectPayload? = nil,
+                            held: [Swift.String]? = nil,
+                            permissions: [Swift.String]? = nil,
+                            readOnly: [Swift.String]? = nil,
+                            limits: Operations.GetV1SetGrantsEffectiveByCustomerId.Output.Ok.Body.JsonPayload.LimitsPayload? = nil,
+                            validUntil: Foundation.Date? = nil,
+                            error: Operations.GetV1SetGrantsEffectiveByCustomerId.Output.Ok.Body.JsonPayload._ErrorPayload? = nil
+                        ) {
+                            self.object = object
+                            self.held = held
+                            self.permissions = permissions
+                            self.readOnly = readOnly
+                            self.limits = limits
+                            self.validUntil = validUntil
+                            self.error = error
+                        }
+                        public enum CodingKeys: String, CodingKey {
+                            case object
+                            case held
+                            case permissions
+                            case readOnly = "read_only"
+                            case limits
+                            case validUntil = "valid_until"
+                            case error
+                        }
+                    }
+                    /// - Remark: Generated from `#/paths/v1/set_grants/effective/{customer_id}/GET/responses/200/content/application\/json`.
+                    case json(Operations.GetV1SetGrantsEffectiveByCustomerId.Output.Ok.Body.JsonPayload?)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Operations.GetV1SetGrantsEffectiveByCustomerId.Output.Ok.Body.JsonPayload? {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.GetV1SetGrantsEffectiveByCustomerId.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.GetV1SetGrantsEffectiveByCustomerId.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// The effective answer
+            ///
+            /// - Remark: Generated from `#/paths//v1/set_grants/effective/{customer_id}/get(getV1SetGrantsEffectiveByCustomerId)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.GetV1SetGrantsEffectiveByCustomerId.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            public var ok: Operations.GetV1SetGrantsEffectiveByCustomerId.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct BadRequest: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/set_grants/effective/{customer_id}/GET/responses/400/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/set_grants/effective/{customer_id}/GET/responses/400/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.GetV1SetGrantsEffectiveByCustomerId.Output.BadRequest.Body
+                /// Creates a new `BadRequest`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.GetV1SetGrantsEffectiveByCustomerId.Output.BadRequest.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/set_grants/effective/{customer_id}/get(getV1SetGrantsEffectiveByCustomerId)/responses/400`.
+            ///
+            /// HTTP response code: `400 badRequest`.
+            case badRequest(Operations.GetV1SetGrantsEffectiveByCustomerId.Output.BadRequest)
+            /// The associated value of the enum case if `self` is `.badRequest`.
+            ///
+            /// - Throws: An error if `self` is not `.badRequest`.
+            /// - SeeAlso: `.badRequest`.
+            public var badRequest: Operations.GetV1SetGrantsEffectiveByCustomerId.Output.BadRequest {
+                get throws {
+                    switch self {
+                    case let .badRequest(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "badRequest",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct Unauthorized: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/set_grants/effective/{customer_id}/GET/responses/401/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/set_grants/effective/{customer_id}/GET/responses/401/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.GetV1SetGrantsEffectiveByCustomerId.Output.Unauthorized.Body
+                /// Creates a new `Unauthorized`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.GetV1SetGrantsEffectiveByCustomerId.Output.Unauthorized.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/set_grants/effective/{customer_id}/get(getV1SetGrantsEffectiveByCustomerId)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            case unauthorized(Operations.GetV1SetGrantsEffectiveByCustomerId.Output.Unauthorized)
+            /// The associated value of the enum case if `self` is `.unauthorized`.
+            ///
+            /// - Throws: An error if `self` is not `.unauthorized`.
+            /// - SeeAlso: `.unauthorized`.
+            public var unauthorized: Operations.GetV1SetGrantsEffectiveByCustomerId.Output.Unauthorized {
+                get throws {
+                    switch self {
+                    case let .unauthorized(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "unauthorized",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct Forbidden: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/set_grants/effective/{customer_id}/GET/responses/403/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/set_grants/effective/{customer_id}/GET/responses/403/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.GetV1SetGrantsEffectiveByCustomerId.Output.Forbidden.Body
+                /// Creates a new `Forbidden`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.GetV1SetGrantsEffectiveByCustomerId.Output.Forbidden.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/set_grants/effective/{customer_id}/get(getV1SetGrantsEffectiveByCustomerId)/responses/403`.
+            ///
+            /// HTTP response code: `403 forbidden`.
+            case forbidden(Operations.GetV1SetGrantsEffectiveByCustomerId.Output.Forbidden)
+            /// The associated value of the enum case if `self` is `.forbidden`.
+            ///
+            /// - Throws: An error if `self` is not `.forbidden`.
+            /// - SeeAlso: `.forbidden`.
+            public var forbidden: Operations.GetV1SetGrantsEffectiveByCustomerId.Output.Forbidden {
+                get throws {
+                    switch self {
+                    case let .forbidden(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "forbidden",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct NotFound: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/set_grants/effective/{customer_id}/GET/responses/404/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/set_grants/effective/{customer_id}/GET/responses/404/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.GetV1SetGrantsEffectiveByCustomerId.Output.NotFound.Body
+                /// Creates a new `NotFound`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.GetV1SetGrantsEffectiveByCustomerId.Output.NotFound.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/set_grants/effective/{customer_id}/get(getV1SetGrantsEffectiveByCustomerId)/responses/404`.
+            ///
+            /// HTTP response code: `404 notFound`.
+            case notFound(Operations.GetV1SetGrantsEffectiveByCustomerId.Output.NotFound)
+            /// The associated value of the enum case if `self` is `.notFound`.
+            ///
+            /// - Throws: An error if `self` is not `.notFound`.
+            /// - SeeAlso: `.notFound`.
+            public var notFound: Operations.GetV1SetGrantsEffectiveByCustomerId.Output.NotFound {
+                get throws {
+                    switch self {
+                    case let .notFound(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "notFound",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        @frozen public enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            public init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            public var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            public static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// Revoke a set grant
+    ///
+    /// The row stays, with `revokeReason` `direct`.
+    ///
+    /// Replaces DELETE /sets/grants/{id}.
+    ///
+    /// - Remark: HTTP `DELETE /v1/set_grants/{id}`.
+    /// - Remark: Generated from `#/paths//v1/set_grants/{id}/delete(deleteV1SetGrantsById)`.
+    public enum DeleteV1SetGrantsById {
+        public static let id: Swift.String = "deleteV1SetGrantsById"
+        public struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/v1/set_grants/{id}/DELETE/path`.
+            public struct Path: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/set_grants/{id}/DELETE/path/id`.
+                public var id: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - id:
+                public init(id: Swift.String) {
+                    self.id = id
+                }
+            }
+            public var path: Operations.DeleteV1SetGrantsById.Input.Path
+            /// - Remark: Generated from `#/paths/v1/set_grants/{id}/DELETE/header`.
+            public struct Headers: Sendable, Hashable {
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.DeleteV1SetGrantsById.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.DeleteV1SetGrantsById.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            public var headers: Operations.DeleteV1SetGrantsById.Input.Headers
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            ///   - headers:
+            public init(
+                path: Operations.DeleteV1SetGrantsById.Input.Path,
+                headers: Operations.DeleteV1SetGrantsById.Input.Headers = .init()
+            ) {
+                self.path = path
+                self.headers = headers
+            }
+        }
+        @frozen public enum Output: Sendable, Hashable {
+            public struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/set_grants/{id}/DELETE/responses/200/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/set_grants/{id}/DELETE/responses/200/content/application\/json`.
+                    case json(Components.Schemas.Deleted)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.Deleted {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.DeleteV1SetGrantsById.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.DeleteV1SetGrantsById.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// Deleted
+            ///
+            /// - Remark: Generated from `#/paths//v1/set_grants/{id}/delete(deleteV1SetGrantsById)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.DeleteV1SetGrantsById.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            public var ok: Operations.DeleteV1SetGrantsById.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct Unauthorized: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/set_grants/{id}/DELETE/responses/401/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/set_grants/{id}/DELETE/responses/401/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.DeleteV1SetGrantsById.Output.Unauthorized.Body
+                /// Creates a new `Unauthorized`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.DeleteV1SetGrantsById.Output.Unauthorized.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/set_grants/{id}/delete(deleteV1SetGrantsById)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            case unauthorized(Operations.DeleteV1SetGrantsById.Output.Unauthorized)
+            /// The associated value of the enum case if `self` is `.unauthorized`.
+            ///
+            /// - Throws: An error if `self` is not `.unauthorized`.
+            /// - SeeAlso: `.unauthorized`.
+            public var unauthorized: Operations.DeleteV1SetGrantsById.Output.Unauthorized {
+                get throws {
+                    switch self {
+                    case let .unauthorized(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "unauthorized",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct Forbidden: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/set_grants/{id}/DELETE/responses/403/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/set_grants/{id}/DELETE/responses/403/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.DeleteV1SetGrantsById.Output.Forbidden.Body
+                /// Creates a new `Forbidden`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.DeleteV1SetGrantsById.Output.Forbidden.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/set_grants/{id}/delete(deleteV1SetGrantsById)/responses/403`.
+            ///
+            /// HTTP response code: `403 forbidden`.
+            case forbidden(Operations.DeleteV1SetGrantsById.Output.Forbidden)
+            /// The associated value of the enum case if `self` is `.forbidden`.
+            ///
+            /// - Throws: An error if `self` is not `.forbidden`.
+            /// - SeeAlso: `.forbidden`.
+            public var forbidden: Operations.DeleteV1SetGrantsById.Output.Forbidden {
+                get throws {
+                    switch self {
+                    case let .forbidden(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "forbidden",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct NotFound: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/set_grants/{id}/DELETE/responses/404/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/set_grants/{id}/DELETE/responses/404/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.DeleteV1SetGrantsById.Output.NotFound.Body
+                /// Creates a new `NotFound`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.DeleteV1SetGrantsById.Output.NotFound.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/set_grants/{id}/delete(deleteV1SetGrantsById)/responses/404`.
+            ///
+            /// HTTP response code: `404 notFound`.
+            case notFound(Operations.DeleteV1SetGrantsById.Output.NotFound)
+            /// The associated value of the enum case if `self` is `.notFound`.
+            ///
+            /// - Throws: An error if `self` is not `.notFound`.
+            /// - SeeAlso: `.notFound`.
+            public var notFound: Operations.DeleteV1SetGrantsById.Output.NotFound {
+                get throws {
+                    switch self {
+                    case let .notFound(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "notFound",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        @frozen public enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            public init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            public var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            public static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// List an ecosystem's sets
+    ///
+    /// Replaces GET /sets.
+    ///
+    /// - Remark: HTTP `GET /v1/sets`.
+    /// - Remark: Generated from `#/paths//v1/sets/get(getV1Sets)`.
+    public enum GetV1Sets {
+        public static let id: Swift.String = "getV1Sets"
+        public struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/v1/sets/GET/query`.
+            public struct Query: Sendable, Hashable {
+                /// An owner-made ecosystem's id (uuid or rdid); the caller must manage it (403 otherwise).
+                ///
+                /// - Remark: Generated from `#/paths/v1/sets/GET/query/ecosystem`.
+                public var ecosystem: Swift.String
+                /// `true` includes personal sets.
+                ///
+                /// - Remark: Generated from `#/paths/v1/sets/GET/query/personal`.
+                public var personal: Swift.String?
+                /// Page size, 1–100 (default 10).
+                ///
+                /// - Remark: Generated from `#/paths/v1/sets/GET/query/limit`.
+                public var limit: Swift.Int?
+                /// Cursor: an object id; returns the page after it.
+                ///
+                /// - Remark: Generated from `#/paths/v1/sets/GET/query/starting_after`.
+                public var startingAfter: Swift.String?
+                /// Cursor: an object id; returns the page before it.
+                ///
+                /// - Remark: Generated from `#/paths/v1/sets/GET/query/ending_before`.
+                public var endingBefore: Swift.String?
+                /// Related objects to return in full instead of as an id. Up to four levels, e.g. `ecosystem_id`; on a list, `data.<field>`.
+                ///
+                /// - Remark: Generated from `#/paths/v1/sets/GET/query/expand[]`.
+                public var expand_lbrack__rbrack_: [Swift.String]?
+                /// Creates a new `Query`.
+                ///
+                /// - Parameters:
+                ///   - ecosystem: An owner-made ecosystem's id (uuid or rdid); the caller must manage it (403 otherwise).
+                ///   - personal: `true` includes personal sets.
+                ///   - limit: Page size, 1–100 (default 10).
+                ///   - startingAfter: Cursor: an object id; returns the page after it.
+                ///   - endingBefore: Cursor: an object id; returns the page before it.
+                ///   - expand_lbrack__rbrack_: Related objects to return in full instead of as an id. Up to four levels, e.g. `ecosystem_id`; on a list, `data.<field>`.
+                public init(
+                    ecosystem: Swift.String,
+                    personal: Swift.String? = nil,
+                    limit: Swift.Int? = nil,
+                    startingAfter: Swift.String? = nil,
+                    endingBefore: Swift.String? = nil,
+                    expand_lbrack__rbrack_: [Swift.String]? = nil
+                ) {
+                    self.ecosystem = ecosystem
+                    self.personal = personal
+                    self.limit = limit
+                    self.startingAfter = startingAfter
+                    self.endingBefore = endingBefore
+                    self.expand_lbrack__rbrack_ = expand_lbrack__rbrack_
+                }
+            }
+            public var query: Operations.GetV1Sets.Input.Query
+            /// - Remark: Generated from `#/paths/v1/sets/GET/header`.
+            public struct Headers: Sendable, Hashable {
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.GetV1Sets.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.GetV1Sets.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            public var headers: Operations.GetV1Sets.Input.Headers
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - query:
+            ///   - headers:
+            public init(
+                query: Operations.GetV1Sets.Input.Query,
+                headers: Operations.GetV1Sets.Input.Headers = .init()
+            ) {
+                self.query = query
+                self.headers = headers
+            }
+        }
+        @frozen public enum Output: Sendable, Hashable {
+            public struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/sets/GET/responses/200/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/sets/GET/responses/200/content/json`.
+                    public struct JsonPayload: Codable, Hashable, Sendable {
+                        /// - Remark: Generated from `#/paths/v1/sets/GET/responses/200/content/json/object`.
+                        @frozen public enum ObjectPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                            case list = "list"
+                        }
+                        /// - Remark: Generated from `#/paths/v1/sets/GET/responses/200/content/json/object`.
+                        public var object: Operations.GetV1Sets.Output.Ok.Body.JsonPayload.ObjectPayload
+                        /// - Remark: Generated from `#/paths/v1/sets/GET/responses/200/content/json/DataPayload`.
+                        public struct DataPayloadPayload: Codable, Hashable, Sendable {
+                            /// - Remark: Generated from `#/paths/v1/sets/GET/responses/200/content/json/DataPayload/value1`.
+                            public struct Value1Payload: Codable, Hashable, Sendable {
+                                /// - Remark: Generated from `#/paths/v1/sets/GET/responses/200/content/json/DataPayload/value1/object`.
+                                @frozen public enum ObjectPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                                    case set = "set"
+                                }
+                                /// - Remark: Generated from `#/paths/v1/sets/GET/responses/200/content/json/DataPayload/value1/object`.
+                                public var object: Operations.GetV1Sets.Output.Ok.Body.JsonPayload.DataPayloadPayload.Value1Payload.ObjectPayload?
+                                /// Creates a new `Value1Payload`.
+                                ///
+                                /// - Parameters:
+                                ///   - object:
+                                public init(object: Operations.GetV1Sets.Output.Ok.Body.JsonPayload.DataPayloadPayload.Value1Payload.ObjectPayload? = nil) {
+                                    self.object = object
+                                }
+                                public enum CodingKeys: String, CodingKey {
+                                    case object
+                                }
+                            }
+                            /// - Remark: Generated from `#/paths/v1/sets/GET/responses/200/content/json/DataPayload/value1`.
+                            public var value1: Operations.GetV1Sets.Output.Ok.Body.JsonPayload.DataPayloadPayload.Value1Payload
+                            /// - Remark: Generated from `#/paths/v1/sets/GET/responses/200/content/json/DataPayload/value2`.
+                            public var value2: Components.Schemas.Set
+                            /// Creates a new `DataPayloadPayload`.
+                            ///
+                            /// - Parameters:
+                            ///   - value1:
+                            ///   - value2:
+                            public init(
+                                value1: Operations.GetV1Sets.Output.Ok.Body.JsonPayload.DataPayloadPayload.Value1Payload,
+                                value2: Components.Schemas.Set
+                            ) {
+                                self.value1 = value1
+                                self.value2 = value2
+                            }
+                            public init(from decoder: any Swift.Decoder) throws {
+                                self.value1 = try .init(from: decoder)
+                                self.value2 = try .init(from: decoder)
+                            }
+                            public func encode(to encoder: any Swift.Encoder) throws {
+                                try self.value1.encode(to: encoder)
+                                try self.value2.encode(to: encoder)
+                            }
+                        }
+                        /// - Remark: Generated from `#/paths/v1/sets/GET/responses/200/content/json/data`.
+                        public typealias DataPayload = [Operations.GetV1Sets.Output.Ok.Body.JsonPayload.DataPayloadPayload]
+                        /// - Remark: Generated from `#/paths/v1/sets/GET/responses/200/content/json/data`.
+                        public var data: Operations.GetV1Sets.Output.Ok.Body.JsonPayload.DataPayload
+                        /// - Remark: Generated from `#/paths/v1/sets/GET/responses/200/content/json/has_more`.
+                        public var hasMore: Swift.Bool
+                        /// - Remark: Generated from `#/paths/v1/sets/GET/responses/200/content/json/url`.
+                        public var url: Swift.String
+                        /// Creates a new `JsonPayload`.
+                        ///
+                        /// - Parameters:
+                        ///   - object:
+                        ///   - data:
+                        ///   - hasMore:
+                        ///   - url:
+                        public init(
+                            object: Operations.GetV1Sets.Output.Ok.Body.JsonPayload.ObjectPayload,
+                            data: Operations.GetV1Sets.Output.Ok.Body.JsonPayload.DataPayload,
+                            hasMore: Swift.Bool,
+                            url: Swift.String
+                        ) {
+                            self.object = object
+                            self.data = data
+                            self.hasMore = hasMore
+                            self.url = url
+                        }
+                        public enum CodingKeys: String, CodingKey {
+                            case object
+                            case data
+                            case hasMore = "has_more"
+                            case url
+                        }
+                    }
+                    /// - Remark: Generated from `#/paths/v1/sets/GET/responses/200/content/application\/json`.
+                    case json(Operations.GetV1Sets.Output.Ok.Body.JsonPayload)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Operations.GetV1Sets.Output.Ok.Body.JsonPayload {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.GetV1Sets.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.GetV1Sets.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// The sets, by slug
+            ///
+            /// - Remark: Generated from `#/paths//v1/sets/get(getV1Sets)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.GetV1Sets.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            public var ok: Operations.GetV1Sets.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct BadRequest: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/sets/GET/responses/400/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/sets/GET/responses/400/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.GetV1Sets.Output.BadRequest.Body
+                /// Creates a new `BadRequest`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.GetV1Sets.Output.BadRequest.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/sets/get(getV1Sets)/responses/400`.
+            ///
+            /// HTTP response code: `400 badRequest`.
+            case badRequest(Operations.GetV1Sets.Output.BadRequest)
+            /// The associated value of the enum case if `self` is `.badRequest`.
+            ///
+            /// - Throws: An error if `self` is not `.badRequest`.
+            /// - SeeAlso: `.badRequest`.
+            public var badRequest: Operations.GetV1Sets.Output.BadRequest {
+                get throws {
+                    switch self {
+                    case let .badRequest(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "badRequest",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct Unauthorized: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/sets/GET/responses/401/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/sets/GET/responses/401/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.GetV1Sets.Output.Unauthorized.Body
+                /// Creates a new `Unauthorized`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.GetV1Sets.Output.Unauthorized.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/sets/get(getV1Sets)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            case unauthorized(Operations.GetV1Sets.Output.Unauthorized)
+            /// The associated value of the enum case if `self` is `.unauthorized`.
+            ///
+            /// - Throws: An error if `self` is not `.unauthorized`.
+            /// - SeeAlso: `.unauthorized`.
+            public var unauthorized: Operations.GetV1Sets.Output.Unauthorized {
+                get throws {
+                    switch self {
+                    case let .unauthorized(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "unauthorized",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct Forbidden: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/sets/GET/responses/403/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/sets/GET/responses/403/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.GetV1Sets.Output.Forbidden.Body
+                /// Creates a new `Forbidden`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.GetV1Sets.Output.Forbidden.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/sets/get(getV1Sets)/responses/403`.
+            ///
+            /// HTTP response code: `403 forbidden`.
+            case forbidden(Operations.GetV1Sets.Output.Forbidden)
+            /// The associated value of the enum case if `self` is `.forbidden`.
+            ///
+            /// - Throws: An error if `self` is not `.forbidden`.
+            /// - SeeAlso: `.forbidden`.
+            public var forbidden: Operations.GetV1Sets.Output.Forbidden {
+                get throws {
+                    switch self {
+                    case let .forbidden(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "forbidden",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct NotFound: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/sets/GET/responses/404/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/sets/GET/responses/404/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.GetV1Sets.Output.NotFound.Body
+                /// Creates a new `NotFound`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.GetV1Sets.Output.NotFound.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/sets/get(getV1Sets)/responses/404`.
+            ///
+            /// HTTP response code: `404 notFound`.
+            case notFound(Operations.GetV1Sets.Output.NotFound)
+            /// The associated value of the enum case if `self` is `.notFound`.
+            ///
+            /// - Throws: An error if `self` is not `.notFound`.
+            /// - SeeAlso: `.notFound`.
+            public var notFound: Operations.GetV1Sets.Output.NotFound {
+                get throws {
+                    switch self {
+                    case let .notFound(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "notFound",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        @frozen public enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            public init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            public var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            public static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// Create a set
+    ///
+    /// Replaces POST /sets.
+    ///
+    /// - Remark: HTTP `POST /v1/sets`.
+    /// - Remark: Generated from `#/paths//v1/sets/post(postV1Sets)`.
+    public enum PostV1Sets {
+        public static let id: Swift.String = "postV1Sets"
+        public struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/v1/sets/POST/query`.
+            public struct Query: Sendable, Hashable {
+                /// An owner-made ecosystem's id (uuid or rdid); the caller must manage it (403 otherwise).
+                ///
+                /// - Remark: Generated from `#/paths/v1/sets/POST/query/ecosystem`.
+                public var ecosystem: Swift.String
+                /// Creates a new `Query`.
+                ///
+                /// - Parameters:
+                ///   - ecosystem: An owner-made ecosystem's id (uuid or rdid); the caller must manage it (403 otherwise).
+                public init(ecosystem: Swift.String) {
+                    self.ecosystem = ecosystem
+                }
+            }
+            public var query: Operations.PostV1Sets.Input.Query
+            /// - Remark: Generated from `#/paths/v1/sets/POST/header`.
+            public struct Headers: Sendable, Hashable {
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.PostV1Sets.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.PostV1Sets.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            public var headers: Operations.PostV1Sets.Input.Headers
+            /// - Remark: Generated from `#/paths/v1/sets/POST/requestBody`.
+            @frozen public enum Body: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/sets/POST/requestBody/content/application\/json`.
+                case json(Components.Schemas.SetCreate)
+            }
+            public var body: Operations.PostV1Sets.Input.Body
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - query:
+            ///   - headers:
+            ///   - body:
+            public init(
+                query: Operations.PostV1Sets.Input.Query,
+                headers: Operations.PostV1Sets.Input.Headers = .init(),
+                body: Operations.PostV1Sets.Input.Body
+            ) {
+                self.query = query
+                self.headers = headers
+                self.body = body
+            }
+        }
+        @frozen public enum Output: Sendable, Hashable {
+            public struct Created: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/sets/POST/responses/201/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/sets/POST/responses/201/content/json`.
+                    public struct JsonPayload: Codable, Hashable, Sendable {
+                        /// - Remark: Generated from `#/paths/v1/sets/POST/responses/201/content/json/value1`.
+                        public struct Value1Payload: Codable, Hashable, Sendable {
+                            /// - Remark: Generated from `#/paths/v1/sets/POST/responses/201/content/json/value1/object`.
+                            @frozen public enum ObjectPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                                case set = "set"
+                            }
+                            /// - Remark: Generated from `#/paths/v1/sets/POST/responses/201/content/json/value1/object`.
+                            public var object: Operations.PostV1Sets.Output.Created.Body.JsonPayload.Value1Payload.ObjectPayload?
+                            /// Creates a new `Value1Payload`.
+                            ///
+                            /// - Parameters:
+                            ///   - object:
+                            public init(object: Operations.PostV1Sets.Output.Created.Body.JsonPayload.Value1Payload.ObjectPayload? = nil) {
+                                self.object = object
+                            }
+                            public enum CodingKeys: String, CodingKey {
+                                case object
+                            }
+                        }
+                        /// - Remark: Generated from `#/paths/v1/sets/POST/responses/201/content/json/value1`.
+                        public var value1: Operations.PostV1Sets.Output.Created.Body.JsonPayload.Value1Payload
+                        /// - Remark: Generated from `#/paths/v1/sets/POST/responses/201/content/json/value2`.
+                        public var value2: Components.Schemas.Set
+                        /// Creates a new `JsonPayload`.
+                        ///
+                        /// - Parameters:
+                        ///   - value1:
+                        ///   - value2:
+                        public init(
+                            value1: Operations.PostV1Sets.Output.Created.Body.JsonPayload.Value1Payload,
+                            value2: Components.Schemas.Set
+                        ) {
+                            self.value1 = value1
+                            self.value2 = value2
+                        }
+                        public init(from decoder: any Swift.Decoder) throws {
+                            self.value1 = try .init(from: decoder)
+                            self.value2 = try .init(from: decoder)
+                        }
+                        public func encode(to encoder: any Swift.Encoder) throws {
+                            try self.value1.encode(to: encoder)
+                            try self.value2.encode(to: encoder)
+                        }
+                    }
+                    /// - Remark: Generated from `#/paths/v1/sets/POST/responses/201/content/application\/json`.
+                    case json(Operations.PostV1Sets.Output.Created.Body.JsonPayload)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Operations.PostV1Sets.Output.Created.Body.JsonPayload {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostV1Sets.Output.Created.Body
+                /// Creates a new `Created`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostV1Sets.Output.Created.Body) {
+                    self.body = body
+                }
+            }
+            /// The new set
+            ///
+            /// - Remark: Generated from `#/paths//v1/sets/post(postV1Sets)/responses/201`.
+            ///
+            /// HTTP response code: `201 created`.
+            case created(Operations.PostV1Sets.Output.Created)
+            /// The associated value of the enum case if `self` is `.created`.
+            ///
+            /// - Throws: An error if `self` is not `.created`.
+            /// - SeeAlso: `.created`.
+            public var created: Operations.PostV1Sets.Output.Created {
+                get throws {
+                    switch self {
+                    case let .created(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "created",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct BadRequest: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/sets/POST/responses/400/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/sets/POST/responses/400/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostV1Sets.Output.BadRequest.Body
+                /// Creates a new `BadRequest`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostV1Sets.Output.BadRequest.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/sets/post(postV1Sets)/responses/400`.
+            ///
+            /// HTTP response code: `400 badRequest`.
+            case badRequest(Operations.PostV1Sets.Output.BadRequest)
+            /// The associated value of the enum case if `self` is `.badRequest`.
+            ///
+            /// - Throws: An error if `self` is not `.badRequest`.
+            /// - SeeAlso: `.badRequest`.
+            public var badRequest: Operations.PostV1Sets.Output.BadRequest {
+                get throws {
+                    switch self {
+                    case let .badRequest(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "badRequest",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct Unauthorized: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/sets/POST/responses/401/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/sets/POST/responses/401/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostV1Sets.Output.Unauthorized.Body
+                /// Creates a new `Unauthorized`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostV1Sets.Output.Unauthorized.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/sets/post(postV1Sets)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            case unauthorized(Operations.PostV1Sets.Output.Unauthorized)
+            /// The associated value of the enum case if `self` is `.unauthorized`.
+            ///
+            /// - Throws: An error if `self` is not `.unauthorized`.
+            /// - SeeAlso: `.unauthorized`.
+            public var unauthorized: Operations.PostV1Sets.Output.Unauthorized {
+                get throws {
+                    switch self {
+                    case let .unauthorized(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "unauthorized",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct Forbidden: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/sets/POST/responses/403/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/sets/POST/responses/403/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostV1Sets.Output.Forbidden.Body
+                /// Creates a new `Forbidden`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostV1Sets.Output.Forbidden.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/sets/post(postV1Sets)/responses/403`.
+            ///
+            /// HTTP response code: `403 forbidden`.
+            case forbidden(Operations.PostV1Sets.Output.Forbidden)
+            /// The associated value of the enum case if `self` is `.forbidden`.
+            ///
+            /// - Throws: An error if `self` is not `.forbidden`.
+            /// - SeeAlso: `.forbidden`.
+            public var forbidden: Operations.PostV1Sets.Output.Forbidden {
+                get throws {
+                    switch self {
+                    case let .forbidden(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "forbidden",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct NotFound: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/sets/POST/responses/404/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/sets/POST/responses/404/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostV1Sets.Output.NotFound.Body
+                /// Creates a new `NotFound`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostV1Sets.Output.NotFound.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/sets/post(postV1Sets)/responses/404`.
+            ///
+            /// HTTP response code: `404 notFound`.
+            case notFound(Operations.PostV1Sets.Output.NotFound)
+            /// The associated value of the enum case if `self` is `.notFound`.
+            ///
+            /// - Throws: An error if `self` is not `.notFound`.
+            /// - SeeAlso: `.notFound`.
+            public var notFound: Operations.PostV1Sets.Output.NotFound {
+                get throws {
+                    switch self {
+                    case let .notFound(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "notFound",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct Conflict: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/sets/POST/responses/409/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/sets/POST/responses/409/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostV1Sets.Output.Conflict.Body
+                /// Creates a new `Conflict`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostV1Sets.Output.Conflict.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/sets/post(postV1Sets)/responses/409`.
+            ///
+            /// HTTP response code: `409 conflict`.
+            case conflict(Operations.PostV1Sets.Output.Conflict)
+            /// The associated value of the enum case if `self` is `.conflict`.
+            ///
+            /// - Throws: An error if `self` is not `.conflict`.
+            /// - SeeAlso: `.conflict`.
+            public var conflict: Operations.PostV1Sets.Output.Conflict {
+                get throws {
+                    switch self {
+                    case let .conflict(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "conflict",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        @frozen public enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            public init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            public var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            public static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// Edit a set
+    ///
+    /// Making a set the default clears the flag on the previous default.
+    ///
+    /// Replaces PATCH /sets/{id}.
+    ///
+    /// - Remark: HTTP `POST /v1/sets/{id}`.
+    /// - Remark: Generated from `#/paths//v1/sets/{id}/post(postV1SetsById)`.
+    public enum PostV1SetsById {
+        public static let id: Swift.String = "postV1SetsById"
+        public struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/v1/sets/{id}/POST/path`.
+            public struct Path: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/sets/{id}/POST/path/id`.
+                public var id: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - id:
+                public init(id: Swift.String) {
+                    self.id = id
+                }
+            }
+            public var path: Operations.PostV1SetsById.Input.Path
+            /// - Remark: Generated from `#/paths/v1/sets/{id}/POST/header`.
+            public struct Headers: Sendable, Hashable {
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.PostV1SetsById.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.PostV1SetsById.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            public var headers: Operations.PostV1SetsById.Input.Headers
+            /// - Remark: Generated from `#/paths/v1/sets/{id}/POST/requestBody`.
+            @frozen public enum Body: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/sets/{id}/POST/requestBody/content/application\/json`.
+                case json(Components.Schemas.SetEdit)
+            }
+            public var body: Operations.PostV1SetsById.Input.Body
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            ///   - headers:
+            ///   - body:
+            public init(
+                path: Operations.PostV1SetsById.Input.Path,
+                headers: Operations.PostV1SetsById.Input.Headers = .init(),
+                body: Operations.PostV1SetsById.Input.Body
+            ) {
+                self.path = path
+                self.headers = headers
+                self.body = body
+            }
+        }
+        @frozen public enum Output: Sendable, Hashable {
+            public struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/sets/{id}/POST/responses/200/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/sets/{id}/POST/responses/200/content/json`.
+                    public struct JsonPayload: Codable, Hashable, Sendable {
+                        /// - Remark: Generated from `#/paths/v1/sets/{id}/POST/responses/200/content/json/value1`.
+                        public struct Value1Payload: Codable, Hashable, Sendable {
+                            /// - Remark: Generated from `#/paths/v1/sets/{id}/POST/responses/200/content/json/value1/object`.
+                            @frozen public enum ObjectPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                                case set = "set"
+                            }
+                            /// - Remark: Generated from `#/paths/v1/sets/{id}/POST/responses/200/content/json/value1/object`.
+                            public var object: Operations.PostV1SetsById.Output.Ok.Body.JsonPayload.Value1Payload.ObjectPayload?
+                            /// Creates a new `Value1Payload`.
+                            ///
+                            /// - Parameters:
+                            ///   - object:
+                            public init(object: Operations.PostV1SetsById.Output.Ok.Body.JsonPayload.Value1Payload.ObjectPayload? = nil) {
+                                self.object = object
+                            }
+                            public enum CodingKeys: String, CodingKey {
+                                case object
+                            }
+                        }
+                        /// - Remark: Generated from `#/paths/v1/sets/{id}/POST/responses/200/content/json/value1`.
+                        public var value1: Operations.PostV1SetsById.Output.Ok.Body.JsonPayload.Value1Payload
+                        /// - Remark: Generated from `#/paths/v1/sets/{id}/POST/responses/200/content/json/value2`.
+                        public var value2: Components.Schemas.Set
+                        /// Creates a new `JsonPayload`.
+                        ///
+                        /// - Parameters:
+                        ///   - value1:
+                        ///   - value2:
+                        public init(
+                            value1: Operations.PostV1SetsById.Output.Ok.Body.JsonPayload.Value1Payload,
+                            value2: Components.Schemas.Set
+                        ) {
+                            self.value1 = value1
+                            self.value2 = value2
+                        }
+                        public init(from decoder: any Swift.Decoder) throws {
+                            self.value1 = try .init(from: decoder)
+                            self.value2 = try .init(from: decoder)
+                        }
+                        public func encode(to encoder: any Swift.Encoder) throws {
+                            try self.value1.encode(to: encoder)
+                            try self.value2.encode(to: encoder)
+                        }
+                    }
+                    /// - Remark: Generated from `#/paths/v1/sets/{id}/POST/responses/200/content/application\/json`.
+                    case json(Operations.PostV1SetsById.Output.Ok.Body.JsonPayload)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Operations.PostV1SetsById.Output.Ok.Body.JsonPayload {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostV1SetsById.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostV1SetsById.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// The set after the edit
+            ///
+            /// - Remark: Generated from `#/paths//v1/sets/{id}/post(postV1SetsById)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.PostV1SetsById.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            public var ok: Operations.PostV1SetsById.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct BadRequest: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/sets/{id}/POST/responses/400/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/sets/{id}/POST/responses/400/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostV1SetsById.Output.BadRequest.Body
+                /// Creates a new `BadRequest`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostV1SetsById.Output.BadRequest.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/sets/{id}/post(postV1SetsById)/responses/400`.
+            ///
+            /// HTTP response code: `400 badRequest`.
+            case badRequest(Operations.PostV1SetsById.Output.BadRequest)
+            /// The associated value of the enum case if `self` is `.badRequest`.
+            ///
+            /// - Throws: An error if `self` is not `.badRequest`.
+            /// - SeeAlso: `.badRequest`.
+            public var badRequest: Operations.PostV1SetsById.Output.BadRequest {
+                get throws {
+                    switch self {
+                    case let .badRequest(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "badRequest",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct Unauthorized: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/sets/{id}/POST/responses/401/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/sets/{id}/POST/responses/401/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostV1SetsById.Output.Unauthorized.Body
+                /// Creates a new `Unauthorized`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostV1SetsById.Output.Unauthorized.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/sets/{id}/post(postV1SetsById)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            case unauthorized(Operations.PostV1SetsById.Output.Unauthorized)
+            /// The associated value of the enum case if `self` is `.unauthorized`.
+            ///
+            /// - Throws: An error if `self` is not `.unauthorized`.
+            /// - SeeAlso: `.unauthorized`.
+            public var unauthorized: Operations.PostV1SetsById.Output.Unauthorized {
+                get throws {
+                    switch self {
+                    case let .unauthorized(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "unauthorized",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct Forbidden: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/sets/{id}/POST/responses/403/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/sets/{id}/POST/responses/403/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostV1SetsById.Output.Forbidden.Body
+                /// Creates a new `Forbidden`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostV1SetsById.Output.Forbidden.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/sets/{id}/post(postV1SetsById)/responses/403`.
+            ///
+            /// HTTP response code: `403 forbidden`.
+            case forbidden(Operations.PostV1SetsById.Output.Forbidden)
+            /// The associated value of the enum case if `self` is `.forbidden`.
+            ///
+            /// - Throws: An error if `self` is not `.forbidden`.
+            /// - SeeAlso: `.forbidden`.
+            public var forbidden: Operations.PostV1SetsById.Output.Forbidden {
+                get throws {
+                    switch self {
+                    case let .forbidden(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "forbidden",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct NotFound: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/sets/{id}/POST/responses/404/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/sets/{id}/POST/responses/404/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostV1SetsById.Output.NotFound.Body
+                /// Creates a new `NotFound`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostV1SetsById.Output.NotFound.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/sets/{id}/post(postV1SetsById)/responses/404`.
+            ///
+            /// HTTP response code: `404 notFound`.
+            case notFound(Operations.PostV1SetsById.Output.NotFound)
+            /// The associated value of the enum case if `self` is `.notFound`.
+            ///
+            /// - Throws: An error if `self` is not `.notFound`.
+            /// - SeeAlso: `.notFound`.
+            public var notFound: Operations.PostV1SetsById.Output.NotFound {
+                get throws {
+                    switch self {
+                    case let .notFound(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "notFound",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct Conflict: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/sets/{id}/POST/responses/409/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/sets/{id}/POST/responses/409/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostV1SetsById.Output.Conflict.Body
+                /// Creates a new `Conflict`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostV1SetsById.Output.Conflict.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/sets/{id}/post(postV1SetsById)/responses/409`.
+            ///
+            /// HTTP response code: `409 conflict`.
+            case conflict(Operations.PostV1SetsById.Output.Conflict)
+            /// The associated value of the enum case if `self` is `.conflict`.
+            ///
+            /// - Throws: An error if `self` is not `.conflict`.
+            /// - SeeAlso: `.conflict`.
+            public var conflict: Operations.PostV1SetsById.Output.Conflict {
+                get throws {
+                    switch self {
+                    case let .conflict(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "conflict",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        @frozen public enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            public init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            public var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            public static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// Delete a set
+    ///
+    /// Its containment goes, an offer selling it stops granting a set, and its grants stop counting. Refused (rule 8) when that unsettles a container or puts a holder in conflict.
+    ///
+    /// Replaces DELETE /sets/{id}.
+    ///
+    /// - Remark: HTTP `DELETE /v1/sets/{id}`.
+    /// - Remark: Generated from `#/paths//v1/sets/{id}/delete(deleteV1SetsById)`.
+    public enum DeleteV1SetsById {
+        public static let id: Swift.String = "deleteV1SetsById"
+        public struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/v1/sets/{id}/DELETE/path`.
+            public struct Path: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/sets/{id}/DELETE/path/id`.
+                public var id: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - id:
+                public init(id: Swift.String) {
+                    self.id = id
+                }
+            }
+            public var path: Operations.DeleteV1SetsById.Input.Path
+            /// - Remark: Generated from `#/paths/v1/sets/{id}/DELETE/header`.
+            public struct Headers: Sendable, Hashable {
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.DeleteV1SetsById.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.DeleteV1SetsById.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            public var headers: Operations.DeleteV1SetsById.Input.Headers
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            ///   - headers:
+            public init(
+                path: Operations.DeleteV1SetsById.Input.Path,
+                headers: Operations.DeleteV1SetsById.Input.Headers = .init()
+            ) {
+                self.path = path
+                self.headers = headers
+            }
+        }
+        @frozen public enum Output: Sendable, Hashable {
+            public struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/sets/{id}/DELETE/responses/200/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/sets/{id}/DELETE/responses/200/content/application\/json`.
+                    case json(Components.Schemas.Deleted)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.Deleted {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.DeleteV1SetsById.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.DeleteV1SetsById.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// Deleted
+            ///
+            /// - Remark: Generated from `#/paths//v1/sets/{id}/delete(deleteV1SetsById)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.DeleteV1SetsById.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            public var ok: Operations.DeleteV1SetsById.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct Unauthorized: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/sets/{id}/DELETE/responses/401/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/sets/{id}/DELETE/responses/401/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.DeleteV1SetsById.Output.Unauthorized.Body
+                /// Creates a new `Unauthorized`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.DeleteV1SetsById.Output.Unauthorized.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/sets/{id}/delete(deleteV1SetsById)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            case unauthorized(Operations.DeleteV1SetsById.Output.Unauthorized)
+            /// The associated value of the enum case if `self` is `.unauthorized`.
+            ///
+            /// - Throws: An error if `self` is not `.unauthorized`.
+            /// - SeeAlso: `.unauthorized`.
+            public var unauthorized: Operations.DeleteV1SetsById.Output.Unauthorized {
+                get throws {
+                    switch self {
+                    case let .unauthorized(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "unauthorized",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct Forbidden: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/sets/{id}/DELETE/responses/403/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/sets/{id}/DELETE/responses/403/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.DeleteV1SetsById.Output.Forbidden.Body
+                /// Creates a new `Forbidden`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.DeleteV1SetsById.Output.Forbidden.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/sets/{id}/delete(deleteV1SetsById)/responses/403`.
+            ///
+            /// HTTP response code: `403 forbidden`.
+            case forbidden(Operations.DeleteV1SetsById.Output.Forbidden)
+            /// The associated value of the enum case if `self` is `.forbidden`.
+            ///
+            /// - Throws: An error if `self` is not `.forbidden`.
+            /// - SeeAlso: `.forbidden`.
+            public var forbidden: Operations.DeleteV1SetsById.Output.Forbidden {
+                get throws {
+                    switch self {
+                    case let .forbidden(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "forbidden",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct NotFound: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/sets/{id}/DELETE/responses/404/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/sets/{id}/DELETE/responses/404/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.DeleteV1SetsById.Output.NotFound.Body
+                /// Creates a new `NotFound`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.DeleteV1SetsById.Output.NotFound.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/sets/{id}/delete(deleteV1SetsById)/responses/404`.
+            ///
+            /// HTTP response code: `404 notFound`.
+            case notFound(Operations.DeleteV1SetsById.Output.NotFound)
+            /// The associated value of the enum case if `self` is `.notFound`.
+            ///
+            /// - Throws: An error if `self` is not `.notFound`.
+            /// - SeeAlso: `.notFound`.
+            public var notFound: Operations.DeleteV1SetsById.Output.NotFound {
+                get throws {
+                    switch self {
+                    case let .notFound(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "notFound",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct UnprocessableContent: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/sets/{id}/DELETE/responses/422/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/sets/{id}/DELETE/responses/422/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.DeleteV1SetsById.Output.UnprocessableContent.Body
+                /// Creates a new `UnprocessableContent`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.DeleteV1SetsById.Output.UnprocessableContent.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/sets/{id}/delete(deleteV1SetsById)/responses/422`.
+            ///
+            /// HTTP response code: `422 unprocessableContent`.
+            case unprocessableContent(Operations.DeleteV1SetsById.Output.UnprocessableContent)
+            /// The associated value of the enum case if `self` is `.unprocessableContent`.
+            ///
+            /// - Throws: An error if `self` is not `.unprocessableContent`.
+            /// - SeeAlso: `.unprocessableContent`.
+            public var unprocessableContent: Operations.DeleteV1SetsById.Output.UnprocessableContent {
+                get throws {
+                    switch self {
+                    case let .unprocessableContent(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "unprocessableContent",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        @frozen public enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            public init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            public var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            public static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// Replace the sets a set contains
+    ///
+    /// Replaces PUT /sets/{id}/members.
+    ///
+    /// - Remark: HTTP `POST /v1/sets/{id}/members`.
+    /// - Remark: Generated from `#/paths//v1/sets/{id}/members/post(postV1SetsByIdMembers)`.
+    public enum PostV1SetsByIdMembers {
+        public static let id: Swift.String = "postV1SetsByIdMembers"
+        public struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/v1/sets/{id}/members/POST/path`.
+            public struct Path: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/sets/{id}/members/POST/path/id`.
+                public var id: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - id:
+                public init(id: Swift.String) {
+                    self.id = id
+                }
+            }
+            public var path: Operations.PostV1SetsByIdMembers.Input.Path
+            /// - Remark: Generated from `#/paths/v1/sets/{id}/members/POST/header`.
+            public struct Headers: Sendable, Hashable {
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.PostV1SetsByIdMembers.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.PostV1SetsByIdMembers.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            public var headers: Operations.PostV1SetsByIdMembers.Input.Headers
+            /// - Remark: Generated from `#/paths/v1/sets/{id}/members/POST/requestBody`.
+            @frozen public enum Body: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/sets/{id}/members/POST/requestBody/content/application\/json`.
+                case json(Components.Schemas.SetMembersPut)
+            }
+            public var body: Operations.PostV1SetsByIdMembers.Input.Body
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            ///   - headers:
+            ///   - body:
+            public init(
+                path: Operations.PostV1SetsByIdMembers.Input.Path,
+                headers: Operations.PostV1SetsByIdMembers.Input.Headers = .init(),
+                body: Operations.PostV1SetsByIdMembers.Input.Body
+            ) {
+                self.path = path
+                self.headers = headers
+                self.body = body
+            }
+        }
+        @frozen public enum Output: Sendable, Hashable {
+            public struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/sets/{id}/members/POST/responses/200/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/sets/{id}/members/POST/responses/200/content/json`.
+                    public struct JsonPayload: Codable, Hashable, Sendable {
+                        /// - Remark: Generated from `#/paths/v1/sets/{id}/members/POST/responses/200/content/json/value1`.
+                        public struct Value1Payload: Codable, Hashable, Sendable {
+                            /// - Remark: Generated from `#/paths/v1/sets/{id}/members/POST/responses/200/content/json/value1/object`.
+                            @frozen public enum ObjectPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                                case member = "member"
+                            }
+                            /// - Remark: Generated from `#/paths/v1/sets/{id}/members/POST/responses/200/content/json/value1/object`.
+                            public var object: Operations.PostV1SetsByIdMembers.Output.Ok.Body.JsonPayload.Value1Payload.ObjectPayload?
+                            /// Creates a new `Value1Payload`.
+                            ///
+                            /// - Parameters:
+                            ///   - object:
+                            public init(object: Operations.PostV1SetsByIdMembers.Output.Ok.Body.JsonPayload.Value1Payload.ObjectPayload? = nil) {
+                                self.object = object
+                            }
+                            public enum CodingKeys: String, CodingKey {
+                                case object
+                            }
+                        }
+                        /// - Remark: Generated from `#/paths/v1/sets/{id}/members/POST/responses/200/content/json/value1`.
+                        public var value1: Operations.PostV1SetsByIdMembers.Output.Ok.Body.JsonPayload.Value1Payload
+                        /// - Remark: Generated from `#/paths/v1/sets/{id}/members/POST/responses/200/content/json/value2`.
+                        public var value2: Components.Schemas.Set
+                        /// Creates a new `JsonPayload`.
+                        ///
+                        /// - Parameters:
+                        ///   - value1:
+                        ///   - value2:
+                        public init(
+                            value1: Operations.PostV1SetsByIdMembers.Output.Ok.Body.JsonPayload.Value1Payload,
+                            value2: Components.Schemas.Set
+                        ) {
+                            self.value1 = value1
+                            self.value2 = value2
+                        }
+                        public init(from decoder: any Swift.Decoder) throws {
+                            self.value1 = try .init(from: decoder)
+                            self.value2 = try .init(from: decoder)
+                        }
+                        public func encode(to encoder: any Swift.Encoder) throws {
+                            try self.value1.encode(to: encoder)
+                            try self.value2.encode(to: encoder)
+                        }
+                    }
+                    /// - Remark: Generated from `#/paths/v1/sets/{id}/members/POST/responses/200/content/application\/json`.
+                    case json(Operations.PostV1SetsByIdMembers.Output.Ok.Body.JsonPayload)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Operations.PostV1SetsByIdMembers.Output.Ok.Body.JsonPayload {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostV1SetsByIdMembers.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostV1SetsByIdMembers.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// The set after the edit
+            ///
+            /// - Remark: Generated from `#/paths//v1/sets/{id}/members/post(postV1SetsByIdMembers)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.PostV1SetsByIdMembers.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            public var ok: Operations.PostV1SetsByIdMembers.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct BadRequest: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/sets/{id}/members/POST/responses/400/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/sets/{id}/members/POST/responses/400/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostV1SetsByIdMembers.Output.BadRequest.Body
+                /// Creates a new `BadRequest`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostV1SetsByIdMembers.Output.BadRequest.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/sets/{id}/members/post(postV1SetsByIdMembers)/responses/400`.
+            ///
+            /// HTTP response code: `400 badRequest`.
+            case badRequest(Operations.PostV1SetsByIdMembers.Output.BadRequest)
+            /// The associated value of the enum case if `self` is `.badRequest`.
+            ///
+            /// - Throws: An error if `self` is not `.badRequest`.
+            /// - SeeAlso: `.badRequest`.
+            public var badRequest: Operations.PostV1SetsByIdMembers.Output.BadRequest {
+                get throws {
+                    switch self {
+                    case let .badRequest(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "badRequest",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct Unauthorized: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/sets/{id}/members/POST/responses/401/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/sets/{id}/members/POST/responses/401/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostV1SetsByIdMembers.Output.Unauthorized.Body
+                /// Creates a new `Unauthorized`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostV1SetsByIdMembers.Output.Unauthorized.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/sets/{id}/members/post(postV1SetsByIdMembers)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            case unauthorized(Operations.PostV1SetsByIdMembers.Output.Unauthorized)
+            /// The associated value of the enum case if `self` is `.unauthorized`.
+            ///
+            /// - Throws: An error if `self` is not `.unauthorized`.
+            /// - SeeAlso: `.unauthorized`.
+            public var unauthorized: Operations.PostV1SetsByIdMembers.Output.Unauthorized {
+                get throws {
+                    switch self {
+                    case let .unauthorized(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "unauthorized",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct Forbidden: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/sets/{id}/members/POST/responses/403/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/sets/{id}/members/POST/responses/403/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostV1SetsByIdMembers.Output.Forbidden.Body
+                /// Creates a new `Forbidden`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostV1SetsByIdMembers.Output.Forbidden.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/sets/{id}/members/post(postV1SetsByIdMembers)/responses/403`.
+            ///
+            /// HTTP response code: `403 forbidden`.
+            case forbidden(Operations.PostV1SetsByIdMembers.Output.Forbidden)
+            /// The associated value of the enum case if `self` is `.forbidden`.
+            ///
+            /// - Throws: An error if `self` is not `.forbidden`.
+            /// - SeeAlso: `.forbidden`.
+            public var forbidden: Operations.PostV1SetsByIdMembers.Output.Forbidden {
+                get throws {
+                    switch self {
+                    case let .forbidden(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "forbidden",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct NotFound: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/sets/{id}/members/POST/responses/404/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/sets/{id}/members/POST/responses/404/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostV1SetsByIdMembers.Output.NotFound.Body
+                /// Creates a new `NotFound`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostV1SetsByIdMembers.Output.NotFound.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/sets/{id}/members/post(postV1SetsByIdMembers)/responses/404`.
+            ///
+            /// HTTP response code: `404 notFound`.
+            case notFound(Operations.PostV1SetsByIdMembers.Output.NotFound)
+            /// The associated value of the enum case if `self` is `.notFound`.
+            ///
+            /// - Throws: An error if `self` is not `.notFound`.
+            /// - SeeAlso: `.notFound`.
+            public var notFound: Operations.PostV1SetsByIdMembers.Output.NotFound {
+                get throws {
+                    switch self {
+                    case let .notFound(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "notFound",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct UnprocessableContent: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/sets/{id}/members/POST/responses/422/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/sets/{id}/members/POST/responses/422/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostV1SetsByIdMembers.Output.UnprocessableContent.Body
+                /// Creates a new `UnprocessableContent`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostV1SetsByIdMembers.Output.UnprocessableContent.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/sets/{id}/members/post(postV1SetsByIdMembers)/responses/422`.
+            ///
+            /// HTTP response code: `422 unprocessableContent`.
+            case unprocessableContent(Operations.PostV1SetsByIdMembers.Output.UnprocessableContent)
+            /// The associated value of the enum case if `self` is `.unprocessableContent`.
+            ///
+            /// - Throws: An error if `self` is not `.unprocessableContent`.
+            /// - SeeAlso: `.unprocessableContent`.
+            public var unprocessableContent: Operations.PostV1SetsByIdMembers.Output.UnprocessableContent {
+                get throws {
+                    switch self {
+                    case let .unprocessableContent(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "unprocessableContent",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        @frozen public enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            public init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            public var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            public static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// Replace a set's permissions and limits
+    ///
+    /// Every key must be one the catalog's `setEntries` declares, with a value of its type (400 otherwise).
+    ///
+    /// Replaces PUT /sets/{id}/values.
+    ///
+    /// - Remark: HTTP `POST /v1/sets/{id}/values`.
+    /// - Remark: Generated from `#/paths//v1/sets/{id}/values/post(postV1SetsByIdValues)`.
+    public enum PostV1SetsByIdValues {
+        public static let id: Swift.String = "postV1SetsByIdValues"
+        public struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/v1/sets/{id}/values/POST/path`.
+            public struct Path: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/sets/{id}/values/POST/path/id`.
+                public var id: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - id:
+                public init(id: Swift.String) {
+                    self.id = id
+                }
+            }
+            public var path: Operations.PostV1SetsByIdValues.Input.Path
+            /// - Remark: Generated from `#/paths/v1/sets/{id}/values/POST/header`.
+            public struct Headers: Sendable, Hashable {
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.PostV1SetsByIdValues.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.PostV1SetsByIdValues.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            public var headers: Operations.PostV1SetsByIdValues.Input.Headers
+            /// - Remark: Generated from `#/paths/v1/sets/{id}/values/POST/requestBody`.
+            @frozen public enum Body: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/sets/{id}/values/POST/requestBody/content/application\/json`.
+                case json(Components.Schemas.SetValuesPut)
+            }
+            public var body: Operations.PostV1SetsByIdValues.Input.Body
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            ///   - headers:
+            ///   - body:
+            public init(
+                path: Operations.PostV1SetsByIdValues.Input.Path,
+                headers: Operations.PostV1SetsByIdValues.Input.Headers = .init(),
+                body: Operations.PostV1SetsByIdValues.Input.Body
+            ) {
+                self.path = path
+                self.headers = headers
+                self.body = body
+            }
+        }
+        @frozen public enum Output: Sendable, Hashable {
+            public struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/sets/{id}/values/POST/responses/200/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/sets/{id}/values/POST/responses/200/content/json`.
+                    public struct JsonPayload: Codable, Hashable, Sendable {
+                        /// - Remark: Generated from `#/paths/v1/sets/{id}/values/POST/responses/200/content/json/value1`.
+                        public struct Value1Payload: Codable, Hashable, Sendable {
+                            /// - Remark: Generated from `#/paths/v1/sets/{id}/values/POST/responses/200/content/json/value1/object`.
+                            @frozen public enum ObjectPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                                case value = "value"
+                            }
+                            /// - Remark: Generated from `#/paths/v1/sets/{id}/values/POST/responses/200/content/json/value1/object`.
+                            public var object: Operations.PostV1SetsByIdValues.Output.Ok.Body.JsonPayload.Value1Payload.ObjectPayload?
+                            /// Creates a new `Value1Payload`.
+                            ///
+                            /// - Parameters:
+                            ///   - object:
+                            public init(object: Operations.PostV1SetsByIdValues.Output.Ok.Body.JsonPayload.Value1Payload.ObjectPayload? = nil) {
+                                self.object = object
+                            }
+                            public enum CodingKeys: String, CodingKey {
+                                case object
+                            }
+                        }
+                        /// - Remark: Generated from `#/paths/v1/sets/{id}/values/POST/responses/200/content/json/value1`.
+                        public var value1: Operations.PostV1SetsByIdValues.Output.Ok.Body.JsonPayload.Value1Payload
+                        /// - Remark: Generated from `#/paths/v1/sets/{id}/values/POST/responses/200/content/json/value2`.
+                        public var value2: Components.Schemas.Set
+                        /// Creates a new `JsonPayload`.
+                        ///
+                        /// - Parameters:
+                        ///   - value1:
+                        ///   - value2:
+                        public init(
+                            value1: Operations.PostV1SetsByIdValues.Output.Ok.Body.JsonPayload.Value1Payload,
+                            value2: Components.Schemas.Set
+                        ) {
+                            self.value1 = value1
+                            self.value2 = value2
+                        }
+                        public init(from decoder: any Swift.Decoder) throws {
+                            self.value1 = try .init(from: decoder)
+                            self.value2 = try .init(from: decoder)
+                        }
+                        public func encode(to encoder: any Swift.Encoder) throws {
+                            try self.value1.encode(to: encoder)
+                            try self.value2.encode(to: encoder)
+                        }
+                    }
+                    /// - Remark: Generated from `#/paths/v1/sets/{id}/values/POST/responses/200/content/application\/json`.
+                    case json(Operations.PostV1SetsByIdValues.Output.Ok.Body.JsonPayload)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Operations.PostV1SetsByIdValues.Output.Ok.Body.JsonPayload {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostV1SetsByIdValues.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostV1SetsByIdValues.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// The set after the edit
+            ///
+            /// - Remark: Generated from `#/paths//v1/sets/{id}/values/post(postV1SetsByIdValues)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.PostV1SetsByIdValues.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            public var ok: Operations.PostV1SetsByIdValues.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct BadRequest: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/sets/{id}/values/POST/responses/400/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/sets/{id}/values/POST/responses/400/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostV1SetsByIdValues.Output.BadRequest.Body
+                /// Creates a new `BadRequest`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostV1SetsByIdValues.Output.BadRequest.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/sets/{id}/values/post(postV1SetsByIdValues)/responses/400`.
+            ///
+            /// HTTP response code: `400 badRequest`.
+            case badRequest(Operations.PostV1SetsByIdValues.Output.BadRequest)
+            /// The associated value of the enum case if `self` is `.badRequest`.
+            ///
+            /// - Throws: An error if `self` is not `.badRequest`.
+            /// - SeeAlso: `.badRequest`.
+            public var badRequest: Operations.PostV1SetsByIdValues.Output.BadRequest {
+                get throws {
+                    switch self {
+                    case let .badRequest(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "badRequest",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct Unauthorized: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/sets/{id}/values/POST/responses/401/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/sets/{id}/values/POST/responses/401/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostV1SetsByIdValues.Output.Unauthorized.Body
+                /// Creates a new `Unauthorized`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostV1SetsByIdValues.Output.Unauthorized.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/sets/{id}/values/post(postV1SetsByIdValues)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            case unauthorized(Operations.PostV1SetsByIdValues.Output.Unauthorized)
+            /// The associated value of the enum case if `self` is `.unauthorized`.
+            ///
+            /// - Throws: An error if `self` is not `.unauthorized`.
+            /// - SeeAlso: `.unauthorized`.
+            public var unauthorized: Operations.PostV1SetsByIdValues.Output.Unauthorized {
+                get throws {
+                    switch self {
+                    case let .unauthorized(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "unauthorized",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct Forbidden: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/sets/{id}/values/POST/responses/403/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/sets/{id}/values/POST/responses/403/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostV1SetsByIdValues.Output.Forbidden.Body
+                /// Creates a new `Forbidden`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostV1SetsByIdValues.Output.Forbidden.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/sets/{id}/values/post(postV1SetsByIdValues)/responses/403`.
+            ///
+            /// HTTP response code: `403 forbidden`.
+            case forbidden(Operations.PostV1SetsByIdValues.Output.Forbidden)
+            /// The associated value of the enum case if `self` is `.forbidden`.
+            ///
+            /// - Throws: An error if `self` is not `.forbidden`.
+            /// - SeeAlso: `.forbidden`.
+            public var forbidden: Operations.PostV1SetsByIdValues.Output.Forbidden {
+                get throws {
+                    switch self {
+                    case let .forbidden(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "forbidden",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct NotFound: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/sets/{id}/values/POST/responses/404/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/sets/{id}/values/POST/responses/404/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostV1SetsByIdValues.Output.NotFound.Body
+                /// Creates a new `NotFound`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostV1SetsByIdValues.Output.NotFound.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/sets/{id}/values/post(postV1SetsByIdValues)/responses/404`.
+            ///
+            /// HTTP response code: `404 notFound`.
+            case notFound(Operations.PostV1SetsByIdValues.Output.NotFound)
+            /// The associated value of the enum case if `self` is `.notFound`.
+            ///
+            /// - Throws: An error if `self` is not `.notFound`.
+            /// - SeeAlso: `.notFound`.
+            public var notFound: Operations.PostV1SetsByIdValues.Output.NotFound {
+                get throws {
+                    switch self {
+                    case let .notFound(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "notFound",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct UnprocessableContent: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/sets/{id}/values/POST/responses/422/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/sets/{id}/values/POST/responses/422/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostV1SetsByIdValues.Output.UnprocessableContent.Body
+                /// Creates a new `UnprocessableContent`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostV1SetsByIdValues.Output.UnprocessableContent.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/sets/{id}/values/post(postV1SetsByIdValues)/responses/422`.
+            ///
+            /// HTTP response code: `422 unprocessableContent`.
+            case unprocessableContent(Operations.PostV1SetsByIdValues.Output.UnprocessableContent)
+            /// The associated value of the enum case if `self` is `.unprocessableContent`.
+            ///
+            /// - Throws: An error if `self` is not `.unprocessableContent`.
+            /// - SeeAlso: `.unprocessableContent`.
+            public var unprocessableContent: Operations.PostV1SetsByIdValues.Output.UnprocessableContent {
+                get throws {
+                    switch self {
+                    case let .unprocessableContent(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "unprocessableContent",
                             response: self
                         )
                     }

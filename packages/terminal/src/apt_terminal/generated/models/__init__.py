@@ -103,6 +103,9 @@ from .campaign_status import CampaignStatus
 from .catalog_feature import CatalogFeature
 from .catalog_feature_allowed_in_item import CatalogFeatureAllowedInItem
 from .catalog_feature_automatic_in_item import CatalogFeatureAutomaticInItem
+from .catalog_feature_set_entries import CatalogFeatureSetEntries
+from .catalog_feature_set_entries_limits_item import CatalogFeatureSetEntriesLimitsItem
+from .catalog_feature_set_entries_limits_item_type import CatalogFeatureSetEntriesLimitsItemType
 from .catalog_feature_subscription_tier import CatalogFeatureSubscriptionTier
 from .catalog_feature_workspace_owner_kinds_item import CatalogFeatureWorkspaceOwnerKindsItem
 from .catalog_sync_outcome import CatalogSyncOutcome
@@ -172,6 +175,9 @@ from .customer_email_verify_result import CustomerEmailVerifyResult
 from .customer_me import CustomerMe
 from .customer_me_access import CustomerMeAccess
 from .customer_me_realm import CustomerMeRealm
+from .customer_me_sets_type_0 import CustomerMeSetsType0
+from .customer_me_sets_type_0_error import CustomerMeSetsType0Error
+from .customer_me_sets_type_0_limits import CustomerMeSetsType0Limits
 from .customer_me_user import CustomerMeUser
 from .customer_register_result import CustomerRegisterResult
 from .customer_resolve_result import CustomerResolveResult
@@ -455,27 +461,6 @@ from .get_v1_billing_offers_response_200 import GetV1BillingOffersResponse200
 from .get_v1_billing_offers_response_200_data_item import GetV1BillingOffersResponse200DataItem
 from .get_v1_billing_prices_response_200 import GetV1BillingPricesResponse200
 from .get_v1_billing_prices_response_200_data_item import GetV1BillingPricesResponse200DataItem
-from .get_v1_billing_subscription_tiers_by_id_response_200 import (
-    GetV1BillingSubscriptionTiersByIdResponse200,
-)
-from .get_v1_billing_subscription_tiers_response_200 import GetV1BillingSubscriptionTiersResponse200
-from .get_v1_billing_subscription_tiers_response_200_data_item import (
-    GetV1BillingSubscriptionTiersResponse200DataItem,
-)
-from .get_v1_billing_subscriptions_by_id_response_200 import (
-    GetV1BillingSubscriptionsByIdResponse200,
-)
-from .get_v1_billing_subscriptions_response_200 import GetV1BillingSubscriptionsResponse200
-from .get_v1_billing_subscriptions_response_200_data_item import (
-    GetV1BillingSubscriptionsResponse200DataItem,
-)
-from .get_v1_billing_tier_entitlements_by_id_response_200 import (
-    GetV1BillingTierEntitlementsByIdResponse200,
-)
-from .get_v1_billing_tier_entitlements_response_200 import GetV1BillingTierEntitlementsResponse200
-from .get_v1_billing_tier_entitlements_response_200_data_item import (
-    GetV1BillingTierEntitlementsResponse200DataItem,
-)
 from .get_v1_blocks_response_200 import GetV1BlocksResponse200
 from .get_v1_blocks_response_200_data_item import GetV1BlocksResponse200DataItem
 from .get_v1_bucket_access_groups_by_id_response_200 import GetV1BucketAccessGroupsByIdResponse200
@@ -1329,6 +1314,19 @@ from .get_v1_reserved_identifiers_response_200_data_item import (
 )
 from .get_v1_server_bag_response_200 import GetV1ServerBagResponse200
 from .get_v1_server_bag_response_200_data_item import GetV1ServerBagResponse200DataItem
+from .get_v1_set_grants_effective_by_customer_id_response_200_type_0 import (
+    GetV1SetGrantsEffectiveByCustomerIdResponse200Type0,
+)
+from .get_v1_set_grants_effective_by_customer_id_response_200_type_0_error import (
+    GetV1SetGrantsEffectiveByCustomerIdResponse200Type0Error,
+)
+from .get_v1_set_grants_effective_by_customer_id_response_200_type_0_limits import (
+    GetV1SetGrantsEffectiveByCustomerIdResponse200Type0Limits,
+)
+from .get_v1_set_grants_response_200 import GetV1SetGrantsResponse200
+from .get_v1_set_grants_response_200_data_item import GetV1SetGrantsResponse200DataItem
+from .get_v1_sets_response_200 import GetV1SetsResponse200
+from .get_v1_sets_response_200_data_item import GetV1SetsResponse200DataItem
 from .get_v1_shipr_connections_by_id_include_item import GetV1ShiprConnectionsByIdIncludeItem
 from .get_v1_shipr_connections_by_id_repositories_response_200 import (
     GetV1ShiprConnectionsByIdRepositoriesResponse200,
@@ -1642,6 +1640,8 @@ from .notification_preference import NotificationPreference
 from .notification_preference_category import NotificationPreferenceCategory
 from .notification_status import NotificationStatus
 from .notification_wake_event import NotificationWakeEvent
+from .offer_set import OfferSet
+from .offer_set_put import OfferSetPut
 from .operator_access_entry import OperatorAccessEntry
 from .operator_access_page import OperatorAccessPage
 from .org_sheet import OrgSheet
@@ -1867,26 +1867,6 @@ from .post_v1_billing_offers_body import PostV1BillingOffersBody
 from .post_v1_billing_offers_by_id_body import PostV1BillingOffersByIdBody
 from .post_v1_billing_offers_by_id_response_200 import PostV1BillingOffersByIdResponse200
 from .post_v1_billing_offers_response_201 import PostV1BillingOffersResponse201
-from .post_v1_billing_subscription_tiers_body import PostV1BillingSubscriptionTiersBody
-from .post_v1_billing_subscription_tiers_by_id_body import PostV1BillingSubscriptionTiersByIdBody
-from .post_v1_billing_subscription_tiers_by_id_response_200 import (
-    PostV1BillingSubscriptionTiersByIdResponse200,
-)
-from .post_v1_billing_subscription_tiers_response_201 import (
-    PostV1BillingSubscriptionTiersResponse201,
-)
-from .post_v1_billing_subscriptions_body import PostV1BillingSubscriptionsBody
-from .post_v1_billing_subscriptions_by_id_body import PostV1BillingSubscriptionsByIdBody
-from .post_v1_billing_subscriptions_by_id_response_200 import (
-    PostV1BillingSubscriptionsByIdResponse200,
-)
-from .post_v1_billing_subscriptions_response_201 import PostV1BillingSubscriptionsResponse201
-from .post_v1_billing_tier_entitlements_body import PostV1BillingTierEntitlementsBody
-from .post_v1_billing_tier_entitlements_by_id_body import PostV1BillingTierEntitlementsByIdBody
-from .post_v1_billing_tier_entitlements_by_id_response_200 import (
-    PostV1BillingTierEntitlementsByIdResponse200,
-)
-from .post_v1_billing_tier_entitlements_response_201 import PostV1BillingTierEntitlementsResponse201
 from .post_v1_blocks_body import PostV1BlocksBody
 from .post_v1_blocks_response_200 import PostV1BlocksResponse200
 from .post_v1_bucket_access_groups_body import PostV1BucketAccessGroupsBody
@@ -2729,6 +2709,7 @@ from .post_v1_oauth_providers_response_201_identity_mapping_client_secret_jwt im
 from .post_v1_oauth_providers_response_201_identity_mapping_response_mode import (
     PostV1OauthProvidersResponse201IdentityMappingResponseMode,
 )
+from .post_v1_offers_by_offer_id_set_response_200 import PostV1OffersByOfferIdSetResponse200
 from .post_v1_organizations_body import PostV1OrganizationsBody
 from .post_v1_organizations_by_id_body import PostV1OrganizationsByIdBody
 from .post_v1_organizations_by_id_response_200 import PostV1OrganizationsByIdResponse200
@@ -3128,6 +3109,11 @@ from .post_v1_server_bag_body import PostV1ServerBagBody
 from .post_v1_server_bag_by_key_body import PostV1ServerBagByKeyBody
 from .post_v1_server_bag_by_key_response_200 import PostV1ServerBagByKeyResponse200
 from .post_v1_server_bag_response_201 import PostV1ServerBagResponse201
+from .post_v1_set_grants_response_201 import PostV1SetGrantsResponse201
+from .post_v1_sets_by_id_members_response_200 import PostV1SetsByIdMembersResponse200
+from .post_v1_sets_by_id_response_200 import PostV1SetsByIdResponse200
+from .post_v1_sets_by_id_values_response_200 import PostV1SetsByIdValuesResponse200
+from .post_v1_sets_response_201 import PostV1SetsResponse201
 from .post_v1_shipr_connections_by_id_repositories_refresh_response_200 import (
     PostV1ShiprConnectionsByIdRepositoriesRefreshResponse200,
 )
@@ -3474,6 +3460,27 @@ from .send_invite_channel import SendInviteChannel
 from .send_invites_body import SendInvitesBody
 from .send_result import SendResult
 from .server_bag import ServerBag
+from .set_ import Set
+from .set_create import SetCreate
+from .set_edit import SetEdit
+from .set_effective import SetEffective
+from .set_effective_effective_type_0 import SetEffectiveEffectiveType0
+from .set_effective_effective_type_0_error import SetEffectiveEffectiveType0Error
+from .set_effective_effective_type_0_limits import SetEffectiveEffectiveType0Limits
+from .set_grant import SetGrant
+from .set_grant_create import SetGrantCreate
+from .set_grant_list import SetGrantList
+from .set_grant_result import SetGrantResult
+from .set_grant_source import SetGrantSource
+from .set_list import SetList
+from .set_members_put import SetMembersPut
+from .set_refusal import SetRefusal
+from .set_refusal_error import SetRefusalError
+from .set_refusal_error_code import SetRefusalErrorCode
+from .set_refusal_error_rule import SetRefusalErrorRule
+from .set_value import SetValue
+from .set_value_kind import SetValueKind
+from .set_values_put import SetValuesPut
 from .shipr_dev_repo import ShiprDevRepo
 from .shipr_group import ShiprGroup
 from .shipr_ladder import ShiprLadder
@@ -3751,6 +3758,9 @@ __all__ = (
     "CatalogFeature",
     "CatalogFeatureAllowedInItem",
     "CatalogFeatureAutomaticInItem",
+    "CatalogFeatureSetEntries",
+    "CatalogFeatureSetEntriesLimitsItem",
+    "CatalogFeatureSetEntriesLimitsItemType",
     "CatalogFeatureSubscriptionTier",
     "CatalogFeatureWorkspaceOwnerKindsItem",
     "CatalogSyncOutcome",
@@ -3820,6 +3830,9 @@ __all__ = (
     "CustomerMe",
     "CustomerMeAccess",
     "CustomerMeRealm",
+    "CustomerMeSetsType0",
+    "CustomerMeSetsType0Error",
+    "CustomerMeSetsType0Limits",
     "CustomerMeUser",
     "CustomerRegisterResult",
     "CustomerResolveResult",
@@ -4047,15 +4060,6 @@ __all__ = (
     "GetV1BillingOffersResponse200DataItem",
     "GetV1BillingPricesResponse200",
     "GetV1BillingPricesResponse200DataItem",
-    "GetV1BillingSubscriptionTiersByIdResponse200",
-    "GetV1BillingSubscriptionTiersResponse200",
-    "GetV1BillingSubscriptionTiersResponse200DataItem",
-    "GetV1BillingSubscriptionsByIdResponse200",
-    "GetV1BillingSubscriptionsResponse200",
-    "GetV1BillingSubscriptionsResponse200DataItem",
-    "GetV1BillingTierEntitlementsByIdResponse200",
-    "GetV1BillingTierEntitlementsResponse200",
-    "GetV1BillingTierEntitlementsResponse200DataItem",
     "GetV1BlocksResponse200",
     "GetV1BlocksResponse200DataItem",
     "GetV1BucketAccessGroupsByIdResponse200",
@@ -4561,6 +4565,13 @@ __all__ = (
     "GetV1ReservedIdentifiersResponse200DataItem",
     "GetV1ServerBagResponse200",
     "GetV1ServerBagResponse200DataItem",
+    "GetV1SetGrantsEffectiveByCustomerIdResponse200Type0",
+    "GetV1SetGrantsEffectiveByCustomerIdResponse200Type0Error",
+    "GetV1SetGrantsEffectiveByCustomerIdResponse200Type0Limits",
+    "GetV1SetGrantsResponse200",
+    "GetV1SetGrantsResponse200DataItem",
+    "GetV1SetsResponse200",
+    "GetV1SetsResponse200DataItem",
     "GetV1ShiprConnectionsByIdIncludeItem",
     "GetV1ShiprConnectionsByIdRepositoriesResponse200",
     "GetV1ShiprConnectionsByIdRepositoriesResponse200RepositoriesItem",
@@ -4812,6 +4823,8 @@ __all__ = (
     "NotificationPreferenceCategory",
     "NotificationStatus",
     "NotificationWakeEvent",
+    "OfferSet",
+    "OfferSetPut",
     "OperatorAccessEntry",
     "OperatorAccessPage",
     "OrgSheet",
@@ -4997,18 +5010,6 @@ __all__ = (
     "PostV1BillingOffersByIdBody",
     "PostV1BillingOffersByIdResponse200",
     "PostV1BillingOffersResponse201",
-    "PostV1BillingSubscriptionTiersBody",
-    "PostV1BillingSubscriptionTiersByIdBody",
-    "PostV1BillingSubscriptionTiersByIdResponse200",
-    "PostV1BillingSubscriptionTiersResponse201",
-    "PostV1BillingSubscriptionsBody",
-    "PostV1BillingSubscriptionsByIdBody",
-    "PostV1BillingSubscriptionsByIdResponse200",
-    "PostV1BillingSubscriptionsResponse201",
-    "PostV1BillingTierEntitlementsBody",
-    "PostV1BillingTierEntitlementsByIdBody",
-    "PostV1BillingTierEntitlementsByIdResponse200",
-    "PostV1BillingTierEntitlementsResponse201",
     "PostV1BlocksBody",
     "PostV1BlocksResponse200",
     "PostV1BucketAccessGroupsBody",
@@ -5537,6 +5538,7 @@ __all__ = (
     "PostV1OauthProvidersResponse201IdentityMapping",
     "PostV1OauthProvidersResponse201IdentityMappingClientSecretJwt",
     "PostV1OauthProvidersResponse201IdentityMappingResponseMode",
+    "PostV1OffersByOfferIdSetResponse200",
     "PostV1OrganizationsBody",
     "PostV1OrganizationsByIdBody",
     "PostV1OrganizationsByIdResponse200",
@@ -5780,6 +5782,11 @@ __all__ = (
     "PostV1ServerBagByKeyBody",
     "PostV1ServerBagByKeyResponse200",
     "PostV1ServerBagResponse201",
+    "PostV1SetGrantsResponse201",
+    "PostV1SetsByIdMembersResponse200",
+    "PostV1SetsByIdResponse200",
+    "PostV1SetsByIdValuesResponse200",
+    "PostV1SetsResponse201",
     "PostV1ShiprConnectionsByIdRepositoriesRefreshResponse200",
     "PostV1ShiprConnectionsByIdRepositoriesRefreshResponse200RepositoriesItem",
     "PostV1ShiprGroupsBody",
@@ -6080,6 +6087,27 @@ __all__ = (
     "SendInvitesBody",
     "SendResult",
     "ServerBag",
+    "Set",
+    "SetCreate",
+    "SetEdit",
+    "SetEffective",
+    "SetEffectiveEffectiveType0",
+    "SetEffectiveEffectiveType0Error",
+    "SetEffectiveEffectiveType0Limits",
+    "SetGrant",
+    "SetGrantCreate",
+    "SetGrantList",
+    "SetGrantResult",
+    "SetGrantSource",
+    "SetList",
+    "SetMembersPut",
+    "SetRefusal",
+    "SetRefusalError",
+    "SetRefusalErrorCode",
+    "SetRefusalErrorRule",
+    "SetValue",
+    "SetValueKind",
+    "SetValuesPut",
     "ShiprDevRepo",
     "ShiprGroup",
     "ShiprLadder",

@@ -272,6 +272,7 @@ var RESERVED_HANDLE_WORDS = [
   "research",
   "roles",
   "server-bags",
+  "sets",
   "signin-apps",
   "signup-list",
   "storage",

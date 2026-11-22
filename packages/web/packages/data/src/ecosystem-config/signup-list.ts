@@ -20,7 +20,7 @@ export interface SignupListEntry {
   email: string;
   /** The product role granted at the first proven session; null grants none. */
   roleId: string | null;
-  /** Reserved for sets; always null for now. */
+  /** The set granted at the first proven session; null grants none. */
   setId: string | null;
   createdAt: string;
   /** When the entry was applied; null while it waits. */
@@ -32,6 +32,7 @@ export interface SignupListEntry {
 export interface SignupListEntryInput {
   email: string;
   roleId?: string | null;
+  setId?: string | null;
 }
 
 /** `/v1/ecosystems/{id}/signup_list_entries` row. */
@@ -64,11 +65,15 @@ export const signupListApi = {
     return sortByText(rows.map(toEntry), (e) => e.email);
   },
 
-  /** Add an email, or change the role of one already listed. */
+  /** Add an email, or change the role or set of one already listed. */
   async put(ecoId: string, input: SignupListEntryInput): Promise<SignupListEntry> {
     const row = await authedJson<SignupEntryWire>(base(ecoId), {
       method: "POST",
-      body: JSON.stringify({ email: input.email, role_id: input.roleId ?? null }),
+      body: JSON.stringify({
+        email: input.email,
+        role_id: input.roleId ?? null,
+        set_id: input.setId ?? null,
+      }),
     });
     return toEntry(row);
   },

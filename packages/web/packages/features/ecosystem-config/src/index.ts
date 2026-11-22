@@ -29,6 +29,7 @@ export { SyncTablesPane, SyncTablesEditor } from "./SyncTablesPane";
 // who holds each role.
 export { ProductRolesPane } from "./ProductRolesPane";
 export { SignupListPane } from "./SignupListPane";
+export { SetsPane } from "./SetsPane";
 export {
   useSyncTables,
   useSetSyncOverride,

@@ -21,6 +21,8 @@
 // `@adh-sdk/adh-api-types`, following `./wire.ts`: this package is portable
 // mechanism and must not take on adh product vocabulary.
 
+import { toSetEntries } from "../sets/sets";
+import type { SetEntries, SetEntriesWire } from "../sets/wire";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { authedJson, authedRequest, isNotFound, listAllV1, unixToIso, withV1Query } from "../http";
 import { enc } from "../client-helpers";
@@ -72,6 +74,12 @@ export interface CatalogFeature {
    * blocked removal with a 409 (see {@link FeatureRequiredError}).
    */
   requiresFeatures?: readonly string[];
+  /**
+   * What the feature contributes to sets (phase 5): `permission` when a set can grant the feature
+   * itself, and the typed limits a set may define under it. Absent when it contributes nothing.
+   * The Sets pane is generated from these.
+   */
+  setEntries?: SetEntries;
   /**
    * The ecosystem types that may hold it. Absent means every type except workspace, personal and
    * organization. Which ecosystems that rules out is the server's call, read per ecosystem through
@@ -159,6 +167,7 @@ interface CatalogRow {
   allowed_in?: readonly EcosystemType[];
   automatic_in?: readonly EcosystemType[];
   included_with?: string;
+  set_entries?: SetEntriesWire;
 }
 /** `/v1/ecosystems/{id}/features` row. */
 interface ProvisionedRow {
@@ -176,6 +185,7 @@ const BASE = "/api/v1/features";
 const ecoFeatures = (ecosystemId: string): string => `/api/v1/ecosystems/${enc(ecosystemId)}/features`;
 
 export function toCatalogFeature(r: CatalogRow): CatalogFeature {
+  const setEntries = toSetEntries(r.set_entries);
   return {
     key: r.key,
     label: r.label,
@@ -187,6 +197,7 @@ export function toCatalogFeature(r: CatalogRow): CatalogFeature {
     ...(r.allowed_in !== undefined ? { allowedIn: r.allowed_in } : {}),
     ...(r.automatic_in !== undefined ? { automaticIn: r.automatic_in } : {}),
     ...(r.included_with !== undefined ? { includedWith: r.included_with } : {}),
+    ...(setEntries ? { setEntries } : {}),
   };
 }
 

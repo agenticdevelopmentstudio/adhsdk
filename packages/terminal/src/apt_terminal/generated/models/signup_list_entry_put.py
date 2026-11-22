@@ -17,7 +17,7 @@ class SignupListEntryPut:
     Attributes:
         email (str): Stored trimmed and lower-cased
         role_id (None | Unset | UUID):
-        set_id (None | Unset | UUID): Refused with 422 until sets are available
+        set_id (None | Unset | UUID): A set of this ecosystem (422 otherwise); null grants none
     """
 
     email: str

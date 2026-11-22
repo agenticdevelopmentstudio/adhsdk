@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Any, TypeVar, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -13,6 +13,10 @@ from ..models.catalog_feature_workspace_owner_kinds_item import (
     CatalogFeatureWorkspaceOwnerKindsItem,
 )
 from ..types import UNSET, Unset
+
+if TYPE_CHECKING:
+    from ..models.catalog_feature_set_entries import CatalogFeatureSetEntries
+
 
 T = TypeVar("T", bound="CatalogFeature")
 
@@ -34,6 +38,9 @@ class CatalogFeature:
         allowed_in (list[CatalogFeatureAllowedInItem] | Unset): The ecosystem types that may hold it; absent means every
             type except workspace, personal and organization. Adding it elsewhere is refused (400). GET
             /ecosystem/features/{id}/availability names these per ecosystem.
+        set_entries (CatalogFeatureSetEntries | Unset): What the feature contributes to sets: `permission` when the
+            feature itself can be in a set, and the typed limits a set may define under it. Limit keys are unique across the
+            catalog. The Sets screen is generated from these.
         workspace_owner_kinds (list[CatalogFeatureWorkspaceOwnerKindsItem] | Unset): Narrows allowedIn for a workspace
             by who owns it: Teams is allowed only in an organization workspace. Absent means either owner kind.
         automatic_in (list[CatalogFeatureAutomaticInItem] | Unset): The ecosystem types that get it when provisioned,
@@ -51,6 +58,7 @@ class CatalogFeature:
     coming_soon: bool | Unset = UNSET
     requires_features: list[str] | Unset = UNSET
     allowed_in: list[CatalogFeatureAllowedInItem] | Unset = UNSET
+    set_entries: CatalogFeatureSetEntries | Unset = UNSET
     workspace_owner_kinds: list[CatalogFeatureWorkspaceOwnerKindsItem] | Unset = UNSET
     automatic_in: list[CatalogFeatureAutomaticInItem] | Unset = UNSET
     included_with: str | Unset = UNSET
@@ -79,6 +87,10 @@ class CatalogFeature:
             for allowed_in_item_data in self.allowed_in:
                 allowed_in_item = allowed_in_item_data.value
                 allowed_in.append(allowed_in_item)
+
+        set_entries: dict[str, Any] | Unset = UNSET
+        if not isinstance(self.set_entries, Unset):
+            set_entries = self.set_entries.to_dict()
 
         workspace_owner_kinds: list[str] | Unset = UNSET
         if not isinstance(self.workspace_owner_kinds, Unset):
@@ -114,6 +126,8 @@ class CatalogFeature:
             field_dict["requires_features"] = requires_features
         if allowed_in is not UNSET:
             field_dict["allowed_in"] = allowed_in
+        if set_entries is not UNSET:
+            field_dict["set_entries"] = set_entries
         if workspace_owner_kinds is not UNSET:
             field_dict["workspace_owner_kinds"] = workspace_owner_kinds
         if automatic_in is not UNSET:
@@ -125,6 +139,8 @@ class CatalogFeature:
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
+        from ..models.catalog_feature_set_entries import CatalogFeatureSetEntries
+
         d = dict(src_dict)
         key = d.pop("key")
 
@@ -148,6 +164,13 @@ class CatalogFeature:
                 allowed_in_item = CatalogFeatureAllowedInItem(allowed_in_item_data)
 
                 allowed_in.append(allowed_in_item)
+
+        _set_entries = d.pop("set_entries", UNSET)
+        set_entries: CatalogFeatureSetEntries | Unset
+        if isinstance(_set_entries, Unset):
+            set_entries = UNSET
+        else:
+            set_entries = CatalogFeatureSetEntries.from_dict(_set_entries)
 
         _workspace_owner_kinds = d.pop("workspace_owner_kinds", UNSET)
         workspace_owner_kinds: list[CatalogFeatureWorkspaceOwnerKindsItem] | Unset = UNSET
@@ -180,6 +203,7 @@ class CatalogFeature:
             coming_soon=coming_soon,
             requires_features=requires_features,
             allowed_in=allowed_in,
+            set_entries=set_entries,
             workspace_owner_kinds=workspace_owner_kinds,
             automatic_in=automatic_in,
             included_with=included_with,

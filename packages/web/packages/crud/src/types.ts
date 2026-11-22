@@ -46,15 +46,15 @@ export interface CrudColumn {
 export type CrudExposure = 'owner' | 'catalog' | 'admin'
 
 export interface CrudTableMeta {
-  /** '<schema>/<table>' in URL (kebab) form, e.g. 'billing/subscription-tiers'. */
+  /** '<schema>/<table>' in URL (kebab) form, e.g. 'billing/offers'. */
   key: string
   /** URL schema segment (kebab), e.g. 'persona-memory'. */
   schema: string
-  /** URL table segment (kebab), e.g. 'subscription-tiers'. */
+  /** URL table segment (kebab), e.g. 'offers'. */
   table: string
-  /** Collection /v1 path on the backend (no /api prefix), e.g. '/v1/billing/subscription_tiers'. */
+  /** Collection /v1 path on the backend (no /api prefix), e.g. '/v1/billing/offers'. */
   basePath: string
-  /** Item path template, e.g. '/v1/billing/subscription_tiers/{id}'. */
+  /** Item path template, e.g. '/v1/billing/offers/{id}'. */
   itemPath: string
   /** itemPath's params in order — also the row fields holding the primary key. */
   pkParams: string[]

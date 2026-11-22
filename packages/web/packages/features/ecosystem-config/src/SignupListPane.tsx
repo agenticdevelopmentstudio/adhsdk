@@ -6,6 +6,7 @@ import { Check, Clock, Trash2 } from "lucide-react";
 import { useResourceList } from "@adh-sdk/data";
 import { accessApi, accessTargetKey, type AccessRoleRow } from "@adh-sdk/data/access";
 import { signupListApi, type SignupListEntry } from "@adh-sdk/data/ecosystem-config";
+import { setsApi, type SetRow } from "@adh-sdk/data/sets";
 import { FieldGroup } from "@adh-sdk/ui/blocks";
 import { Button } from "@adh-sdk/ui/components/button";
 import { ErrorText } from "@adh-sdk/ui/components/error-text";
@@ -19,13 +20,13 @@ const signupListKey = (ecosystemId: string) => `signup-list:${ecosystemId}`;
 
 /**
  * An ecosystem's SIGN-UP LIST (phase 5): the emails that may sign in, each with the product role
- * it receives the first time that person proves the address in a session. It replaces the
+ * and the set it receives the first time that person proves the address in a session. It replaces the
  * allow-list field the client auth settings had: while "Only listed people" is on, this list is the
  * one sign-in checks (the backend keeps the two equal), and while it is off, an entry still grants
  * its role but turns no one away.
  *
- * Adding an email already listed changes its role. Removing an entry never takes back a role it
- * already granted; that is revoked in Product roles. A granted row says when, and to whom it went is
+ * Adding an email already listed changes its role and set. Removing an entry never takes back what
+ * it already granted; a role is revoked in Product roles, a set in Sets. A granted row says when, and to whom it went is
  * the role's holder list.
  */
 export function SignupListPane({
@@ -68,8 +69,17 @@ function SignupList({ ecosystemId, help }: { ecosystemId: string; help?: ReactNo
   );
   const roleNames = useMemo(() => new Map((roles ?? []).map((r) => [r.id, r.name])), [roles]);
 
+  // The sets an entry may grant, read the same way: an unreadable list offers none.
+  const loadSets = useCallback(
+    () => setsApi.list(ecosystemId).catch(() => [] as SetRow[]),
+    [ecosystemId],
+  );
+  const { items: sets } = useResourceList<SetRow>(`sets:${ecosystemId}`, loadSets);
+  const setNames = useMemo(() => new Map((sets ?? []).map((s) => [s.id, s.name])), [sets]);
+
   const [email, setEmail] = useState("");
   const [roleId, setRoleId] = useState("");
+  const [setId, setSetId] = useState("");
   const [busy, setBusy] = useState(false);
   const busyRef = useRef(false);
   const [error, setError] = useState<string | null>(null);
@@ -98,9 +108,14 @@ function SignupList({ ecosystemId, help }: { ecosystemId: string; help?: ReactNo
       return;
     }
     void run(async () => {
-      await signupListApi.put(ecosystemId, { email: email.trim(), roleId: roleId || null });
+      await signupListApi.put(ecosystemId, {
+        email: email.trim(),
+        roleId: roleId || null,
+        setId: setId || null,
+      });
       setEmail("");
       setRoleId("");
+      setSetId("");
     });
   };
 
@@ -136,13 +151,27 @@ function SignupList({ ecosystemId, help }: { ecosystemId: string; help?: ReactNo
                 </option>
               ))}
             </Select>
+            <Select
+              aria-label="Set"
+              value={setId}
+              disabled={busy}
+              onChange={(e) => setSetId(e.target.value)}
+              className="w-48"
+            >
+              <option value="">No set</option>
+              {(sets ?? []).map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.name}
+                </option>
+              ))}
+            </Select>
             <Button type="submit" size="sm" disabled={busy || email.trim() === ""}>
               Add
             </Button>
           </form>
           <p className="text-xs text-apt-text-muted">
-            The role is granted the first time this person proves the address: a provider that
-            verifies it, or a code sent to it. Adding an email already listed changes its role.
+            The role and set are granted the first time this person proves the address: a provider
+            that verifies it, or a code sent to it. Adding an email already listed changes them.
           </p>
           <ErrorText error={error} />
         </FieldGroup>
@@ -163,6 +192,9 @@ function SignupList({ ecosystemId, help }: { ecosystemId: string; help?: ReactNo
                   </span>
                   <span className="w-32 truncate text-sm text-apt-text-muted">
                     {entry.roleId ? (roleNames.get(entry.roleId) ?? "Unknown role") : "No role"}
+                  </span>
+                  <span className="w-32 truncate text-sm text-apt-text-muted">
+                    {entry.setId ? (setNames.get(entry.setId) ?? "Unknown set") : "No set"}
                   </span>
                   <EntryStatus entry={entry} />
                   <Button

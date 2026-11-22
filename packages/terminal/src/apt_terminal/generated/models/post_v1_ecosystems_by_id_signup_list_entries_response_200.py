@@ -20,7 +20,7 @@ class PostV1EcosystemsByIdSignupListEntriesResponse200:
         id (UUID):
         email (str): Trimmed and lower-cased
         role_id (None | UUID): The role granted at the first proven session; null grants none
-        set_id (None | UUID): Reserved for sets; always null for now
+        set_id (None | UUID): The set granted at the first proven session; null grants none
         created (int): Unix timestamp, in seconds.
         granted_at (datetime.datetime | None): When the entry was applied; null while it waits
         granted_customer_id (None | str):

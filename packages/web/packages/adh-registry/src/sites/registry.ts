@@ -1032,6 +1032,8 @@ export const HUB_EXTRA_FEATURE_SEGMENTS = [
   'roles',
   // Sign-up list (phase 5): likewise a product knob, a product rail row and only a route here.
   'signup-list',
+  // Sets (phase 5): likewise a product knob, a product rail row and only a route here.
+  'sets',
   // Email Signup: a bespoke rail route (audience.* lists/templates/campaigns), no
   // distinct registry site of its own — same lockstep as the row above.
   'email-signup',

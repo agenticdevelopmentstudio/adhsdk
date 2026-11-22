@@ -29,6 +29,7 @@ class PostV1BillingOffersByIdResponse200:
         grants_ecosystem_id (None | str):
         lapse_action (str):
         grace_days (int):
+        set_id (None | str):
         is_active (bool):
         created (int): Unix timestamp, in seconds.
         updated (int): Unix timestamp, in seconds.
@@ -51,6 +52,7 @@ class PostV1BillingOffersByIdResponse200:
     grants_ecosystem_id: None | str
     lapse_action: str
     grace_days: int
+    set_id: None | str
     is_active: bool
     created: int
     updated: int
@@ -92,6 +94,9 @@ class PostV1BillingOffersByIdResponse200:
 
         grace_days = self.grace_days
 
+        set_id: None | str
+        set_id = self.set_id
+
         is_active = self.is_active
 
         created = self.created
@@ -122,6 +127,7 @@ class PostV1BillingOffersByIdResponse200:
                 "grants_ecosystem_id": grants_ecosystem_id,
                 "lapse_action": lapse_action,
                 "grace_days": grace_days,
+                "set_id": set_id,
                 "is_active": is_active,
                 "created": created,
                 "updated": updated,
@@ -186,6 +192,13 @@ class PostV1BillingOffersByIdResponse200:
 
         grace_days = d.pop("grace_days")
 
+        def _parse_set_id(data: object) -> None | str:
+            if data is None:
+                return data
+            return cast(None | str, data)
+
+        set_id = _parse_set_id(d.pop("set_id"))
+
         is_active = d.pop("is_active")
 
         created = d.pop("created")
@@ -219,6 +232,7 @@ class PostV1BillingOffersByIdResponse200:
             grants_ecosystem_id=grants_ecosystem_id,
             lapse_action=lapse_action,
             grace_days=grace_days,
+            set_id=set_id,
             is_active=is_active,
             created=created,
             updated=updated,

@@ -121,6 +121,11 @@
       "types": "./dist/profile/index.d.ts",
       "development": "./src/profile/index.ts",
       "import": "./dist/profile/index.js"
+    },
+    "./sets": {
+      "types": "./dist/sets/index.d.ts",
+      "development": "./src/sets/index.ts",
+      "import": "./dist/sets/index.js"
     }
   },
   "scripts": {

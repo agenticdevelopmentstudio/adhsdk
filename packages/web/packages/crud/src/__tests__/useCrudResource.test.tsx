@@ -12,11 +12,11 @@ vi.mock('@adh-sdk/auth/client', () => ({
 const { authedJson, listAllV1 } = vi.mocked(await import('@adh-sdk/auth/client'))
 
 const tiers: CrudTableMeta = {
-  key: 'billing/subscription-tiers',
+  key: 'billing/offers',
   schema: 'billing',
-  table: 'subscription-tiers',
-  basePath: '/v1/billing/subscription_tiers',
-  itemPath: '/v1/billing/subscription_tiers/{id}',
+  table: 'offers',
+  basePath: '/v1/billing/offers',
+  itemPath: '/v1/billing/offers/{id}',
   pkParams: ['id'],
   exposure: 'owner',
   columns: [],
@@ -40,7 +40,7 @@ beforeEach(() => {
 
 describe('itemUrl', () => {
   it('substitutes a single id, URL-encoded', () => {
-    expect(itemUrl(tiers, { id: 'a b' })).toBe('/api/v1/billing/subscription_tiers/a%20b')
+    expect(itemUrl(tiers, { id: 'a b' })).toBe('/api/v1/billing/offers/a%20b')
   })
   it('substitutes composite primary keys in order', () => {
     expect(itemUrl(links, { src_id: 's1', dst_id: 'd1', relation: 'rel/x' })).toBe(
@@ -67,11 +67,11 @@ describe('listUrl', () => {
     )
     await waitFor(() => expect(result.current.loading).toBe(false))
     const url = listUrl(tiers, { source_provider: 'reddit' }, 'eco-1')
-    expect(url).toBe('/api/v1/billing/subscription_tiers?ecosystem_id=eco-1&source_provider=reddit')
+    expect(url).toBe('/api/v1/billing/offers?ecosystem_id=eco-1&source_provider=reddit')
     expect(listAllV1).toHaveBeenCalledWith(url)
   })
   it('has no query string with neither a filter nor a scope', () => {
-    expect(listUrl(tiers, {})).toBe('/api/v1/billing/subscription_tiers')
+    expect(listUrl(tiers, {})).toBe('/api/v1/billing/offers')
   })
 })
 
@@ -80,7 +80,7 @@ describe('useCrudResource', () => {
     listAllV1.mockResolvedValueOnce([{ id: '1' }])
     const { result } = renderHook(() => useCrudResource(tiers))
     await waitFor(() => expect(result.current.loading).toBe(false))
-    expect(listAllV1).toHaveBeenCalledWith('/api/v1/billing/subscription_tiers')
+    expect(listAllV1).toHaveBeenCalledWith('/api/v1/billing/offers')
     expect(result.current.rows).toEqual([{ id: '1' }])
     expect(result.current.error).toBeNull()
   })
@@ -99,7 +99,7 @@ describe('useCrudResource', () => {
     const { result } = renderHook(() => useCrudResource(tiers))
     await waitFor(() => expect(result.current.loading).toBe(false))
     await act(() => result.current.create({ key: 'pro', name: 'Pro' }))
-    expect(authedJson).toHaveBeenCalledWith('/api/v1/billing/subscription_tiers', {
+    expect(authedJson).toHaveBeenCalledWith('/api/v1/billing/offers', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ key: 'pro', name: 'Pro' }),
@@ -114,7 +114,7 @@ describe('useCrudResource', () => {
     const { result } = renderHook(() => useCrudResource(tiers))
     await waitFor(() => expect(result.current.loading).toBe(false))
     await act(() => result.current.update({ id: 't1' }, { name: 'New name' }))
-    expect(authedJson).toHaveBeenCalledWith('/api/v1/billing/subscription_tiers/t1', {
+    expect(authedJson).toHaveBeenCalledWith('/api/v1/billing/offers/t1', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name: 'New name' }),
@@ -127,7 +127,7 @@ describe('useCrudResource', () => {
     const { result } = renderHook(() => useCrudResource(tiers))
     await waitFor(() => expect(result.current.loading).toBe(false))
     await act(() => result.current.remove({ id: 't1' }))
-    expect(authedJson).toHaveBeenCalledWith('/api/v1/billing/subscription_tiers/t1', {
+    expect(authedJson).toHaveBeenCalledWith('/api/v1/billing/offers/t1', {
       method: 'DELETE',
     })
     expect(listAllV1).toHaveBeenCalledTimes(2) // mount + refresh
@@ -279,21 +279,21 @@ describe('useCrudResource filter', () => {
     listAllV1.mockResolvedValueOnce([])
     const { result } = renderHook(() => useCrudResource(tiers, { source_provider: 'reddit' }))
     await waitFor(() => expect(result.current.loading).toBe(false))
-    expect(listAllV1).toHaveBeenCalledWith('/api/v1/billing/subscription_tiers?source_provider=reddit')
+    expect(listAllV1).toHaveBeenCalledWith('/api/v1/billing/offers?source_provider=reddit')
   })
 
   it('omits the query string for an empty filter object', async () => {
     listAllV1.mockResolvedValueOnce([])
     const { result } = renderHook(() => useCrudResource(tiers, {}))
     await waitFor(() => expect(result.current.loading).toBe(false))
-    expect(listAllV1).toHaveBeenCalledWith('/api/v1/billing/subscription_tiers')
+    expect(listAllV1).toHaveBeenCalledWith('/api/v1/billing/offers')
   })
 
   it('URL-encodes filter keys and values', async () => {
     listAllV1.mockResolvedValueOnce([])
     const { result } = renderHook(() => useCrudResource(tiers, { external_ref: 'a b/c&d' }))
     await waitFor(() => expect(result.current.loading).toBe(false))
-    expect(listAllV1).toHaveBeenCalledWith('/api/v1/billing/subscription_tiers?external_ref=a+b%2Fc%26d')
+    expect(listAllV1).toHaveBeenCalledWith('/api/v1/billing/offers?external_ref=a+b%2Fc%26d')
   })
 
   it('does not add a column filter to mutation URLs (list-only)', async () => {
@@ -302,7 +302,7 @@ describe('useCrudResource filter', () => {
     const { result } = renderHook(() => useCrudResource(tiers, { source_provider: 'reddit' }))
     await waitFor(() => expect(result.current.loading).toBe(false))
     await act(() => result.current.create({ key: 'pro', name: 'Pro' }))
-    expect(authedJson).toHaveBeenCalledWith('/api/v1/billing/subscription_tiers', {
+    expect(authedJson).toHaveBeenCalledWith('/api/v1/billing/offers', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ key: 'pro', name: 'Pro' }),
@@ -321,17 +321,17 @@ describe('useCrudResource filter', () => {
     await waitFor(() => expect(result.current.loading).toBe(false))
     await act(() => result.current.create({ key: 'pro' }))
     expect(authedJson).toHaveBeenCalledWith(
-      '/api/v1/billing/subscription_tiers?ecosystem_id=eco-1&workspace=acme%20co',
+      '/api/v1/billing/offers?ecosystem_id=eco-1&workspace=acme%20co',
       expect.objectContaining({ method: 'POST' }),
     )
     await act(() => result.current.update({ id: 't1' }, { name: 'N' }))
     expect(authedJson).toHaveBeenCalledWith(
-      '/api/v1/billing/subscription_tiers/t1?ecosystem_id=eco-1&workspace=acme%20co',
+      '/api/v1/billing/offers/t1?ecosystem_id=eco-1&workspace=acme%20co',
       expect.objectContaining({ method: 'POST' }),
     )
     await act(() => result.current.remove({ id: 't1' }))
     expect(authedJson).toHaveBeenCalledWith(
-      '/api/v1/billing/subscription_tiers/t1?ecosystem_id=eco-1&workspace=acme%20co',
+      '/api/v1/billing/offers/t1?ecosystem_id=eco-1&workspace=acme%20co',
       { method: 'DELETE' },
     )
   })
@@ -343,7 +343,7 @@ describe('useCrudResource filter', () => {
     await waitFor(() => expect(result.current.loading).toBe(false))
     await act(() => result.current.create({ key: 'pro' }))
     expect(authedJson).toHaveBeenCalledWith(
-      '/api/v1/billing/subscription_tiers?workspace=acme',
+      '/api/v1/billing/offers?workspace=acme',
       expect.objectContaining({ method: 'POST' }),
     )
   })
@@ -374,7 +374,7 @@ describe('useCrudResource scopeEcosystemId', () => {
       useCrudResource(tiers, { source_provider: 'reddit' }, 'eco-1'),
     )
     await waitFor(() => expect(result.current.loading).toBe(false))
-    expect(listAllV1).toHaveBeenCalledWith('/api/v1/billing/subscription_tiers?ecosystem_id=eco-1&source_provider=reddit')
+    expect(listAllV1).toHaveBeenCalledWith('/api/v1/billing/offers?ecosystem_id=eco-1&source_provider=reddit')
   })
 
   it('rides every mutation URL (POST / POST / DELETE), unlike the list-only filter', async () => {
@@ -383,19 +383,19 @@ describe('useCrudResource scopeEcosystemId', () => {
     const { result } = renderHook(() => useCrudResource(tiers, undefined, 'eco-1'))
     await waitFor(() => expect(result.current.loading).toBe(false))
     await act(() => result.current.create({ key: 'pro' }))
-    expect(authedJson).toHaveBeenCalledWith('/api/v1/billing/subscription_tiers?ecosystem_id=eco-1', {
+    expect(authedJson).toHaveBeenCalledWith('/api/v1/billing/offers?ecosystem_id=eco-1', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ key: 'pro' }),
     })
     await act(() => result.current.update({ id: 't1' }, { name: 'N' }))
     expect(authedJson).toHaveBeenCalledWith(
-      '/api/v1/billing/subscription_tiers/t1?ecosystem_id=eco-1',
+      '/api/v1/billing/offers/t1?ecosystem_id=eco-1',
       expect.objectContaining({ method: 'POST' }),
     )
     await act(() => result.current.remove({ id: 't1' }))
     expect(authedJson).toHaveBeenCalledWith(
-      '/api/v1/billing/subscription_tiers/t1?ecosystem_id=eco-1',
+      '/api/v1/billing/offers/t1?ecosystem_id=eco-1',
       { method: 'DELETE' },
     )
   })
@@ -404,10 +404,10 @@ describe('useCrudResource scopeEcosystemId', () => {
     listAllV1.mockResolvedValueOnce([])
     const { result } = renderHook(() => useCrudResource(tiers, undefined, ECO))
     await waitFor(() => expect(result.current.loading).toBe(false))
-    expect(listAllV1).toHaveBeenCalledWith(`/api/v1/billing/subscription_tiers?ecosystem_id=${encodeURIComponent(ECO)}`)
+    expect(listAllV1).toHaveBeenCalledWith(`/api/v1/billing/offers?ecosystem_id=${encodeURIComponent(ECO)}`)
     listAllV1.mockResolvedValueOnce([])
     const { result: bare } = renderHook(() => useCrudResource(tiers))
     await waitFor(() => expect(bare.current.loading).toBe(false))
-    expect(listAllV1).toHaveBeenLastCalledWith('/api/v1/billing/subscription_tiers')
+    expect(listAllV1).toHaveBeenLastCalledWith('/api/v1/billing/offers')
   })
 })

@@ -44,7 +44,7 @@ const table = (name: string, exposure: CrudExposure): CrudTableMeta => ({
 })
 
 // The hub's `billing` feature is catalog end to end; `usage` mixes catalog with admin.
-const TIERS = table('subscription-tiers', 'catalog')
+const TIERS = table('offers', 'catalog')
 const LEDGER = table('usage-events', 'admin')
 
 function renderPage(tables: CrudTableMeta[], activeTable?: string) {
@@ -84,11 +84,11 @@ describe('CrudTablePage exposure gating', () => {
     auth = { user: viewerUser(false), isLoading: false }
     renderPage([TIERS, LEDGER])
     await waitFor(() => expect(screen.getByText('Pro')).toBeInTheDocument())
-    expect(screen.getByRole('link', { name: 'subscription-tiers' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'offers' })).toBeInTheDocument()
     expect(screen.queryByRole('link', { name: 'usage-events' })).not.toBeInTheDocument()
     // One LIST, for the one readable table — the hidden one is never fetched.
     expect(listAllV1).toHaveBeenCalledTimes(1)
-    expect(listAllV1.mock.calls[0]?.[0]).toContain('/v1/billing/subscription-tiers')
+    expect(listAllV1.mock.calls[0]?.[0]).toContain('/v1/billing/offers')
   })
 
   it('refuses to open a table the URL names but the viewer may not read', () => {

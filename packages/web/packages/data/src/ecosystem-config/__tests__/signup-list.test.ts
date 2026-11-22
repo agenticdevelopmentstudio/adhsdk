@@ -54,19 +54,19 @@ describe("signupListApi", () => {
     expect(entries[1]).toMatchObject({ roleId: null, grantedCustomerId: "c-1" });
   });
 
-  it("adds by POST with the email and the role, null when none is chosen", async () => {
+  it("adds by POST with the email, the role and the set, null when none is chosen", async () => {
     mockedJson.mockResolvedValueOnce(row());
-    const entry = await signupListApi.put("eco-1", { email: "a@example.com", roleId: "r-1" });
+    const entry = await signupListApi.put("eco-1", { email: "a@example.com", roleId: "r-1", setId: "s-1" });
     const [url, init] = mockedJson.mock.calls[0] as [string, RequestInit];
     expect(url).toBe("/api/v1/ecosystems/eco-1/signup_list_entries");
     expect(init.method).toBe("POST");
-    expect(JSON.parse(String(init.body))).toEqual({ email: "a@example.com", role_id: "r-1" });
+    expect(JSON.parse(String(init.body))).toEqual({ email: "a@example.com", role_id: "r-1", set_id: "s-1" });
     expect(entry.roleId).toBe("r-1");
 
     mockedJson.mockResolvedValueOnce(row({ role_id: null }));
     await signupListApi.put("eco-1", { email: "b@example.com" });
     const [, second] = mockedJson.mock.calls[1] as [string, RequestInit];
-    expect(JSON.parse(String(second.body))).toEqual({ email: "b@example.com", role_id: null });
+    expect(JSON.parse(String(second.body))).toEqual({ email: "b@example.com", role_id: null, set_id: null });
   });
 
   it("removes one entry by its id", async () => {

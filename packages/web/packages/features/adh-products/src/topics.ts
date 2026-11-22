@@ -80,6 +80,9 @@ export const PRODUCT_TOPICS = [
   // Sign-up list (phase 5): the emails that may sign in, each with the role it grants on the
   // person's first proven sign-in. It replaced the allow-list field in Users ▸ Authentication.
   { id: "signup-list", label: "Sign-up list", dividerAfter: false, features: ["users"] },
+  // Sets (phase 5): bundles of the product's permissions and limits its customers hold, through
+  // an offer, the sign-up list or a direct grant. On `users`, as its holders are the product's.
+  { id: "sets", label: "Sets", dividerAfter: false, features: ["users"] },
   // (Communities sat here, was removed for having no surface on any host, and came back below
   // with the rest of the hub's Products group — parked deliberately this time, because the
   // workspace rail offered it and moving that rail down whole is what dropping it would undo.)

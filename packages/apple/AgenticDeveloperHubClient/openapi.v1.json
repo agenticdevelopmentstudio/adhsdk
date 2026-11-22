@@ -141,6 +141,9 @@
       "name": "search"
     },
     {
+      "name": "sets"
+    },
+    {
       "name": "settings"
     },
     {
@@ -282,6 +285,42 @@
               "type": "string"
             },
             "description": "The slugs of the roles the customer holds in its realm, sorted. Absent with `access`."
+          },
+          "sets": {
+            "type": "object",
+            "nullable": true,
+            "description": "The customer's effective sets in its realm: null when the realm has no sets; the held set ids, the features they grant (all or read-only) and their limits; or { error: 'unresolved' } when the answer could not be computed while set enforcement is off (with it on, the request is refused 403).",
+            "properties": {
+              "held": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Held set ids."
+              },
+              "permissions": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "read_only": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "limits": {
+                "type": "object",
+                "additionalProperties": true
+              },
+              "error": {
+                "type": "string",
+                "enum": [
+                  "unresolved"
+                ]
+              }
+            }
           }
         }
       },
@@ -7119,6 +7158,45 @@
               ]
             },
             "description": "The ecosystem types that may hold it; absent means every type except workspace, personal and organization. Adding it elsewhere is refused (400). GET /ecosystem/features/{id}/availability names these per ecosystem."
+          },
+          "set_entries": {
+            "type": "object",
+            "description": "What the feature contributes to sets: `permission` when the feature itself can be in a set, and the typed limits a set may define under it. Limit keys are unique across the catalog. The Sets screen is generated from these.",
+            "properties": {
+              "permission": {
+                "type": "boolean",
+                "enum": [
+                  true
+                ]
+              },
+              "limits": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "key",
+                    "type",
+                    "label"
+                  ],
+                  "properties": {
+                    "key": {
+                      "type": "string"
+                    },
+                    "type": {
+                      "type": "string",
+                      "enum": [
+                        "tier",
+                        "bytes",
+                        "count"
+                      ]
+                    },
+                    "label": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
           },
           "workspace_owner_kinds": {
             "type": "array",
@@ -14163,7 +14241,7 @@
             "type": "string",
             "format": "uuid",
             "nullable": true,
-            "description": "Reserved for sets; always null for now"
+            "description": "The set granted at the first proven session; null grants none"
           },
           "created": {
             "type": "integer",
@@ -14216,7 +14294,7 @@
             "type": "string",
             "format": "uuid",
             "nullable": true,
-            "description": "Refused with 422 until sets are available"
+            "description": "A set of this ecosystem (422 otherwise); null grants none"
           }
         }
       },
@@ -16440,6 +16518,447 @@
             "type": "object",
             "additionalProperties": true,
             "description": "per-verb provenance (the explainer): verb → {kind: 'owner'|'admin-role'|'grant', roleSlug?, via?, scopeItemId?}; sub-item verbs keyed 'sub:<verb>'"
+          }
+        }
+      },
+      "SetValue": {
+        "type": "object",
+        "required": [
+          "kind",
+          "key",
+          "value"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "permission",
+              "limit"
+            ]
+          },
+          "key": {
+            "type": "string",
+            "description": "A feature key for a permission, a limit key (e.g. `usage.tier`) for a limit; both from the catalog's `setEntries`."
+          },
+          "value": {
+            "description": "true for a permission; for a limit, a tier slug (string) or a byte or count (integer)."
+          }
+        }
+      },
+      "Set": {
+        "type": "object",
+        "required": [
+          "id",
+          "slug",
+          "name",
+          "description",
+          "is_default",
+          "is_personal",
+          "personal_customer_id",
+          "contains",
+          "values"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "is_default": {
+            "type": "boolean",
+            "description": "Applies to a customer who holds no live grant; one per ecosystem."
+          },
+          "is_personal": {
+            "type": "boolean",
+            "description": "A one-customer exception, hidden from the list and from offers."
+          },
+          "personal_customer_id": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "contains": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "The sets it directly contains."
+          },
+          "values": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SetValue"
+            },
+            "description": "Its own values."
+          }
+        }
+      },
+      "SetList": {
+        "type": "object",
+        "required": [
+          "sets"
+        ],
+        "properties": {
+          "sets": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Set"
+            }
+          }
+        }
+      },
+      "SetCreate": {
+        "type": "object",
+        "required": [
+          "slug",
+          "name"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "slug": {
+            "type": "string",
+            "maxLength": 64
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 200
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 2000
+          },
+          "is_default": {
+            "type": "boolean"
+          },
+          "personal_customer_id": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true,
+            "description": "Makes a personal set for this customer of the ecosystem; fixed once made."
+          }
+        }
+      },
+      "SetEdit": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "slug": {
+            "type": "string",
+            "maxLength": 64
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 200
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 2000
+          },
+          "is_default": {
+            "type": "boolean"
+          }
+        }
+      },
+      "SetMembersPut": {
+        "type": "object",
+        "required": [
+          "contains"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "contains": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        }
+      },
+      "SetValuesPut": {
+        "type": "object",
+        "required": [
+          "values"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "values": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SetValue"
+            }
+          }
+        }
+      },
+      "SetRefusal": {
+        "type": "object",
+        "required": [
+          "error"
+        ],
+        "description": "A refusal under a set rule, in the house error shape: `code` is always `set_refused`, and `rule` names the rule.",
+        "properties": {
+          "error": {
+            "$ref": "#/components/schemas/SetRefusalError"
+          }
+        }
+      },
+      "SetRefusalError": {
+        "type": "object",
+        "required": [
+          "code",
+          "message",
+          "rule"
+        ],
+        "properties": {
+          "code": {
+            "type": "string",
+            "enum": [
+              "set_refused"
+            ]
+          },
+          "message": {
+            "type": "string"
+          },
+          "rule": {
+            "type": "integer",
+            "enum": [
+              1,
+              2,
+              3,
+              4,
+              6,
+              8,
+              9
+            ],
+            "description": "3: the set must define a limit its contained sets disagree on; 4: the customer holds a conflicting set; 6: a containment loop; 8: the edit unsettles a container or puts a holder in conflict; 9: the set conflicts with another live offer's set."
+          },
+          "limits": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The limits at issue."
+          },
+          "containers": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Rule 8: the containers left unsettled."
+          },
+          "customers": {
+            "type": "integer",
+            "description": "Rule 8: how many holders would conflict."
+          }
+        }
+      },
+      "SetGrant": {
+        "type": "object",
+        "required": [
+          "id",
+          "ecosystem_id",
+          "owner_id",
+          "set_id",
+          "source",
+          "billing_account_id",
+          "granted_by",
+          "granted_at",
+          "revoked_at",
+          "revoke_reason"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "ecosystem_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "owner_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "The customer."
+          },
+          "set_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "offer",
+              "direct",
+              "signup"
+            ]
+          },
+          "billing_account_id": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "granted_by": {
+            "type": "string"
+          },
+          "granted_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "revoked_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "revoke_reason": {
+            "type": "string",
+            "nullable": true,
+            "description": "e.g. `direct`, `refund`, `offer_changed`, `purchase_conflict`."
+          }
+        }
+      },
+      "SetGrantList": {
+        "type": "object",
+        "required": [
+          "grants"
+        ],
+        "properties": {
+          "grants": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SetGrant"
+            }
+          }
+        }
+      },
+      "SetGrantCreate": {
+        "type": "object",
+        "required": [
+          "customer_id",
+          "set_id"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "customer_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "set_id": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      },
+      "SetGrantResult": {
+        "type": "object",
+        "required": [
+          "grant_id",
+          "revoked"
+        ],
+        "properties": {
+          "grant_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "The new grant, or the live one when the set was already held."
+          },
+          "revoked": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        }
+      },
+      "SetEffective": {
+        "type": "object",
+        "required": [
+          "effective"
+        ],
+        "properties": {
+          "effective": {
+            "type": "object",
+            "nullable": true,
+            "description": "The customer's answer before the ecosystem's ceiling: null when the ecosystem has no sets; the held set ids, features and limits; or { error: 'unresolved' }.",
+            "properties": {
+              "held": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "permissions": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "read_only": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "limits": {
+                "type": "object",
+                "additionalProperties": true
+              },
+              "valid_until": {
+                "type": "string",
+                "format": "date-time",
+                "nullable": true,
+                "description": "When the answer next changes (a grant lapsing)."
+              },
+              "error": {
+                "type": "string",
+                "enum": [
+                  "unresolved"
+                ]
+              }
+            }
+          }
+        }
+      },
+      "OfferSetPut": {
+        "type": "object",
+        "required": [
+          "set_id"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "set_id": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          }
+        }
+      },
+      "OfferSet": {
+        "type": "object",
+        "required": [
+          "offer_id",
+          "set_id"
+        ],
+        "properties": {
+          "offer_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "set_id": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
           }
         }
       },
@@ -34661,6 +35180,17 @@
                             "minimum": -2147483648,
                             "maximum": 2147483647
                           },
+                          "set_id": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "maxLength": 36
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
                           "is_active": {
                             "type": "boolean"
                           },
@@ -34695,6 +35225,7 @@
                           "grants_ecosystem_id",
                           "lapse_action",
                           "grace_days",
+                          "set_id",
                           "is_active",
                           "created",
                           "updated",
@@ -34935,6 +35466,17 @@
                       "minimum": -2147483648,
                       "maximum": 2147483647
                     },
+                    "set_id": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "maxLength": 36
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
                     "is_active": {
                       "type": "boolean"
                     },
@@ -34969,6 +35511,7 @@
                     "grants_ecosystem_id",
                     "lapse_action",
                     "grace_days",
+                    "set_id",
                     "is_active",
                     "created",
                     "updated",
@@ -35200,6 +35743,17 @@
                       "minimum": -2147483648,
                       "maximum": 2147483647
                     },
+                    "set_id": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "maxLength": 36
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
                     "is_active": {
                       "type": "boolean"
                     },
@@ -35234,6 +35788,7 @@
                     "grants_ecosystem_id",
                     "lapse_action",
                     "grace_days",
+                    "set_id",
                     "is_active",
                     "created",
                     "updated",
@@ -35480,6 +36035,17 @@
                       "minimum": -2147483648,
                       "maximum": 2147483647
                     },
+                    "set_id": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "maxLength": 36
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
                     "is_active": {
                       "type": "boolean"
                     },
@@ -35514,6 +36080,7 @@
                     "grants_ecosystem_id",
                     "lapse_action",
                     "grace_days",
+                    "set_id",
                     "is_active",
                     "created",
                     "updated",
@@ -35712,1959 +36279,6 @@
         "x-adh-object": "billing.price",
         "x-adh-replaces": [
           "GET /billing/prices"
-        ]
-      }
-    },
-    "/v1/billing/subscription_tiers": {
-      "get": {
-        "tags": [
-          "billing"
-        ],
-        "summary": "List subscription_tiers",
-        "description": "Replaces GET /billing/subscription-tiers.",
-        "operationId": "getV1BillingSubscriptionTiers",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "limit",
-            "in": "query",
-            "required": false,
-            "description": "Page size, 1–100 (default 10).",
-            "schema": {
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 100,
-              "default": 10
-            }
-          },
-          {
-            "name": "starting_after",
-            "in": "query",
-            "required": false,
-            "description": "Cursor: an object id; returns the page after it.",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "ending_before",
-            "in": "query",
-            "required": false,
-            "description": "Cursor: an object id; returns the page before it.",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "expand[]",
-            "in": "query",
-            "required": false,
-            "description": "Related objects to return in full instead of as an id. Up to four levels, e.g. `ecosystem_id`; on a list, `data.<field>`.",
-            "schema": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            "style": "form",
-            "explode": true
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "List",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "required": [
-                    "object",
-                    "data",
-                    "has_more",
-                    "url"
-                  ],
-                  "properties": {
-                    "object": {
-                      "type": "string",
-                      "const": "list"
-                    },
-                    "data": {
-                      "type": "array",
-                      "items": {
-                        "$schema": "https://json-schema.org/draft/2020-12/schema",
-                        "type": "object",
-                        "properties": {
-                          "object": {
-                            "type": "string",
-                            "const": "billing.subscription_tier"
-                          },
-                          "id": {
-                            "type": "string",
-                            "maxLength": 36
-                          },
-                          "key": {
-                            "type": "string",
-                            "maxLength": 64
-                          },
-                          "name": {
-                            "type": "string",
-                            "maxLength": 128
-                          },
-                          "description": {
-                            "type": [
-                              "string",
-                              "null"
-                            ]
-                          },
-                          "display_order": {
-                            "type": "integer",
-                            "minimum": -2147483648,
-                            "maximum": 2147483647
-                          },
-                          "is_active": {
-                            "type": "boolean"
-                          },
-                          "created": {
-                            "type": "integer",
-                            "description": "Unix timestamp, in seconds."
-                          },
-                          "updated": {
-                            "type": "integer",
-                            "description": "Unix timestamp, in seconds."
-                          }
-                        },
-                        "required": [
-                          "id",
-                          "key",
-                          "name",
-                          "description",
-                          "display_order",
-                          "is_active",
-                          "created",
-                          "updated"
-                        ],
-                        "additionalProperties": false
-                      }
-                    },
-                    "has_more": {
-                      "type": "boolean"
-                    },
-                    "url": {
-                      "type": "string"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/StripeError"
-                }
-              }
-            }
-          }
-        },
-        "x-adh-object": "billing.subscription_tier",
-        "x-adh-replaces": [
-          "GET /billing/subscription-tiers"
-        ]
-      },
-      "post": {
-        "tags": [
-          "billing"
-        ],
-        "summary": "Create subscription_tiers",
-        "description": "Replaces POST /billing/subscription-tiers.",
-        "operationId": "postV1BillingSubscriptionTiers",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$schema": "https://json-schema.org/draft/2020-12/schema",
-                "type": "object",
-                "properties": {
-                  "key": {
-                    "type": "string",
-                    "maxLength": 64
-                  },
-                  "name": {
-                    "type": "string",
-                    "maxLength": 128
-                  },
-                  "description": {
-                    "type": [
-                      "string",
-                      "null"
-                    ]
-                  },
-                  "display_order": {
-                    "type": "integer",
-                    "minimum": -2147483648,
-                    "maximum": 2147483647
-                  },
-                  "is_active": {
-                    "type": "boolean"
-                  }
-                },
-                "required": [
-                  "key",
-                  "name"
-                ],
-                "additionalProperties": false
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "subscription_tiers",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$schema": "https://json-schema.org/draft/2020-12/schema",
-                  "type": "object",
-                  "properties": {
-                    "object": {
-                      "type": "string",
-                      "const": "billing.subscription_tier"
-                    },
-                    "id": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
-                    "key": {
-                      "type": "string",
-                      "maxLength": 64
-                    },
-                    "name": {
-                      "type": "string",
-                      "maxLength": 128
-                    },
-                    "description": {
-                      "type": [
-                        "string",
-                        "null"
-                      ]
-                    },
-                    "display_order": {
-                      "type": "integer",
-                      "minimum": -2147483648,
-                      "maximum": 2147483647
-                    },
-                    "is_active": {
-                      "type": "boolean"
-                    },
-                    "created": {
-                      "type": "integer",
-                      "description": "Unix timestamp, in seconds."
-                    },
-                    "updated": {
-                      "type": "integer",
-                      "description": "Unix timestamp, in seconds."
-                    }
-                  },
-                  "required": [
-                    "id",
-                    "key",
-                    "name",
-                    "description",
-                    "display_order",
-                    "is_active",
-                    "created",
-                    "updated"
-                  ],
-                  "additionalProperties": false
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/StripeError"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/StripeError"
-                }
-              }
-            }
-          }
-        },
-        "x-adh-object": "billing.subscription_tier",
-        "x-adh-replaces": [
-          "POST /billing/subscription-tiers"
-        ]
-      }
-    },
-    "/v1/billing/subscription_tiers/{id}": {
-      "delete": {
-        "tags": [
-          "billing"
-        ],
-        "summary": "Delete subscription_tiers",
-        "description": "Replaces DELETE /billing/subscription-tiers/{id}.",
-        "operationId": "deleteV1BillingSubscriptionTiersById",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Deleted",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Deleted"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/StripeError"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/StripeError"
-                }
-              }
-            }
-          }
-        },
-        "x-adh-object": "billing.subscription_tier",
-        "x-adh-replaces": [
-          "DELETE /billing/subscription-tiers/{id}"
-        ]
-      },
-      "get": {
-        "tags": [
-          "billing"
-        ],
-        "summary": "Get subscription_tiers by id",
-        "description": "Replaces GET /billing/subscription-tiers/{id}.",
-        "operationId": "getV1BillingSubscriptionTiersById",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "expand[]",
-            "in": "query",
-            "required": false,
-            "description": "Related objects to return in full instead of as an id. Up to four levels, e.g. `ecosystem_id`; on a list, `data.<field>`.",
-            "schema": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            "style": "form",
-            "explode": true
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "subscription_tiers",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$schema": "https://json-schema.org/draft/2020-12/schema",
-                  "type": "object",
-                  "properties": {
-                    "object": {
-                      "type": "string",
-                      "const": "billing.subscription_tier"
-                    },
-                    "id": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
-                    "key": {
-                      "type": "string",
-                      "maxLength": 64
-                    },
-                    "name": {
-                      "type": "string",
-                      "maxLength": 128
-                    },
-                    "description": {
-                      "type": [
-                        "string",
-                        "null"
-                      ]
-                    },
-                    "display_order": {
-                      "type": "integer",
-                      "minimum": -2147483648,
-                      "maximum": 2147483647
-                    },
-                    "is_active": {
-                      "type": "boolean"
-                    },
-                    "created": {
-                      "type": "integer",
-                      "description": "Unix timestamp, in seconds."
-                    },
-                    "updated": {
-                      "type": "integer",
-                      "description": "Unix timestamp, in seconds."
-                    }
-                  },
-                  "required": [
-                    "id",
-                    "key",
-                    "name",
-                    "description",
-                    "display_order",
-                    "is_active",
-                    "created",
-                    "updated"
-                  ],
-                  "additionalProperties": false
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/StripeError"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/StripeError"
-                }
-              }
-            }
-          }
-        },
-        "x-adh-object": "billing.subscription_tier",
-        "x-adh-replaces": [
-          "GET /billing/subscription-tiers/{id}"
-        ]
-      },
-      "post": {
-        "tags": [
-          "billing"
-        ],
-        "summary": "Update subscription_tiers",
-        "description": "Replaces PUT /billing/subscription-tiers/{id}.",
-        "operationId": "postV1BillingSubscriptionTiersById",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$schema": "https://json-schema.org/draft/2020-12/schema",
-                "type": "object",
-                "properties": {
-                  "key": {
-                    "type": "string",
-                    "maxLength": 64
-                  },
-                  "name": {
-                    "type": "string",
-                    "maxLength": 128
-                  },
-                  "description": {
-                    "type": [
-                      "string",
-                      "null"
-                    ]
-                  },
-                  "display_order": {
-                    "type": "integer",
-                    "minimum": -2147483648,
-                    "maximum": 2147483647
-                  },
-                  "is_active": {
-                    "type": "boolean"
-                  }
-                },
-                "additionalProperties": false
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "subscription_tiers",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$schema": "https://json-schema.org/draft/2020-12/schema",
-                  "type": "object",
-                  "properties": {
-                    "object": {
-                      "type": "string",
-                      "const": "billing.subscription_tier"
-                    },
-                    "id": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
-                    "key": {
-                      "type": "string",
-                      "maxLength": 64
-                    },
-                    "name": {
-                      "type": "string",
-                      "maxLength": 128
-                    },
-                    "description": {
-                      "type": [
-                        "string",
-                        "null"
-                      ]
-                    },
-                    "display_order": {
-                      "type": "integer",
-                      "minimum": -2147483648,
-                      "maximum": 2147483647
-                    },
-                    "is_active": {
-                      "type": "boolean"
-                    },
-                    "created": {
-                      "type": "integer",
-                      "description": "Unix timestamp, in seconds."
-                    },
-                    "updated": {
-                      "type": "integer",
-                      "description": "Unix timestamp, in seconds."
-                    }
-                  },
-                  "required": [
-                    "id",
-                    "key",
-                    "name",
-                    "description",
-                    "display_order",
-                    "is_active",
-                    "created",
-                    "updated"
-                  ],
-                  "additionalProperties": false
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/StripeError"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/StripeError"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/StripeError"
-                }
-              }
-            }
-          }
-        },
-        "x-adh-object": "billing.subscription_tier",
-        "x-adh-replaces": [
-          "PUT /billing/subscription-tiers/{id}"
-        ]
-      }
-    },
-    "/v1/billing/subscriptions": {
-      "get": {
-        "tags": [
-          "billing"
-        ],
-        "summary": "List subscriptions",
-        "description": "Replaces GET /billing/subscriptions.",
-        "operationId": "getV1BillingSubscriptions",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "limit",
-            "in": "query",
-            "required": false,
-            "description": "Page size, 1–100 (default 10).",
-            "schema": {
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 100,
-              "default": 10
-            }
-          },
-          {
-            "name": "starting_after",
-            "in": "query",
-            "required": false,
-            "description": "Cursor: an object id; returns the page after it.",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "ending_before",
-            "in": "query",
-            "required": false,
-            "description": "Cursor: an object id; returns the page before it.",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "expand[]",
-            "in": "query",
-            "required": false,
-            "description": "Related objects to return in full instead of as an id. Up to four levels, e.g. `ecosystem_id`; on a list, `data.<field>`.",
-            "schema": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            "style": "form",
-            "explode": true
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "List",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "required": [
-                    "object",
-                    "data",
-                    "has_more",
-                    "url"
-                  ],
-                  "properties": {
-                    "object": {
-                      "type": "string",
-                      "const": "list"
-                    },
-                    "data": {
-                      "type": "array",
-                      "items": {
-                        "$schema": "https://json-schema.org/draft/2020-12/schema",
-                        "type": "object",
-                        "properties": {
-                          "object": {
-                            "type": "string",
-                            "const": "billing.subscription"
-                          },
-                          "id": {
-                            "type": "string",
-                            "maxLength": 36
-                          },
-                          "user_id": {
-                            "type": "string",
-                            "maxLength": 36
-                          },
-                          "ecosystem_id": {
-                            "type": "string",
-                            "maxLength": 36
-                          },
-                          "tier_id": {
-                            "type": "string",
-                            "maxLength": 36
-                          },
-                          "status": {
-                            "type": "string",
-                            "maxLength": 32
-                          },
-                          "source": {
-                            "type": "string",
-                            "maxLength": 32
-                          },
-                          "started_at": {
-                            "type": "string"
-                          },
-                          "expires_at": {
-                            "type": [
-                              "string",
-                              "null"
-                            ]
-                          },
-                          "assigned_by": {
-                            "anyOf": [
-                              {
-                                "type": "string",
-                                "maxLength": 36
-                              },
-                              {
-                                "type": "null"
-                              }
-                            ]
-                          },
-                          "created": {
-                            "type": "integer",
-                            "description": "Unix timestamp, in seconds."
-                          },
-                          "updated": {
-                            "type": "integer",
-                            "description": "Unix timestamp, in seconds."
-                          }
-                        },
-                        "required": [
-                          "id",
-                          "user_id",
-                          "ecosystem_id",
-                          "tier_id",
-                          "status",
-                          "source",
-                          "started_at",
-                          "expires_at",
-                          "assigned_by",
-                          "created",
-                          "updated"
-                        ],
-                        "additionalProperties": false
-                      }
-                    },
-                    "has_more": {
-                      "type": "boolean"
-                    },
-                    "url": {
-                      "type": "string"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/StripeError"
-                }
-              }
-            }
-          }
-        },
-        "x-adh-object": "billing.subscription",
-        "x-adh-replaces": [
-          "GET /billing/subscriptions"
-        ]
-      },
-      "post": {
-        "tags": [
-          "billing"
-        ],
-        "summary": "Create subscriptions",
-        "description": "Replaces POST /billing/subscriptions.",
-        "operationId": "postV1BillingSubscriptions",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$schema": "https://json-schema.org/draft/2020-12/schema",
-                "type": "object",
-                "properties": {
-                  "ecosystem_id": {
-                    "type": "string",
-                    "maxLength": 36
-                  },
-                  "tier_id": {
-                    "type": "string",
-                    "maxLength": 36
-                  },
-                  "status": {
-                    "type": "string",
-                    "maxLength": 32
-                  },
-                  "source": {
-                    "type": "string",
-                    "maxLength": 32
-                  },
-                  "started_at": {
-                    "type": "string"
-                  },
-                  "expires_at": {
-                    "type": [
-                      "string",
-                      "null"
-                    ]
-                  }
-                },
-                "required": [
-                  "tier_id",
-                  "started_at"
-                ],
-                "additionalProperties": false
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "subscriptions",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$schema": "https://json-schema.org/draft/2020-12/schema",
-                  "type": "object",
-                  "properties": {
-                    "object": {
-                      "type": "string",
-                      "const": "billing.subscription"
-                    },
-                    "id": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
-                    "user_id": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
-                    "ecosystem_id": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
-                    "tier_id": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
-                    "status": {
-                      "type": "string",
-                      "maxLength": 32
-                    },
-                    "source": {
-                      "type": "string",
-                      "maxLength": 32
-                    },
-                    "started_at": {
-                      "type": "string"
-                    },
-                    "expires_at": {
-                      "type": [
-                        "string",
-                        "null"
-                      ]
-                    },
-                    "assigned_by": {
-                      "anyOf": [
-                        {
-                          "type": "string",
-                          "maxLength": 36
-                        },
-                        {
-                          "type": "null"
-                        }
-                      ]
-                    },
-                    "created": {
-                      "type": "integer",
-                      "description": "Unix timestamp, in seconds."
-                    },
-                    "updated": {
-                      "type": "integer",
-                      "description": "Unix timestamp, in seconds."
-                    }
-                  },
-                  "required": [
-                    "id",
-                    "user_id",
-                    "ecosystem_id",
-                    "tier_id",
-                    "status",
-                    "source",
-                    "started_at",
-                    "expires_at",
-                    "assigned_by",
-                    "created",
-                    "updated"
-                  ],
-                  "additionalProperties": false
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/StripeError"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/StripeError"
-                }
-              }
-            }
-          }
-        },
-        "x-adh-object": "billing.subscription",
-        "x-adh-replaces": [
-          "POST /billing/subscriptions"
-        ]
-      }
-    },
-    "/v1/billing/subscriptions/{id}": {
-      "delete": {
-        "tags": [
-          "billing"
-        ],
-        "summary": "Delete subscriptions",
-        "description": "Replaces DELETE /billing/subscriptions/{id}.",
-        "operationId": "deleteV1BillingSubscriptionsById",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Deleted",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Deleted"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/StripeError"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/StripeError"
-                }
-              }
-            }
-          }
-        },
-        "x-adh-object": "billing.subscription",
-        "x-adh-replaces": [
-          "DELETE /billing/subscriptions/{id}"
-        ]
-      },
-      "get": {
-        "tags": [
-          "billing"
-        ],
-        "summary": "Get subscriptions by id",
-        "description": "Replaces GET /billing/subscriptions/{id}.",
-        "operationId": "getV1BillingSubscriptionsById",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "expand[]",
-            "in": "query",
-            "required": false,
-            "description": "Related objects to return in full instead of as an id. Up to four levels, e.g. `ecosystem_id`; on a list, `data.<field>`.",
-            "schema": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            "style": "form",
-            "explode": true
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "subscriptions",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$schema": "https://json-schema.org/draft/2020-12/schema",
-                  "type": "object",
-                  "properties": {
-                    "object": {
-                      "type": "string",
-                      "const": "billing.subscription"
-                    },
-                    "id": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
-                    "user_id": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
-                    "ecosystem_id": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
-                    "tier_id": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
-                    "status": {
-                      "type": "string",
-                      "maxLength": 32
-                    },
-                    "source": {
-                      "type": "string",
-                      "maxLength": 32
-                    },
-                    "started_at": {
-                      "type": "string"
-                    },
-                    "expires_at": {
-                      "type": [
-                        "string",
-                        "null"
-                      ]
-                    },
-                    "assigned_by": {
-                      "anyOf": [
-                        {
-                          "type": "string",
-                          "maxLength": 36
-                        },
-                        {
-                          "type": "null"
-                        }
-                      ]
-                    },
-                    "created": {
-                      "type": "integer",
-                      "description": "Unix timestamp, in seconds."
-                    },
-                    "updated": {
-                      "type": "integer",
-                      "description": "Unix timestamp, in seconds."
-                    }
-                  },
-                  "required": [
-                    "id",
-                    "user_id",
-                    "ecosystem_id",
-                    "tier_id",
-                    "status",
-                    "source",
-                    "started_at",
-                    "expires_at",
-                    "assigned_by",
-                    "created",
-                    "updated"
-                  ],
-                  "additionalProperties": false
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/StripeError"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/StripeError"
-                }
-              }
-            }
-          }
-        },
-        "x-adh-object": "billing.subscription",
-        "x-adh-replaces": [
-          "GET /billing/subscriptions/{id}"
-        ]
-      },
-      "post": {
-        "tags": [
-          "billing"
-        ],
-        "summary": "Update subscriptions",
-        "description": "Replaces PUT /billing/subscriptions/{id}.",
-        "operationId": "postV1BillingSubscriptionsById",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$schema": "https://json-schema.org/draft/2020-12/schema",
-                "type": "object",
-                "properties": {
-                  "ecosystem_id": {
-                    "type": "string",
-                    "maxLength": 36
-                  },
-                  "tier_id": {
-                    "type": "string",
-                    "maxLength": 36
-                  },
-                  "status": {
-                    "type": "string",
-                    "maxLength": 32
-                  },
-                  "source": {
-                    "type": "string",
-                    "maxLength": 32
-                  },
-                  "started_at": {
-                    "type": "string"
-                  },
-                  "expires_at": {
-                    "type": [
-                      "string",
-                      "null"
-                    ]
-                  }
-                },
-                "additionalProperties": false
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "subscriptions",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$schema": "https://json-schema.org/draft/2020-12/schema",
-                  "type": "object",
-                  "properties": {
-                    "object": {
-                      "type": "string",
-                      "const": "billing.subscription"
-                    },
-                    "id": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
-                    "user_id": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
-                    "ecosystem_id": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
-                    "tier_id": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
-                    "status": {
-                      "type": "string",
-                      "maxLength": 32
-                    },
-                    "source": {
-                      "type": "string",
-                      "maxLength": 32
-                    },
-                    "started_at": {
-                      "type": "string"
-                    },
-                    "expires_at": {
-                      "type": [
-                        "string",
-                        "null"
-                      ]
-                    },
-                    "assigned_by": {
-                      "anyOf": [
-                        {
-                          "type": "string",
-                          "maxLength": 36
-                        },
-                        {
-                          "type": "null"
-                        }
-                      ]
-                    },
-                    "created": {
-                      "type": "integer",
-                      "description": "Unix timestamp, in seconds."
-                    },
-                    "updated": {
-                      "type": "integer",
-                      "description": "Unix timestamp, in seconds."
-                    }
-                  },
-                  "required": [
-                    "id",
-                    "user_id",
-                    "ecosystem_id",
-                    "tier_id",
-                    "status",
-                    "source",
-                    "started_at",
-                    "expires_at",
-                    "assigned_by",
-                    "created",
-                    "updated"
-                  ],
-                  "additionalProperties": false
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/StripeError"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/StripeError"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/StripeError"
-                }
-              }
-            }
-          }
-        },
-        "x-adh-object": "billing.subscription",
-        "x-adh-replaces": [
-          "PUT /billing/subscriptions/{id}"
-        ]
-      }
-    },
-    "/v1/billing/tier_entitlements": {
-      "get": {
-        "tags": [
-          "billing"
-        ],
-        "summary": "List tier_entitlements",
-        "description": "Replaces GET /billing/tier-entitlements.",
-        "operationId": "getV1BillingTierEntitlements",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "limit",
-            "in": "query",
-            "required": false,
-            "description": "Page size, 1–100 (default 10).",
-            "schema": {
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 100,
-              "default": 10
-            }
-          },
-          {
-            "name": "starting_after",
-            "in": "query",
-            "required": false,
-            "description": "Cursor: an object id; returns the page after it.",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "ending_before",
-            "in": "query",
-            "required": false,
-            "description": "Cursor: an object id; returns the page before it.",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "expand[]",
-            "in": "query",
-            "required": false,
-            "description": "Related objects to return in full instead of as an id. Up to four levels, e.g. `ecosystem_id`; on a list, `data.<field>`.",
-            "schema": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            "style": "form",
-            "explode": true
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "List",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "required": [
-                    "object",
-                    "data",
-                    "has_more",
-                    "url"
-                  ],
-                  "properties": {
-                    "object": {
-                      "type": "string",
-                      "const": "list"
-                    },
-                    "data": {
-                      "type": "array",
-                      "items": {
-                        "$schema": "https://json-schema.org/draft/2020-12/schema",
-                        "type": "object",
-                        "properties": {
-                          "object": {
-                            "type": "string",
-                            "const": "billing.tier_entitlement"
-                          },
-                          "id": {
-                            "type": "string",
-                            "maxLength": 36
-                          },
-                          "tier_id": {
-                            "type": "string",
-                            "maxLength": 36
-                          },
-                          "entitlement_key": {
-                            "type": "string",
-                            "maxLength": 64
-                          },
-                          "value_type": {
-                            "type": "string",
-                            "maxLength": 16
-                          },
-                          "value": {
-                            "type": "string",
-                            "maxLength": 64
-                          }
-                        },
-                        "required": [
-                          "id",
-                          "tier_id",
-                          "entitlement_key",
-                          "value_type",
-                          "value"
-                        ],
-                        "additionalProperties": false
-                      }
-                    },
-                    "has_more": {
-                      "type": "boolean"
-                    },
-                    "url": {
-                      "type": "string"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/StripeError"
-                }
-              }
-            }
-          }
-        },
-        "x-adh-object": "billing.tier_entitlement",
-        "x-adh-replaces": [
-          "GET /billing/tier-entitlements"
-        ]
-      },
-      "post": {
-        "tags": [
-          "billing"
-        ],
-        "summary": "Create tier_entitlements",
-        "description": "Replaces POST /billing/tier-entitlements.",
-        "operationId": "postV1BillingTierEntitlements",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$schema": "https://json-schema.org/draft/2020-12/schema",
-                "type": "object",
-                "properties": {
-                  "tier_id": {
-                    "type": "string",
-                    "maxLength": 36
-                  },
-                  "entitlement_key": {
-                    "type": "string",
-                    "maxLength": 64
-                  },
-                  "value_type": {
-                    "type": "string",
-                    "maxLength": 16
-                  },
-                  "value": {
-                    "type": "string",
-                    "maxLength": 64
-                  }
-                },
-                "required": [
-                  "tier_id",
-                  "entitlement_key",
-                  "value_type",
-                  "value"
-                ],
-                "additionalProperties": false
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "tier_entitlements",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$schema": "https://json-schema.org/draft/2020-12/schema",
-                  "type": "object",
-                  "properties": {
-                    "object": {
-                      "type": "string",
-                      "const": "billing.tier_entitlement"
-                    },
-                    "id": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
-                    "tier_id": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
-                    "entitlement_key": {
-                      "type": "string",
-                      "maxLength": 64
-                    },
-                    "value_type": {
-                      "type": "string",
-                      "maxLength": 16
-                    },
-                    "value": {
-                      "type": "string",
-                      "maxLength": 64
-                    }
-                  },
-                  "required": [
-                    "id",
-                    "tier_id",
-                    "entitlement_key",
-                    "value_type",
-                    "value"
-                  ],
-                  "additionalProperties": false
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/StripeError"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/StripeError"
-                }
-              }
-            }
-          }
-        },
-        "x-adh-object": "billing.tier_entitlement",
-        "x-adh-replaces": [
-          "POST /billing/tier-entitlements"
-        ]
-      }
-    },
-    "/v1/billing/tier_entitlements/{id}": {
-      "delete": {
-        "tags": [
-          "billing"
-        ],
-        "summary": "Delete tier_entitlements",
-        "description": "Replaces DELETE /billing/tier-entitlements/{id}.",
-        "operationId": "deleteV1BillingTierEntitlementsById",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Deleted",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Deleted"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/StripeError"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/StripeError"
-                }
-              }
-            }
-          }
-        },
-        "x-adh-object": "billing.tier_entitlement",
-        "x-adh-replaces": [
-          "DELETE /billing/tier-entitlements/{id}"
-        ]
-      },
-      "get": {
-        "tags": [
-          "billing"
-        ],
-        "summary": "Get tier_entitlements by id",
-        "description": "Replaces GET /billing/tier-entitlements/{id}.",
-        "operationId": "getV1BillingTierEntitlementsById",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "expand[]",
-            "in": "query",
-            "required": false,
-            "description": "Related objects to return in full instead of as an id. Up to four levels, e.g. `ecosystem_id`; on a list, `data.<field>`.",
-            "schema": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            "style": "form",
-            "explode": true
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "tier_entitlements",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$schema": "https://json-schema.org/draft/2020-12/schema",
-                  "type": "object",
-                  "properties": {
-                    "object": {
-                      "type": "string",
-                      "const": "billing.tier_entitlement"
-                    },
-                    "id": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
-                    "tier_id": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
-                    "entitlement_key": {
-                      "type": "string",
-                      "maxLength": 64
-                    },
-                    "value_type": {
-                      "type": "string",
-                      "maxLength": 16
-                    },
-                    "value": {
-                      "type": "string",
-                      "maxLength": 64
-                    }
-                  },
-                  "required": [
-                    "id",
-                    "tier_id",
-                    "entitlement_key",
-                    "value_type",
-                    "value"
-                  ],
-                  "additionalProperties": false
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/StripeError"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/StripeError"
-                }
-              }
-            }
-          }
-        },
-        "x-adh-object": "billing.tier_entitlement",
-        "x-adh-replaces": [
-          "GET /billing/tier-entitlements/{id}"
-        ]
-      },
-      "post": {
-        "tags": [
-          "billing"
-        ],
-        "summary": "Update tier_entitlements",
-        "description": "Replaces PUT /billing/tier-entitlements/{id}.",
-        "operationId": "postV1BillingTierEntitlementsById",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$schema": "https://json-schema.org/draft/2020-12/schema",
-                "type": "object",
-                "properties": {
-                  "tier_id": {
-                    "type": "string",
-                    "maxLength": 36
-                  },
-                  "entitlement_key": {
-                    "type": "string",
-                    "maxLength": 64
-                  },
-                  "value_type": {
-                    "type": "string",
-                    "maxLength": 16
-                  },
-                  "value": {
-                    "type": "string",
-                    "maxLength": 64
-                  }
-                },
-                "additionalProperties": false
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "tier_entitlements",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$schema": "https://json-schema.org/draft/2020-12/schema",
-                  "type": "object",
-                  "properties": {
-                    "object": {
-                      "type": "string",
-                      "const": "billing.tier_entitlement"
-                    },
-                    "id": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
-                    "tier_id": {
-                      "type": "string",
-                      "maxLength": 36
-                    },
-                    "entitlement_key": {
-                      "type": "string",
-                      "maxLength": 64
-                    },
-                    "value_type": {
-                      "type": "string",
-                      "maxLength": 16
-                    },
-                    "value": {
-                      "type": "string",
-                      "maxLength": 64
-                    }
-                  },
-                  "required": [
-                    "id",
-                    "tier_id",
-                    "entitlement_key",
-                    "value_type",
-                    "value"
-                  ],
-                  "additionalProperties": false
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/StripeError"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/StripeError"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/StripeError"
-                }
-              }
-            }
-          }
-        },
-        "x-adh-object": "billing.tier_entitlement",
-        "x-adh-replaces": [
-          "PUT /billing/tier-entitlements/{id}"
         ]
       }
     },
@@ -122880,6 +121494,120 @@
         ]
       }
     },
+    "/v1/offers/{offer_id}/set": {
+      "post": {
+        "tags": [
+          "sets"
+        ],
+        "summary": "Set the set an offer sells",
+        "description": "null stops the offer granting a set. Refused (rule 9) when the set conflicts with another live offer's set; a personal set is never sold (400).\n\nReplaces PUT /sets/offers/{offerId}.",
+        "operationId": "postV1OffersByOfferIdSet",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "offer_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OfferSetPut"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The offer and its set",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "object": {
+                          "type": "string",
+                          "const": "offer"
+                        }
+                      }
+                    },
+                    {
+                      "$ref": "#/components/schemas/OfferSet"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          }
+        },
+        "x-adh-object": "offer",
+        "x-adh-replaces": [
+          "PUT /sets/offers/{offerId}"
+        ]
+      }
+    },
     "/v1/organizations": {
       "get": {
         "tags": [
@@ -146518,6 +145246,1206 @@
         "x-adh-replaces": [
           "PUT /ecosystem/server-bag/{id}/{key}",
           "PUT /system/server-bag/{key}"
+        ]
+      }
+    },
+    "/v1/set_grants": {
+      "get": {
+        "tags": [
+          "sets"
+        ],
+        "summary": "List a customer's set grants",
+        "description": "Revoked grants are listed with their reason; newest first.\n\nReplaces GET /sets/grants.",
+        "operationId": "getV1SetGrants",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "ecosystem",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "An owner-made ecosystem's id (uuid or rdid); the caller must manage it (403 otherwise)."
+          },
+          {
+            "name": "customer",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The customer id"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "description": "Page size, 1–100 (default 10).",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 10
+            }
+          },
+          {
+            "name": "starting_after",
+            "in": "query",
+            "required": false,
+            "description": "Cursor: an object id; returns the page after it.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "ending_before",
+            "in": "query",
+            "required": false,
+            "description": "Cursor: an object id; returns the page before it.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "expand[]",
+            "in": "query",
+            "required": false,
+            "description": "Related objects to return in full instead of as an id. Up to four levels, e.g. `ecosystem_id`; on a list, `data.<field>`.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "style": "form",
+            "explode": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The grants",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "object",
+                    "data",
+                    "has_more",
+                    "url"
+                  ],
+                  "properties": {
+                    "object": {
+                      "type": "string",
+                      "const": "list"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "allOf": [
+                          {
+                            "type": "object",
+                            "properties": {
+                              "object": {
+                                "type": "string",
+                                "const": "set_grant"
+                              }
+                            }
+                          },
+                          {
+                            "$ref": "#/components/schemas/SetGrant"
+                          }
+                        ]
+                      }
+                    },
+                    "has_more": {
+                      "type": "boolean"
+                    },
+                    "url": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          }
+        },
+        "x-adh-object": "set_grant",
+        "x-adh-replaces": [
+          "GET /sets/grants"
+        ]
+      },
+      "post": {
+        "tags": [
+          "sets"
+        ],
+        "summary": "Grant a set to a customer",
+        "description": "A direct grant. Refused (rule 4) when it conflicts with a set the customer holds; granting a set already held returns that grant.\n\nReplaces POST /sets/grants.",
+        "operationId": "postV1SetGrants",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "ecosystem",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "An owner-made ecosystem's id (uuid or rdid); the caller must manage it (403 otherwise)."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetGrantCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "The grant",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "object": {
+                          "type": "string",
+                          "const": "set_grant"
+                        }
+                      }
+                    },
+                    {
+                      "$ref": "#/components/schemas/SetGrantResult"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          }
+        },
+        "x-adh-object": "set_grant",
+        "x-adh-replaces": [
+          "POST /sets/grants"
+        ]
+      }
+    },
+    "/v1/set_grants/effective/{customer_id}": {
+      "get": {
+        "tags": [
+          "sets"
+        ],
+        "summary": "Read a customer's effective sets",
+        "description": "Replaces GET /sets/effective/{customerId}.",
+        "operationId": "getV1SetGrantsEffectiveByCustomerId",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "customer_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "expand[]",
+            "in": "query",
+            "required": false,
+            "description": "Related objects to return in full instead of as an id. Up to four levels, e.g. `ecosystem_id`; on a list, `data.<field>`.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "style": "form",
+            "explode": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The effective answer",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "nullable": true,
+                  "description": "The customer's answer before the ecosystem's ceiling: null when the ecosystem has no sets; the held set ids, features and limits; or { error: 'unresolved' }.",
+                  "properties": {
+                    "object": {
+                      "type": "string",
+                      "const": "set_grants.effective"
+                    },
+                    "held": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "format": "uuid"
+                      }
+                    },
+                    "permissions": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "read_only": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "limits": {
+                      "type": "object",
+                      "additionalProperties": true
+                    },
+                    "valid_until": {
+                      "type": "string",
+                      "format": "date-time",
+                      "nullable": true,
+                      "description": "When the answer next changes (a grant lapsing)."
+                    },
+                    "error": {
+                      "type": "string",
+                      "enum": [
+                        "unresolved"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          }
+        },
+        "x-adh-object": "set_grants.effective",
+        "x-adh-replaces": [
+          "GET /sets/effective/{customerId}"
+        ]
+      }
+    },
+    "/v1/set_grants/{id}": {
+      "delete": {
+        "tags": [
+          "sets"
+        ],
+        "summary": "Revoke a set grant",
+        "description": "The row stays, with `revokeReason` `direct`.\n\nReplaces DELETE /sets/grants/{id}.",
+        "operationId": "deleteV1SetGrantsById",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Deleted"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          }
+        },
+        "x-adh-object": "set_grant",
+        "x-adh-replaces": [
+          "DELETE /sets/grants/{id}"
+        ]
+      }
+    },
+    "/v1/sets": {
+      "get": {
+        "tags": [
+          "sets"
+        ],
+        "summary": "List an ecosystem's sets",
+        "description": "Replaces GET /sets.",
+        "operationId": "getV1Sets",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "ecosystem",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "An owner-made ecosystem's id (uuid or rdid); the caller must manage it (403 otherwise)."
+          },
+          {
+            "name": "personal",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "`true` includes personal sets."
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "description": "Page size, 1–100 (default 10).",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 10
+            }
+          },
+          {
+            "name": "starting_after",
+            "in": "query",
+            "required": false,
+            "description": "Cursor: an object id; returns the page after it.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "ending_before",
+            "in": "query",
+            "required": false,
+            "description": "Cursor: an object id; returns the page before it.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "expand[]",
+            "in": "query",
+            "required": false,
+            "description": "Related objects to return in full instead of as an id. Up to four levels, e.g. `ecosystem_id`; on a list, `data.<field>`.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "style": "form",
+            "explode": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The sets, by slug",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "object",
+                    "data",
+                    "has_more",
+                    "url"
+                  ],
+                  "properties": {
+                    "object": {
+                      "type": "string",
+                      "const": "list"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "allOf": [
+                          {
+                            "type": "object",
+                            "properties": {
+                              "object": {
+                                "type": "string",
+                                "const": "set"
+                              }
+                            }
+                          },
+                          {
+                            "$ref": "#/components/schemas/Set"
+                          }
+                        ]
+                      }
+                    },
+                    "has_more": {
+                      "type": "boolean"
+                    },
+                    "url": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          }
+        },
+        "x-adh-object": "set",
+        "x-adh-replaces": [
+          "GET /sets"
+        ]
+      },
+      "post": {
+        "tags": [
+          "sets"
+        ],
+        "summary": "Create a set",
+        "description": "Replaces POST /sets.",
+        "operationId": "postV1Sets",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "ecosystem",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "An owner-made ecosystem's id (uuid or rdid); the caller must manage it (403 otherwise)."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "The new set",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "object": {
+                          "type": "string",
+                          "const": "set"
+                        }
+                      }
+                    },
+                    {
+                      "$ref": "#/components/schemas/Set"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          }
+        },
+        "x-adh-object": "set",
+        "x-adh-replaces": [
+          "POST /sets"
+        ]
+      }
+    },
+    "/v1/sets/{id}": {
+      "delete": {
+        "tags": [
+          "sets"
+        ],
+        "summary": "Delete a set",
+        "description": "Its containment goes, an offer selling it stops granting a set, and its grants stop counting. Refused (rule 8) when that unsettles a container or puts a holder in conflict.\n\nReplaces DELETE /sets/{id}.",
+        "operationId": "deleteV1SetsById",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Deleted"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          }
+        },
+        "x-adh-object": "set",
+        "x-adh-replaces": [
+          "DELETE /sets/{id}"
+        ]
+      },
+      "post": {
+        "tags": [
+          "sets"
+        ],
+        "summary": "Edit a set",
+        "description": "Making a set the default clears the flag on the previous default.\n\nReplaces PATCH /sets/{id}.",
+        "operationId": "postV1SetsById",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetEdit"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The set after the edit",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "object": {
+                          "type": "string",
+                          "const": "set"
+                        }
+                      }
+                    },
+                    {
+                      "$ref": "#/components/schemas/Set"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          }
+        },
+        "x-adh-object": "set",
+        "x-adh-replaces": [
+          "PATCH /sets/{id}"
+        ]
+      }
+    },
+    "/v1/sets/{id}/members": {
+      "post": {
+        "tags": [
+          "sets"
+        ],
+        "summary": "Replace the sets a set contains",
+        "description": "Replaces PUT /sets/{id}/members.",
+        "operationId": "postV1SetsByIdMembers",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetMembersPut"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The set after the edit",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "object": {
+                          "type": "string",
+                          "const": "member"
+                        }
+                      }
+                    },
+                    {
+                      "$ref": "#/components/schemas/Set"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          }
+        },
+        "x-adh-object": "member",
+        "x-adh-replaces": [
+          "PUT /sets/{id}/members"
+        ]
+      }
+    },
+    "/v1/sets/{id}/values": {
+      "post": {
+        "tags": [
+          "sets"
+        ],
+        "summary": "Replace a set's permissions and limits",
+        "description": "Every key must be one the catalog's `setEntries` declares, with a value of its type (400 otherwise).\n\nReplaces PUT /sets/{id}/values.",
+        "operationId": "postV1SetsByIdValues",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetValuesPut"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The set after the edit",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "object": {
+                          "type": "string",
+                          "const": "value"
+                        }
+                      }
+                    },
+                    {
+                      "$ref": "#/components/schemas/Set"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          }
+        },
+        "x-adh-object": "value",
+        "x-adh-replaces": [
+          "PUT /sets/{id}/values"
         ]
       }
     },
