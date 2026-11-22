@@ -661,6 +661,14 @@ export function useAccessAudit() {
 // pages within the newest 200 rows of each filter set, so an operator after something older
 // narrows by time rather than walking further. The legacy `after` cursor is never sent.
 
+/**
+ * The most rows of one filter set the gateway will page through. The legacy route pages by its own
+ * `after` cursor, which the /v1 gateway does not walk: it asks for the route's widest page
+ * (OPERATOR_ACCESS_PAGE_MAX, 200) and pages `starting_after` within it, so a window that holds this
+ * many rows has reached the end of what is served, whether or not older rows exist.
+ */
+export const OPERATOR_ACCESS_WINDOW_CAP = 200;
+
 /** One `system.operator_access` row: who acted in operator mode, when, on what request. */
 export interface OperatorAccessEvent {
   id: string;

@@ -134,6 +134,17 @@ describe("OperatorAccessPane", () => {
     expect(lastQuery().has("target_ecosystem_id")).toBe(false);
   });
 
+  it("at the gateway's 200-row cap, says to narrow rather than calling it the whole log", async () => {
+    const rows = Array.from({ length: 200 }, (_, i) => ({ ...row, id: `row-${i}` }));
+    listV1Page.mockResolvedValue({ data: rows, hasMore: true });
+    mount();
+    await screen.findAllByText("POST /v1/ecosystems/abc/members");
+    const caption = await screen.findByText(/200 entries/);
+    expect(caption.textContent).not.toContain("the whole log");
+    expect(caption.textContent).toContain("narrow them to reach older entries");
+    expect(screen.queryByRole("button", { name: "Load older entries" })).toBeNull();
+  });
+
   it("offers a former operator seen in the rows as a filter", async () => {
     const FORMER = "44444444-4444-4444-8444-444444444444";
     listV1Page.mockResolvedValue({

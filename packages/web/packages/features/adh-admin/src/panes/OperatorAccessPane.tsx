@@ -14,6 +14,7 @@ import { Input } from "@adh-sdk/ui/components/input";
 import { Label } from "@adh-sdk/ui/components/label";
 import { Select } from "@adh-sdk/ui/components/select";
 import {
+  OPERATOR_ACCESS_WINDOW_CAP,
   normalizeOperatorAccessFilters,
   useOperatorAccess,
   useOperators,
@@ -255,6 +256,9 @@ export function OperatorAccessPane({
     if (sameFilters(next, applied)) log.refresh();
     else setApplied(next);
   };
+  // At the gateway's cap the server pages no further: the window is the newest rows for these
+  // filters, not the whole log, and a "Load older" would fetch an empty page and then claim it was.
+  const capped = log.rows.length >= OPERATOR_ACCESS_WINDOW_CAP;
   // The form is edited freely and takes effect only on Apply, so it can show filters the list is
   // not using. Saying so keeps an operator from reading the list as filtered by what the form shows.
   const pending = !sameFilters(toFilters(draft), applied);
@@ -384,7 +388,11 @@ export function OperatorAccessPane({
           ariaLabel="Operator access events"
           searchPlaceholder="Search the loaded entries"
           emptyLabel="No operator access recorded for these filters."
-          emptyFilteredLabel="Nothing in the loaded window matches — load older entries, or widen the filters."
+          emptyFilteredLabel={
+            capped
+              ? "Nothing in the loaded window matches. It holds the newest entries the server serves for these filters: narrow them by operator, ecosystem or time to reach older ones."
+              : "Nothing in the loaded window matches — load older entries, or widen the filters."
+          }
           loading={log.isLoading}
           error={log.error}
           errorTitle="Couldn't load the operator access log"
@@ -397,7 +405,8 @@ export function OperatorAccessPane({
               noun="entries"
               loaded={log.rows.length}
               showing={list.rows.length}
-              hasMore={log.hasMore}
+              hasMore={log.hasMore && !capped}
+              capped={capped}
               busy={log.isFetchingMore}
               onLoadMore={log.loadMore}
             />
