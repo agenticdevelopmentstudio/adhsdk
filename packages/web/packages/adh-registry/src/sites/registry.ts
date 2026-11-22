@@ -1030,6 +1030,8 @@ export const HUB_EXTRA_FEATURE_SEGMENTS = [
   'server-bags', 'sync', 'llm-providers',
   // Product roles (phase 5): a product knob, a row on the product rail and only a route here.
   'roles',
+  // Sign-up list (phase 5): likewise a product knob, a product rail row and only a route here.
+  'signup-list',
   // Email Signup: a bespoke rail route (audience.* lists/templates/campaigns), no
   // distinct registry site of its own — same lockstep as the row above.
   'email-signup',
