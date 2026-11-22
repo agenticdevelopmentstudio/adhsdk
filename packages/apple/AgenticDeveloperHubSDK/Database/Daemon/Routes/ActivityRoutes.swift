@@ -48,7 +48,10 @@ public enum ActivityRoutes {
         "POST /app/unregister"
     ]
 
-    /// `POST /app/register` and `/app/unregister`'s reply.
+    /// `POST /app/register` and `/app/unregister`'s reply: whether the caller
+    /// holds the slot after the call, and the live owner's pid (nil when no one
+    /// holds it). An unregister's reply is the registry's state afterwards, so
+    /// `registered` is never true there and `ownerPid` names whoever else owns it.
     public struct AppRegistryResponse: Codable, Sendable, Equatable {
         public let ownerPid: Int32?
         public let registered: Bool
@@ -144,13 +147,15 @@ public enum ActivityRoutes {
                     return .error(invalidPid, status: 400)
                 }
             },
-            // Idempotent: releases the slot only if the caller owns it. 200, or
-            // 400 for a pid that could never own it.
+            // Idempotent: releases the slot only if the caller owns it, and
+            // answers the state afterwards. 200, or 400 for a pid that could
+            // never own it.
             RouteTable.route("POST", where: { $0 == ["app", "unregister"] }) { request, _ in
                 guard let pid = decodePid(request) else { return .error(missingBody, status: 400) }
                 guard registry.isValidOwner(pid: pid) else { return .error(invalidPid, status: 400) }
-                let released = await registry.unregister(pid: pid)
-                return .json(AppRegistryResponse(ownerPid: nil, registered: !released))
+                _ = await registry.unregister(pid: pid)
+                let owner = await registry.currentOwner()
+                return .json(AppRegistryResponse(ownerPid: owner, registered: owner == pid))
             }
         ]
     }
