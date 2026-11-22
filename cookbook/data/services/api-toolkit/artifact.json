@@ -4,15 +4,15 @@
     "id": "7add8e4b-922e-4518-aa45-79bf56cdf8bc",
     "title": "API Toolkit",
     "type": "ingredient",
-    "version": "1.1.3",
+    "version": "1.2.0",
     "status": "review",
     "language": "en",
     "created": "2026-09-23",
-    "modified": "2026-11-14",
+    "modified": "2026-11-22",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
-    "summary": "Same-origin request building, generated-endpoint lookup, schema-derived examples and field descriptions, and generic-CRUD headless logic for API browsing and data-table editing.",
+    "summary": "Same-origin request building, endpoint lookup and matching, schema-derived examples, and generic-CRUD headless logic for API browsing and data-table editing.",
     "platforms": [
       "typescript",
       "web"
@@ -32,7 +32,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "902e8646a4571fb6",
+  "synced": "6da9c2726e192b5c",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

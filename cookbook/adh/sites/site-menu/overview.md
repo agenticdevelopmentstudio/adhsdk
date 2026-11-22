@@ -1,19 +1,27 @@
 
-`SiteMenu` is the platform's primary navigation menu — the popover disclosed from
-the header wordmark. It renders a vertical list of rows, each `[icon] [label]
-[description]`, organized into sections. It has one shared core layout used by
-**both** the marketing (logged-out) and workspace (logged-in `/home`) surfaces;
-only the **top section** differs by auth state.
+`SiteMenu` is the family launcher: the command-style popover disclosed from the
+header's hub brand. It turns a declarative tree of `MenuGroup` entries into rows
+(icon, label, optional description), adds the chrome that depends on who is looking
+(Login and Sign up, Home, a Workspaces flyout, Help, a Recents flyout, the host
+site's own navigation on a phone), and navigates when a row is chosen. It is built
+by composing `NavigationPopover`, which supplies the popover surface, the search
+box, keyboard navigation and flyout submenus.
 
-It is chrome. The menu itself — `SiteMenu` and the `menu-icons` map — is ADH
-vocabulary, and the registry-free machinery it composes (`NavigationPopover`, the
-recents store) is generic; both halves now live in `@adh-sdk/adh/header`,
-so the tier boundary this recipe once straddled is gone. It is built by composing that
-`NavigationPopover` (surface, search, keyboard nav, flyout submenus) with a
-declarative config (`MenuGroup[]`). This recipe defines the enhanced menu:
-per-row **icons** from a single source of truth, a new **inline sub-item** row
-kind, a **Hub** section that gathers the ecosystem's sites and tools, and an
-auth-conditional **top section** that adds **Login/Sign up** when logged out and
-**Home / Workspaces / Recents** when logged in. Recents records the last 10 places
-the user actually landed on and deep-links back to each.
+Three config-only components sit on one shared base:
+
+- `SiteMenu` holds all the logic. It takes `groups` plus the header-chrome props
+  and owns link resolution, the trigger, navigation, the top section, Recents,
+  the search command and the trailing control.
+- `MarketingSiteMenu` supplies the short public tree. It is what every site shows
+  on its marketing pages, signed in or out.
+- `WorkspaceSiteMenu` supplies the whole family tree. It is shown on the hub's
+  workspace routes whenever `WorkspaceMenu` does not take over (signed out, or no
+  workspaces context).
+- `SiteMenuSwitcher` is a dispatcher with no content of its own. It picks one of
+  the two menus by route, or swaps in the `WorkspaceMenu` (a different component,
+  covered elsewhere) for a signed-in hub user inside a workspace.
+
+Two further modules belong to the menu. `menu-icons` is the single source of every
+row's icon. `recents` is the per-device store behind the Recents flyout; the
+recorder that writes to it lives in the hub app, not in this package.
 

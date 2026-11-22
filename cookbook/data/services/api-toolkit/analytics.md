@@ -1,4 +1,3 @@
 
-Not applicable: none of the given sources emit an analytics/telemetry event
-or call an analytics client.
+Not applicable: no given source emits an analytics event or calls an analytics client.
 

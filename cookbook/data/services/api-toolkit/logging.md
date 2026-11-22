@@ -1,4 +1,3 @@
 
-Not applicable: none of the given sources call a logger or otherwise emit
-diagnostic output.
+Not applicable: no given source calls a logger or writes diagnostic output.
 

@@ -1,0 +1,64 @@
+{
+  "format": 2,
+  "meta": {
+    "id": "a273158e-3129-4e69-ab08-a651235303e0",
+    "title": "Sets Client",
+    "type": "ingredient",
+    "version": "1.0.0",
+    "status": "review",
+    "language": "en",
+    "created": "2026-11-22",
+    "modified": "2026-11-22",
+    "author": "mfullerton",
+    "copyright": "2026 mfullerton",
+    "license": "MIT",
+    "summary": "Web client for an ecosystem's sets admin API: sets, containment, values, grants, effective answers, offer sets, typed 422 refusals and catalog set entries.",
+    "platforms": [
+      "typescript",
+      "web"
+    ],
+    "tags": [
+      "data",
+      "sets",
+      "permissions",
+      "api",
+      "errors"
+    ],
+    "depends-on": [
+      "870c182f-1a80-4254-8fec-3eb35c8f13f7",
+      "3ea9329e-5acc-4c43-b5ce-bb8c50570104"
+    ],
+    "related": [],
+    "references": [
+      "packages/web/packages/data/src/sets/sets.ts (adhsdk)",
+      "packages/web/packages/data/src/sets/wire.ts (adhsdk)",
+      "packages/web/packages/data/src/sets/index.ts (adhsdk)",
+      "packages/web/packages/data/src/sets/__tests__/sets.test.ts (adhsdk)"
+    ],
+    "approved-by": "",
+    "approved-date": ""
+  },
+  "synced": "01b8bf60cc89b1a5",
+  "parts": [
+    {"part": "intro"},
+    {"part": "overview", "heading": "Overview"},
+    {"part": "behavioral-requirements", "heading": "Behavioral Requirements"},
+    {"part": "appearance", "heading": "Appearance"},
+    {"part": "states", "heading": "States"},
+    {"part": "accessibility", "heading": "Accessibility"},
+    {"part": "conformance-test-vectors", "heading": "Conformance Test Vectors"},
+    {"part": "edge-cases", "heading": "Edge Cases"},
+    {"part": "configuration", "heading": "Configuration"},
+    {"part": "deep-linking", "heading": "Deep Linking"},
+    {"part": "localization", "heading": "Localization"},
+    {"part": "accessibility-options", "heading": "Accessibility Options"},
+    {"part": "feature-flags", "heading": "Feature Flags"},
+    {"part": "analytics", "heading": "Analytics"},
+    {"part": "privacy", "heading": "Privacy"},
+    {"part": "logging", "heading": "Logging"},
+    {"part": "platform-notes", "heading": "Platform Notes"},
+    {"part": "design-decisions", "heading": "Design Decisions"},
+    {"part": "compliance", "heading": "Compliance"},
+    {"part": "history", "heading": "Change History"}
+  ]
+}

@@ -21,11 +21,15 @@ separate from the UI-facing `Ecosystem` type. `explicit-error-handling`
 **passed**: every catch on both platforms either re-maps a specific error
 (`HubError.notFound`→`.empty`, `HubError.conflict`→`.validation`,
 `isNotFound`→`null`, a 409→`rethrowConflict`) or wraps/rethrows
-unconditionally (`HubError.wrap`) — no path silently swallows a failure.
-`unit-test-coverage` **partial**: 33 of the 51 conformance vectors
-(`ecosystems-019` through `-051`) are covered by passing web tests in
-`ecosystems.test.ts`, `ecosystem-features.test.tsx` and
-`use-workspace-default-ecosystem.test.tsx`, one test per vector. Vectors
+unconditionally (`HubError.wrap`) - no path silently swallows a failure.
+`unit-test-coverage` **partial**: vectors `ecosystems-019` through `-066`
+are covered by web tests in `ecosystems.test.ts`,
+`ecosystem-features.test.tsx` and `use-workspace-default-ecosystem.test.tsx`
+(vectors `-052` through `-066` name their tests; `-019` through `-051` are
+one test per vector). Vectors `ecosystems-067` through `-073`, which cover the
+feature requirement rules, the feature manager, the hub-data predicate and the
+hub-data ecosystem hooks, are derived from source and have no test of their
+own. Vectors
 `ecosystems-001` through `-018` describe the Apple `EcosystemsModule` and
 `Ecosystem` type, which the web client has no equivalent of; they are
 exercised by `EcosystemsModuleTests.swift` (root listing, manageability gate,
@@ -37,7 +41,7 @@ consistently distinguish "missing" from "already exists" from every other
 failure on both platforms, and `ecosystemIdForSlug` explicitly rethrows a
 non-404 rather than treating it as license to fall back
 (ecosystems-035). `retry-with-backoff` **failed**: no file in
-either implementation retries a failed ecosystems/identifiers request —
+either implementation retries a failed ecosystems/identifiers request -
 the underlying `authedJson`'s 401-refresh-and-retry-once is a different,
 cross-cutting auth concern (see [adhsdk.ingredient.data.services.auth.auth-client](cookbook:3ea9329e-5acc-4c43-b5ce-bb8c50570104)), not a retry of this
 domain's own operations. `offline-behavior` **failed**: neither
@@ -45,12 +49,12 @@ implementation defines an offline-cache-first read path or a
 queued-write-when-offline behavior; every operation is a live round-trip
 that fails outright when the network is unavailable.
 `idempotent-operations` **partial**: the feature client is idempotent on
-both mutating paths — `remove` treats an already-gone row (404) as success,
-and `provision` of an already-active key is a backend no-op — and
-`ecosystemsApi.update`'s PUT is
+both mutating paths - `remove` treats an already-gone row (404) as success,
+and `provision` of an already-active key is a backend no-op - and
+`ecosystemsApi.update`'s write is
 documented as idempotent by the backend's own locked-value diff (sending
 an unchanged `slug` is a no-op, per the source's `addressPatchMoves`
-comment), but `create` has no idempotency key on either platform — a
+comment), but `create` has no idempotency key on either platform - a
 client-level retry of a create (were one ever added) could not safely be
 distinguished from a genuine duplicate request without one.
 `input-sanitization` **partial**: `Slug.pattern`/`FormValidator` (Apple)
@@ -65,7 +69,7 @@ list and are needed to decide who may sign in, and the provisioner principal id,
 opaque id. `no-hardcoded-strings` **failed**: every
 user-facing string this ingredient documents (labels, warnings, validation
 messages) is fixed English with no lookup table or locale parameter on
-either platform (see Localization) — a plain, honestly-reported gap, not
+either platform (see Localization) - a plain, honestly-reported gap, not
 a hidden one. `fault-tolerance` **partial**: `useApplyFeatureChange`
 keeps going past a failed removal and reports it by name rather than
 aborting, and `FeatureSubscriptionTier` is an open string so an unknown

@@ -1,253 +1,160 @@
 
 ### Request Building and Execution
 
-- **request-base**: the fixed API base MUST be the fixed string `/api`; every
-  built request MUST be same-origin relative to this base, never an absolute
-  cross-origin URL.
-- **path-substitution**: path substitution MUST replace each `{name}` path
-  segment with the URL-encoded value from the supplied path values when
-  present, and MUST leave a `{name}` segment visible, unencoded, in the
-  resulting path when no matching value is supplied.
-- **body-allowed**: the body-allowed check MUST return true only when the
-  endpoint's method is one that accepts a body per its metadata; it MUST
-  return false otherwise so the request builder never attaches a body to a
-  body-less method.
-- **request-headers**: the request builder MUST set `Content-Type:
-  application/json` only when a body is actually attached, and MUST set
-  `Authorization: Bearer <token>` only when a token argument is supplied;
-  each header MUST NOT be present when its precondition is absent.
-- **mutating-methods**: the mutating-method check MUST return true for every
-  HTTP method except `GET`, `HEAD`, and `OPTIONS`, and MUST return false for
-  those three.
-- **response-normalization**: the request executor MUST resolve to a uniform
-  result for every HTTP status code, `2xx` through `5xx` inclusive, and MUST
-  record the elapsed wall-clock duration on that result; it MUST NOT throw for
-  a non-2xx HTTP response.
-- **network-failure-propagation**: the request executor MUST let a
-  transport-level failure (offline, DNS failure, a cross-origin block) reject
-  its promise rather than resolve to a normalized result; its "never throws"
-  contract covers only non-2xx statuses. The endpoint detail view catches the
-  rejection and shows its message (falling back to `'Request failed'`).
-- **request-timeout**: neither the request builder nor the request executor
-  attaches a timeout or a cancellation controller to the underlying request; a
-  request that never resolves stays in flight until the browser gives up.
+- **request-base**: The `API_BASE` constant MUST be the string `/api`.
+- **request-same-origin**: A request produced by `buildRequest` MUST have a `url` that begins with `API_BASE`, never an absolute cross-origin URL.
+- **path-substitution-encoded**: `substitutePath` MUST replace each `{name}` placeholder with the `encodeURIComponent` of the matching entry in `pathValues`.
+- **path-substitution-unfilled**: `substitutePath` MUST leave a placeholder as the literal text `{name}`, unencoded, when its value is missing, `null`, or the empty string.
+- **query-from-declared-params**: `buildRequest` MUST add a query pair only for each entry of `meta.params` whose `in` is `query` and whose value in `queryValues` is neither missing nor the empty string.
+- **query-omitted-when-empty**: `buildRequest` MUST append no `?` to the url when no query pair was added.
+- **body-allowed**: `bodyAllowed` MUST return true if and only if `meta.requestBody` is not `null` or `undefined`.
+- **body-attached**: `buildRequest` MUST attach `values.body` as `body` only when the endpoint allows a body and `values.body` is neither missing nor blank after trimming.
+- **body-untrimmed**: `buildRequest` MUST pass `values.body` through without trimming it.
+- **content-type-header**: `buildRequest` MUST set `Content-Type` only when a body is attached, to `meta.requestBody.contentType`, defaulting to `application/json` when that value is absent.
+- **authorization-header**: `buildRequest` MUST set `Authorization: Bearer <token>` only when `token` is truthy.
+- **built-request-method**: `buildRequest` MUST copy `meta.method` unchanged into `method`.
+- **mutating-methods**: `isMutating` MUST return false for exactly `GET`, `HEAD`, and `OPTIONS`, and true for every other string, compared case-sensitively.
+- **response-normalization**: `executeRequest` MUST resolve to an `ApiResult` carrying `status`, `statusText`, `ok`, `headers`, `contentType`, `bodyText`, and `durationMs` for any HTTP status, and MUST NOT reject on a non-2xx status.
+- **result-headers-and-type**: `executeRequest` MUST return `headers` as an array of name and value pairs and `contentType` as the `content-type` response header, or `null` when absent.
+- **result-duration**: `executeRequest` MUST set `durationMs` to the elapsed time rounded to whole milliseconds.
+- **network-failure-propagation**: `executeRequest` MUST let a transport-level failure (offline, DNS failure, a cross-origin block) reject its promise rather than resolve to an `ApiResult`. The endpoint detail view that calls it catches the rejection and shows the message, falling back to `Request failed`.
+- **request-timeout**: `buildRequest` and `executeRequest` MUST NOT attach a timeout or an abort signal to the request; a request that never resolves stays in flight until the browser gives up.
 
-### Endpoint Lookup
+### Endpoint Lookup and Matching
 
-- **endpoint-key**: the endpoint key MUST be derived from an endpoint's method
-  and path such that endpoint lookup can find the same endpoint by that key.
-- **tag-index-caching**: the tag-to-endpoints index MUST be built lazily, on
-  first use, and MUST be reused on every subsequent call rather than being
-  rebuilt.
-- **tag-ordering**: the full tag list MUST be returned in sorted order.
-- **endpoints-for-tag-ordering**: the endpoints-for-a-tag lookup MUST return
-  that tag's endpoints sorted first by path, then by a fixed method ranking
-  for endpoints sharing a path.
+- **endpoint-key**: `endpointKey` MUST return a string reference unchanged and MUST return the upper-cased method, a space, and the path for an `EndpointRef`.
+- **get-endpoint**: `getEndpoint` MUST return the `API_ENDPOINTS` entry for the key of its argument, or `undefined` when there is none.
+- **index-lazy-cached**: The tag index, the tag list, and the path-shape index MUST each be built on first use and reused on every later call.
+- **untagged-bucket**: An endpoint whose `tag` is absent MUST be listed under the tag `other`.
+- **tag-ordering**: `allTags` MUST return the tags sorted with the default string sort.
+- **endpoints-for-tag-ordering**: `endpointsForTag` MUST return a tag's endpoints sorted by path with `localeCompare`, then by method rank `GET`, `POST`, `PUT`, `PATCH`, `DELETE`, with any other method ranked after them.
+- **endpoints-for-unknown-tag**: `endpointsForTag` MUST return an empty array for a tag that has no endpoints.
+- **shape-matching**: `matchEndpoints` MUST compare routes by path shape, treating every `{placeholder}` as equal whatever its name, so `{ecosystem id}` matches `{ecosystemId}`.
+- **match-with-method**: `matchEndpoints` MUST return only the endpoint on the matching shape whose method equals the match's method, compared upper-cased.
+- **match-without-method**: `matchEndpoints` MUST return every endpoint on the matching shape, in method rank order, when the match carries no method.
+- **match-order-and-dedup**: `matchEndpoints` MUST return endpoints in the order the matches name them, each endpoint once.
+- **match-miss-skipped**: `matchEndpoints` MUST leave out a match for which the spec has no endpoint.
 
 ### Code Highlighting
 
-- **highlighter-singleton**: the cached highlighter MUST be created at most
-  once per process and MUST be reused by every subsequent highlight call
-  rather than being re-initialized.
-- **highlighter-dual-theme**: the cached highlighter MUST support both a
-  light and a dark theme and the JSON, shell, and JavaScript languages.
-- **highlighter-failure-recovery**: if highlighter initialization rejects, the
-  cache MUST reset back to empty so a subsequent call retries initialization
-  rather than being permanently disabled by one transient failure.
-- **pretty-json-fallback**: the pretty-JSON fallback MUST return the original
-  input text unchanged when parsing fails, and MUST return an empty string
-  for blank input; it MUST NOT throw.
+- **highlight-lazy-load**: The highlighting library MUST be loaded by dynamic import on the first `highlightToHtml` call, not at module load.
+- **highlighter-singleton**: The highlighter promise MUST be created at most once while it has not rejected, and every later call MUST reuse it.
+- **highlighter-themes-and-langs**: The highlighter MUST be created with the themes `github-light` and `github-dark` and the languages `json`, `bash`, and `javascript`.
+- **highlight-output-variables**: `highlightToHtml` MUST emit both themes as CSS variables, with no default color, so the host theme selects the variant without re-highlighting.
+- **highlighter-failure-recovery**: A rejected highlighter creation MUST reset the cache to empty so the next call retries, and the rejection MUST propagate to the caller of that call.
+- **pretty-json-format**: `prettyJson` MUST return the parsed text re-serialized with two-space indentation and `lang` `json` when the trimmed input parses as JSON.
+- **pretty-json-fallback**: `prettyJson` MUST return the original input text, untrimmed, with `lang` `json` when parsing fails, and MUST NOT throw.
+- **pretty-json-blank**: `prettyJson` MUST return empty text with `lang` `json` for input that is empty or only whitespace.
 
 ### Schema-Derived Examples and Field Descriptions
 
-- **ref-resolution-scope**: reference resolution MUST resolve only local
-  schema-component references; a reference outside that local scope MUST NOT
-  be treated as resolved.
-- **example-cycle-safety**: example derivation MUST thread a "seen" set
-  through every recursive step so that a cyclic schema (a schema that refs
-  itself, directly or transitively) terminates rather than recursing
-  indefinitely.
-- **example-precedence**: example derivation MUST resolve an example value by
-  trying, in order: reference resolution, `anyOf`/`oneOf` variant selection,
-  `allOf` merge, an explicit example, an explicit default, the first `enum`
-  value, then a type-driven default — stopping at the first applicable step.
-- **type-label-truncation**: the type label MUST append a `?` suffix for a
-  nullable type, MUST render a union of variants, and MUST truncate an enum
-  preview beyond its fourth value with `…` rather than listing every value.
-- **field-description-depth**: field description MUST describe fields exactly
-  one level deep (name, type, required, description) after type unwrapping
-  has dereferenced a reference, array items, a null-union, and a merged
-  `allOf`.
+- **ref-resolution-scope**: `refName` MUST return a name only for a `$ref` string that begins with `#/components/schemas/`, and `undefined` for any other value or for a non-object schema.
+- **example-cycle-safety**: `schemaToExample` MUST carry a `seen` set of schema names through each reference step so a schema that refers to itself terminates, returning `null` at the repeated reference.
+- **example-boolean-schemas**: `schemaToExample` MUST return `{}` for an undefined schema or `true`, and `null` for `false`.
+- **example-precedence**: `schemaToExample` MUST try, in order, reference resolution, `anyOf` or `oneOf` selection, `allOf` merge, `example`, `default`, the first `enum` value, then a type-driven default, and stop at the first that applies.
+- **example-union-choice**: `schemaToExample` MUST choose the first non-null variant of an `anyOf` or `oneOf`, or the first variant when every variant is null.
+- **example-allof-merge**: `schemaToExample` MUST merge the object examples of the `allOf` parts into one object and ignore a part that does not yield a plain object.
+- **example-type-defaults**: `schemaToExample` MUST return `2020-01-01T00:00:00.000Z` for a string of format `date-time`, `string` for any other string, `0` for an integer or number, `true` for a boolean, `null` for a null type, a one-element array of the item example for an array with `items`, and `[]` for an array without.
+- **example-object-fallback**: `schemaToExample` MUST return an object of each property's example when the schema has `properties` and no recognized type, and `{}` otherwise.
+- **type-label-forms**: `typeLabel` MUST return `any` for an undefined schema or `true`, `never` for `false`, the schema name for a `$ref`, `T[]` for an array of `T`, the schema `title` or `object` for an object, and the primary type otherwise, or `any` when the schema declares no type.
+- **type-label-nullable**: `typeLabel` MUST append `?` for a nullable type, whether the nullability comes from a `null` union variant, a `type` array containing `null`, or `nullable: true`.
+- **type-label-union**: `typeLabel` MUST join the labels of multiple non-null variants with ` | `.
+- **type-label-enum-truncation**: `typeLabel` MUST list an enum of four or fewer values, each rendered as its JSON text (a string keeps its quotes) and joined by ` | `, and for more than four MUST list the first three followed by `| …`.
+- **unwrap-to-object**: `unwrapToObject` MUST dereference a reference, unwrap array `items`, select the first non-null union variant, and merge `allOf` properties and `required` lists, returning `undefined` when no object results or a reference repeats.
+- **field-description-depth**: `describeFields` MUST return one `SchemaField` per top-level property of the unwrapped object, with `name`, `type` from `typeLabel`, `required`, and `description` only when the property has a string description.
+- **field-description-empty**: `describeFields` MUST return an empty array when the schema unwraps to no object or to an object without `properties`.
 
 ### Endpoint Slugging
 
-- **slug-projection**: slug projection MUST strip `{param}` braces from every
-  path segment and MUST append the method, lower-cased, as the final slug
-  segment.
-- **slug-collision-detection**: the lazily-built slug index MUST throw when
-  two distinct endpoints project to the same slug, rather than silently
-  letting the second endpoint alias or shadow the first.
-- **slug-lookup-miss**: slug lookup MUST return nothing, not throw, when no
-  endpoint maps to the given slug.
+- **slug-projection**: `endpointSlug` MUST split the path on `/`, drop empty segments, strip the braces from each `{param}` segment, and append the lower-cased method as the final segment.
+- **slug-index-lazy**: The slug-to-key index MUST be built on first use of `endpointForSlug`.
+- **slug-collision-detection**: Building the slug index MUST throw an `Error` whose message names the slug and both colliding keys when two distinct endpoints project to the same slug.
+- **slug-lookup**: `endpointForSlug` MUST join the segments with `/` and return the matching endpoint, or `undefined` on a miss; a miss itself raises no error.
+- **all-endpoints**: `allEndpoints` MUST return every `API_ENDPOINTS` value in the object's own key order.
 
 ### Snippet Generation
 
-- **snippet-token-placeholder**: every generated snippet MUST embed a fixed
-  token placeholder (the literal string `YOUR_TOKEN`) in place of any real
-  bearer token; a generated snippet MUST NOT embed a live, caller-supplied
-  token.
-- **snippet-body-inclusion**: the generated snippet's body text MUST include a
-  request body only when the endpoint's metadata declares a request body and
-  the supplied body, once trimmed, is non-empty.
-- **curl-snippet-escaping**: the command-line snippet MUST single-quote an
-  embedded JSON body and MUST shell-escape any single quote that occurs
-  inside that body.
+- **snippet-token-placeholder**: Every generated snippet MUST carry the literal `YOUR_TOKEN` as its bearer token and MUST NOT embed a caller-supplied token.
+- **snippet-origin**: A snippet url MUST use the backend-native path, with no `/api` prefix, under the `origin` argument, which defaults to `https://api.agenticdeveloperhub.com`.
+- **snippet-url-composition**: A snippet url MUST use the same placeholder substitution and the same query rules as `buildRequest`.
+- **snippet-body-inclusion**: A snippet MUST include a body only when the endpoint declares a request body and the supplied body is non-empty after trimming, and it MUST include the trimmed body.
+- **snippet-content-type**: A snippet with a body MUST carry a `Content-Type` of `meta.requestBody.contentType`, defaulting to `application/json`.
+- **curl-snippet-escaping**: `curlSnippet` MUST wrap the body in single quotes and MUST replace each embedded single quote with the four-character sequence single quote, backslash, single quote, single quote.
+- **javascript-snippet-body**: `javascriptSnippet` MUST emit the body as a `JSON.stringify` of the body text.
+- **snippet-dispatch**: `snippetFor` MUST return the cURL snippet for `curl` and the JavaScript snippet for any other value.
+- **snippet-languages**: `SNIPPET_LANGS` MUST list `curl` (label `cURL`, highlighted as `bash`) and `javascript` (label `JavaScript`, highlighted as `javascript`).
 
 ### Method and Status Tone Mapping
 
-- **method-tone-mapping**: the method badge/dot class mapping MUST map each of
-  `GET`, `POST`, `PUT`, `PATCH`, `DELETE` to that method's fixed badge/dot
-  classes, and MUST fall back to the neutral class for any other method.
-- **method-text-class-consistency**: the method text class MUST always equal
-  the first space-delimited token of the method's badge class for every
-  method, so the badge and the text-only rendering can never drift onto
-  different palettes.
-- **status-tone-mapping**: the status tone mapping MUST map `200`–`299` to
-  the green tone, `400`–`499` to the orange tone, `500` and above to the red
-  tone, and any other status to the muted tone.
+- **method-tone-mapping**: `methodBadgeClass` and `methodDotClass` MUST map each of `GET`, `POST`, `PUT`, `PATCH`, and `DELETE` to its fixed classes, with `PUT` and `PATCH` sharing the orange tone.
+- **method-tone-fallback**: `methodBadgeClass` MUST return `text-apt-text-muted border-apt-border` and `methodDotClass` MUST return `bg-apt-text-dim` for any other method, and the lookup MUST be case-sensitive.
+- **method-text-class-consistency**: `methodTextClass` MUST return the first space-delimited token of `methodBadgeClass` for the same method.
+- **status-tone-mapping**: `statusTone` MUST parse its string argument as a number and return `text-apt-green` for 200 to 299, `text-apt-orange` for 400 to 499, `text-apt-red` for 500 and above, and `text-apt-text-muted` otherwise, including a non-numeric status.
 
-### Server and Client Entry Points
+### Entry Points
 
-- **server-entry-safe-for-server-use**: the server-usable entry point MUST
-  NOT carry a marker that forces client-side rendering machinery, so it can
-  be imported from server-only code without pulling client-bundling
-  requirements with it.
-- **client-barrel-excludes-metadata**: the client-facing entry point MUST NOT
-  re-export endpoint lookup or the generated endpoint list; a component
-  imported from the client-facing entry point MUST NOT bundle the generated
-  endpoint metadata as a transitive dependency.
-- **shared-cache-via-package-path**: the server-usable entry point MUST reach
-  the tag index, endpoint-for-tag lookup, endpoint lookup, and endpoint key
-  functions through a path that resolves to the same module instance as the
-  client-facing entry point uses, so that the server entry and the client
-  entry — two separate build chunk graphs — observe the same module-level
-  cache instance rather than each forking its own copy.
+- **server-entry-no-client-marker**: `server.ts` MUST NOT carry a `'use client'` directive.
+- **server-entry-exports**: `server.ts` MUST re-export `ApiReferenceShell`, `endpointHref`, `ApiEndpointReference`, `StaticCodeBlock`, `endpointSlug`, `endpointForSlug`, `allEndpoints`, `allTags`, `endpointsForTag`, `getEndpoint`, `endpointKey`, `methodTextClass`, the types `EndpointMeta` and `EndpointRef`, and the props types `ApiReferenceShellProps`, `ApiEndpointReferenceProps`, and `StaticCodeBlockProps`.
+- **shared-cache-via-package-path**: `server.ts` MUST import the tag, endpoint, and key functions from the package path `@adh-sdk/api-explorer/lib/getEndpoint`, not a relative path, so the server and client entry points share one module-level cache.
+- **client-barrel-excludes-metadata**: The client-facing barrel `index.ts` MUST NOT re-export endpoint lookup or `API_ENDPOINTS`, so importing a client component does not bundle the generated metadata. The barrel `index.ts` carries `'use client'`, exports only the components (`ApiButton`, `ApiBrowser`, `ApiEndpointDetail`, `RecordApiButton`) and the `EndpointMeta` and `EndpointRef` types, and its own comment says keeping `getEndpoint` and `API_ENDPOINTS` off it stops the metadata entering the host page's initial bundle.
 
 ### Column Editability
 
-- **server-managed-lock**: a column marked server-managed MUST NOT be
-  editable in any mode, regardless of any override.
-- **override-precedence**: an editability override MUST take effect only for
-  a non-relational, non-server-managed column; an override MUST NOT make a
-  relational (primary-key or foreign-key-shaped) column, nor a
-  server-managed column, editable.
-- **relational-create-only**: a relational column (a primary-key member, an
-  exact match against a known set of identifier field names, or a match
-  against a fixed identifier-suffix pattern) MUST be editable only when the
-  mode is create, never in edit mode.
-- **create-only-lock-on-edit**: a column marked create-only MUST NOT be
-  editable once the mode is edit.
-- **default-editable**: a column that is not server-managed, not relational,
-  and not locked by the create-only flag in edit mode MUST be editable by
-  default.
-- **hidden-columns**: the hidden-column check MUST return true only for a
-  server-managed column.
+- **server-managed-lock**: `isColumnEditable` MUST return false for a column with `serverManaged` true, in every mode and regardless of any override.
+- **override-precedence**: `isColumnEditable` MUST return the `EDITABLE_OVERRIDES` value for `meta.key` and the column name when one exists and the column is not relational, ahead of the create-only default.
+- **override-not-relational**: An override MUST NOT change the result for a relational column.
+- **relational-column**: `isRelationalColumn` MUST return true for a column named in `meta.pkParams`, a column named `id`, `rdid`, `owner_id`, `author_id`, `customer_id`, `account_id`, or `user_id`, and a column whose name ends in `_id` or `_rdid`.
+- **relational-create-only**: `isColumnEditable` MUST return true for a relational column in `create` mode and false in `edit` mode.
+- **create-only-lock-on-edit**: `isColumnEditable` MUST return false for a column with `createOnly` true in `edit` mode.
+- **default-editable**: `isColumnEditable` MUST return true for any other column in either mode.
+- **hidden-columns**: `isColumnHidden` MUST return true if and only if `serverManaged` is true.
+- **overrides-default-empty**: `EDITABLE_OVERRIDES` MUST be empty by default.
 
 ### Row Edit Tracking
 
-- **dirty-detection**: dirty detection MUST return true if and only if at
-  least one key present in the edit set has a value that is strictly
-  different from the same key's value in the baseline; because the edit set
-  MUST carry only the columns that were actually changed, iterating its keys
-  MUST be sufficient — dirty detection MUST NOT need to inspect any key absent
-  from the edit set.
-- **draft-merge-immutability**: draft merging MUST return a new object
-  overlaying the edit set onto the baseline, and MUST NOT mutate either the
-  baseline or the edit set.
+- **dirty-detection**: `isRowDirty` MUST return true if and only if some key in the edit set has a value strictly unequal (`!==`) to the baseline value of that key, and MUST return false when the edit set is `undefined`.
+- **dirty-ignores-absent-keys**: `isRowDirty` MUST NOT inspect baseline keys that are absent from the edit set.
+- **draft-merge-immutability**: `mergeDraft` MUST return a new object with the edits laid over the baseline, and MUST NOT mutate either input.
+- **draft-merge-no-edits**: `mergeDraft` MUST return a copy of the baseline when the edit set is `undefined`.
 
 ### Table Visibility Gate
 
-- **presentation-only-gate**: the read/write allowlist checks MUST be
-  documented and treated as presentation-only; they MUST NOT be relied upon
-  as the authorization boundary — the server MUST independently re-check
-  every request regardless of what the client renders.
-- **read-allowlist**: the read-allowlist check MUST return true for
-  owner and catalog exposure for any viewer, and MUST return true for admin
-  exposure only when the viewer is an admin.
-- **write-allowlist**: the write-allowlist check MUST return true for owner
-  exposure for any viewer, and MUST return true for catalog or admin exposure
-  only when the viewer is an admin.
-- **fail-closed-on-unknown-tier**: a table whose exposure tier is missing or
-  unrecognized MUST be denied both read and write for a non-admin viewer; the
-  readable-tables filter MUST exclude such a table from its filtered result
-  for a non-admin viewer.
-- **order-preserving-filter**: the readable-tables filter MUST preserve the
-  input order of the tables it retains.
+- **presentation-only-gate**: `canReadTable`, `canWriteTable`, and `readableTables` MUST be treated as presentation only; the server re-checks every request.
+- **read-allowlist**: `canReadTable` MUST return true for `owner` and `catalog` exposure for any viewer, and for every other value only when `isAdminViewer` is true.
+- **write-allowlist**: `canWriteTable` MUST return true for `owner` exposure for any viewer, and for every other value only when `isAdminViewer` is true.
+- **fail-closed-on-unknown-tier**: `canReadTable` and `canWriteTable` MUST return false for a non-admin viewer when `exposure` is absent or not one of `owner`, `catalog`, or `admin`.
+- **order-preserving-filter**: `readableTables` MUST return the tables `canReadTable` accepts, in input order.
 
 ### Schema Allowlist
 
-- **schema-allowlist-single-source**: the schema allowlist MUST be computed
-  exactly once, at load time, from the generated table list, and MUST serve
-  as the single source of truth consulted by both halves of the
-  allowlist-to-feature lockstep check.
+- **schema-allowlist-single-source**: `CRUD_SCHEMAS` MUST be a read-only set of the distinct `schema` values of `CRUD_TABLES`, computed once at module load.
 
 ### CRUD Resource State
 
-- **item-url-substitution**: the item URL builder MUST substitute each
-  primary-key value, URL-encoded, into the item path to build the per-item
-  URL.
-- **row-key-derivation**: the row key MUST join the row's escaped
-  primary-key values, and MUST return the empty string when a single-key row
-  has no value for that key.
-- **loading-vs-fetching**: "loading" MUST mean "nothing to show for the
-  current list yet" and "fetching" MUST mean "a list call is currently open";
-  the two MUST be able to diverge (e.g. a background re-list on an
-  already-populated list has fetching true but loading false).
-- **out-of-order-response-guard**: the state MUST track a sequence number per
-  list call and MUST discard the result of any list response whose sequence
-  number is not the latest issued, so a slow, stale response MUST NOT
-  overwrite state written by a newer, faster response.
-- **loaded-for-tracking**: the state MUST track which list identity's rows
-  are currently on screen, and "loading" MUST be derived as "fetching is true
-  and the currently-loaded list differs from the requested one" so switching
-  to a not-yet-loaded list shows loading, while re-fetching an
-  already-loaded list does not.
-- **query-composition-order**: the list query string MUST place the
-  scope-derived query segment before the filter query segment when both are
-  present.
-- **mutation-relist**: create, update, and remove MUST re-issue the list call
-  after their underlying mutation succeeds; the raw create/update/remove
-  mutators they call MUST NOT re-list on their own.
-- **delete-uses-authed-request**: row removal MUST call the JSON-parsing
-  authenticated request helper with the `DELETE` method, because the delete
-  endpoint answers `200` with a `{id, object, deleted: true}` tombstone; the
-  tombstone is not read.
-- **mutation-error-not-hook-state**: a failure from create, update, or remove
-  MUST propagate to the caller as a rejected promise, and MUST NOT be written
-  into the state's own error field.
+- **item-url-substitution**: `itemUrl` MUST replace each `{param}` of `meta.itemPath` with the `encodeURIComponent` of the row's value for that primary-key name, using the empty string for a missing value, and MUST prefix the result with `/api`.
+- **row-key-derivation**: `rowKey` MUST join the encoded primary-key values with `/` and MUST return the empty string for a single-key row with no value.
+- **list-url-composition**: `listUrl` MUST return `/api` plus `meta.basePath`, followed by `?` and the `ecosystem_id` pair then the filter pairs, joined by `&`, when either is present.
+- **list-url-no-query**: `listUrl` MUST append no `?` when there is no ecosystem scope and the filter is absent or empty.
+- **loading-vs-fetching**: `loading` MUST be true only while a list call is open and no list has landed for the current list URL, and `fetching` MUST be true while any list call is open; a re-list of an already-loaded list MUST report `fetching` true and `loading` false.
+- **list-on-mount**: `useCrudResource` MUST issue a list call on mount and again whenever `meta` or the list URL changes.
+- **list-walks-collection**: A list call MUST fetch every row through `listAllV1` with the list URL.
+- **out-of-order-response-guard**: `useCrudResource` MUST increment a sequence number per list call and MUST discard the rows, the error, and the fetching reset of any call that is not the latest.
+- **list-error-state**: A failed latest list call MUST set `error` to `errorMessage(err)` and leave `rows` as they were; a started list call MUST clear `error`.
+- **write-scope-query**: Every create, update, and remove url MUST carry `ecosystem_id` then `workspace` when present, where `workspace` is taken from `filter.workspace` and `ecosystem_id` from `scopeEcosystemId`, each URL-encoded.
+- **create-update-method**: `createRow` MUST send a JSON `POST` to `meta.basePath` and `updateRow` MUST send a JSON `POST` to the item url, each with `JSON.stringify(values)` as the body.
+- **remove-method**: `removeRow` MUST send `DELETE` to the item url through `authedJson` and MUST NOT read the `{id, object, deleted: true}` tombstone the backend answers with; `authedJson` throws on a 204 answer, which would reject the call.
+- **mutation-relist**: `create`, `update`, and `remove` MUST call `refresh` after the matching raw mutator succeeds, and the raw mutators `createRow`, `updateRow`, and `removeRow` MUST NOT re-list.
+- **mutation-error-not-hook-state**: A failed mutation MUST reject its promise to the caller and MUST NOT write to `error`, and a failed mutation MUST NOT trigger a re-list.
 
 ### Exit Guard Channel
 
-- **stable-proxy-identity**: the exit-guard proxy returned while a guard is
-  registered MUST be the same object identity across re-registrations (built
-  once, with no dependency that would cause it to be rebuilt).
-- **presence-is-the-dirty-signal**: the channel MUST expose the proxy
-  (non-null) only while a guard is present, and MUST expose nothing once
-  withdrawn; callers MUST treat the presence of a non-null guard, not merely
-  a call to it, as part of the dirty signal.
-- **proxy-reads-latest-guard**: the stable proxy's dirty check MUST read
-  through to the most recently registered guard rather than closing over a
-  stale one.
+- **stable-proxy-identity**: `useExitGuardChannel` MUST build the proxy once and return the same object identity for the life of the hook.
+- **presence-is-the-dirty-signal**: `exitGuard` MUST be the proxy while a guard is registered and `null` after `registerGuard(null)`.
+- **proxy-reads-latest-guard**: The proxy's `isDirty` MUST call the most recently registered guard's `isDirty`, and MUST return false when no guard is registered.
+- **registrar-bails-out**: `registerGuard` MUST set only a presence boolean, so re-registering every render causes no extra render.
 
 ### Viewer State
 
-- **standalone-default**: the viewer state MUST return the settled value
-  "not an admin, ready" when no authentication provider is present, so the
-  browser is usable standalone without ever reporting an unsettled/loading
-  state.
-- **admin-derivation**: when an authentication provider is present, the
-  admin flag MUST be derived from an admin check against the current user
-  and readiness MUST be derived from the negation of the provider's loading
-  state — readiness MUST distinguish "settled" from "still loading," never
-  conflating the two.
+- **standalone-default**: `useViewer` MUST return `isAdmin` false, `ready` true, and `principal` `null` when no auth provider is present.
+- **admin-derivation**: With a provider, `useViewer` MUST return `isAdmin` from `isAdmin(auth.user)`, `ready` as the negation of `auth.isLoading`, and `principal` as `auth.user?.id ?? null`.
 

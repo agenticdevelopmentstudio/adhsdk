@@ -1,5 +1,5 @@
 
-Not applicable: the feature-listing operation and its fallback list name feature *areas* the
-roles matrix edits (`projects`, `personas`) — a data-domain concept — not a feature-flag key;
-the file contains no feature-flag or gating check of any kind.
+Not applicable: the feature areas `listFeatures` and `ACCESS_FEATURES` name (`projects`,
+`personas`) are a data-domain concept, not a feature-flag key, and the source contains no flag
+or gating check.
 

@@ -1,13 +1,11 @@
 
-None of the given sources externalize strings into a localization resource
-system; the following are hardcoded, English-only strings that are facts
-about the current implementation, not gaps:
+No given source externalizes strings. These hardcoded English strings are facts about the implementation, not gaps:
 
-- The fixed token placeholder (`'YOUR_TOKEN'`) is embedded verbatim, in
-  English, in every generated command-line/scripting snippet.
-- The slug index's collision message (`endpoint slug collision on
-  "${slug}"...`) is a hardcoded English developer-facing error string.
-- The CRUD resource state's reliance on an inherited hardcoded English error
-  message for an unexpected `204` response (see Platform Notes) is inherited,
-  not produced, by this recipe's own logic.
+| String Key | Default (en) | Context |
+|-----------|-------------|---------|
+| (inline) | `YOUR_TOKEN` | Token placeholder in every generated snippet |
+| (inline) | `api-explorer: endpoint slug collision on "<slug>" (<key> vs <key>)` | Developer-facing error thrown by the slug index |
+| (inline) | `string`, `any`, `never`, `object`, `other` | Type labels and the untagged-tag bucket |
+
+Error text for a failed list comes from `errorMessage` in `@adh-sdk/ui`, and the `Request failed` fallback belongs to the endpoint detail view; neither is produced here.
 

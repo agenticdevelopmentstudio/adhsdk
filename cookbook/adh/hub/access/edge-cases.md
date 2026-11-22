@@ -1,46 +1,47 @@
 
-- **Null and empty input — `workspace`**: Not checked client-side. `workspace` is a plain
-  string the caller supplies; an empty slug is sent to the server unchanged as `workspace=`.
-  A non-empty customer or org slug is a caller precondition, per the module's top-of-file
-  comment.
-- **Null and empty input — assignment scope pairing**: see `assignment-scope-pairing-passthrough`
-  below.
-- **Empty `grants` array**: the create-role and update-role operations MUST send an empty
-  `grants: []` unchanged when the caller supplies one; no client-side check requires at
-  least one grant — a role with zero grants is a valid, unvalidated request as far as this
-  module is concerned.
-- **Boundary values — grant verb strings**: grant rows' item-verb and subitem-verb fields are
-  strings with a documented expected character set (a comma-letter subset of `C,R,U,D,M` and
-  `C,R,U,D` respectively), but the create-role and update-role operations send whatever
-  string the caller provides with no client-side charset or length check. This is a fact,
-  not a gap: the sibling fallback-feature-list documentation notes that "every submitted
-  grant is refined against it server-side," establishing that this client's job is to pass
-  the value through, not police its shape.
-- **Concurrent access — module state**: the client holds no shared mutable state between
-  calls (the only persistent value is the read-only fallback feature list), so there is
-  nothing for two concurrent calls to race on within this module.
-- **Concurrent access — competing writes**: two concurrent assignment-upsert calls for the
-  same subject and scope follow ordinary upsert semantics — last response received wins,
-  with no client-side sequencing or optimistic-lock check in this file.
-- **Error states — validation failure vs. HTTP failure**: the error `feature-row-shape-validated`
-  throws and an HTTP error are distinguishable only via the shared status-extraction
-  helper's status check.
-- **Error states — 204 on a declared-void write**: see `item-restrict-restore-parse-body`
-  above; this is the one place in the file where an operation declared to resolve with no
-  value can throw on success-shaped input, depending on what the backend actually returns.
-- **Offline or disconnected state**: none of the ten operations catches a network-level
-  failure; a connectivity loss mid-call propagates unhandled out of the client to the
-  caller, with no retry, queuing, or offline-specific handling anywhere in this file.
-- **No timeout**: no call sets a deadline or cancellation signal; a reachable-but-unresponsive
-  backend leaves the call pending until the underlying transport's own limit, if any.
-- **No cancellation**: no operation accepts a cancellation-signal parameter, so a caller
-  cannot cancel an in-flight request through this module.
-- **No retry beyond the 401 waterfall**: every call issues exactly one request (plus, on a
-  `401`, the single inherited refresh-and-retry); nothing in this file retries a network
-  failure or a non-401 error status.
-- **assignment-scope-pairing-passthrough**: the assignment write input's `feature` and `itemId`
-  fields are independently optional, and the assignment-upsert operation MUST send whatever
-  combination the caller passes verbatim; it performs no client-side check that the two are provided
-  together (to scope a grant to one item) or omitted together (for a workspace-wide grant), even
-  though the field's own doc comment declares that pairing.
+- **Empty target value**: The client does not check a target. An empty workspace slug is sent
+  as `workspace=` and an empty ecosystem id as `ecosystem=`; a non-empty value is a caller
+  precondition, and the backend answers any 400 (MUST NOT be checked client-side).
+- **Both target keys on one object**: `accessTargetQuery` returns only `ecosystem`. The type
+  forbids this input; the behavior is fixed by `target-ecosystem-checked-first` (MUST).
+- **Undefined target in `accessTargetKey`**: Returns `workspace:` (MUST), so a cache key can be
+  built before a target is known.
+- **Empty feature list**: `listFeatures` resolves to `[]` for `data: []` (MUST); the test
+  "resolves an EMPTY list to an empty array" asserts it.
+- **Malformed feature rows**: A string, an array of bare strings, an object, a missing `key` or
+  `label`, a wrong-typed `key`, an empty `key` or `label`, one empty row among good ones, and a
+  `null` row each MUST reject the whole list; `access.test.ts` has a test for each except a row
+  missing `key`, which `isAccessFeatureRow` rejects but no test covers.
+- **More than one page of features**: A registry of more than 100 areas, reported by
+  `has_more: true`, MUST be rejected rather than truncated.
+- **Empty search term**: `listSubjects` with `q: ""` MUST omit `q`, because the builder gets
+  `undefined`.
+- **Empty `grants` array**: `createRole` and `updateRole` MUST send `grants: []` unchanged. The
+  client never requires a grant.
+- **Grant verb strings**: `itemVerbs` and `subitemVerbs` document a comma-letter subset of
+  `C,R,U,D,M` and `C,R,U,D`. The client sends whatever string the caller gives with no charset
+  or length check; the module's comment says the server refines every submitted grant. This is
+  the contract, not a gap.
+- **Empty patch**: `updateRole` with `{}` MUST send an empty JSON object.
+- **Partial assignment scope**: `putAssignment` with `feature` but no `itemId`, or the reverse,
+  MUST be sent as given; the doc comment states the pairing and the backend decides.
+- **Boundary page size**: `listRoles` pages at 100 rows (`V1_PAGE_MAX`) and `listFeatures` asks
+  for 100 in one page (MUST).
+- **Concurrent access, module state**: The module holds no mutable state, so concurrent calls
+  cannot race inside it.
+- **Concurrent access, competing writes**: Two concurrent `putAssignment` calls for one subject
+  and scope follow upsert semantics, the last response received winning, with no client-side
+  sequencing or optimistic lock; the backend's ordering is outside this module.
+- **Missing assignments member**: `listAssignments` maps `body.assignments` unchecked, so a
+  body without it fails with a `TypeError` rather than a typed error.
+- **204 on a declared-void write**: `restrictItem` and `restoreItem` MUST throw on a 204, see
+  `item-restrict-restore-parse-body`.
+- **Non-member read**: A `404` MUST reject with `status: 404`; the client sends one request and
+  does no membership pre-check.
+- **Offline or disconnected state**: No operation catches a network failure; it propagates to
+  the caller with no retry, queue or offline handling (the one retry is the inherited `401`
+  waterfall).
+- **No timeout**: No call sets a deadline, so an unresponsive backend leaves the call pending
+  until the transport's own limit.
+- **No cancellation**: No operation accepts a cancellation signal.
 

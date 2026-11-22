@@ -7,7 +7,7 @@
   are rendered by both the macOS `FormSheet`/`FormViewController`
   (`HTDV/Views/macOS/`) and the iOS `FormSheet+UIKit`/
   `FormViewController+UIKit` (`HTDV/Views/iOS/`) presenters, so this domain
-  logic is genuinely shared, unmodified, across macOS and iOS — only the
+  logic is genuinely shared, unmodified, across macOS and iOS - only the
   presenting view layer differs.
 
   `Ecosystem`/`EcosystemCreate`/`EcosystemUpdate` (`EcosystemsModels.swift`)
@@ -55,12 +55,12 @@
   (`.notFound`, `.conflict`, `.validation`, `.offline`, ...), defined in
   `HubError.swift` and wrapped via `HubError.wrap`
   (`Support/HubError+Wrap.swift`) at every boundary that does not itself
-  re-map a specific case — never a raw `Error` reaching a topic or the
+  re-map a specific case - never a raw `Error` reaching a topic or the
   module. Rail navigation position is expressed as an `[HTDVItem]` path
   resolved through `RailPath.id(at:in:)` (`Support/RailPath.swift`);
   `HTDVItem`/`HTDVLevel`/`HTDVDetail` are this ingredient's "rail item"/"list"/
   "detail view" vocabulary. This implementation has no feature-picker data
-  source in these sources — a port of the picker starts from the other
+  source in these sources - a port of the picker starts from the other
   reference implementation's contract.
 - **React/Web**: This is the other reference implementation, under
   `packages/web/packages/data/src/ecosystems/`. `ecosystemsApi`
@@ -73,7 +73,7 @@
   cases cited in Conformance Test Vectors above). `identifiersApi`
   (`identifiers.ts`) implements the **Identifier rename and slug
   ownership** group's generic rename/existence-probe requirements;
-  `ecosystemsApi.update`'s `slug`-carrying PUT, not `identifiersApi.rename`,
+  `ecosystemsApi.update`'s `slug`-carrying write, not `identifiersApi.rename`,
   is the actual ecosystem-rename route
   (**identifier-rename-is-not-ecosystems-renaming-route**).
 
@@ -93,18 +93,35 @@
 
   `ecosystemFeaturesApi` plus its hooks (`ecosystem-features.ts`, tested by
   `ecosystem-features.test.tsx`) implement both **Feature provisioning**
-  groups: `catalog`, `list`, `provision`, `remove` are the wire calls;
-  `useFeatureCatalog`, `useProvisionedFeatures`, `useProvisionFeatures`,
-  `useRemoveFeature`, `useApplyFeatureChange` are the query/mutation hooks.
+  groups: `catalog`, `list`, `availability`, `provision`, `remove` are the
+  wire calls; `useFeatureCatalog`, `useProvisionedFeatures`,
+  `useFeatureAvailability`, `useProvisionFeatures`, `useRemoveFeature`,
+  `useApplyFeatureChange` are the query/mutation hooks, and `removalLevels`
+  orders a batch of removals. `FeatureRequiredError` is the typed refusal and
+  `toCatalogFeature`/`toProvisionedFeature` are the row mappers.
   Unlike `useWorkspaceDefaultEcosystemId`, these hooks read the query
   client from React context rather than the module singleton
   (**features-hooks-context-client**). This data has no counterpart in the
   other reference implementation.
 
+  `feature-requirements.ts` holds the pure rules (`requiredClosure`,
+  `neededBy`, `listedFeatureKey`, `listedCatalog`, `neededByMessage`) that
+  implement the **Feature requirements** group, and `feature-manager.ts`
+  (`featureHoldings`, `featureRowState`, `featureRowLabel`,
+  `featureUnavailableReason`, `featuresAddedWith`, `useEcosystemFeatures`)
+  implements the **Feature manager** group.
+  `use-workspace-hub-ecosystem.ts` (`useWorkspaceHubEcosystemId`,
+  `useWorkspaceHubScope`) implements the **Hub-data ecosystem resolution**
+  group, resolving through `ecosystemsApi.hubDataEcosystemId` and
+  `isHubDataEcosystem`. `wire.ts` holds the wire row and body types, among
+  them `EcosystemType`. The update call is a POST to the ecosystem's own
+  route, and every list read pages through `listAllV1`.
+
   Every error this implementation raises is a plain `Error` carrying a
   numeric `.status` (`AuthHttpError`-shaped, from `@adh-sdk/auth`'s
-  Bearer-token client — see [adhsdk.ingredient.data.services.auth.auth-client](cookbook:3ea9329e-5acc-4c43-b5ce-bb8c50570104)); `isNotFound`/`isConflict`/
-  `rethrowConflict` (`client-helpers.ts`, `http.ts`) are the conflict/
+  Bearer-token client - see [adhsdk.ingredient.data.services.auth.auth-client](cookbook:3ea9329e-5acc-4c43-b5ce-bb8c50570104)); `isNotFound`/`isConflict`/
+  `rethrowConflict` (`http.ts`; `rethrowConflict` recognizes a conflict by an
+  "already exists" message, not by status) are the conflict/
   not-found mapping helpers every requirement above that mentions
   surfacing a conflict or a not-found result relies on.
 - **Compose / Android**: `OkHttp`/`Ktor` (or `Retrofit`) would replace
@@ -145,12 +162,22 @@
   `INotifyPropertyChanged`; a `comingSoon` row goes in a separate
   "Coming soon" group (a `CollectionViewSource` with `IsSourceGrouped`) with
   `IsEnabled="False"`, and a `provisioning` row shows as already checked.
-  Applying a change awaits `ProvisionAsync` first, then
-  `Task.WhenAll` over per-key tasks that each catch their own exception
-  and return a success flag (plain `Task.WhenAll` throws on the first
-  fault, unlike `Promise.allSettled`), then throws
-  `Couldn't remove: <keys>` for the failures and always re-reads the list
-  in a `finally`. The 30-minute catalog cache has no built-in equivalent:
-  keep the catalog and a fetched-at `DateTimeOffset` in a
-  session-lifetime service.
+  Applying a change awaits `ProvisionAsync` first, then walks the removal
+  levels in order: for each level, `Task.WhenAll` over per-key tasks that each
+  catch their own exception and return a success flag (plain `Task.WhenAll`
+  throws on the first fault, unlike `Promise.allSettled`), awaited before the
+  next level starts. A `FeatureRequiredError` is a small exception class
+  holding the blocking keys and the other failed keys; throw it when the
+  server answers `HttpStatusCode.Conflict` with the `feature_required` code,
+  else throw `Couldn't remove: <keys>`, and always re-read the list in a
+  `finally`. The picker also disables a row whose key is in the server's
+  unavailable map (`IsEnabled="False"` with the reason in a `ToolTip`), and
+  unticking a feature that others need shows the needed-by copy in an
+  `InfoBar` with `Severity="Warning"` instead of changing the checkbox. The
+  30-minute catalog cache has no built-in equivalent: keep the catalog and a
+  fetched-at `DateTimeOffset` in a session-lifetime service. The feature
+  manager is that same service exposing a holdings record and a
+  row-state function, and `NavigationViewItem.Visibility` binds to the
+  `hidden` row state so a rail row is drawn only while the ecosystem holds one
+  of its features, with a `provisioning` row shown but not invokable.
 

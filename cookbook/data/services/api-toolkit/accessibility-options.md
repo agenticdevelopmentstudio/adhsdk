@@ -1,5 +1,3 @@
 
-Not applicable: none of the given sources render a visual or interactive
-surface, so there is no contrast, motion, font-size, or other
-accessibility-preference surface for this recipe to define.
+Not applicable: no given source renders a surface, so there is no motion, contrast, or color-differentiation behavior to define; the tone helpers return class names only.
 

@@ -1,37 +1,38 @@
 
-**Decision**: `ACCESS_FEATURES` is exported as a plain constant but never consulted from
-inside `listFeatures` itself.
-**Rationale**: the source's own comment frames it as a degraded path for "a backend that
-predates `/access/features`," and the authoritative registry is per-deployment and
-server-refined — so `listFeatures` staying strict (throw on anything it can't validate) and
-leaving the fallback decision to the caller keeps this module from silently masking a real
-backend/response mismatch as an old-backend case.
-Platform scope: React/Web.
+**Decision**: `ACCESS_FEATURES` is exported but `listFeatures` never consults it.
+**Rationale**: The source's comment frames it as a degraded path for a backend that predates
+the features route and warns that the authoritative registry is per-deployment. Keeping
+`listFeatures` strict leaves the fallback decision to the caller and stops a real
+response mismatch from looking like an old backend.
 **Approved**: pending
 
-**Decision**: `restrictItem`/`restoreItem` call `authedJson` rather than `authedRequest`,
-even though both are declared `Promise<void>`.
-**Rationale**: this is recorded as observed source behavior, not smoothed into the declared
-type — a 204 response from either endpoint throws today, per `item-restrict-restore-parse-body`;
-a port MUST preserve this exact behavior rather than "fixing" it to `authedRequest`'s
-discard-the-body semantics, since the current backend's actual response shape for these two
-routes is not available in this checkout to confirm which is correct.
-Platform scope: React/Web.
+**Decision**: `restrictItem` and `restoreItem` use `authedJson` although they are declared
+`Promise<void>`, so a 204 throws.
+**Rationale**: Recorded as observed behavior, not smoothed into the declared type. A port
+preserves it rather than switching to `authedRequest`, because the backend's actual response
+for these routes is outside this checkout.
 **Approved**: pending
 
-**Decision**: only `listFeatures` validates its response shape at runtime; `listRoles`,
-`listAssignments`, and `effective` trust the generic `authedJson<T>` cast.
-**Rationale**: the source's own `isAccessFeatureRow` comment explains this guard was added
-after a bare cast on `/access/features` let a malformed response reach every consumer
-looking like real data; no equivalent comment or fix exists for the other reads, so this
-recipe records the current asymmetry as a fact of the source rather than projecting the same
-guard onto endpoints that don't have it.
-Platform scope: React/Web.
+**Decision**: Only `listFeatures` validates its response at runtime; `listRoles`,
+`listAssignments`, `listSubjects` and `effective` rely on the typed cast or a plain mapping.
+**Rationale**: The `isAccessFeatureRow` comment explains the guard was added after a bare
+cast let a malformed features response look like real data. No equivalent fix exists for the
+other reads, so the asymmetry is recorded as fact.
 **Approved**: pending
 
-**Decision**: the assignment-upsert operation does not validate that `feature` and `itemId` are supplied together or omitted together; a partial combination is sent to the backend as given.
+**Decision**: `listFeatures` rejects `has_more: true` instead of paging.
+**Rationale**: It asks for the widest page (100) and treats a longer registry as malformed, so
+the roles matrix never renders a silently truncated set of columns.
+**Approved**: pending
 
-**Rationale**: the field's doc comment states the pairing rule but the client leaves enforcement to the backend, whose handling of a `feature`-without-`itemId` write is not present in this checkout; closing the gap would take either a client-side guard rejecting partial scopes or a discriminated input type that makes the partial combination unrepresentable.
+**Decision**: `putAssignment` does not check that `feature` and `itemId` are given together.
+**Rationale**: The field's comment states the pairing and the client leaves enforcement to the
+backend, whose handling of a half-scoped write is outside this checkout. A client guard or a
+discriminated input type would close the gap.
+**Approved**: pending
 
+**Decision**: `accessTargetKey` keeps the `workspace:<slug>` prefix for workspace targets.
+**Rationale**: The source's comment says panes that share an entry, such as the roles list,
+must keep sharing it after ecosystem targets were added.
 **Approved**: pending
 

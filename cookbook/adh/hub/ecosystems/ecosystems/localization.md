@@ -11,12 +11,14 @@
   validation message this ingredient's requirements quote.
 - **Hardcoded strings (API-client implementation)**: every thrown-error
   friendly message (the "already exists"/"already in use" conflict
-  messages), and the batch-apply's `Couldn't remove: <keys>` error. Catalog
+  messages), the batch-apply's `Couldn't remove: <keys>` error, the `Coming soon.`
+  unavailable reason, and the blocked tick-off copy `this feature is needed
+  by <labels> features`. Catalog
   `label`/`description`/subscription-tier text is served by the backend and
   passed through untranslated.
 
 Neither reference implementation has a lookup table, i18n key, or locale
-parameter anywhere in these files — every user-facing string above is fixed
+parameter anywhere in these files - every user-facing string above is fixed
 English. This is a plain, honestly-reported fact about the current source,
 not a hidden gap (see Compliance).
 

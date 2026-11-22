@@ -1,4 +1,4 @@
 
-Not applicable: this client renders no UI and responds to none of Reduce Motion, Increase
-Contrast, or Differentiate Without Color.
+Not applicable: the module renders no UI and responds to none of Reduce Motion, Increase
+Contrast or Differentiate Without Color.
 

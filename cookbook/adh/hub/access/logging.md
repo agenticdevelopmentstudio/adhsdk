@@ -1,3 +1,3 @@
 
-Not applicable: this client contains no logging call of any kind.
+Not applicable: the module contains no logging call of any kind.
 

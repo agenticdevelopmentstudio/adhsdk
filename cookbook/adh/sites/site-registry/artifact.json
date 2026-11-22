@@ -4,15 +4,15 @@
     "id": "9069ccf9-0357-4311-9671-91ee2793adae",
     "title": "Site Registry",
     "type": "ingredient",
-    "version": "1.1.1",
+    "version": "1.2.0",
     "status": "review",
     "language": "en",
     "created": "2026-09-24",
-    "modified": "2026-10-04",
+    "modified": "2026-11-22",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
-    "summary": "Single source of truth for the ADH site family: every site's identity, hosts, environments, workspace/hub routing, build-side data, reserved slugs, generated route map, and brand-story graph.",
+    "summary": "Single source of truth for the ADH site family: sites, hosts, environments, hub routing, SSO origins, reserved slugs, route map, brand story, legal URLs.",
     "platforms": [
       "typescript",
       "web"
@@ -31,7 +31,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "d9a4b770c619f39a",
+  "synced": "5c8edaf3db78bc9e",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

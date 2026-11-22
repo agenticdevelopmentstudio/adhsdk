@@ -1,35 +1,20 @@
 
-- **Unfilled path parameter**: path substitution leaves an unmatched `{name}`
-  segment visible, unencoded, in the built path rather than erroring or
-  omitting the segment — a deliberate, documented rendering choice, not a
-  gap.
-- **Cyclic schema**: example derivation's "seen"-set threading guarantees
-  termination on a schema that refs itself directly or transitively.
-- **Slug collision**: two endpoints that would project to the same slug cause
-  the lazily-built slug index to throw at build time rather than silently
-  aliasing one endpoint's reference page onto another's.
-- **External (non-local) reference**: reference resolution only resolves
-  local schema-component references; a schema containing a reference outside
-  that scope is not resolved and falls through example derivation's
-  remaining precedence steps (this API's generated schemas are self-contained,
-  so this scope limitation is a design decision — see Design Decisions — not
-  a runtime failure mode).
-- **Out-of-order network responses**: the CRUD resource state's sequence-number
-  guard is the specified defense against a slow list response overwriting a
-  newer one; a mutation (create/update/remove) has no equivalent sequence
-  guard because those calls are not re-issued concurrently against the same
-  resource by the state itself.
-- **Concurrent access to the editability overrides**: this overrides object is
-  empty by default and is intended as static, hand-populated configuration;
-  production code never mutates it at runtime. Only test code mutates and
-  restores it. Because the runtime is single-threaded, this is not a
-  concurrency hazard in practice — it is a fact about the module's intended
-  use, not an unresolved gap.
-- **Network-level failure of a built request**: an offline/DNS/cross-origin
-  failure rejects the request executor's promise instead of producing a
-  normalized result (see network-failure-propagation); the caller turns it
-  into an error message.
-- **Hung request**: no timeout or cancellation bounds the request built by the
-  request builder/executor (see request-timeout); a connection that never
-  resolves keeps the request in flight.
+- **Unfilled path parameter** (MUST): `substitutePath` leaves `{name}` visible so the user sees what is missing rather than a silently wrong URL. `itemUrl` instead substitutes the empty string for a missing key value.
+- **Empty and missing input** (MUST): `buildRequest` treats a missing or empty query value as absent; blank body text is treated as no body; `prettyJson` returns empty text for blank input; `describeFields` returns `[]` for a schema with no object shape; `endpointsForTag` returns `[]` for an unknown tag.
+- **Cyclic schema** (MUST): `schemaToExample` and `unwrapToObject` carry a `seen` set and stop on a repeated reference, returning `null` and `undefined` respectively. `typeLabel` never recurses through a `$ref`, so it needs no guard.
+- **External reference** (MUST): `refName` accepts only `#/components/schemas/` references, so any other `$ref` is not resolved and `schemaToExample` falls through to its remaining steps. A reference to a name missing from the schema map yields the default example for an undefined schema, `{}`.
+- **Slug collision** (MUST): Building the slug index throws on a collision. The map is assigned before the loop, so after a throw a later `endpointForSlug` call finds the partly built index and does not throw again. This follows the code as written.
+- **Boundary values** (MUST): An enum of exactly four values is listed in full and five is truncated; status 200 and 299 are green, 400 and 499 orange, 500 red, and 300 to 399 muted.
+- **Method case** (MUST): `endpointKey` and `matchEndpoints` upper-case the method; `isMutating`, `methodBadgeClass`, and `methodDotClass` do not, so a lower-case method is treated as mutating and as an unknown method.
+- **Network failure of a built request** (MUST): A transport failure rejects the promise from `executeRequest`; the endpoint detail view turns it into a message. Nothing in the toolkit retries.
+- **Hung request** (MUST): No timeout or cancellation bounds a request; a connection that never resolves stays in flight.
+- **Out-of-order list responses** (MUST): The sequence guard in `useCrudResource` discards a stale list response. A mutation has no sequence guard of its own; the re-list that follows it goes through the same list guard.
+- **Failed refresh keeps stale rows** (SHOULD): A failed list call leaves `rows` unchanged. After a switch to a table whose first list fails, `rows` still hold the previous table's rows while `error` is set and `loading` is false. A failed background re-list shows its error beside the stale rows.
+- **Composite-key table past one page** (MUST): `listAllV1` throws because the gateway pages by id; the message lands in `error` like any failed list. The paging itself is owned by `@adh-sdk/auth/client`.
+- **Concurrent mutations** (MUST): Mutations are not serialized or de-duplicated by the hook; each call sends its own request, and the batch editor uses the raw mutators and refreshes once. JavaScript is single-threaded, so state updates cannot interleave inside one call.
+- **Concurrent access to the editability overrides** (MUST): `EDITABLE_OVERRIDES` is a module-level object that is empty by default and populated by hand; production code does not mutate it at runtime, and single-threaded execution means no race.
+- **Highlighter load failure** (MUST): A rejected import or creation rejects that call and clears the cache, so the next call retries; a session is not disabled by one transient chunk-load failure.
+- **Unknown or missing exposure tier** (MUST): The gate denies read and write to a non-admin viewer, matching the server's fail-closed `hasPermission`.
+- **Auth still bootstrapping** (MUST): `useViewer` reports `ready` false while `auth.isLoading` is true, so gates hold rather than guess; without a provider it reports a settled anonymous viewer.
+- **Offline or disconnected state**: Not applicable beyond network failure above: the toolkit holds no connection, queue, or cache of responses, and `useCrudResource` surfaces a failed list as `error` and a failed write as a rejection.
 

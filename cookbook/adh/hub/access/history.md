@@ -1,6 +1,7 @@
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.3.0 | 2026-11-22 | Mike Fullerton | Ecosystem targets, listSubjects, paged listRoles, /v1 features page check; vectors 025 to 035 added |
 | 1.2.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (access.test.ts, 24 of 24 vectors); unit-test-coverage now passed. Vector text rewritten to match the real /api/v1 routes and snake_case wire shapes. |
 | 1.2.1 | 2026-10-04 | Mike Fullerton | Design Decisions keep the Decision / Rationale / Approved triple; each decision's platform line is folded into its rationale. |
 | 1.2.0 | 2026-10-04 | Mike Fullerton | Resolve open-question markers against the code; restate unimplemented behavior as current behavior with pending Decisions. |

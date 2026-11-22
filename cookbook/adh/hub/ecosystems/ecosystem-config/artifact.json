@@ -4,15 +4,15 @@
     "id": "87ca0139-6cd0-46dd-a9fb-40ad3406f175",
     "title": "Ecosystem Config",
     "type": "ingredient",
-    "version": "2.0.0",
+    "version": "2.1.0",
     "status": "review",
     "language": "en",
     "created": "2026-09-24",
-    "modified": "2026-11-15",
+    "modified": "2026-11-22",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
-    "summary": "Five product-rail topics (User Auth, Sign-in apps, Feature flags, Server bags, Storage Access Tokens) that let a hub caller view and edit one ecosystem's configuration, plus their shared data models and matching client-side data layer, and a web-only sync-tables client and pane.",
+    "summary": "Five product-rail topics (User Auth, Sign-in apps, Feature flags, Server bags, Storage Access Tokens) that let a hub caller view and edit one ecosystem's configuration, plus their shared data models and matching client-side data layer, and the web-only sync-tables, sign-up list, product roles, sets and billing panes behind a workspace gate.",
     "platforms": [
       "swift",
       "macos",
@@ -36,7 +36,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "eb26f791e62e024f",
+  "synced": "5bc69ea910fb0353",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

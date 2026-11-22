@@ -1,55 +1,7 @@
 
-- **Web (source platform)**: a fetch/promise-based HTTP call, a cancellation
-  controller, and a query-string builder are the native browser primitives
-  this recipe's source is written against; a syntax-highlighting library
-  (loaded dynamically at first use) is the only third-party runtime
-  dependency among the given sources, and its cached highlighter supports the
-  `github-light`/`github-dark` themes and the `json`/`bash`/`javascript`
-  languages. The server-usable entry point in source is a file with no
-  client-rendering directive, so it can be imported from server-only code
-  without pulling client-component bundling requirements with it; the
-  client-facing entry point deliberately omits the endpoint-lookup functions
-  and the generated endpoint metadata constant, and reaches the shared lookup
-  functions via their package path rather than a relative path so both entry
-  points observe the same module-level cache instance instead of each
-  forking its own copy. The exit-guard proxy is built once via a
-  memoization primitive with an empty dependency array so its object
-  identity is stable across re-registrations. The viewer state's dependence
-  on an optional context-based authentication provider (absent, it settles
-  to signed-out defaults instead of an unsettled loading state), and the CRUD
-  resource state's use of a response-body-discarding request helper and a
-  JSON-parsing request helper from the auth client recipe for the actual
-  network calls, are specific to this source's implementation in
-  `@adh-sdk/api-explorer` and `@adh-sdk/crud`.
-- **Apple (Swift, not in source)**: `URLSession` (with `URLRequest`) is the
-  equivalent of the request builder/executor; `Codable` is the equivalent of
-  the schema-driven example/field-description derivation (though Codable is
-  compile-time-typed, so a dynamic schema-to-example projection has no direct
-  one-to-one match); `Task`/`async`/`await` replace the promise-based flow; a
-  stable `AnyObject` proxy under `@MainActor` would replace the exit guard
-  channel's memoized proxy.
-- **Android (Kotlin, not in source)**: `OkHttp` or `Retrofit` plus
-  `kotlinx.serialization` (or Moshi) replace the request builder/executor and
-  the schema-derived example/field logic respectively; Kotlin
-  `Flow`/`StateFlow` replace the loading/fetching state pair exposed by the
-  CRUD resource state; a `Mutex`-guarded sequence counter would replace the
-  out-of-order-response guard.
-- **WinUI 3 (Windows, not in source)**: `HttpClient` replaces the request
-  builder/executor; `System.Text.Json` replaces the schema example/field
-  derivation (again, statically-typed deserialization has no exact analogue
-  to the dynamic example synthesis); `Windows.Storage` has no counterpart
-  here since no given source persists data locally; `Task`/`async`/`await`
-  replace the promise-based flow; `ObservableCollection<T>` plus
-  `INotifyPropertyChanged` replace the rows/loading/fetching state that the
-  CRUD resource state exposes to a render; a WinUI 3 port would need its own
-  out-of-order-response guard (e.g. a monotonically increasing request-token
-  field checked before applying a completed request's result) since
-  `HttpClient` provides no built-in equivalent to the sequence guard.
-- **Python (not in source)**: `httpx` (or `requests`) replaces the request
-  builder/executor; `dataclasses` or `pydantic` models replace the
-  schema-driven example/field derivation; there is no direct Python analogue
-  to the state machine in the CRUD resource state since Python is not paired
-  with a UI render loop in this codebase — a port would need to re-derive the
-  loading/fetching distinction against whatever calling convention it adopts
-  (a callback, an async generator, or similar).
+- **SwiftUI**: Use `URLSession` with `URLRequest` for the request builder and executor and `async`/`await`; a non-2xx `HTTPURLResponse` does not throw, which matches `executeRequest`, while transport errors throw as `URLError`. Dynamic schema examples need `JSONSerialization` or `JSONValue`, because `Codable` is statically typed. Model `useCrudResource` as an `@Observable` or `ObservableObject` class with `rows`, `loading`, `fetching`, and `error`, and guard stale responses with a counter on a `@MainActor` type.
+- **Compose**: Use OkHttp or Ktor for requests, `kotlinx.serialization.json.JsonElement` for schema walking, and a `ViewModel` exposing `StateFlow` for `rows`, `loading`, `fetching`, and `error`. Cancel superseded list calls with `Job.cancel` or `collectLatest`, or keep an `AtomicInteger` sequence to match the guard. Keep the exit guard in a `remember`ed holder with a stable lambda.
+- **React/Web**: The source is `packages/web/packages/api-explorer/src/lib/*.ts`, `server.ts`, `types.ts`, and `packages/web/packages/crud/src/*.ts` with the two hooks. It uses `fetch`, `URLSearchParams`, `performance.now`, dynamic `import('shiki')`, and React `useState`, `useRef`, `useCallback`, `useMemo`, and `useEffect`. `server.ts` has no client marker, the CRUD hooks and `viewer.ts` carry `'use client'`, and the cache-sharing import goes through the package path.
+- **AppKit / UIKit**: Use `URLSession` as above and a view-model or `NSObject` with Combine `@Published` properties or `AsyncStream` to drive a table or collection view. The unsaved-changes guard maps to a stable delegate or closure object consulted by `windowShouldClose` or `isModalInPresentation`. Apple has no `fetch`-style never-throws default, so wrap non-2xx responses explicitly as `ApiResult`.
+- **WinUI 3**: Use `System.Net.Http.HttpClient` with `HttpRequestMessage`; `SendAsync` does not throw on a non-2xx status, matching `executeRequest`, and throws `HttpRequestException` on transport failure, matching its rejection. Set `HttpClient.Timeout` or pass a `CancellationToken`, which the source does not do. Build the query with `HttpUtility.ParseQueryString` or `Uri.EscapeDataString`, and parse schemas with `System.Text.Json.Nodes.JsonNode` for the example walk. Replace the hook with a view-model implementing `INotifyPropertyChanged` that exposes `ObservableCollection<CrudRow>` plus `Loading`, `Fetching`, and `Error`, guarding stale responses with an `Interlocked.Increment` sequence checked on the dispatcher thread (`DispatcherQueue.TryEnqueue`). Show the tone as `Brush` resources keyed by method, and bind `ReadOnly` or `IsEnabled` from the editability functions. Use a `ConditionalWeakTable` or a lazily initialized static dictionary for the module-level indexes, and `Windows.Storage` is not needed because nothing persists.
 

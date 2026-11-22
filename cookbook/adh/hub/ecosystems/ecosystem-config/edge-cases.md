@@ -19,15 +19,15 @@
   rejected by the origin-validation step with its own specific message and MUST NOT
   reach the network.
 - **Re-rendering the detail currently showing a revealed secret**: MUST NOT drop the
-  secret — the secret-expiry check's same-detail guard leaves it untouched; only
+  secret - the secret-expiry check's same-detail guard leaves it untouched; only
   navigating to a *different* destination drops it.
 - **A value outside the shared error taxonomy thrown during storage-token create**:
   MUST be converted to a generic unexpected error reading "Couldn't create the
-  token. Please try again.", discarding the original error's own message text — a deliberate divergence from the shared
+  token. Please try again.", discarding the original error's own message text - a deliberate divergence from the shared
   error-wrapping step's usual behavior of preserving as much detail as possible (see
   Design Decisions).
 - **A feature-flag key containing a reserved character (e.g. `:`)**: see
-  **flags-key-charset-unrestricted** — it SHOULD be rejected, but no given
+  **flags-key-charset-unrestricted** - it SHOULD be rejected, but no given
   implementation rejects it yet, and it is later embedded unescaped in a
   colon-delimited composite id.
 - **Path segments containing special characters**: the alternate client's
@@ -40,6 +40,18 @@
   **dual-scoping-channels** documents that the rail always leaves the body field
   unset and relies on the parameter/query channel exclusively.
 
+- **Turning "Only listed people" on with an empty sign-up list**: the save sends
+  the sign-up list's own emails, an empty list, which means nobody may sign in. The
+  backend keeps the sign-up entries equal to the list written, so the form MUST
+  never send an empty draft list of its own that would erase every entry.
+- **A sign-up list entry for an email already listed**: adding it changes its role
+  and set rather than adding a second row; removing an entry never takes back a
+  role or set it already granted.
+- **A set edit the backend refuses**: the pane shows the refusal's rule, limits and
+  affected sets in its own words.
+- **A workspace that cannot be resolved**: every pane reads a missing ecosystem id
+  as an empty ecosystem, so the gate MUST NOT let a failed resolution fall through
+  to a pane that would then show "no server bags" for an ecosystem it never found.
 - **A follower turned on while its parent is off**: the sync-tables write succeeds
   and the row comes back `overridden` but not `enabled`. The pane shows the server's
   answer rather than the requested state.

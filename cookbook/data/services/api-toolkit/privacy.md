@@ -1,16 +1,8 @@
 
-- The request builder's token parameter is forwarded as an `Authorization`
-  header and is never persisted, cached, or logged by any given source; the
-  caller owns the token's lifecycle.
-- Snippet generation deliberately substitutes the fixed token placeholder for
-  any real token so that copying a generated snippet to the clipboard can
-  never leak a live credential — a privacy-motivated design decision (see
-  Design Decisions).
-- The table visibility gate's tier check (read-allowlist/write-allowlist) is
-  presentation data-minimization only: it narrows which tables the UI
-  *offers* to a non-admin viewer, but it is explicitly documented as not a
-  security or privacy boundary — the server independently decides what data
-  is actually returned.
-- None of the given sources persist personally identifiable information to
-  local storage, a database, or any other durable store.
+- **Data collected**: None. No given source records or reports user data.
+- **Storage**: Nothing is written to local storage, a database, or any durable store. Module-level caches hold only generated metadata indexes and the highlighter.
+- **Transmission**: `buildRequest` forwards the caller's token only as an `Authorization` header on a same-origin request; `useCrudResource` sends row values in the request body through `authedJson`. The token is not persisted or logged.
+- **Retention**: None.
+- Snippets use `YOUR_TOKEN` so copying one to the clipboard cannot leak a live credential.
+- The exposure gate narrows what the UI offers; it is documented as not a security boundary, and `useViewer.principal` is exposed so per-viewer caches can be keyed by user.
 

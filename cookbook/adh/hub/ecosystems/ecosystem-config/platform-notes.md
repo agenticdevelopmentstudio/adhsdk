@@ -1,5 +1,5 @@
 
-- **SwiftUI**: not applicable to these sources directly — none of the Swift files
+- **SwiftUI**: not applicable to these sources directly - none of the Swift files
   imports SwiftUI; they build form/level/detail value objects that a SwiftUI (or
   AppKit) rendering layer elsewhere consumes unchanged.
 - **AppKit / UIKit**: this is one of the two source platforms. The files live under
@@ -9,7 +9,7 @@
   `StorageTokensRail.swift`, `StorageTokensTopic.swift`), part of the
   `AgenticDeveloperHubSDKHub` sources directory that `project.yml` builds into both
   `AgenticDeveloperHubSDKHub-macOS` and `AgenticDeveloperHubSDKHub-iOS` targets from the same
-  source tree — there is no platform-specific branch anywhere in these files. Each
+  source tree - there is no platform-specific branch anywhere in these files. Each
   topic conforms to `EcosystemTopicProvider` and implements
   `child(for:path:rail:)`; every data-source call not covered by the exception
   below is wrapped in `HubError.wrap { ... }`, with specific mappings to
@@ -21,10 +21,10 @@
   `FeatureFlagsTopic`, `ServerBagsTopic`, and `StorageTokensRail`/
   `StorageTokensTopic` are declared `@MainActor final class`, with every method
   that touches their own stored state running only on the main actor. Static
-  helpers a `FormAction.perform` closure calls directly —
+  helpers a `FormAction.perform` closure calls directly -
   `ServerBagsTopic.parsedValue`, `SigninAppsTopic.validateOrigin`/
   `canonicalOrigin`/`canonicalOrigins`, `StorageTokensRail.nameTakenMessage`/
-  `createFailedMessage` — are declared `nonisolated`, because `FormAction.perform`
+  `createFailedMessage` - are declared `nonisolated`, because `FormAction.perform`
   closures are not `@MainActor`-isolated (per the source's own comments citing
   `FormSpec.swift`). `AuthSettings`, `AuthSettingsUpdate`, `SigninApp`,
   `SigninAppCreate`, `SigninAppUpdate`, `FeatureFlag`, `FeatureFlagCreate`,
@@ -74,7 +74,7 @@
   `server-bags.ts`, `client-auth.ts`, `storage-tokens.ts`, and `wire.ts` under
   `packages/web/packages/data/src/ecosystem-config/` (plus shared helpers in
   `http.ts` and `client-helpers.ts`) are plain `fetch`-based clients with no JSX.
-  `clientAuthApi` reads and `PUT`s the ecosystem's and each application's
+  `clientAuthApi` reads and `POST`s the ecosystem's and each application's
   client-auth settings, sending a `compact`ed body that drops undefined keys but
   keeps an explicit `registration: null`; `ecosystemFeatureFlagsApi.update`/`delete`
   embed `key` in the URL path via `enc()` (`encodeURIComponent`), as do the
@@ -85,21 +85,31 @@
   from `TokenPrincipal` (the list-row shape, carrying only `prefix`).
   `EcosystemServerBag.value`/`EcosystemServerBagCreate.value`/
   `EcosystemServerBagUpdate.value` are typed `unknown` in `server-bags.ts`. The UI
-  panes and dialog-state modules that call these clients (`FeatureFlagsPane.tsx`,
-  `bag-dialog-state.ts`, `flag-dialog-state.ts`, `ApplicationClientAuthSection.tsx`) are not
-  among this ingredient's given sources, but see Design Decisions for the
+  panes and dialog-state modules that call these clients live in
+  `packages/web/packages/features/ecosystem-config/src/` (`FeatureFlagsPane.tsx`,
+  `ServerBagsPane.tsx`, `StorageTokensPanel.tsx`, `ApplicationClientAuthSection.tsx`,
+  `bag-dialog-state.ts`, `flag-dialog-state.ts`); see Design Decisions for the
   validation-layering split observed there.
-  The login allow-list (**auth-login-allow-list-edit**,
-  **auth-login-allow-list-bounds**) is the exception: its editor lives in
-  `packages/web/packages/features/ecosystem-config/src/` — `ClientAuthFields.tsx`
-  draws the section, `client-auth-model.ts` holds `cleanEmailList`,
-  `policyPatch`, `samePolicy` and `policyError`, and `ClientAuthSettingsPane.tsx`
-  blocks Save on `policyError` and re-keys the rows editor on each re-seed.
-  Emails are typed: the list names people by email so an owner can admit someone
-  who has never signed in, and the hub has no owner-scoped customer listing to
-  pick from. The email shape check is a local regular expression in
-  `client-auth-model.ts`, because no shared web package exports an email
-  validator; the backend's zod check stays authoritative.
+  `signup-list.ts` in the data folder is the sign-up list client (`signupListApi`,
+  with `list`, `put` and `remove`). The sets client lives in the sibling
+  `@adh-sdk/data/sets` module, and the roles client and the ecosystem subject
+  directory in `@adh-sdk/data/access` and `@adh-sdk/teams`; this ingredient only
+  consumes them. The login allow-list is now two parts. `ClientAuthFields.tsx` draws
+  the "Who can sign in" section, a switch with a pointer to the Sign-up list pane;
+  `client-auth-model.ts` holds `cleanEmailList`, `policyPatch`, `samePolicy`,
+  `allowListTurnedOn`, `allowListDropped`, `signupEmailError`, `registrationError`
+  and the not-saved message; and `ClientAuthSettingsPane.tsx` seeds the form from the
+  saved policy. The emails are typed in `SignupListPane.tsx`, because the hub has no
+  owner-scoped customer listing to pick from. The email shape check is a local
+  regular expression in `client-auth-model.ts`, because no shared web package
+  exports an email validator; the backend's zod check stays authoritative.
+  The phase-5 panes are `SignupListPane.tsx`, `ProductRolesPane.tsx` (with
+  `RoleHolders`), `SetsPane.tsx` (with `refusalText` and `valuesOfDraft`) and
+  `BillingPane.tsx`, each taking `{ ecosystemId, title, help }` so a host renders
+  them through one signature; `EcosystemConfigGate.tsx` sits above them when the
+  host holds a workspace rather than an ecosystem id. `SignupListPane`,
+  `ProductRolesPane` and `SetsPane` read with `useResourceList` and guard writes
+  with a single-flight flag; the sync-tables editor uses react-query hooks instead.
   The sync-tables topic is web-only. `sync-tables.ts` in the same data folder is
   the client (`syncTablesApi(family)`, `schemaOf`). `SyncTablesPane.tsx` in the
   features package holds `SyncTablesEditor` (the list and its progress modal, no
@@ -118,9 +128,10 @@
   `kotlinx.serialization.json.JsonElement`, noting the same integral-`Double`-vs-`Long`
   equality pitfall **bags-json-equality-int-number** documents applies to
   `JsonPrimitive` unless normalized the same way. Model the sync-tables client as a
-  Kotlin `interface` with `suspend fun`s that return the refreshed catalog, and the
-  login allow-list as a `List<String>?` of lowercase emails, where `null` means
-  every customer and an empty list means nobody.
+  Kotlin `interface` with `suspend fun`s that return the refreshed catalog, the
+  sign-up list as a `List<SignupListEntry>` of a lowercase email with an optional
+  role id and set id, and the policy's allow-list as a switch, `null` meaning every
+  customer and a non-null list meaning only the listed people.
 - **WinUI 3**: model each data-source interface as a C# interface returning
   `Task<T>` (e.g. `Task<IReadOnlyList<FeatureFlag>> ListAsync(string
   ecosystemId)`) backed by `HttpClient` and `System.Text.Json` for
@@ -129,10 +140,13 @@
   `ObservableCollection<T>` (or a view-model implementing `INotifyPropertyChanged`)
   for a WinUI 3 `ListView`/`ItemsView`. For the shared token rail's reveal-once
   secret, keep the equivalent of `revealedSecrets` as a plain in-memory field on the
-  view-model — deliberately never written to `Windows.Storage.ApplicationData` or
-  any DPAPI-backed store — so the "shown once" contract this component enforces is
+  view-model - deliberately never written to `Windows.Storage.ApplicationData` or
+  any DPAPI-backed store - so the "shown once" contract this component enforces is
   preserved rather than accidentally persisted. Model the sync-tables client as a
-  C# interface with one `Task`-returning method per operation, and the login
-  allow-list editor as a view-model holding a nullable `List<string>` of lowercase
-  emails, where `null` means every customer and an empty list means nobody.
+  C# interface with one `Task`-returning method per operation, the sign-up list as
+  a view-model over an `ObservableCollection<SignupListEntry>` (lowercase email,
+  nullable role id and set id) with add and remove commands, and the sets editor as
+  a view-model that builds one `CheckBox` per permission and one `NumberBox` or
+  `TextBox` per limit from the catalog's entries, so no feature is named in the
+  view.
 

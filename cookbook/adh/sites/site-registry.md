@@ -2,15 +2,15 @@
 id: 9069ccf9-0357-4311-9671-91ee2793adae
 title: "Site Registry"
 type: ingredient
-version: 1.1.1
+version: 1.2.0
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-10-04
+modified: 2026-11-22
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
-summary: "Single source of truth for the ADH site family: every site's identity, hosts, environments, workspace/hub routing, build-side data, reserved slugs, generated route map, and brand-story graph."
+summary: "Single source of truth for the ADH site family: sites, hosts, environments, hub routing, SSO origins, reserved slugs, route map, brand story, legal URLs."
 platforms:
   - typescript
   - web
@@ -37,7 +37,7 @@ site family: roughly seventy independently deployed sites (`hub`, `cookbook`,
 `projects`, `billing`, …) that share a header, a cross-site switcher, and a central
 OAuth client. It comprises:
 
-- **The site roster** — a closed set of every site identifier the family currently
+- **The site roster**: a closed set of every site identifier the family currently
   knows about, and one definition per site (display names, production host, which
   deploy environments exist, whether the site exposes the shared landing route,
   whether it mounts an authenticated workspace route); environment/host resolution
@@ -46,18 +46,22 @@ OAuth client. It comprises:
   slug apart from a static page); a per-site build-configuration side table kept
   deliberately outside the mechanically generated part of the roster; and the
   cross-site single-sign-on (SSO) OAuth redirect allowlist.
-- **The reserved-slug table** — which top-level path segments a registrant cannot
+- **The reserved-slug table**: which top-level path segments a registrant cannot
   claim as a public handle, per site.
-- **The generated route map** — per-region generated route shares merged into one
+- **The generated route map**: per-region generated route shares merged into one
   route table, feeding a "Routes" review surface and, downstream, a sitemap's
   static-segment exclusion list.
-- **The brand story and guided tour** — a hand-authored brand-story map (brand tier,
+- **The legal addresses and the fleet directory**: the one hub-hosted Privacy Policy
+  and Terms of Use address every site's footer links, and the directory of working
+  sites a landing page's footer links, derived by removing the marketing-deck and
+  placeholder fleets from the footer site list.
+- **The brand story and guided tour**: a hand-authored brand-story map (brand tier,
   message-house pillar, funnel stage, and a brand-judgment "next step" per site)
   plus a separately generated, three-ring guided-tour graph merged into one
   next-step map.
 
 All of it is pure, synchronous data and functions with no I/O beyond in-memory
-lookups, read by the header, the site switcher, the footer, the hub's workspace
+lookups and one read of a local-server environment variable, read by the header, the site switcher, the footer, the hub's workspace
 router, and a downstream OAuth-return-origin sync process.
 
 ## Behavioral Requirements
@@ -79,9 +83,14 @@ router, and a downstream OAuth-return-origin sync process.
 - **workspace-route-not-derived-from-has-home**: A site definition's workspace-route
   field MUST NOT be inferred from `hasHome`; the two are independent facts about a
   site's route tree (`bitbag`, `status`, and `admin` have `hasHome: false` and no
-  workspace route, while `hub-help` and `personaregistry` have `hasHome` true or
-  false independently of having no workspace route at all), and a caller deriving
-  one from the other risks sending a workspace switch to a route that 404s.
+  workspace route; `hub-help` and `personaregistry` have neither a home route nor a
+  workspace route; and `store` has `hasHome: false` yet a `'root'` workspace route),
+  and a caller deriving one from the other risks sending a workspace switch to a
+  route that 404s.
+- **native-app-site-flag**: A site definition for a macOS native tool (`kitchen`,
+  `stenographer`) MUST be marked `nativeApp`; such a site MUST remain in every roster
+  that lists sites (the switcher, the footer, the overview) and MUST be absent from the
+  main-family roster, the marketing-family roster, and the external set.
 - **external-site-excluded-from-sso**: A site definition marked `external` MUST be
   excluded from the OAuth return-origin allowlist in every environment, because such
   a site (FishLamp Design) has no auth-callback route and never begins an ADH login.
@@ -120,9 +129,8 @@ router, and a downstream OAuth-return-origin sync process.
   marketing-family roster MUST each be a hand-curated, non-overlapping list of site
   identifiers; an identifier present in one MUST NOT appear in the other, and `mcp`
   and `builds` (which have no build-tree directory anywhere) MUST appear in neither.
-- **site-categories-exactly-one-membership**: Every identifier appearing in any
-  category grouping's member list MUST appear in exactly one grouping's member list,
-  never zero and never more than one.
+- **site-categories-exactly-one-membership**: Every overview site MUST appear in
+  exactly one category grouping's member list, never zero and never more than one.
 - **group-by-category-preserves-order-and-collects-leftovers**: Category grouping
   MUST emit groups in the categories' declared order, with members in each group's
   declared order, MUST omit any group with no matching member among the sites being
@@ -158,8 +166,8 @@ router, and a downstream OAuth-return-origin sync process.
   testing deploy; otherwise for `'testing'` it MUST fall back to `staging.<prodHost>`
   when the site has a staging deploy, and otherwise to the bare `prodHost`. For
   `'staging'` it MUST resolve `staging.<prodHost>` when the site has a staging
-  deploy and otherwise the bare `prodHost`. For `'production'` it MUST always
-  resolve the bare `prodHost`.
+  deploy and otherwise the bare `prodHost`. For `'production'` and `'local'` it MUST
+  always resolve the bare `prodHost`.
 - **local-origin-suite-domain-priority**: Local-origin resolution MUST first check
   whether the lower-cased, port-stripped current host ends in one of the recognized
   local suite domains (`sites.localhost`, `dev.test`, `dev.local`, checked in that
@@ -175,45 +183,64 @@ router, and a downstream OAuth-return-origin sync process.
   `#site-switch` marker appended (so the target's not-found page knows to walk the
   path up), or `/` when the target has no home route at all.
 - **build-site-href-env-aware**: Cross-site link construction MUST classify the
-  current environment via environment detection; for `'local'` it MUST return the
-  local origin concatenated with the carried path; for every other environment it
-  MUST return `https://<resolved environment host>` concatenated with the carried
-  path.
+  current environment via environment detection; for `'local'` and a target the local
+  server runs it MUST return the local origin concatenated with the carried path; for
+  every other case it MUST return `https://<resolved environment host>` concatenated
+  with the carried path.
+- **local-sites-list-limits-local-hops**: When the current environment is `'local'` and
+  the `NEXT_PUBLIC_LOCAL_SITES` environment variable is a non-empty comma-separated
+  list of site identifiers (each entry trimmed), cross-site link construction and the
+  cross-site URL builder MUST resolve a target whose identifier is not in that list to
+  its production host, `https://<prodHost>` followed by the path, and MUST resolve a
+  target in that list to its local origin.
+- **local-sites-unset-means-all**: When `NEXT_PUBLIC_LOCAL_SITES` is unset or empty, the
+  local-server check MUST treat every site as served, so every local hop resolves to a
+  local origin (the full local suite).
+- **local-sites-read-per-call**: The local-server check MUST read
+  `NEXT_PUBLIC_LOCAL_SITES` on each call, spelled out in full as
+  `process.env.NEXT_PUBLIC_LOCAL_SITES`, and MUST NOT cache the value at module load.
 
 ### Cross-Site SSO Origin Allowlist (security-relevant)
 
-- **sso-return-origins-partitioned-by-env**: The OAuth return-origin allowlist MUST
-  return, for `env === 'production'`, the bare `https://<prodHost>` origin of every
-  roster entry that is not marked external; for `env === 'staging'`, only the
-  `https://staging.<prodHost>` origin of every non-external entry with a staging
-  deploy; for `env === 'testing'`, only the `https://testing.<prodHost>` origin of
-  every non-external entry with a testing deploy.
-- **sso-flag-flip-is-a-one-way-door**: The staging-deploy and testing-deploy flags
-  are the OAuth redirect surface the allowlist names, and flipping either from
-  `false` to `true` MUST be treated as permanently widening that environment's
-  allowlist: the deploy-time sync process that reads the allowlist's output into the
-  enforcing database column is additive-only and never prunes a row that a later
-  flag flip back to `false` would otherwise remove. A caller changing an existing
-  entry's flag back to `false` MUST NOT assume the corresponding origin stops being
-  a valid OAuth `return` target without a separate, deliberate, hand-run pruning
-  pass against that environment.
-- **sso-external-exclusion-fail-closed**: An origin belonging to a site marked
-  external MUST NOT appear in the OAuth return-origin allowlist's result for any
-  environment, on a fail-closed basis: an origin that cannot complete an ADH login
-  has no legitimate reason to be a legal `return` target, so the absence is
-  deliberate rather than an oversight to fill in.
+- **sso-return-origins-partitioned-by-env**: The return-origin list MUST return, for
+  `env === 'production'`, the bare `https://<prodHost>` origin of every roster entry
+  that is neither external nor `nativeApp`; for `env === 'staging'`, only the
+  `https://staging.<prodHost>` origin of every such entry with a staging deploy; for
+  `env === 'testing'`, only the `https://testing.<prodHost>` origin of every such entry
+  with a testing deploy.
+- **sso-origins-grant-nothing-by-themselves**: A caller MUST NOT treat membership in the
+  return-origin list as a grant of sign-in return or cross-origin access; the backend
+  no longer trusts this list for either, and its one reader uses the list to decide
+  which origins a client still holds are retired sites (an origin the list does not
+  name is dropped rather than moved to an application).
+- **sso-external-exclusion-fail-closed**: An origin belonging to a site marked external
+  MUST NOT appear in the return-origin list's result for any environment, on a
+  fail-closed basis: an origin that cannot complete an ADH login has no legitimate
+  reason to be a legal `return` target, so the absence is deliberate rather than an
+  oversight to fill in.
+- **sso-native-app-exclusion-fail-closed**: An origin belonging to a site marked
+  `nativeApp` MUST NOT appear in the return-origin list's result for any environment,
+  even though its testing-deploy flag is true (a native-app site has production and
+  testing deploys and no staging deploy), because such a site has no ADH backend and no
+  auth-callback route.
 
 ### Hub in-workspace feature routing
 
 - **hub-feature-segment-default-is-site-id**: The hub feature-segment map MUST map a
   routed site's identifier to the hub's own feature segment for that site's
   implementation; the default mapping is a site's own identifier, and every entry
-  that maps to a different segment MUST do so because the hub already routed that
-  feature under a different name before the site existed.
+  that maps to a different segment MUST do so for a stated reason: the hub already
+  routed that feature under a different name before the site existed (`messages` to
+  `messaging`, `teamregistry` to `teams`), the site's implementation lives under
+  another feature (`authentication` to `tokens`, `messaging` to `integrations`,
+  `ecosystems` to `products`), or the site is a copy of another (`hub-sdk` to
+  `toolkit`).
 - **hub-feature-segment-many-to-one-allowed**: Two or more site identifiers MAY map
-  to the same feature-segment value (for example `ecosystems` and `products` both
-  mapping to `'products'`) when the hub renders one pane for both; segment lookup by
-  site identifier MUST return that shared segment for either identifier.
+  to the same feature-segment value when the hub renders one pane for both; exactly
+  three such aliases exist (`ecosystems` and `products` to `'products'`, `messaging`
+  and `integrations` to `'integrations'`, `hub-sdk` and `toolkit` to `'toolkit'`), any
+  other duplicate segment is drift, and segment lookup by site identifier MUST return
+  the shared segment for either identifier.
 - **site-for-hub-segment-tiebreak**: The reverse feature-segment lookup MUST resolve
   a segment shared by more than one site to the site whose own identifier equals
   that segment when one exists (for example `'products'` resolves to the `products`
@@ -225,8 +252,9 @@ router, and a downstream OAuth-return-origin sync process.
   hub workspace feature?" never has to consult the two source lists separately.
 - **hub-extra-segments-have-no-registry-site**: An entry in the hub-only extra
   segments MUST name a hub workspace feature with no corresponding registry site (a
-  hub-only knob, such as an ecosystem's member list, or the persona-data management
-  surface); a feature that is some site's own implementation MUST be keyed in the
+  hub-only knob, such as an ecosystem's member list, the persona-data management
+  surface; a product knob with a row on the product rail, such as `roles`,
+  `signup-list`, or `sets`; or a bespoke rail route such as `email-signup`); a feature that is some site's own implementation MUST be keyed in the
   feature-segment map by that site's identifier instead.
 
 ### Workspace routing
@@ -243,7 +271,7 @@ router, and a downstream OAuth-return-origin sync process.
 - **workspace-slug-excludes-landing-segments**: For a site whose workspace root is
   the template root, workspace-slug parsing MUST take the first non-empty path
   segment and return it as the slug unless that segment is a member of the
-  landing-segment set, in which case it MUST return nothing — including for the
+  landing-segment set, in which case it MUST return nothing, including for the
   empty-path case, which resolves to no first segment and therefore also nothing.
 - **landing-and-hub-segment-sets-are-answer-specific**: The landing-segment set MUST
   be consulted only for a template-root site's first path segment, and the hub's own
@@ -263,7 +291,7 @@ router, and a downstream OAuth-return-origin sync process.
   generated region is silently dropped the next time the region is regenerated.
 - **site-build-config-default-empty**: Build-configuration lookup MUST return a
   site's build configuration entry when one exists, and MUST return an empty
-  result — never nothing and never a thrown error — for any site with no entry,
+  result, never nothing and never a thrown error, for any site with no entry,
   since most sites need no per-site build behavior at all.
 - **cookbook-and-hub-excluded-from-site-build**: `cookbook` and `hub` MUST NOT carry
   `legacyHomePaths`, `extraRedirects`, or `requiresBackendUrl` entries in the build
@@ -279,7 +307,7 @@ router, and a downstream OAuth-return-origin sync process.
   not.
 - **reserved-slug-unknown-site-fail-open**: Reserved-slug lookup MUST return false,
   never true and never throw, when the given site has no entry in the reserved-slug
-  table; this fail-open behavior is a documented precondition, not a gap — at least
+  table; this fail-open behavior is a documented precondition, not a gap, at least
   one real caller passes a raw, unvalidated database column value that cannot be
   statically confirmed as a known site identifier, and that caller's own validation
   is pinned to fail open rather than reject a write for a site this registry has
@@ -294,6 +322,35 @@ router, and a downstream OAuth-return-origin sync process.
   answer from a single site's list alone, even on the day every list happens to be
   textually identical, because the lists are declared per-site specifically so they
   can diverge later.
+
+- **reserved-slugs-cover-static-directories**: Each reserved-slug list MUST contain the
+  name of every static top-level directory of its site's application tree, including
+  that site's own entry prefix, so that a registrant is never handed a name a page of
+  the site already answers for.
+- **reserved-slugs-name-legal-paths**: The universal reserved list MUST contain
+  `privacy-policy` and `terms-of-use`, the permanent legal paths, in addition to
+  `privacy` and `terms`.
+
+### Legal addresses
+
+- **legal-paths-fixed**: The privacy policy path MUST be `/privacy-policy` and the terms
+  of use path MUST be `/terms-of-use`.
+- **legal-urls-are-hub-production**: The privacy policy URL and the terms of use URL MUST
+  each be the production URL builder applied to the `hub` site and the matching legal
+  path, so every site links one absolute address on the hub's production host
+  regardless of the environment the linking site runs in.
+
+### Fleet directory
+
+- **fleet-ids-read-from-route-shares**: The marketing-fleet identifier list and the
+  placeholder-fleet identifier list MUST each equal the key list of their generated
+  route share, and MUST NOT be derived from the main-family or marketing-family
+  rosters (the marketing-family roster still holds `research`, `docs`, and `registry`).
+- **fleets-share-no-site**: A site identifier MUST NOT appear in both the marketing
+  fleet and the placeholder fleet.
+- **directory-sites-is-footer-less-fleets**: The directory site list MUST equal the
+  footer site list, in the same order, with every marketing-fleet and
+  placeholder-fleet site removed and no other site removed.
 
 ### Generated route map
 
@@ -325,7 +382,7 @@ router, and a downstream OAuth-return-origin sync process.
 - **next-step-never-self-referential**: A brand-story entry's `nextStep` MUST NOT equal
   its own site identifier.
 - **next-step-chains-converge-on-hub**: Following any site's `nextStep` chain
-  repeatedly MUST eventually reach `hub`, for every site in the brand-story map —
+  repeatedly MUST eventually reach `hub`, for every site in the brand-story map;
   whatever door a visitor entered the family through, the brand story MUST lead back
   to the platform.
 - **funnel-stage-never-empty**: Every funnel-stage value (`discover`, `learn`,
@@ -344,8 +401,8 @@ router, and a downstream OAuth-return-origin sync process.
   time.
 - **tour-ring-may-be-empty**: A tour ring (for example the main ring, which has
   carried no entries since 2026-08-31) legitimately being empty MUST be treated as a
-  real, renderable state — "this region's generator has not populated its ring
-  yet" — not as an error condition.
+  real, renderable state, "this region's generator has not populated its ring
+  yet", not as an error condition.
 - **get-site-story-direct-lookup**: Brand-story lookup MUST return a site's
   brand-story entry directly, with no fallback and no transformation, for any valid
   site identifier.
@@ -373,34 +430,28 @@ router, and a downstream OAuth-return-origin sync process.
 
 ## Appearance
 
-Not applicable — this is the site family's data registry and routing-resolution
-module, not a visual component.
+Not applicable: this is the site family's data registry and routing-resolution module, not a visual component.
 
 ## States
 
-Not applicable — this is the site family's data registry and routing-resolution
-module, not a visual component. Its only stateful concept — the additive, one-way-door
-growth of the SSO return-origin allowlist as the staging-deploy/testing-deploy flags
-are set over time — is covered under Behavioral Requirements above (the Cross-Site SSO
-Origin Allowlist subsection), not as a visual-state table.
+Not applicable: this is the site family's data registry and routing-resolution module, not a visual component.
 
 ## Accessibility
 
-Not applicable — this is the site family's data registry and routing-resolution
-module, not a visual component.
+Not applicable: this is the site family's data registry and routing-resolution module, not a visual component.
 
 ## Conformance Test Vectors
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
-| site-registry-001 | detect-env-classification | Classifying hosts `agenticdeveloperhub.com`, `testing.agenticdeveloperhub.com`, `staging.admin.agenticdeveloperhub.com`, `admin.localhost` (traced to `registry.test.ts`'s "classifies production hosts", "classifies testing / staging by leading label", and "classifies local hosts") | `'production'`, `'testing'`, `'staging'`, `'local'` respectively |
+| site-registry-001 | detect-env-classification | Classifying hosts `agenticdeveloperhub.com`, `testing.agenticdeveloperhub.com`, `staging.admin.agenticdeveloperhub.com`, `admin.localhost` (traced to `registry.test.ts`'s "classifies production hosts", "classifies testing / staging by leading label", and "classifies local hosts (localhost, 127.*, *.local, *.test, *.localhost, ports)") | `'production'`, `'testing'`, `'staging'`, `'local'` respectively |
 | site-registry-002 | host-for-env-fallback, build-site-href-env-aware | Building a cross-site link to the `mcp` site (no testing deploy) from host `testing.agenticdeveloperhub.com`, path `/` (traced to "falls back testing → staging when the target lacks a testing env") | `'https://staging.mcp.agenticdeveloperhub.com/'` |
 | site-registry-003 | carry-path-home-only | Building a cross-site link to `hub` from host `agenticdeveloperhub.com`, path `/home/foo` (traced to "carries deep /home routes with the up-walk marker") | `'https://agenticdeveloperhub.com/home/foo#site-switch'` |
 | site-registry-004 | carry-path-home-only | Building a cross-site link to `hub-help` (no home route) from host `agenticdeveloperhub.com`, path `/home` (traced to "sends /home to root for sites without a /home route") | `'https://help.agenticdeveloperhub.com/'` |
 | site-registry-005 | local-origin-suite-domain-priority | Building a cross-site link to `cookbook` from host `localhost`, path `/home` (traced to "resolves to a local origin from local dev (bare localhost, no port)") | `'http://cookbook.localhost/home'` |
-| site-registry-006 | sso-return-origins-partitioned-by-env, sso-external-exclusion-fail-closed | Computing the OAuth return-origin allowlist for `'production'` (traced to "production = every non-external site as a bare-host origin (no env prefix)" and "never allows an external link-out origin, in any env") | Includes `https://<prodHost>` for every non-external site; never includes `fishlamp`'s or `fishlampdesign`'s origin |
-| site-registry-007 | sso-return-origins-partitioned-by-env | Computing the OAuth return-origin allowlist for `'testing'` (traced to "testing = only sites with a testing deploy, prefixed testing.") | Includes exactly the `https://testing.<prodHost>` origin of every site with a testing deploy, and no others |
-| site-registry-008 | sso-return-origins-partitioned-by-env | Computing the OAuth return-origin allowlist for `'staging'` (traced to "staging = every staging-deploy site, prefixed staging.") | Includes exactly the `https://staging.<prodHost>` origin of every site with a staging deploy, and no others |
+| site-registry-006 | sso-return-origins-partitioned-by-env, sso-external-exclusion-fail-closed | Computing the return-origin list for `'production'` (traced to "production = every ADH app site as a bare-host origin (no env prefix)" and "never allows an external link-out origin, in any env") | Includes `https://<prodHost>` for every site that is neither external nor `nativeApp`; never includes `fishlamp`'s, `fishlampdesign`'s, `kitchen`'s, or `stenographer`'s origin |
+| site-registry-007 | sso-return-origins-partitioned-by-env | Computing the return-origin list for `'testing'` (traced to "testing = only sites with a testing deploy, prefixed testing.") | Includes exactly the `https://testing.<prodHost>` origin of every non-excluded site with a testing deploy, and no others |
+| site-registry-008 | sso-return-origins-partitioned-by-env | Computing the return-origin list for `'staging'` (traced to "staging = every staging-deploy site, prefixed staging.") | Includes exactly the `https://staging.<prodHost>` origin of every non-excluded site with a staging deploy, and no others |
 | site-registry-009 | workspace-href-single-shape | Building the workspace link for slug `'acme'`, for every site with a workspace route, including the two sites whose workspace once nested under a different shape (traced to "builds `/<slug>` for every site with a workspace, including the two that once differed") | `'/acme'` for every one of them |
 | site-registry-010 | workspace-href-single-shape | Building the workspace link for an empty slug (traced to "returns undefined for an empty slug rather than minting `//`") | Nothing |
 | site-registry-011 | workspace-slug-root-sites-only | Parsing a workspace slug from path `/acme` on the hub, whose workspace root is the hub shape (traced to "refuses the hub rather than parsing it with the template's landing set") | Nothing |
@@ -412,73 +463,112 @@ module, not a visual component.
 | site-registry-017 | site-build-config-default-empty | Sites in the build configuration table with `requiresBackendUrl` set (traced to "marks exactly the five backend-fronting sites as requiring a backend url") | Exactly `['billing', 'bitbag', 'narratives', 'personaregistry', 'projects']` |
 | site-registry-018 | reserved-slug-unknown-site-fail-open | Checking whether `'anything'` is reserved for `hub`, which has no entry in the reserved-slug table (traced to `reserved-slugs.test.ts`'s documented unknown-site case) | `false` |
 | site-registry-019 | reserved-slug-anywhere-is-a-cross-site-or | Checking whether a slug is reserved anywhere, with a reservation temporarily injected on one site only, then removed (traced to "is the OR across sites, not one site's list") | `true` while the injected reservation exists |
-| site-registry-020 | route-shares-keyed-only-to-family-sites, route-shares-are-pairwise-disjoint | The identifier set across all route shares (traced to `siteRoutes.test.ts`'s "keys only registry family sites, so the SiteId typing stays honest" and "gives every site to exactly one share") | Equals the main-family roster union the marketing-family roster exactly; no identifier repeated across two shares |
+| site-registry-020 | route-shares-keyed-only-to-family-sites, route-shares-are-pairwise-disjoint | The identifier set across all route shares (traced to `siteRoutes.test.ts`'s "keys only registry family sites, so the SiteId typing stays honest" and "gives every site to exactly one share") | Every identifier is a member of the main-family or marketing-family roster; no identifier repeated across two shares, and the merged map holds exactly the sum of the shares' keys |
 | site-registry-021 | route-list-per-site-is-normalized | Every non-empty route list in every share (traced to "lists absolute, sorted, deduplicated paths per site") | Every path begins with `/`; each site's list is sorted and contains no duplicate |
 | site-registry-022 | site-stories-total-map, next-step-never-self-referential | The brand-story map's keys against the site identifier set, and every entry's `nextStep` against its own identifier (traced to `story.test.ts`'s "covers every registered site (and nothing else)" and "never points a next step at the site itself") | Key sets match exactly; no entry's `nextStep` equals its own identifier |
 | site-registry-023 | next-step-chains-converge-on-hub | Every site's `nextStep` chain, followed repeatedly (traced to "every next-step chain converges on the hub") | Every chain reaches `hub` |
 | site-registry-024 | tour-rings-are-separately-generated-and-merged | The three tour rings' key sets (traced to `tour-region.test.ts`'s ring-disjointness assertions) | Pairwise disjoint; every edge names a real site identifier on both ends; no self-pointing edge |
+| site-registry-025 | sso-native-app-exclusion-fail-closed, native-app-site-flag | Computing the return-origin list for each of `'production'`, `'staging'`, and `'testing'`, and listing the `nativeApp` sites (traced to `registry.test.ts`'s "never allows a native-app site origin, in any env" and "keeps native-app sites out of the ADH app rosters") | `nativeApp` sites are exactly `['kitchen', 'stenographer']`; neither origin appears in any environment; neither id is in the main-family or marketing-family roster |
+| site-registry-026 | local-sites-list-limits-local-hops | Building a link to `cookbook` from host `hub-site-menu2.sites.localhost`, path `/`, with `NEXT_PUBLIC_LOCAL_SITES` set to `hub` (traced to "local hops to a site the local server does not run go to the production host") | `'https://agenticdevelopercookbook.com/'` |
+| site-registry-027 | local-sites-list-limits-local-hops | Building a link to `cookbook` from the same host, with `NEXT_PUBLIC_LOCAL_SITES` set to `hub, cookbook` (traced to "stay local for a site on the list") | `'https://cookbook.hub-site-menu2.sites.localhost/'` |
+| site-registry-028 | local-sites-unset-means-all | Building a link to `cookbook` from the same host, with `NEXT_PUBLIC_LOCAL_SITES` set to the empty string (traced to "stay local for every site when the list is unset (the full suite)") | `'https://cookbook.hub-site-menu2.sites.localhost/'` |
+| site-registry-029 | local-sites-list-limits-local-hops | Calling the cross-site URL builder for `cookbook`, path `/x`, from the same host, with the list set to `hub` (traced to "go to the production host") | `'https://agenticdevelopercookbook.com/x'` |
+| site-registry-030 | fleets-share-no-site, fleet-ids-read-from-route-shares | The marketing-fleet and placeholder-fleet identifier lists (traced to `fleets.test.ts`'s "are both read off a populated route share" and "share no site") | Both lists are non-empty; their intersection is empty |
+| site-registry-031 | directory-sites-is-footer-less-fleets | The directory site list against the footer site list less both fleets (traced to "is FOOTER_SITES in the same order, less only those fleets", "links no marketing deck and no placeholder", and "keeps the working sites") | Same identifiers in the same order; contains `hub`, `bitbag`, `research`, `shipr`, and `fishlamp` |
+| site-registry-032 | legal-paths-fixed, legal-urls-are-hub-production | The two legal paths and the two legal URLs (derived from `legal.ts`; no test in this package exercises it) | `'/privacy-policy'`, `'/terms-of-use'`, `'https://agenticdeveloperhub.com/privacy-policy'`, `'https://agenticdeveloperhub.com/terms-of-use'` |
+| site-registry-033 | reserved-slugs-cover-static-directories, reserved-slugs-name-legal-paths | For every reserving site whose application directory is present, every static segment on disk checked against the reserved list (traced to `reserved-slugs.test.ts`'s "reserves every static segment its app/ dir actually has"); the universal list checked for the legal paths (derived from `reserved-slugs.ts`) | Every on-disk segment is reserved; `privacy-policy` and `terms-of-use` are reserved |
+| site-registry-034 | reserved-slug-normalization, reserved-slug-per-site-lookup | Checking `'Tour'` and `'TOUR'` against the `registries` list, and `'fishlamp'` against the `registries` list (traced to "is case-insensitive" and "does not reserve an ordinary slug") | `true` for both `'Tour'` and `'TOUR'`; `false` for `'fishlamp'` |
+| site-registry-035 | hub-workspace-segments-is-the-full-union, hub-extra-segments-have-no-registry-site | Whether every hub-only extra segment is a member of the full workspace-segment set (traced to "contributes every segment to HUB_WORKSPACE_SEGMENTS") | Every extra segment, including `roles`, `signup-list`, `sets`, and `email-signup`, is a member |
+| site-registry-036 | site-id-closed-union, is-site-id-derived-from-sites | Calling identifier validation on a real site id and on a directory name that is not a site (traced to `build-fields.test.ts`'s "isSiteId accepts a real id and rejects a directory that is not a site") | `true` for the real id; `false` for the non-site directory name |
+| site-registry-037 | unique-site-ids, site-def-minimum-fields | The roster's identifiers, labels, and production hosts (traced to `registry.test.ts`'s "has unique ids and excludes the backend" and "every site has a label and a production host") | No identifier repeats; no entry names the backend service; every entry has a non-empty label and production host |
+| site-registry-038 | workspace-route-not-derived-from-has-home | Each site's workspace-route field compared with the route tree of its site folder (traced to "workspaceRoute matches the route tree for every site folder") | Every field matches its route tree, independent of `hasHome`; `bitbag`, `status`, and `admin` have no workspace route |
+| site-registry-039 | external-site-excluded-from-sso | Listing the sites marked external, then computing the return-origin list for each environment (traced to "never allows an external link-out origin, in any env") | External sites are exactly `['fishlamp', 'fishlampdesign']`; neither host appears in any environment's list |
+| site-registry-040 | admin-only-derives-admin-ids-and-drops-footer | The footer site list against the admin-only id set (traced to "drops the admin-only consoles, which stay on the roster" and "lists admin + status but still hides the unlisted registry entries") | No admin-only id appears in the footer site list; every admin-only id is in the admin-only id set |
+| site-registry-041 | listed-sites-filter | Looking up a site registered with `listed: false`, then checking the listed-sites set (traced to "keeps the folded sites registered but out of the switcher") | The lookup returns the entry; the listed-sites set omits it |
+| site-registry-042 | footer-sites-filter | The footer site list for the `mcp` site, which is not crawlable (traced to "excludes the non-HTML mcp endpoint and the delisted sites, but keeps the content sites") | `mcp` is absent; the remaining entries keep the listed-sites order |
+| site-registry-043 | get-site-lookup | Looking up `hub`, then looking up an identifier for no site (derived from source; `getSite('hub')` is exercised by "splitSiteTitle splits the brand lead from the accent") | The `hub` entry; nothing for the unknown identifier |
+| site-registry-044 | dir-name-strips-tld, site-id-for-dir-bare-id-first | Directory-based identification of a domain-shaped folder, of a bare site id, and of a name matching neither (traced to `registry.test.ts`'s "maps a domain-shaped folder to its id", "still answers for a bare id", and "is undefined for anything that is not a site") | The matching site id; the bare id unchanged; nothing |
+| site-registry-045 | main-marketing-ids-are-disjoint-curated-lists | The main-family and marketing-family rosters (traced to "every family id is a real registry site, with no dupes or cross-family overlap") | Every id is a real site; no duplicate; no id in both rosters; `mcp` and `builds` in neither |
+| site-registry-046 | site-categories-exactly-one-membership | The category member lists against the overview sites (traced to "covers every overview site exactly once (no orphans, no dupes)") | Each overview site appears in exactly one category |
+| site-registry-047 | group-by-category-preserves-order-and-collects-leftovers | Grouping the overview sites by category (traced to "mirrors the site menu: same labels, same order..."; the trailing group named "More" is derived from source, with no test) | Groups in declared order with members in declared order; a site matching no category lands in the trailing "More" group |
+| site-registry-048 | header-title-explicit-fulllabel-wins, header-title-derives-from-apex-pattern | Header-title derivation for `hub`, which has a `fullLabel`; and for a site with no `fullLabel` whose host is `agenticdeveloper<x>.com` (the second case is derived from source; no test pins it) | `'Agentic Developer Hub'`; `'Agentic Developer <X>'` with `<x>` capitalized |
+| site-registry-049 | split-title-prefix-detection | Splitting the header title of `hub` (traced to `registry-characterisation.test.ts`'s "splitSiteTitle splits the brand lead from the accent") | Lead `'Agentic Developer'`, accent `'Hub'`; an off-pattern brand name such as the Persona Registry gives an empty lead (derived from source) |
+| site-registry-050 | local-sites-read-per-call | Building the same link three times with `NEXT_PUBLIC_LOCAL_SITES` stubbed to `hub`, then `hub, cookbook`, then the empty string (traced to the three cases in "local hops to a site the local server does not run") | Production host, then local origin, then local origin: each call reflects the value at call time |
+| site-registry-051 | sso-origins-grant-nothing-by-themselves | A site's production origin appearing in the return-origin list (derived from the source comment on `ssoReturnOrigins`; no test pins it) | Appearance means only that the origin names a real, current site; no sign-in return or cross-origin access is derived from it |
+| site-registry-052 | hub-feature-segment-default-is-site-id, hub-feature-segment-many-to-one-allowed | Every entry of the feature-segment map, including `ecosystems` and `products` (traced to "maps only real registry sites, to bare feature segments (one site per segment, except the documented products alias)" and "names the documented winner for each shared segment, and the site itself for the rest") | Every key is a real site; the only shared segments are `products` (`ecosystems`, `products`), `integrations` (`integrations`, `messaging`), and `toolkit` (`hub-sdk`, `toolkit`); `products` resolves to `products` and `integrations` to `integrations` |
+| site-registry-053 | cookbook-and-hub-excluded-from-site-build | The build table's entries carrying `legacyHomePaths` (traced to `build-fields.test.ts`'s "marks exactly the eight registry-owned legacy-home-path sites") | Exactly `dashboards`, `ecosystems`, `knowledgebases`, `narratives`, `personabuilder`, `projects`, `research`, `teamregistry`; neither `cookbook` nor `hub` |
+| site-registry-054 | site-route-shares-is-the-sole-roster, site-routes-merges-all-shares | The merged route map against every share file on disk (traced to `siteRoutes.test.ts`'s "merges every share file that exists on disk") | The merged map holds exactly the union of every share's keys and routes |
+| site-registry-055 | exactly-one-masterbrand | Counting brand-story entries whose tier is `masterbrand` (traced to `story.test.ts`'s "has exactly one masterbrand, and it is the hub") | Exactly one entry, for `hub` |
+| site-registry-056 | funnel-stage-never-empty | The funnel stage of every brand-story entry (traced to "leaves no funnel stage empty") | Each of `discover`, `learn`, `build`, `ship`, `adopt` is held by at least one entry |
+| site-registry-057 | next-step-distinct-from-tour-graph, tour-ring-may-be-empty | The merged tour graph's rings, including the main ring (traced to `tour-region.test.ts`'s "is a walk that is actually turned on, in every ring that owns one"; no test compares brand `nextStep` with tour edges) | The empty main ring is accepted as a valid state; brand `nextStep` and tour edges are read as separate maps |
+| site-registry-058 | get-site-story-direct-lookup | Brand-story lookup for every registered site (traced to "covers every registered site (and nothing else)") | The entry stored for that identifier, unchanged |
+| site-registry-059 | persona-and-registry-paths-percent-encode-slugs, persona-profile-url-resolves-current-env | Building a persona profile URL and each registry path from a handle containing reserved characters (traced to "personaProfileUrl percent-encodes the slug onto the persona registry" and "every registry path helper percent-encodes its handle") | Each handle is percent-encoded as the whole path; the URL lands on the persona registry site in the current environment |
+| site-registry-060 | site-url-falls-back-to-bare-path | The cross-site URL builder for an identifier that is not a site, path `/x`, host `agenticdeveloperhub.com` (traced to "siteUrl falls through to the raw path for an unknown id") | `'/x'` |
+| site-registry-061 | site-prod-url-ignores-current-environment | The production URL builder for `hub`, path `/` (traced to "siteProdUrl is host-independent and always https") | `'https://agenticdeveloperhub.com/'` |
+| site-registry-062 | site-home-path-fallback | The home path for `hub` (traced to "siteHomePath is /home only for sites that expose one") | `'/home'` when `hasHome` is true; `'/'` otherwise |
 
 ## Edge Cases
 
-- **Null and empty input**: Building the workspace link for an empty slug returns
-  nothing rather than minting `//` (workspace-href-single-shape). Parsing a
+- **Null and empty input** (MUST): Building the workspace link for an empty slug
+  returns nothing rather than minting `//` (workspace-href-single-shape). Parsing a
   workspace slug for an empty path resolves the path to `/`, whose first segment is
   empty, and therefore returns nothing. The cross-site URL builder, for a site
-  identifier not present in the roster, returns the given path unmodified rather
-  than throwing.
-- **Boundary values**: A site with no testing deploy and no staging deploy
-  (a production-only site) resolves to its bare `prodHost` from every non-local
-  environment (environment host resolution's two-level fallback ends on the bare
-  host, never on nothing). A site definition with neither a workspace route nor a
-  home route is a valid, fully supported shape (an operations console such as
-  `admin`, `status`, or `bitbag`) — the absence of both is not itself an
-  inconsistency to flag.
-- **Concurrent access**: This registry is synchronous and stateless — every value is
-  computed once when the registry loads and every operation is a pure function over
-  that data, with no shared mutable state written at runtime — so there is no
-  interleaving for two callers reading the site roster, the merged route map, or the
-  merged guided-tour graph at once to race against.
-- **Error states — a shared hub feature segment with no clear owner**: The reverse
-  feature-segment lookup's tie-break (site-for-hub-segment-tiebreak) resolves
+  identifier not present in the roster, returns the given path unmodified rather than
+  throwing. An unset or empty `NEXT_PUBLIC_LOCAL_SITES` means every site is served
+  locally (local-sites-unset-means-all). A blank or unknown site passed to reserved-slug
+  lookup answers false (reserved-slug-unknown-site-fail-open).
+- **Boundary values** (MUST): A site with no testing deploy and no staging deploy (a
+  production-only site) resolves to its bare `prodHost` from every non-local
+  environment, because environment host resolution's two-level fallback ends on the
+  bare host, never on nothing. A site definition with neither a workspace route nor a
+  home route is a valid, fully supported shape (an operations console such as `admin`,
+  `status`, or `bitbag`), so the absence of both is not itself an inconsistency to
+  flag. A site marked `nativeApp` carries a true testing-deploy flag
+  yet is excluded from every return-origin list, so the flags
+  alone never decide membership.
+- **Concurrent access** (not applicable): This registry is synchronous and stateless.
+  Every value is computed once when the registry loads and every operation is a pure
+  function over that data, with no shared mutable state written at runtime, so there
+  is no interleaving for two callers reading the site roster, the merged route map, or
+  the merged guided-tour graph at once to race against. The one runtime input, the
+  local-sites environment variable, is read per call and never written here.
+- **Error states, a shared hub feature segment with no clear owner** (SHOULD): The
+  reverse feature-segment lookup's tie-break (site-for-hub-segment-tiebreak) resolves
   deterministically by "does the site's own identifier equal the segment," but a
-  future segment shared by two sites where NEITHER site's identifier equals the
-  segment resolves silently to whichever site's feature-segment entry was declared
-  first in source order; this is documented as an intentional, documented convention
-  rather than an oversight.
-- **Error states — a route share whose generator has not run yet in this checkout**:
-  A region's generated route share can legitimately be empty in a checkout whose own
-  region generator has not run yet — a dedicated check's own fill-expectation table
-  names `main` as the one region currently expected to be empty, and any other
+  future segment shared by two sites where neither site's identifier equals the
+  segment resolves to whichever site's feature-segment entry was declared first in
+  source order; a new shared segment SHOULD therefore be given an owner whose
+  identifier equals it. This is a documented convention, not an oversight.
+- **Error states, a route share whose generator has not run yet in this checkout**
+  (MUST): A region's generated route share can legitimately be empty in a checkout
+  whose own region generator has not run yet. A dedicated check's own fill-expectation
+  table names `main` as the one region currently expected to be empty, and any other
   region going empty without an entry in that table is what the "has every share
-  filled in" check exists to catch.
-- **Error states — the additive OAuth allowlist widening unintentionally**: Flipping
-  a staging-deploy or testing-deploy flag to `true` on a site claimed but not yet
-  actually deployed on that tier allowlists a redirect target for a host nothing is
-  serving; the OAuth return-origin allowlist's own documentation names the
-  historical precedent (the `messaging` site, 2026-08-22) where a flag flip that
-  looked like a listing change permanently widened two environments' allowlists, and
-  states that a caller wanting to narrow the allowlist back down must run a
-  separate, deliberate pruning tool against the database column this allowlist's
-  output feeds — this registry itself performs no pruning.
-- **Offline or disconnected state**: Not applicable — every part of this component
-  performs only synchronous, local computation over in-memory constants; none of it
-  makes a network request.
+  filled in" check exists to catch. An empty share contributes no fleet members, so a
+  fleet whose share is empty yields an empty fleet list.
+- **Error states, a local hop to a site the local server does not run** (MUST): With
+  `NEXT_PUBLIC_LOCAL_SITES` naming only some sites, a hop to a site off the list
+  resolves to its production host rather than to a local host nothing answers
+  (local-sites-list-limits-local-hops).
+- **Offline or disconnected state** (not applicable): Every part of this component
+  performs only synchronous, local computation over in-memory constants and one
+  environment-variable read; none of it makes a network request.
 
 ## Configuration
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| The site roster | list of site definitions | fixed at build time | The whole family roster; not caller-configurable at runtime — a new site is added by editing the registry (its mechanically generated region for the mechanically-added fields, or the hand-authored part directly). |
+| The site roster | list of site definitions | fixed at build time | The whole family roster; not caller-configurable at runtime, a new site is added by editing the registry (its mechanically generated region for the mechanically-added fields, or the hand-authored part directly). |
 | The hostname (environment detection, the cross-site URL builder, the persona profile URL builder) | string | caller-supplied; the persona profile URL builder defaults to the current environment's hostname when available, else an empty string | The current request/browser host, used to resolve which deploy environment and, for local dev, which suite the caller is on. |
 | The current hostname / path (cross-site link construction) | string | caller-supplied; required | The visitor's current host and path, used to resolve the target site's href in the same environment and to decide whether `/home` is carried. |
+| `NEXT_PUBLIC_LOCAL_SITES` (environment variable) | comma-separated list of site identifiers | unset, meaning every site is served locally | The site identifiers the local server actually runs; a local hop to any other site resolves to its production host. |
 | The recognized local suite domains | fixed list of strings (internal constant) | `['sites.localhost', 'dev.test', 'dev.local']` | The domain suffixes recognized as a local-suite host; not caller-configurable. |
 | The environment (the OAuth return-origin allowlist) | one of `'production'`, `'staging'`, `'testing'` | caller-supplied; required | Which deploy environment's OAuth-return-origin allowlist to compute. |
 | The build configuration table | optional build configuration entry per site identifier | fixed at build time | Per-site build behavior flags read by the shared build-configuration package; not caller-configurable at runtime. |
 
 ## Deep Linking
 
-Not applicable: this component defines no URL scheme, route handler, or navigation
-target of its own; it is the data other code reads to build one.
+Not applicable: this component defines no URL scheme, route handler, or navigation target of its own. It is the data other code reads to build one; the two legal paths are names the hub mounts, not routes this component serves.
 
 ## Localization
 
@@ -497,9 +587,7 @@ Motion, Increase Contrast, or Differentiate Without Color setting.
 
 ## Feature Flags
 
-Not applicable: no part of this component declares or reads a feature-flag key; a
-site definition's `featured` field is a display-order marker for the switcher, not
-a feature gate, and nothing reads it today.
+Not applicable: no part of this component declares or reads a feature-flag key. A site definition's `featured` field is a display-order marker for the switcher, not a feature gate, and nothing renders it today. `NEXT_PUBLIC_LOCAL_SITES` is a local-server setting documented under Configuration, not a flag.
 
 ## Analytics
 
@@ -512,15 +600,14 @@ Not applicable: no part of this component emits an analytics or event-tracking c
   is itself source-controlled configuration, not user data. The persona and registry
   path builders accept a caller-supplied slug (a public handle a registrant chose)
   and percent-encode it into a path; no credential, token, or other secret value is
-  read or handled anywhere in this component.
+  read or handled anywhere in this component. The legal URLs are fixed public addresses.
 - **Storage**: This component persists nothing at runtime; every value is either a
   constant computed once at load or the result of a pure function with no side
   effect.
-- **Transmission**: Not applicable — this component performs no networking of its
-  own. The OAuth return-origin allowlist's output is consumed by a separate
-  deploy-time sync process elsewhere, which is the one that actually transmits it to
-  a database column; that transmission is outside this component.
-- **Retention**: Not applicable — nothing here is retained beyond the lifetime of
+- **Transmission**: Not applicable: this component performs no networking of its
+  own. The return-origin list's output is consumed by a separate process elsewhere;
+  that transmission is outside this component.
+- **Retention**: Not applicable: nothing here is retained beyond the lifetime of
   the process that loaded the registry.
 
 ## Logging
@@ -531,72 +618,83 @@ an empty result, or the input path unchanged) with no side channel.
 
 ## Platform Notes
 
-- **AppKit / UIKit**: These are TypeScript/web sources with no Apple-framework
-  dependency; a macOS/iOS reader of this recipe would model a site definition and a
-  brand story as `Codable` `struct`s, the site roster and the brand-story map as
-  `static let` constants (loaded from a bundled JSON or a generated Swift file
-  rather than re-typed by hand), and environment detection/cross-site link
-  construction/the OAuth return-origin allowlist as pure functions over
-  `URLComponents`/`String` with no `NSObject` subclassing needed anywhere.
 - **SwiftUI**: No SwiftUI dependency exists in the source. A SwiftUI consumer would
   typically expose the registry's derived collections (the listed-sites set, the
-  footer site list, category grouping's output) as plain `let` properties on an
-  `@Observable` view model computed once at init, since none of the underlying data
-  ever changes during a running process.
+  footer site list, the directory site list, category grouping's output) as plain
+  `let` properties on an `@Observable` view model computed once at init, since none of
+  the underlying data changes during a running process. The local-sites setting would
+  come from `ProcessInfo.processInfo.environment`.
 - **Compose**: A Kotlin port would model the site identifier type as a `sealed
-  interface`/`enum class` rather than a string-literal union (closer to identifier
+  interface` or `enum class` rather than a string-literal union (closer to identifier
   validation's narrowing contract than TypeScript's own union erasure), a site
-  definition/brand story as `data class`es, and the various derived `Set`/`Map`
+  definition and a brand story as `data class`es, and the derived `Set` and `Map`
   constants (the landing-segment set, the full workspace-segment set, the merged
-  guided-tour graph) as `kotlinx.collections.immutable` structures built once at
-  object-initialization time, mirroring this module's compute-once-at-load pattern.
-- **React/Web**: This is the source. The implementation lives in `registry.ts`,
-  `reserved-slugs.ts`, the thirteen `routes.*.generated.ts` shares plus the
-  hand-written `routes.generated.ts`, and `story.ts`, all under
-  `packages/web/packages/adh-registry/src/sites/`. `registry.ts` declares the
-  `SiteId` union and the `SiteDef` shape, the `SITES` array, environment/host
-  resolution (`detectEnv`, `hostForEnv`, `localOrigin`, `buildSiteHref`), the hub's
-  feature-segment map (`HUB_FEATURE_SEGMENT`, `SITE_FOR_HUB_SEGMENT`,
-  `HUB_WORKSPACE_SEGMENTS`), the workspace-slug round trip (`siteWorkspaceHref`/
-  `siteWorkspaceSlug` plus `SITE_LANDING_SEGMENTS`/`HUB_ROUTE_SEGMENTS`), the
-  per-site build-config side table (`SITE_BUILD`/`siteBuildConfig`) kept outside the
-  file's `<gen:sites>`…`</gen:sites>` scaffolded region, and the SSO allowlist
-  (`ssoReturnOrigins`). `reserved-slugs.ts` holds `RESERVED_SLUGS`,
-  `isReservedSlug`, and `isReservedSlugAnywhere`. The route shares merge via
-  `Object.assign` into `SITE_ROUTE_SHARES`/`SITE_ROUTES`. `story.ts` holds
-  `SITE_STORIES`, `getSiteStory`, and the three generated rings `TOUR_MAIN`/
-  `TOUR_MARKETING`/`TOUR_PLACEHOLDER` merged by object spread into
-  `SITE_TOUR_NEXT`. A site's build-tree directory name is a Next.js app-router
-  folder derived by `dirNameOf`; a site's workspace route is a Next.js
-  `app/[workspace]` dynamic route. `personaProfileUrl` reads the current hostname
-  from `globalThis.location?.hostname ?? ''` rather than `window` directly, because
-  this file is also type-checked in a backend build with no DOM library. The files
-  are pure TypeScript with no React import, consumed by React components (the
-  header, switcher, and footer) that live elsewhere in the same web packages; a
-  caller re-implementing this in another JS/TS codebase should keep the same
-  pure-data/pure-function shape rather than folding any of it into a component or a
-  hook, since several of the exports (`ssoReturnOrigins`, the route shares) are
-  consumed by non-React code (a backend sync job, a sitemap generator) that would
-  break if the logic moved into a component. Nothing in the module uses `async`,
-  `Promise`, or any mutable module-level state — every export is a `const` computed
-  once at module load or a pure function over that data.
-- **WinUI 3**: A .NET port would model the site identifier type as an `enum`, a
-  site definition/brand story as `record`s (immutable by default, matching this
-  module's `readonly`-everywhere shape), the various derived set/map constants as
-  `FrozenSet<string>`/`FrozenDictionary<TKey, TValue>` computed once in a static
-  constructor, environment detection/environment host resolution/local-origin
-  resolution as pure `static` methods over `Uri`/`string`, and `System.Text.Json`
-  for deserializing any of this data if it were instead shipped as a generated JSON
-  asset rather than compiled Swift/Kotlin/C# source; no `HttpClient`,
-  `Windows.Storage`, `Task`/`async`, `ObservableCollection`, or
-  `INotifyPropertyChanged` is needed anywhere, since nothing in this component
-  performs I/O, runs asynchronously, or changes after process start.
+  guided-tour graph, the fleet lists) as `kotlinx.collections.immutable` structures
+  built once at object-initialization time, mirroring this module's compute-once-at-load
+  pattern. The local-sites setting would come from `System.getenv`.
+- **React/Web**: This is the source. The implementation lives under
+  `packages/web/packages/adh-registry/src/sites/`: `registry.ts`, `reserved-slugs.ts`,
+  `legal.ts`, `fleets.ts`, `story.ts`, the thirteen `routes.*.generated.ts` shares, and
+  the hand-written `routes.generated.ts`, which declares `SITE_ROUTE_SHARES` and merges its values with
+  `Object.assign` into `SITE_ROUTES`. `registry.ts` declares the `SiteId` union and
+  the `SiteDef` shape (including the `nativeApp`, `featured`, `listed`, and
+  `publicWorkspaceSegment` fields), the `SITES` array, environment and host resolution
+  (`detectEnv`, `hostForEnv`, `localOrigin`, `servedLocally`, `buildSiteHref`,
+  `siteUrl`), the hub's feature-segment map (`HUB_FEATURE_SEGMENT`,
+  `SITE_FOR_HUB_SEGMENT`, `HUB_EXTRA_FEATURE_SEGMENTS`, `HUB_WORKSPACE_SEGMENTS`), the
+  workspace-slug round trip (`siteWorkspaceHref` and `siteWorkspaceSlug` plus
+  `SITE_LANDING_SEGMENTS` and `HUB_ROUTE_SEGMENTS`), the per-site build table
+  (`SITE_BUILD` and `siteBuildConfig`) kept outside the file's `<gen:sites>` region, and
+  `ssoReturnOrigins`. `reserved-slugs.ts` holds `RESERVED_SLUGS`, `isReservedSlug`, and
+  `isReservedSlugAnywhere`. `legal.ts` holds the privacy and terms paths and URLs.
+  `fleets.ts` holds `MARKETING_FLEET_SITE_IDS`, `PLACEHOLDER_FLEET_SITE_IDS`, and
+  `DIRECTORY_SITES`. `story.ts` holds `SITE_STORIES`, `getSiteStory`, and the three
+  generated rings `TOUR_MAIN`, `TOUR_MARKETING`, and `TOUR_PLACEHOLDER` merged by object
+  spread into `SITE_TOUR_NEXT`. A site's build-tree directory name is a Next.js
+  app-router folder derived by `dirNameOf`; a site's workspace route is a Next.js
+  `app/[workspace]` dynamic route. `servedLocally` reads
+  `process.env.NEXT_PUBLIC_LOCAL_SITES` spelled out in full, because Next inlines a
+  `process.env.NEXT_PUBLIC_*` reference only where the literal text appears.
+  `personaProfileUrl` reads the current hostname from
+  `globalThis.location?.hostname ?? ''` rather than `window`, because this file is also
+  type-checked in a backend build with no DOM library. The files are pure TypeScript
+  with no React import, consumed by React components (the header, switcher, and footer)
+  elsewhere in the same web packages; a caller re-implementing this in another JS or TS
+  codebase should keep the same pure-data, pure-function shape rather than folding any of
+  it into a component or a hook, since several exports (`ssoReturnOrigins`, the route
+  shares) are consumed by non-React code that would break if the logic moved into a
+  component. Nothing in the module uses `async` or `Promise`, and the only runtime input
+  is the environment variable.
+- **AppKit / UIKit**: These are TypeScript and web sources with no Apple-framework
+  dependency. A macOS or iOS port would model a site definition and a brand story as
+  `Codable` `struct`s, the site roster and the brand-story map as `static let` constants
+  (loaded from a bundled JSON or a generated Swift file rather than re-typed by hand),
+  and environment detection, cross-site link construction, and the return-origin list as
+  pure functions over `URLComponents` and `String`, with no `NSObject` subclassing
+  needed anywhere. Kitchen and Stenographer, the two `nativeApp` sites, are themselves
+  macOS tools, so a port inside them would use the legal URLs as plain `URL` constants
+  opened with `NSWorkspace` or `UIApplication`.
+- **WinUI 3**: A .NET port would model the site identifier type as an `enum`, a site
+  definition and a brand story as `record`s (immutable by default, matching this
+  module's `readonly` shape), and the derived set and map constants as `FrozenSet<string>`
+  and `FrozenDictionary<TKey, TValue>` built once in a static constructor. Environment
+  detection, host resolution, and local-origin resolution become pure `static` methods
+  over `Uri` and `string`, and the local-sites setting is read with
+  `Environment.GetEnvironmentVariable` on each call. `System.Text.Json` would
+  deserialize the roster if it shipped as a generated JSON asset, and that asset, if
+  packaged with the app, would be read once at startup with `Windows.Storage` (for
+  example `StorageFile.GetFileFromApplicationUriAsync`) inside a `Task`-returning
+  `async` initializer, which is the one place this port differs from the source, where
+  every export is synchronous. `HttpClient` is not needed, since nothing here performs a
+  network call, and `ObservableCollection` and `INotifyPropertyChanged` are not needed,
+  since no value changes after process start; a view model that binds the footer
+  directory can expose a plain `IReadOnlyList<SiteDef>`.
 
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/adh-registry/src/sites/` | unverified |
+| web | `packages/web/packages/adh-registry/src/sites/` | confirmed (1.2.0) |
 
 ## Design Decisions
 
@@ -614,7 +712,7 @@ the roster has a scaffolded region at all.
 **Approved**: pending
 
 **Decision**: A site's workspace-route field records only whether a site mounts a
-workspace route and, for the two roots that exist ("root" and "hub"), which root —
+workspace route and, for the two roots that exist ("root" and "hub"), which root,
 not the historical per-site nested shape (`/home/<slug>`, `/<slug>/home`) that an
 earlier rollout once required.
 **Rationale**: Every site that mounts a workspace route now mounts the identical
@@ -624,16 +722,41 @@ set) tells a slug apart from a page on that root, which is exactly what the
 two-valued field, plus the two segment sets, needs to express.
 **Approved**: pending
 
-**Decision**: The OAuth return-origin allowlist is computed fresh from the
-staging-deploy/testing-deploy/external flags on every call rather than cached, but
-the deploy-time job that persists its output into the enforcing database column is
-deliberately additive-only and never prunes.
-**Rationale**: The enforcement point for an OAuth redirect allowlist is a security
-control; the computation itself can safely recompute (it has no side effect), but
-automatically shrinking a persisted allowlist whenever a flag flips back to `false`
-risks silently revoking a redirect target that some other, unrelated part of the
-system still depends on being live during a migration. Un-widening is deliberately
-made a separate, hand-run, auditable action instead.
+**Decision**: The return-origin list is computed fresh from the staging-deploy,
+testing-deploy, external, and `nativeApp` flags on every call rather than cached, and
+it excludes external and `nativeApp` sites in every environment.
+**Rationale**: The computation has no side effect, so recomputing is safe. The
+exclusions are fail-closed on purpose: an origin that cannot complete an ADH login has
+no reason to be a legal `return` target, and a `nativeApp` site's testing flag
+is true (it is deployed) so the flags alone would list it. The list's one reader drops
+any origin the list does not name as a retired site, so listing an origin that is
+not a live ADH login site would keep it alive; the exclusion is kept absolute.
+**Approved**: pending
+
+**Decision**: The marketing-fleet and placeholder-fleet identifier lists are read off
+their generated route shares, not off the marketing-family roster.
+**Rationale**: The marketing-family roster names the ids whose app once sat under the
+old marketing folder, before the fleets split into repos, and it still holds
+`research`, `docs`, and `registry`; a build tool parses it by name, so it cannot change.
+The route share is kept equal to what each fleet's repo actually deploys, so reading it
+cannot drift from the deployed fleet.
+**Approved**: pending
+
+**Decision**: A local hop to a site the local server does not run goes to that site's
+production host, and the list of served sites is read from an environment variable on
+each call.
+**Rationale**: A local server that runs only the hub used to emit sibling links to
+hosts nothing answered, so those menu rows led nowhere. The production host is the
+address the visitor meant. The variable is read per call and written out in full
+because the web framework inlines a public environment reference only where its
+literal text appears.
+**Approved**: pending
+
+**Decision**: The legal URLs are built once with the production URL builder on the hub,
+and every site links those absolute URLs instead of a `/privacy` or `/terms` of its own.
+**Rationale**: One address never moves, so it can be given to an app store, a payment
+processor, or an SMS carrier. A production URL, not a current-environment one, keeps the
+address identical in every environment and every render.
 **Approved**: pending
 
 **Decision**: The merged guided-tour graph's three rings (the main ring, the
@@ -642,7 +765,7 @@ merged by a plain object spread, rather than one map with regions spliced in pla
 **Rationale**: Each ring is generated by a different region's own tooling, and those
 regions cannot see each other's site trees. A single generated map would be
 overwritten wholesale by whichever region's generator ran last, silently deleting
-every other region's entries — a failure mode that still compiles, still satisfies
+every other region's entries, a failure mode that still compiles, still satisfies
 every test assertion about the entries it kept, and simply drops the other rings out
 of the guided tour with nothing anywhere reporting it. Three separately-owned
 constants, each with its own generated-region markers, make that specific failure
@@ -653,8 +776,8 @@ generated-constant mechanism specifically; any implementation adopting per-regio
 generation inherits the same trade-off.
 **Approved**: pending
 
-**Decision**: The route shares — the roster of generated per-region route shares
-merged into the route map — is stated exactly once, as the shares' own key list,
+**Decision**: The route shares, the roster of generated per-region route shares
+merged into the route map, is stated exactly once, as the shares' own key list,
 with no restating of the region names or the share count in prose comments above it.
 **Rationale**: A prose paragraph restating "there are N shares, owned by these
 regions" drifts from the list it describes every time a share is added or removed,
@@ -669,15 +792,16 @@ second copy that could drift.
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
 | [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | failed | Internationalization |
 
-`separation-of-concerns` passes because this component keeps its five concerns in five separately-owned files (site identity and routing in `registry.ts`, slug reservation in `reserved-slugs.ts`, the generated per-repo route map in the thirteen `routes.*.generated.ts` shares plus the hand-written merge in `routes.generated.ts`, and brand-story/tour data in `story.ts`), with per-site build-only data deliberately isolated in its own `SITE_BUILD` side table outside the scaffolded region so scaffolding, build configuration, and routing data cannot be clobbered by each other's regeneration. `unit-test-coverage` passes: `registry.test.ts`, `registry-characterisation.test.ts`, `siteRoutes.test.ts`, `story.test.ts`, `tour-region.test.ts`, `sites/__tests__/reserved-slugs.test.ts`, and `sites/__tests__/build-fields.test.ts` together exercise every exported function's branches, including environment classification and fallback, the workspace-slug round trip in both directions, the additive SSO allowlist's per-environment partitioning, the scaffold-region isolation invariant, the reserved-slug fail-open contract, the route-share disjointness and normalization invariants, and the brand-story/tour-graph convergence and disjointness invariants. `no-hardcoded-strings` fails: every `SiteDef`'s `label`, `fullLabel`, `shortLabel`, and `description` is a literal English string with no localization or string-catalog indirection (see Localization above), and `siteHeaderTitle`'s `"Agentic Developer <X>"` derivation is built from the same hardcoded convention; a translated presentation of the switcher, footer, or header cannot be produced from this file alone.
+`separation-of-concerns` passes because each concern lives in its own file: site identity and routing in `registry.ts`, slug reservation in `reserved-slugs.ts`, the legal addresses in `legal.ts`, the fleet directory in `fleets.ts`, the generated route map in the thirteen `routes.*.generated.ts` shares plus the hand-written merge in `routes.generated.ts`, and brand-story and tour data in `story.ts`. Per-site build-only data sits in its own `SITE_BUILD` table outside the scaffolded region, so scaffolding, build configuration, and routing data cannot clobber each other's regeneration. `unit-test-coverage` is partial: `registry.test.ts`, `registry-characterisation.test.ts`, `siteRoutes.test.ts`, `story.test.ts`, `tour-region.test.ts`, `fleets.test.ts`, `sites/__tests__/reserved-slugs.test.ts`, and `sites/__tests__/build-fields.test.ts` cover environment classification and fallback, the local-sites list, the workspace-slug round trip, the return-origin list per environment including the `nativeApp` exclusion, the scaffold-region isolation invariant, the reserved-slug contract, the route-share invariants, the fleet directory, and the brand-story and tour invariants, but no test imports `legal.ts`, so the legal paths and URLs have no coverage. `no-hardcoded-strings` fails: every `SiteDef`'s `label`, `fullLabel`, `shortLabel`, and `description` is a literal English string with no localization or string-catalog indirection (see Localization above), and `siteHeaderTitle`'s `"Agentic Developer <X>"` derivation is built from the same hardcoded convention, so a translated presentation of the switcher, footer, or header cannot be produced from this file alone.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.2.0 | 2026-11-22 | Mike Fullerton | Added legal paths and URLs, fleet directory, nativeApp sites, local-sites list; SSO list now excludes nativeApp and grants nothing by itself. |
 | 1.1.1 | 2026-10-04 | Mike Fullerton | Inverted prohibitions (none/neither/no X MUST) restated as MUST NOT. |
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to adh/sites/. |
 | 1.0.1 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |

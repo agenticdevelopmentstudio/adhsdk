@@ -16,9 +16,14 @@
 - **workspace-route-not-derived-from-has-home**: A site definition's workspace-route
   field MUST NOT be inferred from `hasHome`; the two are independent facts about a
   site's route tree (`bitbag`, `status`, and `admin` have `hasHome: false` and no
-  workspace route, while `hub-help` and `personaregistry` have `hasHome` true or
-  false independently of having no workspace route at all), and a caller deriving
-  one from the other risks sending a workspace switch to a route that 404s.
+  workspace route; `hub-help` and `personaregistry` have neither a home route nor a
+  workspace route; and `store` has `hasHome: false` yet a `'root'` workspace route),
+  and a caller deriving one from the other risks sending a workspace switch to a
+  route that 404s.
+- **native-app-site-flag**: A site definition for a macOS native tool (`kitchen`,
+  `stenographer`) MUST be marked `nativeApp`; such a site MUST remain in every roster
+  that lists sites (the switcher, the footer, the overview) and MUST be absent from the
+  main-family roster, the marketing-family roster, and the external set.
 - **external-site-excluded-from-sso**: A site definition marked `external` MUST be
   excluded from the OAuth return-origin allowlist in every environment, because such
   a site (FishLamp Design) has no auth-callback route and never begins an ADH login.
@@ -57,9 +62,8 @@
   marketing-family roster MUST each be a hand-curated, non-overlapping list of site
   identifiers; an identifier present in one MUST NOT appear in the other, and `mcp`
   and `builds` (which have no build-tree directory anywhere) MUST appear in neither.
-- **site-categories-exactly-one-membership**: Every identifier appearing in any
-  category grouping's member list MUST appear in exactly one grouping's member list,
-  never zero and never more than one.
+- **site-categories-exactly-one-membership**: Every overview site MUST appear in
+  exactly one category grouping's member list, never zero and never more than one.
 - **group-by-category-preserves-order-and-collects-leftovers**: Category grouping
   MUST emit groups in the categories' declared order, with members in each group's
   declared order, MUST omit any group with no matching member among the sites being
@@ -95,8 +99,8 @@
   testing deploy; otherwise for `'testing'` it MUST fall back to `staging.<prodHost>`
   when the site has a staging deploy, and otherwise to the bare `prodHost`. For
   `'staging'` it MUST resolve `staging.<prodHost>` when the site has a staging
-  deploy and otherwise the bare `prodHost`. For `'production'` it MUST always
-  resolve the bare `prodHost`.
+  deploy and otherwise the bare `prodHost`. For `'production'` and `'local'` it MUST
+  always resolve the bare `prodHost`.
 - **local-origin-suite-domain-priority**: Local-origin resolution MUST first check
   whether the lower-cased, port-stripped current host ends in one of the recognized
   local suite domains (`sites.localhost`, `dev.test`, `dev.local`, checked in that
@@ -112,45 +116,64 @@
   `#site-switch` marker appended (so the target's not-found page knows to walk the
   path up), or `/` when the target has no home route at all.
 - **build-site-href-env-aware**: Cross-site link construction MUST classify the
-  current environment via environment detection; for `'local'` it MUST return the
-  local origin concatenated with the carried path; for every other environment it
-  MUST return `https://<resolved environment host>` concatenated with the carried
-  path.
+  current environment via environment detection; for `'local'` and a target the local
+  server runs it MUST return the local origin concatenated with the carried path; for
+  every other case it MUST return `https://<resolved environment host>` concatenated
+  with the carried path.
+- **local-sites-list-limits-local-hops**: When the current environment is `'local'` and
+  the `NEXT_PUBLIC_LOCAL_SITES` environment variable is a non-empty comma-separated
+  list of site identifiers (each entry trimmed), cross-site link construction and the
+  cross-site URL builder MUST resolve a target whose identifier is not in that list to
+  its production host, `https://<prodHost>` followed by the path, and MUST resolve a
+  target in that list to its local origin.
+- **local-sites-unset-means-all**: When `NEXT_PUBLIC_LOCAL_SITES` is unset or empty, the
+  local-server check MUST treat every site as served, so every local hop resolves to a
+  local origin (the full local suite).
+- **local-sites-read-per-call**: The local-server check MUST read
+  `NEXT_PUBLIC_LOCAL_SITES` on each call, spelled out in full as
+  `process.env.NEXT_PUBLIC_LOCAL_SITES`, and MUST NOT cache the value at module load.
 
 ### Cross-Site SSO Origin Allowlist (security-relevant)
 
-- **sso-return-origins-partitioned-by-env**: The OAuth return-origin allowlist MUST
-  return, for `env === 'production'`, the bare `https://<prodHost>` origin of every
-  roster entry that is not marked external; for `env === 'staging'`, only the
-  `https://staging.<prodHost>` origin of every non-external entry with a staging
-  deploy; for `env === 'testing'`, only the `https://testing.<prodHost>` origin of
-  every non-external entry with a testing deploy.
-- **sso-flag-flip-is-a-one-way-door**: The staging-deploy and testing-deploy flags
-  are the OAuth redirect surface the allowlist names, and flipping either from
-  `false` to `true` MUST be treated as permanently widening that environment's
-  allowlist: the deploy-time sync process that reads the allowlist's output into the
-  enforcing database column is additive-only and never prunes a row that a later
-  flag flip back to `false` would otherwise remove. A caller changing an existing
-  entry's flag back to `false` MUST NOT assume the corresponding origin stops being
-  a valid OAuth `return` target without a separate, deliberate, hand-run pruning
-  pass against that environment.
-- **sso-external-exclusion-fail-closed**: An origin belonging to a site marked
-  external MUST NOT appear in the OAuth return-origin allowlist's result for any
-  environment, on a fail-closed basis: an origin that cannot complete an ADH login
-  has no legitimate reason to be a legal `return` target, so the absence is
-  deliberate rather than an oversight to fill in.
+- **sso-return-origins-partitioned-by-env**: The return-origin list MUST return, for
+  `env === 'production'`, the bare `https://<prodHost>` origin of every roster entry
+  that is neither external nor `nativeApp`; for `env === 'staging'`, only the
+  `https://staging.<prodHost>` origin of every such entry with a staging deploy; for
+  `env === 'testing'`, only the `https://testing.<prodHost>` origin of every such entry
+  with a testing deploy.
+- **sso-origins-grant-nothing-by-themselves**: A caller MUST NOT treat membership in the
+  return-origin list as a grant of sign-in return or cross-origin access; the backend
+  no longer trusts this list for either, and its one reader uses the list to decide
+  which origins a client still holds are retired sites (an origin the list does not
+  name is dropped rather than moved to an application).
+- **sso-external-exclusion-fail-closed**: An origin belonging to a site marked external
+  MUST NOT appear in the return-origin list's result for any environment, on a
+  fail-closed basis: an origin that cannot complete an ADH login has no legitimate
+  reason to be a legal `return` target, so the absence is deliberate rather than an
+  oversight to fill in.
+- **sso-native-app-exclusion-fail-closed**: An origin belonging to a site marked
+  `nativeApp` MUST NOT appear in the return-origin list's result for any environment,
+  even though its testing-deploy flag is true (a native-app site has production and
+  testing deploys and no staging deploy), because such a site has no ADH backend and no
+  auth-callback route.
 
 ### Hub in-workspace feature routing
 
 - **hub-feature-segment-default-is-site-id**: The hub feature-segment map MUST map a
   routed site's identifier to the hub's own feature segment for that site's
   implementation; the default mapping is a site's own identifier, and every entry
-  that maps to a different segment MUST do so because the hub already routed that
-  feature under a different name before the site existed.
+  that maps to a different segment MUST do so for a stated reason: the hub already
+  routed that feature under a different name before the site existed (`messages` to
+  `messaging`, `teamregistry` to `teams`), the site's implementation lives under
+  another feature (`authentication` to `tokens`, `messaging` to `integrations`,
+  `ecosystems` to `products`), or the site is a copy of another (`hub-sdk` to
+  `toolkit`).
 - **hub-feature-segment-many-to-one-allowed**: Two or more site identifiers MAY map
-  to the same feature-segment value (for example `ecosystems` and `products` both
-  mapping to `'products'`) when the hub renders one pane for both; segment lookup by
-  site identifier MUST return that shared segment for either identifier.
+  to the same feature-segment value when the hub renders one pane for both; exactly
+  three such aliases exist (`ecosystems` and `products` to `'products'`, `messaging`
+  and `integrations` to `'integrations'`, `hub-sdk` and `toolkit` to `'toolkit'`), any
+  other duplicate segment is drift, and segment lookup by site identifier MUST return
+  the shared segment for either identifier.
 - **site-for-hub-segment-tiebreak**: The reverse feature-segment lookup MUST resolve
   a segment shared by more than one site to the site whose own identifier equals
   that segment when one exists (for example `'products'` resolves to the `products`
@@ -162,8 +185,9 @@
   hub workspace feature?" never has to consult the two source lists separately.
 - **hub-extra-segments-have-no-registry-site**: An entry in the hub-only extra
   segments MUST name a hub workspace feature with no corresponding registry site (a
-  hub-only knob, such as an ecosystem's member list, or the persona-data management
-  surface); a feature that is some site's own implementation MUST be keyed in the
+  hub-only knob, such as an ecosystem's member list, the persona-data management
+  surface; a product knob with a row on the product rail, such as `roles`,
+  `signup-list`, or `sets`; or a bespoke rail route such as `email-signup`); a feature that is some site's own implementation MUST be keyed in the
   feature-segment map by that site's identifier instead.
 
 ### Workspace routing
@@ -180,7 +204,7 @@
 - **workspace-slug-excludes-landing-segments**: For a site whose workspace root is
   the template root, workspace-slug parsing MUST take the first non-empty path
   segment and return it as the slug unless that segment is a member of the
-  landing-segment set, in which case it MUST return nothing — including for the
+  landing-segment set, in which case it MUST return nothing, including for the
   empty-path case, which resolves to no first segment and therefore also nothing.
 - **landing-and-hub-segment-sets-are-answer-specific**: The landing-segment set MUST
   be consulted only for a template-root site's first path segment, and the hub's own
@@ -200,7 +224,7 @@
   generated region is silently dropped the next time the region is regenerated.
 - **site-build-config-default-empty**: Build-configuration lookup MUST return a
   site's build configuration entry when one exists, and MUST return an empty
-  result — never nothing and never a thrown error — for any site with no entry,
+  result, never nothing and never a thrown error, for any site with no entry,
   since most sites need no per-site build behavior at all.
 - **cookbook-and-hub-excluded-from-site-build**: `cookbook` and `hub` MUST NOT carry
   `legacyHomePaths`, `extraRedirects`, or `requiresBackendUrl` entries in the build
@@ -216,7 +240,7 @@
   not.
 - **reserved-slug-unknown-site-fail-open**: Reserved-slug lookup MUST return false,
   never true and never throw, when the given site has no entry in the reserved-slug
-  table; this fail-open behavior is a documented precondition, not a gap — at least
+  table; this fail-open behavior is a documented precondition, not a gap, at least
   one real caller passes a raw, unvalidated database column value that cannot be
   statically confirmed as a known site identifier, and that caller's own validation
   is pinned to fail open rather than reject a write for a site this registry has
@@ -231,6 +255,35 @@
   answer from a single site's list alone, even on the day every list happens to be
   textually identical, because the lists are declared per-site specifically so they
   can diverge later.
+
+- **reserved-slugs-cover-static-directories**: Each reserved-slug list MUST contain the
+  name of every static top-level directory of its site's application tree, including
+  that site's own entry prefix, so that a registrant is never handed a name a page of
+  the site already answers for.
+- **reserved-slugs-name-legal-paths**: The universal reserved list MUST contain
+  `privacy-policy` and `terms-of-use`, the permanent legal paths, in addition to
+  `privacy` and `terms`.
+
+### Legal addresses
+
+- **legal-paths-fixed**: The privacy policy path MUST be `/privacy-policy` and the terms
+  of use path MUST be `/terms-of-use`.
+- **legal-urls-are-hub-production**: The privacy policy URL and the terms of use URL MUST
+  each be the production URL builder applied to the `hub` site and the matching legal
+  path, so every site links one absolute address on the hub's production host
+  regardless of the environment the linking site runs in.
+
+### Fleet directory
+
+- **fleet-ids-read-from-route-shares**: The marketing-fleet identifier list and the
+  placeholder-fleet identifier list MUST each equal the key list of their generated
+  route share, and MUST NOT be derived from the main-family or marketing-family
+  rosters (the marketing-family roster still holds `research`, `docs`, and `registry`).
+- **fleets-share-no-site**: A site identifier MUST NOT appear in both the marketing
+  fleet and the placeholder fleet.
+- **directory-sites-is-footer-less-fleets**: The directory site list MUST equal the
+  footer site list, in the same order, with every marketing-fleet and
+  placeholder-fleet site removed and no other site removed.
 
 ### Generated route map
 
@@ -262,7 +315,7 @@
 - **next-step-never-self-referential**: A brand-story entry's `nextStep` MUST NOT equal
   its own site identifier.
 - **next-step-chains-converge-on-hub**: Following any site's `nextStep` chain
-  repeatedly MUST eventually reach `hub`, for every site in the brand-story map —
+  repeatedly MUST eventually reach `hub`, for every site in the brand-story map;
   whatever door a visitor entered the family through, the brand story MUST lead back
   to the platform.
 - **funnel-stage-never-empty**: Every funnel-stage value (`discover`, `learn`,
@@ -281,8 +334,8 @@
   time.
 - **tour-ring-may-be-empty**: A tour ring (for example the main ring, which has
   carried no entries since 2026-08-31) legitimately being empty MUST be treated as a
-  real, renderable state — "this region's generator has not populated its ring
-  yet" — not as an error condition.
+  real, renderable state, "this region's generator has not populated its ring
+  yet", not as an error condition.
 - **get-site-story-direct-lookup**: Brand-story lookup MUST return a site's
   brand-story entry directly, with no fallback and no transformation, for any valid
   site identifier.

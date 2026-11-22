@@ -1,14 +1,12 @@
 
-Listing feature areas is the one place this module authors its own English string, rather
-than relaying one from the backend:
+The module authors two English strings of its own; every other message a caller sees comes
+from the backend's response body.
 
 | String Key | Default (en) | Context |
 |-----------|---------------|---------|
-| — | `GET /access/features returned a malformed feature list` | Thrown when the response fails `feature-row-shape-validated`'s runtime shape check |
+| none | `GET /v1/access/features returned a malformed feature list` | Thrown by `listFeatures` when the response fails its shape or page check |
+| none | `<url>: has_more is set but the last row carries no id to page from` | Thrown by the shared pager used by `listRoles` |
 
-There is no localization mechanism in this module (no catalog, no key, no i18n call) — the
-string above is a hardcoded literal, stated as fact per the non-UI component guidance rather
-than as a gap. Every other error message a caller can observe from this client originates in
-the backend's response body and is extracted by the shared authentication client, not
-authored here.
+There is no catalog, key or i18n call in the module; both strings are hardcoded literals,
+stated as fact rather than a gap.
 
