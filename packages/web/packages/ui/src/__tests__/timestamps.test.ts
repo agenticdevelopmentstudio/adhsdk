@@ -26,6 +26,23 @@ describe("parseBackendTimestamp", () => {
     );
   });
 
+  it("reads Postgres timestamptz text (space, short offset) in the ECMAScript format", () => {
+    // What a Drizzle `mode: 'string'` timestamptz column returns. V8 parses it as is, Safari and
+    // Firefox do not, so the assertion is on the ISO text handed to Date, via the parsed instant.
+    expect(parseBackendTimestamp("2026-11-21 10:00:00.123+00")?.toISOString()).toBe(
+      "2026-11-21T10:00:00.123Z",
+    );
+    expect(parseBackendTimestamp("2026-11-21 11:00:00.123456+01")?.toISOString()).toBe(
+      "2026-11-21T10:00:00.123Z",
+    );
+    expect(parseBackendTimestamp("2026-11-21 04:30:00-05:30")?.toISOString()).toBe(
+      "2026-11-21T10:00:00.000Z",
+    );
+    expect(parseBackendTimestamp("2026-11-21 12:00:00+0200")?.toISOString()).toBe(
+      "2026-11-21T10:00:00.000Z",
+    );
+  });
+
   it("answers null rather than an Invalid Date", () => {
     expect(parseBackendTimestamp("not a timestamp")).toBeNull();
   });
