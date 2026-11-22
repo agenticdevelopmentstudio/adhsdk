@@ -39,6 +39,14 @@ describe("the caption", () => {
     expect(setup({ hasMore: false }).caption()).toContain("the whole log");
   });
 
+  it("never calls a capped window the whole log, and offers no load", () => {
+    const { caption, button } = setup({ hasMore: false, capped: true, total: undefined });
+    expect(caption()).not.toContain("the whole log");
+    expect(caption()).toContain("newest the server serves for these filters");
+    expect(caption()).toContain("narrow them to reach older events");
+    expect(button()).toBeNull();
+  });
+
   it("distinguishes what is loaded from what is showing", () => {
     const { caption } = setup({ showing: 12 });
     expect(caption()).toContain("12 of 200 events");

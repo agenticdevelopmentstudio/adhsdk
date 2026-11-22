@@ -32,6 +32,14 @@ export interface WindowFooterProps {
   unloadedWord?: string;
   /** What the complete thing is called once it is all loaded ("the whole LOG"). */
   wholeWord?: string;
+  /**
+   * The window has reached the most the server will page through for this query, so "nothing
+   * more" means "nothing more SERVED", not "nothing older exists". Some routes page only within
+   * their newest N rows (the /v1 gateway over a route that pages by its own cursor), and saying
+   * "the whole log" there would tell an operator in an audit view that older rows do not exist.
+   * The caption says to narrow instead, and there is no load button.
+   */
+  capped?: boolean;
 }
 
 /**
@@ -59,9 +67,12 @@ export function WindowFooter({
   windowWord = "newest",
   unloadedWord = "older",
   wholeWord = "log",
+  capped = false,
 }: WindowFooterProps): ReactElement {
   const counted = showing === loaded ? `${loaded} ${noun}` : `${showing} of ${loaded} ${noun}`;
-  const extent = !hasMore
+  const extent = capped
+    ? `the ${windowWord} the server serves for these filters — narrow them to reach ${unloadedWord} ${noun}`
+    : !hasMore
     ? `the whole ${wholeWord}`
     : total && total > loaded
       ? `the ${windowWord} of about ${total.toLocaleString()} — ${unloadedWord} ${noun} are not loaded`
@@ -75,7 +86,7 @@ export function WindowFooter({
         {counted} — {extent}
       </span>
       <div className="flex-1" />
-      {hasMore && (
+      {hasMore && !capped && (
         <Button variant="secondary" size="sm" onClick={onLoadMore} disabled={busy}>
           {busy ? "Loading…" : `Load ${unloadedWord} ${noun}`}
         </Button>
