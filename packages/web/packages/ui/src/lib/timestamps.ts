@@ -15,13 +15,32 @@
  * nobody notices until a bug report from another timezone.
  */
 
-/** `YYYY-MM-DD HH:MM:SS` with no zone — the shape that needs a `Z` before `Date` sees it. */
-const NAIVE = /^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}:\d{2}(\.\d+)?$/;
+/**
+ * Postgres's own text for a timestamp: `YYYY-MM-DD HH:MM:SS[.ffffff]`, then for a `timestamptz`
+ * column its offset as `+HH`, `+HH:MM` or `+HHMM`. Captured as date, time, fraction, offset hours,
+ * offset minutes.
+ */
+const POSTGRES = /^(\d{4}-\d{2}-\d{2})[ T](\d{2}:\d{2}:\d{2})(?:\.(\d+))?(?:([+-]\d{2})(?::?(\d{2}))?)?$/;
+
+/**
+ * The ECMAScript date-time format for a backend timestamp, which is the only shape every engine
+ * must parse. V8 is lenient and reads Postgres's text as it comes; Safari and Firefox are not, and
+ * answer Invalid Date for the space separator, the two-digit `+00` offset and a fraction longer
+ * than milliseconds. So the text is rewritten to `YYYY-MM-DDTHH:MM:SS.sss±HH:MM` (a zone-less
+ * value gets `Z`, per the module note) before `Date` sees it. Anything else passes through.
+ */
+function toIso(value: string): string {
+  const m = POSTGRES.exec(value);
+  if (!m) return value;
+  const [, date, time, fraction, offsetHours, offsetMinutes] = m;
+  const ms = fraction ? `.${fraction.slice(0, 3).padEnd(3, "0")}` : "";
+  const zone = offsetHours ? `${offsetHours}:${offsetMinutes ?? "00"}` : "Z";
+  return `${date}T${time}${ms}${zone}`;
+}
 
 /** A `Date` for a backend timestamp, or null when the value is not a timestamp at all. */
 export function parseBackendTimestamp(value: string): Date | null {
-  const normalized = NAIVE.test(value) ? `${value.replace(" ", "T")}Z` : value;
-  const d = new Date(normalized);
+  const d = new Date(toIso(value));
   return Number.isNaN(d.getTime()) ? null : d;
 }
 
