@@ -1418,6 +1418,7 @@ var ICONS = {
   // segments that are a SITE's implementation mounted in the hub — is folded in from
   // the registry below, so a site added to HUB_FEATURE_SEGMENT arrives with the glyph
   // its own menu row already wears instead of an empty slot.
+  "/admin-site": UserCog,
   "/all-data": Database,
   "/applications": AppWindow,
   "/email-signup": Mail,
@@ -1477,6 +1478,8 @@ var ICONS = {
   api: Code,
   builds: HardHat,
   // the build console
+  "product-admin": UserCog,
+  // a product's own admin site; the hub's Admin site row wears it too
   shipr: Rocket,
   // walks a commit from main to production
   // --- the macOS native tools' sites (registry `nativeApp`), for their Build rows. ---
