@@ -22,7 +22,14 @@ enum GitTextMateFixture {
         let registry = GrammarRegistry(sources: [try BundledGrammarSource(resources: resources)])
         let theme = try CodeTheme(vscodeThemeData: Data(contentsOf: directory.appendingPathComponent(
             "themes/dark-plus.json")))
-        return (try SyntaxHighlighter(resources: resources, registry: registry), registry, theme)
+        // Limits no colouring test can reach: the test host has no `allow-jit`, so the WASM
+        // Oniguruma is interpreted, and on a loaded machine a grammar's first line runs past
+        // the shipped 500 ms line limit and comes back uncoloured. The limits are tested in
+        // SyntaxHighlighterTests with their own values.
+        let unreachableLimit = 600_000
+        return (try SyntaxHighlighter(resources: resources, registry: registry,
+                                      lineTimeLimit: unreachableLimit, timeBudget: unreachableLimit),
+                registry, theme)
     }
 
     static func coloring() throws -> GitSyntaxColoring {
