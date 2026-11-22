@@ -9,9 +9,9 @@ import GRDB
 /// main database (`stenographer.db` or `adkd.db`), the hook spool (`ingest.db`),
 /// the event store (`events.db`) and the Claude raw archive (`claude-raw.db`). A
 /// file that is not there is reported as missing, never an error. The importer
-/// only reads the source, and writes only through the target's own connection
-/// (the main database's write lane), so the app that owns the target is still
-/// the one writing it.
+/// only reads the source, and writes only through the target's main database
+/// connection (its write lane), with the target's other three files attached
+/// to it, so the app that owns the target is still the one writing it.
 ///
 /// Every table the source and the target share is copied, with its common
 /// columns; a source-only table (a daemon's own migrations) is reported as
@@ -36,9 +36,19 @@ import GRDB
 /// (`ingestion_enabled`, the provider registry, the summaries switch) belongs to
 /// the daemon that wrote it and would switch the target's features silently.
 ///
-/// Atomicity is per file: the copy runs as one transaction over every attached
-/// file, which SQLite commits atomically within each WAL-mode file but not
-/// across them. A spool row recorded in the main database's map whose spool
+/// The main database is copied in one transaction (its foreign keys are
+/// checked at its commit). The raw archive, the event store and the spool are
+/// then copied in batches of at most ``batchRows`` source rows, each batch its
+/// own transaction: SQLite holds a write lock on every attached file a
+/// transaction has written until it commits, and those files are the ones the
+/// runtime's hook ingestion writes through its own connections, so one
+/// transaction over the whole copy locked live ingestion out for as long as
+/// the import ran. A runtime writer now waits for one batch at most.
+///
+/// So an import that fails part way leaves the batches before the failure
+/// committed, and a re-run (which inserts nothing it inserted before) copies
+/// the rest. A batch commits atomically within each WAL-mode file but not
+/// across them: a spool row recorded in the main database's map whose spool
 /// insert was lost to a crash is the only window, and the spool is a queue of
 /// not-yet-drained hook events.
 public final class LegacySessionImporter: @unchecked Sendable {
@@ -100,6 +110,11 @@ public final class LegacySessionImporter: @unchecked Sendable {
     /// store is millions of rows; the serving deadline would eject it.
     static let writeDeadline: Duration = .seconds(6 * 60 * 60)
 
+    /// The default for ``batchRows``: small enough that a batch commits in well
+    /// under the runtime's busy timeout, large enough that a store of millions
+    /// of rows is not millions of commits.
+    public static let defaultBatchRows = 2_000
+
     /// Main-database tables never copied, with why.
     static let excludedMainTables: [String: String] = [
         "schema_migrations": "the target's own migration ledger",
@@ -120,13 +135,24 @@ public final class LegacySessionImporter: @unchecked Sendable {
 
     public let target: Target
 
-    public init(target: Target) {
+    /// Most source rows one transaction copies into an attached store.
+    public let batchRows: Int
+
+    /// Called after each committed batch with the attached store's schema
+    /// (`dst_raw`, `dst_events` or `dst_spool`), while the import still holds
+    /// the main database's write lane. Tests use it to write those stores
+    /// between batches.
+    var batchCommitted: (String) -> Void = { _ in }
+
+    public init(target: Target, batchRows: Int = LegacySessionImporter.defaultBatchRows) {
         self.target = target
+        self.batchRows = max(1, batchRows)
     }
 
     /// Copies every store found in `directory` into the target and reports what
     /// each table gained. Throws only when a file that is there cannot be read
-    /// or written; the transaction is then rolled back.
+    /// or written; the transaction that failed is then rolled back, and what
+    /// committed before it stays (a re-run copies the rest).
     public func importStores(kind: SourceKind, directory: URL) throws -> LegacyImportReport {
         let files = SourceFiles(kind: kind, directory: directory)
         let targetFiles = TargetFiles(target: target)
@@ -161,11 +187,11 @@ public final class LegacySessionImporter: @unchecked Sendable {
                     PRIMARY KEY (source, table_name, source_id)) WITHOUT ROWID
                 """)
 
+            let copier = TableCopier(
+                conn: conn, tag: kind.rawValue, batchRows: batchRows, batchCommitted: batchCommitted)
             try conn.inTransaction {
                 // Checked at commit, so the copy order never trips a reference.
                 try conn.execute(sql: "PRAGMA defer_foreign_keys = ON")
-                let copier = TableCopier(conn: conn, tag: kind.rawValue)
-
                 report.stores.append(try Self.store(
                     file: kind.mainDatabaseFileName, present: hasMain, targetPresent: true
                 ) { store in
@@ -175,30 +201,32 @@ public final class LegacySessionImporter: @unchecked Sendable {
                         targetPrefix: target.database.billingSettingsKeyPrefix
                     )
                 })
-                // The archive before the event store: an event row's raw_ref is
-                // resolved through the target archive's copy of its raw record.
-                report.stores.append(try Self.store(
-                    file: SourceFiles.rawName, present: hasRaw, targetPresent: hasTargetRaw
-                ) { store in
-                    try copier.copyStore(from: "src_raw", to: "dst_raw", into: &store, rawRemap: false)
-                })
-                report.stores.append(try Self.store(
-                    file: EventStore.fileName, present: hasEvents, targetPresent: hasTargetEvents
-                ) { store in
-                    guard hasRaw, hasTargetRaw else {
-                        store.status = .notImported
-                        store.note = "needs both raw archives to resolve raw_ref"
-                        return
-                    }
-                    try copier.copyStore(from: "src_events", to: "dst_events", into: &store, rawRemap: true)
-                })
-                report.stores.append(try Self.store(
-                    file: IngestSpool.defaultDBName, present: hasSpool, targetPresent: hasTargetSpool
-                ) { store in
-                    try copier.copySpool(into: &store)
-                })
                 return .commit
             }
+
+            // The attached stores, each in batches that commit as they go.
+            // The archive before the event store: an event row's raw_ref is
+            // resolved through the target archive's copy of its raw record.
+            report.stores.append(try Self.store(
+                file: SourceFiles.rawName, present: hasRaw, targetPresent: hasTargetRaw
+            ) { store in
+                try copier.copyStore(from: "src_raw", to: "dst_raw", into: &store, rawRemap: false)
+            })
+            report.stores.append(try Self.store(
+                file: EventStore.fileName, present: hasEvents, targetPresent: hasTargetEvents
+            ) { store in
+                guard hasRaw, hasTargetRaw else {
+                    store.status = .notImported
+                    store.note = "needs both raw archives to resolve raw_ref"
+                    return
+                }
+                try copier.copyStore(from: "src_events", to: "dst_events", into: &store, rawRemap: true)
+            })
+            report.stores.append(try Self.store(
+                file: IngestSpool.defaultDBName, present: hasSpool, targetPresent: hasTargetSpool
+            ) { store in
+                try copier.copySpool(into: &store)
+            })
         }
         return report
     }
@@ -262,11 +290,14 @@ private struct ColumnInfo {
     let primaryKeyIndex: Int
 }
 
-/// The SQL behind the copy. Runs on the target's write connection, inside the
-/// import's transaction, with the source and target files attached.
+/// The SQL behind the copy. Runs on the target's write connection with the
+/// source and target files attached: the main database inside the caller's
+/// transaction, the attached stores in batches that open their own.
 private struct TableCopier {
     let conn: Database
     let tag: String
+    let batchRows: Int
+    let batchCommitted: (String) -> Void
 
     private var map: String { "main.\(LegacySessionImporter.mapTable)" }
 
@@ -305,7 +336,9 @@ private struct TableCopier {
                 count = try copySnapshots(plan: plan)
             default:
                 if plan.rowIdColumn != nil {
-                    count = try copyByRowMap(table, from: "src_main", to: "main", mapName: table, plan: plan)
+                    count = try copyByRowMap(
+                        table, from: "src_main", to: "main", mapName: table, plan: plan, limit: nil
+                    ).inserted
                 } else {
                     count = try insertOrIgnore(table, from: "src_main", to: "main", plan: plan)
                 }
@@ -368,8 +401,8 @@ private struct TableCopier {
 
     // MARK: Event store and archive
 
-    /// Every shared table, `INSERT OR IGNORE` on its natural key; with
-    /// `rawRemap`, `raw_ref` is rewritten to the target archive's row id.
+    /// Every shared table, `INSERT OR IGNORE` on its natural key, in batches;
+    /// with `rawRemap`, `raw_ref` is rewritten to the target archive's row id.
     func copyStore(from source: String, to target: String, into store: inout LegacyImportReport.Store,
                    rawRemap: Bool) throws {
         let targetTables = Set(try tables(in: target))
@@ -384,8 +417,43 @@ private struct TableCopier {
             }
             let plan = try columnPlan(table: table, source: source, target: target)
             if !plan.sourceOnly.isEmpty { store.columnsNotCopied[table] = plan.sourceOnly }
-            store.inserted[table] = try insertOrIgnore(
+            store.inserted[table] = try insertOrIgnoreInBatches(
                 table, from: source, to: target, plan: plan, rawRemap: rawRemap && plan.copied.contains("raw_ref"))
+        }
+    }
+
+    /// `insertOrIgnore` over the source's rowid ranges of at most `batchRows`
+    /// rows, each range its own committed transaction. A table without a rowid
+    /// is copied in one.
+    private func insertOrIgnoreInBatches(_ table: String, from source: String, to target: String,
+                                         plan: ColumnPlan, rawRemap: Bool) throws -> Int {
+        guard try hasRowId(table, in: source) else {
+            var count = 0
+            try conn.inTransaction {
+                count = try insertOrIgnore(table, from: source, to: target, plan: plan, rawRemap: rawRemap)
+                return .commit
+            }
+            batchCommitted(target)
+            return count
+        }
+        var after = Int64.min
+        var total = 0
+        while true {
+            var upper: Int64?
+            try conn.inTransaction {
+                upper = try Int64.fetchOne(conn, sql: """
+                    SELECT MAX(rowid) FROM (
+                        SELECT rowid FROM \(quoted(source)).\(quoted(table)) WHERE rowid > ? ORDER BY rowid LIMIT ?)
+                    """, arguments: [after, batchRows])
+                if let upper {
+                    total += try insertOrIgnore(
+                        table, from: source, to: target, plan: plan, rawRemap: rawRemap, rowIds: (after, upper))
+                }
+                return .commit
+            }
+            guard let upper else { return total }
+            batchCommitted(target)
+            after = upper
         }
     }
 
@@ -402,15 +470,32 @@ private struct TableCopier {
         }
         let plan = try columnPlan(table: table, source: "src_spool", target: "dst_spool")
         if !plan.sourceOnly.isEmpty { store.columnsNotCopied[table] = plan.sourceOnly }
-        store.inserted[table] = try copyByRowMap(
-            table, from: "src_spool", to: "dst_spool", mapName: "\(IngestSpool.defaultDBName)/\(table)", plan: plan)
+        // Batches of not-yet-recorded rows, each copied and recorded in its
+        // own transaction, until a pass finds none.
+        var total = 0
+        while true {
+            var selected = 0
+            try conn.inTransaction {
+                let pass = try copyByRowMap(
+                    table, from: "src_spool", to: "dst_spool", mapName: "\(IngestSpool.defaultDBName)/\(table)",
+                    plan: plan, limit: batchRows)
+                total += pass.inserted
+                selected = pass.selected
+                return .commit
+            }
+            guard selected > 0 else { break }
+            batchCommitted("dst_spool")
+        }
+        store.inserted[table] = total
     }
 
     // MARK: Strategies
 
-    /// Rows with a natural key: the target's unique constraints decide.
+    /// Rows with a natural key: the target's unique constraints decide. With
+    /// `rowIds`, only source rows whose rowid is above the first and at most
+    /// the second.
     private func insertOrIgnore(_ table: String, from source: String, to target: String, plan: ColumnPlan,
-                                rawRemap: Bool = false) throws -> Int {
+                                rawRemap: Bool = false, rowIds: (after: Int64, through: Int64)? = nil) throws -> Int {
         let columns = plan.copied.map(quoted).joined(separator: ", ")
         var values: [String] = []
         var filters: [String] = []
@@ -422,6 +507,9 @@ private struct TableCopier {
             } else {
                 values.append("s.\(quoted(column))")
             }
+        }
+        if let rowIds {
+            filters.append("s.rowid > \(rowIds.after) AND s.rowid <= \(rowIds.through)")
         }
         let order = plan.rowIdColumn.map { " ORDER BY s.\(quoted($0))" } ?? ""
         let whereClause = filters.isEmpty ? "" : " WHERE " + filters.joined(separator: " AND ")
@@ -435,10 +523,12 @@ private struct TableCopier {
     /// Rows with only a row id: copied once per source tag, recorded in the
     /// map. An `event_log_id` is rewritten to its parent's target id, and a row
     /// whose parent was not copied is left out (and left unrecorded, so it is
-    /// looked at again if its parent ever is).
+    /// looked at again if its parent ever is). With `limit`, one pass takes at
+    /// most that many rows, lowest row ids first; `selected` is how many it
+    /// took, so a caller repeats until a pass takes none.
     private func copyByRowMap(_ table: String, from source: String, to target: String, mapName: String,
-                              plan: ColumnPlan) throws -> Int {
-        guard let rowId = plan.rowIdColumn else { return 0 }
+                              plan: ColumnPlan, limit: Int?) throws -> (inserted: Int, selected: Int) {
+        guard let rowId = plan.rowIdColumn else { return (0, 0) }
         let columns = plan.copied.map(quoted).joined(separator: ", ")
         var values: [String] = []
         var filters = [notMapped(mapName, sourceId: "s.\(quoted(rowId))")]
@@ -455,8 +545,10 @@ private struct TableCopier {
         // The rows this pass takes, chosen once: copied, then recorded.
         try conn.execute(sql: "CREATE TEMP TABLE IF NOT EXISTS legacy_import_pending (source_id INTEGER PRIMARY KEY)")
         try conn.execute(sql: "DELETE FROM temp.legacy_import_pending")
+        let bound = limit.map { " ORDER BY s.\(quoted(rowId)) LIMIT \($0)" } ?? ""
         try conn.execute(
-            sql: "INSERT INTO temp.legacy_import_pending (source_id) SELECT s.\(quoted(rowId)) \(selection)")
+            sql: "INSERT INTO temp.legacy_import_pending (source_id) SELECT s.\(quoted(rowId)) \(selection)\(bound)")
+        let selected = conn.changesCount
         try conn.execute(sql: """
             INSERT OR IGNORE INTO \(quoted(target)).\(quoted(table)) (\(columns))
             SELECT \(values.joined(separator: ", ")) FROM \(quoted(source)).\(quoted(table)) s
@@ -469,7 +561,7 @@ private struct TableCopier {
             SELECT ?, ?, source_id, NULL FROM temp.legacy_import_pending
             """, arguments: [tag, mapName])
         try conn.execute(sql: "DELETE FROM temp.legacy_import_pending")
-        return inserted
+        return (inserted, selected)
     }
 
     // MARK: SQL pieces
@@ -496,6 +588,14 @@ private struct TableCopier {
             SELECT name FROM \(quoted(schema)).sqlite_master
             WHERE type = 'table' AND name NOT LIKE 'sqlite_%' ORDER BY name
             """)
+    }
+
+    /// False for a `WITHOUT ROWID` table, which has no rowid to batch by.
+    private func hasRowId(_ table: String, in schema: String) throws -> Bool {
+        let sql = try String.fetchOne(conn, sql: """
+            SELECT sql FROM \(quoted(schema)).sqlite_master WHERE type = 'table' AND name = ?
+            """, arguments: [table]) ?? ""
+        return !sql.uppercased().contains("WITHOUT ROWID")
     }
 
     private func columns(of table: String, in schema: String) throws -> [ColumnInfo] {
