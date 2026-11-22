@@ -13,6 +13,7 @@
   "ecosystems/roles": "The roles this product's users hold: what each role lets them do in the product's features, and which users hold it. Every user holds the default role.",
   "ecosystems/signup-list": "The people who may sign up for this product, each with the role they get the first time they prove their email address. While Users ▸ Authentication limits sign-in to listed people, only these people can sign in.",
   "ecosystems/sets": "Sets bundle what this product's users may use: the features a set grants and the limits it sets, such as a usage tier or an amount of storage. A user holds a set by buying an offer that sells it, through the sign-up list, or by a direct grant, and a set can contain other sets.",
+  "ecosystems/admin-site": "The product's own admin site: the address your product's admins sign in at, with the product's own sign-in, to manage its users. Anyone who holds the product's admin role can use it. Here you set the address and see the product's totals: how many users it has, how many were active, and how much storage they use.",
   "teams": "Teams group people and the permissions they share. Pick a team to manage it.",
   "teams/settings": "The team's identifier and display name.",
   "teams/members": "The people in this team.",
