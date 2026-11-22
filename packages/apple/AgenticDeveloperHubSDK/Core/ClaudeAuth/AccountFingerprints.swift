@@ -94,10 +94,28 @@ public enum AccountFingerprints {
     /// Written atomically, so a reader never sees half a file — the daemon reads
     /// this on the hook path, where a truncated read would attribute a whole
     /// burst of events to nobody.
+    ///
+    /// The file is owner-only (0600) from the moment it appears: the new
+    /// contents go to a temporary file beside it, which is set to 0600 before
+    /// it is renamed over the old one. When the mode cannot be set, `publish`
+    /// throws, the temporary file is removed and the previous file stays as it
+    /// was, so a file readable by others is never published.
     public static func publish(
         _ fresh: [String: String],
         atPath path: String = defaultPath,
         now: Date = Date()
+    ) throws {
+        try publish(fresh, atPath: path, now: now, setOwnerOnly: { path in
+            try FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: path)
+        })
+    }
+
+    /// `publish` with the permission step injectable, so a test can make it fail.
+    static func publish(
+        _ fresh: [String: String],
+        atPath path: String,
+        now: Date,
+        setOwnerOnly: (String) throws -> Void
     ) throws {
         let url = URL(fileURLWithPath: path)
         try FileManager.default.createDirectory(
@@ -111,9 +129,18 @@ public enum AccountFingerprints {
         let body: [String: Any] = ["version": 1, "tokens": tokens]
         let data = try JSONSerialization.data(
             withJSONObject: body, options: [.prettyPrinted, .sortedKeys])
-        try data.write(to: url, options: .atomic)
-        try? FileManager.default.setAttributes(
-            [.posixPermissions: 0o600], ofItemAtPath: path)
+        let temporary = url.deletingLastPathComponent()
+            .appendingPathComponent(".\(url.lastPathComponent).\(UUID().uuidString).tmp")
+        do {
+            try data.write(to: temporary)
+            try setOwnerOnly(temporary.path)
+            guard rename(temporary.path, path) == 0 else {
+                throw POSIXError(POSIXErrorCode(rawValue: errno) ?? .EIO)
+            }
+        } catch {
+            try? FileManager.default.removeItem(at: temporary)
+            throw error
+        }
     }
 
     /// One published fingerprint: which account, and when it was last seen.
