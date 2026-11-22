@@ -116,6 +116,26 @@ struct RouteRequestTests {
                 == .success("2026-01-31T00:00:00.500Z"))
     }
 
+    // `validatedDay` is the same lesson for a column of days.
+
+    @Test func aDayBoundIsTheDayOrATimestampsUTCDay() {
+        #expect(request().validatedDay("from") == .success(nil))
+        #expect(request(["from": [""]]).validatedDay("from") == .success(nil))
+        #expect(request(["from": ["2026-11-01"]]).validatedDay("from") == .success("2026-11-01"))
+        #expect(request(["from": ["2026-11-01T12:00:00Z"]]).validatedDay("from") == .success("2026-11-01"))
+        #expect(request(["from": ["2026-11-01T01:00:00+02:00"]]).validatedDay("from") == .success("2026-10-31"))
+    }
+
+    @Test func aMalformedDayBoundIsRefused() {
+        for raw in ["11/01/2026", "2026-11-01garbage", "2026-02-30", "2026-11", "yesterday"] {
+            guard case .failure(let invalid) = request(["to": [raw]]).validatedDay("to") else {
+                Issue.record("accepted \(raw)")
+                continue
+            }
+            #expect(invalid.message.contains("`to`"))
+        }
+    }
+
     @Test func anOffsetBoundIsRebasedOntoUTC() {
         // Every stored timestamp is UTC, so a `+02:00` bound compared as a
         // string would be two hours off in the wrong direction.

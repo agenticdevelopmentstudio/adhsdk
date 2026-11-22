@@ -4,11 +4,11 @@
     "id": "1a8e345f-c602-4ccb-8880-432b1deac6ac",
     "title": "Route Request",
     "type": "ingredient",
-    "version": "1.0.2",
+    "version": "1.1.0",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
-    "modified": "2026-11-14",
+    "modified": "2026-11-22",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -32,7 +32,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "6a50d9fe7d7e2f83",
+  "synced": "e2fa708cd3d109c0",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

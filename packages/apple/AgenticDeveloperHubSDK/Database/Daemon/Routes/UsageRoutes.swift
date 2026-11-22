@@ -106,11 +106,21 @@ public enum UsageRoutes {
                 // two-second render never waits behind ingestion.
                 return .json(database.statusLineUsageRows())
             case "daily-metrics":
+                // `daily_metric.day` holds days, so the bounds are days (a
+                // timestamp counts for its day), checked like every other bound.
+                let fromDay: String?, toDay: String?
+                switch (request.validatedDay("from"), request.validatedDay("to")) {
+                case (.failure(let invalid), _), (_, .failure(let invalid)):
+                    return .error(invalid.message, status: 400)
+                case (.success(let lower), .success(let upper)):
+                    fromDay = lower
+                    toDay = upper
+                }
                 return .json(try database.dailyMetrics(
                     metric: request.query("metric"),
                     dimension: request.query("dimension"),
-                    from: request.query("from"),
-                    to: request.query("to"),
+                    from: fromDay,
+                    to: toDay,
                     // Its own bound: these are small pre-aggregated rows, so this
                     // endpoint pages far coarser than the rest of `/insights`.
                     limit: request.boundedLimit(default: 1000, max: 10_000)
