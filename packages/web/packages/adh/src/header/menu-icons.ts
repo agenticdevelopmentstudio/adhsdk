@@ -156,6 +156,7 @@ const ICONS: Record<string, LucideIcon> = {
   '/llm-providers': Boxes,
   '/members': BookUser,
   '/persona-services': Boxes,
+  '/roles': ShieldCheck,
   '/server-bags': Server,
   '/settings': Settings,
   '/sync': RefreshCw,
