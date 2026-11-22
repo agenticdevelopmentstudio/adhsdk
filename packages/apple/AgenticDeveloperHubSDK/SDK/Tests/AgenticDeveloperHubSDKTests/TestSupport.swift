@@ -84,6 +84,24 @@ actor EventCollector {
         return events
     }
 
+    /// Wait until the events so far satisfy `condition`, or give up.
+    ///
+    /// Prefer this to `wait(for:)` whenever a test depends on a particular
+    /// event: a turn's event count includes its `statusChanged` events, so a
+    /// raw count can be met by an earlier turn's trailing events, or by a
+    /// status that arrives before the request the test means to wait for.
+    @discardableResult
+    func wait(
+        timeout: TimeInterval = 2,
+        until condition: @Sendable ([InboundEvent]) -> Bool
+    ) async -> [InboundEvent] {
+        let deadline = Date().addingTimeInterval(timeout)
+        while !condition(events), !finished, Date() < deadline {
+            try? await Task.sleep(nanoseconds: 500_000)
+        }
+        return events
+    }
+
     /// Wait for the event that ends a turn, then let anything trailing land.
     /// Tests that assert something did NOT happen need the turn to be over
     /// first, or they pass by arriving early.

@@ -29,9 +29,9 @@ final class PersonaChatCoordinatorTests: XCTestCase {
         defer { f.tearDown() }
 
         _ = try await f.coordinator.send(text: "one", attachments: [])
-        await f.collector.wait(for: 4)
+        await f.collector.wait { $0.compactMap(\.receivedMessage).count >= 1 }
         _ = try await f.coordinator.send(text: "two", attachments: [])
-        await f.collector.wait(for: 8)
+        await f.collector.wait { $0.compactMap(\.receivedMessage).count >= 2 }
 
         XCTAssertEqual(f.requests.requests(matching: "/v1/chats").count, 1)
         XCTAssertEqual(f.requests.requests(matching: "/messages").count, 2)
@@ -243,7 +243,7 @@ final class PersonaChatCoordinatorTests: XCTestCase {
         let f = makeFixture { hangingSse([("token", #"{"text":"half"}"#)], cancelled: cancelled) }
 
         _ = try await f.coordinator.send(text: "hey", attachments: [])
-        await f.collector.wait(for: 1)
+        await f.collector.wait { $0.contains { $0.draftText == "half" } }
         XCTAssertFalse(cancelled.wasCancelled)
 
         f.coordinator.destroy()
