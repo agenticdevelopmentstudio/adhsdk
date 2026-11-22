@@ -2,12 +2,15 @@
 import { render, screen, fireEvent, cleanup, waitFor } from '@testing-library/react'
 import { describe, it, expect, afterEach, vi } from 'vitest'
 import { ClientAuthSettingsPane } from './ClientAuthSettingsPane'
-import { clientAuthApi, type EcosystemClientAuth } from '@adh-sdk/data/ecosystem-config'
+import { clientAuthApi, signupListApi, type EcosystemClientAuth } from '@adh-sdk/data/ecosystem-config'
 
 vi.mock('@adh-sdk/data/ecosystem-config', () => ({
   clientAuthApi: {
     ecosystem: vi.fn(),
     updateEcosystem: vi.fn(),
+  },
+  signupListApi: {
+    list: vi.fn(),
   },
 }))
 
@@ -107,99 +110,81 @@ describe('ClientAuthSettingsPane', () => {
 describe('ClientAuthSettingsPane: who can sign in', () => {
   const ALICE = 'alice@example.com'
   const BOB = 'bob@example.com'
-  const emailInputs = () => screen.queryAllByPlaceholderText('name@example.com') as HTMLInputElement[]
-  const addPerson = () => fireEvent.click(screen.getByRole('button', { name: 'Add person' }))
-
-  it('starts as everyone, with no list drawn', async () => {
-    await renderPane(config())
-    expect(sw('Only listed people')).not.toHaveAttribute('data-checked')
-    expect(emailInputs()).toHaveLength(0)
-    expect(screen.getByText('Everyone can sign in.')).toBeInTheDocument()
+  const entry = (email: string) => ({
+    id: `e-${email}`,
+    email,
+    roleId: null,
+    setId: null,
+    createdAt: '2026-11-22T00:00:00.000Z',
+    grantedAt: null,
+    grantedCustomerId: null,
   })
 
-  it('turned on and left blank, sends an empty list: nobody', async () => {
+  it('starts as everyone, and draws no email rows: the people are the sign-up list', async () => {
     await renderPane(config())
+    expect(sw('Only listed people')).not.toHaveAttribute('data-checked')
+    expect(screen.getByText('Everyone can sign in.')).toBeInTheDocument()
+    expect(screen.queryAllByPlaceholderText('name@example.com')).toHaveLength(0)
+    expect(screen.queryByRole('button', { name: 'Add person' })).toBeNull()
+  })
+
+  it('links to the Sign-up list pane when the host says where it is', async () => {
+    const id = `eco${++n}`
+    vi.mocked(clientAuthApi.ecosystem).mockResolvedValue(config())
+    render(<ClientAuthSettingsPane ecosystemId={id} signupListHref="/acme/products/p1/signup-list" />)
+    const link = await screen.findByRole('link', { name: 'sign-up list' })
+    expect(link).toHaveAttribute('href', '/acme/products/p1/signup-list')
+  })
+
+  it('turned on, sends the sign-up list emails, read at save time', async () => {
+    await renderPane(config())
+    vi.mocked(signupListApi.list).mockResolvedValue([entry(ALICE), entry(BOB)])
     fireEvent.click(sw('Only listed people'))
-    expect(emailInputs()).toHaveLength(1)
+    save()
+    await waitFor(() => expect(clientAuthApi.updateEcosystem).toHaveBeenCalled())
+    expect(signupListApi.list).toHaveBeenCalledTimes(1)
+    expect(putBody()?.settings).toEqual({ loginAllowedEmails: [ALICE, BOB] })
+  })
+
+  it('turned on with an empty sign-up list, sends an empty list: nobody', async () => {
+    await renderPane(config())
+    vi.mocked(signupListApi.list).mockResolvedValue([])
+    fireEvent.click(sw('Only listed people'))
     save()
     await waitFor(() => expect(clientAuthApi.updateEcosystem).toHaveBeenCalled())
     expect(putBody()?.settings).toEqual({ loginAllowedEmails: [] })
   })
 
-  it('sends the listed emails trimmed and lowercased, without blanks or duplicates', async () => {
-    await renderPane(config())
-    fireEvent.click(sw('Only listed people'))
-    fireEvent.change(emailInputs()[0]!, { target: { value: `  ${ALICE} ` } })
-    addPerson()
-    addPerson()
-    addPerson()
-    fireEvent.change(emailInputs()[1]!, { target: { value: BOB } })
-    fireEvent.change(emailInputs()[3]!, { target: { value: 'Alice@Example.com' } })
-    save()
-    await waitFor(() => expect(clientAuthApi.updateEcosystem).toHaveBeenCalled())
-    expect(putBody()?.settings).toEqual({ loginAllowedEmails: [ALICE, BOB] })
-  })
-
-  it('shows a saved list, and turning it off sends null: everyone', async () => {
+  it('turned off, sends null: everyone, without reading the sign-up list', async () => {
     await renderPane(config({ loginAllowedEmails: [ALICE] }))
-    expect(emailInputs().map((i) => i.value)).toEqual([ALICE])
+    expect(sw('Only listed people')).toHaveAttribute('data-checked')
     fireEvent.click(sw('Only listed people'))
-    expect(emailInputs()).toHaveLength(0)
     save()
     await waitFor(() => expect(clientAuthApi.updateEcosystem).toHaveBeenCalled())
     expect(putBody()?.settings).toEqual({ loginAllowedEmails: null })
+    expect(signupListApi.list).not.toHaveBeenCalled()
   })
 
-  it('ecosystem-config-037: fails the save, keeping the list, when the backend drops it', async () => {
+  it('never sends the list for another change while it stays on', async () => {
+    await renderPane(config({ loginAllowedEmails: [ALICE] }))
+    fireEvent.click(sw('Email and password'))
+    save()
+    await waitFor(() => expect(clientAuthApi.updateEcosystem).toHaveBeenCalled())
+    expect(putBody()?.settings).toEqual({ passwordEnabled: false })
+  })
+
+  it('ecosystem-config-037: fails the save, keeping the switch on, when the backend drops the list', async () => {
     const loaded = config()
     await renderPane(loaded)
+    vi.mocked(signupListApi.list).mockResolvedValue([entry(ALICE)])
     // A backend without the allow-list strips the unknown field and answers 200.
     vi.mocked(clientAuthApi.updateEcosystem).mockImplementation(async (_id, update) => {
       const { loginAllowedEmails: _dropped, ...kept } = update.settings ?? {}
       return { ...loaded, settings: { ...loaded.settings, ...kept } }
     })
     fireEvent.click(sw('Only listed people'))
-    fireEvent.change(emailInputs()[0]!, { target: { value: ALICE } })
     save()
     expect(await screen.findByText(/sign-in list was not saved/)).toBeInTheDocument()
     expect(sw('Only listed people')).toHaveAttribute('data-checked')
-    expect(emailInputs().map((i) => i.value)).toEqual([ALICE])
-  })
-
-  it('a blank row added to a saved list is not an edit', async () => {
-    await renderPane(config({ loginAllowedEmails: [ALICE] }))
-    addPerson()
-    expect(emailInputs()).toHaveLength(2)
-    expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled()
-  })
-
-  it('ecosystem-config-032: refuses an entry that is not an email address, before the round trip', async () => {
-    await renderPane(config())
-    fireEvent.click(sw('Only listed people'))
-    fireEvent.change(emailInputs()[0]!, { target: { value: 'alice' } })
-    expect(screen.getByText('"alice" is not an email address.')).toBeInTheDocument()
-    save()
-    expect(clientAuthApi.updateEcosystem).not.toHaveBeenCalled()
-  })
-
-  // Its own time budget, not the 5s default. The pane renders 501 rows in about 0.3s; the time is in
-  // the two `getByRole('button', { name })` lookups (Add person, Save), each of which computes the
-  // accessible name of every row's button — about 1.7s apiece on an idle machine. Alone it ran in
-  // 4.3s, and under the full workspace run it crossed 5s and timed out.
-  it('ecosystem-config-032: refuses a 501st email, and Save stays blocked', async () => {
-    const many = Array.from({ length: 500 }, (_, i) => `p${i}@example.com`)
-    await renderPane(config({ loginAllowedEmails: many }))
-    addPerson()
-    fireEvent.change(emailInputs()[500]!, { target: { value: 'extra@example.com' } })
-    expect(screen.getByText('At most 500 people can be listed.')).toBeInTheDocument()
-    save()
-    expect(clientAuthApi.updateEcosystem).not.toHaveBeenCalled()
-  }, 30_000)
-
-  it('Cancel puts the saved rows back', async () => {
-    await renderPane(config({ loginAllowedEmails: [ALICE] }))
-    fireEvent.change(emailInputs()[0]!, { target: { value: BOB } })
-    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }))
-    await waitFor(() => expect(emailInputs().map((i) => i.value)).toEqual([ALICE]))
   })
 })

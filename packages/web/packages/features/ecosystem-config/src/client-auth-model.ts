@@ -1,7 +1,13 @@
 // The pure half of client auth editing, which the ecosystem's Settings pane and an application's
 // client auth section share. It covers the draft shapes, what counts as a change, what a save
 // sends, what a platform allows, how a provider switch maps onto `allowedProviders`, and how the
-// login allow-list is cleaned and bounded.
+// login allow-list switch is saved.
+//
+// The form edits only WHETHER sign-in is limited to a list, never the emails: those are the
+// Sign-up list (phase 5), which the backend mirrors onto `loginAllowedEmails` on every add and
+// remove. So the form sends `loginAllowedEmails` only when the switch flips: `null` to open
+// sign-in to everyone, or the sign-up list's emails to limit it to them. `client-auth.ts` keeps the
+// field, for older callers.
 
 import type {
   ApplicationPlatform,
@@ -139,7 +145,12 @@ export function sameRegistration(a: RegistrationDraft | null, b: RegistrationDra
   return JSON.stringify(cleanRegistration(a)) === JSON.stringify(cleanRegistration(b));
 }
 
-/** Policy equality. `allowedProviders` is compared as a set, because order means nothing. */
+/** Whether sign-in is limited to a list. The emails are the Sign-up list's, not the form's. */
+const listOn = (p: ClientAuthPolicy): boolean => p.loginAllowedEmails !== null;
+
+/** Policy equality. `allowedProviders` is compared as a set, because order means nothing. The
+ *  allow-list is compared by its switch alone: its emails change in the Sign-up list pane, and an
+ *  edit there must not make this form dirty. */
 export function samePolicy(a: ClientAuthPolicy | null, b: ClientAuthPolicy | null): boolean {
   if (a === null || b === null) return a === b;
   return (
@@ -147,18 +158,31 @@ export function samePolicy(a: ClientAuthPolicy | null, b: ClientAuthPolicy | nul
     a.loginEnabled === b.loginEnabled &&
     a.passwordEnabled === b.passwordEnabled &&
     sameProviders(a.allowedProviders, b.allowedProviders) &&
-    sameEmailList(a.loginAllowedEmails, b.loginAllowedEmails)
+    listOn(a) === listOn(b)
   );
 }
 
-/** The backend's bounds on the login allow-list (routes/ecosystemAuthSettings.ts), mirrored so
- *  Save is refused before the round trip. */
-export const MAX_LOGIN_ALLOWED_EMAILS = 500;
+/** Whether a save turns "Only listed people" on. That save must send the sign-up list's emails:
+ *  the backend keeps the entries equal to whatever list is written, so an empty one would delete
+ *  every entry. */
+export function allowListTurnedOn(draft: ClientAuthPolicy, base: ClientAuthPolicy): boolean {
+  return listOn(draft) && !listOn(base);
+}
+
 const MAX_EMAIL_LENGTH = 254;
 /** The allow-list's email grammar: exactly one `@`, a non-empty local part with no whitespace and
  *  no quote, and a domain of at least two non-empty dot-separated labels. The backend's zod check
  *  is authoritative; this only refuses sooner what it would refuse. */
 const EMAIL_SHAPE = /^[^\s@"]+@[^\s@.]+(?:\.[^\s@.]+)+$/;
+
+/** Why `email` cannot go on the sign-up list, or null when it can. Checked on the trimmed,
+ *  lower-cased form the backend stores. */
+export function signupEmailError(email: string): string | null {
+  const e = email.trim().toLowerCase();
+  if (e === "") return "Enter an email address.";
+  if (e.length > MAX_EMAIL_LENGTH || !EMAIL_SHAPE.test(e)) return `"${e}" is not an email address.`;
+  return null;
+}
 
 /**
  * The login allow-list as a save sends it: each email trimmed and lowercased, blank rows dropped,
@@ -197,18 +221,6 @@ export function allowListDropped(
 export const ALLOW_LIST_NOT_SAVED =
   "The sign-in list was not saved, so everyone can still sign in. This backend does not support the list yet.";
 
-/** Why the policy cannot be saved as it stands, or null when it can. The backend is
- *  authoritative; this only says it sooner. */
-export function policyError(policy: ClientAuthPolicy | null): string | null {
-  const emails = cleanEmailList(policy?.loginAllowedEmails ?? null);
-  if (emails === null) return null;
-  if (emails.length > MAX_LOGIN_ALLOWED_EMAILS)
-    return `At most ${MAX_LOGIN_ALLOWED_EMAILS} people can be listed.`;
-  const bad = emails.find((e) => e.length > MAX_EMAIL_LENGTH || !EMAIL_SHAPE.test(e));
-  if (bad) return `"${bad}" is not an email address.`;
-  return null;
-}
-
 function sameProviders(a: string[] | null, b: string[] | null): boolean {
   if (a === null || b === null) return a === b;
   return a.length === b.length && a.every((slug) => b.includes(slug));
@@ -237,10 +249,15 @@ export function toggleProvider(
   return providers.every((p) => next.includes(p.slug)) ? null : next;
 }
 
-/** The fields of a policy that differ from `base`, for a partial PUT. */
+/**
+ * The fields of a policy that differ from `base`, for a partial PUT. `loginAllowedEmails` is sent
+ * only when the switch flips: `null` when it turns off, and `signupEmails` (the sign-up list's
+ * emails, cleaned) when it turns on. The draft's own emails are never sent.
+ */
 export function policyPatch(
   draft: ClientAuthPolicy,
   base: ClientAuthPolicy,
+  signupEmails: readonly string[] = [],
 ): Partial<ClientAuthPolicy> | undefined {
   const patch: Partial<ClientAuthPolicy> = {};
   if (draft.signupMode !== base.signupMode) patch.signupMode = draft.signupMode;
@@ -248,7 +265,7 @@ export function policyPatch(
   if (draft.passwordEnabled !== base.passwordEnabled) patch.passwordEnabled = draft.passwordEnabled;
   if (!sameProviders(draft.allowedProviders, base.allowedProviders))
     patch.allowedProviders = draft.allowedProviders;
-  if (!sameEmailList(draft.loginAllowedEmails, base.loginAllowedEmails))
-    patch.loginAllowedEmails = cleanEmailList(draft.loginAllowedEmails);
+  if (listOn(draft) !== listOn(base))
+    patch.loginAllowedEmails = listOn(draft) ? cleanEmailList([...signupEmails]) : null;
   return Object.keys(patch).length > 0 ? patch : undefined;
 }

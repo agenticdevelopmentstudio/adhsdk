@@ -28,6 +28,7 @@ export { SyncTablesPane, SyncTablesEditor } from "./SyncTablesPane";
 // An owner-made ecosystem's product roles: the Teams roles editor on the ecosystem target, plus
 // who holds each role.
 export { ProductRolesPane } from "./ProductRolesPane";
+export { SignupListPane } from "./SignupListPane";
 export {
   useSyncTables,
   useSetSyncOverride,

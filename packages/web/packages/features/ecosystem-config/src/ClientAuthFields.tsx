@@ -55,21 +55,23 @@ function SettingRow({
  * switch per OAuth provider. The ecosystem's Settings pane draws these; the policy is the
  * ecosystem's alone. Controlled; `idPrefix` keeps two sets on one page from sharing element ids.
  *
- * The allowed-email editor keeps its own rows (see UrlRowsEditor). `generation` is part of its key,
- * so a Cancel or a save that re-seeds the draft also resets the rows.
+ * "Only listed people" is a switch and nothing more. The people are the Sign-up list (phase 5),
+ * edited in its own pane, where each email can also carry the role it receives; `signupListHref`
+ * links there. The form never edits the emails, so it cannot overwrite an entry's role.
  */
 export function ClientAuthPolicyFields({
   policy,
   providers,
   onChange,
   idPrefix,
-  generation = 0,
+  signupListHref,
 }: {
   policy: ClientAuthPolicy;
   providers: readonly AuthProviderChoice[];
   onChange: (patch: Partial<ClientAuthPolicy>) => void;
   idPrefix: string;
-  generation?: number;
+  /** Where the Sign-up list pane is. Omitted, the list is named without a link. */
+  signupListHref?: string;
 }) {
   const listed = policy.loginAllowedEmails;
   const onCount = providers.filter((p) => providerOn(policy, p.slug)).length;
@@ -113,28 +115,28 @@ export function ClientAuthPolicyFields({
               help={
                 listed === null
                   ? "Everyone can sign in."
-                  : "Only the people listed here can sign in. An empty list lets no one in."
+                  : "Only the people on the sign-up list can sign in. An empty list lets no one in."
               }
             >
               <Switch
                 id={`${idPrefix}-allow-list`}
                 checked={listed !== null}
-                // On starts with one blank row to type into; a blank row saves as nobody.
-                onCheckedChange={(on) => onChange({ loginAllowedEmails: on ? [""] : null })}
+                // The switch alone: the save sends the sign-up list's emails (client-auth-model).
+                onCheckedChange={(on) => onChange({ loginAllowedEmails: on ? [] : null })}
               />
             </SettingRow>
-            {listed !== null && (
-              <UrlRowsEditor
-                key={`allow-list-${generation}`}
-                label="People"
-                helpText="Email addresses. A person matches when they sign in with a provider that has verified this address, or have verified it on their account. Someone you invite who is not listed still joins, but can't sign in until you add them."
-                placeholder="name@example.com"
-                addLabel="Add person"
-                removeLabel="Remove person"
-                values={listed}
-                onChange={(loginAllowedEmails) => onChange({ loginAllowedEmails })}
-              />
-            )}
+            <p className="text-xs text-apt-text-muted">
+              The people are the{" "}
+              {signupListHref ? (
+                <a href={signupListHref} className="text-apt-text underline hover:text-apt-text-muted">
+                  sign-up list
+                </a>
+              ) : (
+                "sign-up list"
+              )}
+              , where each email can also carry the role it gets the first time that person proves the
+              address.
+            </p>
           </CardContent>
         </Card>
       </DetailSection>

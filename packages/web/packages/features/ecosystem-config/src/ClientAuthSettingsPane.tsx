@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import type { ReactNode } from "react";
 
 import { useResourceItemQuery, useResourceItemWriter } from "@adh-sdk/data";
 import {
   clientAuthApi,
+  signupListApi,
   type ClientAuthPolicy,
   type EcosystemClientAuth,
 } from "@adh-sdk/data/ecosystem-config";
@@ -19,7 +20,7 @@ import { ClientAuthPolicyFields } from "./ClientAuthFields";
 import {
   ALLOW_LIST_NOT_SAVED,
   allowListDropped,
-  policyError,
+  allowListTurnedOn,
   policyPatch,
   samePolicy,
 } from "./client-auth-model";
@@ -38,15 +39,22 @@ const toDraft = (c: EcosystemClientAuth): ClientAuthPolicy => c.settings;
  *
  * One DetailsPane over `/ecosystem/client-auth/:ecosystemId`. A save sends only the policy fields
  * that changed; it never names the registration, so the server leaves it as it is.
+ *
+ * Who may sign in is the Sign-up list pane's (phase 5); here it is one switch. Turning it on
+ * reads the sign-up list at save time and sends its emails, so the list it limits sign-in to is
+ * the one the owner sees there.
  */
 export function ClientAuthSettingsPane({
   ecosystemId,
   help,
+  signupListHref,
 }: {
   ecosystemId?: string;
   /** Unused: the breadcrumb names the pane. Kept for the ScopedPane prop shape. */
   title?: ReactNode;
   help?: ReactNode;
+  /** Where the Sign-up list pane is, for the link beside the switch. */
+  signupListHref?: string;
 }) {
   const {
     item: config,
@@ -61,25 +69,19 @@ export function ClientAuthSettingsPane({
   useReportBusy(isFetching);
 
   const draft = useSettingsDraft<EcosystemClientAuth, ClientAuthPolicy>(config, toDraft, samePolicy);
-  // Bumped on every re-seed (Cancel, a save, a background refetch of an unedited record), so the
-  // allow-list editor's own rows follow the draft back.
-  const [generation, setGeneration] = useState(0);
-  const [seedSeen, setSeedSeen] = useState(draft.seed);
-  if (seedSeen !== draft.seed) {
-    setSeedSeen(draft.seed);
-    setGeneration((g) => g + 1);
-  }
-  const blockedReason = policyError(draft.draft);
 
   // Handed to the pane as its own section: this component renders the DetailsPane, so a
   // `useDetailsSection` call here would sit outside the pane's scope.
   const section: DetailsSection = {
     dirty: draft.dirty,
-    canSave: blockedReason === null,
-    blockedReason,
+    canSave: true,
+    blockedReason: null,
     save: async () => {
       if (!ecosystemId || !draft.draft || !draft.seed) return;
-      const settings = policyPatch(draft.draft, draft.seed);
+      const signupEmails = allowListTurnedOn(draft.draft, draft.seed)
+        ? (await signupListApi.list(ecosystemId)).map((e) => e.email)
+        : [];
+      const settings = policyPatch(draft.draft, draft.seed, signupEmails);
       // Dirty with nothing of this user's to send: the edits were undone while the server copy
       // moved underneath. Adopt the server's copy rather than PUT an empty body (a 400).
       if (!settings) {
@@ -89,14 +91,11 @@ export function ClientAuthSettingsPane({
       const updated = await clientAuthApi.updateEcosystem(ecosystemId, { settings });
       writeConfig(ecosystemId, updated);
       // The other fields did save, so the cache takes the answer. The draft keeps the owner's
-      // list and the save fails loudly, instead of re-seeding the switch back off.
+      // switch and the save fails loudly, instead of re-seeding the switch back off.
       if (allowListDropped(settings, updated.settings)) throw new Error(ALLOW_LIST_NOT_SAVED);
       draft.commit(updated);
     },
-    reset: () => {
-      draft.reset();
-      setGeneration((g) => g + 1);
-    },
+    reset: () => draft.reset(),
   };
 
   const current = draft.draft;
@@ -123,7 +122,7 @@ export function ClientAuthSettingsPane({
           policy={current}
           providers={config.providers}
           onChange={(patch) => draft.patch(patch)}
-          generation={generation}
+          signupListHref={signupListHref}
         />
       )}
     </DetailsPane>

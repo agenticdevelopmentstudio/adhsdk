@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest'
 import type { ClientAuthPolicy } from '@adh-sdk/data/ecosystem-config'
 import {
-  MAX_LOGIN_ALLOWED_EMAILS,
   allowListDropped,
+  allowListTurnedOn,
   cleanEmailList,
-  policyError,
   policyPatch,
   samePolicy,
+  signupEmailError,
 } from './client-auth-model'
 
 const BASE: ClientAuthPolicy = {
@@ -21,43 +21,42 @@ const list = (loginAllowedEmails: string[] | null): ClientAuthPolicy => ({ ...BA
 describe('the login allow-list in the client auth model', () => {
   it('ecosystem-config-031: cleans to what a save sends: trimmed, lowercased, no blanks, no duplicates, null and [] kept apart', () => {
     expect(cleanEmailList([' A@x.com ', '', 'b@x.com', 'a@X.com'])).toEqual(['a@x.com', 'b@x.com'])
-    expect(policyPatch(list([' a@x.com ', '', 'b@x.com', 'A@x.com']), BASE)).toEqual({ loginAllowedEmails: ['a@x.com', 'b@x.com'] })
-    expect(policyPatch(BASE, list(['a@x.com']))).toEqual({ loginAllowedEmails: null })
-    expect(policyPatch(list([]), BASE)).toEqual({ loginAllowedEmails: [] })
-    // A blank row added to a saved list is not an edit.
-    expect(policyPatch(list(['a@x.com', '']), list(['a@x.com']))).toBeUndefined()
     expect(cleanEmailList([''])).toEqual([])
     expect(cleanEmailList(null)).toBeNull()
   })
 
-  it('compares as a set of cleaned emails, case-insensitively', () => {
-    expect(samePolicy(list(['a@x.com', 'b@x.com']), list(['B@x.com', 'a@x.com', '']))).toBe(true)
+  // Phase 5: the emails are the Sign-up list's. The form flips the switch and nothing else.
+  it('sends the list only when the switch flips: the sign-up list on, null off', () => {
+    expect(policyPatch(list([]), BASE, [' A@x.com ', 'b@x.com', 'a@x.com'])).toEqual({
+      loginAllowedEmails: ['a@x.com', 'b@x.com'],
+    })
+    expect(policyPatch(list([]), BASE)).toEqual({ loginAllowedEmails: [] })
+    expect(policyPatch(BASE, list(['a@x.com']))).toEqual({ loginAllowedEmails: null })
+    // The draft's own emails never travel: a list that stays on is not sent, whatever it holds.
+    expect(policyPatch(list(['c@x.com']), list(['a@x.com']), ['z@x.com'])).toBeUndefined()
+    expect(policyPatch(list(['c@x.com']), list(['a@x.com']))).toBeUndefined()
+  })
+
+  it('compares the allow-list by its switch alone', () => {
+    expect(samePolicy(list(['a@x.com']), list(['b@x.com', 'c@x.com']))).toBe(true)
     expect(samePolicy(list([]), list(null))).toBe(false)
-    expect(samePolicy(list(['a@x.com']), list(['a@x.com', 'b@x.com']))).toBe(false)
+    expect(allowListTurnedOn(list([]), BASE)).toBe(true)
+    expect(allowListTurnedOn(list([]), list(['a@x.com']))).toBe(false)
+    expect(allowListTurnedOn(BASE, list([]))).toBe(false)
   })
 
-  it('patches only a real change, and sends it cleaned', () => {
-    expect(policyPatch(list(['A@x.com', '']), list(['a@x.com']))).toBeUndefined()
-    expect(policyPatch(list([' a@x.com ', 'a@x.com']), BASE)).toEqual({ loginAllowedEmails: ['a@x.com'] })
-    expect(policyPatch(list(['']), BASE)).toEqual({ loginAllowedEmails: [] })
-  })
-
-  it('ecosystem-config-032: refuses more emails than the backend takes, or an entry that is not an email address', () => {
-    expect(policyError(BASE)).toBeNull()
-    expect(policyError(null)).toBeNull()
-    expect(policyError(list([]))).toBeNull()
-    const many = Array.from({ length: MAX_LOGIN_ALLOWED_EMAILS + 1 }, (_, i) => `p${i}@example.com`)
-    expect(policyError(list(many))).toBe('At most 500 people can be listed.')
-    expect(policyError(list(many.slice(0, MAX_LOGIN_ALLOWED_EMAILS)))).toBeNull()
+  it('ecosystem-config-032: refuses a sign-up list entry that is not an email address', () => {
+    expect(signupEmailError('')).toBe('Enter an email address.')
+    expect(signupEmailError('  ')).toBe('Enter an email address.')
     for (const bad of ['alice', 'alice@', '@x.com', 'a@x', 'a b@x.com', 'a@@x.com', '"a"@x.com', 'a@x..com']) {
-      expect(policyError(list([bad]))).toBe(`"${bad}" is not an email address.`)
+      expect(signupEmailError(bad)).toBe(`"${bad}" is not an email address.`)
     }
     // 254 characters is the limit; 255 is over it.
     const at254 = `${'a'.repeat(64)}@${'b'.repeat(185)}.com`
     expect(at254).toHaveLength(254)
-    expect(policyError(list([at254]))).toBeNull()
-    expect(policyError(list([`a${at254}`]))).toMatch(/is not an email address/)
-    expect(policyError(list(['first.last+tag@sub.example.co.uk']))).toBeNull()
+    expect(signupEmailError(at254)).toBeNull()
+    expect(signupEmailError(`a${at254}`)).toMatch(/is not an email address/)
+    expect(signupEmailError(' First.Last+tag@Sub.Example.co.uk ')).toBeNull()
   })
 
   it('ecosystem-config-037: a list the backend did not keep is a drop; an absent list reads as everyone', () => {

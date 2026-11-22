@@ -77,6 +77,9 @@ export const PRODUCT_TOPICS = [
   // Product roles (phase 5): the roles the product's users hold and who holds each. It stands on
   // `users` with the Users row: a product with no users has no one to give a role to.
   { id: "roles", label: "Product roles", dividerAfter: false, features: ["users"] },
+  // Sign-up list (phase 5): the emails that may sign in, each with the role it grants on the
+  // person's first proven sign-in. It replaced the allow-list field in Users ▸ Authentication.
+  { id: "signup-list", label: "Sign-up list", dividerAfter: false, features: ["users"] },
   // (Communities sat here, was removed for having no surface on any host, and came back below
   // with the rest of the hub's Products group — parked deliberately this time, because the
   // workspace rail offered it and moving that rail down whole is what dropping it would undo.)

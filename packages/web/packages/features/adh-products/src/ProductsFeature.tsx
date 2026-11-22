@@ -28,6 +28,7 @@ import {
   ScrollText,
   RefreshCw,
   ShieldCheck,
+  ListChecks,
 } from "lucide-react";
 import { useDetailTitle } from "@adh-sdk/ui/blocks/detail-title";
 import type { TopicLeaf } from "@adh-sdk/resource";
@@ -52,6 +53,7 @@ import {
   StorageTokensPanel,
   SyncTablesPane,
   ProductRolesPane,
+  SignupListPane,
 } from "@adh-sdk/ecosystem-config";
 import { AccessPane } from "@adh-sdk/authentication";
 import { helpFor } from "@adh-sdk/adh/help/store";
@@ -104,6 +106,7 @@ const ICONS: Record<string, ReactNode> = {
   // Users + Requests / Pending users / Invites); a people icon matches the label.
   invitations: <UsersRound size={16} aria-hidden />,
   roles: <ShieldCheck size={16} aria-hidden />,
+  "signup-list": <ListChecks size={16} aria-hidden />,
   gaming: <Gamepad2 size={16} aria-hidden />,
   gamification: <Trophy size={16} aria-hidden />,
   "feature-flags": <Flag size={16} aria-hidden />,
@@ -176,9 +179,13 @@ export const PRODUCT_TOPIC_CONFIGS: EcosystemsTopicConfig[] = PRODUCT_TOPICS.map
 export function productTopicPaneRenderer({
   workspaceSlug,
   renderTransfer,
+  basePath,
 }: {
   workspaceSlug: string;
   renderTransfer?: RenderTransferSection;
+  /** Where the feature is mounted, for the links one topic's pane makes to another's. Omitted ⇒
+   *  no such links. */
+  basePath?: string;
 }): (topicId: string, ctx: RenderTopicPaneCtx) => ReactNode {
   return function renderProductTopicPane(topicId, ctx) {
     switch (topicId) {
@@ -312,9 +319,28 @@ export function productTopicPaneRenderer({
             leaf={ctx.leaf}
           />
         );
+      case "signup-list":
+        // Who may sign in, and the role each person gets on their first proven sign-in.
+        return (
+          <SignupListPane
+            key={ctx.ecosystemId}
+            ecosystemId={ctx.ecosystemId}
+            title={ctx.title}
+            help={helpFor("ecosystems/signup-list")}
+          />
+        );
       // Users ▸ Authentication: the ecosystem's client auth — how its customers sign in and sign up.
+      // Its "Only listed people" switch names the Sign-up list row, so it links there.
       case "auth":
-        return <ClientAuthSettingsPane ecosystemId={ctx.ecosystemId} help={helpFor("ecosystems/client-auth")} />;
+        return (
+          <ClientAuthSettingsPane
+            ecosystemId={ctx.ecosystemId}
+            help={helpFor("ecosystems/client-auth")}
+            signupListHref={
+              basePath && ctx.ecosystemId ? `${basePath}/${ctx.ecosystemId}/signup-list` : undefined
+            }
+          />
+        );
       default:
         // The topics with no surface anywhere yet (PLACEHOLDER_TOPIC_IDS) are answered HERE rather
         // than declined, because declining routes them to a host seam that has nothing to say
@@ -393,8 +419,8 @@ export function ProductsFeature({
   // EcosystemsFeature a new `renderTopicPane` identity on each pass, which is a prop change to a
   // seam that is supposed to be fixed.
   const renderTopicPane = useMemo(
-    () => productTopicPaneRenderer({ workspaceSlug, renderTransfer }),
-    [workspaceSlug, renderTransfer],
+    () => productTopicPaneRenderer({ workspaceSlug, renderTransfer, basePath }),
+    [workspaceSlug, renderTransfer, basePath],
   );
   return (
     <EcosystemsFeature
