@@ -64,21 +64,21 @@ final class BillingMigrationTests: XCTestCase {
         return versions
     }
 
-    /// The upgrade path: a database at 047 — no activity tables, no record of
-    /// 48 — gains both tables and all three indexes when the daemon opens it,
-    /// records 48, and keeps the billing data it already held.
+    /// The upgrade path: a database at 047 (now 1003) — no activity tables, no
+    /// record of 048 (now 1004) — gains both tables and all three indexes when
+    /// the daemon opens it, records 1004, and keeps the billing data it already held.
     func testMigration048UpgradesADatabaseAt047() throws {
         try database.execute("INSERT INTO billing_project(id, name, idle_cutoff_minutes) VALUES ('p1', 'Alpha', 20)")
         try database.execute("DROP TABLE activity_span")
         try database.execute("DROP TABLE activity_presence")
-        try database.execute("DELETE FROM schema_migrations WHERE version >= 48")
+        try database.execute("DELETE FROM schema_migrations WHERE version >= 1004")
         XCTAssertFalse(try database.tableExists("activity_span"))
-        XCTAssertEqual(try recordedVersions().max(), 47)
+        XCTAssertEqual(try recordedVersions().max(), 1003)
 
         database = nil
         database = try TestDaemonDatabase.openFeatureDatabase(path: tmpPath)
 
-        XCTAssertTrue(try recordedVersions().contains(48))
+        XCTAssertTrue(try recordedVersions().contains(1004))
         XCTAssertEqual(try columns(of: "activity_span"), [
             "id", "bundle_id", "app_name", "window_title", "working_path", "repo_root", "branch",
             "started_at", "ended_at", "tz", "last_seen_at", "billing_derived_at"
@@ -91,20 +91,20 @@ final class BillingMigrationTests: XCTestCase {
         XCTAssertEqual(try database.billingProject(id: "p1")?.idleCutoffMinutes, 20, "047 data survives")
     }
 
-    /// Branch divergence: the tables exist (with rows) but 48 is not recorded,
-    /// so the runner re-runs 048 over them. It must neither throw nor touch
+    /// Branch divergence: the tables exist (with rows) but 1004 (Stenographer's
+    /// 048) is not recorded, so the runner re-runs it over them. It must neither throw nor touch
     /// the rows.
     func testMigration048RerunOverExistingTablesKeepsTheirRows() throws {
         try database.execute("""
             INSERT INTO activity_span (id, bundle_id, app_name, started_at, tz)
             VALUES ('s1', 'com.apple.dt.Xcode', 'Xcode', '2026-10-01T09:00:00Z', 'UTC')
         """)
-        try database.execute("DELETE FROM schema_migrations WHERE version >= 48")
+        try database.execute("DELETE FROM schema_migrations WHERE version >= 1004")
 
         database = nil
         database = try TestDaemonDatabase.openFeatureDatabase(path: tmpPath)
 
-        XCTAssertTrue(try recordedVersions().contains(48))
+        XCTAssertTrue(try recordedVersions().contains(1004))
         var count = 0
         try database.query("SELECT COUNT(*) FROM activity_span") { row in count = row[0] ?? -1 }
         XCTAssertEqual(count, 1)
