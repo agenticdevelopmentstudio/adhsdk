@@ -3,8 +3,9 @@ import Foundation
 import AgenticDeveloperHubSDKCore
 @testable import AgenticDeveloperHubSDKDatabase
 
-/// The read-only billing surface. These tests care about shape and bounds:
-/// the numbers themselves are the store's contract and are tested there.
+/// The billing surface over HTTP, reads and writes. These tests care about
+/// shape, bounds and how a refusal travels: the numbers and the rules
+/// themselves are the stores' contract and are tested there.
 final class BillingRoutesTests: XCTestCase {
 
     // swiftlint:disable:next identifier_name
@@ -28,13 +29,31 @@ final class BillingRoutesTests: XCTestCase {
     // MARK: - Helpers
 
     /// Sends `method path` through the table; nil when no route claims it.
-    private func send(_ method: String, _ target: String) async throws -> RouteResponse? {
+    private func send(_ method: String, _ target: String, body: Data = Data()) async throws -> RouteResponse? {
         let components = try XCTUnwrap(URLComponents(string: target))
         var query: [String: [String]] = [:]
         for item in components.queryItems ?? [] {
             query[item.name, default: []].append(item.value ?? "")
         }
-        return await table.handle(RouteRequest(method: method, path: components.path, queryValues: query))
+        return await table.handle(RouteRequest(
+            method: method, path: components.path, queryValues: query, body: body
+        ))
+    }
+
+    /// `POST path` with `value` as the snake_case JSON body an app sends.
+    private func post<T: Encodable>(_ target: String, _ value: T) async throws -> RouteResponse? {
+        let encoder = JSONEncoder()
+        encoder.keyEncodingStrategy = .convertToSnakeCase
+        return try await send("POST", target, body: try encoder.encode(value))
+    }
+
+    /// `POST path` with a literal JSON body.
+    private func post(_ target: String, json: String) async throws -> RouteResponse? {
+        try await send("POST", target, body: Data(json.utf8))
+    }
+
+    private func message(_ response: RouteResponse?) throws -> String? {
+        try object(response)["error"] as? String
     }
 
     private func array(_ response: RouteResponse?) throws -> [[String: Any]] {
@@ -159,11 +178,151 @@ final class BillingRoutesTests: XCTestCase {
         XCTAssertEqual(overview["currency"] as? String, "USD")
     }
 
+    func testArchivedRowsAreListedOnlyWhenAsked() async throws {
+        _ = try BillingStore.saveClient(BillingClientDTO(id: "", name: "Live"), database: db)
+        _ = try BillingStore.saveClient(BillingClientDTO(id: "", name: "Old", archived: true), database: db)
+
+        let current = try array(try await send("GET", "/billing/clients"))
+        let all = try array(try await send("GET", "/billing/clients?include_archived=true"))
+        let allByDigit = try array(try await send("GET", "/billing/projects?include_archived=1"))
+
+        XCTAssertEqual(current.map { $0["name"] as? String }, ["Live"])
+        XCTAssertEqual(all.count, 2, "the app's windows list archived rows too")
+        XCTAssertTrue(allByDigit.isEmpty)
+    }
+
+    func testReposRouteFiltersByProject() async throws {
+        let project = try seedProject()
+        _ = try BillingStore.saveRepo(
+            BillingRepoDTO(id: "", projectId: project.id, projectRoot: "/src/app"), database: db
+        )
+
+        let mine = try array(try await send("GET", "/billing/repos?project_id=\(project.id)"))
+        let others = try array(try await send("GET", "/billing/repos?project_id=nope"))
+
+        XCTAssertEqual(mine.count, 1)
+        XCTAssertEqual(mine[0]["project_root"] as? String, "/src/app")
+        XCTAssertTrue(others.isEmpty)
+    }
+
+    func testTimersRouteListsRunningTimers() async throws {
+        let rows = try array(try await send("GET", "/billing/timers"))
+        XCTAssertTrue(rows.isEmpty)
+    }
+
+    func testAuditRouteAnswersAList() async throws {
+        let rows = try array(try await send("GET", "/billing/entries/nope/audit"))
+        XCTAssertTrue(rows.isEmpty, "an entry with no history has an empty trail, not a 404")
+    }
+
+    // MARK: - Writes
+
+    func testSavingAClientRepliesTheStoredRowInSnakeCase() async throws {
+        let saved = try object(try await post(
+            "/billing/clients", BillingClientDTO(id: "", name: "Acme", contactName: "Dana Reed")
+        ))
+
+        XCTAssertFalse((saved["id"] as? String ?? "").isEmpty, "an empty id inserts and is given one")
+        XCTAssertEqual(saved["contact_name"] as? String, "Dana Reed")
+        XCTAssertEqual(try db.billingClients(includeArchived: true).map(\.name), ["Acme"])
+    }
+
+    /// A store's refusal reaches the app as the sentence it shows in an alert.
+    func testAStoreRefusalIsA400WithItsSentence() async throws {
+        _ = try await post("/billing/clients", BillingClientDTO(id: "", name: "Acme"))
+
+        let duplicate = try await post("/billing/clients", BillingClientDTO(id: "", name: "Acme"))
+        let nameless = try await post("/billing/projects", BillingProjectDTO(id: "", name: ""))
+
+        XCTAssertEqual(duplicate?.status, 400)
+        XCTAssertEqual(try message(duplicate), BillingStore.BillingError.duplicateName("Acme").errorDescription)
+        XCTAssertEqual(nameless?.status, 400)
+        XCTAssertEqual(try message(nameless), BillingStore.BillingError.missingName.errorDescription)
+    }
+
+    func testAnUnreadableBodyWritesNothing() async throws {
+        let response = try await post("/billing/clients", json: "{\"nope\":1}")
+
+        XCTAssertEqual(response?.status, 400)
+        XCTAssertEqual(try message(response), BillingRoutes.BillingWireError.undecodable.errorDescription)
+        XCTAssertTrue(try db.billingClients(includeArchived: true).isEmpty)
+    }
+
+    func testDeletingAClientIsA204() async throws {
+        let client = try BillingStore.saveClient(BillingClientDTO(id: "", name: "Acme"), database: db)
+
+        let response = try await send("POST", "/billing/clients/\(client.id)/delete")
+
+        XCTAssertEqual(response?.status, 204)
+        XCTAssertTrue(try db.billingClients(includeArchived: true).isEmpty)
+    }
+
+    func testEntryStatusRefusesANameItDoesNotKnow() async throws {
+        let project = try seedProject()
+        let entry = try BillingRollup.saveEntry(BillingEntryDTO(
+            id: "", projectId: project.id, day: "2026-09-22",
+            rawSeconds: 3600, billedSeconds: 3600, rateCents: 12_000, amountCents: 12_000
+        ), database: db)
+
+        let unknown = try await post("/billing/entries/\(entry.id)/status", json: "{\"status\":\"lost\"}")
+        let billed = try await post("/billing/entries/\(entry.id)/status", json: "{\"status\":\"billed\"}")
+        let described = try await post(
+            "/billing/entries/\(entry.id)/description", json: "{\"description\":\"Sprint 4\"}"
+        )
+
+        XCTAssertEqual(unknown?.status, 400)
+        XCTAssertEqual(try message(unknown), BillingRoutes.BillingWireError.unknownStatus("lost").errorDescription)
+        XCTAssertEqual(try object(billed)["status"] as? String, "billed")
+        XCTAssertEqual(try object(described)["description"] as? String, "Sprint 4")
+    }
+
+    func testSegmentWritesAnswerACount() async throws {
+        let project = try seedProject()
+        try seedSegment(id: "seg1", startedAt: "2026-09-22T09:00:00Z", endedAt: "2026-09-22T09:30:00Z")
+
+        let assigned = try object(try await post(
+            "/billing/segments/assign", json: "{\"ids\":[\"seg1\"],\"project_id\":\"\(project.id)\"}"
+        ))
+        let backfilled = try object(try await post("/billing/backfill", json: "{\"since\":\"2026-09-01\"}"))
+
+        XCTAssertEqual(assigned["count"] as? Int, 1)
+        XCTAssertNotNil(backfilled["count"] as? Int)
+    }
+
+    func testPreferencesApplyAndReplyTheSnapshot() async throws {
+        let key = db.billingSettingsKeys.defaultRateCents
+
+        let snapshot = try object(try await post("/billing/preferences", json: "{\"\(key)\":\"15000\"}"))
+        let unchanged = try object(try await post("/billing/preferences", json: "not json"))
+
+        XCTAssertEqual(snapshot["default_rate_cents"] as? Int, 15_000)
+        XCTAssertEqual(unchanged["default_rate_cents"] as? Int, 15_000,
+                       "an unreadable body writes nothing and answers what is in force")
+    }
+
+    func testAppNamesReadsAtMostTheCap() async throws {
+        let ids = (0..<(BillingRoutes.maxAppNameIds + 10)).map { "s\($0)" }
+        let encoder = JSONEncoder()
+        let body = try encoder.encode(["session_ids": ids])
+
+        let response = try await send("POST", "/billing/app-names", body: body)
+        let garbage = try await post("/billing/app-names", json: "[]")
+
+        XCTAssertEqual(response?.status, 200)
+        XCTAssertTrue(try array(response).isEmpty)
+        XCTAssertEqual(garbage?.status, 400)
+    }
+
     // MARK: - Method and shape
 
-    func testBillingRoutesAreReadOnly() async throws {
-        let response = try await send("POST", "/billing/entries")
-        XCTAssertEqual(response?.status, 405, "HTTP must not be able to write billing state")
+    func testAMethodOtherThanGetOrPostIs405() async throws {
+        let response = try await send("PUT", "/billing/entries")
+        XCTAssertEqual(response?.status, 405)
+    }
+
+    func testAnUnknownWriteIs404() async throws {
+        let response = try await send("POST", "/billing/clients/x/archive")
+        XCTAssertEqual(response?.status, 404)
     }
 
     func testAnUnknownBillingSubpathIs404() async throws {
