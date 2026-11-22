@@ -2,11 +2,11 @@
 id: b6d96b0b-3ca0-48ac-8e94-a25a8ee68e43
 title: "Stenographer Identifiers"
 type: ingredient
-version: 1.0.3
+version: 1.0.4
 status: review
 language: en
 created: 2026-11-14
-modified: 2026-11-14
+modified: 2026-11-21
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -207,6 +207,7 @@ Not applicable: the types call no logging API; `subsystem(_:)` only builds the s
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.4 | 2026-11-21 | Mike Fullerton | Dropped the retired Kitchen daemon's identifiers (ADKDIdentifiers was deleted). |
 | 1.0.3 | 2026-11-14 | Mike Fullerton | Conformance tests added (StenographerIdentifiersConformanceTests.swift, 21 of 21 vectors); unit-test-coverage now passed. |
 | 1.0.2 | 2026-11-14 | Mike Fullerton | Recorded the silent give-up and the logs-directory asymmetry as decisions, cited each decision's source symbol, added eight test vectors and the ADKDIdentifiers link, and named the product version. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Each design decision carries its own approval line |

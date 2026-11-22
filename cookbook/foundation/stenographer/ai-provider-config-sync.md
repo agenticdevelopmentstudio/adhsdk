@@ -2,11 +2,11 @@
 id: b05ceb21-7c1c-4d62-83ba-01a3132df00a
 title: "AI Provider Config Sync"
 type: ingredient
-version: 1.0.2
+version: 1.0.3
 status: review
 language: en
 created: 2026-11-14
-modified: 2026-11-14
+modified: 2026-11-21
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -190,5 +190,6 @@ Not applicable: the types call no logging API. Callers must follow **secrets-not
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.3 | 2026-11-21 | Mike Fullerton | Dropped the retired Kitchen daemon's identifiers (ADKDIdentifiers was deleted). |
 | 1.0.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (AIProviderConfigSyncConformanceTests.swift, 9 of 11 vectors tested, 2 skipped); unit-test-coverage now partial. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Reworded daemon apply rules with MUST keywords, added partial-sync-sends-key and secrets-not-logged requirements, gave real rationales, cited daemon tests for the apply vectors, and linked related specs. |

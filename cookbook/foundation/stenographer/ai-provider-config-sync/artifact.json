@@ -4,11 +4,11 @@
     "id": "b05ceb21-7c1c-4d62-83ba-01a3132df00a",
     "title": "AI Provider Config Sync",
     "type": "ingredient",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
-    "modified": "2026-11-14",
+    "modified": "2026-11-21",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -34,7 +34,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "5b032d74f12a8eb6",
+  "synced": "416f79db947d78e5",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

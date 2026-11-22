@@ -1,0 +1,25 @@
+
+- **label-value**: `StenographerIdentifiers.label` MUST be `com.agenticdevelopmentstudio.stenographer`.
+- **legacy-label-values**: `legacyLabel` MUST be `com.agentic-cookbook.stenographer` and `legacyMenubarLabel` MUST be `com.agentic-cookbook.stenographer.menubar`.
+- **subsystem-is-label**: `StenographerIdentifiers.subsystem` MUST equal `label`.
+- **subsystem-suffix**: `subsystem(_:)` MUST return the label, a dot and the given suffix, with no escaping or validation of the suffix.
+- **keychain-service-values**: `keychainService` MUST equal `label`, `daemonKeychainService` MUST be the label followed by `.daemon`, and `legacyDaemonKeychainService` MUST be `com.agentic-cookbook.stenographer.daemon`.
+- **http-port**: `httpPort` MUST be `22847`, and `httpBaseURL` MUST be `http://127.0.0.1:` followed by `httpPort`.
+- **router-port**: `routerPort` MUST be `22848` and `routerBaseURL` MUST be `http://127.0.0.1:` followed by `routerPort`; it is where `ANTHROPIC_BASE_URL` points when account routing is used and MUST NOT be the same listener as `httpPort`.
+- **file-names**: `StenographerPaths.databaseFileName` MUST be `stenographer.db`, `launchdStdoutLogName` MUST be `stdout.log` and `launchdStderrLogName` MUST be `stderr.log`.
+- **home-injection**: `StenographerPaths.init(home:exists:)` MUST default `home` to the current user's home directory and `exists` to a file-system check of the URL's path, and every path property MUST be derived from them.
+- **support-directories**: `currentSupportDirectory` MUST be `Library/Application Support/` followed by the label, and `legacySupportDirectory` the same with the legacy label, both under home.
+- **plugin-directories**: `pluginDirectories` MUST return two URLs in order, the `Plugins` directory under `currentSupportDirectory` and then the one under `legacySupportDirectory`, whether or not either exists.
+- **plugin-directories-both**: `pluginDirectories` MUST NOT be reduced to the resolved `supportDirectory`, because the daemon may move the legacy directory after the app has discovered plugins at launch.
+- **support-directory-resolution**: `supportDirectory` MUST be the current directory when the file `stenographer.db` exists in it; otherwise the legacy directory when that directory exists; otherwise the current directory.
+- **empty-current-does-not-hide**: An existing current directory without the database file MUST NOT be chosen over an existing legacy directory.
+- **write-support-file**: `writeSupportFile(named:attempts:_:)` MUST call the closure with the named file inside `supportDirectory`, then resolve `supportDirectory` again, and repeat the write at the new location when the resolved URL changed.
+- **write-support-file-attempts**: `writeSupportFile` MUST write at most `max(attempts, 1)` times (default 3), MUST stop as soon as the resolved URL matches the one just written, and MUST return the URL resolved after its last write. That is where the file was last written when the directory settled; when the attempts run out while the directory is still moving, it is the newly resolved URL that no write reached, and the function raises no error and gives the caller no other signal that it gave up (see the Design Decisions).
+- **write-support-file-errors**: `writeSupportFile` MUST rethrow the closure's error unchanged and MUST NOT retry after a throw.
+- **logs-directories**: `currentLogsDirectory` MUST be `Library/Logs/` followed by the label, `legacyLogsDirectory` the same with the legacy label, and `logsDirectory` MUST be the current one when it exists, else the legacy one when it exists, else the current one.
+- **launch-agent-plists**: `launchAgentPlist`, `legacyLaunchAgentPlist` and `legacyMenubarLaunchAgentPlist` MUST be `Library/LaunchAgents/<label>.plist` under home for the label, legacy label and legacy menubar label.
+- **legacy-never-written**: Callers MUST NOT use the legacy names to create new files; they exist so the daemon and app can read, recognise and migrate old installs. These types only return names and paths, so they cannot enforce this; it is guidance for their callers.
+- **existence-only-for-resolution**: `StenographerPaths` MUST touch the file system only through the injected `exists` closure, and only in `supportDirectory` and `logsDirectory`; every other property is a pure derivation.
+- **logs-directory-no-sentinel**: `logsDirectory` MUST decide by whether the directory exists, not by whether it holds any file, so an existing but empty current logs directory is chosen over a populated legacy one. This differs from `supportDirectory` on purpose (see the Design Decisions).
+- **sendability**: `StenographerPaths` MUST be `Sendable`, so the `exists` closure is `@Sendable`.
+

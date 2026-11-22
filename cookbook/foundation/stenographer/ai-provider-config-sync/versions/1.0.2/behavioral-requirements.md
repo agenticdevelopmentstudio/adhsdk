@@ -1,0 +1,21 @@
+
+- **sync-fields**: `AIProviderConfigSync` MUST carry `enabled` (`Bool`), `selectedConfigId` (`UUID?`), `configs` (`[ResolvedProviderConfig]`) and `removedConfigIds` (`[UUID]?`).
+- **enabled-ignored**: `enabled` is kept for wire compatibility only: the daemon MUST ignore it, and whether summaries run MUST be set only through `POST /preferences/summaries`.
+- **selected-ignored**: `selectedConfigId` is kept for wire compatibility only: the daemon MUST ignore it, and the summaries configuration MUST be set only through `POST /preferences/summaries`.
+- **whole-registry**: `configs` MUST hold every configured provider, fully resolved (values and secrets).
+- **nil-removed-full-sync**: When `removedConfigIds` is nil or absent, as an older host sends, `configs` MUST be the complete registry and the daemon MUST delete every stored configuration it lists no longer.
+- **non-nil-removed-partial-sync**: When `removedConfigIds` is non-nil, the sync is partial: the daemon MUST upsert `configs`, MUST delete exactly the listed ids and MUST NOT touch any other stored configuration.
+- **partial-sync-sends-key**: A partial-sync host MUST encode `removedConfigIds`, even when it is empty; omitting the key makes the daemon treat the sync as the complete registry and delete other hosts' configurations.
+- **empty-removed-is-partial**: An empty non-nil `removedConfigIds` MUST count as a partial sync that deletes nothing, not as a full sync.
+- **sync-initializer**: The initializer MUST take `enabled`, `selectedConfigId` and `configs` without defaults, and `removedConfigIds` defaulting to nil.
+- **sync-decode-tolerance**: A payload with no `removedConfigIds` key MUST decode with that field nil, and a payload with no `selectedConfigId` key MUST decode with that field nil.
+- **sync-decode-required**: A payload missing `enabled` or `configs` MUST fail to decode, because the synthesized conformance requires non-optional keys.
+- **config-fields**: `ResolvedProviderConfig` MUST carry `id` (`UUID`), `name`, `pluginIdentifier`, `templateId`, `model` (all `String`), `values` and `secrets` (both `[String: String]`).
+- **config-initializer**: The `ResolvedProviderConfig` initializer MUST take every field with no defaults.
+- **values-secrets-split**: Non-secret entries MUST travel in `values` and credentials in `secrets`.
+- **empty-secret-clears**: An empty secret value MUST mean "clear this credential", and so MUST the absence of a previously stored secret field's key from `secrets`: the daemon, not the sender, deletes the stored credential in both cases.
+- **config-keyed-by-id**: The daemon MUST persist each configuration under `AIProviderConfigKeys` keyed by `id`, so `id` MUST be the configuration's stable identity across pushes.
+- **round-trip**: Encoding then decoding a sync MUST produce an equal value, including `selectedConfigId`, each configuration and its `values` and `secrets`.
+- **secrets-not-logged**: A sender or receiver MUST NOT log or string-interpolate a sync body or a `ResolvedProviderConfig`, because the synthesized descriptions of these structs print `secrets` in plain text.
+- **aliases**: `AIPluginKit` MUST re-export `AIProviderConfigSync` and `ResolvedProviderConfig` as type aliases of the Core types.
+
