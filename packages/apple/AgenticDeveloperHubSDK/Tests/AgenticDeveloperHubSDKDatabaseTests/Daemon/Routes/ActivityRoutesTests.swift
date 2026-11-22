@@ -212,4 +212,40 @@ final class ActivityRoutesTests: XCTestCase {
         XCTAssertEqual(rows.compactMap { $0["id"] as? String }, ["on"])
         XCTAssertEqual(all.count, 2, "an empty since is absent")
     }
+
+    // MARK: - App registry
+
+    /// The daemon's pid in these tests; this test process plays the app.
+    private let daemonPid: Int32 = 999_999
+    private var appPid: Int32 { ProcessInfo.processInfo.processIdentifier }
+
+    private func registryTable() -> RouteTable {
+        ActivityRoutes.table(
+            database: db, workTracking: tracker.control, appRegistry: SessionAppRegistry(daemonPid: daemonPid))
+    }
+
+    private func pidBody(_ pid: Int32) -> Data {
+        Data(#"{"pid":\#(pid)}"#.utf8)
+    }
+
+    func testRegisteringZeroANegativeOrTheDaemonsPidIs400() async throws {
+        let table = registryTable()
+        for pid in [0, -1, daemonPid] {
+            let response = try await send("POST", "/app/register", body: pidBody(pid), table: table)
+            XCTAssertEqual(response?.status, 400, "pid \(pid)")
+        }
+        let real = try await send("POST", "/app/register", body: pidBody(appPid), table: table)
+        XCTAssertEqual(real?.status, 200, "a refused pid must not hold the slot")
+    }
+
+    func testUnregisteringAnInvalidPidIs400AndReleasesNothing() async throws {
+        let table = registryTable()
+        _ = try await send("POST", "/app/register", body: pidBody(appPid), table: table)
+
+        let response = try await send("POST", "/app/unregister", body: pidBody(-1), table: table)
+        let again = try await send("POST", "/app/register", body: pidBody(appPid), table: table)
+
+        XCTAssertEqual(response?.status, 400)
+        XCTAssertEqual(try object(again)["registered"] as? Bool, true, "the owner still holds the slot")
+    }
 }

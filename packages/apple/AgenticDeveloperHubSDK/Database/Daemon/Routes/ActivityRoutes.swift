@@ -129,8 +129,10 @@ public enum ActivityRoutes {
 
     private static func registryHandlers(_ registry: SessionAppRegistry) -> [RouteTable.Handler] {
         let missingBody = "Missing body: expected {\"pid\": Int}"
+        let invalidPid = "Invalid pid: expected a positive process id other than the daemon's"
         return [
-            // 200 on success; 409 with the live owner's pid when one holds it.
+            // 200 on success; 409 with the live owner's pid when one holds it;
+            // 400 for a pid that names no single other process.
             RouteTable.route("POST", where: { $0 == ["app", "register"] }) { request, _ in
                 guard let pid = decodePid(request) else { return .error(missingBody, status: 400) }
                 switch await registry.register(pid: pid) {
@@ -138,11 +140,15 @@ public enum ActivityRoutes {
                     return .json(AppRegistryResponse(ownerPid: pid, registered: true))
                 case .alreadyRegistered(let ownerPid):
                     return .json(AppRegistryResponse(ownerPid: ownerPid, registered: false), status: 409)
+                case .invalidPid:
+                    return .error(invalidPid, status: 400)
                 }
             },
-            // Idempotent: releases the slot only if the caller owns it. Always 200.
+            // Idempotent: releases the slot only if the caller owns it. 200, or
+            // 400 for a pid that could never own it.
             RouteTable.route("POST", where: { $0 == ["app", "unregister"] }) { request, _ in
                 guard let pid = decodePid(request) else { return .error(missingBody, status: 400) }
+                guard registry.isValidOwner(pid: pid) else { return .error(invalidPid, status: 400) }
                 let released = await registry.unregister(pid: pid)
                 return .json(AppRegistryResponse(ownerPid: nil, registered: !released))
             }
