@@ -373,14 +373,33 @@ struct GitRepositoryModelTests {
         defer { watcher.stop() }
         let recorder = ChangeRecorder()
         watcher.start { recorder.record($0) }
-        try await Task.sleep(for: .milliseconds(300))
+
+        // FSEvents goes through fseventsd, which on a loaded machine runs seconds
+        // behind: events from creating the repository (`.git/HEAD`, `.git/refs`)
+        // can arrive after the stream starts and would pass this test without the
+        // checkout. A sentinel the watcher reports as an operation marks the point
+        // the stream has caught up to; only reports after it count.
+        let sentinel = gitDirectory.appendingPathComponent("sequencer")
+        try FileManager.default.createDirectory(at: sentinel, withIntermediateDirectories: true)
+        try "sentinel\n".write(to: sentinel.appendingPathComponent("todo"), atomically: false, encoding: .utf8)
+        try await waitForReport(from: recorder, after: 0) { $0.contains(.operation) }
+        try FileManager.default.removeItem(at: sentinel)
+        let caughtUp = recorder.calls.count
 
         try await repository.run(["checkout", "-b", "x"])
-        let deadline = Date().addingTimeInterval(10)
-        while !recorder.calls.contains(where: { $0.contains(.refs) }), Date() < deadline {
+        try await waitForReport(from: recorder, after: caughtUp) { $0.contains(.refs) }
+        #expect(recorder.calls.dropFirst(caughtUp).contains { $0.contains(.refs) })
+    }
+
+    /// Waits until a report after the first `skip` satisfies `matches`. The bound is
+    /// only a backstop for a watcher that never reports: fseventsd's latency under
+    /// load is not bounded, and a passing run returns as soon as the report lands.
+    private func waitForReport(from recorder: ChangeRecorder, after skip: Int,
+                               matching matches: (Set<GitRepositoryChange>) -> Bool) async throws {
+        let deadline = Date().addingTimeInterval(60)
+        while !recorder.calls.dropFirst(skip).contains(where: matches), Date() < deadline {
             try await Task.sleep(for: .milliseconds(100))
         }
-        #expect(recorder.calls.contains { $0.contains(.refs) })
     }
 
     @Test("the git and common directories the deferred watcher asks for are read one call each, whole")
