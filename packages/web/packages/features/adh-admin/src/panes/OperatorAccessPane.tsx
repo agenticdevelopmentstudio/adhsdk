@@ -122,6 +122,25 @@ export function OperatorAccessPane({
     for (const o of operators.data ?? []) m.set(o.id, o.email);
     return m;
   }, [operators.data]);
+  // Operators the filter can name: everyone on the operator list, then any account the loaded rows
+  // or the filters name that the list does not (an operator since removed). Without those, a former
+  // operator's rows show as a short id and cannot be narrowed to, so their rows older than the
+  // gateway's window are unreachable.
+  const operatorOptions = useMemo(() => {
+    const options = (operators.data ?? []).map((o) => ({ id: o.id, label: o.email }));
+    const known = new Set(options.map((o) => o.id));
+    const former = [
+      ...log.rows.map((e) => e.operatorAccountId),
+      applied.operatorAccountId,
+      draft.operatorAccountId,
+    ];
+    for (const id of former) {
+      if (!id || known.has(id)) continue;
+      known.add(id);
+      options.push({ id, label: `${shortId(id)} (not a current operator)` });
+    }
+    return options;
+  }, [operators.data, log.rows, applied.operatorAccountId, draft.operatorAccountId]);
   const who = useCallback(
     (e: OperatorAccessEvent): string =>
       emailById.get(e.operatorAccountId) ?? shortId(e.operatorAccountId),
@@ -271,9 +290,9 @@ export function OperatorAccessPane({
               onChange={(e) => set("operatorAccountId")(e.target.value)}
             >
               <option value="">Any operator</option>
-              {(operators.data ?? []).map((o) => (
+              {operatorOptions.map((o) => (
                 <option key={o.id} value={o.id}>
-                  {o.email}
+                  {o.label}
                 </option>
               ))}
             </Select>
