@@ -1,0 +1,16 @@
+
+- **Null / empty input**: An absent name MUST resolve to the default instance. An empty `STENOGRAPHER_INSTANCE` value or an empty argument after `-instance` MUST be treated as absent. An empty name passed straight to `resolve` MUST throw `invalidName`.
+- **Environment shadows the argument**: A present but empty `STENOGRAPHER_INSTANCE` MUST select the default even when `-instance <name>` is passed, because the environment is consulted first and the arguments are not read when the key exists.
+- **Flag without value**: `-instance` as the last argument MUST select the default. A following argument that looks like another flag (`-instance -x`) MUST be returned as the name and then refused by `resolve` with `invalidName`.
+- **Boundary values**: Names of 1 and 32 characters MUST pass the pattern and 33 MUST fail. Ports 1024 and 65535 MUST pass and 1023 and 65536 MUST fail. A socket path of 103 bytes MUST pass and 104 MUST fail; with the 18-byte `/stenographer.sock` suffix that is a data root of at most 85 bytes. Lengths are UTF-8 bytes, so a non-ASCII data root reaches the limit with fewer characters.
+- **Reserved name with no file**: MUST throw `undefined`, because the file check precedes validation.
+- **Data root of `/` or the home directory**: MUST throw `overlapsInstalledState`, because it contains every protected root.
+- **Data root inside the definitions directory**: MUST be accepted as far as installed state goes, because the comparison is by whole components and the definitions directory is not a protected root.
+- **Case and firmlink aliases**: A data root that differs from a protected root only by letter case, or by a leading `/System/Volumes/Data`, MUST be treated as the same path.
+- **Symlinks**: An existing symlink anywhere in the data root MUST be followed before comparing. A dangling symlink MUST be followed to its target. A symlink chain deeper than 32 dangling links MUST stop being followed, and the remaining component MUST be kept as written.
+- **Unreadable peer definitions**: A peer file that cannot be read, does not decode, declares a mismatched name or has a relative data root MUST be skipped in the overlap check; that peer is refused only when it is itself resolved.
+- **Two instances with the same port**: MUST be accepted by `validate` as the source stands; see the open question on `port-unique-across-instances`.
+- **Concurrent access**: `current` is a Swift `static let`, initialised once and thread-safe. `resolve` holds no shared state and may run on any thread. The file system is not locked: a definition file written or removed between the existence check and the read MUST surface as `undefined` or `unreadable`, and two definitions written at the same moment may each pass the overlap check before the other exists; the script that writes definitions owns that ordering.
+- **Error states**: Every failure MUST be thrown as a `ResolutionError`; no failure is swallowed in `resolve` or `validate`. `otherDefinitions` deliberately returns an empty list for a missing directory and drops unreadable peers. `current` MUST turn a thrown error into a stderr line and exit status 78.
+- **Offline / disconnected state**: Not applicable: the type performs no network access; `httpPort` is a number the daemon binds elsewhere.
+

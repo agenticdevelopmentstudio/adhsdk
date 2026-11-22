@@ -1,0 +1,7 @@
+
+`StenographerInstance` says which Stenographer the current process belongs to. The **default** instance is the one a person installs: it is unnamed and resolves every value exactly as Stenographer always has (label `com.agenticdevelopmentstudio.stenographer`, HTTP port `22847`). A **named** instance (for example `dev-trimming`) is a development copy that runs beside the installed one, with its own data root, label and HTTP port, and the rules here keep it from touching anything the installed copy owns.
+
+A named instance exists only if its definition file does: `~/Library/Application Support/com.agenticdevelopmentstudio.stenographer.instances/<name>.json`, which `scripts/stenographer_instance.py` writes. Asking for a name with no definition is a hard error, because creating an empty store for a typo would look like data loss.
+
+The type is a `Sendable`, `Equatable` struct holding an optional `Definition`. It provides the selection rule (`requestedName(environment:arguments:)`), the resolver (`resolve(name:home:)`), the validator (`validate(_:fileName:home:)`) and the process-wide value `current`, which [adhsdk.ingredient.foundation.stenographer.stenographer-identifiers](cookbook:b6d96b0b-3ca0-48ac-8e94-a25a8ee68e43) reads to derive its label, port and paths. The passive gates that stop a named instance from acting on installed state live outside this type, in the daemon's `InstancePolicy` and the app's `StenographerInstances`.
+

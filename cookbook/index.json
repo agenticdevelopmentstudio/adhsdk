@@ -5731,6 +5731,31 @@
       "path": "ui/layout/composable-tabs/project-tab-configuration",
       "rdid": "adhsdk.ingredient.ui.layout.composable-tabs.project-tab-configuration"
     },
+    "3f1efb26-3dfb-4e6c-bbbc-32609151ce78": {
+      "implementations": [
+        {
+          "conformance": {
+            "hash": "sha256:bf5854fbca405d7f7d86e3a0321d844bfd8c811b37fc5bc76c44a2b79faec338",
+            "state": "confirmed",
+            "version": "1.1.0"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/Core/Sessions/Wire/ClaudeAccountRequestDTOs.swift",
+          "platform": "apple"
+        },
+        {
+          "conformance": {
+            "hash": "sha256:13155c168994ac57623ba0b70941bbb30c2ce6b37873d28e1ec9eb28e9c27535",
+            "state": "confirmed",
+            "version": "1.1.0"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/Core/Sessions/Wire/ClaudeAccountTokenDTOs.swift",
+          "platform": "apple"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "foundation/sessions/wire/claude-account-request-dt-os",
+      "rdid": "adhsdk.ingredient.foundation.sessions.wire.claude-account-request-dt-os"
+    },
     "3f2ae6c1-bc07-40ab-b15c-bb4b8c77986b": {
       "implementations": [
         {
@@ -13633,6 +13658,22 @@
       "path": "ui/containers/help-content-view",
       "rdid": "adhsdk.ingredient.ui.containers.help-content-view"
     },
+    "94bac7a5-3fc6-463d-86d1-7c59350cd7cb": {
+      "implementations": [
+        {
+          "conformance": {
+            "hash": "sha256:bd8059e19b1a00bbf9734edadc7c7657adddff4e1ee81bc3a67841931fab7c6c",
+            "state": "confirmed",
+            "version": "1.0.0"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/Core/Sessions/Wire/StatusLineDTOs.swift",
+          "platform": "apple"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "foundation/sessions/wire/status-line-dt-os",
+      "rdid": "adhsdk.ingredient.foundation.sessions.wire.status-line-dt-os"
+    },
     "94dc5dad-be14-4520-8afe-e944e59a0117": {
       "implementations": [
         {
@@ -15093,6 +15134,40 @@
       "kind": "ingredient",
       "path": "workspace/extensions/manifest/activation-event-matcher",
       "rdid": "adhsdk.ingredient.workspace.extensions.manifest.activation-event-matcher"
+    },
+    "a2cb25cc-f3d1-4b82-8a32-52e727c317e1": {
+      "implementations": [
+        {
+          "conformance": {
+            "hash": "sha256:8b18ca3d2409a959460115760d9ca39e806f1154568942b3db68cd3a8be7c2f5",
+            "state": "confirmed",
+            "version": "1.1.0"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/Core/ClaudeAuth/ClaudeAuthEvaluator.swift",
+          "platform": "apple"
+        },
+        {
+          "conformance": {
+            "hash": "sha256:ef972f894492664ff7665e147f166297bdfbceba2e9d5cd5957e0eb6ea28a4b0",
+            "state": "confirmed",
+            "version": "1.1.0"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/Core/ClaudeAuth/AccountFingerprints.swift",
+          "platform": "apple"
+        },
+        {
+          "conformance": {
+            "hash": "sha256:5767eb5e88f7b333e2163f967f404c5d5ad2417a7910b853fad5140e643d65a6",
+            "state": "confirmed",
+            "version": "1.1.0"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/Core/ClaudeAuth/ClaudeTokenRefresher.swift",
+          "platform": "apple"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "foundation/claude-auth/claude-auth-evaluator",
+      "rdid": "adhsdk.ingredient.foundation.claude-auth.claude-auth-evaluator"
     },
     "a30725ca-fa2f-4a04-8cb0-8beddf264a0a": {
       "implementations": [
@@ -17938,6 +18013,22 @@
       "path": "workspace/extensions/vscode-api/webviews/extension-webview-presenting",
       "rdid": "adhsdk.ingredient.workspace.extensions.vscode-api.webviews.extension-webview-presenting"
     },
+    "c5231579-d9c0-412d-8ae0-4c9bfb7937d3": {
+      "implementations": [
+        {
+          "conformance": {
+            "hash": "sha256:258fd3116f1982d925a72a451dd5244ade07da044dd4d96ef16b5857d3878df1",
+            "state": "confirmed",
+            "version": "1.0.0"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/Core/Sessions/Wire/AccountRouterDTOs.swift",
+          "platform": "apple"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "foundation/sessions/wire/account-router-dt-os",
+      "rdid": "adhsdk.ingredient.foundation.sessions.wire.account-router-dt-os"
+    },
     "c54698ea-490c-41e2-ad8f-762f257839ca": {
       "implementations": [
         {
@@ -18116,6 +18207,31 @@
       "kind": "ingredient",
       "path": "adh/hub/content/notes-client",
       "rdid": "adhsdk.ingredient.adh.hub.content.notes-client"
+    },
+    "c6cd4263-02fa-4284-98d5-7d89001ca4c4": {
+      "implementations": [
+        {
+          "conformance": {
+            "hash": "sha256:d3649c91317417aac72aaf8edc2ae46c11049861064262fdce757914b6b41426",
+            "state": "confirmed",
+            "version": "1.1.0"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/Core/WorkTracking/ActivityPersistence.swift",
+          "platform": "apple"
+        },
+        {
+          "conformance": {
+            "hash": "sha256:3b130148aa9b9cebed6d68959c18fe780bcb2650172c40455ec31ef22819dd6e",
+            "state": "confirmed",
+            "version": "1.1.0"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/Core/WorkTracking/ActivityPersistenceContract.swift",
+          "platform": "apple"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "foundation/work-tracking/activity-persistence",
+      "rdid": "adhsdk.ingredient.foundation.work-tracking.activity-persistence"
     },
     "c708a65f-4d6c-40e4-b1b8-a24584cd45a1": {
       "implementations": [
@@ -20399,6 +20515,40 @@
       "path": "status/service/monitor/heartbeat",
       "rdid": "adhsdk.ingredient.status.service.monitor.heartbeat"
     },
+    "de98aa67-83a3-41d1-907f-86713a7a6e10": {
+      "implementations": [
+        {
+          "conformance": {
+            "hash": "sha256:af9bed02c21a474215b49742a770809e9d9fe1111d313f9f709fa17715b4eae9",
+            "state": "confirmed",
+            "version": "1.1.0"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/Core/Sessions/Wire/Sessions.swift",
+          "platform": "apple"
+        },
+        {
+          "conformance": {
+            "hash": "sha256:c207f553318acd1f96cd2d905f5beb97e417b6fd2ceb5e43415f7b53910de609",
+            "state": "confirmed",
+            "version": "1.1.0"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/Core/Sessions/Wire/VisibleText.swift",
+          "platform": "apple"
+        },
+        {
+          "conformance": {
+            "hash": "sha256:3c3faccf9ff69e61ac7b8c07c288a5c0908a1d863b96aafdecc88e1387107a29",
+            "state": "confirmed",
+            "version": "1.1.0"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/Core/Sessions/Wire/StenographerBillingSettings.swift",
+          "platform": "apple"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "foundation/sessions/wire/sessions",
+      "rdid": "adhsdk.ingredient.foundation.sessions.wire.sessions"
+    },
     "deac5bd8-5e5f-43cf-bdfa-3a83b2298639": {
       "implementations": [
         {
@@ -20489,6 +20639,31 @@
       "kind": "ingredient",
       "path": "status/dashboard/telemetry/local-cache",
       "rdid": "adhsdk.ingredient.status.dashboard.telemetry.local-cache"
+    },
+    "dfdb871e-bca1-45a7-a64d-9ab6af0c0917": {
+      "implementations": [
+        {
+          "conformance": {
+            "hash": "sha256:bbe5d2751a46ab28505e1e82e82a70b24f66abb654b2a518e1b5906a62b1476d",
+            "state": "confirmed",
+            "version": "1.1.0"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/Core/Sessions/Wire/ModelRouterDTOs.swift",
+          "platform": "apple"
+        },
+        {
+          "conformance": {
+            "hash": "sha256:810bd16e0cba8a8cb4b5505263b6a9e3d2b65cac58daf4f5a2792030da240153",
+            "state": "confirmed",
+            "version": "1.1.0"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/Core/Sessions/Wire/ModelRouterTemplates.swift",
+          "platform": "apple"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "foundation/sessions/wire/model-router-dt-os",
+      "rdid": "adhsdk.ingredient.foundation.sessions.wire.model-router-dt-os"
     },
     "dffc1431-7386-4acf-94bc-6043c5c7eebc": {
       "implementations": [
@@ -22968,7 +23143,7 @@
           "conformance": {
             "hash": "sha256:36c726a9fa840b862e02f06e3d569066bb47908245521fa5cbcf1871caee2707",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.1.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/ClaudeHooks/ClaudeHookInstaller.swift",
           "platform": "apple"
@@ -22990,6 +23165,15 @@
             "state": "planned"
           },
           "platform": "windows"
+        },
+        {
+          "conformance": {
+            "hash": "sha256:c297afbec6431c483112232725f861f4ae6003cc2038ba4d04b164885816c584",
+            "state": "confirmed",
+            "version": "1.1.0"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/Core/ClaudeHooks/ClaudeHookInstaller+RouterPointer.swift",
+          "platform": "apple"
         }
       ],
       "kind": "ingredient",
@@ -23054,6 +23238,31 @@
       "kind": "ingredient",
       "path": "ui/components/overlays/help-enabled",
       "rdid": "adhsdk.ingredient.ui.components.overlays.help-enabled"
+    },
+    "fcbf09d9-5555-4278-9940-2be920de49d3": {
+      "implementations": [
+        {
+          "conformance": {
+            "hash": "sha256:94a0b66e9c03617ad1fca62abe971b86d184f23091d4fa88302eebfc5c5fd98c",
+            "state": "confirmed",
+            "version": "1.1.0"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/Core/Sessions/Wire/InsightsDTOs.swift",
+          "platform": "apple"
+        },
+        {
+          "conformance": {
+            "hash": "sha256:45607cf296c59f2928c2ab87aa81d42b7deabfc92b03038ca7e961d15dc9bc52",
+            "state": "confirmed",
+            "version": "1.1.0"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/Core/Sessions/Wire/GraphSnapshotDTO.swift",
+          "platform": "apple"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "foundation/sessions/wire/insights-dt-os",
+      "rdid": "adhsdk.ingredient.foundation.sessions.wire.insights-dt-os"
     },
     "fcc6d4c4-d83e-402a-857c-fbd0aff91113": {
       "implementations": [
@@ -23267,6 +23476,22 @@
       "kind": "ingredient",
       "path": "registry-profile/service-list",
       "rdid": "adhsdk.ingredient.registry-profile.service-list"
+    },
+    "fe798f91-076e-41fc-9713-907b744c5539": {
+      "implementations": [
+        {
+          "conformance": {
+            "hash": "sha256:bd0cb9a58b358ee4accfb49466254c1e9a22d345a151d77afc47eea358801275",
+            "state": "confirmed",
+            "version": "1.0.0"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/Core/Stenographer/StenographerInstance.swift",
+          "platform": "apple"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "foundation/stenographer/stenographer-instance",
+      "rdid": "adhsdk.ingredient.foundation.stenographer.stenographer-instance"
     },
     "fea35fb1-9eeb-4647-b185-902c1d1cb988": {
       "implementations": [

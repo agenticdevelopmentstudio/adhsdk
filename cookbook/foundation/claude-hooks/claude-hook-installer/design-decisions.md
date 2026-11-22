@@ -26,3 +26,16 @@
 **Decision**: A status-line failure never fails the install, and the status line step runs after the legacy scrub and before hook registration.
 **Rationale**: Losing the line is cheaper than losing event capture; turning the display on reports the reason by throwing.
 **Approved**: pending
+
+**Decision**: The router pointer is compared by exact string equality with `routerBaseURL`, and any other value, including a non-object `env`, is never overwritten or removed; enabling over it throws a conflict carrying only a redacted display form.
+**Rationale**: `ANTHROPIC_BASE_URL` may belong to the user or another proxy, so only a value this router wrote is treated as its own; the display form drops userinfo and path because the value can carry credentials.
+**Approved**: pending
+
+**Decision**: Suspension is a marker file beside `settings.json`, written before the pointer is removed and deleted only after a resume's save, and any explicit `setRouterPointer` call forgets it.
+**Rationale**: While the router's daemon is down Claude Code must reach Anthropic directly rather than fail every request; the write order means a failed save never loses the record of a suspension, and the user's own choice must not be undone by a later resume.
+**Approved**: pending
+
+**Decision**: Turning tracking off (`uninstallHooks()`) keeps the router pointer; only `uninstallHooks(removingRouterPointer: true)`, used when removing the router's owner, takes it out.
+**Rationale**: The router does not depend on tracking, and removing the pointer with the hooks would make Claude Code silently stop going through the router.
+**Approved**: pending
+

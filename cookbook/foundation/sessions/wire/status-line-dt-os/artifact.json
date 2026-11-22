@@ -1,0 +1,63 @@
+{
+  "format": 2,
+  "meta": {
+    "id": "94bac7a5-3fc6-463d-86d1-7c59350cd7cb",
+    "title": "Status Line DTOs",
+    "type": "ingredient",
+    "version": "1.0.0",
+    "status": "review",
+    "language": "en",
+    "created": "2026-11-21",
+    "modified": "2026-11-21",
+    "author": "Mike Fullerton",
+    "copyright": "2026 Mike Fullerton",
+    "license": "MIT",
+    "summary": "Wire records for the session daemon's usage and status-line endpoints, with tolerant decoders for version skew and the one record that carries a secret.",
+    "platforms": [
+      "swift",
+      "macos"
+    ],
+    "tags": [
+      "foundation",
+      "sessions",
+      "dto",
+      "wire"
+    ],
+    "depends-on": [
+      "e8286557-84ee-4f45-b78c-f1d184c51a37",
+      "d457c4d4-005c-4fcb-a3a6-3e1680bcb561",
+      "2b552bde-d0bd-425a-9e79-fc624b52f516"
+    ],
+    "related": [
+      "ea580796-8b16-4832-b11d-ad3cae991ecd",
+      "704d4ae9-e344-44d4-b19c-eadfec082077"
+    ],
+    "references": [],
+    "approved-by": "",
+    "approved-date": ""
+  },
+  "names_hosts": "The subject is Claude account quota and credentials: the records carry Claude login tokens, ~/.claude.json account data and the Fable weekly-quota bucket named by the Anthropic rate-limit headers.",
+  "synced": "e759aeb682af5e57",
+  "parts": [
+    {"part": "intro"},
+    {"part": "overview", "heading": "Overview"},
+    {"part": "behavioral-requirements", "heading": "Behavioral Requirements"},
+    {"part": "appearance", "heading": "Appearance"},
+    {"part": "states", "heading": "States"},
+    {"part": "accessibility", "heading": "Accessibility"},
+    {"part": "conformance-test-vectors", "heading": "Conformance Test Vectors"},
+    {"part": "edge-cases", "heading": "Edge Cases"},
+    {"part": "configuration", "heading": "Configuration"},
+    {"part": "deep-linking", "heading": "Deep Linking"},
+    {"part": "localization", "heading": "Localization"},
+    {"part": "accessibility-options", "heading": "Accessibility Options"},
+    {"part": "feature-flags", "heading": "Feature Flags"},
+    {"part": "analytics", "heading": "Analytics"},
+    {"part": "privacy", "heading": "Privacy"},
+    {"part": "logging", "heading": "Logging"},
+    {"part": "platform-notes", "heading": "Platform Notes"},
+    {"part": "design-decisions", "heading": "Design Decisions"},
+    {"part": "compliance", "heading": "Compliance"},
+    {"part": "history", "heading": "Change History"}
+  ]
+}

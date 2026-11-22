@@ -1,0 +1,23 @@
+
+- **Empty request**: A request built with only `operation` MUST encode to a one-key object and decode back to an equal value (vector 005).
+- **Unknown operation string**: A request whose `operation` is not one of the eight raw strings MUST fail to decode; there is no fallback case, so a newer sender's operation is a decoding error for an older receiver (vector 004).
+- **Swift case name on the wire**: `"switchLogin"`, `"saveToken"` or `"saveLogin"` sent as the operation MUST be rejected as unknown, because the wire spellings are `switch`, `save_token` and `save_login` (vector 003).
+- **Fields the operation does not use**: A request MUST encode and decode with any combination of optional fields present; nothing in these types rejects, for example, a `token` on a `usage` request (vector 008).
+- **Unrecognized credential kind**: `credentialKind` is a plain `String` on the request, summary and status, so a value that is not a Claude Credential Kind raw value MUST still encode and decode; interpreting it is the receiver's job.
+- **Malformed item key**: `itemKey` is a plain `String` with no format check; a value without a colon MUST still encode and decode.
+- **Negative or zero lifetime**: `minimumLifetime` accepts any `Double`, including `0`, negative values and non-integral seconds; the types MUST NOT clamp or reject it.
+- **Missing expiry on a long-lived token**: A summary for a `long-lived` credential SHOULD carry `nil` for `expiresAt` and `refreshExpiresAt`, which are documented as logins only; the type does not enforce this.
+- **Empty saved list**: `saved` MAY be an empty array, which MUST encode as `[]` and is distinct from `nil` (omitted).
+- **Response decode of an unknown extra key**: Decoding MUST ignore JSON keys a type does not declare, as synthesized decoding does.
+- **No app connected**: When a relayed operation arrives with no app connected, the reply MUST be a refusal whose reason string is exactly `noCustodianReason`, not a `ClaudeAccountResponseDTO`; any change to that sentence breaks `steno`'s match.
+- **Unknown token state from a newer daemon**: A status whose `state` string this build does not know MUST still decode; `tokenState` reads it as `unknown` (vector 019). A renewal with such a state reads it as `inconclusive`, never as a reason to refuse a login (vector 028). The two fallbacks differ on purpose: a status with an unreadable state is still probeable, and a renewal with one is treated as having proved nothing.
+- **Counting an unknown state**: `counting(from:)` rebuilds the status through the typed initializer, so an unrecognized state string MUST come back as `"unknown"`; the original raw string is lost on the copy (vector 023).
+- **Stale stored countdown**: A status's stored `secondsRemaining` is frozen at decision time and a status may be read for up to five minutes after the app pushes; a reader that wants the live countdown MUST call `counting(from:)`, which discards the stored value (vector 022).
+- **Expiry already past**: `counting(from:)` MUST return a negative `secondsRemaining` when `now` is after `expiresAt`; it does not clamp to zero (vector 021).
+- **Missing `tokenUntouched` from an older daemon**: A renewal decoded without `tokenUntouched` MUST read `leftTokenUntouched == false`, so the saved pair is treated as possibly spent (vector 026).
+- **Renewal with `refreshed` but no `oauth`**: Nothing in the type ties `oauth` to the `refreshed` state; a payload with `state: "refreshed"` and no `oauth` MUST still decode, and deciding what to do with it is the caller's job.
+- **Empty rotation list**: An evaluation with no rotations MUST encode `rotated` as `[]`, not omit it, because `rotated` is non-optional (vector 024).
+- **No probe round yet**: `ClaudeAccountsDTO.measuredAt` MUST be `nil` until a probe round has completed; `tokens` and `quotas` MAY be empty arrays.
+- **Concurrent access**: All declarations are `Sendable` value types (or a case-less namespace with `static let` constants); they hold no shared mutable state, so concurrent reads are safe and a mutated response copy never affects another copy.
+- **Network or storage failure**: Not applicable to these types: they perform no transport, keychain or file access. Transport errors belong to the XPC connection and handlers that carry them; a lost evaluation reply surfaces as a thrown error at the caller (evaluation-acceptance).
+

@@ -1,3 +1,3 @@
 
-Not applicable: the only user-facing strings are the `ClaudeHookInstallerError` descriptions, which are hardcoded English in source, and the source has no localization table for them; the callers show them.
+Not applicable: the only user-facing strings are the `ClaudeHookInstallerError` and `RouterPointerError` descriptions and the literal `custom value` display form, all hardcoded English in source with no localization table; the callers show them.
 
