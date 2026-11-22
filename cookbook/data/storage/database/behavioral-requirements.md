@@ -120,3 +120,19 @@
 - **credential-relay**: `POST /accounts/credentials` MUST decode the body as a snake_case JSON array of `ClaudeCredentialDTO`, hand it to the probe classify-only (`takeCredentials(_:refreshing: false)`, which stores through `setCredentials(_:)`), and answer 200 with `{"changed": <Bool>}`.
 - **credential-relay-no-echo**: The relay's reply MUST carry no token, and an undecodable body MUST answer 400 "the body must be a JSON array of credentials" without quoting the body or the decoding error.
 - **credential-relay-router-free**: The relay MUST work whether or not the table has a router.
+
+### Billing Routes
+
+- **billing-routes-endpoints**: `BillingRoutes.endpoints` MUST list every billing route for a daemon's endpoint index: clients, projects and repos (list, save, delete), entries (list, save, audit, status, description, delete), segments (list, assign, promote, assign-repository), timers (list, start, stop), app names, backfill, the preferences push and the overview.
+- **billing-routes-forward**: Every billing handler MUST forward to `BillingStore`, `BillingRollup`, `BillingTimer` or `BillingPrefs` and decide nothing itself, so each rule stays where a store test covers it.
+- **billing-routes-writes-post**: Every billing write MUST be a `POST`, so a daemon's token gate on writes covers all of them.
+- **billing-routes-bad-body**: A write whose body does not decode MUST answer 400 and change nothing.
+
+### Activity Routes
+
+- **activity-routes-table**: `ActivityRoutes.table(database:workTracking:appRegistry:)` MUST serve `GET /activity/status`, `POST /activity/preferences`, `POST /activity/recheck` and `GET /activity/spans`, and `POST /app/register` and `POST /app/unregister` only when given an app registry.
+- **activity-not-running**: With no `WorkTrackingControl`, status, preferences and recheck MUST answer 503 "Work tracking is not running".
+- **activity-status-quiet**: `GET /activity/status` MUST answer the tracker's last known state and MUST NOT ask the system for Accessibility.
+- **activity-preferences**: `POST /activity/preferences` MUST decode a whole snake_case `WorkTrackingPreferences`, apply it and answer the status it produced; an undecodable body MUST answer 400 and change nothing.
+- **activity-recheck**: `POST /activity/recheck` MUST ask for Accessibility again and answer the resulting status.
+- **activity-spans**: `GET /activity/spans` MUST answer the spans since `since`, limited to 1...1000 (default 100); a malformed `since` MUST answer 400.

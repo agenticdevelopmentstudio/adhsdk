@@ -21,3 +21,5 @@
 | `router` (`AccountRouterRoutes.table`) | optional `AccountRouterServer` | required | The daemon's router; nil makes `/router/*` answer 503. |
 | `probe` (`AccountRouterRoutes.table`) | `AccountQuotaProbe` | required | The probe that takes custody of relayed credentials. |
 | `since_hours` default | constant | `24` (`AccountRouterRoutes.defaultReportHours`) | The report window when the query omits it. |
+| `workTracking` (`ActivityRoutes.table`) | optional `ActivityRoutes.WorkTrackingControl` | required | The daemon's work tracker (status, apply, recheck); nil makes those three routes answer 503. |
+| `appRegistry` (`ActivityRoutes.table`) | optional `SessionAppRegistry` | required | The single-instance registry; nil leaves `/app/*` unserved. |
