@@ -277,6 +277,38 @@ final class BillingRoutesTests: XCTestCase {
         XCTAssertEqual(try object(described)["description"] as? String, "Sprint 4")
     }
 
+    /// The day must be the whole value, or a full timestamp: a prefix that
+    /// happens to be a day is not one.
+    func testEntriesRouteRejectsTrailingJunk() async throws {
+        for since in ["2026-09-01garbage", "2026-09-01T", "2026-09-01T25:00:00Z", "2026-09-01%20"] {
+            let response = try await send("GET", "/billing/entries?since=\(since)")
+            XCTAssertEqual(response?.status, 400, since)
+        }
+        let timestamp = try await send("GET", "/billing/entries?since=2026-09-01T12:00:00Z")
+        XCTAssertEqual(timestamp?.status, 200)
+    }
+
+    /// An empty `since` would re-derive every session, a non-date nothing,
+    /// both answering 200: each is a 400 that changes nothing.
+    func testBackfillRejectsAnInvalidSince() async throws {
+        for since in ["", "garbage", "sept 1", "2026-09-01garbage", "2026-02-30", "2026-09-01T25:00:00Z"] {
+            let response = try await post("/billing/backfill", json: "{\"since\":\"\(since)\"}")
+            XCTAssertEqual(response?.status, 400, since)
+        }
+        let valid = ["2026-09-01", "2026-09-01T00:00:00Z", "2026-09-01T00:00:00.250Z", "2026-09-01T02:00:00+02:00"]
+        for since in valid {
+            let response = try await post("/billing/backfill", json: "{\"since\":\"\(since)\"}")
+            XCTAssertEqual(response?.status, 200, since)
+        }
+    }
+
+    func testBackfillSinceIsADayOrAUTCInstant() {
+        XCTAssertEqual(BillingRoutes.backfillSince("2026-09-01"), "2026-09-01")
+        XCTAssertEqual(BillingRoutes.backfillSince("2026-09-01T02:00:00+02:00"), "2026-09-01T00:00:00Z")
+        XCTAssertEqual(BillingRoutes.backfillSince("2026-09-01T00:00:00.750Z"), "2026-09-01T00:00:00Z")
+        XCTAssertNil(BillingRoutes.backfillSince(""))
+    }
+
     func testSegmentWritesAnswerACount() async throws {
         let project = try seedProject()
         try seedSegment(id: "seg1", startedAt: "2026-09-22T09:00:00Z", endedAt: "2026-09-22T09:30:00Z")
