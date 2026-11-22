@@ -1424,6 +1424,7 @@ var ICONS = {
   "/llm-providers": Boxes,
   "/members": BookUser,
   "/persona-services": Boxes,
+  "/roles": ShieldCheck,
   "/server-bags": Server,
   "/settings": Settings2,
   "/sync": RefreshCw,

@@ -261,6 +261,7 @@ var RESERVED_HANDLE_WORDS = [
   "products",
   "registries",
   "research",
+  "roles",
   "server-bags",
   "signin-apps",
   "storage",
