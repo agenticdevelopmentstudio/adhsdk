@@ -164,15 +164,16 @@ public struct StenographerInstance: Sendable, Equatable {
         // Each instance's lock is keyed on its own label, so nothing else stops
         // two definitions that share a data root from running on one set of databases,
         // or two that share a port from one answering the other's clients.
-        for other in otherDefinitions(excluding: definition.name, home: home) {
+        let others = otherDefinitions(excluding: definition.name, home: home)
+        for other in others {
             let otherRoot = canonicalComponents(other.dataRoot)
             if root.starts(with: otherRoot) || otherRoot.starts(with: root) {
                 throw ResolutionError.overlapsAnotherInstance(
                     dataRoot: definition.dataRoot, instance: other.name, otherRoot: other.dataRoot)
             }
-            if other.httpPort == definition.httpPort {
-                throw ResolutionError.portTakenByAnotherInstance(port: definition.httpPort, instance: other.name)
-            }
+        }
+        if let other = others.first(where: { $0.httpPort == definition.httpPort }) {
+            throw ResolutionError.portTakenByAnotherInstance(port: definition.httpPort, instance: other.name)
         }
         let socket = URL(fileURLWithPath: definition.dataRoot, isDirectory: true)
             .appendingPathComponent(socketFileName).path
