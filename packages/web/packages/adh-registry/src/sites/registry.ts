@@ -11,6 +11,7 @@ export type SiteId =
   | 'bitbag'
   | 'hub'
   | 'admin'
+  | 'product-admin'
   | 'cookbook'
   | 'projects'
   | 'personaregistry'
@@ -357,6 +358,7 @@ export const SITES: SiteDef[] = [
   // admin is a wholly-authenticated console — its dashboard root IS its home,
   // so the switcher links it to '/' rather than a separate /home.
   { id: 'admin', label: 'Admin', fullLabel: 'Agentic Developer Admin', description: 'Operations console', prodHost: 'admin.agenticdeveloperhub.com', hasStaging: true, hasTesting: true, hasHome: false, adminOnly: true },
+  { id: 'product-admin', label: 'Product admin', fullLabel: 'Agentic Developer Product Admin', description: 'Your product admin site', prodHost: 'product-admin.agenticdeveloperhub.com', hasStaging: true, hasTesting: true, hasHome: false, adminOnly: true, crawlable: false },
   { id: 'builds', label: 'Builds', fullLabel: 'Agentic Developer Builds', description: 'Build status', prodHost: 'builder.agenticdeveloperhub.com', hasStaging: false, hasTesting: true, hasHome: false, adminOnly: true },
 ]
 
@@ -454,6 +456,7 @@ export const SITE_BUILD: Partial<Record<SiteId, SiteBuildConfig>> = {
   // (`OVERVIEW_PATH`, `featureIds`) this package cannot import; freezing those values
   // here would re-create the drift their own comments exist to prevent.
   admin: { handRolledConfig: true },
+  'product-admin': { handRolledConfig: true },
   'hub-help': { handRolledConfig: true },
   status: { handRolledConfig: true },
   cookbook: { handRolledConfig: true },
@@ -550,7 +553,8 @@ export function siteIdForDir(name: string): SiteId | undefined {
  *  which is why the route did not have to move when the id changed hands. */
 export const MAIN_SITE_IDS: SiteId[] = [
   'admin', 'bitbag', 'community', 'cookbook', 'devteam', 'help', 'hub', 'hub-help', 'hub-sdk',
-  'myagenticteams', 'news', 'personaregistry', 'shipr', 'status', 'support', 'toolkit',
+  'myagenticteams', 'news', 'personaregistry', 'product-admin', 'shipr', 'status', 'support',
+  'toolkit',
 ]
 export const MARKETING_SITE_IDS: SiteId[] = [
   'academy', 'authentication', 'billing', 'codereviews', 'communities', 'consultants', 'consulting',
@@ -1034,6 +1038,8 @@ export const HUB_EXTRA_FEATURE_SEGMENTS = [
   'signup-list',
   // Sets (phase 5): likewise a product knob, a product rail row and only a route here.
   'sets',
+  // Admin site (phase 6): a product knob, a product rail row and only a route here.
+  'admin-site',
   // Email Signup: a bespoke rail route (audience.* lists/templates/campaigns), no
   // distinct registry site of its own — same lockstep as the row above.
   'email-signup',
