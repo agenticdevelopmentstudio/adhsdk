@@ -2540,6 +2540,24 @@ public protocol APIProtocol: Sendable {
     /// - Remark: HTTP `POST /v1/customers`.
     /// - Remark: Generated from `#/paths//v1/customers/post(postV1Customers)`.
     func postV1Customers(_ input: Operations.PostV1Customers.Input) async throws -> Operations.PostV1Customers.Output
+    /// Confirm the code sent to the signed-in customer's own sign-up email
+    ///
+    /// Under a customer token. On success the email is proven, the sign-up list is applied and a registered invitation to the address is accepted. A wrong code is a 400 whose message is the reason (mismatch, expired, too_many_attempts, no_challenge) and counts against the code's five attempts.
+    ///
+    /// Replaces POST /customer/email/verify/confirm.
+    ///
+    /// - Remark: HTTP `POST /v1/customers/me/email_verification/confirm`.
+    /// - Remark: Generated from `#/paths//v1/customers/me/email_verification/confirm/post(postV1CustomersMeEmailVerificationConfirm)`.
+    func postV1CustomersMeEmailVerificationConfirm(_ input: Operations.PostV1CustomersMeEmailVerificationConfirm.Input) async throws -> Operations.PostV1CustomersMeEmailVerificationConfirm.Output
+    /// Send a code to the signed-in customer's own sign-up email
+    ///
+    /// Under a customer token. The code goes to the customer's `customers.email`; no address is accepted. 409 when the email is already verified or held by another account, 429 within the resend cooldown, 422 when the code could not be sent.
+    ///
+    /// Replaces POST /customer/email/verify/start.
+    ///
+    /// - Remark: HTTP `POST /v1/customers/me/email_verification/start`.
+    /// - Remark: Generated from `#/paths//v1/customers/me/email_verification/start/post(postV1CustomersMeEmailVerificationStart)`.
+    func postV1CustomersMeEmailVerificationStart(_ input: Operations.PostV1CustomersMeEmailVerificationStart.Input) async throws -> Operations.PostV1CustomersMeEmailVerificationStart.Output
     /// Provision one of the caller's end-customers with an ADH password credential
     ///
     /// Replaces POST /customer/register.
@@ -2983,6 +3001,31 @@ public protocol APIProtocol: Sendable {
     /// - Remark: HTTP `DELETE /v1/ecosystems/{id}/signin_apps/{client_id}`.
     /// - Remark: Generated from `#/paths//v1/ecosystems/{id}/signin_apps/{client_id}/delete(deleteV1EcosystemsByIdSigninAppsByClientId)`.
     func deleteV1EcosystemsByIdSigninAppsByClientId(_ input: Operations.DeleteV1EcosystemsByIdSigninAppsByClientId.Input) async throws -> Operations.DeleteV1EcosystemsByIdSigninAppsByClientId.Output
+    /// List an ecosystem's sign-up list
+    ///
+    /// Replaces GET /ecosystem/signup-list/{id}.
+    ///
+    /// - Remark: HTTP `GET /v1/ecosystems/{id}/signup_list_entries`.
+    /// - Remark: Generated from `#/paths//v1/ecosystems/{id}/signup_list_entries/get(getV1EcosystemsByIdSignupListEntries)`.
+    func getV1EcosystemsByIdSignupListEntries(_ input: Operations.GetV1EcosystemsByIdSignupListEntries.Input) async throws -> Operations.GetV1EcosystemsByIdSignupListEntries.Output
+    /// Add or change a sign-up list entry
+    ///
+    /// Upserts by email. While the ecosystem limits sign-in to a list of emails, the email is added to that list in the same transaction.
+    ///
+    /// Replaces PUT /ecosystem/signup-list/{id}.
+    ///
+    /// - Remark: HTTP `POST /v1/ecosystems/{id}/signup_list_entries`.
+    /// - Remark: Generated from `#/paths//v1/ecosystems/{id}/signup_list_entries/post(postV1EcosystemsByIdSignupListEntries)`.
+    func postV1EcosystemsByIdSignupListEntries(_ input: Operations.PostV1EcosystemsByIdSignupListEntries.Input) async throws -> Operations.PostV1EcosystemsByIdSignupListEntries.Output
+    /// Remove a sign-up list entry
+    ///
+    /// While the ecosystem limits sign-in to a list of emails, the email is removed from that list too. A role already granted stays granted.
+    ///
+    /// Replaces DELETE /ecosystem/signup-list/{id}/entries/{entryId}.
+    ///
+    /// - Remark: HTTP `DELETE /v1/ecosystems/{id}/signup_list_entries/{entry_id}`.
+    /// - Remark: Generated from `#/paths//v1/ecosystems/{id}/signup_list_entries/{entry_id}/delete(deleteV1EcosystemsByIdSignupListEntriesByEntryId)`.
+    func deleteV1EcosystemsByIdSignupListEntriesByEntryId(_ input: Operations.DeleteV1EcosystemsByIdSignupListEntriesByEntryId.Input) async throws -> Operations.DeleteV1EcosystemsByIdSignupListEntriesByEntryId.Output
     /// List an ecosystem's sync enrollment, default and effective
     ///
     /// For whoever manages the ecosystem: its owner, an admin of the organization that owns it, or a platform admin.
@@ -13017,6 +13060,34 @@ extension APIProtocol {
             body: body
         ))
     }
+    /// Confirm the code sent to the signed-in customer's own sign-up email
+    ///
+    /// Under a customer token. On success the email is proven, the sign-up list is applied and a registered invitation to the address is accepted. A wrong code is a 400 whose message is the reason (mismatch, expired, too_many_attempts, no_challenge) and counts against the code's five attempts.
+    ///
+    /// Replaces POST /customer/email/verify/confirm.
+    ///
+    /// - Remark: HTTP `POST /v1/customers/me/email_verification/confirm`.
+    /// - Remark: Generated from `#/paths//v1/customers/me/email_verification/confirm/post(postV1CustomersMeEmailVerificationConfirm)`.
+    public func postV1CustomersMeEmailVerificationConfirm(
+        headers: Operations.PostV1CustomersMeEmailVerificationConfirm.Input.Headers = .init(),
+        body: Operations.PostV1CustomersMeEmailVerificationConfirm.Input.Body
+    ) async throws -> Operations.PostV1CustomersMeEmailVerificationConfirm.Output {
+        try await postV1CustomersMeEmailVerificationConfirm(Operations.PostV1CustomersMeEmailVerificationConfirm.Input(
+            headers: headers,
+            body: body
+        ))
+    }
+    /// Send a code to the signed-in customer's own sign-up email
+    ///
+    /// Under a customer token. The code goes to the customer's `customers.email`; no address is accepted. 409 when the email is already verified or held by another account, 429 within the resend cooldown, 422 when the code could not be sent.
+    ///
+    /// Replaces POST /customer/email/verify/start.
+    ///
+    /// - Remark: HTTP `POST /v1/customers/me/email_verification/start`.
+    /// - Remark: Generated from `#/paths//v1/customers/me/email_verification/start/post(postV1CustomersMeEmailVerificationStart)`.
+    public func postV1CustomersMeEmailVerificationStart(headers: Operations.PostV1CustomersMeEmailVerificationStart.Input.Headers = .init()) async throws -> Operations.PostV1CustomersMeEmailVerificationStart.Output {
+        try await postV1CustomersMeEmailVerificationStart(Operations.PostV1CustomersMeEmailVerificationStart.Input(headers: headers))
+    }
     /// Provision one of the caller's end-customers with an ADH password credential
     ///
     /// Replaces POST /customer/register.
@@ -14008,6 +14079,59 @@ extension APIProtocol {
         headers: Operations.DeleteV1EcosystemsByIdSigninAppsByClientId.Input.Headers = .init()
     ) async throws -> Operations.DeleteV1EcosystemsByIdSigninAppsByClientId.Output {
         try await deleteV1EcosystemsByIdSigninAppsByClientId(Operations.DeleteV1EcosystemsByIdSigninAppsByClientId.Input(
+            path: path,
+            headers: headers
+        ))
+    }
+    /// List an ecosystem's sign-up list
+    ///
+    /// Replaces GET /ecosystem/signup-list/{id}.
+    ///
+    /// - Remark: HTTP `GET /v1/ecosystems/{id}/signup_list_entries`.
+    /// - Remark: Generated from `#/paths//v1/ecosystems/{id}/signup_list_entries/get(getV1EcosystemsByIdSignupListEntries)`.
+    public func getV1EcosystemsByIdSignupListEntries(
+        path: Operations.GetV1EcosystemsByIdSignupListEntries.Input.Path,
+        query: Operations.GetV1EcosystemsByIdSignupListEntries.Input.Query = .init(),
+        headers: Operations.GetV1EcosystemsByIdSignupListEntries.Input.Headers = .init()
+    ) async throws -> Operations.GetV1EcosystemsByIdSignupListEntries.Output {
+        try await getV1EcosystemsByIdSignupListEntries(Operations.GetV1EcosystemsByIdSignupListEntries.Input(
+            path: path,
+            query: query,
+            headers: headers
+        ))
+    }
+    /// Add or change a sign-up list entry
+    ///
+    /// Upserts by email. While the ecosystem limits sign-in to a list of emails, the email is added to that list in the same transaction.
+    ///
+    /// Replaces PUT /ecosystem/signup-list/{id}.
+    ///
+    /// - Remark: HTTP `POST /v1/ecosystems/{id}/signup_list_entries`.
+    /// - Remark: Generated from `#/paths//v1/ecosystems/{id}/signup_list_entries/post(postV1EcosystemsByIdSignupListEntries)`.
+    public func postV1EcosystemsByIdSignupListEntries(
+        path: Operations.PostV1EcosystemsByIdSignupListEntries.Input.Path,
+        headers: Operations.PostV1EcosystemsByIdSignupListEntries.Input.Headers = .init(),
+        body: Operations.PostV1EcosystemsByIdSignupListEntries.Input.Body
+    ) async throws -> Operations.PostV1EcosystemsByIdSignupListEntries.Output {
+        try await postV1EcosystemsByIdSignupListEntries(Operations.PostV1EcosystemsByIdSignupListEntries.Input(
+            path: path,
+            headers: headers,
+            body: body
+        ))
+    }
+    /// Remove a sign-up list entry
+    ///
+    /// While the ecosystem limits sign-in to a list of emails, the email is removed from that list too. A role already granted stays granted.
+    ///
+    /// Replaces DELETE /ecosystem/signup-list/{id}/entries/{entryId}.
+    ///
+    /// - Remark: HTTP `DELETE /v1/ecosystems/{id}/signup_list_entries/{entry_id}`.
+    /// - Remark: Generated from `#/paths//v1/ecosystems/{id}/signup_list_entries/{entry_id}/delete(deleteV1EcosystemsByIdSignupListEntriesByEntryId)`.
+    public func deleteV1EcosystemsByIdSignupListEntriesByEntryId(
+        path: Operations.DeleteV1EcosystemsByIdSignupListEntriesByEntryId.Input.Path,
+        headers: Operations.DeleteV1EcosystemsByIdSignupListEntriesByEntryId.Input.Headers = .init()
+    ) async throws -> Operations.DeleteV1EcosystemsByIdSignupListEntriesByEntryId.Output {
+        try await deleteV1EcosystemsByIdSignupListEntriesByEntryId(Operations.DeleteV1EcosystemsByIdSignupListEntriesByEntryId.Input(
             path: path,
             headers: headers
         ))
@@ -34519,6 +34643,39 @@ public enum Components {
                 case customerId = "customer_id"
             }
         }
+        /// - Remark: Generated from `#/components/schemas/CustomerEmailVerifyResult`.
+        public struct CustomerEmailVerifyResult: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/CustomerEmailVerifyResult/ok`.
+            public var ok: Swift.Bool
+            /// Sign-up list entries applied to the customer by this confirmation
+            ///
+            /// - Remark: Generated from `#/components/schemas/CustomerEmailVerifyResult/signup_list_applied`.
+            public var signupListApplied: Swift.Int
+            /// Whether a registered invitation to the address was accepted
+            ///
+            /// - Remark: Generated from `#/components/schemas/CustomerEmailVerifyResult/invitation_accepted`.
+            public var invitationAccepted: Swift.Bool
+            /// Creates a new `CustomerEmailVerifyResult`.
+            ///
+            /// - Parameters:
+            ///   - ok:
+            ///   - signupListApplied: Sign-up list entries applied to the customer by this confirmation
+            ///   - invitationAccepted: Whether a registered invitation to the address was accepted
+            public init(
+                ok: Swift.Bool,
+                signupListApplied: Swift.Int,
+                invitationAccepted: Swift.Bool
+            ) {
+                self.ok = ok
+                self.signupListApplied = signupListApplied
+                self.invitationAccepted = invitationAccepted
+            }
+            public enum CodingKeys: String, CodingKey {
+                case ok
+                case signupListApplied = "signup_list_applied"
+                case invitationAccepted = "invitation_accepted"
+            }
+        }
         /// - Remark: Generated from `#/components/schemas/CustomerRegisterResult`.
         public struct CustomerRegisterResult: Codable, Hashable, Sendable {
             /// The newly provisioned end-customer id
@@ -46194,6 +46351,137 @@ public enum Components {
                 case slug
                 case name
                 case description
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/SignupListEntry`.
+        public struct SignupListEntry: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/SignupListEntry/id`.
+            public var id: Swift.String
+            /// Trimmed and lower-cased
+            ///
+            /// - Remark: Generated from `#/components/schemas/SignupListEntry/email`.
+            public var email: Swift.String
+            /// The role granted at the first proven session; null grants none
+            ///
+            /// - Remark: Generated from `#/components/schemas/SignupListEntry/role_id`.
+            public var roleId: Swift.String?
+            /// Reserved for sets; always null for now
+            ///
+            /// - Remark: Generated from `#/components/schemas/SignupListEntry/set_id`.
+            public var setId: Swift.String?
+            /// Unix timestamp, in seconds.
+            ///
+            /// - Remark: Generated from `#/components/schemas/SignupListEntry/created`.
+            public var created: Swift.Int
+            /// When the entry was applied; null while it waits
+            ///
+            /// - Remark: Generated from `#/components/schemas/SignupListEntry/granted_at`.
+            public var grantedAt: Foundation.Date?
+            /// - Remark: Generated from `#/components/schemas/SignupListEntry/granted_customer_id`.
+            public var grantedCustomerId: Swift.String?
+            /// Creates a new `SignupListEntry`.
+            ///
+            /// - Parameters:
+            ///   - id:
+            ///   - email: Trimmed and lower-cased
+            ///   - roleId: The role granted at the first proven session; null grants none
+            ///   - setId: Reserved for sets; always null for now
+            ///   - created: Unix timestamp, in seconds.
+            ///   - grantedAt: When the entry was applied; null while it waits
+            ///   - grantedCustomerId:
+            public init(
+                id: Swift.String,
+                email: Swift.String,
+                roleId: Swift.String? = nil,
+                setId: Swift.String? = nil,
+                created: Swift.Int,
+                grantedAt: Foundation.Date? = nil,
+                grantedCustomerId: Swift.String? = nil
+            ) {
+                self.id = id
+                self.email = email
+                self.roleId = roleId
+                self.setId = setId
+                self.created = created
+                self.grantedAt = grantedAt
+                self.grantedCustomerId = grantedCustomerId
+            }
+            public enum CodingKeys: String, CodingKey {
+                case id
+                case email
+                case roleId = "role_id"
+                case setId = "set_id"
+                case created
+                case grantedAt = "granted_at"
+                case grantedCustomerId = "granted_customer_id"
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/SignupListEntries`.
+        public struct SignupListEntries: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/SignupListEntries/entries`.
+            public var entries: [Components.Schemas.SignupListEntry]
+            /// Creates a new `SignupListEntries`.
+            ///
+            /// - Parameters:
+            ///   - entries:
+            public init(entries: [Components.Schemas.SignupListEntry]) {
+                self.entries = entries
+            }
+            public enum CodingKeys: String, CodingKey {
+                case entries
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/SignupListEntryPut`.
+        public struct SignupListEntryPut: Codable, Hashable, Sendable {
+            /// Stored trimmed and lower-cased
+            ///
+            /// - Remark: Generated from `#/components/schemas/SignupListEntryPut/email`.
+            public var email: Swift.String
+            /// - Remark: Generated from `#/components/schemas/SignupListEntryPut/role_id`.
+            public var roleId: Swift.String?
+            /// Refused with 422 until sets are available
+            ///
+            /// - Remark: Generated from `#/components/schemas/SignupListEntryPut/set_id`.
+            public var setId: Swift.String?
+            /// Creates a new `SignupListEntryPut`.
+            ///
+            /// - Parameters:
+            ///   - email: Stored trimmed and lower-cased
+            ///   - roleId:
+            ///   - setId: Refused with 422 until sets are available
+            public init(
+                email: Swift.String,
+                roleId: Swift.String? = nil,
+                setId: Swift.String? = nil
+            ) {
+                self.email = email
+                self.roleId = roleId
+                self.setId = setId
+            }
+            public enum CodingKeys: String, CodingKey {
+                case email
+                case roleId = "role_id"
+                case setId = "set_id"
+            }
+            public init(from decoder: any Swift.Decoder) throws {
+                let container = try decoder.container(keyedBy: CodingKeys.self)
+                self.email = try container.decode(
+                    Swift.String.self,
+                    forKey: .email
+                )
+                self.roleId = try container.decodeIfPresent(
+                    Swift.String.self,
+                    forKey: .roleId
+                )
+                self.setId = try container.decodeIfPresent(
+                    Swift.String.self,
+                    forKey: .setId
+                )
+                try decoder.ensureNoAdditionalProperties(knownKeys: [
+                    "email",
+                    "role_id",
+                    "set_id"
+                ])
             }
         }
         /// An ecosystem's sign-up and sign-in policy. Defaults are returned when nothing has been set.
@@ -191321,6 +191609,904 @@ public enum Operations {
             }
         }
     }
+    /// Confirm the code sent to the signed-in customer's own sign-up email
+    ///
+    /// Under a customer token. On success the email is proven, the sign-up list is applied and a registered invitation to the address is accepted. A wrong code is a 400 whose message is the reason (mismatch, expired, too_many_attempts, no_challenge) and counts against the code's five attempts.
+    ///
+    /// Replaces POST /customer/email/verify/confirm.
+    ///
+    /// - Remark: HTTP `POST /v1/customers/me/email_verification/confirm`.
+    /// - Remark: Generated from `#/paths//v1/customers/me/email_verification/confirm/post(postV1CustomersMeEmailVerificationConfirm)`.
+    public enum PostV1CustomersMeEmailVerificationConfirm {
+        public static let id: Swift.String = "postV1CustomersMeEmailVerificationConfirm"
+        public struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/v1/customers/me/email_verification/confirm/POST/header`.
+            public struct Headers: Sendable, Hashable {
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.PostV1CustomersMeEmailVerificationConfirm.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.PostV1CustomersMeEmailVerificationConfirm.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            public var headers: Operations.PostV1CustomersMeEmailVerificationConfirm.Input.Headers
+            /// - Remark: Generated from `#/paths/v1/customers/me/email_verification/confirm/POST/requestBody`.
+            @frozen public enum Body: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/customers/me/email_verification/confirm/POST/requestBody/json`.
+                public struct JsonPayload: Codable, Hashable, Sendable {
+                    /// - Remark: Generated from `#/paths/v1/customers/me/email_verification/confirm/POST/requestBody/json/code`.
+                    public var code: Swift.String
+                    /// Creates a new `JsonPayload`.
+                    ///
+                    /// - Parameters:
+                    ///   - code:
+                    public init(code: Swift.String) {
+                        self.code = code
+                    }
+                    public enum CodingKeys: String, CodingKey {
+                        case code
+                    }
+                    public init(from decoder: any Swift.Decoder) throws {
+                        let container = try decoder.container(keyedBy: CodingKeys.self)
+                        self.code = try container.decode(
+                            Swift.String.self,
+                            forKey: .code
+                        )
+                        try decoder.ensureNoAdditionalProperties(knownKeys: [
+                            "code"
+                        ])
+                    }
+                }
+                /// - Remark: Generated from `#/paths/v1/customers/me/email_verification/confirm/POST/requestBody/content/application\/json`.
+                case json(Operations.PostV1CustomersMeEmailVerificationConfirm.Input.Body.JsonPayload)
+            }
+            public var body: Operations.PostV1CustomersMeEmailVerificationConfirm.Input.Body
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - headers:
+            ///   - body:
+            public init(
+                headers: Operations.PostV1CustomersMeEmailVerificationConfirm.Input.Headers = .init(),
+                body: Operations.PostV1CustomersMeEmailVerificationConfirm.Input.Body
+            ) {
+                self.headers = headers
+                self.body = body
+            }
+        }
+        @frozen public enum Output: Sendable, Hashable {
+            public struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/customers/me/email_verification/confirm/POST/responses/200/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/customers/me/email_verification/confirm/POST/responses/200/content/json`.
+                    public struct JsonPayload: Codable, Hashable, Sendable {
+                        /// - Remark: Generated from `#/paths/v1/customers/me/email_verification/confirm/POST/responses/200/content/json/value1`.
+                        public struct Value1Payload: Codable, Hashable, Sendable {
+                            /// - Remark: Generated from `#/paths/v1/customers/me/email_verification/confirm/POST/responses/200/content/json/value1/object`.
+                            @frozen public enum ObjectPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                                case customers_me_emailVerification = "customers.me.email_verification"
+                            }
+                            /// - Remark: Generated from `#/paths/v1/customers/me/email_verification/confirm/POST/responses/200/content/json/value1/object`.
+                            public var object: Operations.PostV1CustomersMeEmailVerificationConfirm.Output.Ok.Body.JsonPayload.Value1Payload.ObjectPayload?
+                            /// Creates a new `Value1Payload`.
+                            ///
+                            /// - Parameters:
+                            ///   - object:
+                            public init(object: Operations.PostV1CustomersMeEmailVerificationConfirm.Output.Ok.Body.JsonPayload.Value1Payload.ObjectPayload? = nil) {
+                                self.object = object
+                            }
+                            public enum CodingKeys: String, CodingKey {
+                                case object
+                            }
+                        }
+                        /// - Remark: Generated from `#/paths/v1/customers/me/email_verification/confirm/POST/responses/200/content/json/value1`.
+                        public var value1: Operations.PostV1CustomersMeEmailVerificationConfirm.Output.Ok.Body.JsonPayload.Value1Payload
+                        /// - Remark: Generated from `#/paths/v1/customers/me/email_verification/confirm/POST/responses/200/content/json/value2`.
+                        public var value2: Components.Schemas.CustomerEmailVerifyResult
+                        /// Creates a new `JsonPayload`.
+                        ///
+                        /// - Parameters:
+                        ///   - value1:
+                        ///   - value2:
+                        public init(
+                            value1: Operations.PostV1CustomersMeEmailVerificationConfirm.Output.Ok.Body.JsonPayload.Value1Payload,
+                            value2: Components.Schemas.CustomerEmailVerifyResult
+                        ) {
+                            self.value1 = value1
+                            self.value2 = value2
+                        }
+                        public init(from decoder: any Swift.Decoder) throws {
+                            self.value1 = try .init(from: decoder)
+                            self.value2 = try .init(from: decoder)
+                        }
+                        public func encode(to encoder: any Swift.Encoder) throws {
+                            try self.value1.encode(to: encoder)
+                            try self.value2.encode(to: encoder)
+                        }
+                    }
+                    /// - Remark: Generated from `#/paths/v1/customers/me/email_verification/confirm/POST/responses/200/content/application\/json`.
+                    case json(Operations.PostV1CustomersMeEmailVerificationConfirm.Output.Ok.Body.JsonPayload)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Operations.PostV1CustomersMeEmailVerificationConfirm.Output.Ok.Body.JsonPayload {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostV1CustomersMeEmailVerificationConfirm.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostV1CustomersMeEmailVerificationConfirm.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// email verified
+            ///
+            /// - Remark: Generated from `#/paths//v1/customers/me/email_verification/confirm/post(postV1CustomersMeEmailVerificationConfirm)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.PostV1CustomersMeEmailVerificationConfirm.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            public var ok: Operations.PostV1CustomersMeEmailVerificationConfirm.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct BadRequest: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/customers/me/email_verification/confirm/POST/responses/400/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/customers/me/email_verification/confirm/POST/responses/400/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostV1CustomersMeEmailVerificationConfirm.Output.BadRequest.Body
+                /// Creates a new `BadRequest`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostV1CustomersMeEmailVerificationConfirm.Output.BadRequest.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/customers/me/email_verification/confirm/post(postV1CustomersMeEmailVerificationConfirm)/responses/400`.
+            ///
+            /// HTTP response code: `400 badRequest`.
+            case badRequest(Operations.PostV1CustomersMeEmailVerificationConfirm.Output.BadRequest)
+            /// The associated value of the enum case if `self` is `.badRequest`.
+            ///
+            /// - Throws: An error if `self` is not `.badRequest`.
+            /// - SeeAlso: `.badRequest`.
+            public var badRequest: Operations.PostV1CustomersMeEmailVerificationConfirm.Output.BadRequest {
+                get throws {
+                    switch self {
+                    case let .badRequest(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "badRequest",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct Unauthorized: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/customers/me/email_verification/confirm/POST/responses/401/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/customers/me/email_verification/confirm/POST/responses/401/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostV1CustomersMeEmailVerificationConfirm.Output.Unauthorized.Body
+                /// Creates a new `Unauthorized`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostV1CustomersMeEmailVerificationConfirm.Output.Unauthorized.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/customers/me/email_verification/confirm/post(postV1CustomersMeEmailVerificationConfirm)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            case unauthorized(Operations.PostV1CustomersMeEmailVerificationConfirm.Output.Unauthorized)
+            /// The associated value of the enum case if `self` is `.unauthorized`.
+            ///
+            /// - Throws: An error if `self` is not `.unauthorized`.
+            /// - SeeAlso: `.unauthorized`.
+            public var unauthorized: Operations.PostV1CustomersMeEmailVerificationConfirm.Output.Unauthorized {
+                get throws {
+                    switch self {
+                    case let .unauthorized(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "unauthorized",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct Forbidden: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/customers/me/email_verification/confirm/POST/responses/403/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/customers/me/email_verification/confirm/POST/responses/403/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostV1CustomersMeEmailVerificationConfirm.Output.Forbidden.Body
+                /// Creates a new `Forbidden`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostV1CustomersMeEmailVerificationConfirm.Output.Forbidden.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/customers/me/email_verification/confirm/post(postV1CustomersMeEmailVerificationConfirm)/responses/403`.
+            ///
+            /// HTTP response code: `403 forbidden`.
+            case forbidden(Operations.PostV1CustomersMeEmailVerificationConfirm.Output.Forbidden)
+            /// The associated value of the enum case if `self` is `.forbidden`.
+            ///
+            /// - Throws: An error if `self` is not `.forbidden`.
+            /// - SeeAlso: `.forbidden`.
+            public var forbidden: Operations.PostV1CustomersMeEmailVerificationConfirm.Output.Forbidden {
+                get throws {
+                    switch self {
+                    case let .forbidden(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "forbidden",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct NotFound: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/customers/me/email_verification/confirm/POST/responses/404/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/customers/me/email_verification/confirm/POST/responses/404/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostV1CustomersMeEmailVerificationConfirm.Output.NotFound.Body
+                /// Creates a new `NotFound`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostV1CustomersMeEmailVerificationConfirm.Output.NotFound.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/customers/me/email_verification/confirm/post(postV1CustomersMeEmailVerificationConfirm)/responses/404`.
+            ///
+            /// HTTP response code: `404 notFound`.
+            case notFound(Operations.PostV1CustomersMeEmailVerificationConfirm.Output.NotFound)
+            /// The associated value of the enum case if `self` is `.notFound`.
+            ///
+            /// - Throws: An error if `self` is not `.notFound`.
+            /// - SeeAlso: `.notFound`.
+            public var notFound: Operations.PostV1CustomersMeEmailVerificationConfirm.Output.NotFound {
+                get throws {
+                    switch self {
+                    case let .notFound(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "notFound",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct Conflict: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/customers/me/email_verification/confirm/POST/responses/409/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/customers/me/email_verification/confirm/POST/responses/409/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostV1CustomersMeEmailVerificationConfirm.Output.Conflict.Body
+                /// Creates a new `Conflict`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostV1CustomersMeEmailVerificationConfirm.Output.Conflict.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/customers/me/email_verification/confirm/post(postV1CustomersMeEmailVerificationConfirm)/responses/409`.
+            ///
+            /// HTTP response code: `409 conflict`.
+            case conflict(Operations.PostV1CustomersMeEmailVerificationConfirm.Output.Conflict)
+            /// The associated value of the enum case if `self` is `.conflict`.
+            ///
+            /// - Throws: An error if `self` is not `.conflict`.
+            /// - SeeAlso: `.conflict`.
+            public var conflict: Operations.PostV1CustomersMeEmailVerificationConfirm.Output.Conflict {
+                get throws {
+                    switch self {
+                    case let .conflict(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "conflict",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        @frozen public enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            public init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            public var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            public static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// Send a code to the signed-in customer's own sign-up email
+    ///
+    /// Under a customer token. The code goes to the customer's `customers.email`; no address is accepted. 409 when the email is already verified or held by another account, 429 within the resend cooldown, 422 when the code could not be sent.
+    ///
+    /// Replaces POST /customer/email/verify/start.
+    ///
+    /// - Remark: HTTP `POST /v1/customers/me/email_verification/start`.
+    /// - Remark: Generated from `#/paths//v1/customers/me/email_verification/start/post(postV1CustomersMeEmailVerificationStart)`.
+    public enum PostV1CustomersMeEmailVerificationStart {
+        public static let id: Swift.String = "postV1CustomersMeEmailVerificationStart"
+        public struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/v1/customers/me/email_verification/start/POST/header`.
+            public struct Headers: Sendable, Hashable {
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.PostV1CustomersMeEmailVerificationStart.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.PostV1CustomersMeEmailVerificationStart.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            public var headers: Operations.PostV1CustomersMeEmailVerificationStart.Input.Headers
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - headers:
+            public init(headers: Operations.PostV1CustomersMeEmailVerificationStart.Input.Headers = .init()) {
+                self.headers = headers
+            }
+        }
+        @frozen public enum Output: Sendable, Hashable {
+            public struct Accepted: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/customers/me/email_verification/start/POST/responses/202/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/customers/me/email_verification/start/POST/responses/202/content/json`.
+                    public struct JsonPayload: Codable, Hashable, Sendable {
+                        /// - Remark: Generated from `#/paths/v1/customers/me/email_verification/start/POST/responses/202/content/json/object`.
+                        @frozen public enum ObjectPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                            case customers_me_emailVerification_start = "customers.me.email_verification.start"
+                        }
+                        /// - Remark: Generated from `#/paths/v1/customers/me/email_verification/start/POST/responses/202/content/json/object`.
+                        public var object: Operations.PostV1CustomersMeEmailVerificationStart.Output.Accepted.Body.JsonPayload.ObjectPayload?
+                        /// - Remark: Generated from `#/paths/v1/customers/me/email_verification/start/POST/responses/202/content/json/ok`.
+                        public var ok: Swift.Bool
+                        /// Creates a new `JsonPayload`.
+                        ///
+                        /// - Parameters:
+                        ///   - object:
+                        ///   - ok:
+                        public init(
+                            object: Operations.PostV1CustomersMeEmailVerificationStart.Output.Accepted.Body.JsonPayload.ObjectPayload? = nil,
+                            ok: Swift.Bool
+                        ) {
+                            self.object = object
+                            self.ok = ok
+                        }
+                        public enum CodingKeys: String, CodingKey {
+                            case object
+                            case ok
+                        }
+                    }
+                    /// - Remark: Generated from `#/paths/v1/customers/me/email_verification/start/POST/responses/202/content/application\/json`.
+                    case json(Operations.PostV1CustomersMeEmailVerificationStart.Output.Accepted.Body.JsonPayload)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Operations.PostV1CustomersMeEmailVerificationStart.Output.Accepted.Body.JsonPayload {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostV1CustomersMeEmailVerificationStart.Output.Accepted.Body
+                /// Creates a new `Accepted`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostV1CustomersMeEmailVerificationStart.Output.Accepted.Body) {
+                    self.body = body
+                }
+            }
+            /// code sent
+            ///
+            /// - Remark: Generated from `#/paths//v1/customers/me/email_verification/start/post(postV1CustomersMeEmailVerificationStart)/responses/202`.
+            ///
+            /// HTTP response code: `202 accepted`.
+            case accepted(Operations.PostV1CustomersMeEmailVerificationStart.Output.Accepted)
+            /// The associated value of the enum case if `self` is `.accepted`.
+            ///
+            /// - Throws: An error if `self` is not `.accepted`.
+            /// - SeeAlso: `.accepted`.
+            public var accepted: Operations.PostV1CustomersMeEmailVerificationStart.Output.Accepted {
+                get throws {
+                    switch self {
+                    case let .accepted(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "accepted",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct Unauthorized: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/customers/me/email_verification/start/POST/responses/401/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/customers/me/email_verification/start/POST/responses/401/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostV1CustomersMeEmailVerificationStart.Output.Unauthorized.Body
+                /// Creates a new `Unauthorized`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostV1CustomersMeEmailVerificationStart.Output.Unauthorized.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/customers/me/email_verification/start/post(postV1CustomersMeEmailVerificationStart)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            case unauthorized(Operations.PostV1CustomersMeEmailVerificationStart.Output.Unauthorized)
+            /// The associated value of the enum case if `self` is `.unauthorized`.
+            ///
+            /// - Throws: An error if `self` is not `.unauthorized`.
+            /// - SeeAlso: `.unauthorized`.
+            public var unauthorized: Operations.PostV1CustomersMeEmailVerificationStart.Output.Unauthorized {
+                get throws {
+                    switch self {
+                    case let .unauthorized(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "unauthorized",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct Forbidden: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/customers/me/email_verification/start/POST/responses/403/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/customers/me/email_verification/start/POST/responses/403/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostV1CustomersMeEmailVerificationStart.Output.Forbidden.Body
+                /// Creates a new `Forbidden`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostV1CustomersMeEmailVerificationStart.Output.Forbidden.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/customers/me/email_verification/start/post(postV1CustomersMeEmailVerificationStart)/responses/403`.
+            ///
+            /// HTTP response code: `403 forbidden`.
+            case forbidden(Operations.PostV1CustomersMeEmailVerificationStart.Output.Forbidden)
+            /// The associated value of the enum case if `self` is `.forbidden`.
+            ///
+            /// - Throws: An error if `self` is not `.forbidden`.
+            /// - SeeAlso: `.forbidden`.
+            public var forbidden: Operations.PostV1CustomersMeEmailVerificationStart.Output.Forbidden {
+                get throws {
+                    switch self {
+                    case let .forbidden(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "forbidden",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct NotFound: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/customers/me/email_verification/start/POST/responses/404/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/customers/me/email_verification/start/POST/responses/404/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostV1CustomersMeEmailVerificationStart.Output.NotFound.Body
+                /// Creates a new `NotFound`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostV1CustomersMeEmailVerificationStart.Output.NotFound.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/customers/me/email_verification/start/post(postV1CustomersMeEmailVerificationStart)/responses/404`.
+            ///
+            /// HTTP response code: `404 notFound`.
+            case notFound(Operations.PostV1CustomersMeEmailVerificationStart.Output.NotFound)
+            /// The associated value of the enum case if `self` is `.notFound`.
+            ///
+            /// - Throws: An error if `self` is not `.notFound`.
+            /// - SeeAlso: `.notFound`.
+            public var notFound: Operations.PostV1CustomersMeEmailVerificationStart.Output.NotFound {
+                get throws {
+                    switch self {
+                    case let .notFound(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "notFound",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct Conflict: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/customers/me/email_verification/start/POST/responses/409/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/customers/me/email_verification/start/POST/responses/409/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostV1CustomersMeEmailVerificationStart.Output.Conflict.Body
+                /// Creates a new `Conflict`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostV1CustomersMeEmailVerificationStart.Output.Conflict.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/customers/me/email_verification/start/post(postV1CustomersMeEmailVerificationStart)/responses/409`.
+            ///
+            /// HTTP response code: `409 conflict`.
+            case conflict(Operations.PostV1CustomersMeEmailVerificationStart.Output.Conflict)
+            /// The associated value of the enum case if `self` is `.conflict`.
+            ///
+            /// - Throws: An error if `self` is not `.conflict`.
+            /// - SeeAlso: `.conflict`.
+            public var conflict: Operations.PostV1CustomersMeEmailVerificationStart.Output.Conflict {
+                get throws {
+                    switch self {
+                    case let .conflict(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "conflict",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct UnprocessableContent: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/customers/me/email_verification/start/POST/responses/422/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/customers/me/email_verification/start/POST/responses/422/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostV1CustomersMeEmailVerificationStart.Output.UnprocessableContent.Body
+                /// Creates a new `UnprocessableContent`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostV1CustomersMeEmailVerificationStart.Output.UnprocessableContent.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/customers/me/email_verification/start/post(postV1CustomersMeEmailVerificationStart)/responses/422`.
+            ///
+            /// HTTP response code: `422 unprocessableContent`.
+            case unprocessableContent(Operations.PostV1CustomersMeEmailVerificationStart.Output.UnprocessableContent)
+            /// The associated value of the enum case if `self` is `.unprocessableContent`.
+            ///
+            /// - Throws: An error if `self` is not `.unprocessableContent`.
+            /// - SeeAlso: `.unprocessableContent`.
+            public var unprocessableContent: Operations.PostV1CustomersMeEmailVerificationStart.Output.UnprocessableContent {
+                get throws {
+                    switch self {
+                    case let .unprocessableContent(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "unprocessableContent",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct TooManyRequests: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/customers/me/email_verification/start/POST/responses/429/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/customers/me/email_verification/start/POST/responses/429/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostV1CustomersMeEmailVerificationStart.Output.TooManyRequests.Body
+                /// Creates a new `TooManyRequests`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostV1CustomersMeEmailVerificationStart.Output.TooManyRequests.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/customers/me/email_verification/start/post(postV1CustomersMeEmailVerificationStart)/responses/429`.
+            ///
+            /// HTTP response code: `429 tooManyRequests`.
+            case tooManyRequests(Operations.PostV1CustomersMeEmailVerificationStart.Output.TooManyRequests)
+            /// The associated value of the enum case if `self` is `.tooManyRequests`.
+            ///
+            /// - Throws: An error if `self` is not `.tooManyRequests`.
+            /// - SeeAlso: `.tooManyRequests`.
+            public var tooManyRequests: Operations.PostV1CustomersMeEmailVerificationStart.Output.TooManyRequests {
+                get throws {
+                    switch self {
+                    case let .tooManyRequests(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "tooManyRequests",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        @frozen public enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            public init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            public var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            public static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
     /// Provision one of the caller's end-customers with an ADH password credential
     ///
     /// Replaces POST /customer/register.
@@ -218005,6 +219191,1151 @@ public enum Operations {
             /// - Throws: An error if `self` is not `.notFound`.
             /// - SeeAlso: `.notFound`.
             public var notFound: Operations.DeleteV1EcosystemsByIdSigninAppsByClientId.Output.NotFound {
+                get throws {
+                    switch self {
+                    case let .notFound(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "notFound",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        @frozen public enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            public init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            public var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            public static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// List an ecosystem's sign-up list
+    ///
+    /// Replaces GET /ecosystem/signup-list/{id}.
+    ///
+    /// - Remark: HTTP `GET /v1/ecosystems/{id}/signup_list_entries`.
+    /// - Remark: Generated from `#/paths//v1/ecosystems/{id}/signup_list_entries/get(getV1EcosystemsByIdSignupListEntries)`.
+    public enum GetV1EcosystemsByIdSignupListEntries {
+        public static let id: Swift.String = "getV1EcosystemsByIdSignupListEntries"
+        public struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/v1/ecosystems/{id}/signup_list_entries/GET/path`.
+            public struct Path: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/ecosystems/{id}/signup_list_entries/GET/path/id`.
+                public var id: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - id:
+                public init(id: Swift.String) {
+                    self.id = id
+                }
+            }
+            public var path: Operations.GetV1EcosystemsByIdSignupListEntries.Input.Path
+            /// - Remark: Generated from `#/paths/v1/ecosystems/{id}/signup_list_entries/GET/query`.
+            public struct Query: Sendable, Hashable {
+                /// Page size, 1–100 (default 10).
+                ///
+                /// - Remark: Generated from `#/paths/v1/ecosystems/{id}/signup_list_entries/GET/query/limit`.
+                public var limit: Swift.Int?
+                /// Cursor: an object id; returns the page after it.
+                ///
+                /// - Remark: Generated from `#/paths/v1/ecosystems/{id}/signup_list_entries/GET/query/starting_after`.
+                public var startingAfter: Swift.String?
+                /// Cursor: an object id; returns the page before it.
+                ///
+                /// - Remark: Generated from `#/paths/v1/ecosystems/{id}/signup_list_entries/GET/query/ending_before`.
+                public var endingBefore: Swift.String?
+                /// Related objects to return in full instead of as an id. Up to four levels, e.g. `ecosystem_id`; on a list, `data.<field>`.
+                ///
+                /// - Remark: Generated from `#/paths/v1/ecosystems/{id}/signup_list_entries/GET/query/expand[]`.
+                public var expand_lbrack__rbrack_: [Swift.String]?
+                /// Creates a new `Query`.
+                ///
+                /// - Parameters:
+                ///   - limit: Page size, 1–100 (default 10).
+                ///   - startingAfter: Cursor: an object id; returns the page after it.
+                ///   - endingBefore: Cursor: an object id; returns the page before it.
+                ///   - expand_lbrack__rbrack_: Related objects to return in full instead of as an id. Up to four levels, e.g. `ecosystem_id`; on a list, `data.<field>`.
+                public init(
+                    limit: Swift.Int? = nil,
+                    startingAfter: Swift.String? = nil,
+                    endingBefore: Swift.String? = nil,
+                    expand_lbrack__rbrack_: [Swift.String]? = nil
+                ) {
+                    self.limit = limit
+                    self.startingAfter = startingAfter
+                    self.endingBefore = endingBefore
+                    self.expand_lbrack__rbrack_ = expand_lbrack__rbrack_
+                }
+            }
+            public var query: Operations.GetV1EcosystemsByIdSignupListEntries.Input.Query
+            /// - Remark: Generated from `#/paths/v1/ecosystems/{id}/signup_list_entries/GET/header`.
+            public struct Headers: Sendable, Hashable {
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.GetV1EcosystemsByIdSignupListEntries.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.GetV1EcosystemsByIdSignupListEntries.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            public var headers: Operations.GetV1EcosystemsByIdSignupListEntries.Input.Headers
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            ///   - query:
+            ///   - headers:
+            public init(
+                path: Operations.GetV1EcosystemsByIdSignupListEntries.Input.Path,
+                query: Operations.GetV1EcosystemsByIdSignupListEntries.Input.Query = .init(),
+                headers: Operations.GetV1EcosystemsByIdSignupListEntries.Input.Headers = .init()
+            ) {
+                self.path = path
+                self.query = query
+                self.headers = headers
+            }
+        }
+        @frozen public enum Output: Sendable, Hashable {
+            public struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/ecosystems/{id}/signup_list_entries/GET/responses/200/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/ecosystems/{id}/signup_list_entries/GET/responses/200/content/json`.
+                    public struct JsonPayload: Codable, Hashable, Sendable {
+                        /// - Remark: Generated from `#/paths/v1/ecosystems/{id}/signup_list_entries/GET/responses/200/content/json/object`.
+                        @frozen public enum ObjectPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                            case list = "list"
+                        }
+                        /// - Remark: Generated from `#/paths/v1/ecosystems/{id}/signup_list_entries/GET/responses/200/content/json/object`.
+                        public var object: Operations.GetV1EcosystemsByIdSignupListEntries.Output.Ok.Body.JsonPayload.ObjectPayload
+                        /// - Remark: Generated from `#/paths/v1/ecosystems/{id}/signup_list_entries/GET/responses/200/content/json/DataPayload`.
+                        public struct DataPayloadPayload: Codable, Hashable, Sendable {
+                            /// - Remark: Generated from `#/paths/v1/ecosystems/{id}/signup_list_entries/GET/responses/200/content/json/DataPayload/value1`.
+                            public struct Value1Payload: Codable, Hashable, Sendable {
+                                /// - Remark: Generated from `#/paths/v1/ecosystems/{id}/signup_list_entries/GET/responses/200/content/json/DataPayload/value1/object`.
+                                @frozen public enum ObjectPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                                    case signupListEntry = "signup_list_entry"
+                                }
+                                /// - Remark: Generated from `#/paths/v1/ecosystems/{id}/signup_list_entries/GET/responses/200/content/json/DataPayload/value1/object`.
+                                public var object: Operations.GetV1EcosystemsByIdSignupListEntries.Output.Ok.Body.JsonPayload.DataPayloadPayload.Value1Payload.ObjectPayload?
+                                /// Creates a new `Value1Payload`.
+                                ///
+                                /// - Parameters:
+                                ///   - object:
+                                public init(object: Operations.GetV1EcosystemsByIdSignupListEntries.Output.Ok.Body.JsonPayload.DataPayloadPayload.Value1Payload.ObjectPayload? = nil) {
+                                    self.object = object
+                                }
+                                public enum CodingKeys: String, CodingKey {
+                                    case object
+                                }
+                            }
+                            /// - Remark: Generated from `#/paths/v1/ecosystems/{id}/signup_list_entries/GET/responses/200/content/json/DataPayload/value1`.
+                            public var value1: Operations.GetV1EcosystemsByIdSignupListEntries.Output.Ok.Body.JsonPayload.DataPayloadPayload.Value1Payload
+                            /// - Remark: Generated from `#/paths/v1/ecosystems/{id}/signup_list_entries/GET/responses/200/content/json/DataPayload/value2`.
+                            public var value2: Components.Schemas.SignupListEntry
+                            /// Creates a new `DataPayloadPayload`.
+                            ///
+                            /// - Parameters:
+                            ///   - value1:
+                            ///   - value2:
+                            public init(
+                                value1: Operations.GetV1EcosystemsByIdSignupListEntries.Output.Ok.Body.JsonPayload.DataPayloadPayload.Value1Payload,
+                                value2: Components.Schemas.SignupListEntry
+                            ) {
+                                self.value1 = value1
+                                self.value2 = value2
+                            }
+                            public init(from decoder: any Swift.Decoder) throws {
+                                self.value1 = try .init(from: decoder)
+                                self.value2 = try .init(from: decoder)
+                            }
+                            public func encode(to encoder: any Swift.Encoder) throws {
+                                try self.value1.encode(to: encoder)
+                                try self.value2.encode(to: encoder)
+                            }
+                        }
+                        /// - Remark: Generated from `#/paths/v1/ecosystems/{id}/signup_list_entries/GET/responses/200/content/json/data`.
+                        public typealias DataPayload = [Operations.GetV1EcosystemsByIdSignupListEntries.Output.Ok.Body.JsonPayload.DataPayloadPayload]
+                        /// - Remark: Generated from `#/paths/v1/ecosystems/{id}/signup_list_entries/GET/responses/200/content/json/data`.
+                        public var data: Operations.GetV1EcosystemsByIdSignupListEntries.Output.Ok.Body.JsonPayload.DataPayload
+                        /// - Remark: Generated from `#/paths/v1/ecosystems/{id}/signup_list_entries/GET/responses/200/content/json/has_more`.
+                        public var hasMore: Swift.Bool
+                        /// - Remark: Generated from `#/paths/v1/ecosystems/{id}/signup_list_entries/GET/responses/200/content/json/url`.
+                        public var url: Swift.String
+                        /// Creates a new `JsonPayload`.
+                        ///
+                        /// - Parameters:
+                        ///   - object:
+                        ///   - data:
+                        ///   - hasMore:
+                        ///   - url:
+                        public init(
+                            object: Operations.GetV1EcosystemsByIdSignupListEntries.Output.Ok.Body.JsonPayload.ObjectPayload,
+                            data: Operations.GetV1EcosystemsByIdSignupListEntries.Output.Ok.Body.JsonPayload.DataPayload,
+                            hasMore: Swift.Bool,
+                            url: Swift.String
+                        ) {
+                            self.object = object
+                            self.data = data
+                            self.hasMore = hasMore
+                            self.url = url
+                        }
+                        public enum CodingKeys: String, CodingKey {
+                            case object
+                            case data
+                            case hasMore = "has_more"
+                            case url
+                        }
+                    }
+                    /// - Remark: Generated from `#/paths/v1/ecosystems/{id}/signup_list_entries/GET/responses/200/content/application\/json`.
+                    case json(Operations.GetV1EcosystemsByIdSignupListEntries.Output.Ok.Body.JsonPayload)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Operations.GetV1EcosystemsByIdSignupListEntries.Output.Ok.Body.JsonPayload {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.GetV1EcosystemsByIdSignupListEntries.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.GetV1EcosystemsByIdSignupListEntries.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// Every entry, by email
+            ///
+            /// - Remark: Generated from `#/paths//v1/ecosystems/{id}/signup_list_entries/get(getV1EcosystemsByIdSignupListEntries)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.GetV1EcosystemsByIdSignupListEntries.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            public var ok: Operations.GetV1EcosystemsByIdSignupListEntries.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct Unauthorized: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/ecosystems/{id}/signup_list_entries/GET/responses/401/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/ecosystems/{id}/signup_list_entries/GET/responses/401/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.GetV1EcosystemsByIdSignupListEntries.Output.Unauthorized.Body
+                /// Creates a new `Unauthorized`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.GetV1EcosystemsByIdSignupListEntries.Output.Unauthorized.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/ecosystems/{id}/signup_list_entries/get(getV1EcosystemsByIdSignupListEntries)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            case unauthorized(Operations.GetV1EcosystemsByIdSignupListEntries.Output.Unauthorized)
+            /// The associated value of the enum case if `self` is `.unauthorized`.
+            ///
+            /// - Throws: An error if `self` is not `.unauthorized`.
+            /// - SeeAlso: `.unauthorized`.
+            public var unauthorized: Operations.GetV1EcosystemsByIdSignupListEntries.Output.Unauthorized {
+                get throws {
+                    switch self {
+                    case let .unauthorized(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "unauthorized",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct Forbidden: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/ecosystems/{id}/signup_list_entries/GET/responses/403/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/ecosystems/{id}/signup_list_entries/GET/responses/403/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.GetV1EcosystemsByIdSignupListEntries.Output.Forbidden.Body
+                /// Creates a new `Forbidden`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.GetV1EcosystemsByIdSignupListEntries.Output.Forbidden.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/ecosystems/{id}/signup_list_entries/get(getV1EcosystemsByIdSignupListEntries)/responses/403`.
+            ///
+            /// HTTP response code: `403 forbidden`.
+            case forbidden(Operations.GetV1EcosystemsByIdSignupListEntries.Output.Forbidden)
+            /// The associated value of the enum case if `self` is `.forbidden`.
+            ///
+            /// - Throws: An error if `self` is not `.forbidden`.
+            /// - SeeAlso: `.forbidden`.
+            public var forbidden: Operations.GetV1EcosystemsByIdSignupListEntries.Output.Forbidden {
+                get throws {
+                    switch self {
+                    case let .forbidden(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "forbidden",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct NotFound: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/ecosystems/{id}/signup_list_entries/GET/responses/404/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/ecosystems/{id}/signup_list_entries/GET/responses/404/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.GetV1EcosystemsByIdSignupListEntries.Output.NotFound.Body
+                /// Creates a new `NotFound`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.GetV1EcosystemsByIdSignupListEntries.Output.NotFound.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/ecosystems/{id}/signup_list_entries/get(getV1EcosystemsByIdSignupListEntries)/responses/404`.
+            ///
+            /// HTTP response code: `404 notFound`.
+            case notFound(Operations.GetV1EcosystemsByIdSignupListEntries.Output.NotFound)
+            /// The associated value of the enum case if `self` is `.notFound`.
+            ///
+            /// - Throws: An error if `self` is not `.notFound`.
+            /// - SeeAlso: `.notFound`.
+            public var notFound: Operations.GetV1EcosystemsByIdSignupListEntries.Output.NotFound {
+                get throws {
+                    switch self {
+                    case let .notFound(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "notFound",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        @frozen public enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            public init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            public var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            public static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// Add or change a sign-up list entry
+    ///
+    /// Upserts by email. While the ecosystem limits sign-in to a list of emails, the email is added to that list in the same transaction.
+    ///
+    /// Replaces PUT /ecosystem/signup-list/{id}.
+    ///
+    /// - Remark: HTTP `POST /v1/ecosystems/{id}/signup_list_entries`.
+    /// - Remark: Generated from `#/paths//v1/ecosystems/{id}/signup_list_entries/post(postV1EcosystemsByIdSignupListEntries)`.
+    public enum PostV1EcosystemsByIdSignupListEntries {
+        public static let id: Swift.String = "postV1EcosystemsByIdSignupListEntries"
+        public struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/v1/ecosystems/{id}/signup_list_entries/POST/path`.
+            public struct Path: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/ecosystems/{id}/signup_list_entries/POST/path/id`.
+                public var id: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - id:
+                public init(id: Swift.String) {
+                    self.id = id
+                }
+            }
+            public var path: Operations.PostV1EcosystemsByIdSignupListEntries.Input.Path
+            /// - Remark: Generated from `#/paths/v1/ecosystems/{id}/signup_list_entries/POST/header`.
+            public struct Headers: Sendable, Hashable {
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.PostV1EcosystemsByIdSignupListEntries.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.PostV1EcosystemsByIdSignupListEntries.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            public var headers: Operations.PostV1EcosystemsByIdSignupListEntries.Input.Headers
+            /// - Remark: Generated from `#/paths/v1/ecosystems/{id}/signup_list_entries/POST/requestBody`.
+            @frozen public enum Body: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/ecosystems/{id}/signup_list_entries/POST/requestBody/content/application\/json`.
+                case json(Components.Schemas.SignupListEntryPut)
+            }
+            public var body: Operations.PostV1EcosystemsByIdSignupListEntries.Input.Body
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            ///   - headers:
+            ///   - body:
+            public init(
+                path: Operations.PostV1EcosystemsByIdSignupListEntries.Input.Path,
+                headers: Operations.PostV1EcosystemsByIdSignupListEntries.Input.Headers = .init(),
+                body: Operations.PostV1EcosystemsByIdSignupListEntries.Input.Body
+            ) {
+                self.path = path
+                self.headers = headers
+                self.body = body
+            }
+        }
+        @frozen public enum Output: Sendable, Hashable {
+            public struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/ecosystems/{id}/signup_list_entries/POST/responses/200/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/ecosystems/{id}/signup_list_entries/POST/responses/200/content/json`.
+                    public struct JsonPayload: Codable, Hashable, Sendable {
+                        /// - Remark: Generated from `#/paths/v1/ecosystems/{id}/signup_list_entries/POST/responses/200/content/json/value1`.
+                        public struct Value1Payload: Codable, Hashable, Sendable {
+                            /// - Remark: Generated from `#/paths/v1/ecosystems/{id}/signup_list_entries/POST/responses/200/content/json/value1/object`.
+                            @frozen public enum ObjectPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                                case signupListEntry = "signup_list_entry"
+                            }
+                            /// - Remark: Generated from `#/paths/v1/ecosystems/{id}/signup_list_entries/POST/responses/200/content/json/value1/object`.
+                            public var object: Operations.PostV1EcosystemsByIdSignupListEntries.Output.Ok.Body.JsonPayload.Value1Payload.ObjectPayload?
+                            /// Creates a new `Value1Payload`.
+                            ///
+                            /// - Parameters:
+                            ///   - object:
+                            public init(object: Operations.PostV1EcosystemsByIdSignupListEntries.Output.Ok.Body.JsonPayload.Value1Payload.ObjectPayload? = nil) {
+                                self.object = object
+                            }
+                            public enum CodingKeys: String, CodingKey {
+                                case object
+                            }
+                        }
+                        /// - Remark: Generated from `#/paths/v1/ecosystems/{id}/signup_list_entries/POST/responses/200/content/json/value1`.
+                        public var value1: Operations.PostV1EcosystemsByIdSignupListEntries.Output.Ok.Body.JsonPayload.Value1Payload
+                        /// - Remark: Generated from `#/paths/v1/ecosystems/{id}/signup_list_entries/POST/responses/200/content/json/value2`.
+                        public var value2: Components.Schemas.SignupListEntry
+                        /// Creates a new `JsonPayload`.
+                        ///
+                        /// - Parameters:
+                        ///   - value1:
+                        ///   - value2:
+                        public init(
+                            value1: Operations.PostV1EcosystemsByIdSignupListEntries.Output.Ok.Body.JsonPayload.Value1Payload,
+                            value2: Components.Schemas.SignupListEntry
+                        ) {
+                            self.value1 = value1
+                            self.value2 = value2
+                        }
+                        public init(from decoder: any Swift.Decoder) throws {
+                            self.value1 = try .init(from: decoder)
+                            self.value2 = try .init(from: decoder)
+                        }
+                        public func encode(to encoder: any Swift.Encoder) throws {
+                            try self.value1.encode(to: encoder)
+                            try self.value2.encode(to: encoder)
+                        }
+                    }
+                    /// - Remark: Generated from `#/paths/v1/ecosystems/{id}/signup_list_entries/POST/responses/200/content/application\/json`.
+                    case json(Operations.PostV1EcosystemsByIdSignupListEntries.Output.Ok.Body.JsonPayload)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Operations.PostV1EcosystemsByIdSignupListEntries.Output.Ok.Body.JsonPayload {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostV1EcosystemsByIdSignupListEntries.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostV1EcosystemsByIdSignupListEntries.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// The entry after the write
+            ///
+            /// - Remark: Generated from `#/paths//v1/ecosystems/{id}/signup_list_entries/post(postV1EcosystemsByIdSignupListEntries)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.PostV1EcosystemsByIdSignupListEntries.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            public var ok: Operations.PostV1EcosystemsByIdSignupListEntries.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct BadRequest: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/ecosystems/{id}/signup_list_entries/POST/responses/400/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/ecosystems/{id}/signup_list_entries/POST/responses/400/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostV1EcosystemsByIdSignupListEntries.Output.BadRequest.Body
+                /// Creates a new `BadRequest`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostV1EcosystemsByIdSignupListEntries.Output.BadRequest.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/ecosystems/{id}/signup_list_entries/post(postV1EcosystemsByIdSignupListEntries)/responses/400`.
+            ///
+            /// HTTP response code: `400 badRequest`.
+            case badRequest(Operations.PostV1EcosystemsByIdSignupListEntries.Output.BadRequest)
+            /// The associated value of the enum case if `self` is `.badRequest`.
+            ///
+            /// - Throws: An error if `self` is not `.badRequest`.
+            /// - SeeAlso: `.badRequest`.
+            public var badRequest: Operations.PostV1EcosystemsByIdSignupListEntries.Output.BadRequest {
+                get throws {
+                    switch self {
+                    case let .badRequest(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "badRequest",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct Unauthorized: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/ecosystems/{id}/signup_list_entries/POST/responses/401/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/ecosystems/{id}/signup_list_entries/POST/responses/401/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostV1EcosystemsByIdSignupListEntries.Output.Unauthorized.Body
+                /// Creates a new `Unauthorized`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostV1EcosystemsByIdSignupListEntries.Output.Unauthorized.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/ecosystems/{id}/signup_list_entries/post(postV1EcosystemsByIdSignupListEntries)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            case unauthorized(Operations.PostV1EcosystemsByIdSignupListEntries.Output.Unauthorized)
+            /// The associated value of the enum case if `self` is `.unauthorized`.
+            ///
+            /// - Throws: An error if `self` is not `.unauthorized`.
+            /// - SeeAlso: `.unauthorized`.
+            public var unauthorized: Operations.PostV1EcosystemsByIdSignupListEntries.Output.Unauthorized {
+                get throws {
+                    switch self {
+                    case let .unauthorized(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "unauthorized",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct Forbidden: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/ecosystems/{id}/signup_list_entries/POST/responses/403/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/ecosystems/{id}/signup_list_entries/POST/responses/403/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostV1EcosystemsByIdSignupListEntries.Output.Forbidden.Body
+                /// Creates a new `Forbidden`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostV1EcosystemsByIdSignupListEntries.Output.Forbidden.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/ecosystems/{id}/signup_list_entries/post(postV1EcosystemsByIdSignupListEntries)/responses/403`.
+            ///
+            /// HTTP response code: `403 forbidden`.
+            case forbidden(Operations.PostV1EcosystemsByIdSignupListEntries.Output.Forbidden)
+            /// The associated value of the enum case if `self` is `.forbidden`.
+            ///
+            /// - Throws: An error if `self` is not `.forbidden`.
+            /// - SeeAlso: `.forbidden`.
+            public var forbidden: Operations.PostV1EcosystemsByIdSignupListEntries.Output.Forbidden {
+                get throws {
+                    switch self {
+                    case let .forbidden(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "forbidden",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct NotFound: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/ecosystems/{id}/signup_list_entries/POST/responses/404/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/ecosystems/{id}/signup_list_entries/POST/responses/404/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostV1EcosystemsByIdSignupListEntries.Output.NotFound.Body
+                /// Creates a new `NotFound`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostV1EcosystemsByIdSignupListEntries.Output.NotFound.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/ecosystems/{id}/signup_list_entries/post(postV1EcosystemsByIdSignupListEntries)/responses/404`.
+            ///
+            /// HTTP response code: `404 notFound`.
+            case notFound(Operations.PostV1EcosystemsByIdSignupListEntries.Output.NotFound)
+            /// The associated value of the enum case if `self` is `.notFound`.
+            ///
+            /// - Throws: An error if `self` is not `.notFound`.
+            /// - SeeAlso: `.notFound`.
+            public var notFound: Operations.PostV1EcosystemsByIdSignupListEntries.Output.NotFound {
+                get throws {
+                    switch self {
+                    case let .notFound(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "notFound",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct UnprocessableContent: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/ecosystems/{id}/signup_list_entries/POST/responses/422/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/ecosystems/{id}/signup_list_entries/POST/responses/422/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostV1EcosystemsByIdSignupListEntries.Output.UnprocessableContent.Body
+                /// Creates a new `UnprocessableContent`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostV1EcosystemsByIdSignupListEntries.Output.UnprocessableContent.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/ecosystems/{id}/signup_list_entries/post(postV1EcosystemsByIdSignupListEntries)/responses/422`.
+            ///
+            /// HTTP response code: `422 unprocessableContent`.
+            case unprocessableContent(Operations.PostV1EcosystemsByIdSignupListEntries.Output.UnprocessableContent)
+            /// The associated value of the enum case if `self` is `.unprocessableContent`.
+            ///
+            /// - Throws: An error if `self` is not `.unprocessableContent`.
+            /// - SeeAlso: `.unprocessableContent`.
+            public var unprocessableContent: Operations.PostV1EcosystemsByIdSignupListEntries.Output.UnprocessableContent {
+                get throws {
+                    switch self {
+                    case let .unprocessableContent(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "unprocessableContent",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        @frozen public enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            public init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            public var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            public static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// Remove a sign-up list entry
+    ///
+    /// While the ecosystem limits sign-in to a list of emails, the email is removed from that list too. A role already granted stays granted.
+    ///
+    /// Replaces DELETE /ecosystem/signup-list/{id}/entries/{entryId}.
+    ///
+    /// - Remark: HTTP `DELETE /v1/ecosystems/{id}/signup_list_entries/{entry_id}`.
+    /// - Remark: Generated from `#/paths//v1/ecosystems/{id}/signup_list_entries/{entry_id}/delete(deleteV1EcosystemsByIdSignupListEntriesByEntryId)`.
+    public enum DeleteV1EcosystemsByIdSignupListEntriesByEntryId {
+        public static let id: Swift.String = "deleteV1EcosystemsByIdSignupListEntriesByEntryId"
+        public struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/v1/ecosystems/{id}/signup_list_entries/{entry_id}/DELETE/path`.
+            public struct Path: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/ecosystems/{id}/signup_list_entries/{entry_id}/DELETE/path/id`.
+                public var id: Swift.String
+                /// - Remark: Generated from `#/paths/v1/ecosystems/{id}/signup_list_entries/{entry_id}/DELETE/path/entry_id`.
+                public var entryId: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - id:
+                ///   - entryId:
+                public init(
+                    id: Swift.String,
+                    entryId: Swift.String
+                ) {
+                    self.id = id
+                    self.entryId = entryId
+                }
+            }
+            public var path: Operations.DeleteV1EcosystemsByIdSignupListEntriesByEntryId.Input.Path
+            /// - Remark: Generated from `#/paths/v1/ecosystems/{id}/signup_list_entries/{entry_id}/DELETE/header`.
+            public struct Headers: Sendable, Hashable {
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.DeleteV1EcosystemsByIdSignupListEntriesByEntryId.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.DeleteV1EcosystemsByIdSignupListEntriesByEntryId.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            public var headers: Operations.DeleteV1EcosystemsByIdSignupListEntriesByEntryId.Input.Headers
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            ///   - headers:
+            public init(
+                path: Operations.DeleteV1EcosystemsByIdSignupListEntriesByEntryId.Input.Path,
+                headers: Operations.DeleteV1EcosystemsByIdSignupListEntriesByEntryId.Input.Headers = .init()
+            ) {
+                self.path = path
+                self.headers = headers
+            }
+        }
+        @frozen public enum Output: Sendable, Hashable {
+            public struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/ecosystems/{id}/signup_list_entries/{entry_id}/DELETE/responses/200/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/ecosystems/{id}/signup_list_entries/{entry_id}/DELETE/responses/200/content/application\/json`.
+                    case json(Components.Schemas.Deleted)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.Deleted {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.DeleteV1EcosystemsByIdSignupListEntriesByEntryId.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.DeleteV1EcosystemsByIdSignupListEntriesByEntryId.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// Deleted
+            ///
+            /// - Remark: Generated from `#/paths//v1/ecosystems/{id}/signup_list_entries/{entry_id}/delete(deleteV1EcosystemsByIdSignupListEntriesByEntryId)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.DeleteV1EcosystemsByIdSignupListEntriesByEntryId.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            public var ok: Operations.DeleteV1EcosystemsByIdSignupListEntriesByEntryId.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct Unauthorized: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/ecosystems/{id}/signup_list_entries/{entry_id}/DELETE/responses/401/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/ecosystems/{id}/signup_list_entries/{entry_id}/DELETE/responses/401/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.DeleteV1EcosystemsByIdSignupListEntriesByEntryId.Output.Unauthorized.Body
+                /// Creates a new `Unauthorized`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.DeleteV1EcosystemsByIdSignupListEntriesByEntryId.Output.Unauthorized.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/ecosystems/{id}/signup_list_entries/{entry_id}/delete(deleteV1EcosystemsByIdSignupListEntriesByEntryId)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            case unauthorized(Operations.DeleteV1EcosystemsByIdSignupListEntriesByEntryId.Output.Unauthorized)
+            /// The associated value of the enum case if `self` is `.unauthorized`.
+            ///
+            /// - Throws: An error if `self` is not `.unauthorized`.
+            /// - SeeAlso: `.unauthorized`.
+            public var unauthorized: Operations.DeleteV1EcosystemsByIdSignupListEntriesByEntryId.Output.Unauthorized {
+                get throws {
+                    switch self {
+                    case let .unauthorized(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "unauthorized",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct Forbidden: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/ecosystems/{id}/signup_list_entries/{entry_id}/DELETE/responses/403/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/ecosystems/{id}/signup_list_entries/{entry_id}/DELETE/responses/403/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.DeleteV1EcosystemsByIdSignupListEntriesByEntryId.Output.Forbidden.Body
+                /// Creates a new `Forbidden`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.DeleteV1EcosystemsByIdSignupListEntriesByEntryId.Output.Forbidden.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/ecosystems/{id}/signup_list_entries/{entry_id}/delete(deleteV1EcosystemsByIdSignupListEntriesByEntryId)/responses/403`.
+            ///
+            /// HTTP response code: `403 forbidden`.
+            case forbidden(Operations.DeleteV1EcosystemsByIdSignupListEntriesByEntryId.Output.Forbidden)
+            /// The associated value of the enum case if `self` is `.forbidden`.
+            ///
+            /// - Throws: An error if `self` is not `.forbidden`.
+            /// - SeeAlso: `.forbidden`.
+            public var forbidden: Operations.DeleteV1EcosystemsByIdSignupListEntriesByEntryId.Output.Forbidden {
+                get throws {
+                    switch self {
+                    case let .forbidden(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "forbidden",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct NotFound: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/ecosystems/{id}/signup_list_entries/{entry_id}/DELETE/responses/404/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/ecosystems/{id}/signup_list_entries/{entry_id}/DELETE/responses/404/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.DeleteV1EcosystemsByIdSignupListEntriesByEntryId.Output.NotFound.Body
+                /// Creates a new `NotFound`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.DeleteV1EcosystemsByIdSignupListEntriesByEntryId.Output.NotFound.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/ecosystems/{id}/signup_list_entries/{entry_id}/delete(deleteV1EcosystemsByIdSignupListEntriesByEntryId)/responses/404`.
+            ///
+            /// HTTP response code: `404 notFound`.
+            case notFound(Operations.DeleteV1EcosystemsByIdSignupListEntriesByEntryId.Output.NotFound)
+            /// The associated value of the enum case if `self` is `.notFound`.
+            ///
+            /// - Throws: An error if `self` is not `.notFound`.
+            /// - SeeAlso: `.notFound`.
+            public var notFound: Operations.DeleteV1EcosystemsByIdSignupListEntriesByEntryId.Output.NotFound {
                 get throws {
                     switch self {
                     case let .notFound(response):

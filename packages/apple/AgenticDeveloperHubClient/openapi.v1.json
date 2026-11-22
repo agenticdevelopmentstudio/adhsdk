@@ -6831,6 +6831,27 @@
           }
         }
       },
+      "CustomerEmailVerifyResult": {
+        "type": "object",
+        "required": [
+          "ok",
+          "signup_list_applied",
+          "invitation_accepted"
+        ],
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "signup_list_applied": {
+            "type": "integer",
+            "description": "Sign-up list entries applied to the customer by this confirmation"
+          },
+          "invitation_accepted": {
+            "type": "boolean",
+            "description": "Whether a registered invitation to the address was accepted"
+          }
+        }
+      },
       "CustomerRegisterResult": {
         "type": "object",
         "required": [
@@ -14109,6 +14130,93 @@
             "type": "string",
             "nullable": true,
             "maxLength": 1000
+          }
+        }
+      },
+      "SignupListEntry": {
+        "type": "object",
+        "required": [
+          "id",
+          "email",
+          "role_id",
+          "set_id",
+          "created",
+          "granted_at",
+          "granted_customer_id"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "email": {
+            "type": "string",
+            "description": "Trimmed and lower-cased"
+          },
+          "role_id": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true,
+            "description": "The role granted at the first proven session; null grants none"
+          },
+          "set_id": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true,
+            "description": "Reserved for sets; always null for now"
+          },
+          "created": {
+            "type": "integer",
+            "description": "Unix timestamp, in seconds."
+          },
+          "granted_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true,
+            "description": "When the entry was applied; null while it waits"
+          },
+          "granted_customer_id": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "SignupListEntries": {
+        "type": "object",
+        "required": [
+          "entries"
+        ],
+        "properties": {
+          "entries": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SignupListEntry"
+            }
+          }
+        }
+      },
+      "SignupListEntryPut": {
+        "type": "object",
+        "required": [
+          "email"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "email": {
+            "type": "string",
+            "maxLength": 254,
+            "description": "Stored trimmed and lower-cased"
+          },
+          "role_id": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "set_id": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true,
+            "description": "Refused with 422 until sets are available"
           }
         }
       },
@@ -68057,6 +68165,224 @@
         ]
       }
     },
+    "/v1/customers/me/email_verification/confirm": {
+      "post": {
+        "tags": [
+          "customer"
+        ],
+        "summary": "Confirm the code sent to the signed-in customer's own sign-up email",
+        "description": "Under a customer token. On success the email is proven, the sign-up list is applied and a registered invitation to the address is accepted. A wrong code is a 400 whose message is the reason (mismatch, expired, too_many_attempts, no_challenge) and counts against the code's five attempts.\n\nReplaces POST /customer/email/verify/confirm.",
+        "operationId": "postV1CustomersMeEmailVerificationConfirm",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "code"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "code": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 16
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "email verified",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "object": {
+                          "type": "string",
+                          "const": "customers.me.email_verification"
+                        }
+                      }
+                    },
+                    {
+                      "$ref": "#/components/schemas/CustomerEmailVerifyResult"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          }
+        },
+        "x-adh-object": "customers.me.email_verification",
+        "x-adh-replaces": [
+          "POST /customer/email/verify/confirm"
+        ]
+      }
+    },
+    "/v1/customers/me/email_verification/start": {
+      "post": {
+        "tags": [
+          "customer"
+        ],
+        "summary": "Send a code to the signed-in customer's own sign-up email",
+        "description": "Under a customer token. The code goes to the customer's `customers.email`; no address is accepted. 409 when the email is already verified or held by another account, 429 within the resend cooldown, 422 when the code could not be sent.\n\nReplaces POST /customer/email/verify/start.",
+        "operationId": "postV1CustomersMeEmailVerificationStart",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "code sent",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "ok"
+                  ],
+                  "properties": {
+                    "object": {
+                      "type": "string",
+                      "const": "customers.me.email_verification.start"
+                    },
+                    "ok": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          }
+        },
+        "x-adh-object": "customers.me.email_verification.start",
+        "x-adh-replaces": [
+          "POST /customer/email/verify/start"
+        ]
+      }
+    },
     "/v1/customers/register": {
       "post": {
         "tags": [
@@ -77937,6 +78263,349 @@
         "x-adh-object": "signin_app",
         "x-adh-replaces": [
           "PATCH /ecosystem/signin-apps/{id}/{clientId}"
+        ]
+      }
+    },
+    "/v1/ecosystems/{id}/signup_list_entries": {
+      "get": {
+        "tags": [
+          "registry"
+        ],
+        "summary": "List an ecosystem's sign-up list",
+        "description": "Replaces GET /ecosystem/signup-list/{id}.",
+        "operationId": "getV1EcosystemsByIdSignupListEntries",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "description": "Page size, 1–100 (default 10).",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 10
+            }
+          },
+          {
+            "name": "starting_after",
+            "in": "query",
+            "required": false,
+            "description": "Cursor: an object id; returns the page after it.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "ending_before",
+            "in": "query",
+            "required": false,
+            "description": "Cursor: an object id; returns the page before it.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "expand[]",
+            "in": "query",
+            "required": false,
+            "description": "Related objects to return in full instead of as an id. Up to four levels, e.g. `ecosystem_id`; on a list, `data.<field>`.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "style": "form",
+            "explode": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Every entry, by email",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "object",
+                    "data",
+                    "has_more",
+                    "url"
+                  ],
+                  "properties": {
+                    "object": {
+                      "type": "string",
+                      "const": "list"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "allOf": [
+                          {
+                            "type": "object",
+                            "properties": {
+                              "object": {
+                                "type": "string",
+                                "const": "signup_list_entry"
+                              }
+                            }
+                          },
+                          {
+                            "$ref": "#/components/schemas/SignupListEntry"
+                          }
+                        ]
+                      }
+                    },
+                    "has_more": {
+                      "type": "boolean"
+                    },
+                    "url": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          }
+        },
+        "x-adh-object": "signup_list_entry",
+        "x-adh-replaces": [
+          "GET /ecosystem/signup-list/{id}"
+        ]
+      },
+      "post": {
+        "tags": [
+          "registry"
+        ],
+        "summary": "Add or change a sign-up list entry",
+        "description": "Upserts by email. While the ecosystem limits sign-in to a list of emails, the email is added to that list in the same transaction.\n\nReplaces PUT /ecosystem/signup-list/{id}.",
+        "operationId": "postV1EcosystemsByIdSignupListEntries",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SignupListEntryPut"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The entry after the write",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "object": {
+                          "type": "string",
+                          "const": "signup_list_entry"
+                        }
+                      }
+                    },
+                    {
+                      "$ref": "#/components/schemas/SignupListEntry"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          }
+        },
+        "x-adh-object": "signup_list_entry",
+        "x-adh-replaces": [
+          "PUT /ecosystem/signup-list/{id}"
+        ]
+      }
+    },
+    "/v1/ecosystems/{id}/signup_list_entries/{entry_id}": {
+      "delete": {
+        "tags": [
+          "registry"
+        ],
+        "summary": "Remove a sign-up list entry",
+        "description": "While the ecosystem limits sign-in to a list of emails, the email is removed from that list too. A role already granted stays granted.\n\nReplaces DELETE /ecosystem/signup-list/{id}/entries/{entryId}.",
+        "operationId": "deleteV1EcosystemsByIdSignupListEntriesByEntryId",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "entry_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Deleted"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          }
+        },
+        "x-adh-object": "signup_list_entry",
+        "x-adh-replaces": [
+          "DELETE /ecosystem/signup-list/{id}/entries/{entryId}"
         ]
       }
     },

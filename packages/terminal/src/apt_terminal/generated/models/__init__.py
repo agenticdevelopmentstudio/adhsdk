@@ -168,6 +168,7 @@ from .community_settings_type_0 import CommunitySettingsType0
 from .contact_method import ContactMethod
 from .contact_method_type import ContactMethodType
 from .customer_auth_result import CustomerAuthResult
+from .customer_email_verify_result import CustomerEmailVerifyResult
 from .customer_me import CustomerMe
 from .customer_me_access import CustomerMeAccess
 from .customer_me_realm import CustomerMeRealm
@@ -751,6 +752,12 @@ from .get_v1_ecosystems_by_id_signin_apps_response_200 import (
 )
 from .get_v1_ecosystems_by_id_signin_apps_response_200_data_item import (
     GetV1EcosystemsByIdSigninAppsResponse200DataItem,
+)
+from .get_v1_ecosystems_by_id_signup_list_entries_response_200 import (
+    GetV1EcosystemsByIdSignupListEntriesResponse200,
+)
+from .get_v1_ecosystems_by_id_signup_list_entries_response_200_data_item import (
+    GetV1EcosystemsByIdSignupListEntriesResponse200DataItem,
 )
 from .get_v1_ecosystems_by_id_sync_tables_response_200 import (
     GetV1EcosystemsByIdSyncTablesResponse200,
@@ -2144,6 +2151,15 @@ from .post_v1_customer_sessions_sms_codes_response_202 import (
 from .post_v1_customers_body import PostV1CustomersBody
 from .post_v1_customers_by_id_body import PostV1CustomersByIdBody
 from .post_v1_customers_by_id_response_200 import PostV1CustomersByIdResponse200
+from .post_v1_customers_me_email_verification_confirm_body import (
+    PostV1CustomersMeEmailVerificationConfirmBody,
+)
+from .post_v1_customers_me_email_verification_confirm_response_200 import (
+    PostV1CustomersMeEmailVerificationConfirmResponse200,
+)
+from .post_v1_customers_me_email_verification_start_response_202 import (
+    PostV1CustomersMeEmailVerificationStartResponse202,
+)
 from .post_v1_customers_register_body import PostV1CustomersRegisterBody
 from .post_v1_customers_register_response_201 import PostV1CustomersRegisterResponse201
 from .post_v1_customers_resolve_body import PostV1CustomersResolveBody
@@ -2199,6 +2215,9 @@ from .post_v1_ecosystems_by_id_signin_apps_by_client_id_response_200 import (
 )
 from .post_v1_ecosystems_by_id_signin_apps_response_201 import (
     PostV1EcosystemsByIdSigninAppsResponse201,
+)
+from .post_v1_ecosystems_by_id_signup_list_entries_response_200 import (
+    PostV1EcosystemsByIdSignupListEntriesResponse200,
 )
 from .post_v1_ecosystems_by_id_sync_tables_by_resource_response_200 import (
     PostV1EcosystemsByIdSyncTablesByResourceResponse200,
@@ -3477,6 +3496,9 @@ from .shipr_run_step_detail_type_0 import ShiprRunStepDetailType0
 from .shipr_run_step_stage import ShiprRunStepStage
 from .shipr_run_step_state import ShiprRunStepState
 from .shipr_run_summary_type_0 import ShiprRunSummaryType0
+from .signup_list_entries import SignupListEntries
+from .signup_list_entry import SignupListEntry
+from .signup_list_entry_put import SignupListEntryPut
 from .signup_list_public import SignupListPublic
 from .signup_list_public_status import SignupListPublicStatus
 from .storage_attachment import StorageAttachment
@@ -3794,6 +3816,7 @@ __all__ = (
     "ContactMethod",
     "ContactMethodType",
     "CustomerAuthResult",
+    "CustomerEmailVerifyResult",
     "CustomerMe",
     "CustomerMeAccess",
     "CustomerMeRealm",
@@ -4204,6 +4227,8 @@ __all__ = (
     "GetV1EcosystemsByIdResponse200",
     "GetV1EcosystemsByIdSigninAppsResponse200",
     "GetV1EcosystemsByIdSigninAppsResponse200DataItem",
+    "GetV1EcosystemsByIdSignupListEntriesResponse200",
+    "GetV1EcosystemsByIdSignupListEntriesResponse200DataItem",
     "GetV1EcosystemsByIdSyncTablesResponse200",
     "GetV1EcosystemsByIdSyncTablesResponse200DataItem",
     "GetV1EcosystemsResponse200",
@@ -5172,6 +5197,9 @@ __all__ = (
     "PostV1CustomersBody",
     "PostV1CustomersByIdBody",
     "PostV1CustomersByIdResponse200",
+    "PostV1CustomersMeEmailVerificationConfirmBody",
+    "PostV1CustomersMeEmailVerificationConfirmResponse200",
+    "PostV1CustomersMeEmailVerificationStartResponse202",
     "PostV1CustomersRegisterBody",
     "PostV1CustomersRegisterResponse201",
     "PostV1CustomersResolveBody",
@@ -5220,6 +5248,7 @@ __all__ = (
     "PostV1EcosystemsByIdResponse200",
     "PostV1EcosystemsByIdSigninAppsByClientIdResponse200",
     "PostV1EcosystemsByIdSigninAppsResponse201",
+    "PostV1EcosystemsByIdSignupListEntriesResponse200",
     "PostV1EcosystemsByIdSyncTablesByResourceResponse200",
     "PostV1EcosystemsMoveBody",
     "PostV1EcosystemsMoveResponse200",
@@ -6073,6 +6102,9 @@ __all__ = (
     "ShiprRunStepStage",
     "ShiprRunStepState",
     "ShiprRunSummaryType0",
+    "SignupListEntries",
+    "SignupListEntry",
+    "SignupListEntryPut",
     "SignupListPublic",
     "SignupListPublicStatus",
     "StorageAttachment",

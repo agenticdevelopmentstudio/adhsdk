@@ -4564,6 +4564,50 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/customers/me/email_verification/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Confirm the code sent to the signed-in customer's own sign-up email
+         * @description Under a customer token. On success the email is proven, the sign-up list is applied and a registered invitation to the address is accepted. A wrong code is a 400 whose message is the reason (mismatch, expired, too_many_attempts, no_challenge) and counts against the code's five attempts.
+         *
+         *     Replaces POST /customer/email/verify/confirm.
+         */
+        post: operations["postV1CustomersMeEmailVerificationConfirm"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/customers/me/email_verification/start": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Send a code to the signed-in customer's own sign-up email
+         * @description Under a customer token. The code goes to the customer's `customers.email`; no address is accepted. 409 when the email is already verified or held by another account, 429 within the resend cooldown, 422 when the code could not be sent.
+         *
+         *     Replaces POST /customer/email/verify/start.
+         */
+        post: operations["postV1CustomersMeEmailVerificationStart"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/customers/register": {
         parameters: {
             query?: never;
@@ -5315,6 +5359,54 @@ export interface paths {
          *     Replaces DELETE /ecosystem/signin-apps/{id}/{clientId}.
          */
         delete: operations["deleteV1EcosystemsByIdSigninAppsByClientId"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ecosystems/{id}/signup_list_entries": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List an ecosystem's sign-up list
+         * @description Replaces GET /ecosystem/signup-list/{id}.
+         */
+        get: operations["getV1EcosystemsByIdSignupListEntries"];
+        put?: never;
+        /**
+         * Add or change a sign-up list entry
+         * @description Upserts by email. While the ecosystem limits sign-in to a list of emails, the email is added to that list in the same transaction.
+         *
+         *     Replaces PUT /ecosystem/signup-list/{id}.
+         */
+        post: operations["postV1EcosystemsByIdSignupListEntries"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ecosystems/{id}/signup_list_entries/{entry_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Remove a sign-up list entry
+         * @description While the ecosystem limits sign-in to a list of emails, the email is removed from that list too. A role already granted stays granted.
+         *
+         *     Replaces DELETE /ecosystem/signup-list/{id}/entries/{entryId}.
+         */
+        delete: operations["deleteV1EcosystemsByIdSignupListEntriesByEntryId"];
         options?: never;
         head?: never;
         patch?: never;
@@ -15583,6 +15675,13 @@ export interface components {
             /** @description The stable ADH customer id for this externalId */
             customer_id: string;
         };
+        CustomerEmailVerifyResult: {
+            ok: boolean;
+            /** @description Sign-up list entries applied to the customer by this confirmation */
+            signup_list_applied: number;
+            /** @description Whether a registered invitation to the address was accepted */
+            invitation_accepted: boolean;
+        };
         CustomerRegisterResult: {
             /** @description The newly provisioned end-customer id */
             customer_id: string;
@@ -17777,6 +17876,44 @@ export interface components {
             slug: string;
             name: string;
             description?: string | null;
+        };
+        SignupListEntry: {
+            /** Format: uuid */
+            id: string;
+            /** @description Trimmed and lower-cased */
+            email: string;
+            /**
+             * Format: uuid
+             * @description The role granted at the first proven session; null grants none
+             */
+            role_id: string | null;
+            /**
+             * Format: uuid
+             * @description Reserved for sets; always null for now
+             */
+            set_id: string | null;
+            /** @description Unix timestamp, in seconds. */
+            created: number;
+            /**
+             * Format: date-time
+             * @description When the entry was applied; null while it waits
+             */
+            granted_at: string | null;
+            granted_customer_id: string | null;
+        };
+        SignupListEntries: {
+            entries: components["schemas"]["SignupListEntry"][];
+        };
+        SignupListEntryPut: {
+            /** @description Stored trimmed and lower-cased */
+            email: string;
+            /** Format: uuid */
+            role_id?: string | null;
+            /**
+             * Format: uuid
+             * @description Refused with 422 until sets are available
+             */
+            set_id?: string | null;
         };
         /** @description An ecosystem's sign-up and sign-in policy. Defaults are returned when nothing has been set. */
         EcosystemAuthSettings: {
@@ -40510,6 +40647,158 @@ export interface operations {
             };
         };
     };
+    postV1CustomersMeEmailVerificationConfirm: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    code: string;
+                };
+            };
+        };
+        responses: {
+            /** @description email verified */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        object?: "customers.me.email_verification";
+                    } & components["schemas"]["CustomerEmailVerifyResult"];
+                };
+            };
+            /** @description Error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+        };
+    };
+    postV1CustomersMeEmailVerificationStart: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description code sent */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        object?: "customers.me.email_verification.start";
+                        ok: boolean;
+                    };
+                };
+            };
+            /** @description Error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+        };
+    };
     postV1CustomersRegister: {
         parameters: {
             query?: never;
@@ -44659,6 +44948,197 @@ export interface operations {
             path: {
                 id: string;
                 client_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deleted */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Deleted"];
+                };
+            };
+            /** @description Error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+        };
+    };
+    getV1EcosystemsByIdSignupListEntries: {
+        parameters: {
+            query?: {
+                /** @description Page size, 1–100 (default 10). */
+                limit?: number;
+                /** @description Cursor: an object id; returns the page after it. */
+                starting_after?: string;
+                /** @description Cursor: an object id; returns the page before it. */
+                ending_before?: string;
+                /** @description Related objects to return in full instead of as an id. Up to four levels, e.g. `ecosystem_id`; on a list, `data.<field>`. */
+                "expand[]"?: string[];
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Every entry, by email */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        object: "list";
+                        data: ({
+                            /** @constant */
+                            object?: "signup_list_entry";
+                        } & components["schemas"]["SignupListEntry"])[];
+                        has_more: boolean;
+                        url: string;
+                    };
+                };
+            };
+            /** @description Error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+        };
+    };
+    postV1EcosystemsByIdSignupListEntries: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SignupListEntryPut"];
+            };
+        };
+        responses: {
+            /** @description The entry after the write */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        object?: "signup_list_entry";
+                    } & components["schemas"]["SignupListEntry"];
+                };
+            };
+            /** @description Error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+        };
+    };
+    deleteV1EcosystemsByIdSignupListEntriesByEntryId: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                entry_id: string;
             };
             cookie?: never;
         };
