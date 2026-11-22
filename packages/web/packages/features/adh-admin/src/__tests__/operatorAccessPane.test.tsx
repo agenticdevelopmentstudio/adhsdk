@@ -134,6 +134,17 @@ describe("OperatorAccessPane", () => {
     expect(lastQuery().has("target_ecosystem_id")).toBe(false);
   });
 
+  it("re-reads the log when the filters in force are applied again", async () => {
+    mount();
+    await screen.findByText("POST /v1/ecosystems/abc/members");
+    const before = listV1Page.mock.calls.length;
+    fireEvent.click(screen.getByRole("button", { name: "Apply filters" }));
+    await waitFor(() =>
+      expect(listV1Page.mock.calls.length).toBeGreaterThan(before),
+    );
+    expect(lastQuery().has("operator_account_id")).toBe(false);
+  });
+
   it("refuses a partial ecosystem id beside the field, keeping the list", async () => {
     mount();
     await screen.findByText("POST /v1/ecosystems/abc/members");

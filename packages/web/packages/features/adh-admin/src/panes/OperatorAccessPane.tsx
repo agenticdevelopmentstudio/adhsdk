@@ -14,6 +14,7 @@ import { Input } from "@adh-sdk/ui/components/input";
 import { Label } from "@adh-sdk/ui/components/label";
 import { Select } from "@adh-sdk/ui/components/select";
 import {
+  normalizeOperatorAccessFilters,
   useOperatorAccess,
   useOperators,
   type OperatorAccessEvent,
@@ -220,7 +221,15 @@ export function OperatorAccessPane({
     const found = checkDraft(draft);
     setErrors(found);
     if (found.targetEcosystemId || found.range) return;
-    setApplied(toFilters(draft));
+    const next = toFilters(draft);
+    // Applying the filters already in force is a request to look again. Setting an equal key
+    // would do nothing (react-query hashes it the same and the data is still fresh), so the
+    // window is re-read instead, and a row written a moment ago shows up.
+    const same =
+      JSON.stringify(normalizeOperatorAccessFilters(next)) ===
+      JSON.stringify(normalizeOperatorAccessFilters(applied));
+    if (same) log.refresh();
+    else setApplied(next);
   };
   const clear = () => {
     setDraft(EMPTY_DRAFT);
