@@ -134,6 +134,43 @@ describe("OperatorAccessPane", () => {
     expect(lastQuery().has("target_ecosystem_id")).toBe(false);
   });
 
+  it("refuses a partial ecosystem id beside the field, keeping the list", async () => {
+    mount();
+    await screen.findByText("POST /v1/ecosystems/abc/members");
+    const before = listV1Page.mock.calls.length;
+    fireEvent.change(screen.getByLabelText("Ecosystem id"), {
+      target: { value: "22222222" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Apply filters" }));
+    expect((await screen.findByRole("alert")).textContent).toMatch(
+      /whole ecosystem id/,
+    );
+    expect(
+      screen.getByLabelText("Ecosystem id").getAttribute("aria-invalid"),
+    ).toBe("true");
+    await new Promise((r) => setTimeout(r, 20));
+    expect(listV1Page.mock.calls.length).toBe(before);
+    expect(screen.getByText("POST /v1/ecosystems/abc/members")).toBeTruthy();
+  });
+
+  it("refuses a From at or after To", async () => {
+    mount();
+    await screen.findByText("POST /v1/ecosystems/abc/members");
+    const before = listV1Page.mock.calls.length;
+    fireEvent.change(screen.getByLabelText("From"), {
+      target: { value: "2026-11-21T10:00" },
+    });
+    fireEvent.change(screen.getByLabelText("To"), {
+      target: { value: "2026-11-01T10:00" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Apply filters" }));
+    expect((await screen.findByRole("alert")).textContent).toBe(
+      "From must be earlier than To.",
+    );
+    await new Promise((r) => setTimeout(r, 20));
+    expect(listV1Page.mock.calls.length).toBe(before);
+  });
+
   it("sends a time range as ISO text", async () => {
     mount();
     await screen.findByText("POST /v1/ecosystems/abc/members");

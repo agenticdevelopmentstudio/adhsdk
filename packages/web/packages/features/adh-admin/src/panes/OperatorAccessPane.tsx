@@ -56,6 +56,37 @@ function localToIso(value: string): string | undefined {
   return Number.isNaN(ms) ? undefined : new Date(ms).toISOString();
 }
 
+/** 8-4-4-4-12 hex, as the route checks `target_ecosystem_id` (adhbackend lib/uuid.ts UUID_RE). */
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** What is wrong with a draft, per field. Empty when the draft can be applied. */
+interface DraftErrors {
+  targetEcosystemId?: string;
+  range?: string;
+}
+
+/**
+ * The draft checked before it is applied. The route answers 400 for a non-uuid ecosystem id, and
+ * that error would replace the whole list with a generic load failure that never names the field;
+ * a From at or after To is not an error to the server at all, just an empty range, which the list
+ * would report as "no operator access recorded", a false answer for an audit log. Both are caught
+ * here and shown beside the field instead.
+ */
+function checkDraft(d: FilterDraft): DraftErrors {
+  const errors: DraftErrors = {};
+  const eco = d.targetEcosystemId.trim();
+  if (eco && !UUID_RE.test(eco)) {
+    errors.targetEcosystemId =
+      "Enter the whole ecosystem id, e.g. 22222222-2222-4222-8222-222222222222. The list shows only its first 8 characters.";
+  }
+  const from = localToIso(d.from);
+  const to = localToIso(d.to);
+  if (from && to && Date.parse(from) >= Date.parse(to)) {
+    errors.range = "From must be earlier than To.";
+  }
+  return errors;
+}
+
 /** The draft as the filters the server is asked for. Only this reaches the query key. */
 function toFilters(d: FilterDraft): OperatorAccessFilters {
   return {
@@ -71,6 +102,7 @@ export function OperatorAccessPane({
 }: { help?: ReactNode } = {}): ReactElement {
   const [draft, setDraft] = useState<FilterDraft>(EMPTY_DRAFT);
   const [applied, setApplied] = useState<OperatorAccessFilters>({});
+  const [errors, setErrors] = useState<DraftErrors>({});
   const log = useOperatorAccess(applied);
   const operators = useOperators();
 
@@ -185,10 +217,14 @@ export function OperatorAccessPane({
 
   const apply = (ev: FormEvent) => {
     ev.preventDefault();
+    const found = checkDraft(draft);
+    setErrors(found);
+    if (found.targetEcosystemId || found.range) return;
     setApplied(toFilters(draft));
   };
   const clear = () => {
     setDraft(EMPTY_DRAFT);
+    setErrors({});
     setApplied({});
   };
   const set = (field: keyof FilterDraft) => (value: string) =>
@@ -233,6 +269,12 @@ export function OperatorAccessPane({
               placeholder="Any ecosystem"
               value={draft.targetEcosystemId}
               onChange={(e) => set("targetEcosystemId")(e.target.value)}
+              aria-invalid={errors.targetEcosystemId ? true : undefined}
+              aria-describedby={
+                errors.targetEcosystemId
+                  ? "operator-access-ecosystem-error"
+                  : undefined
+              }
             />
           </div>
           <div className="flex flex-col gap-1.5">
@@ -251,12 +293,38 @@ export function OperatorAccessPane({
               type="datetime-local"
               value={draft.to}
               onChange={(e) => set("to")(e.target.value)}
+              aria-invalid={errors.range ? true : undefined}
+              aria-describedby={
+                errors.range ? "operator-access-range-error" : undefined
+              }
             />
           </div>
           <Button type="submit">Apply filters</Button>
           <Button type="button" variant="outline" onClick={clear}>
             Clear
           </Button>
+          {(errors.targetEcosystemId || errors.range) && (
+            <div className="flex basis-full flex-col gap-1">
+              {errors.targetEcosystemId && (
+                <span
+                  id="operator-access-ecosystem-error"
+                  role="alert"
+                  className="text-sm text-apt-red"
+                >
+                  {errors.targetEcosystemId}
+                </span>
+              )}
+              {errors.range && (
+                <span
+                  id="operator-access-range-error"
+                  role="alert"
+                  className="text-sm text-apt-red"
+                >
+                  {errors.range}
+                </span>
+              )}
+            </div>
+          )}
         </form>
 
         {/* No actions, as on the Audit pane: the log is append-only in the database itself. */}
