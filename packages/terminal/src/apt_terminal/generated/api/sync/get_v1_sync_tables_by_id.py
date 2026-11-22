@@ -97,7 +97,9 @@ def sync_detailed(
 ) -> Response[GetV1SyncTablesByIdResponse200 | StripeError]:
     """List an ecosystem's sync enrollment, default and effective
 
-     Replaces GET /admin/sync/tables/{id}.
+     Platform admins only.
+
+    Replaces GET /admin/sync/tables/{id}.
 
     Args:
         id (str):
@@ -140,7 +142,9 @@ def sync(
 ) -> GetV1SyncTablesByIdResponse200 | StripeError | None:
     """List an ecosystem's sync enrollment, default and effective
 
-     Replaces GET /admin/sync/tables/{id}.
+     Platform admins only.
+
+    Replaces GET /admin/sync/tables/{id}.
 
     Args:
         id (str):
@@ -178,7 +182,9 @@ async def asyncio_detailed(
 ) -> Response[GetV1SyncTablesByIdResponse200 | StripeError]:
     """List an ecosystem's sync enrollment, default and effective
 
-     Replaces GET /admin/sync/tables/{id}.
+     Platform admins only.
+
+    Replaces GET /admin/sync/tables/{id}.
 
     Args:
         id (str):
@@ -219,7 +225,9 @@ async def asyncio(
 ) -> GetV1SyncTablesByIdResponse200 | StripeError | None:
     """List an ecosystem's sync enrollment, default and effective
 
-     Replaces GET /admin/sync/tables/{id}.
+     Platform admins only.
+
+    Replaces GET /admin/sync/tables/{id}.
 
     Args:
         id (str):

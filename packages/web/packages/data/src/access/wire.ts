@@ -58,6 +58,22 @@ export interface EffectiveAccessRow {
   >;
 }
 
+/**
+ * Whose roles an access call manages: a hub workspace (by slug), or an owner-made ecosystem's
+ * product roles (by id). The backend takes exactly one of the two as `?workspace=` or
+ * `?ecosystem=`.
+ */
+export type AccessTarget = { workspace: string } | { ecosystem: string };
+
+/** One person a role can be granted to, as `GET /access/subjects` lists an ecosystem's. */
+export interface AccessSubjectRow {
+  kind: 'customer';
+  id: string;
+  label: string;
+  email: string | null;
+  slug: string;
+}
+
 /** `/v1/access/roles` row (grants nest as `{feature, item_verbs, subitem_verbs}`). */
 export interface AccessRoleWire {
   id: string;

@@ -12,7 +12,8 @@ from ...types import UNSET, Response, Unset
 
 def _get_kwargs(
     *,
-    workspace: str,
+    workspace: str | Unset = UNSET,
+    ecosystem: str | Unset = UNSET,
     limit: int | Unset = 10,
     starting_after: str | Unset = UNSET,
     ending_before: str | Unset = UNSET,
@@ -21,6 +22,8 @@ def _get_kwargs(
     params: dict[str, Any] = {}
 
     params["workspace"] = workspace
+
+    params["ecosystem"] = ecosystem
 
     params["limit"] = limit
 
@@ -88,7 +91,8 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient,
-    workspace: str,
+    workspace: str | Unset = UNSET,
+    ecosystem: str | Unset = UNSET,
     limit: int | Unset = 10,
     starting_after: str | Unset = UNSET,
     ending_before: str | Unset = UNSET,
@@ -99,7 +103,8 @@ def sync_detailed(
      Replaces GET /access/roles.
 
     Args:
-        workspace (str):
+        workspace (str | Unset):
+        ecosystem (str | Unset):
         limit (int | Unset):  Default: 10.
         starting_after (str | Unset):
         ending_before (str | Unset):
@@ -115,6 +120,7 @@ def sync_detailed(
 
     kwargs = _get_kwargs(
         workspace=workspace,
+        ecosystem=ecosystem,
         limit=limit,
         starting_after=starting_after,
         ending_before=ending_before,
@@ -131,7 +137,8 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient,
-    workspace: str,
+    workspace: str | Unset = UNSET,
+    ecosystem: str | Unset = UNSET,
     limit: int | Unset = 10,
     starting_after: str | Unset = UNSET,
     ending_before: str | Unset = UNSET,
@@ -142,7 +149,8 @@ def sync(
      Replaces GET /access/roles.
 
     Args:
-        workspace (str):
+        workspace (str | Unset):
+        ecosystem (str | Unset):
         limit (int | Unset):  Default: 10.
         starting_after (str | Unset):
         ending_before (str | Unset):
@@ -159,6 +167,7 @@ def sync(
     return sync_detailed(
         client=client,
         workspace=workspace,
+        ecosystem=ecosystem,
         limit=limit,
         starting_after=starting_after,
         ending_before=ending_before,
@@ -169,7 +178,8 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
-    workspace: str,
+    workspace: str | Unset = UNSET,
+    ecosystem: str | Unset = UNSET,
     limit: int | Unset = 10,
     starting_after: str | Unset = UNSET,
     ending_before: str | Unset = UNSET,
@@ -180,7 +190,8 @@ async def asyncio_detailed(
      Replaces GET /access/roles.
 
     Args:
-        workspace (str):
+        workspace (str | Unset):
+        ecosystem (str | Unset):
         limit (int | Unset):  Default: 10.
         starting_after (str | Unset):
         ending_before (str | Unset):
@@ -196,6 +207,7 @@ async def asyncio_detailed(
 
     kwargs = _get_kwargs(
         workspace=workspace,
+        ecosystem=ecosystem,
         limit=limit,
         starting_after=starting_after,
         ending_before=ending_before,
@@ -210,7 +222,8 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient,
-    workspace: str,
+    workspace: str | Unset = UNSET,
+    ecosystem: str | Unset = UNSET,
     limit: int | Unset = 10,
     starting_after: str | Unset = UNSET,
     ending_before: str | Unset = UNSET,
@@ -221,7 +234,8 @@ async def asyncio(
      Replaces GET /access/roles.
 
     Args:
-        workspace (str):
+        workspace (str | Unset):
+        ecosystem (str | Unset):
         limit (int | Unset):  Default: 10.
         starting_after (str | Unset):
         ending_before (str | Unset):
@@ -239,6 +253,7 @@ async def asyncio(
         await asyncio_detailed(
             client=client,
             workspace=workspace,
+            ecosystem=ecosystem,
             limit=limit,
             starting_after=starting_after,
             ending_before=ending_before,

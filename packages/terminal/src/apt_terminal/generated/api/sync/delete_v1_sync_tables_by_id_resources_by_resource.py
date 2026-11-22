@@ -74,9 +74,9 @@ def sync_detailed(
 ) -> Response[Deleted | StripeError]:
     """Drop the override and fall back to the catalog default
 
-     Idempotent, and deliberately unvalidated: clearing an override that was never set — or one naming a
-    resource the catalog has since dropped — succeeds rather than 400ing, so a stale override can always
-    be cleaned up.
+     Platform admins only. Idempotent, and deliberately unvalidated: clearing an override that was never
+    set — or one naming a resource the catalog has since dropped — succeeds rather than 400ing, so a
+    stale override can always be cleaned up.
 
     Replaces DELETE /admin/sync/tables/{id}/{resource}.
 
@@ -112,9 +112,9 @@ def sync(
 ) -> Deleted | StripeError | None:
     """Drop the override and fall back to the catalog default
 
-     Idempotent, and deliberately unvalidated: clearing an override that was never set — or one naming a
-    resource the catalog has since dropped — succeeds rather than 400ing, so a stale override can always
-    be cleaned up.
+     Platform admins only. Idempotent, and deliberately unvalidated: clearing an override that was never
+    set — or one naming a resource the catalog has since dropped — succeeds rather than 400ing, so a
+    stale override can always be cleaned up.
 
     Replaces DELETE /admin/sync/tables/{id}/{resource}.
 
@@ -145,9 +145,9 @@ async def asyncio_detailed(
 ) -> Response[Deleted | StripeError]:
     """Drop the override and fall back to the catalog default
 
-     Idempotent, and deliberately unvalidated: clearing an override that was never set — or one naming a
-    resource the catalog has since dropped — succeeds rather than 400ing, so a stale override can always
-    be cleaned up.
+     Platform admins only. Idempotent, and deliberately unvalidated: clearing an override that was never
+    set — or one naming a resource the catalog has since dropped — succeeds rather than 400ing, so a
+    stale override can always be cleaned up.
 
     Replaces DELETE /admin/sync/tables/{id}/{resource}.
 
@@ -181,9 +181,9 @@ async def asyncio(
 ) -> Deleted | StripeError | None:
     """Drop the override and fall back to the catalog default
 
-     Idempotent, and deliberately unvalidated: clearing an override that was never set — or one naming a
-    resource the catalog has since dropped — succeeds rather than 400ing, so a stale override can always
-    be cleaned up.
+     Platform admins only. Idempotent, and deliberately unvalidated: clearing an override that was never
+    set — or one naming a resource the catalog has since dropped — succeeds rather than 400ing, so a
+    stale override can always be cleaned up.
 
     Replaces DELETE /admin/sync/tables/{id}/{resource}.
 

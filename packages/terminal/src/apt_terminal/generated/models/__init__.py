@@ -16,6 +16,9 @@ from .access_role import AccessRole
 from .access_role_default_for import AccessRoleDefaultFor
 from .access_role_envelope import AccessRoleEnvelope
 from .access_role_list import AccessRoleList
+from .access_subject import AccessSubject
+from .access_subject_kind import AccessSubjectKind
+from .access_subject_list import AccessSubjectList
 from .access_tag import AccessTag
 from .access_tag_list import AccessTagList
 from .add_pending_user import AddPendingUser
@@ -166,6 +169,7 @@ from .contact_method import ContactMethod
 from .contact_method_type import ContactMethodType
 from .customer_auth_result import CustomerAuthResult
 from .customer_me import CustomerMe
+from .customer_me_access import CustomerMeAccess
 from .customer_me_realm import CustomerMeRealm
 from .customer_me_user import CustomerMeUser
 from .customer_register_result import CustomerRegisterResult
@@ -316,6 +320,8 @@ from .get_v1_access_features_response_200_data_item import GetV1AccessFeaturesRe
 from .get_v1_access_role_assignments_response_200 import GetV1AccessRoleAssignmentsResponse200
 from .get_v1_access_roles_response_200 import GetV1AccessRolesResponse200
 from .get_v1_access_roles_response_200_data_item import GetV1AccessRolesResponse200DataItem
+from .get_v1_access_subjects_response_200 import GetV1AccessSubjectsResponse200
+from .get_v1_access_subjects_response_200_data_item import GetV1AccessSubjectsResponse200DataItem
 from .get_v1_access_team_permissions_by_id_response_200 import (
     GetV1AccessTeamPermissionsByIdResponse200,
 )
@@ -363,6 +369,9 @@ from .get_v1_account_mfa_response_200_preferred_method_type_3_type_1 import (
 )
 from .get_v1_account_response_200 import GetV1AccountResponse200
 from .get_v1_account_response_200_privacy import GetV1AccountResponse200Privacy
+from .get_v1_accounts_by_id_response_200 import GetV1AccountsByIdResponse200
+from .get_v1_accounts_response_200 import GetV1AccountsResponse200
+from .get_v1_accounts_response_200_data_item import GetV1AccountsResponse200DataItem
 from .get_v1_admin_notes_response_200 import GetV1AdminNotesResponse200
 from .get_v1_admin_notes_response_200_data_item import GetV1AdminNotesResponse200DataItem
 from .get_v1_ai_services_by_id_response_200 import GetV1AiServicesByIdResponse200
@@ -419,6 +428,12 @@ from .get_v1_audience_templates_response_200_data_item import (
 from .get_v1_audit_events_by_id_response_200 import GetV1AuditEventsByIdResponse200
 from .get_v1_audit_events_response_200 import GetV1AuditEventsResponse200
 from .get_v1_audit_events_response_200_data_item import GetV1AuditEventsResponse200DataItem
+from .get_v1_auth_capabilities_operators_response_200 import (
+    GetV1AuthCapabilitiesOperatorsResponse200,
+)
+from .get_v1_auth_capabilities_operators_response_200_data_item import (
+    GetV1AuthCapabilitiesOperatorsResponse200DataItem,
+)
 from .get_v1_auth_capabilities_response_200 import GetV1AuthCapabilitiesResponse200
 from .get_v1_auth_capabilities_response_200_data_item_type_0 import (
     GetV1AuthCapabilitiesResponse200DataItemType0,
@@ -737,6 +752,12 @@ from .get_v1_ecosystems_by_id_signin_apps_response_200 import (
 from .get_v1_ecosystems_by_id_signin_apps_response_200_data_item import (
     GetV1EcosystemsByIdSigninAppsResponse200DataItem,
 )
+from .get_v1_ecosystems_by_id_sync_tables_response_200 import (
+    GetV1EcosystemsByIdSyncTablesResponse200,
+)
+from .get_v1_ecosystems_by_id_sync_tables_response_200_data_item import (
+    GetV1EcosystemsByIdSyncTablesResponse200DataItem,
+)
 from .get_v1_ecosystems_response_200 import GetV1EcosystemsResponse200
 from .get_v1_ecosystems_response_200_data_item import GetV1EcosystemsResponse200DataItem
 from .get_v1_entity_history_response_200 import GetV1EntityHistoryResponse200
@@ -992,6 +1013,10 @@ from .get_v1_messaging_messages_recipient import GetV1MessagingMessagesRecipient
 from .get_v1_messaging_messages_response_200 import GetV1MessagingMessagesResponse200
 from .get_v1_messaging_messages_response_200_data_item import (
     GetV1MessagingMessagesResponse200DataItem,
+)
+from .get_v1_messaging_providers_response_200 import GetV1MessagingProvidersResponse200
+from .get_v1_messaging_providers_response_200_data_item import (
+    GetV1MessagingProvidersResponse200DataItem,
 )
 from .get_v1_messaging_status_response_200 import GetV1MessagingStatusResponse200
 from .get_v1_messaging_templates_response_200 import GetV1MessagingTemplatesResponse200
@@ -1361,6 +1386,10 @@ from .get_v1_system_access_audit_response_200_data_item import (
 )
 from .get_v1_system_debug_env_response_200 import GetV1SystemDebugEnvResponse200
 from .get_v1_system_debug_env_response_200_data_item import GetV1SystemDebugEnvResponse200DataItem
+from .get_v1_system_operator_access_response_200 import GetV1SystemOperatorAccessResponse200
+from .get_v1_system_operator_access_response_200_data_item import (
+    GetV1SystemOperatorAccessResponse200DataItem,
+)
 from .get_v1_tasks_by_id_response_200 import GetV1TasksByIdResponse200
 from .get_v1_tasks_response_200 import GetV1TasksResponse200
 from .get_v1_tasks_response_200_data_item import GetV1TasksResponse200DataItem
@@ -1606,6 +1635,8 @@ from .notification_preference import NotificationPreference
 from .notification_preference_category import NotificationPreferenceCategory
 from .notification_status import NotificationStatus
 from .notification_wake_event import NotificationWakeEvent
+from .operator_access_entry import OperatorAccessEntry
+from .operator_access_page import OperatorAccessPage
 from .org_sheet import OrgSheet
 from .org_sheet_stats import OrgSheetStats
 from .org_sheet_subject_type import OrgSheetSubjectType
@@ -1646,6 +1677,7 @@ from .persona_sheet_stats import PersonaSheetStats
 from .persona_sheet_subject_type import PersonaSheetSubjectType
 from .persona_sheet_trend import PersonaSheetTrend
 from .persona_weekly_recap import PersonaWeeklyRecap
+from .platform_messaging_provider import PlatformMessagingProvider
 from .poll_tally import PollTally
 from .poll_tally_option import PollTallyOption
 from .poll_vote import PollVote
@@ -1732,6 +1764,10 @@ from .post_v1_account_mfa_totp_confirm_body import PostV1AccountMfaTotpConfirmBo
 from .post_v1_account_mfa_totp_confirm_response_200 import PostV1AccountMfaTotpConfirmResponse200
 from .post_v1_account_mfa_totp_response_200 import PostV1AccountMfaTotpResponse200
 from .post_v1_account_response_200 import PostV1AccountResponse200
+from .post_v1_accounts_body import PostV1AccountsBody
+from .post_v1_accounts_by_id_body import PostV1AccountsByIdBody
+from .post_v1_accounts_by_id_response_200 import PostV1AccountsByIdResponse200
+from .post_v1_accounts_response_201 import PostV1AccountsResponse201
 from .post_v1_admin_notes_body import PostV1AdminNotesBody
 from .post_v1_admin_notes_response_200 import PostV1AdminNotesResponse200
 from .post_v1_ai_services_body import PostV1AiServicesBody
@@ -2164,6 +2200,9 @@ from .post_v1_ecosystems_by_id_signin_apps_by_client_id_response_200 import (
 from .post_v1_ecosystems_by_id_signin_apps_response_201 import (
     PostV1EcosystemsByIdSigninAppsResponse201,
 )
+from .post_v1_ecosystems_by_id_sync_tables_by_resource_response_200 import (
+    PostV1EcosystemsByIdSyncTablesByResourceResponse200,
+)
 from .post_v1_ecosystems_move_body import PostV1EcosystemsMoveBody
 from .post_v1_ecosystems_move_response_200 import PostV1EcosystemsMoveResponse200
 from .post_v1_ecosystems_move_response_200_moved import PostV1EcosystemsMoveResponse200Moved
@@ -2533,6 +2572,16 @@ from .post_v1_memory_links_by_id_response_200 import PostV1MemoryLinksByIdRespon
 from .post_v1_memory_links_response_201 import PostV1MemoryLinksResponse201
 from .post_v1_messaging_messages_body import PostV1MessagingMessagesBody
 from .post_v1_messaging_messages_response_200 import PostV1MessagingMessagesResponse200
+from .post_v1_messaging_providers_by_id_body import PostV1MessagingProvidersByIdBody
+from .post_v1_messaging_providers_by_id_body_fields import PostV1MessagingProvidersByIdBodyFields
+from .post_v1_messaging_providers_by_id_response_200 import PostV1MessagingProvidersByIdResponse200
+from .post_v1_messaging_providers_by_id_rotate_webhook_secret_response_200 import (
+    PostV1MessagingProvidersByIdRotateWebhookSecretResponse200,
+)
+from .post_v1_messaging_providers_by_id_test_body import PostV1MessagingProvidersByIdTestBody
+from .post_v1_messaging_providers_by_id_test_response_200 import (
+    PostV1MessagingProvidersByIdTestResponse200,
+)
 from .post_v1_models_body import PostV1ModelsBody
 from .post_v1_models_body_metadata_type_0_type_1 import PostV1ModelsBodyMetadataType0Type1
 from .post_v1_models_by_id_body import PostV1ModelsByIdBody
@@ -3593,6 +3642,9 @@ __all__ = (
     "AccessRoleDefaultFor",
     "AccessRoleEnvelope",
     "AccessRoleList",
+    "AccessSubject",
+    "AccessSubjectKind",
+    "AccessSubjectList",
     "AccessTag",
     "AccessTagList",
     "AddPendingUser",
@@ -3743,6 +3795,7 @@ __all__ = (
     "ContactMethodType",
     "CustomerAuthResult",
     "CustomerMe",
+    "CustomerMeAccess",
     "CustomerMeRealm",
     "CustomerMeUser",
     "CustomerRegisterResult",
@@ -3885,6 +3938,8 @@ __all__ = (
     "GetV1AccessRoleAssignmentsResponse200",
     "GetV1AccessRolesResponse200",
     "GetV1AccessRolesResponse200DataItem",
+    "GetV1AccessSubjectsResponse200",
+    "GetV1AccessSubjectsResponse200DataItem",
     "GetV1AccessTeamPermissionsByIdResponse200",
     "GetV1AccessTeamPermissionsResponse200",
     "GetV1AccessTeamPermissionsResponse200DataItem",
@@ -3910,6 +3965,9 @@ __all__ = (
     "GetV1AccountMfaResponse200PreferredMethodType3Type1",
     "GetV1AccountResponse200",
     "GetV1AccountResponse200Privacy",
+    "GetV1AccountsByIdResponse200",
+    "GetV1AccountsResponse200",
+    "GetV1AccountsResponse200DataItem",
     "GetV1AdminNotesResponse200",
     "GetV1AdminNotesResponse200DataItem",
     "GetV1AiServicesByIdResponse200",
@@ -3946,6 +4004,8 @@ __all__ = (
     "GetV1AuditEventsByIdResponse200",
     "GetV1AuditEventsResponse200",
     "GetV1AuditEventsResponse200DataItem",
+    "GetV1AuthCapabilitiesOperatorsResponse200",
+    "GetV1AuthCapabilitiesOperatorsResponse200DataItem",
     "GetV1AuthCapabilitiesResponse200",
     "GetV1AuthCapabilitiesResponse200DataItemType0",
     "GetV1AuthMethodsByMethodResponse200",
@@ -4144,6 +4204,8 @@ __all__ = (
     "GetV1EcosystemsByIdResponse200",
     "GetV1EcosystemsByIdSigninAppsResponse200",
     "GetV1EcosystemsByIdSigninAppsResponse200DataItem",
+    "GetV1EcosystemsByIdSyncTablesResponse200",
+    "GetV1EcosystemsByIdSyncTablesResponse200DataItem",
     "GetV1EcosystemsResponse200",
     "GetV1EcosystemsResponse200DataItem",
     "GetV1EntityHistoryResponse200",
@@ -4292,6 +4354,8 @@ __all__ = (
     "GetV1MessagingMessagesRecipient",
     "GetV1MessagingMessagesResponse200",
     "GetV1MessagingMessagesResponse200DataItem",
+    "GetV1MessagingProvidersResponse200",
+    "GetV1MessagingProvidersResponse200DataItem",
     "GetV1MessagingStatusResponse200",
     "GetV1MessagingTemplatesResponse200",
     "GetV1MessagingTemplatesResponse200DataItem",
@@ -4512,6 +4576,8 @@ __all__ = (
     "GetV1SystemAccessAuditResponse200DataItem",
     "GetV1SystemDebugEnvResponse200",
     "GetV1SystemDebugEnvResponse200DataItem",
+    "GetV1SystemOperatorAccessResponse200",
+    "GetV1SystemOperatorAccessResponse200DataItem",
     "GetV1TasksByIdResponse200",
     "GetV1TasksResponse200",
     "GetV1TasksResponse200DataItem",
@@ -4721,6 +4787,8 @@ __all__ = (
     "NotificationPreferenceCategory",
     "NotificationStatus",
     "NotificationWakeEvent",
+    "OperatorAccessEntry",
+    "OperatorAccessPage",
     "OrgSheet",
     "OrgSheetStats",
     "OrgSheetSubjectType",
@@ -4761,6 +4829,7 @@ __all__ = (
     "PersonaSheetSubjectType",
     "PersonaSheetTrend",
     "PersonaWeeklyRecap",
+    "PlatformMessagingProvider",
     "PollTally",
     "PollTallyOption",
     "PollVote",
@@ -4825,6 +4894,10 @@ __all__ = (
     "PostV1AccountMfaTotpConfirmResponse200",
     "PostV1AccountMfaTotpResponse200",
     "PostV1AccountResponse200",
+    "PostV1AccountsBody",
+    "PostV1AccountsByIdBody",
+    "PostV1AccountsByIdResponse200",
+    "PostV1AccountsResponse201",
     "PostV1AdminNotesBody",
     "PostV1AdminNotesResponse200",
     "PostV1AiServicesBody",
@@ -5147,6 +5220,7 @@ __all__ = (
     "PostV1EcosystemsByIdResponse200",
     "PostV1EcosystemsByIdSigninAppsByClientIdResponse200",
     "PostV1EcosystemsByIdSigninAppsResponse201",
+    "PostV1EcosystemsByIdSyncTablesByResourceResponse200",
     "PostV1EcosystemsMoveBody",
     "PostV1EcosystemsMoveResponse200",
     "PostV1EcosystemsMoveResponse200Moved",
@@ -5354,6 +5428,12 @@ __all__ = (
     "PostV1MemoryLinksResponse201",
     "PostV1MessagingMessagesBody",
     "PostV1MessagingMessagesResponse200",
+    "PostV1MessagingProvidersByIdBody",
+    "PostV1MessagingProvidersByIdBodyFields",
+    "PostV1MessagingProvidersByIdResponse200",
+    "PostV1MessagingProvidersByIdRotateWebhookSecretResponse200",
+    "PostV1MessagingProvidersByIdTestBody",
+    "PostV1MessagingProvidersByIdTestResponse200",
     "PostV1ModelsBody",
     "PostV1ModelsBodyMetadataType0Type1",
     "PostV1ModelsByIdBody",

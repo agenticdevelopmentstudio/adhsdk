@@ -21,12 +21,17 @@ class EcosystemAuthSettings:
         password_enabled (bool): Email and password sign-in and sign-up for the customer realm. Defaults to true
         allowed_providers (list[str] | None): null means every configured provider. An empty array is stored as null,
             never as "none".
+        login_allowed_emails (list[str] | None): The people who may sign in, by email, stored lowercase. null (the
+            default) means every customer; an empty array means nobody. A customer matches only through an email they have
+            proven: the address a social sign-in vouches for, or a verified email contact method. It gates sign-in only: an
+            invitee who is not listed still joins, and is refused with login_disabled until listed.
     """
 
     signup_mode: EcosystemAuthSettingsSignupMode
     login_enabled: bool
     password_enabled: bool
     allowed_providers: list[str] | None
+    login_allowed_emails: list[str] | None
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -43,6 +48,13 @@ class EcosystemAuthSettings:
         else:
             allowed_providers = self.allowed_providers
 
+        login_allowed_emails: list[str] | None
+        if isinstance(self.login_allowed_emails, list):
+            login_allowed_emails = self.login_allowed_emails
+
+        else:
+            login_allowed_emails = self.login_allowed_emails
+
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
@@ -51,6 +63,7 @@ class EcosystemAuthSettings:
                 "login_enabled": login_enabled,
                 "password_enabled": password_enabled,
                 "allowed_providers": allowed_providers,
+                "login_allowed_emails": login_allowed_emails,
             }
         )
 
@@ -80,11 +93,27 @@ class EcosystemAuthSettings:
 
         allowed_providers = _parse_allowed_providers(d.pop("allowed_providers"))
 
+        def _parse_login_allowed_emails(data: object) -> list[str] | None:
+            if data is None:
+                return data
+            try:
+                if not isinstance(data, list):
+                    raise TypeError()
+                login_allowed_emails_type_0 = cast(list[str], data)
+
+                return login_allowed_emails_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(list[str] | None, data)
+
+        login_allowed_emails = _parse_login_allowed_emails(d.pop("login_allowed_emails"))
+
         ecosystem_auth_settings = cls(
             signup_mode=signup_mode,
             login_enabled=login_enabled,
             password_enabled=password_enabled,
             allowed_providers=allowed_providers,
+            login_allowed_emails=login_allowed_emails,
         )
 
         ecosystem_auth_settings.additional_properties = d

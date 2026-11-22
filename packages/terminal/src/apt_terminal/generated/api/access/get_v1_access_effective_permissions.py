@@ -14,7 +14,8 @@ from ...types import UNSET, Response, Unset
 
 def _get_kwargs(
     *,
-    workspace: str,
+    workspace: str | Unset = UNSET,
+    ecosystem: str | Unset = UNSET,
     feature: str,
     subject_kind: str,
     subject_id: str,
@@ -24,6 +25,8 @@ def _get_kwargs(
     params: dict[str, Any] = {}
 
     params["workspace"] = workspace
+
+    params["ecosystem"] = ecosystem
 
     params["feature"] = feature
 
@@ -98,7 +101,8 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient,
-    workspace: str,
+    workspace: str | Unset = UNSET,
+    ecosystem: str | Unset = UNSET,
     feature: str,
     subject_kind: str,
     subject_id: str,
@@ -110,7 +114,8 @@ def sync_detailed(
      Replaces GET /access/effective.
 
     Args:
-        workspace (str):
+        workspace (str | Unset):
+        ecosystem (str | Unset):
         feature (str):
         subject_kind (str):
         subject_id (str):
@@ -127,6 +132,7 @@ def sync_detailed(
 
     kwargs = _get_kwargs(
         workspace=workspace,
+        ecosystem=ecosystem,
         feature=feature,
         subject_kind=subject_kind,
         subject_id=subject_id,
@@ -144,7 +150,8 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient,
-    workspace: str,
+    workspace: str | Unset = UNSET,
+    ecosystem: str | Unset = UNSET,
     feature: str,
     subject_kind: str,
     subject_id: str,
@@ -156,7 +163,8 @@ def sync(
      Replaces GET /access/effective.
 
     Args:
-        workspace (str):
+        workspace (str | Unset):
+        ecosystem (str | Unset):
         feature (str):
         subject_kind (str):
         subject_id (str):
@@ -174,6 +182,7 @@ def sync(
     return sync_detailed(
         client=client,
         workspace=workspace,
+        ecosystem=ecosystem,
         feature=feature,
         subject_kind=subject_kind,
         subject_id=subject_id,
@@ -185,7 +194,8 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
-    workspace: str,
+    workspace: str | Unset = UNSET,
+    ecosystem: str | Unset = UNSET,
     feature: str,
     subject_kind: str,
     subject_id: str,
@@ -197,7 +207,8 @@ async def asyncio_detailed(
      Replaces GET /access/effective.
 
     Args:
-        workspace (str):
+        workspace (str | Unset):
+        ecosystem (str | Unset):
         feature (str):
         subject_kind (str):
         subject_id (str):
@@ -214,6 +225,7 @@ async def asyncio_detailed(
 
     kwargs = _get_kwargs(
         workspace=workspace,
+        ecosystem=ecosystem,
         feature=feature,
         subject_kind=subject_kind,
         subject_id=subject_id,
@@ -229,7 +241,8 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient,
-    workspace: str,
+    workspace: str | Unset = UNSET,
+    ecosystem: str | Unset = UNSET,
     feature: str,
     subject_kind: str,
     subject_id: str,
@@ -241,7 +254,8 @@ async def asyncio(
      Replaces GET /access/effective.
 
     Args:
-        workspace (str):
+        workspace (str | Unset):
+        ecosystem (str | Unset):
         feature (str):
         subject_kind (str):
         subject_id (str):
@@ -260,6 +274,7 @@ async def asyncio(
         await asyncio_detailed(
             client=client,
             workspace=workspace,
+            ecosystem=ecosystem,
             feature=feature,
             subject_kind=subject_kind,
             subject_id=subject_id,

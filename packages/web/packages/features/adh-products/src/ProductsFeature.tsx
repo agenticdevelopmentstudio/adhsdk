@@ -27,6 +27,7 @@ import {
   FolderKanban,
   ScrollText,
   RefreshCw,
+  ShieldCheck,
 } from "lucide-react";
 import { useDetailTitle } from "@adh-sdk/ui/blocks/detail-title";
 import type { TopicLeaf } from "@adh-sdk/resource";
@@ -50,6 +51,7 @@ import {
   ServerBagsPane,
   StorageTokensPanel,
   SyncTablesPane,
+  ProductRolesPane,
 } from "@adh-sdk/ecosystem-config";
 import { AccessPane } from "@adh-sdk/authentication";
 import { helpFor } from "@adh-sdk/adh/help/store";
@@ -101,6 +103,7 @@ const ICONS: Record<string, ReactNode> = {
   // The "Users" topic keeps id "invitations" for deep-link stability (its members are
   // Users + Requests / Pending users / Invites); a people icon matches the label.
   invitations: <UsersRound size={16} aria-hidden />,
+  roles: <ShieldCheck size={16} aria-hidden />,
   gaming: <Gamepad2 size={16} aria-hidden />,
   gamification: <Trophy size={16} aria-hidden />,
   "feature-flags": <Flag size={16} aria-hidden />,
@@ -295,6 +298,17 @@ export function productTopicPaneRenderer({
             ecosystemId={ctx.ecosystemId}
             title={ctx.title}
             help={helpFor("ecosystems/users")}
+            leaf={ctx.leaf}
+          />
+        );
+      case "roles":
+        // The product's roles: the Teams roles editor on this ecosystem, plus who holds each.
+        // Keyed on the product so a selected role never survives a switch to another one.
+        return (
+          <ProductRolesPane
+            key={ctx.ecosystemId}
+            ecosystemId={ctx.ecosystemId}
+            title={ctx.title}
             leaf={ctx.leaf}
           />
         );

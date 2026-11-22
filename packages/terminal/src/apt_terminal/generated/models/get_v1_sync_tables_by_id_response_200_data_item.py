@@ -17,6 +17,7 @@ T = TypeVar("T", bound="GetV1SyncTablesByIdResponse200DataItem")
 class GetV1SyncTablesByIdResponse200DataItem:
     """
     Attributes:
+        id (str): The resource again, as the object id the /v1 list pages by (starting_after)
         resource (str): "<schema>.<table>", e.g. content.contacts
         scope (SyncEnrollmentRowScope): Which rows a caller syncs: 'owner' the rows whose owner pair names them,
             'author' the rows whose author pair does, 'ecosystem' every row in their ecosystem
@@ -28,6 +29,7 @@ class GetV1SyncTablesByIdResponse200DataItem:
         object_ (Literal['sync.table'] | Unset):
     """
 
+    id: str
     resource: str
     scope: SyncEnrollmentRowScope
     push_mode: SyncEnrollmentRowPushMode
@@ -38,6 +40,8 @@ class GetV1SyncTablesByIdResponse200DataItem:
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
+        id = self.id
+
         resource = self.resource
 
         scope = self.scope.value
@@ -56,6 +60,7 @@ class GetV1SyncTablesByIdResponse200DataItem:
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
+                "id": id,
                 "resource": resource,
                 "scope": scope,
                 "push_mode": push_mode,
@@ -72,6 +77,8 @@ class GetV1SyncTablesByIdResponse200DataItem:
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
+        id = d.pop("id")
+
         resource = d.pop("resource")
 
         scope = SyncEnrollmentRowScope(d.pop("scope"))
@@ -89,6 +96,7 @@ class GetV1SyncTablesByIdResponse200DataItem:
             raise ValueError(f"object must match const 'sync.table', got '{object_}'")
 
         get_v1_sync_tables_by_id_response_200_data_item = cls(
+            id=id,
             resource=resource,
             scope=scope,
             push_mode=push_mode,

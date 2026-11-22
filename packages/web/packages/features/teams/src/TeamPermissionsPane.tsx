@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { Shield } from "lucide-react";
 
@@ -8,8 +8,11 @@ import { reportUnexpectedAuthError } from "@adh-sdk/auth";
 import { isNotFound, useResourceList } from "@adh-sdk/data";
 import {
   accessApi,
+  accessTargetKey,
   ACCESS_FEATURES,
   type AccessFeatureRow,
+  type AccessTarget,
+  type AccessTargetInput,
   type AccessGrantRow,
   type AccessRoleRow,
 } from "@adh-sdk/data/access";
@@ -177,15 +180,25 @@ const isAdminRole = (role: AccessRoleRow | null): boolean =>
  * than the subset this package happened to be built with. Built on the shared
  * MasterDetailForm/Level substrate like the sibling
  * AccessPane: the roles list is PUBLISHED as a rail level (master), and this pane
- * renders the selected role's editor (detail). Every call names the workspace by slug.
+ * renders the selected role's editor (detail). Every call names its target: a workspace by slug,
+ * or (phase 5) an owner-made ecosystem by id, whose roles are its product users' roles and whose
+ * feature areas are the product's own (`GET /access/features` answers for the target).
  */
 export function TeamPermissionsPane({
   workspaceSlug,
+  target,
+  roleFooter,
   leaf,
 }: {
   /** The workspace whose roles this edits (a customer or org slug). Absent ⇒ the defined
    *  empty state, never a spinner — the pane is only useful mounted from a hub workspace. */
   workspaceSlug?: string;
+  /** Whose roles this edits, in place of `workspaceSlug`: `{ ecosystem }` edits an owner-made
+   *  ecosystem's product roles. Wins over `workspaceSlug` when both are given. */
+  target?: AccessTarget;
+  /** Rendered under the selected role's editor (never while creating): the seam a host uses to
+   *  show who holds the role, as the Product roles pane does. */
+  roleFooter?: (role: AccessRoleRow) => ReactNode;
   /** Unused: the breadcrumb names the pane now (kept for the topic render prop shape). */
   title?: ReactNode;
   /** Deep-linkable role selection (`…/permissions/<roleId>`). */
@@ -195,6 +208,17 @@ export function TeamPermissionsPane({
   // `must-create-in-modal`): the `+` opens it, and on save the new role is selected so its
   // REAL detail (the per-feature permission matrix + default-for) opens.
   const [newOpen, setNewOpen] = useState(false);
+
+  // The one target every call names, built from primitives so its identity holds still while the
+  // target does (an inline `{ ecosystem }` prop is a new object every render). A workspace stays
+  // the bare slug every call took before ecosystems had roles.
+  const ecosystemId = target && "ecosystem" in target ? target.ecosystem : undefined;
+  const slug = target && "workspace" in target ? target.workspace : workspaceSlug;
+  const accessTarget = useMemo<AccessTargetInput | undefined>(
+    () => (ecosystemId ? { ecosystem: ecosystemId } : slug || undefined),
+    [ecosystemId, slug],
+  );
+  const cacheKey = accessTargetKey(accessTarget);
 
   // The feature areas the matrix RENDERS. The backend's registry is the authority (it refines
   // every submitted grant against it, and it is what the system roles were seeded from), so the
@@ -209,10 +233,10 @@ export function TeamPermissionsPane({
   // so it is retried on the next visit — by THROWING here instead of returning the fallback.
   // Caching the fallback would pin a transient hiccup to the two hardcoded rows with no retry.
   const loadFeatures = useCallback(async (): Promise<AccessFeatureRow[]> => {
-    if (!workspaceSlug) return [...ACCESS_FEATURES];
+    if (!accessTarget) return [...ACCESS_FEATURES];
     let rows: AccessFeatureRow[];
     try {
-      rows = await accessApi.listFeatures(workspaceSlug);
+      rows = await accessApi.listFeatures(accessTarget);
     } catch (err) {
       // A 404 is the expected degrade path — a product whose backend predates this endpoint — and
       // must stay silent, matching the pre-endpoint behavior this pane is required to reproduce
@@ -240,7 +264,7 @@ export function TeamPermissionsPane({
       step: "loadFeatures",
     });
     throw new Error("The feature list came back empty. Showing the default list instead.");
-  }, [workspaceSlug]);
+  }, [accessTarget]);
 
   // `reportErrors: false` because `loadFeatures` above already reports, with the step that failed
   // and — for the empty answer — an engineer-facing message the thrown one deliberately isn't.
@@ -249,7 +273,7 @@ export function TeamPermissionsPane({
     reload: reloadFeatures,
     error: featuresError,
   } = useResourceList<AccessFeatureRow>(
-    `workspace:${workspaceSlug ?? ""}:access-features`,
+    `${cacheKey}:access-features`,
     loadFeatures,
     { reportErrors: false },
   );
@@ -268,16 +292,16 @@ export function TeamPermissionsPane({
   const loadRoles = useCallback((): Promise<AccessRoleRow[]> => {
     // No workspace ⇒ a DEFINED empty list (not null), so the rail shows the "open from your hub"
     // message rather than an eternal "Loading…" spinner.
-    if (!workspaceSlug) return Promise.resolve([]);
-    return accessApi.listRoles(workspaceSlug);
-  }, [workspaceSlug]);
+    if (!accessTarget) return Promise.resolve([]);
+    return accessApi.listRoles(accessTarget);
+  }, [accessTarget]);
 
   const {
     items: loadedRoles,
     reload: reloadRoles,
     error: rolesError,
     isFetching,
-  } = useResourceList<AccessRoleRow>(`workspace:${workspaceSlug ?? ""}:access-roles`, loadRoles);
+  } = useResourceList<AccessRoleRow>(`${cacheKey}:access-roles`, loadRoles);
 
   // TWO reads, one refresh. A save/delete re-reads the feature list as well as the roles, which is
   // what keeps a feature list that was unreadable at mount from staying unreadable for the rest of
@@ -345,8 +369,8 @@ export function TeamPermissionsPane({
   const createRole = async (input: RoleInput): Promise<AccessRoleRow> => {
     // Guarded for safety — the pane is unreachable for create without a workspace, but a
     // clear rejection beats a thrown `enc(undefined)` if that ever changes.
-    if (!workspaceSlug) throw new Error("Open Teams from your hub workspace to manage roles.");
-    return accessApi.createRole(workspaceSlug, {
+    if (!accessTarget) throw new Error("Open Teams from your hub workspace to manage roles.");
+    return accessApi.createRole(accessTarget, {
       slug: input.slug,
       name: input.name,
       description: input.description,
@@ -378,8 +402,8 @@ export function TeamPermissionsPane({
     normalize: roleNormalize,
     create: createRole,
     update: async (id, input) => {
-      if (!workspaceSlug) throw new Error("Open Teams from your hub workspace to manage roles.");
-      return accessApi.updateRole(workspaceSlug, id, {
+      if (!accessTarget) throw new Error("Open Teams from your hub workspace to manage roles.");
+      return accessApi.updateRole(accessTarget, id, {
         name: input.name,
         description: input.description,
         defaultFor: input.defaultFor,
@@ -389,8 +413,8 @@ export function TeamPermissionsPane({
     // Only custom roles are deletable; the affordance is hidden for system roles (below), and
     // the server 403s besides. A 409 while assignments still reference the role surfaces inline.
     remove: (role) => {
-      if (!workspaceSlug) return Promise.reject(new Error("No workspace to delete from."));
-      return accessApi.deleteRole(workspaceSlug, role.id);
+      if (!accessTarget) return Promise.reject(new Error("No workspace to delete from."));
+      return accessApi.deleteRole(accessTarget, role.id);
     },
     confirmDelete: (role) =>
       `Delete role "${role.name}"? Members assigned only this role fall back to the workspace default.`,
@@ -413,7 +437,7 @@ export function TeamPermissionsPane({
     emptyLabel:
       roles === null
         ? "Loading…"
-        : !workspaceSlug
+        : !accessTarget
           ? "Open Teams from your hub workspace to manage roles."
           : "No roles yet.",
     // The spinner before "Roles" — the only thing that says a revalidation is running behind rows
@@ -423,7 +447,7 @@ export function TeamPermissionsPane({
     busy: isFetching || !featuresSettled,
     // No workspace ⇒ no create affordance (the pane is only usable from a hub workspace; the
     // empty state says so). Elsewhere the `+` opens the scoped create modal.
-    onNew: workspaceSlug ? () => setNewOpen(true) : undefined,
+    onNew: accessTarget ? () => setNewOpen(true) : undefined,
   });
 
   const selected = form.selected;
@@ -461,10 +485,11 @@ export function TeamPermissionsPane({
             error={form.error}
             creating={form.creating}
             selected={selected}
+            footer={!form.creating && selected && roleFooter ? roleFooter(selected) : undefined}
           />
         ) : roles === null ? (
           <EmptyState title="Loading…" />
-        ) : !workspaceSlug ? (
+        ) : !accessTarget ? (
           <EmptyState title="Open Teams from your hub workspace to manage roles." />
         ) : (
           <TopicSelectHint title="Select a role to edit, or create a new one." />
@@ -533,6 +558,7 @@ function RoleDetail({
   error,
   creating,
   selected,
+  footer,
 }: {
   title: string;
   /** The rendered feature areas — the same list `draft.grants` was projected onto, so the
@@ -543,6 +569,8 @@ function RoleDetail({
   error?: string | null;
   creating: boolean;
   selected: AccessRoleRow | null;
+  /** The host's `roleFooter` for this role, under the permissions. */
+  footer?: ReactNode;
 }) {
   const admin = isAdminRole(selected);
   const disabled = admin; // the whole admin form is locked; every field + toggle disables
@@ -627,6 +655,7 @@ function RoleDetail({
           />
         ))}
       </FieldGroup>
+      {footer}
     </DetailSection>
   );
 }

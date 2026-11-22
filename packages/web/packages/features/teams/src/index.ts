@@ -22,5 +22,14 @@ export { TeamsFeature } from "./TeamsFeature";
 export { ItemAccessPanel, type ItemAccessPanelProps } from "./ItemAccessPanel";
 // The batteries-included subjects directory for ItemAccessPanel mounts (members +
 // personas + teams from the shared platform APIs); hosts may still inject their own.
-export { workspaceSubjectsDirectory } from "./subjects-directory";
+export {
+  workspaceSubjectsDirectory,
+  ecosystemSubjectsDirectory,
+  subjectsDirectoryFor,
+} from "./subjects-directory";
 export type { AccessSubject } from "./ItemAccessPanel";
+
+// The roles editor, exported for an ECOSYSTEM's Product roles pane (phase 5,
+// @adh-sdk/ecosystem-config), which mounts it with `target={{ ecosystem }}` and a
+// `roleFooter` listing who holds the role. Teams itself still mounts it internally.
+export { TeamPermissionsPane } from "./TeamPermissionsPane";

@@ -178,6 +178,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/access/subjects": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List an ecosystem's product users, the people its roles can be granted to
+         * @description A page of the realm's live product users, ordered by id. `q` searches email, name and slug; `after` is the last id of the previous page. Ecosystem target only: a workspace target is 400 (its people are listed by the workspace members route).
+         *
+         *     Replaces GET /access/subjects.
+         */
+        get: operations["getV1AccessSubjects"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/access/team_permissions": {
         parameters: {
             query?: never;
@@ -13691,6 +13713,12 @@ export interface components {
             ecosystem_id: string;
             /** @enum {string} */
             realm: "customer";
+            /** @description The customer's product roles in its realm: each product feature area's item verbs as letters, e.g. { notes: 'CRUD' }. Absent where product roles do not apply. */
+            access?: {
+                [key: string]: string;
+            };
+            /** @description The slugs of the roles the customer holds in its realm, sorted. Absent with `access`. */
+            roles?: string[];
         };
         AuthResult: {
             /** @description JWT access token (Bearer credential) */
@@ -18354,6 +18382,18 @@ export interface components {
             default_for: "" | "customer" | "persona";
             grants: components["schemas"]["AccessGrant"][];
         };
+        AccessSubject: {
+            /** @enum {string} */
+            kind: "customer";
+            id: string;
+            /** @description display name, else email, else slug */
+            label: string;
+            email: string | null;
+            slug: string;
+        };
+        AccessSubjectList: {
+            subjects: components["schemas"]["AccessSubject"][];
+        };
         AccessRoleList: {
             roles: components["schemas"]["AccessRole"][];
         };
@@ -19104,7 +19144,10 @@ export interface operations {
     getV1AccessEffectivePermissions: {
         parameters: {
             query: {
-                workspace: string;
+                /** @description The hub workspace (slug). Exactly one of `workspace` and `ecosystem`. */
+                workspace?: string;
+                /** @description An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem (403 otherwise). */
+                ecosystem?: string;
                 feature: string;
                 subject_kind: string;
                 subject_id: string;
@@ -19170,8 +19213,11 @@ export interface operations {
     };
     getV1AccessFeatures: {
         parameters: {
-            query: {
-                workspace: string;
+            query?: {
+                /** @description The hub workspace (slug). Exactly one of `workspace` and `ecosystem`. */
+                workspace?: string;
+                /** @description An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem (403 otherwise). */
+                ecosystem?: string;
                 /** @description Page size, 1–100 (default 10). */
                 limit?: number;
                 /** @description Cursor: an object id; returns the page after it. */
@@ -19236,8 +19282,11 @@ export interface operations {
     };
     postV1AccessItemsRestore: {
         parameters: {
-            query: {
-                workspace: string;
+            query?: {
+                /** @description The hub workspace (slug). Exactly one of `workspace` and `ecosystem`. */
+                workspace?: string;
+                /** @description An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem (403 otherwise). */
+                ecosystem?: string;
             };
             header?: never;
             path?: never;
@@ -19304,8 +19353,11 @@ export interface operations {
     };
     postV1AccessItemsRestrict: {
         parameters: {
-            query: {
-                workspace: string;
+            query?: {
+                /** @description The hub workspace (slug). Exactly one of `workspace` and `ecosystem`. */
+                workspace?: string;
+                /** @description An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem (403 otherwise). */
+                ecosystem?: string;
             };
             header?: never;
             path?: never;
@@ -19372,8 +19424,11 @@ export interface operations {
     };
     getV1AccessRoleAssignments: {
         parameters: {
-            query: {
-                workspace: string;
+            query?: {
+                /** @description The hub workspace (slug). Exactly one of `workspace` and `ecosystem`. */
+                workspace?: string;
+                /** @description An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem (403 otherwise). */
+                ecosystem?: string;
                 feature?: string;
                 item_id?: string;
                 /** @description Related objects to return in full instead of as an id. Up to four levels, e.g. `ecosystem_id`; on a list, `data.<field>`. */
@@ -19437,8 +19492,11 @@ export interface operations {
     };
     postV1AccessRoleAssignments: {
         parameters: {
-            query: {
-                workspace: string;
+            query?: {
+                /** @description The hub workspace (slug). Exactly one of `workspace` and `ecosystem`. */
+                workspace?: string;
+                /** @description An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem (403 otherwise). */
+                ecosystem?: string;
             };
             header?: never;
             path?: never;
@@ -19510,8 +19568,11 @@ export interface operations {
     };
     deleteV1AccessRoleAssignmentsById: {
         parameters: {
-            query: {
-                workspace: string;
+            query?: {
+                /** @description The hub workspace (slug). Exactly one of `workspace` and `ecosystem`. */
+                workspace?: string;
+                /** @description An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem (403 otherwise). */
+                ecosystem?: string;
             };
             header?: never;
             path: {
@@ -19561,8 +19622,11 @@ export interface operations {
     };
     getV1AccessRoles: {
         parameters: {
-            query: {
-                workspace: string;
+            query?: {
+                /** @description The hub workspace (slug). Exactly one of `workspace` and `ecosystem`. */
+                workspace?: string;
+                /** @description An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem (403 otherwise). */
+                ecosystem?: string;
                 /** @description Page size, 1–100 (default 10). */
                 limit?: number;
                 /** @description Cursor: an object id; returns the page after it. */
@@ -19627,8 +19691,11 @@ export interface operations {
     };
     postV1AccessRoles: {
         parameters: {
-            query: {
-                workspace: string;
+            query?: {
+                /** @description The hub workspace (slug). Exactly one of `workspace` and `ecosystem`. */
+                workspace?: string;
+                /** @description An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem (403 otherwise). */
+                ecosystem?: string;
             };
             header?: never;
             path?: never;
@@ -19708,8 +19775,11 @@ export interface operations {
     };
     postV1AccessRolesById: {
         parameters: {
-            query: {
-                workspace: string;
+            query?: {
+                /** @description The hub workspace (slug). Exactly one of `workspace` and `ecosystem`. */
+                workspace?: string;
+                /** @description An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem (403 otherwise). */
+                ecosystem?: string;
             };
             header?: never;
             path: {
@@ -19790,8 +19860,11 @@ export interface operations {
     };
     deleteV1AccessRolesById: {
         parameters: {
-            query: {
-                workspace: string;
+            query?: {
+                /** @description The hub workspace (slug). Exactly one of `workspace` and `ecosystem`. */
+                workspace?: string;
+                /** @description An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem (403 otherwise). */
+                ecosystem?: string;
             };
             header?: never;
             path: {
@@ -19839,6 +19912,86 @@ export interface operations {
             };
             /** @description Error */
             409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+        };
+    };
+    getV1AccessSubjects: {
+        parameters: {
+            query?: {
+                /** @description The hub workspace (slug). Exactly one of `workspace` and `ecosystem`. */
+                workspace?: string;
+                /** @description An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem (403 otherwise). */
+                ecosystem?: string;
+                q?: string;
+                after?: string;
+                /** @description Page size, 1–100 (default 10). */
+                limit?: number;
+                /** @description Cursor: an object id; returns the page after it. */
+                starting_after?: string;
+                /** @description Cursor: an object id; returns the page before it. */
+                ending_before?: string;
+                /** @description Related objects to return in full instead of as an id. Up to four levels, e.g. `ecosystem_id`; on a list, `data.<field>`. */
+                "expand[]"?: string[];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Subjects */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        object: "list";
+                        data: ({
+                            /** @constant */
+                            object?: "access.subject";
+                        } & components["schemas"]["AccessSubject"])[];
+                        has_more: boolean;
+                        url: string;
+                    };
+                };
+            };
+            /** @description Error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };

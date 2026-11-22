@@ -22,6 +22,8 @@ public protocol APIProtocol: Sendable {
     func getV1Account(_ input: Operations.GetV1Account.Input) async throws -> Operations.GetV1Account.Output
     /// Update the caller's own profile (name, slug, avatar, public-profile toggle)
     ///
+    /// An operator session edits its own operator account. It may not change its slug: that request is 400 with error code `operator_slug_immutable`.
+    ///
     /// Replaces PATCH /auth/me, PUT /account/privacy (include privacy), PUT /me/appearance (include appearance), PUT /me/communication-settings (include communication_settings), PUT /me/workspace-prefs (include workspace_prefs).
     ///
     /// - Remark: HTTP `POST /v1/account`.
@@ -98,6 +100,8 @@ extension APIProtocol {
         ))
     }
     /// Update the caller's own profile (name, slug, avatar, public-profile toggle)
+    ///
+    /// An operator session edits its own operator account. It may not change its slug: that request is 400 with error code `operator_slug_immutable`.
     ///
     /// Replaces PATCH /auth/me, PUT /account/privacy (include privacy), PUT /me/appearance (include appearance), PUT /me/communication-settings (include communication_settings), PUT /me/workspace-prefs (include workspace_prefs).
     ///
@@ -1220,6 +1224,8 @@ public enum Operations {
         }
     }
     /// Update the caller's own profile (name, slug, avatar, public-profile toggle)
+    ///
+    /// An operator session edits its own operator account. It may not change its slug: that request is 400 with error code `operator_slug_immutable`.
     ///
     /// Replaces PATCH /auth/me, PUT /account/privacy (include privacy), PUT /me/appearance (include appearance), PUT /me/communication-settings (include communication_settings), PUT /me/workspace-prefs (include workspace_prefs).
     ///
@@ -2939,15 +2945,25 @@ public enum Operations {
                             ///
                             /// - Remark: Generated from `#/paths/v1/auth/passkey_challenges/POST/requestBody/json/value1/case2/identifier`.
                             public var identifier: Swift.String
+                            /// Sign-in client the passkey login is for; picks the login realm (the admin client signs in operators). Absent: the hub, then the operator realm. An unknown or customer-realm client is a 400.
+                            ///
+                            /// - Remark: Generated from `#/paths/v1/auth/passkey_challenges/POST/requestBody/json/value1/case2/client_id`.
+                            public var clientId: Swift.String?
                             /// Creates a new `Case2Payload`.
                             ///
                             /// - Parameters:
                             ///   - identifier: Email or login slug
-                            public init(identifier: Swift.String) {
+                            ///   - clientId: Sign-in client the passkey login is for; picks the login realm (the admin client signs in operators). Absent: the hub, then the operator realm. An unknown or customer-realm client is a 400.
+                            public init(
+                                identifier: Swift.String,
+                                clientId: Swift.String? = nil
+                            ) {
                                 self.identifier = identifier
+                                self.clientId = clientId
                             }
                             public enum CodingKeys: String, CodingKey {
                                 case identifier
+                                case clientId = "client_id"
                             }
                         }
                         /// - Remark: Generated from `#/paths/v1/auth/passkey_challenges/POST/requestBody/json/value1/case2`.

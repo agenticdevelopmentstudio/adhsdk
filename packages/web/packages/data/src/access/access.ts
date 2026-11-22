@@ -1,6 +1,8 @@
 // Workspace roles & permissions API client — the gated /v1/access surface
-// (adh/docs/platform/workspace-roles-permissions.md). Every call names the workspace by slug
-// (`?workspace=`): a personal workspace's customer slug or an org slug. Reads answer
+// (adh/docs/platform/workspace-roles-permissions.md). Every call names its TARGET: a workspace by
+// slug (`?workspace=`: a personal workspace's customer slug or an org slug), or an owner-made
+// ecosystem by id (`?ecosystem=`), whose roles are its product users' roles. A bare string is a
+// workspace slug, which is what every caller passed before ecosystems had roles. Reads answer
 // 404 to non-members; role definition is admin-only; assignments/restriction need the
 // M verb at the target scope (the server enforces no-escalation).
 
@@ -14,6 +16,8 @@ import type {
   AccessFeatureRow,
   AccessGrantRow,
   AccessRoleRow,
+  AccessSubjectRow,
+  AccessTarget,
   EffectiveAccessRow,
 } from "./wire";
 
@@ -22,8 +26,30 @@ export type {
   AccessFeatureRow,
   AccessGrantRow,
   AccessRoleRow,
+  AccessSubjectRow,
+  AccessTarget,
   EffectiveAccessRow,
 };
+
+/** A target as callers pass it: an {@link AccessTarget}, or a bare workspace slug. */
+export type AccessTargetInput = string | AccessTarget;
+
+/** The one query parameter that names a target. Never both: the backend 400s that. */
+export function accessTargetQuery(
+  target: AccessTargetInput,
+): { workspace: string } | { ecosystem: string } {
+  if (typeof target === "string") return { workspace: target };
+  if ("ecosystem" in target) return { ecosystem: target.ecosystem };
+  return { workspace: target.workspace };
+}
+
+/** A stable cache-key prefix for a target. A workspace keeps the `workspace:<slug>` prefix its
+ *  caches always used, so panes that share an entry (the roles list) still share it. */
+export function accessTargetKey(target: AccessTargetInput | undefined): string {
+  if (target === undefined) return "workspace:";
+  const q = accessTargetQuery(target);
+  return "ecosystem" in q ? `ecosystem:${q.ecosystem}` : `workspace:${q.workspace}`;
+}
 
 const BASE = "/api/v1/access";
 
@@ -128,9 +154,9 @@ export const accessApi = {
    * answer (e.g. a bare string, or an array of feature keys with no `label`) surfaces to the
    * caller as a failure to fall back on rather than a value that crashes downstream `.map()`s.
    */
-  async listFeatures(workspace: string): Promise<AccessFeatureRow[]> {
+  async listFeatures(target: AccessTargetInput): Promise<AccessFeatureRow[]> {
     const body = await authedJson<{ data?: unknown; has_more?: boolean }>(
-      withV1Query(`${BASE}/features`, { workspace, limit: 100 }),
+      withV1Query(`${BASE}/features`, { ...accessTargetQuery(target), limit: 100 }),
     );
     const rows = body.data;
     if (!Array.isArray(rows) || !rows.every(isAccessFeatureRow) || body.has_more === true) {
@@ -139,13 +165,38 @@ export const accessApi = {
     return rows.map((r) => ({ key: r.key, label: r.label }));
   },
 
-  async listRoles(workspace: string): Promise<AccessRoleRow[]> {
-    const rows = await listAllV1<AccessRoleWire>(withV1Query(`${BASE}/roles`, { workspace }));
+  /**
+   * The people an ECOSYSTEM target's roles can be granted to: its live product users, searched by
+   * `q` (email, name or slug). A workspace target has no such list here (its members come from the
+   * workspace members route), and the backend answers 400.
+   */
+  async listSubjects(
+    target: AccessTargetInput,
+    opts: { q?: string; limit?: number } = {},
+  ): Promise<AccessSubjectRow[]> {
+    const body = await authedJson<{ data?: AccessSubjectRow[] }>(
+      withV1Query(`${BASE}/subjects`, {
+        ...accessTargetQuery(target),
+        q: opts.q || undefined,
+        limit: opts.limit,
+      }),
+    );
+    return (body.data ?? []).map((s) => ({
+      kind: "customer",
+      id: s.id,
+      label: s.label,
+      email: s.email ?? null,
+      slug: s.slug,
+    }));
+  },
+
+  async listRoles(target: AccessTargetInput): Promise<AccessRoleRow[]> {
+    const rows = await listAllV1<AccessRoleWire>(withV1Query(`${BASE}/roles`, accessTargetQuery(target)));
     return rows.map(toRole);
   },
 
-  async createRole(workspace: string, input: AccessRoleInput): Promise<AccessRoleRow> {
-    const row = await authedJson<AccessRoleWire>(withV1Query(`${BASE}/roles`, { workspace }), {
+  async createRole(target: AccessTargetInput, input: AccessRoleInput): Promise<AccessRoleRow> {
+    const row = await authedJson<AccessRoleWire>(withV1Query(`${BASE}/roles`, accessTargetQuery(target)), {
       method: "POST",
       body: JSON.stringify({
         slug: input.slug,
@@ -159,12 +210,12 @@ export const accessApi = {
   },
 
   async updateRole(
-    workspace: string,
+    target: AccessTargetInput,
     id: string,
     patch: Partial<Omit<AccessRoleInput, "slug">>,
   ): Promise<AccessRoleRow> {
     const row = await authedJson<AccessRoleWire>(
-      withV1Query(`${BASE}/roles/${enc(id)}`, { workspace }),
+      withV1Query(`${BASE}/roles/${enc(id)}`, accessTargetQuery(target)),
       {
         method: "POST",
         body: JSON.stringify({
@@ -178,8 +229,8 @@ export const accessApi = {
     return toRole(row);
   },
 
-  async deleteRole(workspace: string, id: string): Promise<void> {
-    await authedRequest(withV1Query(`${BASE}/roles/${enc(id)}`, { workspace }), {
+  async deleteRole(target: AccessTargetInput, id: string): Promise<void> {
+    await authedRequest(withV1Query(`${BASE}/roles/${enc(id)}`, accessTargetQuery(target)), {
       method: "DELETE",
     });
   },
@@ -187,12 +238,12 @@ export const accessApi = {
   /** Workspace-wide listing needs workspace admin; item-scoped needs M on that item.
    *  `restricted` is present on item-scoped listings. */
   async listAssignments(
-    workspace: string,
+    target: AccessTargetInput,
     scope?: { feature: string; itemId: string },
   ): Promise<{ assignments: AccessAssignmentRow[]; restricted?: boolean }> {
     const body = await authedJson<{ assignments: AccessAssignmentWire[]; restricted?: boolean }>(
       withV1Query(`${BASE}/role_assignments`, {
-        workspace,
+        ...accessTargetQuery(target),
         feature: scope?.feature,
         item_id: scope?.itemId,
       }),
@@ -205,11 +256,11 @@ export const accessApi = {
 
   /** Grant (or replace) — one role per subject per scope. */
   async putAssignment(
-    workspace: string,
+    target: AccessTargetInput,
     input: AccessAssignmentInput,
   ): Promise<AccessAssignmentRow> {
     const row = await authedJson<AccessAssignmentWire>(
-      withV1Query(`${BASE}/role_assignments`, { workspace }),
+      withV1Query(`${BASE}/role_assignments`, accessTargetQuery(target)),
       {
         method: "POST",
         body: JSON.stringify({
@@ -224,21 +275,21 @@ export const accessApi = {
     return toAssignment(row);
   },
 
-  async deleteAssignment(workspace: string, id: string): Promise<void> {
-    await authedRequest(withV1Query(`${BASE}/role_assignments/${enc(id)}`, { workspace }), {
+  async deleteAssignment(target: AccessTargetInput, id: string): Promise<void> {
+    await authedRequest(withV1Query(`${BASE}/role_assignments/${enc(id)}`, accessTargetQuery(target)), {
       method: "DELETE",
     });
   },
 
-  async restrictItem(workspace: string, feature: string, itemId: string): Promise<void> {
-    await authedJson(withV1Query(`${BASE}/items/restrict`, { workspace }), {
+  async restrictItem(target: AccessTargetInput, feature: string, itemId: string): Promise<void> {
+    await authedJson(withV1Query(`${BASE}/items/restrict`, accessTargetQuery(target)), {
       method: "POST",
       body: JSON.stringify({ feature, item_id: itemId }),
     });
   },
 
-  async restoreItem(workspace: string, feature: string, itemId: string): Promise<void> {
-    await authedJson(withV1Query(`${BASE}/items/restore`, { workspace }), {
+  async restoreItem(target: AccessTargetInput, feature: string, itemId: string): Promise<void> {
+    await authedJson(withV1Query(`${BASE}/items/restore`, accessTargetQuery(target)), {
       method: "POST",
       body: JSON.stringify({ feature, item_id: itemId }),
     });
@@ -246,12 +297,12 @@ export const accessApi = {
 
   /** The effective-permission explainer for one subject (requires M at the scope). */
   async effective(
-    workspace: string,
+    target: AccessTargetInput,
     q: { feature: string; subjectKind: "customer" | "persona"; subjectId: string; itemId?: string },
   ): Promise<EffectiveAccessRow> {
     const w = await authedJson<EffectiveAccessWire>(
       withV1Query(`${BASE}/effective_permissions`, {
-        workspace,
+        ...accessTargetQuery(target),
         feature: q.feature,
         subject_kind: q.subjectKind,
         subject_id: q.subjectId,

@@ -14,7 +14,8 @@ from ...types import UNSET, Response, Unset
 
 def _get_kwargs(
     *,
-    workspace: str,
+    workspace: str | Unset = UNSET,
+    ecosystem: str | Unset = UNSET,
     feature: str | Unset = UNSET,
     item_id: str | Unset = UNSET,
     expand: list[str] | Unset = UNSET,
@@ -22,6 +23,8 @@ def _get_kwargs(
     params: dict[str, Any] = {}
 
     params["workspace"] = workspace
+
+    params["ecosystem"] = ecosystem
 
     params["feature"] = feature
 
@@ -92,7 +95,8 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient,
-    workspace: str,
+    workspace: str | Unset = UNSET,
+    ecosystem: str | Unset = UNSET,
     feature: str | Unset = UNSET,
     item_id: str | Unset = UNSET,
     expand: list[str] | Unset = UNSET,
@@ -102,7 +106,8 @@ def sync_detailed(
      Replaces GET /access/assignments.
 
     Args:
-        workspace (str):
+        workspace (str | Unset):
+        ecosystem (str | Unset):
         feature (str | Unset):
         item_id (str | Unset):
         expand (list[str] | Unset):
@@ -117,6 +122,7 @@ def sync_detailed(
 
     kwargs = _get_kwargs(
         workspace=workspace,
+        ecosystem=ecosystem,
         feature=feature,
         item_id=item_id,
         expand=expand,
@@ -132,7 +138,8 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient,
-    workspace: str,
+    workspace: str | Unset = UNSET,
+    ecosystem: str | Unset = UNSET,
     feature: str | Unset = UNSET,
     item_id: str | Unset = UNSET,
     expand: list[str] | Unset = UNSET,
@@ -142,7 +149,8 @@ def sync(
      Replaces GET /access/assignments.
 
     Args:
-        workspace (str):
+        workspace (str | Unset):
+        ecosystem (str | Unset):
         feature (str | Unset):
         item_id (str | Unset):
         expand (list[str] | Unset):
@@ -158,6 +166,7 @@ def sync(
     return sync_detailed(
         client=client,
         workspace=workspace,
+        ecosystem=ecosystem,
         feature=feature,
         item_id=item_id,
         expand=expand,
@@ -167,7 +176,8 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
-    workspace: str,
+    workspace: str | Unset = UNSET,
+    ecosystem: str | Unset = UNSET,
     feature: str | Unset = UNSET,
     item_id: str | Unset = UNSET,
     expand: list[str] | Unset = UNSET,
@@ -177,7 +187,8 @@ async def asyncio_detailed(
      Replaces GET /access/assignments.
 
     Args:
-        workspace (str):
+        workspace (str | Unset):
+        ecosystem (str | Unset):
         feature (str | Unset):
         item_id (str | Unset):
         expand (list[str] | Unset):
@@ -192,6 +203,7 @@ async def asyncio_detailed(
 
     kwargs = _get_kwargs(
         workspace=workspace,
+        ecosystem=ecosystem,
         feature=feature,
         item_id=item_id,
         expand=expand,
@@ -205,7 +217,8 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient,
-    workspace: str,
+    workspace: str | Unset = UNSET,
+    ecosystem: str | Unset = UNSET,
     feature: str | Unset = UNSET,
     item_id: str | Unset = UNSET,
     expand: list[str] | Unset = UNSET,
@@ -215,7 +228,8 @@ async def asyncio(
      Replaces GET /access/assignments.
 
     Args:
-        workspace (str):
+        workspace (str | Unset):
+        ecosystem (str | Unset):
         feature (str | Unset):
         item_id (str | Unset):
         expand (list[str] | Unset):
@@ -232,6 +246,7 @@ async def asyncio(
         await asyncio_detailed(
             client=client,
             workspace=workspace,
+            ecosystem=ecosystem,
             feature=feature,
             item_id=item_id,
             expand=expand,

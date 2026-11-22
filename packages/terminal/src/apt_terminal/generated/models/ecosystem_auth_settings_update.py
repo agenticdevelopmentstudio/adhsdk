@@ -24,12 +24,15 @@ class EcosystemAuthSettingsUpdate:
         password_enabled (bool | Unset):
         allowed_providers (list[str] | None | Unset): Every slug must name a configured provider, or the call is a 400.
             An empty array is coerced to null (all providers) rather than locking everyone out.
+        login_allowed_emails (list[str] | None | Unset): Emails allowed to sign in; null for every customer, [] for
+            nobody. Each is trimmed and lowercased, and duplicates are dropped.
     """
 
     signup_mode: EcosystemAuthSettingsUpdateSignupMode | Unset = UNSET
     login_enabled: bool | Unset = UNSET
     password_enabled: bool | Unset = UNSET
     allowed_providers: list[str] | None | Unset = UNSET
+    login_allowed_emails: list[str] | None | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -50,6 +53,15 @@ class EcosystemAuthSettingsUpdate:
         else:
             allowed_providers = self.allowed_providers
 
+        login_allowed_emails: list[str] | None | Unset
+        if isinstance(self.login_allowed_emails, Unset):
+            login_allowed_emails = UNSET
+        elif isinstance(self.login_allowed_emails, list):
+            login_allowed_emails = self.login_allowed_emails
+
+        else:
+            login_allowed_emails = self.login_allowed_emails
+
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update({})
@@ -61,6 +73,8 @@ class EcosystemAuthSettingsUpdate:
             field_dict["password_enabled"] = password_enabled
         if allowed_providers is not UNSET:
             field_dict["allowed_providers"] = allowed_providers
+        if login_allowed_emails is not UNSET:
+            field_dict["login_allowed_emails"] = login_allowed_emails
 
         return field_dict
 
@@ -95,11 +109,29 @@ class EcosystemAuthSettingsUpdate:
 
         allowed_providers = _parse_allowed_providers(d.pop("allowed_providers", UNSET))
 
+        def _parse_login_allowed_emails(data: object) -> list[str] | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, list):
+                    raise TypeError()
+                login_allowed_emails_type_0 = cast(list[str], data)
+
+                return login_allowed_emails_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(list[str] | None | Unset, data)
+
+        login_allowed_emails = _parse_login_allowed_emails(d.pop("login_allowed_emails", UNSET))
+
         ecosystem_auth_settings_update = cls(
             signup_mode=signup_mode,
             login_enabled=login_enabled,
             password_enabled=password_enabled,
             allowed_providers=allowed_providers,
+            login_allowed_emails=login_allowed_emails,
         )
 
         ecosystem_auth_settings_update.additional_properties = d

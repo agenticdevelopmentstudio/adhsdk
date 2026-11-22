@@ -8,17 +8,20 @@ from ... import errors
 from ...client import AuthenticatedClient, Client
 from ...models.deleted import Deleted
 from ...models.stripe_error import StripeError
-from ...types import UNSET, Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     id: str,
     *,
-    workspace: str,
+    workspace: str | Unset = UNSET,
+    ecosystem: str | Unset = UNSET,
 ) -> dict[str, Any]:
     params: dict[str, Any] = {}
 
     params["workspace"] = workspace
+
+    params["ecosystem"] = ecosystem
 
     params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
 
@@ -77,7 +80,8 @@ def sync_detailed(
     id: str,
     *,
     client: AuthenticatedClient,
-    workspace: str,
+    workspace: str | Unset = UNSET,
+    ecosystem: str | Unset = UNSET,
 ) -> Response[Deleted | StripeError]:
     """Revoke an assignment (requires M at its scope)
 
@@ -85,7 +89,8 @@ def sync_detailed(
 
     Args:
         id (str):
-        workspace (str):
+        workspace (str | Unset):
+        ecosystem (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -98,6 +103,7 @@ def sync_detailed(
     kwargs = _get_kwargs(
         id=id,
         workspace=workspace,
+        ecosystem=ecosystem,
     )
 
     response = client.get_httpx_client().request(
@@ -111,7 +117,8 @@ def sync(
     id: str,
     *,
     client: AuthenticatedClient,
-    workspace: str,
+    workspace: str | Unset = UNSET,
+    ecosystem: str | Unset = UNSET,
 ) -> Deleted | StripeError | None:
     """Revoke an assignment (requires M at its scope)
 
@@ -119,7 +126,8 @@ def sync(
 
     Args:
         id (str):
-        workspace (str):
+        workspace (str | Unset):
+        ecosystem (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -133,6 +141,7 @@ def sync(
         id=id,
         client=client,
         workspace=workspace,
+        ecosystem=ecosystem,
     ).parsed
 
 
@@ -140,7 +149,8 @@ async def asyncio_detailed(
     id: str,
     *,
     client: AuthenticatedClient,
-    workspace: str,
+    workspace: str | Unset = UNSET,
+    ecosystem: str | Unset = UNSET,
 ) -> Response[Deleted | StripeError]:
     """Revoke an assignment (requires M at its scope)
 
@@ -148,7 +158,8 @@ async def asyncio_detailed(
 
     Args:
         id (str):
-        workspace (str):
+        workspace (str | Unset):
+        ecosystem (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -161,6 +172,7 @@ async def asyncio_detailed(
     kwargs = _get_kwargs(
         id=id,
         workspace=workspace,
+        ecosystem=ecosystem,
     )
 
     response = await client.get_async_httpx_client().request(**kwargs)
@@ -172,7 +184,8 @@ async def asyncio(
     id: str,
     *,
     client: AuthenticatedClient,
-    workspace: str,
+    workspace: str | Unset = UNSET,
+    ecosystem: str | Unset = UNSET,
 ) -> Deleted | StripeError | None:
     """Revoke an assignment (requires M at its scope)
 
@@ -180,7 +193,8 @@ async def asyncio(
 
     Args:
         id (str):
-        workspace (str):
+        workspace (str | Unset):
+        ecosystem (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -195,5 +209,6 @@ async def asyncio(
             id=id,
             client=client,
             workspace=workspace,
+            ecosystem=ecosystem,
         )
     ).parsed

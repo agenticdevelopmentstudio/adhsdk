@@ -92,7 +92,8 @@ def sync_detailed(
 ) -> Response[PostV1SyncTablesByIdResourcesByResourceResponse200 | StripeError]:
     """Override whether one resource syncs for an ecosystem
 
-     A resource that is not in the catalog is a 400 — overrides cannot invent resources.
+     Platform admins only. A resource that is not in the catalog is a 400 — overrides cannot invent
+    resources.
 
     Replaces PUT /admin/sync/tables/{id}/{resource}.
 
@@ -131,7 +132,8 @@ def sync(
 ) -> PostV1SyncTablesByIdResourcesByResourceResponse200 | StripeError | None:
     """Override whether one resource syncs for an ecosystem
 
-     A resource that is not in the catalog is a 400 — overrides cannot invent resources.
+     Platform admins only. A resource that is not in the catalog is a 400 — overrides cannot invent
+    resources.
 
     Replaces PUT /admin/sync/tables/{id}/{resource}.
 
@@ -165,7 +167,8 @@ async def asyncio_detailed(
 ) -> Response[PostV1SyncTablesByIdResourcesByResourceResponse200 | StripeError]:
     """Override whether one resource syncs for an ecosystem
 
-     A resource that is not in the catalog is a 400 — overrides cannot invent resources.
+     Platform admins only. A resource that is not in the catalog is a 400 — overrides cannot invent
+    resources.
 
     Replaces PUT /admin/sync/tables/{id}/{resource}.
 
@@ -202,7 +205,8 @@ async def asyncio(
 ) -> PostV1SyncTablesByIdResourcesByResourceResponse200 | StripeError | None:
     """Override whether one resource syncs for an ecosystem
 
-     A resource that is not in the catalog is a 400 — overrides cannot invent resources.
+     Platform admins only. A resource that is not in the catalog is a 400 — overrides cannot invent
+    resources.
 
     Replaces PUT /admin/sync/tables/{id}/{resource}.
 

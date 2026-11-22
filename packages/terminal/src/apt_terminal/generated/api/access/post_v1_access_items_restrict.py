@@ -10,19 +10,22 @@ from ...models.post_v1_access_items_restrict_response_200 import (
     PostV1AccessItemsRestrictResponse200,
 )
 from ...models.stripe_error import StripeError
-from ...types import UNSET, Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     *,
     body: PostV1AccessItemsRestrictBody,
-    workspace: str,
+    workspace: str | Unset = UNSET,
+    ecosystem: str | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
     params: dict[str, Any] = {}
 
     params["workspace"] = workspace
+
+    params["ecosystem"] = ecosystem
 
     params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
 
@@ -89,14 +92,16 @@ def sync_detailed(
     *,
     client: AuthenticatedClient,
     body: PostV1AccessItemsRestrictBody,
-    workspace: str,
+    workspace: str | Unset = UNSET,
+    ecosystem: str | Unset = UNSET,
 ) -> Response[PostV1AccessItemsRestrictResponse200 | StripeError]:
     """Mark an item RESTRICTED (workspace-scope grants stop applying to it)
 
      Replaces POST /access/items/restrict.
 
     Args:
-        workspace (str):
+        workspace (str | Unset):
+        ecosystem (str | Unset):
         body (PostV1AccessItemsRestrictBody):
 
     Raises:
@@ -110,6 +115,7 @@ def sync_detailed(
     kwargs = _get_kwargs(
         body=body,
         workspace=workspace,
+        ecosystem=ecosystem,
     )
 
     response = client.get_httpx_client().request(
@@ -123,14 +129,16 @@ def sync(
     *,
     client: AuthenticatedClient,
     body: PostV1AccessItemsRestrictBody,
-    workspace: str,
+    workspace: str | Unset = UNSET,
+    ecosystem: str | Unset = UNSET,
 ) -> PostV1AccessItemsRestrictResponse200 | StripeError | None:
     """Mark an item RESTRICTED (workspace-scope grants stop applying to it)
 
      Replaces POST /access/items/restrict.
 
     Args:
-        workspace (str):
+        workspace (str | Unset):
+        ecosystem (str | Unset):
         body (PostV1AccessItemsRestrictBody):
 
     Raises:
@@ -145,6 +153,7 @@ def sync(
         client=client,
         body=body,
         workspace=workspace,
+        ecosystem=ecosystem,
     ).parsed
 
 
@@ -152,14 +161,16 @@ async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
     body: PostV1AccessItemsRestrictBody,
-    workspace: str,
+    workspace: str | Unset = UNSET,
+    ecosystem: str | Unset = UNSET,
 ) -> Response[PostV1AccessItemsRestrictResponse200 | StripeError]:
     """Mark an item RESTRICTED (workspace-scope grants stop applying to it)
 
      Replaces POST /access/items/restrict.
 
     Args:
-        workspace (str):
+        workspace (str | Unset):
+        ecosystem (str | Unset):
         body (PostV1AccessItemsRestrictBody):
 
     Raises:
@@ -173,6 +184,7 @@ async def asyncio_detailed(
     kwargs = _get_kwargs(
         body=body,
         workspace=workspace,
+        ecosystem=ecosystem,
     )
 
     response = await client.get_async_httpx_client().request(**kwargs)
@@ -184,14 +196,16 @@ async def asyncio(
     *,
     client: AuthenticatedClient,
     body: PostV1AccessItemsRestrictBody,
-    workspace: str,
+    workspace: str | Unset = UNSET,
+    ecosystem: str | Unset = UNSET,
 ) -> PostV1AccessItemsRestrictResponse200 | StripeError | None:
     """Mark an item RESTRICTED (workspace-scope grants stop applying to it)
 
      Replaces POST /access/items/restrict.
 
     Args:
-        workspace (str):
+        workspace (str | Unset):
+        ecosystem (str | Unset):
         body (PostV1AccessItemsRestrictBody):
 
     Raises:
@@ -207,5 +221,6 @@ async def asyncio(
             client=client,
             body=body,
             workspace=workspace,
+            ecosystem=ecosystem,
         )
     ).parsed

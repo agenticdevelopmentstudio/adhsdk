@@ -9,20 +9,23 @@ from ...client import AuthenticatedClient, Client
 from ...models.post_v1_access_roles_by_id_body import PostV1AccessRolesByIdBody
 from ...models.post_v1_access_roles_by_id_response_200 import PostV1AccessRolesByIdResponse200
 from ...models.stripe_error import StripeError
-from ...types import UNSET, Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     id: str,
     *,
     body: PostV1AccessRolesByIdBody,
-    workspace: str,
+    workspace: str | Unset = UNSET,
+    ecosystem: str | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
     params: dict[str, Any] = {}
 
     params["workspace"] = workspace
+
+    params["ecosystem"] = ecosystem
 
     params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
 
@@ -97,7 +100,8 @@ def sync_detailed(
     *,
     client: AuthenticatedClient,
     body: PostV1AccessRolesByIdBody,
-    workspace: str,
+    workspace: str | Unset = UNSET,
+    ecosystem: str | Unset = UNSET,
 ) -> Response[PostV1AccessRolesByIdResponse200 | StripeError]:
     """Edit a role (name/description/default/grants; the system admin role is immutable)
 
@@ -105,7 +109,8 @@ def sync_detailed(
 
     Args:
         id (str):
-        workspace (str):
+        workspace (str | Unset):
+        ecosystem (str | Unset):
         body (PostV1AccessRolesByIdBody):
 
     Raises:
@@ -120,6 +125,7 @@ def sync_detailed(
         id=id,
         body=body,
         workspace=workspace,
+        ecosystem=ecosystem,
     )
 
     response = client.get_httpx_client().request(
@@ -134,7 +140,8 @@ def sync(
     *,
     client: AuthenticatedClient,
     body: PostV1AccessRolesByIdBody,
-    workspace: str,
+    workspace: str | Unset = UNSET,
+    ecosystem: str | Unset = UNSET,
 ) -> PostV1AccessRolesByIdResponse200 | StripeError | None:
     """Edit a role (name/description/default/grants; the system admin role is immutable)
 
@@ -142,7 +149,8 @@ def sync(
 
     Args:
         id (str):
-        workspace (str):
+        workspace (str | Unset):
+        ecosystem (str | Unset):
         body (PostV1AccessRolesByIdBody):
 
     Raises:
@@ -158,6 +166,7 @@ def sync(
         client=client,
         body=body,
         workspace=workspace,
+        ecosystem=ecosystem,
     ).parsed
 
 
@@ -166,7 +175,8 @@ async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
     body: PostV1AccessRolesByIdBody,
-    workspace: str,
+    workspace: str | Unset = UNSET,
+    ecosystem: str | Unset = UNSET,
 ) -> Response[PostV1AccessRolesByIdResponse200 | StripeError]:
     """Edit a role (name/description/default/grants; the system admin role is immutable)
 
@@ -174,7 +184,8 @@ async def asyncio_detailed(
 
     Args:
         id (str):
-        workspace (str):
+        workspace (str | Unset):
+        ecosystem (str | Unset):
         body (PostV1AccessRolesByIdBody):
 
     Raises:
@@ -189,6 +200,7 @@ async def asyncio_detailed(
         id=id,
         body=body,
         workspace=workspace,
+        ecosystem=ecosystem,
     )
 
     response = await client.get_async_httpx_client().request(**kwargs)
@@ -201,7 +213,8 @@ async def asyncio(
     *,
     client: AuthenticatedClient,
     body: PostV1AccessRolesByIdBody,
-    workspace: str,
+    workspace: str | Unset = UNSET,
+    ecosystem: str | Unset = UNSET,
 ) -> PostV1AccessRolesByIdResponse200 | StripeError | None:
     """Edit a role (name/description/default/grants; the system admin role is immutable)
 
@@ -209,7 +222,8 @@ async def asyncio(
 
     Args:
         id (str):
-        workspace (str):
+        workspace (str | Unset):
+        ecosystem (str | Unset):
         body (PostV1AccessRolesByIdBody):
 
     Raises:
@@ -226,5 +240,6 @@ async def asyncio(
             client=client,
             body=body,
             workspace=workspace,
+            ecosystem=ecosystem,
         )
     ).parsed

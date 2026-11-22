@@ -82,7 +82,10 @@ def sync_detailed(
 ) -> Response[PostV1AccountResponse200 | StripeError]:
     """Update the caller's own profile (name, slug, avatar, public-profile toggle)
 
-     Replaces PATCH /auth/me, PUT /account/privacy (include privacy), PUT /me/appearance (include
+     An operator session edits its own operator account. It may not change its slug: that request is 400
+    with error code `operator_slug_immutable`.
+
+    Replaces PATCH /auth/me, PUT /account/privacy (include privacy), PUT /me/appearance (include
     appearance), PUT /me/communication-settings (include communication_settings), PUT /me/workspace-
     prefs (include workspace_prefs).
 
@@ -115,7 +118,10 @@ def sync(
 ) -> PostV1AccountResponse200 | StripeError | None:
     """Update the caller's own profile (name, slug, avatar, public-profile toggle)
 
-     Replaces PATCH /auth/me, PUT /account/privacy (include privacy), PUT /me/appearance (include
+     An operator session edits its own operator account. It may not change its slug: that request is 400
+    with error code `operator_slug_immutable`.
+
+    Replaces PATCH /auth/me, PUT /account/privacy (include privacy), PUT /me/appearance (include
     appearance), PUT /me/communication-settings (include communication_settings), PUT /me/workspace-
     prefs (include workspace_prefs).
 
@@ -143,7 +149,10 @@ async def asyncio_detailed(
 ) -> Response[PostV1AccountResponse200 | StripeError]:
     """Update the caller's own profile (name, slug, avatar, public-profile toggle)
 
-     Replaces PATCH /auth/me, PUT /account/privacy (include privacy), PUT /me/appearance (include
+     An operator session edits its own operator account. It may not change its slug: that request is 400
+    with error code `operator_slug_immutable`.
+
+    Replaces PATCH /auth/me, PUT /account/privacy (include privacy), PUT /me/appearance (include
     appearance), PUT /me/communication-settings (include communication_settings), PUT /me/workspace-
     prefs (include workspace_prefs).
 
@@ -174,7 +183,10 @@ async def asyncio(
 ) -> PostV1AccountResponse200 | StripeError | None:
     """Update the caller's own profile (name, slug, avatar, public-profile toggle)
 
-     Replaces PATCH /auth/me, PUT /account/privacy (include privacy), PUT /me/appearance (include
+     An operator session edits its own operator account. It may not change its slug: that request is 400
+    with error code `operator_slug_immutable`.
+
+    Replaces PATCH /auth/me, PUT /account/privacy (include privacy), PUT /me/appearance (include
     appearance), PUT /me/communication-settings (include communication_settings), PUT /me/workspace-
     prefs (include workspace_prefs).
 

@@ -117,6 +117,9 @@
       "name": "personal"
     },
     {
+      "name": "platform"
+    },
+    {
       "name": "presence"
     },
     {
@@ -265,6 +268,20 @@
             "enum": [
               "customer"
             ]
+          },
+          "access": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "The customer's product roles in its realm: each product feature area's item verbs as letters, e.g. { notes: 'CRUD' }. Absent where product roles do not apply."
+          },
+          "roles": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The slugs of the roles the customer holds in its realm, sorted. Absent with `access`."
           }
         }
       },
@@ -8163,6 +8180,25 @@
           }
         }
       },
+      "PlatformMessagingProvider": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/IntegrationProviderConfig"
+          },
+          {
+            "type": "object",
+            "required": [
+              "active"
+            ],
+            "properties": {
+              "active": {
+                "type": "boolean",
+                "description": "Whether this is the row the platform sends with. The write routes act on this row only."
+              }
+            }
+          }
+        ]
+      },
       "MessagingLogEntry": {
         "type": "object",
         "required": [
@@ -14083,7 +14119,8 @@
           "signup_mode",
           "login_enabled",
           "password_enabled",
-          "allowed_providers"
+          "allowed_providers",
+          "login_allowed_emails"
         ],
         "properties": {
           "signup_mode": {
@@ -14110,6 +14147,15 @@
             },
             "nullable": true,
             "description": "null means every configured provider. An empty array is stored as null, never as \"none\"."
+          },
+          "login_allowed_emails": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "email"
+            },
+            "nullable": true,
+            "description": "The people who may sign in, by email, stored lowercase. null (the default) means every customer; an empty array means nobody. A customer matches only through an email they have proven: the address a social sign-in vouches for, or a verified email contact method. It gates sign-in only: an invitee who is not listed still joins, and is refused with login_disabled until listed."
           }
         }
       },
@@ -14139,6 +14185,17 @@
             },
             "nullable": true,
             "description": "Every slug must name a configured provider, or the call is a 400. An empty array is coerced to null (all providers) rather than locking everyone out."
+          },
+          "login_allowed_emails": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "email",
+              "maxLength": 254
+            },
+            "maxItems": 500,
+            "nullable": true,
+            "description": "Emails allowed to sign in; null for every customer, [] for nobody. Each is trimmed and lowercased, and duplicates are dropped."
           }
         }
       },
@@ -15527,6 +15584,87 @@
           }
         }
       },
+      "OperatorAccessEntry": {
+        "type": "object",
+        "required": [
+          "id",
+          "at",
+          "operator_account_id",
+          "token_id",
+          "method",
+          "path",
+          "route",
+          "target_ecosystem_id",
+          "request_id",
+          "ip",
+          "user_agent"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "at": {
+            "type": "string",
+            "description": "Postgres timestamptz text, the transaction's start"
+          },
+          "operator_account_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "token_id": {
+            "type": "string",
+            "nullable": true
+          },
+          "method": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          },
+          "route": {
+            "type": "string",
+            "nullable": true,
+            "description": "The matched route pattern"
+          },
+          "target_ecosystem_id": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "request_id": {
+            "type": "string",
+            "nullable": true
+          },
+          "ip": {
+            "type": "string",
+            "nullable": true
+          },
+          "user_agent": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "OperatorAccessPage": {
+        "type": "object",
+        "required": [
+          "items",
+          "has_more"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OperatorAccessEntry"
+            }
+          },
+          "has_more": {
+            "type": "boolean",
+            "description": "More rows lie past this page (ask with `after`)"
+          }
+        }
+      },
       "ReservedIdentifier": {
         "type": "object",
         "required": [
@@ -16006,6 +16144,52 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/AccessGrant"
+            }
+          }
+        }
+      },
+      "AccessSubject": {
+        "type": "object",
+        "required": [
+          "kind",
+          "id",
+          "label",
+          "email",
+          "slug"
+        ],
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "customer"
+            ]
+          },
+          "id": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string",
+            "description": "display name, else email, else slug"
+          },
+          "email": {
+            "type": "string",
+            "nullable": true
+          },
+          "slug": {
+            "type": "string"
+          }
+        }
+      },
+      "AccessSubjectList": {
+        "type": "object",
+        "required": [
+          "subjects"
+        ],
+        "properties": {
+          "subjects": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AccessSubject"
             }
           }
         }
@@ -16586,6 +16770,7 @@
         "type": "object",
         "description": "One resource from the sync catalog as it stands for a given ecosystem: what the code ships as the default, and whether an operator has overridden it.",
         "required": [
+          "id",
           "resource",
           "scope",
           "push_mode",
@@ -16594,6 +16779,10 @@
           "overridden"
         ],
         "properties": {
+          "id": {
+            "type": "string",
+            "description": "The resource again, as the object id the /v1 list pages by (starting_after)"
+          },
           "resource": {
             "type": "string",
             "description": "\"<schema>.<table>\", e.g. content.contacts"
@@ -18296,10 +18485,20 @@
           {
             "name": "workspace",
             "in": "query",
-            "required": true,
+            "required": false,
             "schema": {
               "type": "string"
-            }
+            },
+            "description": "The hub workspace (slug). Exactly one of `workspace` and `ecosystem`."
+          },
+          {
+            "name": "ecosystem",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem (403 otherwise)."
           },
           {
             "name": "feature",
@@ -18436,10 +18635,20 @@
           {
             "name": "workspace",
             "in": "query",
-            "required": true,
+            "required": false,
             "schema": {
               "type": "string"
-            }
+            },
+            "description": "The hub workspace (slug). Exactly one of `workspace` and `ecosystem`."
+          },
+          {
+            "name": "ecosystem",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem (403 otherwise)."
           },
           {
             "name": "limit",
@@ -18588,10 +18797,20 @@
           {
             "name": "workspace",
             "in": "query",
-            "required": true,
+            "required": false,
             "schema": {
               "type": "string"
-            }
+            },
+            "description": "The hub workspace (slug). Exactly one of `workspace` and `ecosystem`."
+          },
+          {
+            "name": "ecosystem",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem (403 otherwise)."
           }
         ],
         "requestBody": {
@@ -18706,10 +18925,20 @@
           {
             "name": "workspace",
             "in": "query",
-            "required": true,
+            "required": false,
             "schema": {
               "type": "string"
-            }
+            },
+            "description": "The hub workspace (slug). Exactly one of `workspace` and `ecosystem`."
+          },
+          {
+            "name": "ecosystem",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem (403 otherwise)."
           }
         ],
         "requestBody": {
@@ -18824,10 +19053,20 @@
           {
             "name": "workspace",
             "in": "query",
-            "required": true,
+            "required": false,
             "schema": {
               "type": "string"
-            }
+            },
+            "description": "The hub workspace (slug). Exactly one of `workspace` and `ecosystem`."
+          },
+          {
+            "name": "ecosystem",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem (403 otherwise)."
           },
           {
             "name": "feature",
@@ -18946,10 +19185,20 @@
           {
             "name": "workspace",
             "in": "query",
-            "required": true,
+            "required": false,
             "schema": {
               "type": "string"
-            }
+            },
+            "description": "The hub workspace (slug). Exactly one of `workspace` and `ecosystem`."
+          },
+          {
+            "name": "ecosystem",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem (403 otherwise)."
           }
         ],
         "requestBody": {
@@ -19091,10 +19340,20 @@
           {
             "name": "workspace",
             "in": "query",
-            "required": true,
+            "required": false,
             "schema": {
               "type": "string"
-            }
+            },
+            "description": "The hub workspace (slug). Exactly one of `workspace` and `ecosystem`."
+          },
+          {
+            "name": "ecosystem",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem (403 otherwise)."
           }
         ],
         "responses": {
@@ -19162,10 +19421,20 @@
           {
             "name": "workspace",
             "in": "query",
-            "required": true,
+            "required": false,
             "schema": {
               "type": "string"
-            }
+            },
+            "description": "The hub workspace (slug). Exactly one of `workspace` and `ecosystem`."
+          },
+          {
+            "name": "ecosystem",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem (403 otherwise)."
           },
           {
             "name": "limit",
@@ -19312,10 +19581,20 @@
           {
             "name": "workspace",
             "in": "query",
-            "required": true,
+            "required": false,
             "schema": {
               "type": "string"
-            }
+            },
+            "description": "The hub workspace (slug). Exactly one of `workspace` and `ecosystem`."
+          },
+          {
+            "name": "ecosystem",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem (403 otherwise)."
           }
         ],
         "requestBody": {
@@ -19470,10 +19749,20 @@
           {
             "name": "workspace",
             "in": "query",
-            "required": true,
+            "required": false,
             "schema": {
               "type": "string"
-            }
+            },
+            "description": "The hub workspace (slug). Exactly one of `workspace` and `ecosystem`."
+          },
+          {
+            "name": "ecosystem",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem (403 otherwise)."
           }
         ],
         "responses": {
@@ -19557,10 +19846,20 @@
           {
             "name": "workspace",
             "in": "query",
-            "required": true,
+            "required": false,
             "schema": {
               "type": "string"
-            }
+            },
+            "description": "The hub workspace (slug). Exactly one of `workspace` and `ecosystem`."
+          },
+          {
+            "name": "ecosystem",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem (403 otherwise)."
           }
         ],
         "requestBody": {
@@ -19676,6 +19975,194 @@
         "x-adh-object": "access.role",
         "x-adh-replaces": [
           "PATCH /access/roles/{id}"
+        ]
+      }
+    },
+    "/v1/access/subjects": {
+      "get": {
+        "tags": [
+          "access"
+        ],
+        "summary": "List an ecosystem's product users, the people its roles can be granted to",
+        "description": "A page of the realm's live product users, ordered by id. `q` searches email, name and slug; `after` is the last id of the previous page. Ecosystem target only: a workspace target is 400 (its people are listed by the workspace members route).\n\nReplaces GET /access/subjects.",
+        "operationId": "getV1AccessSubjects",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "workspace",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The hub workspace (slug). Exactly one of `workspace` and `ecosystem`."
+          },
+          {
+            "name": "ecosystem",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem (403 otherwise)."
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "after",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "description": "Page size, 1–100 (default 10).",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 10
+            }
+          },
+          {
+            "name": "starting_after",
+            "in": "query",
+            "required": false,
+            "description": "Cursor: an object id; returns the page after it.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "ending_before",
+            "in": "query",
+            "required": false,
+            "description": "Cursor: an object id; returns the page before it.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "expand[]",
+            "in": "query",
+            "required": false,
+            "description": "Related objects to return in full instead of as an id. Up to four levels, e.g. `ecosystem_id`; on a list, `data.<field>`.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "style": "form",
+            "explode": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Subjects",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "object",
+                    "data",
+                    "has_more",
+                    "url"
+                  ],
+                  "properties": {
+                    "object": {
+                      "type": "string",
+                      "const": "list"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "allOf": [
+                          {
+                            "type": "object",
+                            "properties": {
+                              "object": {
+                                "type": "string",
+                                "const": "access.subject"
+                              }
+                            }
+                          },
+                          {
+                            "$ref": "#/components/schemas/AccessSubject"
+                          }
+                        ]
+                      }
+                    },
+                    "has_more": {
+                      "type": "boolean"
+                    },
+                    "url": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          }
+        },
+        "x-adh-object": "access.subject",
+        "x-adh-replaces": [
+          "GET /access/subjects"
         ]
       }
     },
@@ -20805,7 +21292,7 @@
           "auth"
         ],
         "summary": "Update the caller's own profile (name, slug, avatar, public-profile toggle)",
-        "description": "Replaces PATCH /auth/me, PUT /account/privacy (include privacy), PUT /me/appearance (include appearance), PUT /me/communication-settings (include communication_settings), PUT /me/workspace-prefs (include workspace_prefs).",
+        "description": "An operator session edits its own operator account. It may not change its slug: that request is 400 with error code `operator_slug_immutable`.\n\nReplaces PATCH /auth/me, PUT /account/privacy (include privacy), PUT /me/appearance (include appearance), PUT /me/communication-settings (include communication_settings), PUT /me/workspace-prefs (include workspace_prefs).",
         "operationId": "postV1Account",
         "security": [
           {
@@ -22987,6 +23474,1127 @@
         "x-adh-object": "account.mfa.totp",
         "x-adh-replaces": [
           "POST /account/mfa/totp/confirm"
+        ]
+      }
+    },
+    "/v1/accounts": {
+      "get": {
+        "tags": [
+          "platform"
+        ],
+        "summary": "List accounts",
+        "description": "Replaces GET /platform/accounts.",
+        "operationId": "getV1Accounts",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "ecosystem_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Uuid of the ecosystem whose accounts are listed: the hub or Operators. Narrows the list; it never widens what the caller can see."
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "description": "Page size, 1–100 (default 10).",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 10
+            }
+          },
+          {
+            "name": "starting_after",
+            "in": "query",
+            "required": false,
+            "description": "Cursor: an object id; returns the page after it.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "ending_before",
+            "in": "query",
+            "required": false,
+            "description": "Cursor: an object id; returns the page before it.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "expand[]",
+            "in": "query",
+            "required": false,
+            "description": "Related objects to return in full instead of as an id. Up to four levels, e.g. `ecosystem_id`; on a list, `data.<field>`.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "style": "form",
+            "explode": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "object",
+                    "data",
+                    "has_more",
+                    "url"
+                  ],
+                  "properties": {
+                    "object": {
+                      "type": "string",
+                      "const": "list"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$schema": "https://json-schema.org/draft/2020-12/schema",
+                        "type": "object",
+                        "properties": {
+                          "object": {
+                            "type": "string",
+                            "const": "account"
+                          },
+                          "id": {
+                            "type": "string",
+                            "maxLength": 36
+                          },
+                          "ecosystem_id": {
+                            "type": "string",
+                            "maxLength": 36
+                          },
+                          "external_id": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "maxLength": 255
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "email": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "maxLength": 255
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "display_name": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "maxLength": 255
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "slug": {
+                            "type": "string",
+                            "maxLength": 64
+                          },
+                          "avatar_url": {
+                            "type": "string",
+                            "maxLength": 1024
+                          },
+                          "public_profile_enabled": {
+                            "type": "boolean"
+                          },
+                          "profile_visibility": {
+                            "type": "string",
+                            "maxLength": 16
+                          },
+                          "token_version": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "preferred_mfa_method": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "maxLength": 16
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "mfa_failed_attempts": {
+                            "type": "integer",
+                            "minimum": -32768,
+                            "maximum": 32767
+                          },
+                          "mfa_locked_until": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "deleted_at": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "created": {
+                            "type": "integer",
+                            "description": "Unix timestamp, in seconds."
+                          },
+                          "updated": {
+                            "type": "integer",
+                            "description": "Unix timestamp, in seconds."
+                          },
+                          "sync_version": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "sync_stamped_at": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "sync_txid": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "ecosystem_id",
+                          "external_id",
+                          "email",
+                          "display_name",
+                          "slug",
+                          "avatar_url",
+                          "public_profile_enabled",
+                          "profile_visibility",
+                          "token_version",
+                          "preferred_mfa_method",
+                          "mfa_failed_attempts",
+                          "mfa_locked_until",
+                          "deleted_at",
+                          "created",
+                          "updated",
+                          "sync_version",
+                          "sync_stamped_at",
+                          "sync_txid"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "has_more": {
+                      "type": "boolean"
+                    },
+                    "url": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          }
+        },
+        "x-adh-object": "account",
+        "x-adh-replaces": [
+          "GET /platform/accounts"
+        ]
+      },
+      "post": {
+        "tags": [
+          "platform"
+        ],
+        "summary": "Create accounts",
+        "description": "Replaces POST /platform/accounts.",
+        "operationId": "postV1Accounts",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "ecosystem_id": {
+                    "type": "string",
+                    "maxLength": 36
+                  },
+                  "external_id": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 255
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "email": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 255
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "display_name": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 255
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "slug": {
+                    "type": "string",
+                    "maxLength": 64
+                  },
+                  "avatar_url": {
+                    "type": "string",
+                    "maxLength": 1024
+                  },
+                  "profile_visibility": {
+                    "type": "string",
+                    "maxLength": 16
+                  },
+                  "preferred_mfa_method": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 16
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "slug"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "accounts",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$schema": "https://json-schema.org/draft/2020-12/schema",
+                  "type": "object",
+                  "properties": {
+                    "object": {
+                      "type": "string",
+                      "const": "account"
+                    },
+                    "id": {
+                      "type": "string",
+                      "maxLength": 36
+                    },
+                    "ecosystem_id": {
+                      "type": "string",
+                      "maxLength": 36
+                    },
+                    "external_id": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "maxLength": 255
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "email": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "maxLength": 255
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "display_name": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "maxLength": 255
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "slug": {
+                      "type": "string",
+                      "maxLength": 64
+                    },
+                    "avatar_url": {
+                      "type": "string",
+                      "maxLength": 1024
+                    },
+                    "public_profile_enabled": {
+                      "type": "boolean"
+                    },
+                    "profile_visibility": {
+                      "type": "string",
+                      "maxLength": 16
+                    },
+                    "token_version": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "preferred_mfa_method": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "maxLength": 16
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "mfa_failed_attempts": {
+                      "type": "integer",
+                      "minimum": -32768,
+                      "maximum": 32767
+                    },
+                    "mfa_locked_until": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "deleted_at": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "created": {
+                      "type": "integer",
+                      "description": "Unix timestamp, in seconds."
+                    },
+                    "updated": {
+                      "type": "integer",
+                      "description": "Unix timestamp, in seconds."
+                    },
+                    "sync_version": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "sync_stamped_at": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "sync_txid": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "ecosystem_id",
+                    "external_id",
+                    "email",
+                    "display_name",
+                    "slug",
+                    "avatar_url",
+                    "public_profile_enabled",
+                    "profile_visibility",
+                    "token_version",
+                    "preferred_mfa_method",
+                    "mfa_failed_attempts",
+                    "mfa_locked_until",
+                    "deleted_at",
+                    "created",
+                    "updated",
+                    "sync_version",
+                    "sync_stamped_at",
+                    "sync_txid"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          }
+        },
+        "x-adh-object": "account",
+        "x-adh-replaces": [
+          "POST /platform/accounts"
+        ]
+      }
+    },
+    "/v1/accounts/{id}": {
+      "delete": {
+        "tags": [
+          "platform"
+        ],
+        "summary": "Delete accounts",
+        "description": "Replaces DELETE /platform/accounts/{id}.",
+        "operationId": "deleteV1AccountsById",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Deleted"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          }
+        },
+        "x-adh-object": "account",
+        "x-adh-replaces": [
+          "DELETE /platform/accounts/{id}"
+        ]
+      },
+      "get": {
+        "tags": [
+          "platform"
+        ],
+        "summary": "Get accounts by id",
+        "description": "Replaces GET /platform/accounts/{id}.",
+        "operationId": "getV1AccountsById",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "expand[]",
+            "in": "query",
+            "required": false,
+            "description": "Related objects to return in full instead of as an id. Up to four levels, e.g. `ecosystem_id`; on a list, `data.<field>`.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "style": "form",
+            "explode": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "accounts",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$schema": "https://json-schema.org/draft/2020-12/schema",
+                  "type": "object",
+                  "properties": {
+                    "object": {
+                      "type": "string",
+                      "const": "account"
+                    },
+                    "id": {
+                      "type": "string",
+                      "maxLength": 36
+                    },
+                    "ecosystem_id": {
+                      "type": "string",
+                      "maxLength": 36
+                    },
+                    "external_id": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "maxLength": 255
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "email": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "maxLength": 255
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "display_name": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "maxLength": 255
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "slug": {
+                      "type": "string",
+                      "maxLength": 64
+                    },
+                    "avatar_url": {
+                      "type": "string",
+                      "maxLength": 1024
+                    },
+                    "public_profile_enabled": {
+                      "type": "boolean"
+                    },
+                    "profile_visibility": {
+                      "type": "string",
+                      "maxLength": 16
+                    },
+                    "token_version": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "preferred_mfa_method": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "maxLength": 16
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "mfa_failed_attempts": {
+                      "type": "integer",
+                      "minimum": -32768,
+                      "maximum": 32767
+                    },
+                    "mfa_locked_until": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "deleted_at": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "created": {
+                      "type": "integer",
+                      "description": "Unix timestamp, in seconds."
+                    },
+                    "updated": {
+                      "type": "integer",
+                      "description": "Unix timestamp, in seconds."
+                    },
+                    "sync_version": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "sync_stamped_at": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "sync_txid": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "ecosystem_id",
+                    "external_id",
+                    "email",
+                    "display_name",
+                    "slug",
+                    "avatar_url",
+                    "public_profile_enabled",
+                    "profile_visibility",
+                    "token_version",
+                    "preferred_mfa_method",
+                    "mfa_failed_attempts",
+                    "mfa_locked_until",
+                    "deleted_at",
+                    "created",
+                    "updated",
+                    "sync_version",
+                    "sync_stamped_at",
+                    "sync_txid"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          }
+        },
+        "x-adh-object": "account",
+        "x-adh-replaces": [
+          "GET /platform/accounts/{id}"
+        ]
+      },
+      "post": {
+        "tags": [
+          "platform"
+        ],
+        "summary": "Update accounts",
+        "description": "Replaces PUT /platform/accounts/{id}.",
+        "operationId": "postV1AccountsById",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "ecosystem_id": {
+                    "type": "string",
+                    "maxLength": 36
+                  },
+                  "external_id": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 255
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "email": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 255
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "display_name": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 255
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "slug": {
+                    "type": "string",
+                    "maxLength": 64
+                  },
+                  "avatar_url": {
+                    "type": "string",
+                    "maxLength": 1024
+                  },
+                  "profile_visibility": {
+                    "type": "string",
+                    "maxLength": 16
+                  },
+                  "preferred_mfa_method": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 16
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "accounts",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$schema": "https://json-schema.org/draft/2020-12/schema",
+                  "type": "object",
+                  "properties": {
+                    "object": {
+                      "type": "string",
+                      "const": "account"
+                    },
+                    "id": {
+                      "type": "string",
+                      "maxLength": 36
+                    },
+                    "ecosystem_id": {
+                      "type": "string",
+                      "maxLength": 36
+                    },
+                    "external_id": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "maxLength": 255
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "email": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "maxLength": 255
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "display_name": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "maxLength": 255
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "slug": {
+                      "type": "string",
+                      "maxLength": 64
+                    },
+                    "avatar_url": {
+                      "type": "string",
+                      "maxLength": 1024
+                    },
+                    "public_profile_enabled": {
+                      "type": "boolean"
+                    },
+                    "profile_visibility": {
+                      "type": "string",
+                      "maxLength": 16
+                    },
+                    "token_version": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "preferred_mfa_method": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "maxLength": 16
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "mfa_failed_attempts": {
+                      "type": "integer",
+                      "minimum": -32768,
+                      "maximum": 32767
+                    },
+                    "mfa_locked_until": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "deleted_at": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "created": {
+                      "type": "integer",
+                      "description": "Unix timestamp, in seconds."
+                    },
+                    "updated": {
+                      "type": "integer",
+                      "description": "Unix timestamp, in seconds."
+                    },
+                    "sync_version": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "sync_stamped_at": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "sync_txid": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "ecosystem_id",
+                    "external_id",
+                    "email",
+                    "display_name",
+                    "slug",
+                    "avatar_url",
+                    "public_profile_enabled",
+                    "profile_visibility",
+                    "token_version",
+                    "preferred_mfa_method",
+                    "mfa_failed_attempts",
+                    "mfa_locked_until",
+                    "deleted_at",
+                    "created",
+                    "updated",
+                    "sync_version",
+                    "sync_stamped_at",
+                    "sync_txid"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          }
+        },
+        "x-adh-object": "account",
+        "x-adh-replaces": [
+          "PUT /platform/accounts/{id}"
         ]
       }
     },
@@ -30187,6 +31795,156 @@
         ]
       }
     },
+    "/v1/auth/capabilities/operators": {
+      "get": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "List every live operator account (admin)",
+        "description": "Replaces GET /auth/capabilities/operators.",
+        "operationId": "getV1AuthCapabilitiesOperators",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "description": "Page size, 1–100 (default 10).",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 10
+            }
+          },
+          {
+            "name": "starting_after",
+            "in": "query",
+            "required": false,
+            "description": "Cursor: an object id; returns the page after it.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "ending_before",
+            "in": "query",
+            "required": false,
+            "description": "Cursor: an object id; returns the page before it.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "expand[]",
+            "in": "query",
+            "required": false,
+            "description": "Related objects to return in full instead of as an id. Up to four levels, e.g. `ecosystem_id`; on a list, `data.<field>`.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "style": "form",
+            "explode": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Every live operator account",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "object",
+                    "data",
+                    "has_more",
+                    "url"
+                  ],
+                  "properties": {
+                    "object": {
+                      "type": "string",
+                      "const": "list"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "id",
+                          "email",
+                          "name",
+                          "created",
+                          "holds_admin"
+                        ],
+                        "properties": {
+                          "object": {
+                            "type": "string",
+                            "const": "auth.operator"
+                          },
+                          "id": {
+                            "type": "string"
+                          },
+                          "email": {
+                            "type": "string"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "created": {
+                            "type": "integer",
+                            "description": "Unix timestamp, in seconds."
+                          },
+                          "holds_admin": {
+                            "type": "boolean"
+                          }
+                        }
+                      }
+                    },
+                    "has_more": {
+                      "type": "boolean"
+                    },
+                    "url": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          }
+        },
+        "x-adh-object": "auth.operator",
+        "x-adh-replaces": [
+          "GET /auth/capabilities/operators"
+        ]
+      }
+    },
     "/v1/auth/capabilities/revoke": {
       "post": {
         "tags": [
@@ -30830,6 +32588,10 @@
                           "identifier": {
                             "type": "string",
                             "description": "Email or login slug"
+                          },
+                          "client_id": {
+                            "type": "string",
+                            "description": "Sign-in client the passkey login is for; picks the login realm (the admin client signs in operators). Absent: the hub, then the operator realm. An unknown or customer-realm client is a 400."
                           }
                         }
                       }
@@ -76178,6 +77940,347 @@
         ]
       }
     },
+    "/v1/ecosystems/{id}/sync_tables": {
+      "get": {
+        "tags": [
+          "sync"
+        ],
+        "summary": "List an ecosystem's sync enrollment, default and effective",
+        "description": "For whoever manages the ecosystem: its owner, an admin of the organization that owns it, or a platform admin.\n\nReplaces GET /ecosystem/sync-tables/{id}.",
+        "operationId": "getV1EcosystemsByIdSyncTables",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "description": "Page size, 1–100 (default 10).",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 10
+            }
+          },
+          {
+            "name": "starting_after",
+            "in": "query",
+            "required": false,
+            "description": "Cursor: an object id; returns the page after it.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "ending_before",
+            "in": "query",
+            "required": false,
+            "description": "Cursor: an object id; returns the page before it.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "expand[]",
+            "in": "query",
+            "required": false,
+            "description": "Related objects to return in full instead of as an id. Up to four levels, e.g. `ecosystem_id`; on a list, `data.<field>`.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "style": "form",
+            "explode": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Every catalog resource with its effective state",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "object",
+                    "data",
+                    "has_more",
+                    "url"
+                  ],
+                  "properties": {
+                    "object": {
+                      "type": "string",
+                      "const": "list"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "allOf": [
+                          {
+                            "type": "object",
+                            "properties": {
+                              "object": {
+                                "type": "string",
+                                "const": "sync_table"
+                              }
+                            }
+                          },
+                          {
+                            "$ref": "#/components/schemas/SyncEnrollmentRow"
+                          }
+                        ]
+                      }
+                    },
+                    "has_more": {
+                      "type": "boolean"
+                    },
+                    "url": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          }
+        },
+        "x-adh-object": "sync_table",
+        "x-adh-replaces": [
+          "GET /ecosystem/sync-tables/{id}"
+        ]
+      }
+    },
+    "/v1/ecosystems/{id}/sync_tables/{resource}": {
+      "delete": {
+        "tags": [
+          "sync"
+        ],
+        "summary": "Drop the override and fall back to the catalog default",
+        "description": "For whoever manages the ecosystem: its owner, an admin of the organization that owns it, or a platform admin. Idempotent, and deliberately unvalidated: clearing an override that was never set — or one naming a resource the catalog has since dropped — succeeds rather than 400ing, so a stale override can always be cleaned up.\n\nReplaces DELETE /ecosystem/sync-tables/{id}/{resource}.",
+        "operationId": "deleteV1EcosystemsByIdSyncTablesByResource",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "resource",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Deleted"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          }
+        },
+        "x-adh-object": "sync_table",
+        "x-adh-replaces": [
+          "DELETE /ecosystem/sync-tables/{id}/{resource}"
+        ]
+      },
+      "post": {
+        "tags": [
+          "sync"
+        ],
+        "summary": "Override whether one resource syncs for an ecosystem",
+        "description": "For whoever manages the ecosystem: its owner, an admin of the organization that owns it, or a platform admin. A resource that is not in the catalog is a 400 — overrides cannot invent resources.\n\nReplaces PUT /ecosystem/sync-tables/{id}/{resource}.",
+        "operationId": "postV1EcosystemsByIdSyncTablesByResource",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "resource",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SyncEnrollmentUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The catalog after the write",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "object": {
+                          "type": "string",
+                          "const": "sync_table"
+                        }
+                      }
+                    },
+                    {
+                      "$ref": "#/components/schemas/SyncEnrollmentList"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          }
+        },
+        "x-adh-object": "sync_table",
+        "x-adh-replaces": [
+          "PUT /ecosystem/sync-tables/{id}/{resource}"
+        ]
+      }
+    },
     "/v1/entity_history": {
       "get": {
         "tags": [
@@ -110335,6 +112438,539 @@
         "x-adh-object": "messaging.message",
         "x-adh-replaces": [
           "GET /messaging/log/{id}"
+        ]
+      }
+    },
+    "/v1/messaging/providers": {
+      "get": {
+        "tags": [
+          "messaging"
+        ],
+        "summary": "List the platform's own messaging provider configs, Postmark and Twilio (admin)",
+        "description": "The providers the platform sends OTP, MFA, invitation and notification messages with, stored under the hub's key. Masked: secrets collapse to `hasSecret`, except the Postmark deliverability webhook secret the platform mints.\n\nReplaces GET /messaging/providers.",
+        "operationId": "getV1MessagingProviders",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "description": "Page size, 1–100 (default 10).",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 10
+            }
+          },
+          {
+            "name": "starting_after",
+            "in": "query",
+            "required": false,
+            "description": "Cursor: an object id; returns the page after it.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "ending_before",
+            "in": "query",
+            "required": false,
+            "description": "Cursor: an object id; returns the page before it.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "expand[]",
+            "in": "query",
+            "required": false,
+            "description": "Related objects to return in full instead of as an id. Up to four levels, e.g. `ecosystem_id`; on a list, `data.<field>`.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "style": "form",
+            "explode": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Platform messaging providers",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "object",
+                    "data",
+                    "has_more",
+                    "url"
+                  ],
+                  "properties": {
+                    "object": {
+                      "type": "string",
+                      "const": "list"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "allOf": [
+                          {
+                            "type": "object",
+                            "properties": {
+                              "object": {
+                                "type": "string",
+                                "const": "messaging.provider"
+                              }
+                            }
+                          },
+                          {
+                            "$ref": "#/components/schemas/PlatformMessagingProvider"
+                          }
+                        ]
+                      }
+                    },
+                    "has_more": {
+                      "type": "boolean"
+                    },
+                    "url": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          }
+        },
+        "x-adh-object": "messaging.provider",
+        "x-adh-replaces": [
+          "GET /messaging/providers"
+        ]
+      }
+    },
+    "/v1/messaging/providers/{id}": {
+      "delete": {
+        "tags": [
+          "messaging"
+        ],
+        "summary": "Remove one of the platform's messaging providers (admin)",
+        "description": "Replaces DELETE /messaging/providers/{providerId}.",
+        "operationId": "deleteV1MessagingProvidersById",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Deleted"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          }
+        },
+        "x-adh-object": "messaging.provider",
+        "x-adh-replaces": [
+          "DELETE /messaging/providers/{providerId}"
+        ]
+      },
+      "post": {
+        "tags": [
+          "messaging"
+        ],
+        "summary": "Set or replace one of the platform's messaging providers (admin)",
+        "description": "Updates the active config, or creates it when there is none. The submitted fields are merged over the stored config; a blank or absent secret field keeps the stored secret, and an optional field sent as an empty string or null is cleared. A new Postmark config is created with its own deliverability webhook secret. 404 for any provider other than postmark or twilio.\n\nReplaces PUT /messaging/providers/{providerId}.",
+        "operationId": "postV1MessagingProvidersById",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "description": "Instance name"
+                  },
+                  "fields": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "description": "The provider's config fields by key: postmark serverToken, fromEmail, …; twilio accountSid, authToken, fromNumber. An empty string or null clears an optional field."
+                  },
+                  "enabled": {
+                    "type": "boolean",
+                    "description": "false pauses the provider"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Masked provider config",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "object": {
+                          "type": "string",
+                          "const": "messaging.provider"
+                        }
+                      }
+                    },
+                    {
+                      "$ref": "#/components/schemas/IntegrationProviderConfig"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          }
+        },
+        "x-adh-object": "messaging.provider",
+        "x-adh-replaces": [
+          "PUT /messaging/providers/{providerId}"
+        ]
+      }
+    },
+    "/v1/messaging/providers/{id}/rotate_webhook_secret": {
+      "post": {
+        "tags": [
+          "messaging"
+        ],
+        "summary": "Rotate the platform Postmark config's deliverability webhook secret (admin)",
+        "description": "Mints a new secret and returns it on `deliverabilityWebhook.secret`; the old one stops working at once. 404 for twilio, which has no webhook, and when Postmark is not configured.\n\nReplaces POST /messaging/providers/{providerId}/rotate-webhook-secret.",
+        "operationId": "postV1MessagingProvidersByIdRotateWebhookSecret",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Masked provider config carrying the new webhook secret",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "object": {
+                          "type": "string",
+                          "const": "messaging.provider"
+                        }
+                      }
+                    },
+                    {
+                      "$ref": "#/components/schemas/IntegrationProviderConfig"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          }
+        },
+        "x-adh-object": "messaging.provider",
+        "x-adh-replaces": [
+          "POST /messaging/providers/{providerId}/rotate-webhook-secret"
+        ]
+      }
+    },
+    "/v1/messaging/providers/{id}/test": {
+      "post": {
+        "tags": [
+          "messaging"
+        ],
+        "summary": "Send a test message through a platform messaging provider (admin)",
+        "description": "Email goes to `to`, or to the calling admin's own address without it. SMS needs `to` (400 without it). The send is logged with origin platform.\n\nReplaces POST /messaging/providers/{providerId}/test.",
+        "operationId": "postV1MessagingProvidersByIdTest",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "to": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "description": "Email address or phone number to send the test to"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Sent",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "object": {
+                          "type": "string",
+                          "const": "messaging.provider"
+                        }
+                      }
+                    },
+                    {
+                      "$ref": "#/components/schemas/MessagingSendResult"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          }
+        },
+        "x-adh-object": "messaging.provider",
+        "x-adh-replaces": [
+          "POST /messaging/providers/{providerId}/test"
         ]
       }
     },
@@ -148785,7 +151421,7 @@
           "sync"
         ],
         "summary": "List an ecosystem's sync enrollment, default and effective",
-        "description": "Replaces GET /admin/sync/tables/{id}.",
+        "description": "Platform admins only.\n\nReplaces GET /admin/sync/tables/{id}.",
         "operationId": "getV1SyncTablesById",
         "security": [
           {
@@ -148937,7 +151573,7 @@
           "sync"
         ],
         "summary": "Drop the override and fall back to the catalog default",
-        "description": "Idempotent, and deliberately unvalidated: clearing an override that was never set — or one naming a resource the catalog has since dropped — succeeds rather than 400ing, so a stale override can always be cleaned up.\n\nReplaces DELETE /admin/sync/tables/{id}/{resource}.",
+        "description": "Platform admins only. Idempotent, and deliberately unvalidated: clearing an override that was never set — or one naming a resource the catalog has since dropped — succeeds rather than 400ing, so a stale override can always be cleaned up.\n\nReplaces DELETE /admin/sync/tables/{id}/{resource}.",
         "operationId": "deleteV1SyncTablesByIdResourcesByResource",
         "security": [
           {
@@ -149014,7 +151650,7 @@
           "sync"
         ],
         "summary": "Override whether one resource syncs for an ecosystem",
-        "description": "A resource that is not in the catalog is a 400 — overrides cannot invent resources.\n\nReplaces PUT /admin/sync/tables/{id}/{resource}.",
+        "description": "Platform admins only. A resource that is not in the catalog is a 400 — overrides cannot invent resources.\n\nReplaces PUT /admin/sync/tables/{id}/{resource}.",
         "operationId": "postV1SyncTablesByIdResourcesByResource",
         "security": [
           {
@@ -149378,6 +152014,200 @@
         "x-adh-object": "system.debug_env",
         "x-adh-replaces": [
           "GET /system/debug-env"
+        ]
+      }
+    },
+    "/v1/system/operator_access": {
+      "get": {
+        "tags": [
+          "system"
+        ],
+        "summary": "Admin-only operator access log (newest first, cursor-paged)",
+        "description": "Replaces GET /system/operator-access.",
+        "operationId": "getV1SystemOperatorAccess",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "operator_account_id",
+            "in": "query",
+            "required": false,
+            "description": "Only rows written by this operator account",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "target_ecosystem_id",
+            "in": "query",
+            "required": false,
+            "description": "Only rows whose request named this ecosystem",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "required": false,
+            "description": "Only rows at or after this time (inclusive)",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": false,
+            "description": "Only rows before this time (exclusive)",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "after",
+            "in": "query",
+            "required": false,
+            "description": "Cursor: the id of the last row held; returns the older rows after it",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "description": "Page size, 1–100 (default 10).",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 10
+            }
+          },
+          {
+            "name": "starting_after",
+            "in": "query",
+            "required": false,
+            "description": "Cursor: an object id; returns the page after it.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "ending_before",
+            "in": "query",
+            "required": false,
+            "description": "Cursor: an object id; returns the page before it.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "expand[]",
+            "in": "query",
+            "required": false,
+            "description": "Related objects to return in full instead of as an id. Up to four levels, e.g. `ecosystem_id`; on a list, `data.<field>`.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "style": "form",
+            "explode": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Operator access page",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "object",
+                    "data",
+                    "has_more",
+                    "url"
+                  ],
+                  "properties": {
+                    "object": {
+                      "type": "string",
+                      "const": "list"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "allOf": [
+                          {
+                            "type": "object",
+                            "properties": {
+                              "object": {
+                                "type": "string",
+                                "const": "system.operator_access"
+                              }
+                            }
+                          },
+                          {
+                            "$ref": "#/components/schemas/OperatorAccessEntry"
+                          }
+                        ]
+                      }
+                    },
+                    "has_more": {
+                      "type": "boolean"
+                    },
+                    "url": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          }
+        },
+        "x-adh-object": "system.operator_access",
+        "x-adh-replaces": [
+          "GET /system/operator-access"
         ]
       }
     },
@@ -162908,7 +165738,7 @@
             "name": "starting_after",
             "in": "query",
             "required": false,
-            "description": "Cursor: an object id; returns the page after it.",
+            "description": "Cursor: an object's `slug`; returns the page after it.",
             "schema": {
               "type": "string"
             }
@@ -162917,7 +165747,7 @@
             "name": "ending_before",
             "in": "query",
             "required": false,
-            "description": "Cursor: an object id; returns the page before it.",
+            "description": "Cursor: an object's `slug`; returns the page before it.",
             "schema": {
               "type": "string"
             }

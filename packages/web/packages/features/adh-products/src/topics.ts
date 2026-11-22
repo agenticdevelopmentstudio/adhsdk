@@ -74,6 +74,9 @@ export const PRODUCT_TOPICS = [
   // waitlists, which come with Users. How they sign in and sign up is Users ▸ Authentication; the
   // Authentication group all of this sat in is gone (Mike, 2026-09-29).
   { id: "invitations", label: "Users", dividerAfter: false, features: ["users"] },
+  // Product roles (phase 5): the roles the product's users hold and who holds each. It stands on
+  // `users` with the Users row: a product with no users has no one to give a role to.
+  { id: "roles", label: "Product roles", dividerAfter: false, features: ["users"] },
   // (Communities sat here, was removed for having no surface on any host, and came back below
   // with the rest of the hub's Products group — parked deliberately this time, because the
   // workspace rail offered it and moving that rail down whole is what dropping it would undo.)

@@ -34,7 +34,9 @@ vi.mock("@adh-sdk/auth", async (importOriginal) => ({
   reportUnexpectedAuthError: vi.fn(),
 }));
 
-vi.mock("@adh-sdk/data/access", () => ({
+vi.mock("@adh-sdk/data/access", async (importOriginal) => ({
+  // The real cache-key helper: pure, and what keeps a workspace's keys what they always were.
+  accessTargetKey: (await importOriginal<typeof import("@adh-sdk/data/access")>()).accessTargetKey,
   ACCESS_FEATURES: [
     { key: "projects", label: "Projects" },
     { key: "personas", label: "Personas" },

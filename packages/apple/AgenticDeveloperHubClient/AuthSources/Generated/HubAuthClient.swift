@@ -184,6 +184,8 @@ public struct HubAuthClient: APIProtocol {
     }
     /// Update the caller's own profile (name, slug, avatar, public-profile toggle)
     ///
+    /// An operator session edits its own operator account. It may not change its slug: that request is 400 with error code `operator_slug_immutable`.
+    ///
     /// Replaces PATCH /auth/me, PUT /account/privacy (include privacy), PUT /me/appearance (include appearance), PUT /me/communication-settings (include communication_settings), PUT /me/workspace-prefs (include workspace_prefs).
     ///
     /// - Remark: HTTP `POST /v1/account`.

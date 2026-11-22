@@ -8,19 +8,22 @@ from ...client import AuthenticatedClient, Client
 from ...models.post_v1_access_items_restore_body import PostV1AccessItemsRestoreBody
 from ...models.post_v1_access_items_restore_response_200 import PostV1AccessItemsRestoreResponse200
 from ...models.stripe_error import StripeError
-from ...types import UNSET, Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     *,
     body: PostV1AccessItemsRestoreBody,
-    workspace: str,
+    workspace: str | Unset = UNSET,
+    ecosystem: str | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
     params: dict[str, Any] = {}
 
     params["workspace"] = workspace
+
+    params["ecosystem"] = ecosystem
 
     params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
 
@@ -87,14 +90,16 @@ def sync_detailed(
     *,
     client: AuthenticatedClient,
     body: PostV1AccessItemsRestoreBody,
-    workspace: str,
+    workspace: str | Unset = UNSET,
+    ecosystem: str | Unset = UNSET,
 ) -> Response[PostV1AccessItemsRestoreResponse200 | StripeError]:
     """Restore an item to inherited access (deletes its restriction row)
 
      Replaces POST /access/items/restore.
 
     Args:
-        workspace (str):
+        workspace (str | Unset):
+        ecosystem (str | Unset):
         body (PostV1AccessItemsRestoreBody):
 
     Raises:
@@ -108,6 +113,7 @@ def sync_detailed(
     kwargs = _get_kwargs(
         body=body,
         workspace=workspace,
+        ecosystem=ecosystem,
     )
 
     response = client.get_httpx_client().request(
@@ -121,14 +127,16 @@ def sync(
     *,
     client: AuthenticatedClient,
     body: PostV1AccessItemsRestoreBody,
-    workspace: str,
+    workspace: str | Unset = UNSET,
+    ecosystem: str | Unset = UNSET,
 ) -> PostV1AccessItemsRestoreResponse200 | StripeError | None:
     """Restore an item to inherited access (deletes its restriction row)
 
      Replaces POST /access/items/restore.
 
     Args:
-        workspace (str):
+        workspace (str | Unset):
+        ecosystem (str | Unset):
         body (PostV1AccessItemsRestoreBody):
 
     Raises:
@@ -143,6 +151,7 @@ def sync(
         client=client,
         body=body,
         workspace=workspace,
+        ecosystem=ecosystem,
     ).parsed
 
 
@@ -150,14 +159,16 @@ async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
     body: PostV1AccessItemsRestoreBody,
-    workspace: str,
+    workspace: str | Unset = UNSET,
+    ecosystem: str | Unset = UNSET,
 ) -> Response[PostV1AccessItemsRestoreResponse200 | StripeError]:
     """Restore an item to inherited access (deletes its restriction row)
 
      Replaces POST /access/items/restore.
 
     Args:
-        workspace (str):
+        workspace (str | Unset):
+        ecosystem (str | Unset):
         body (PostV1AccessItemsRestoreBody):
 
     Raises:
@@ -171,6 +182,7 @@ async def asyncio_detailed(
     kwargs = _get_kwargs(
         body=body,
         workspace=workspace,
+        ecosystem=ecosystem,
     )
 
     response = await client.get_async_httpx_client().request(**kwargs)
@@ -182,14 +194,16 @@ async def asyncio(
     *,
     client: AuthenticatedClient,
     body: PostV1AccessItemsRestoreBody,
-    workspace: str,
+    workspace: str | Unset = UNSET,
+    ecosystem: str | Unset = UNSET,
 ) -> PostV1AccessItemsRestoreResponse200 | StripeError | None:
     """Restore an item to inherited access (deletes its restriction row)
 
      Replaces POST /access/items/restore.
 
     Args:
-        workspace (str):
+        workspace (str | Unset):
+        ecosystem (str | Unset):
         body (PostV1AccessItemsRestoreBody):
 
     Raises:
@@ -205,5 +219,6 @@ async def asyncio(
             client=client,
             body=body,
             workspace=workspace,
+            ecosystem=ecosystem,
         )
     ).parsed

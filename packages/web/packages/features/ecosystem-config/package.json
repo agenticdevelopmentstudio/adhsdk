@@ -40,6 +40,7 @@
     "@adh-sdk/auth": "workspace:*",
     "@adh-sdk/data": "workspace:*",
     "@adh-sdk/resource": "workspace:*",
+    "@adh-sdk/teams": "workspace:*",
     "@tanstack/react-query": "^5.62.0",
     "lucide-react": "^1.16.0",
     "@adh-sdk/ui": "workspace:*"

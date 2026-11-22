@@ -1962,6 +1962,9 @@ importers:
       '@adh-sdk/resource':
         specifier: workspace:*
         version: link:../../resource
+      '@adh-sdk/teams':
+        specifier: workspace:*
+        version: link:../teams
       '@adh-sdk/ui':
         specifier: workspace:*
         version: link:../../ui

@@ -25,6 +25,9 @@ export { FeatureFlagsPane, FlagDialog } from "./FeatureFlagsPane";
 export { ServerBagsPane, BagDialog } from "./ServerBagsPane";
 export { StorageTokensPanel } from "./StorageTokensPanel";
 export { SyncTablesPane, SyncTablesEditor } from "./SyncTablesPane";
+// An owner-made ecosystem's product roles: the Teams roles editor on the ecosystem target, plus
+// who holds each role.
+export { ProductRolesPane } from "./ProductRolesPane";
 export {
   useSyncTables,
   useSetSyncOverride,
