@@ -270,6 +270,54 @@ final class LegacySessionImporterTests: XCTestCase {
         XCTAssertEqual(report.store("adkd.db")?.inserted["sessions"], 0)
     }
 
+    /// One-row batches copy what one big batch does, once, and commit between
+    /// batches: a writer that never waits (GRDB's default busy mode fails at
+    /// once) can write each attached store whenever a batch has committed.
+    func testBatchesCopyEverythingOnceAndReleaseTheStoresBetweenThem() throws {
+        try makeStenographerSource()
+        let batched = LegacySessionImporter(target: importer.target, batchRows: 1)
+        let targetDirectory = root.appendingPathComponent("target")
+        let paths = [
+            "dst_raw": archivePath,
+            "dst_events": targetDirectory.appendingPathComponent(EventStore.fileName).path,
+            "dst_spool": targetDirectory.appendingPathComponent(IngestSpool.defaultDBName).path
+        ]
+        var committed: [String] = []
+        var failures: [String] = []
+        batched.batchCommitted = { schema in
+            committed.append(schema)
+            do {
+                let writer = try DatabaseQueue(path: try XCTUnwrap(paths[schema]))
+                try writer.write { conn in
+                    try conn.execute(sql: "CREATE TABLE IF NOT EXISTS between_batches (n INTEGER)")
+                    try conn.execute(sql: "INSERT INTO between_batches (n) VALUES (1)")
+                }
+            } catch {
+                failures.append("\(schema): \(error)")
+            }
+        }
+
+        let first = try batched.importStores(kind: .stenographerd, directory: sourceDirectory)
+        let second = try batched.importStores(kind: .stenographerd, directory: sourceDirectory)
+
+        XCTAssertEqual(failures, [], "a store was still locked after its batch committed")
+        XCTAssertEqual(committed.filter { $0 == "dst_raw" }.count, 4, "two one-row batches per import")
+        XCTAssertTrue(committed.contains("dst_events"))
+        XCTAssertTrue(committed.contains("dst_spool"))
+        XCTAssertEqual(first.store(rawFileName)?.inserted["raw_record"], 2)
+        XCTAssertEqual(first.store(EventStore.fileName)?.inserted["events"], 1)
+        XCTAssertEqual(first.store(EventStore.fileName)?.inserted["sessions"], 1)
+        XCTAssertEqual(first.store(IngestSpool.defaultDBName)?.inserted["spooled_event"], 1)
+        XCTAssertEqual(first.store("stenographer.db")?.inserted["event_log"], 2)
+        XCTAssertEqual(second.totalInserted, 0, "\(second)")
+    }
+
+    func testTheBatchSizeIsAtLeastOne() {
+        XCTAssertEqual(LegacySessionImporter(target: importer.target, batchRows: 0).batchRows, 1)
+        XCTAssertEqual(LegacySessionImporter(target: importer.target).batchRows,
+                       LegacySessionImporter.defaultBatchRows)
+    }
+
     func testTheReportPrintsAsJSON() throws {
         try makeStenographerSource()
 
