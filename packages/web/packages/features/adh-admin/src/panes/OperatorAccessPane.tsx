@@ -5,6 +5,7 @@ import {
   useMemo,
   useState,
   type FormEvent,
+  type ReactElement,
   type ReactNode,
 } from "react";
 import { FeatureTitle } from "@adh-sdk/resource";
@@ -62,7 +63,9 @@ function toFilters(d: FilterDraft): OperatorAccessFilters {
   };
 }
 
-export function OperatorAccessPane({ help }: { help?: ReactNode } = {}) {
+export function OperatorAccessPane({
+  help,
+}: { help?: ReactNode } = {}): ReactElement {
   const [draft, setDraft] = useState<FilterDraft>(EMPTY_DRAFT);
   const [applied, setApplied] = useState<OperatorAccessFilters>({});
   const log = useOperatorAccess(applied);
