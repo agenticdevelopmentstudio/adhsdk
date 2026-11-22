@@ -1693,13 +1693,29 @@ function useSelectionConnectors(
       if (performance.now() - start < trackMs) raf = requestAnimationFrame(loop)
     }
     loop()
-    // A rail's rows hide under its filter autocomplete and come back on no event this stack
-    // hears (typing, a host's rows landing): watch the flag itself, and re-measure once per flip.
-    const hidden = new MutationObserver(() => measure())
-    hidden.observe(cont, { subtree: true, attributes: true, attributeFilter: ["data-htd-hidden"] })
+    // Two changes reach an anchor on no event this stack hears, and both can come long after the
+    // loop above has ended: a rail's rows hiding under its filter autocomplete and coming back
+    // (typing), and a host's rows LANDING — a deep link sets every selection from the URL first, so
+    // the selected child row (its `aria-current`) can arrive with nothing in `sig` changing. Watch
+    // for both, and re-measure once on the next frame however many mutations a commit makes.
+    let pending = 0
+    const changed = new MutationObserver(() => {
+      if (pending) return
+      pending = requestAnimationFrame(() => {
+        pending = 0
+        measure()
+      })
+    })
+    changed.observe(cont, {
+      subtree: true,
+      childList: true,
+      attributes: true,
+      attributeFilter: ["data-htd-hidden", "aria-current"],
+    })
     return () => {
       cancelAnimationFrame(raf)
-      hidden.disconnect()
+      cancelAnimationFrame(pending)
+      changed.disconnect()
     }
   }, [containerRef, levelCount, sig, possible, trackMs])
   return { connectors, onScroll: () => measureRef.current() }

@@ -444,6 +444,35 @@ describe('HierarchicalTopicDetail — hover reveal, the hovered list and its chi
     await waitFor(() => expect(paths()).toBe(2))
   })
 
+  // A deep link sets every level's selection from the URL before a host's rows have arrived, so the
+  // selected child row can land long after the short re-measure loop has ended, with nothing in the
+  // layout signature changing. Under load in the hub's e2e that left the trail with no connector.
+  it.each([
+    ['HierarchicalTopicDetail', HierarchicalTopicDetail],
+    ['HierarchicalMenuDetail', HierarchicalMenuDetail],
+  ] as const)('%s draws the connector into a selected row that lands after the loop', async (_, Stack) => {
+    const surface = `late-${++surfaceSeq}`
+    const withTopics = (items: { id: string; label: string }[]) =>
+      levelsFor({ region: 'us', eco: 'core', topic: 'apps' }, surface).map((l) =>
+        l.title === 'Topics' ? { ...l, items } : l,
+      )
+    const { rerender } = render(
+      <Stack levels={withTopics([])}>
+        <p>detail</p>
+      </Stack>,
+    )
+    const paths = () => document.querySelectorAll('[data-htd-connectors] path').length
+    await waitFor(() => expect(paths()).toBe(1))
+    // Well past the loop's window, so only a re-measure the rows' arrival causes can draw it.
+    await act(() => new Promise((r) => setTimeout(r, 1000)))
+    rerender(
+      <Stack levels={withTopics(TOPICS)}>
+        <p>detail</p>
+      </Stack>,
+    )
+    await waitFor(() => expect(paths()).toBe(2))
+  })
+
   it('gives the click-rooted branch an edge on BOTH sides — leading and trailing', () => {
     render(
       <HierarchicalTopicDetail levels={levelsFor({ region: 'us', eco: 'core', topic: 'apps' })}>
