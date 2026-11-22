@@ -18,7 +18,7 @@ import {
   withV1Query,
 } from "./http";
 import { fetchMemberships, type UserEcosystem } from "./memberships";
-import { fetchV1WindowPage, useWindowedList } from "./windowed";
+import { fetchV1WindowPage, useWindowedList, type WindowedList } from "./windowed";
 
 // Every call here targets the `/api/v1` surface (Stripe-style: snake_case bodies,
 // `{object:'list', data, has_more}` collections, `created` as unix seconds, update as
@@ -735,7 +735,9 @@ export function operatorAccessUrl(filters: OperatorAccessFilters = {}): string {
  * caller passes the APPLIED filters, never a field's live text: `useWindowedList`'s key must not
  * hold what the operator is still typing, or every keystroke would throw the window away.
  */
-export function useOperatorAccess(filters: OperatorAccessFilters = {}) {
+export function useOperatorAccess(
+  filters: OperatorAccessFilters = {},
+): WindowedList<OperatorAccessEvent> {
   const applied = normalizeOperatorAccessFilters(filters);
   return useWindowedList<OperatorAccessEvent>({
     key: ["admin", "operator-access", applied],
