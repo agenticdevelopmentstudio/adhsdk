@@ -1,7 +1,4 @@
-// AgenticDeveloperHubSDKCore is macOS-only, so this is too (review F29).
-#if os(macOS)
 import Foundation
-import AgenticDeveloperHubSDKCore
 
 /// Checks every `ActivityPersistence` must pass. Returns failure messages
 /// (empty = pass) so a host can run them from its own XCTest target.
@@ -198,4 +195,3 @@ public enum ActivityPersistenceContract {
         if limited != ["live", "mid"] { out.append("limit not respected: \(limited)") }
     }
 }
-#endif

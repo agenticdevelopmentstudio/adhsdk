@@ -1,7 +1,4 @@
-// AgenticDeveloperHubSDKCore is macOS-only, so this is too (review F29).
-#if os(macOS)
 import Foundation
-import AgenticDeveloperHubSDKCore
 
 /// Where work-tracking writes. The host implements it over its own database.
 /// Every timestamp is ISO-8601 UTC (`UTCTimestamp`).
@@ -13,7 +10,7 @@ public protocol ActivityPersistence: AnyObject, Sendable {
     func closeActivitySpan(id: String, endedAt: String) throws
     func retitleActivitySpan(id: String, title: String) throws
     /// Heartbeat: the span was still current at `at`.
-    func touchActivitySpan(id: String, at: String) throws
+    func touchActivitySpan(id: String, at: String) throws // swiftlint:disable:this identifier_name
     /// Opens an idle interval unless one is already open.
     func openIdleInterval(from: String) throws
     /// Closes the open idle interval, if any.
@@ -55,4 +52,15 @@ public enum ActivityRecovery {
         return idle ?? base
     }
 }
-#endif
+
+/// The storage a `WorkTrackingController` runs against: the activity tables,
+/// the work-tracking settings, and the repo roots the host already knows.
+/// The host conforms its database; every rule stays in the controller (review F14).
+/// Declared in Core, beside ``ActivityPersistence``, so the session database
+/// (a tier below Activity) can conform to it.
+public protocol WorkTrackingPersistence: ActivityPersistence, WorkTrackingSettingsStore {
+    /// Project roots the host knows from its own records, for the title
+    /// fallback: roots it bills, and roots of sessions active at or after
+    /// `cutoff` (ISO-8601 UTC). Blank roots are left out; order is free.
+    func knownRepoRoots(activeSince cutoff: String) throws -> [String]
+}

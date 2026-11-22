@@ -4,16 +4,6 @@ import Foundation
 import OSLog
 import AgenticDeveloperHubSDKCore
 
-/// The storage a `WorkTrackingController` runs against: the activity tables,
-/// the work-tracking settings, and the repo roots the host already knows.
-/// The host conforms its database; every rule stays here (review F14).
-public protocol WorkTrackingPersistence: ActivityPersistence, WorkTrackingSettingsStore {
-    /// Project roots the host knows from its own records, for the title
-    /// fallback: roots it bills, and roots of sessions active at or after
-    /// `cutoff` (ISO-8601 UTC). Blank roots are left out; order is free.
-    func knownRepoRoots(activeSince cutoff: String) throws -> [String]
-}
-
 /// The owner of app-activity tracking: loads and saves the work-tracking
 /// preferences, applies the Accessibility policy, runs the
 /// `WorkActivityRecorder`, and reports status.
