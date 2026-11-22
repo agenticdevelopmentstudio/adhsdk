@@ -33,6 +33,7 @@ export const SITE_ROUTES_HUB: Partial<Record<SiteId, readonly string[]>> = {
     '/llm-providers',
     '/login',
     '/messaging',
+    '/operator-access',
     '/operators',
     '/privacy',
     '/processing-configs',
