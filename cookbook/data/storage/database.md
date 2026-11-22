@@ -212,6 +212,7 @@ account router, moved out of stenographerd so any daemon can host it:
 - **billing-routes-forward**: Every billing handler MUST forward to `BillingStore`, `BillingRollup`, `BillingTimer` or `BillingPrefs` and decide nothing itself, so each rule stays where a store test covers it.
 - **billing-routes-writes-post**: Every billing write MUST be a `POST`, so a daemon's token gate on writes covers all of them.
 - **billing-routes-bad-body**: A write whose body does not decode MUST answer 400 and change nothing.
+- **billing-routes-failures**: A billing write that throws MUST answer 400 with the error's sentence only when a store refused it (`BillingStore.BillingError`, `BillingRollup.RollupError`, `BillingTimer.TimerError` or a wire error); a busy or locked database (SQLITE_BUSY or SQLITE_LOCKED, extended forms and a write deadline included) MUST answer 503 and any other failure 500, each with a fixed sentence, and the database's own text MUST reach only the log, never the reply.
 - **billing-routes-preferences-values**: `POST /billing/preferences` MUST accept a JSON object whose values are strings, numbers or bools, storing each as the text `RawSetting` reads (`15`, `1.5`, `true`); a body that is not such an object (not JSON, an array, a `null`, an array or object value) MUST answer 400 and write nothing, and an empty body MUST write nothing and answer the snapshot in force.
 
 ### Activity Routes

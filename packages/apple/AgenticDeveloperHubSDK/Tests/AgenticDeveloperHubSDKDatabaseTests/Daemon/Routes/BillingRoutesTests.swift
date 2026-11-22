@@ -1,6 +1,7 @@
 import XCTest
 import Foundation
 import AgenticDeveloperHubSDKCore
+import GRDB
 @testable import AgenticDeveloperHubSDKDatabase
 
 /// The billing surface over HTTP, reads and writes. These tests care about
@@ -335,6 +336,53 @@ final class BillingRoutesTests: XCTestCase {
             from: Data(#"{"a":"day","b":15,"c":true,"d":1.5,"e":0}"#.utf8)
         )
         XCTAssertEqual(decoded.mapValues(\.settingText), ["a": "day", "b": "15", "c": "true", "d": "1.5", "e": "0"])
+    }
+
+    // MARK: - Failures
+
+    /// Only a store's refusal is a 400, the status the app treats as final.
+    func testAStoresRefusalIs400WithItsSentence() throws {
+        let refusals: [Error] = [
+            BillingStore.BillingError.missingName,
+            BillingRollup.RollupError.unknownEntry("e1"),
+            BillingTimer.TimerError.unknownTimer("t1"),
+            BillingRoutes.BillingWireError.undecodable
+        ]
+        for refusal in refusals {
+            let response = BillingRoutes.storeFailure(refusal)
+            XCTAssertEqual(response.status, 400, "\(refusal)")
+            XCTAssertEqual(try message(response), refusal.localizedDescription)
+        }
+    }
+
+    /// A busy or locked database, however it arrives, is a 503 the app may
+    /// retry, and its text never reaches the reply.
+    func testABusyDatabaseIs503WithoutSQLitesText() throws {
+        let busy: [Error] = [
+            DaemonDatabaseError.stepFailed(message: "database is locked", code: ResultCode.SQLITE_BUSY.rawValue),
+            DaemonDatabaseError.stepFailed(message: "database is locked", code: 517), // SQLITE_BUSY_SNAPSHOT
+            DaemonDatabaseError.stepFailed(message: "table is locked", code: ResultCode.SQLITE_LOCKED.rawValue),
+            DaemonDatabase.mapDBError(BoundedDatabaseError.deadlineExceeded(lane: "write", elapsedMs: 61_000)),
+            DatabaseError(resultCode: .SQLITE_BUSY, message: "database is locked")
+        ]
+        for error in busy {
+            let response = BillingRoutes.storeFailure(error)
+            XCTAssertEqual(response.status, 503, "\(error)")
+            XCTAssertEqual(try message(response), BillingRoutes.busyMessage)
+        }
+    }
+
+    func testAnyOtherFailureIs500WithoutItsText() throws {
+        let failures: [Error] = [
+            DaemonDatabaseError.stepFailed(message: "database disk image is malformed", code: 11),
+            DaemonDatabaseError.stepFailed(message: "disk I/O error", code: 10),
+            NSError(domain: "test", code: 1, userInfo: [NSLocalizedDescriptionKey: "/private/path/sessions.db"])
+        ]
+        for error in failures {
+            let response = BillingRoutes.storeFailure(error)
+            XCTAssertEqual(response.status, 500, "\(error)")
+            XCTAssertEqual(try message(response), BillingRoutes.failedMessage)
+        }
     }
 
     func testAppNamesReadsAtMostTheCap() async throws {
