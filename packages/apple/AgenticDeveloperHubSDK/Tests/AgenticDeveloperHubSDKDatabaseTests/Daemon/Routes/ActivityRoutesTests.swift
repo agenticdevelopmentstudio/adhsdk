@@ -248,4 +248,30 @@ final class ActivityRoutesTests: XCTestCase {
         XCTAssertEqual(response?.status, 400)
         XCTAssertEqual(try object(again)["registered"] as? Bool, true, "the owner still holds the slot")
     }
+
+    /// The reply is the state after the call: a release, a repeat release
+    /// and a release with nothing registered all say the caller holds nothing.
+    func testUnregisterAnswersTheStateAfterTheCall() async throws {
+        let table = registryTable()
+        let none = try object(try await send("POST", "/app/unregister", body: pidBody(appPid), table: table))
+        _ = try await send("POST", "/app/register", body: pidBody(appPid), table: table)
+        let released = try object(try await send("POST", "/app/unregister", body: pidBody(appPid), table: table))
+        let repeated = try object(try await send("POST", "/app/unregister", body: pidBody(appPid), table: table))
+
+        for reply in [none, released, repeated] {
+            XCTAssertEqual(reply["registered"] as? Bool, false)
+            XCTAssertTrue(reply["owner_pid"] == nil || reply["owner_pid"] is NSNull, "\(reply)")
+        }
+    }
+
+    /// A pid that does not own the slot releases nothing and is told who does.
+    func testUnregisterFromANonOwnerNamesTheOwner() async throws {
+        let table = registryTable()
+        _ = try await send("POST", "/app/register", body: pidBody(appPid), table: table)
+
+        let reply = try object(try await send("POST", "/app/unregister", body: pidBody(4_242), table: table))
+
+        XCTAssertEqual(reply["registered"] as? Bool, false)
+        XCTAssertEqual((reply["owner_pid"] as? NSNumber)?.int32Value, appPid)
+    }
 }
