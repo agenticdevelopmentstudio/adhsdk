@@ -15772,6 +15772,17 @@ export interface components {
             requires_features?: string[];
             /** @description The ecosystem types that may hold it; absent means every type except workspace, personal and organization. Adding it elsewhere is refused (400). GET /ecosystem/features/{id}/availability names these per ecosystem. */
             allowed_in?: ("workspace" | "persona" | "personal" | "organization" | "container" | "product")[];
+            /** @description What the feature contributes to sets: `permission` when the feature itself can be in a set, and the typed limits a set may define under it. Limit keys are unique across the catalog. The Sets screen is generated from these. */
+            set_entries?: {
+                /** @enum {boolean} */
+                permission?: true;
+                limits?: {
+                    key: string;
+                    /** @enum {string} */
+                    type: "tier" | "bytes" | "count";
+                    label: string;
+                }[];
+            };
             /** @description Narrows allowedIn for a workspace by who owns it: Teams is allowed only in an organization workspace. Absent means either owner kind. */
             workspace_owner_kinds?: ("customer" | "organization")[];
             /** @description The ecosystem types that get it when provisioned, with no owner opt-in (a workspace gets Personas; a Personal or Organization ecosystem gets its hub data). */
@@ -26859,6 +26870,7 @@ export interface operations {
                             grants_ecosystem_id: string | null;
                             lapse_action: string;
                             grace_days: number;
+                            set_id: string | null;
                             is_active: boolean;
                             /** @description Unix timestamp, in seconds. */
                             created: number;
@@ -26933,6 +26945,7 @@ export interface operations {
                         grants_ecosystem_id: string | null;
                         lapse_action: string;
                         grace_days: number;
+                        set_id: string | null;
                         is_active: boolean;
                         /** @description Unix timestamp, in seconds. */
                         created: number;
@@ -27000,6 +27013,7 @@ export interface operations {
                         grants_ecosystem_id: string | null;
                         lapse_action: string;
                         grace_days: number;
+                        set_id: string | null;
                         is_active: boolean;
                         /** @description Unix timestamp, in seconds. */
                         created: number;
@@ -27082,6 +27096,7 @@ export interface operations {
                         grants_ecosystem_id: string | null;
                         lapse_action: string;
                         grace_days: number;
+                        set_id: string | null;
                         is_active: boolean;
                         /** @description Unix timestamp, in seconds. */
                         created: number;
