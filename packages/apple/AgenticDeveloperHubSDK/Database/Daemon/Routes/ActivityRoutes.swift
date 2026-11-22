@@ -4,14 +4,45 @@ import Foundation
 
 // swiftlint:disable multiple_closures_with_trailing_closure
 
-/// App-activity tracking, read-only: `GET /activity/status` and
-/// `GET /activity/spans`, plus the single-instance app registry
+/// App-activity tracking: its state (`GET /activity/status`), its controls
+/// (`POST /activity/preferences`, `POST /activity/recheck`) and what it recorded
+/// (`GET /activity/spans`), plus the single-instance app registry
 /// (`POST /app/register`, `POST /app/unregister`).
+///
+/// The two `POST /activity/*` routes change what the machine records, so a
+/// daemon mounts this set behind its client token, as it does every write.
 public enum ActivityRoutes {
+
+    /// The work tracker a daemon runs, as this set drives it. Closures rather
+    /// than the controller itself, because the controller lives in the
+    /// Activity tier above this one.
+    public struct WorkTrackingControl: Sendable {
+        /// The tracker's last known state. Must never ask the system for
+        /// Accessibility: that check can freeze the machine.
+        public let status: @Sendable () async -> WorkTrackingStatus
+        /// Applies new preferences and answers the state they produced.
+        /// Turning tracking on checks Accessibility once.
+        public let apply: @Sendable (WorkTrackingPreferences) async throws -> WorkTrackingStatus
+        /// Asks the system for Accessibility again, at the user's request: the
+        /// only path that checks it on demand.
+        public let recheck: @Sendable () async -> WorkTrackingStatus
+
+        public init(
+            status: @escaping @Sendable () async -> WorkTrackingStatus,
+            apply: @escaping @Sendable (WorkTrackingPreferences) async throws -> WorkTrackingStatus,
+            recheck: @escaping @Sendable () async -> WorkTrackingStatus
+        ) {
+            self.status = status
+            self.apply = apply
+            self.recheck = recheck
+        }
+    }
 
     /// The endpoint-index lines this set serves, for a daemon's `GET /`.
     public static let endpoints: [String] = [
         "GET /activity/status",
+        "POST /activity/preferences",
+        "POST /activity/recheck",
         "GET /activity/spans",
         "POST /app/register",
         "POST /app/unregister"
@@ -34,24 +65,21 @@ public enum ActivityRoutes {
 
     /// - Parameters:
     ///   - database: where the spans are read.
-    ///   - workTrackingStatus: the tracker's last known state. It must never ask
-    ///     the system for Accessibility (that check can freeze the machine). Nil
-    ///     when this daemon runs no tracker, which makes `/activity/status` a 503.
+    ///   - workTracking: the tracker this daemon runs. Nil when it runs none,
+    ///     which makes `/activity/status` and both `POST /activity/*` a 503.
     ///   - appRegistry: the single-instance registry; nil leaves `/app/*` to the
     ///     daemon.
     public static func table(
         database: DaemonDatabase,
-        workTrackingStatus: (@Sendable () async -> WorkTrackingStatus)?,
+        workTracking: WorkTrackingControl?,
         appRegistry: SessionAppRegistry?
     ) -> RouteTable {
         var handlers: [RouteTable.Handler] = [
             RouteTable.route("GET", where: { $0.count == 2 && $0[0] == "activity" }) { request, components in
                 switch components[1] {
                 case "status":
-                    guard let workTrackingStatus else {
-                        return .error("Work tracking is not running", status: 503)
-                    }
-                    return .json(await workTrackingStatus())
+                    guard let workTracking else { return notRunning }
+                    return .json(await workTracking.status())
                 case "spans":
                     let since: String
                     switch RouteRequest.activitySince(request.query("since")) {
@@ -69,6 +97,26 @@ public enum ActivityRoutes {
                 default:
                     return .notFound("Unknown activity endpoint: /activity/\(components[1])")
                 }
+            },
+            // Applies a whole `WorkTrackingPreferences` (snake_case) and answers
+            // the status it produced. An unreadable body changes nothing.
+            RouteTable.route("POST", where: { $0 == ["activity", "preferences"] }) { request, _ in
+                guard let workTracking else { return notRunning }
+                let decoder = JSONDecoder()
+                decoder.keyDecodingStrategy = .convertFromSnakeCase
+                guard let prefs = try? decoder.decode(WorkTrackingPreferences.self, from: request.body) else {
+                    return .error("Invalid body: expected work-tracking preferences", status: 400)
+                }
+                do {
+                    return .json(try await workTracking.apply(prefs))
+                } catch {
+                    return .failure(error)
+                }
+            },
+            // The user's "check again" after granting Accessibility.
+            RouteTable.route("POST", where: { $0 == ["activity", "recheck"] }) { _, _ in
+                guard let workTracking else { return notRunning }
+                return .json(await workTracking.recheck())
             }
         ]
         if let appRegistry {
@@ -76,6 +124,8 @@ public enum ActivityRoutes {
         }
         return RouteTable(handlers)
     }
+
+    private static let notRunning = RouteResponse.error("Work tracking is not running", status: 503)
 
     private static func registryHandlers(_ registry: SessionAppRegistry) -> [RouteTable.Handler] {
         let missingBody = "Missing body: expected {\"pid\": Int}"
