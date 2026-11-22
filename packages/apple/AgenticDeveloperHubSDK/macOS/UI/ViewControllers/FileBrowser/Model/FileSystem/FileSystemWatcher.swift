@@ -8,10 +8,22 @@ import AgenticDeveloperHubSDKCoreMacOS
 public final class FileSystemWatcher: @unchecked Sendable {
     public typealias ChangeHandler = @Sendable (_ changedPaths: [String]) -> Void
 
+    /// FSEvents' flags meaning "events under this path were lost; rescan it":
+    /// fseventsd or the kernel fell behind and dropped events
+    /// (`UserDropped`/`KernelDropped`, both with `MustScanSubDirs`), coalesced a
+    /// burst into one `MustScanSubDirs`, or a watched root itself moved
+    /// (`RootChanged`). The path such an event names is a directory, often a
+    /// watched root, and says nothing about which file inside it changed.
+    static let rescanFlags = FSEventStreamEventFlags(
+        kFSEventStreamEventFlagMustScanSubDirs | kFSEventStreamEventFlagUserDropped
+            | kFSEventStreamEventFlagKernelDropped | kFSEventStreamEventFlagRootChanged
+    )
+
     private var streamRef: FSEventStreamRef?
     private let rootPaths: [String]
     private let excludedPrefixes: [String]
     private let handler: ChangeHandler
+    private let rescanHandler: ChangeHandler?
     private let queue = DispatchQueue(
         label: "com.mikefullerton.agenticdeveloperhubsdk.filebrowser.fswatcher", qos: .utility
     )
@@ -24,10 +36,35 @@ public final class FileSystemWatcher: @unchecked Sendable {
     /// git directory and the common directory live outside its working tree.
     /// A root that repeats another, or lies inside one, is dropped, so an
     /// event is never delivered twice.
-    public init(rootPaths: [String], excludedPrefixes: [String], handler: @escaping ChangeHandler) {
+    ///
+    /// `rescanHandler`, when given, receives the paths of events that mean
+    /// "rescan this directory" (`rescanFlags`) instead of `handler`, so a
+    /// watcher that reads meaning into a path can treat them as "anything
+    /// under here changed". Without it, those paths go to `handler` like any
+    /// other.
+    public init(rootPaths: [String], excludedPrefixes: [String],
+                rescanHandler: ChangeHandler? = nil, handler: @escaping ChangeHandler) {
         self.rootPaths = Self.distinctRoots(rootPaths)
         self.excludedPrefixes = excludedPrefixes
+        self.rescanHandler = rescanHandler
         self.handler = handler
+    }
+
+    /// Splits one callback's events into ordinary changes and rescans, dropping
+    /// excluded paths from both. With no rescan handler every path is ordinary.
+    static func partition(paths: [String], flags: [FSEventStreamEventFlags], excludedPrefixes: [String],
+                          separatingRescans: Bool) -> (changed: [String], rescan: [String]) {
+        var changed: [String] = []
+        var rescan: [String] = []
+        for (index, path) in paths.enumerated() where !isExcluded(path, by: excludedPrefixes) {
+            let flag = index < flags.count ? flags[index] : 0
+            if separatingRescans, flag & rescanFlags != 0 {
+                rescan.append(path)
+            } else {
+                changed.append(path)
+            }
+        }
+        return (changed, rescan)
     }
 
     /// `paths` without repeats and without any path inside another, in their
@@ -57,19 +94,28 @@ public final class FileSystemWatcher: @unchecked Sendable {
         var context = FSEventStreamContext()
         context.info = Unmanaged.passUnretained(self).toOpaque()
 
-        let callback: FSEventStreamCallback = { _, clientCallBackInfo, _, eventPaths, _, _ in
+        let callback: FSEventStreamCallback = { _, clientCallBackInfo, numEvents, eventPaths, eventFlags, _ in
             guard let info = clientCallBackInfo else { return }
             let watcher = Unmanaged<FileSystemWatcher>.fromOpaque(info).takeUnretainedValue()
 
             let paths = unsafeBitCast(eventPaths, to: NSArray.self) as! [String] // swiftlint:disable:this force_cast
-            let filtered = paths.filter { path in
-                !FileSystemWatcher.isExcluded(path, by: watcher.excludedPrefixes)
+            let flags = Array(UnsafeBufferPointer(start: eventFlags, count: numEvents))
+            let rescanHandler = watcher.rescanHandler
+            let (changed, rescan) = FileSystemWatcher.partition(
+                paths: paths, flags: flags, excludedPrefixes: watcher.excludedPrefixes,
+                separatingRescans: rescanHandler != nil
+            )
+            if !rescan.isEmpty {
+                FileSystemWatcher.logger.info(
+                    "FSEvents asked for a rescan of \(rescan.joined(separator: ", "), privacy: .public)"
+                )
             }
 
-            guard !filtered.isEmpty else { return }
+            guard !changed.isEmpty || !rescan.isEmpty else { return }
             let handler = watcher.handler
             DispatchQueue.main.async {
-                handler(filtered)
+                if !rescan.isEmpty { rescanHandler?(rescan) }
+                if !changed.isEmpty { handler(changed) }
             }
         }
 

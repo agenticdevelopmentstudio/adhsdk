@@ -1,3 +1,4 @@
+import CoreServices
 import Foundation
 import Testing
 @testable import AgenticDeveloperHubSDKCore
@@ -358,6 +359,55 @@ struct GitRepositoryModelTests {
         watcher.receive(paths: ["/r/wt/.git/config"])
         try await Task.sleep(for: .milliseconds(700))
         #expect(recorder.calls.count == 1)
+    }
+
+    @Test("a rescan of the repository, or of a directory above it, reports every kind of change once")
+    func watcherReportsEverythingForARescan() async throws {
+        let watcher = GitRepositoryWatcher(root: URL(fileURLWithPath: "/r/wt"),
+                                           gitDirectory: URL(fileURLWithPath: "/r/main/.git/worktrees/wt"),
+                                           commonDirectory: URL(fileURLWithPath: "/r/main/.git"))
+        let recorder = ChangeRecorder()
+        watcher.onChange = { recorder.record($0) }
+
+        // fseventsd dropped the git directory's events: as an ordinary path it means nothing.
+        watcher.receive(rescanOf: ["/r/main/.git/worktrees/wt/"])
+        try await Task.sleep(for: .milliseconds(700))
+        #expect(recorder.calls == [[.refs, .history, .workingCopy, .operation]])
+
+        // A rescan of the whole volume, as after a kernel drop, covers the repository too.
+        watcher.receive(rescanOf: ["/"])
+        try await Task.sleep(for: .milliseconds(700))
+        #expect(recorder.calls.count == 2)
+        #expect(recorder.calls.last == [.refs, .history, .workingCopy, .operation])
+
+        // One inside the working tree is still a rescan of part of it.
+        watcher.receive(rescanOf: ["/r/wt/src/"])
+        try await Task.sleep(for: .milliseconds(700))
+        #expect(recorder.calls.count == 3)
+
+        // A sibling whose name only starts the same, or anywhere else, is not the repository.
+        watcher.receive(rescanOf: ["/r/wtx/", "/elsewhere/"])
+        try await Task.sleep(for: .milliseconds(700))
+        #expect(recorder.calls.count == 3)
+    }
+
+    @Test("a file system watcher sends rescans to their own handler, and every path to one without")
+    func fileSystemWatcherPartitionsRescans() {
+        let rescan = FSEventStreamEventFlags(
+            kFSEventStreamEventFlagMustScanSubDirs | kFSEventStreamEventFlagUserDropped)
+        let plain = FSEventStreamEventFlags(kFSEventStreamEventFlagItemModified | kFSEventStreamEventFlagItemIsFile)
+        let split = FileSystemWatcher.partition(
+            paths: ["/r/a", "/r/.git/objects/x", "/r/", "/r/b"], flags: [plain, rescan, rescan, plain],
+            excludedPrefixes: ["/r/.git/objects"], separatingRescans: true
+        )
+        #expect(split.changed == ["/r/a", "/r/b"])
+        #expect(split.rescan == ["/r/"])
+
+        let together = FileSystemWatcher.partition(
+            paths: ["/r/a", "/r/"], flags: [plain, rescan], excludedPrefixes: [], separatingRescans: false
+        )
+        #expect(together.changed == ["/r/a", "/r/"])
+        #expect(together.rescan.isEmpty)
     }
 
     @Test("the real watcher reports refs for a branch switch in a repository under the temporary directory")

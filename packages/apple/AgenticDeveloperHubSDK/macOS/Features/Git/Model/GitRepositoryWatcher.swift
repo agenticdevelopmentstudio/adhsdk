@@ -66,11 +66,13 @@ public final class GitRepositoryWatcher: GitRepositoryWatching, @unchecked Senda
     public func start(onChange: @escaping @Sendable (Set<GitRepositoryChange>) -> Void) {
         self.onChange = onChange
         guard fileWatcher == nil else { return }
-        let watcher = FileSystemWatcher(rootPaths: [root, gitDirectory, commonDirectory],
-                                        excludedPrefixes: [commonDirectory + "/objects"]) { [weak self] paths in
+        let watcher = FileSystemWatcher(
+            rootPaths: [root, gitDirectory, commonDirectory],
+            excludedPrefixes: [commonDirectory + "/objects"],
             // FileSystemWatcher hands its paths over on the main queue.
-            self?.receive(paths: paths)
-        }
+            rescanHandler: { [weak self] paths in self?.receive(rescanOf: paths) },
+            handler: { [weak self] paths in self?.receive(paths: paths) }
+        )
         fileWatcher = watcher
         watcher.start()
     }
@@ -92,6 +94,35 @@ public final class GitRepositoryWatcher: GitRepositoryWatching, @unchecked Senda
                                                    commonDirectory: commonDirectory) else { continue }
             pending.formUnion(Self.classify(relativePath: relative))
         }
+        scheduleFlush()
+    }
+
+    /// FSEvents lost the events under each of `paths` (fseventsd fell behind and
+    /// dropped them, or coalesced them into one "rescan this directory"), so which
+    /// file changed is unknown. A path that is, contains or lies inside the working
+    /// tree, the git directory or the common directory means any part may have
+    /// changed: reload everything. Classifying the path itself would read the
+    /// working tree's root as only the working copy and the git directory as nothing,
+    /// and a branch switch lost that way would never reach the model. Main queue only.
+    func receive(rescanOf paths: [String]) {
+        if paths.contains(where: concernsRepository) {
+            pending.formUnion(Self.rescanChanges)
+        }
+        scheduleFlush()
+    }
+
+    /// Every kind of change the watcher can post.
+    static let rescanChanges: Set<GitRepositoryChange> = [.refs, .history, .workingCopy, .operation]
+
+    private func concernsRepository(_ path: String) -> Bool {
+        let directory = path.hasSuffix("/") && path.count > 1 ? String(path.dropLast()) : path
+        return [root, gitDirectory, commonDirectory].contains { watched in
+            watched == directory || watched.hasPrefix(directory == "/" ? "/" : directory + "/")
+                || directory.hasPrefix(watched + "/")
+        }
+    }
+
+    private func scheduleFlush() {
         guard !pending.isEmpty else { return }
         flush?.cancel()
         let work = DispatchWorkItem { [weak self] in
