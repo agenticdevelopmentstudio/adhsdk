@@ -273,6 +273,7 @@ var RESERVED_HANDLE_WORDS = [
   "roles",
   "server-bags",
   "signin-apps",
+  "signup-list",
   "storage",
   "sync",
   "teams",
