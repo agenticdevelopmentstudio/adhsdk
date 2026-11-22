@@ -98,6 +98,19 @@ final class UsageSummaryTests: XCTestCase {
         }
     }
 
+    /// `seedSessionAcross(edge)`'s rows: one per cut, where the cuts are the edge and every
+    /// UTC midnight inside the session (rows are per UTC day, and `now` is the wall clock,
+    /// so an edge can fall within half an hour of midnight), plus the first; and the row
+    /// that starts at the edge, `"<edge>|<turns from the edge to the next cut>"`.
+    private func expectedSegmentsAcross(_ edge: Double) -> (count: Int, atEdge: String) {
+        let turns = stride(from: -20.0, through: 30, by: 5).map { edge + $0 * 60 }
+        let midnights = turns.map { ($0 / 86400).rounded(.down) * 86400 }.filter { $0 > turns[0] }
+        let cuts = Set([edge] + midnights)
+        let next = cuts.filter { $0 > edge }.min() ?? .infinity
+        let atEdge = turns.filter { $0 >= edge && $0 < next }.count
+        return (cuts.count + 1, "\(edge)|\(atEdge)")
+    }
+
     /// The UTC midnight a 7-day trim cuts at (Task 3's cutoff is day-aligned).
     private var sevenDayTrimCutoff: Double {
         ((now.timeIntervalSince1970 - 7 * 86400) / 86400).rounded(.down) * 86400
@@ -319,8 +332,9 @@ final class UsageSummaryTests: XCTestCase {
                 """, params: [session]) { row in
                 segments.append(row.databaseValues.map(\.description).joined(separator: "|"))
             }
-            XCTAssertEqual(segments.count, 2, session)
-            XCTAssertEqual(segments.last, "\(edge)|7", session)
+            let expected = expectedSegmentsAcross(edge)
+            XCTAssertEqual(segments.count, expected.count, session)
+            XCTAssertTrue(segments.contains(expected.atEdge), "\(session): \(segments)")
         }
         let summaryBefore = try dump("session_summary")
         let burstsBefore = try dump("usage_bursts")
