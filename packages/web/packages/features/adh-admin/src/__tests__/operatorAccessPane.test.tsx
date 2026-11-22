@@ -134,6 +134,27 @@ describe("OperatorAccessPane", () => {
     expect(lastQuery().has("target_ecosystem_id")).toBe(false);
   });
 
+  it("offers a former operator seen in the rows as a filter", async () => {
+    const FORMER = "44444444-4444-4444-8444-444444444444";
+    listV1Page.mockResolvedValue({
+      data: [row, { ...row, id: "row-2", operator_account_id: FORMER }],
+      hasMore: false,
+    });
+    mount();
+    await screen.findByRole("option", { name: "second@example.com" });
+    const option = await screen.findByRole("option", {
+      name: "44444444 (not a current operator)",
+    });
+    expect(option.getAttribute("value")).toBe(FORMER);
+    fireEvent.change(screen.getByLabelText("Operator"), {
+      target: { value: FORMER },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Apply filters" }));
+    await waitFor(() =>
+      expect(lastQuery().get("operator_account_id")).toBe(FORMER),
+    );
+  });
+
   it("marks edits that are not applied yet, until Apply", async () => {
     mount();
     await screen.findByText("POST /v1/ecosystems/abc/members");
