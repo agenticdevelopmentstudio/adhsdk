@@ -134,6 +134,28 @@ describe("OperatorAccessPane", () => {
     expect(lastQuery().has("target_ecosystem_id")).toBe(false);
   });
 
+  it("marks edits that are not applied yet, until Apply", async () => {
+    mount();
+    await screen.findByText("POST /v1/ecosystems/abc/members");
+    await screen.findByRole("option", { name: "second@example.com" });
+    expect(screen.queryByText(/Not applied yet/)).toBeNull();
+    fireEvent.change(screen.getByLabelText("Operator"), {
+      target: { value: OP2 },
+    });
+    expect(screen.getByText(/Not applied yet/)).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Apply filters" }));
+    await waitFor(() => expect(screen.queryByText(/Not applied yet/)).toBeNull());
+  });
+
+  it("says so when the operator list fails to load", async () => {
+    listAllV1.mockRejectedValue(new Error("boom"));
+    mount();
+    await screen.findByText("POST /v1/ecosystems/abc/members");
+    expect(
+      (await screen.findByText(/load the operator list/)).textContent,
+    ).toMatch(/short account/);
+  });
+
   it("re-reads the log when the filters in force are applied again", async () => {
     mount();
     await screen.findByText("POST /v1/ecosystems/abc/members");
