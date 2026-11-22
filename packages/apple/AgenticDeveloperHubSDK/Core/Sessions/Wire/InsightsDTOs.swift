@@ -75,7 +75,9 @@ extension Sessions {
 
     /// One rolled-up daily statistic from the `daily_metric` table. `count` and
     /// `valueSum` are additive (sum across days/dimensions); averages are
-    /// `valueSum / count`. `valueSum` is 0 in the current phase (counts only).
+    /// `valueSum / count`. `valueSum` is 0 on every metric but `project`, where
+    /// it is the day's distinct sessions in that project (`count` is its
+    /// events); summed across days it counts a session once per day it ran.
     public struct DailyMetricDTO: Codable, Sendable {
         public let day: String             // YYYY-MM-DD (UTC)
         public let metric: String          // e.g. "tool_use", "subagent_run"

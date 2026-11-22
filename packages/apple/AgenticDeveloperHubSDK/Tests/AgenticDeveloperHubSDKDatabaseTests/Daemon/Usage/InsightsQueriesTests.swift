@@ -259,6 +259,28 @@ final class InsightsQueriesTests: XCTestCase {
         XCTAssertEqual(projA?.valueSum, 2, "distinct sessions")
     }
 
+    /// `daily-metric-value-sum-zero`: `valueSum` is 0 on every metric but
+    /// `project`, where it is the day's distinct sessions.
+    func testRecomputeWritesValueSumOnlyOnProjectRows() throws {
+        try seed(event: "PreToolUse", session: "s1", timestamp: "2026-04-10T10:00:00Z", cwd: "/w/proj-a", tool: "Edit")
+        try seed(event: "PostToolUse", session: "s1", timestamp: "2026-04-10T10:00:30Z", cwd: "/w/proj-a", tool: "Edit")
+        try seed(event: "PreToolUse", session: "s2", timestamp: "2026-04-10T10:01:00Z", cwd: "/w/proj-a", tool: "Read")
+        try seed(event: "PreToolUse", session: "s3", timestamp: "2026-04-10T10:02:00Z", cwd: "/w/proj-b", tool: "Bash")
+        try database.recomputeDailyMetrics(forDay: "2026-04-10")
+
+        let rows = try database.dailyMetrics(from: "2026-04-10", to: "2026-04-10")
+        let others = rows.filter { $0.metric != "project" }
+        XCTAssertFalse(others.isEmpty)
+        for row in others {
+            XCTAssertEqual(row.valueSum, 0, "\(row.metric)/\(row.dimension)")
+        }
+        let projects = Dictionary(uniqueKeysWithValues: rows.filter { $0.metric == "project" }
+            .map { ($0.dimension, $0) })
+        XCTAssertEqual(projects["proj-a"]?.count, 3, "events")
+        XCTAssertEqual(projects["proj-a"]?.valueSum, 2, "s1 and s2")
+        XCTAssertEqual(projects["proj-b"]?.valueSum, 1, "s3")
+    }
+
     func testBackfillProjectMetricFillsDaysLackingIt() throws {
         // Events present but never recomputed → no project rows yet (mimics days
         // finalized by a daemon that predated the project metric).
