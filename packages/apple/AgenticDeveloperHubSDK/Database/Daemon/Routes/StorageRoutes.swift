@@ -4,14 +4,16 @@ import Foundation
 
 // swiftlint:disable multiple_closures_with_trailing_closure
 
-/// `GET /storage` and `POST /storage/trim`: the history window, each database
-/// file's size, the last trim's report, and a way to start a trim pass.
+/// `GET /storage`, `POST /storage/trim` and `POST /storage/preferences`: the
+/// history window, each database file's size, the last trim's report, a way to
+/// start a trim pass, and a way to change the window.
 public enum StorageRoutes {
 
     /// The endpoint-index lines this set serves, for a daemon's `GET /`.
     public static let endpoints: [String] = [
         "GET /storage",
-        "POST /storage/trim"
+        "POST /storage/trim",
+        "POST /storage/preferences"
     ]
 
     /// - Parameters:
@@ -47,6 +49,27 @@ public enum StorageRoutes {
                         trimStarted: started),
                     status: started ? 202 : 409
                 )
+            },
+            // Stores the history window (`StoragePreferencesRequestDTO`,
+            // snapped to an allowed value) and answers the new status. Zero or
+            // fewer days is not a window: 400, never snapped up. The next trim
+            // pass reads the window; this does not start one.
+            RouteTable.route("POST", where: { $0 == ["storage", "preferences"] }) { request, _ in
+                guard let body = try? StenographerWire.decoder()
+                    .decode(StoragePreferencesRequestDTO.self, from: request.body)
+                else {
+                    return .error(#"the body must be {"history_days": <days>}"#, status: 400)
+                }
+                guard StorageHistoryWindow.accepts(body.historyDays) else {
+                    return .error("history_days must be at least 1", status: 400)
+                }
+                do {
+                    try StorageSettings.setHistoryDays(body.historyDays, database)
+                } catch {
+                    return .error("could not store the history window: \(error.localizedDescription)", status: 500)
+                }
+                return .json(StorageStatusReader.status(
+                    database: database, storage: storage(), claudePipeline: claudePipeline))
             }
         ])
     }

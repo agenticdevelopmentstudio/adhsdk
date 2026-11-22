@@ -61,8 +61,10 @@ final class SessionFeatureRoutesTests: XCTestCase {
     private func makeServices(
         spool: IngestSpool? = nil,
         buildHookEvent: @escaping @Sendable (String, Data) -> ParsedEvent? = { _, _ in nil },
-        pipelineQuarantine: (any PipelineQuarantineControl)? = nil
+        pipelineQuarantine: (any PipelineQuarantineControl)? = nil,
+        database: DaemonDatabase? = nil
     ) throws -> SessionFeatureServices {
+        let store = database ?? db!
         let dispatcher = tmpDir.appendingPathComponent("dispatch.sh")
         // swiftlint:disable:next line_length
         try "#!/bin/sh\n# claudehelpers-statusline-dispatch 1\n".write(to: dispatcher, atomically: true, encoding: .utf8)
@@ -80,14 +82,14 @@ final class SessionFeatureRoutesTests: XCTestCase {
         let secrets = InMemorySecretStore()
         let captured = self.captured!
         return SessionFeatureServices(
-            database: db,
-            conversations: ConversationStore(database: db),
+            database: store,
+            conversations: ConversationStore(database: store),
             quarantine: QuarantineService(
-                errorsDirectory: tmpDir.appendingPathComponent("errors"), database: db
+                errorsDirectory: tmpDir.appendingPathComponent("errors"), database: store
             ),
             spool: spool,
             preferences: PreferencesService(
-                database: db, secretStore: secrets, hookInstaller: installer, summariesDefaultEnabled: true
+                database: store, secretStore: secrets, hookInstaller: installer, summariesDefaultEnabled: true
             ),
             secretStore: secrets,
             hookInstaller: installer,
@@ -385,5 +387,75 @@ final class SessionFeatureRoutesTests: XCTestCase {
         XCTAssertFalse(SessionFeatureRoutes.isServableWhileMigrating(["sessions"]))
         XCTAssertFalse(SessionFeatureRoutes.isServableWhileMigrating(["ingestion", "errors"]))
         XCTAssertFalse(SessionFeatureRoutes.isServableWhileMigrating(["hook"]))
+    }
+}
+
+// MARK: - Query parameters a client sends (apps suite phase 3)
+
+extension SessionFeatureRoutesTests {
+    /// A database with events, through the Claude pipeline: four in `s1`, one
+    /// of them in `/`.
+    private func seededHarness() throws -> ClaudePipelineTestHarness {
+        let harness = try ClaudePipelineTestHarness(directory: tmpDir.appendingPathComponent("pipeline"))
+        func hook(_ type: String, _ stamp: String, cwd: String = "/Users/dev/work/app") -> ParsedEvent {
+            ClaudePipelineTestHarness.event(type, sessionId: "s1", timestamp: stamp, cwd: cwd, hookData: [:])
+        }
+        try harness.ingest([
+            hook("SessionStart", "2026-06-01T12:00:00Z"),
+            hook("PreToolUse", "2026-06-01T12:01:00Z"),
+            hook("PreToolUse", "2026-06-01T12:02:00Z", cwd: "/"),
+            hook("Stop", "2026-06-01T12:03:00Z")
+        ])
+        return harness
+    }
+
+    private func events(_ response: RouteResponse) throws -> [SessionEventDTO] {
+        try StenographerWire.decoder().decode([SessionEventDTO].self, from: response.body)
+    }
+
+    func testEventsKeepRootCwdEventsUnlessAskedNotTo() async throws {
+        let harness = try seededHarness()
+        let services = try makeServices(database: harness.database)
+
+        let all = try await send("GET", "/events", services: services)
+        let excluded = try await send("GET", "/events", query: ["exclude_root_cwd": ["true"]], services: services)
+
+        XCTAssertEqual(try events(all).count, 4)
+        XCTAssertEqual(try events(excluded).count, 3)
+        XCTAssertFalse(try events(excluded).contains { $0.cwd == "/" })
+    }
+
+    func testOnlyTrueExcludesRootCwdEvents() async throws {
+        let harness = try seededHarness()
+        let services = try makeServices(database: harness.database)
+
+        let response = try await send("GET", "/events", query: ["exclude_root_cwd": ["false"]], services: services)
+
+        XCTAssertEqual(try events(response).count, 4)
+    }
+
+    func testASessionDetailCarriesRecentLimitEvents() async throws {
+        let harness = try seededHarness()
+        let services = try makeServices(database: harness.database)
+
+        let response = try await send("GET", "/sessions/s1", query: ["recent_limit": ["2"]], services: services)
+
+        XCTAssertEqual(response.status, 200)
+        let detail = try StenographerWire.decoder().decode(SessionDetailDTO.self, from: response.body)
+        XCTAssertEqual(detail.session.sessionId, "s1")
+        XCTAssertEqual(detail.recentEvents.map(\.eventType), ["Stop", "PreToolUse"], "the newest two")
+    }
+
+    func testASessionDetailDefaultsToTwentyEventsAndFloorsAtOne() async throws {
+        let harness = try seededHarness()
+        let services = try makeServices(database: harness.database)
+
+        let unbounded = try await send("GET", "/sessions/s1", services: services)
+        let floored = try await send("GET", "/sessions/s1", query: ["recent_limit": ["0"]], services: services)
+
+        let decoder = StenographerWire.decoder()
+        XCTAssertEqual(try decoder.decode(SessionDetailDTO.self, from: unbounded.body).recentEvents.count, 4)
+        XCTAssertEqual(try decoder.decode(SessionDetailDTO.self, from: floored.body).recentEvents.count, 1)
+        XCTAssertEqual(SessionRoutes.defaultRecentLimit, 20)
     }
 }

@@ -26,8 +26,8 @@ enum SessionRoutes {
             RouteTable.route("GET", where: { $0 == ["sessions"] }) { request, _ in
                 listSessions(request, database: database)
             },
-            RouteTable.route("GET", where: { $0.count == 2 && $0[0] == "sessions" }) { _, components in
-                getSession(components[1], database: database)
+            RouteTable.route("GET", where: { $0.count == 2 && $0[0] == "sessions" }) { request, components in
+                getSession(components[1], request, database: database)
             },
             RouteTable.route("GET", where: { $0.count == 3 && $0[0] == "sessions" && $0[2] == "events" }) {
                 request, components in
@@ -131,9 +131,18 @@ enum SessionRoutes {
         }
     }
 
-    private static func getSession(_ id: String, database: DaemonDatabase) -> RouteResponse {
+    /// The most recent events a session detail carries when `recent_limit` is
+    /// not given, and the most it carries when it is.
+    static let defaultRecentLimit = 20
+    static let maxRecentLimit = 500
+
+    /// `GET /sessions/:id[?recent_limit=]`: the session and its newest
+    /// `recent_limit` events (default 20, at most 500; below 1 reads as 1).
+    private static func getSession(_ id: String, _ request: RouteRequest, database: DaemonDatabase) -> RouteResponse {
+        let recentLimit = min(
+            max(request.queryInt("recent_limit", default: defaultRecentLimit), 1), maxRecentLimit)
         do {
-            guard let detail = try database.fetchSessionDetail(sessionId: id, recentLimit: 20) else {
+            guard let detail = try database.fetchSessionDetail(sessionId: id, recentLimit: recentLimit) else {
                 return .notFound("Session not found: \(id)")
             }
             return .json(detail)
@@ -199,11 +208,17 @@ enum SessionRoutes {
         case .failure(let invalid): return .error(invalid.message, status: 400)
         }
 
+        // `exclude_root_cwd=true` leaves out events whose cwd is `/`
+        // (the event store's `excludeRootCwd`), which the app's event list
+        // asks for.
+        let excludeRootCwd = request.query("exclude_root_cwd") == "true"
+
         do {
             let events = try database.fetchEvents(
                 eventType: eventType,
                 since: since,
-                limit: request.boundedLimit(default: 50, max: 500)
+                limit: request.boundedLimit(default: 50, max: 500),
+                excludeRootCwd: excludeRootCwd
             )
             return .json(events)
         } catch {
