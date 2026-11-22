@@ -13662,9 +13662,9 @@
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:bd8059e19b1a00bbf9734edadc7c7657adddff4e1ee81bc3a67841931fab7c6c",
+            "hash": "sha256:13cf50fd0dece351d113f2006cd3f3856280e6b01b4a3c98e6e2e64f09971c23",
             "state": "confirmed",
-            "version": "1.0.0"
+            "version": "1.0.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Sessions/Wire/StatusLineDTOs.swift",
           "platform": "apple"
@@ -15139,18 +15139,18 @@
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:8b18ca3d2409a959460115760d9ca39e806f1154568942b3db68cd3a8be7c2f5",
+            "hash": "sha256:02de33893db4fa2b64e8cd348e571fce9b5974e0a924f759044dfd581db20999",
             "state": "confirmed",
-            "version": "1.1.0"
+            "version": "1.1.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/ClaudeAuth/ClaudeAuthEvaluator.swift",
           "platform": "apple"
         },
         {
           "conformance": {
-            "hash": "sha256:ef972f894492664ff7665e147f166297bdfbceba2e9d5cd5957e0eb6ea28a4b0",
+            "hash": "sha256:dab227285e84cdb0118bccc61d1e4b58e77e02aa86560f4697c719a035527d22",
             "state": "confirmed",
-            "version": "1.1.0"
+            "version": "1.1.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/ClaudeAuth/AccountFingerprints.swift",
           "platform": "apple"
@@ -15159,7 +15159,7 @@
           "conformance": {
             "hash": "sha256:5767eb5e88f7b333e2163f967f404c5d5ad2417a7910b853fad5140e643d65a6",
             "state": "confirmed",
-            "version": "1.1.0"
+            "version": "1.1.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/ClaudeAuth/ClaudeTokenRefresher.swift",
           "platform": "apple"
@@ -21531,7 +21531,7 @@
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:b282e7c875cc6e9ba13fe736ff57788751d3b48fa66434373766017a7016e84c",
+            "hash": "sha256:2d4baaaf35827b69c84ca228a893ff6a7c4933d1c291486b9a09602397465fde",
             "state": "confirmed",
             "version": "1.3.0"
           },
@@ -23143,7 +23143,7 @@
           "conformance": {
             "hash": "sha256:36c726a9fa840b862e02f06e3d569066bb47908245521fa5cbcf1871caee2707",
             "state": "confirmed",
-            "version": "1.1.0"
+            "version": "2.0.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/ClaudeHooks/ClaudeHookInstaller.swift",
           "platform": "apple"
@@ -23168,9 +23168,9 @@
         },
         {
           "conformance": {
-            "hash": "sha256:c297afbec6431c483112232725f861f4ae6003cc2038ba4d04b164885816c584",
+            "hash": "sha256:f5b8f51e6791c03609246128260a6354aaccb6e4531828e8860ae016d1e76da8",
             "state": "confirmed",
-            "version": "1.1.0"
+            "version": "2.0.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/ClaudeHooks/ClaudeHookInstaller+RouterPointer.swift",
           "platform": "apple"
@@ -23243,9 +23243,9 @@
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:94a0b66e9c03617ad1fca62abe971b86d184f23091d4fa88302eebfc5c5fd98c",
+            "hash": "sha256:d3acaaeab22b255f38dbf2957afe2e62985bb58bbf1eb2063af7729b1840ae1e",
             "state": "confirmed",
-            "version": "1.1.0"
+            "version": "1.1.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Sessions/Wire/InsightsDTOs.swift",
           "platform": "apple"
@@ -23254,7 +23254,7 @@
           "conformance": {
             "hash": "sha256:45607cf296c59f2928c2ab87aa81d42b7deabfc92b03038ca7e961d15dc9bc52",
             "state": "confirmed",
-            "version": "1.1.0"
+            "version": "1.1.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Sessions/Wire/GraphSnapshotDTO.swift",
           "platform": "apple"
@@ -23481,9 +23481,9 @@
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:bd0cb9a58b358ee4accfb49466254c1e9a22d345a151d77afc47eea358801275",
+            "hash": "sha256:e5d732fb5d536a433272d740745770adbc5220af19f7758f83291c4d9ce414f8",
             "state": "confirmed",
-            "version": "1.0.0"
+            "version": "1.0.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Stenographer/StenographerInstance.swift",
           "platform": "apple"

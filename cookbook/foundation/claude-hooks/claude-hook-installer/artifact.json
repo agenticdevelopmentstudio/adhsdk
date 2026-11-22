@@ -4,7 +4,7 @@
     "id": "fc622208-1504-421f-8892-c5869820550c",
     "title": "Claude Hook Installer",
     "type": "ingredient",
-    "version": "1.1.0",
+    "version": "2.0.0",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -34,7 +34,7 @@
     "approved-date": ""
   },
   "names_hosts": "The component integrates with Claude Code's hooks and status line; the host's name, events and paths are its subject.",
-  "synced": "1971b5791b6f00f0",
+  "synced": "0be8e5512288236a",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

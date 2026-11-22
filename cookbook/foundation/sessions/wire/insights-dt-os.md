@@ -2,7 +2,7 @@
 id: fcbf09d9-5555-4278-9940-2be920de49d3
 title: "Insights DTOs"
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: 2026-11-21
@@ -93,7 +93,7 @@ The types carry no logic. The values in them are computed by `DaemonDatabase` (`
 - **daily-metric-fields**: `DailyMetricDTO` MUST carry `day: String`, `metric: String`, `dimension: String`, `count: Int` and `valueSum: Double`.
 - **daily-metric-additive**: `count` and `valueSum` MUST be additive across days and dimensions, so a consumer MAY sum them over any set of rows.
 - **daily-metric-average**: A consumer computing an average MUST compute it as `valueSum / count`.
-- **daily-metric-value-sum-zero**: NEEDS REVIEW: Not implemented in source. The doc comment declares "`valueSum` is 0 in the current phase (counts only)", but `projectActivity` reads the `project` metric's `value_sum` as the day's distinct sessions and `testRecomputeEmitsProjectMetric` asserts `valueSum == 2`; the owner of the rollup must say whether the comment or the `project` metric is the contract.
+- **daily-metric-value-sum-zero**: The producer MUST write `valueSum` 0 on every metric except `project`, where it MUST be the number of distinct sessions with events in that project on that day (`count` being the project's events), which `projectActivity` reads as the session count. Summed across days it counts a session once per day it ran. The doc comments on `DailyMetricDTO` and the `daily_metric` migration say the same.
 
 **Cache misses**
 
@@ -165,7 +165,7 @@ Not applicable — this is a set of wire data types, not a visual component.
 | insights-dtos-008 | tool-usage-fields | `testToolUsageCountsPreToolUse`: two `Edit` and one `Read` `PreToolUse` events | First row `toolName == "Edit"`, `count == 2`; last row `toolName == "Read"`, `count == 1` |
 | insights-dtos-009 | project-name, project-activity-fields | `testProjectActivityExtractsLastPathComponent`: two events under a `cwd` ending `project-a` in one session, one under `project-b` | `project-a` has `eventCount == 2`, `sessionCount == 1`; `project-b` has `eventCount == 1` |
 | insights-dtos-010 | sessions-per-day-fields | `testSessionsPerDayCountsSessionStartOnly`: two sessions starting 2026-04-10, one on 2026-04-11 | Rows `("2026-04-10", 2)` and `("2026-04-11", 1)` for `(day, newSessions)` |
-| insights-dtos-011 | daily-metric-fields, daily-metric-additive | `testRecomputeEmitsProjectMetric`: two events in one project on one day across two sessions | The `project` row for that day has `count == 2`, `valueSum == 2` (see the open question on `daily-metric-value-sum-zero`) |
+| insights-dtos-011 | daily-metric-fields, daily-metric-additive, daily-metric-value-sum-zero | `testRecomputeEmitsProjectMetric`: two events in one project on one day across two sessions | The `project` row for that day has `count == 2`, `valueSum == 2` |
 | insights-dtos-012 | misses-rate, misses-fields | `testCacheMissesOnEmptyDBIsZero`: no status-line ticks | `misses == 0`, `requests == 0`, `missRate == 0`, `estimatedCostUsd == 0`, `causes`, `models` empty |
 | insights-dtos-013 | misses-first-tick-ignored | `testCacheMissesIgnoresTheFirstTicksInheritedCounters`: one session with a single tick that already reports misses | `misses == 0`, `requests == 0`, `recacheTokens == 0` |
 | insights-dtos-014 | misses-counted-as-increases, cause-fields | `testCacheMissesCountsIncreasesNotTicks`: a session whose counters advance once by one miss, ten requests and 100,000 recache tokens, re-rendered on later ticks | `misses == 1`, `requests == 10`, `recacheTokens == 100000`, `causes` is one row `("ttl_expired_1h", 1)` |
@@ -192,8 +192,9 @@ Not applicable — this is a set of wire data types, not a visual component.
 | insights-dtos-035 | graph-session-limit | 250 sessions; `graphSnapshot(limit: 1000)`, then `graphSnapshot(limit: 0)` | 200 session nodes, the 200 with the newest `last_activity_at`; then 1 session node, the newest |
 | insights-dtos-036 | graph-tool-source | One session with a `PreToolUse` event whose tool name is `""` and a `PostToolUse` `Edit` event | No tool node and no session-to-tool link; the session node's `weight == 2` |
 | insights-dtos-037 | node-kind-values, dto-init-no-validation | `GraphNodeDTO(id: "x", kind: "agent", label: "", status: nil, weight: -1)` | Constructs and encodes with `kind == "agent"`, `weight == -1` |
+| insights-dtos-038 | daily-metric-value-sum-zero | `testRecomputeWritesValueSumOnlyOnProjectRows`: on one day, sessions `s1` (two events) and `s2` (one event) in `proj-a` and `s3` (one event) in `proj-b`, then recompute that day | Every non-`project` row has `valueSum == 0`; `proj-a` has `count == 3`, `valueSum == 2`; `proj-b` has `valueSum == 1` |
 
-Vectors 006 through 021 and 025 are asserted in `InsightsQueriesTests` against the producers; 001 to 005, 022 to 024, 026 to 029 and 037 are encoding and construction checks a port's unit tests can run on the types directly. Vectors 030 to 036 are derived from `DaemonDatabase.graphSnapshot` and the event-count queries it calls (`claudeEventCounts`, `claudeToolUseCounts`); no test in the source asserts them. `dto-no-io` has no vector: an absence of side effects is checked by reading the type, not by a test. `node-id-opaque` has no vector: it constrains consumers, not the types or the producer.
+Vectors 006 through 021, 025 and 038 are asserted in `InsightsQueriesTests` against the producers; 001 to 005, 022 to 024, 026 to 029 and 037 are encoding and construction checks a port's unit tests can run on the types directly. Vectors 030 to 036 are derived from `DaemonDatabase.graphSnapshot` and the event-count queries it calls (`claudeEventCounts`, `claudeToolUseCounts`); no test in the source asserts them. `dto-no-io` has no vector: an absence of side effects is checked by reading the type, not by a test. `node-id-opaque` has no vector: it constrains consumers, not the types or the producer.
 
 ## Edge Cases
 
@@ -268,8 +269,8 @@ a compiled doc or skill shows those rows as a derived section here. -->
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Sessions/Wire/InsightsDTOs.swift` | confirmed (1.1.0) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Sessions/Wire/GraphSnapshotDTO.swift` | confirmed (1.1.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Sessions/Wire/InsightsDTOs.swift` | confirmed (1.1.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Sessions/Wire/GraphSnapshotDTO.swift` | confirmed (1.1.1) |
 
 ## Design Decisions
 
@@ -321,4 +322,5 @@ Separation of concerns passes: both files hold only data shapes, with computatio
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-11-21 | Mike Fullerton | Resolved daily-metric-value-sum-zero: valueSum is 0 on every metric but project, where it is the day's distinct sessions, and the doc comments now say so; added vector 038. |
 | 1.1.0 | 2026-11-21 | Mike Fullerton | Covers GraphSnapshotDTO.swift: the graph snapshot, node and link wire types for /visualization/graph |

@@ -2,7 +2,7 @@
 id: fe798f91-076e-41fc-9713-907b744c5539
 title: "Stenographer Instance"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-21
@@ -83,14 +83,14 @@ The type is a `Sendable`, `Equatable` struct holding an optional `Definition`. I
 
 ### Validating a definition
 
-- **validate-order**: `validate` MUST check in this order and throw the first failure: name match, reserved name, absolute data root, port, overlap with installed state, overlap with another instance, socket path length.
+- **validate-order**: `validate` MUST check in this order and throw the first failure: name match, reserved name, absolute data root, port, overlap with installed state, overlap with another instance, port held by another instance, socket path length.
 - **name-match**: `validate` MUST throw `nameMismatch(file:declared:)` when the definition's `name` differs from `fileName`.
 - **name-reserved**: `validate` MUST throw `reservedName(name)` when the definition's `name` is in `reservedNames`.
 - **validate-no-pattern**: `validate` MUST NOT apply the name pattern itself; only `resolve` does.
 - **absolute-data-root**: `validate` MUST throw `relativeDataRoot(dataRoot)` when `dataRoot` does not begin with `/`.
 - **port-range**: `validate` MUST throw `invalidPort(port)` when `httpPort` is outside 1024 to 65535 inclusive.
 - **port-not-reserved**: `validate` MUST throw `invalidPort(port)` when `httpPort` is in `reservedHTTPPorts`.
-- **port-unique-across-instances**: NEEDS REVIEW: Not implemented in source. The type's doc comment says a named instance has its own port, but `validate` compares another definition's `dataRoot` only, never its `httpPort`, so two named definitions may declare the same port; settling it needs a decision on whether `validate` (and the script's `check_definition`) must refuse a port another definition already holds.
+- **port-unique-across-instances**: `validate` MUST throw `portTakenByAnotherInstance(port:instance:)`, naming the first other definition in file-name order whose `httpPort` equals this definition's, so a named instance's port is its own and two instances never contend for one port. It considers the same peers as `instance-overlap` (`other-definitions`), so a definition's own file never collides with it and an unreadable peer is skipped.
 - **protected-roots**: `protectedRoots(home:)` MUST return, in order, `<home>/Library/Application Support/<baseLabel>`, `<home>/Library/Logs/<baseLabel>`, `<home>/Library/Application Support/<legacyLabel>`, `<home>/Library/Logs/<legacyLabel>` and `<home>/.claude`, where `legacyLabel` is `com.agentic-cookbook.stenographer`.
 - **installed-overlap**: `validate` MUST throw `overlapsInstalledState(dataRoot:protected:)`, naming the first protected root in `protectedRoots` order, when the canonical data root equals, contains or lies inside that protected root.
 - **instance-overlap**: `validate` MUST throw `overlapsAnotherInstance(dataRoot:instance:otherRoot:)`, naming the first other definition in file-name order, when the canonical data root equals, contains or lies inside that definition's canonical data root.
@@ -140,7 +140,7 @@ Not applicable — this is an instance-selection and validation model, not a vis
 
 ## Conformance Test Vectors
 
-The source has no test file in this repository. Its doc comment on `validate` names `tests/fixtures/instance_definition_cases.json` as the cases both it and `scripts/stenographer_instance.py` are tested against, but that fixture is not among the given sources, so every vector below is derived from the source. In the vectors, `H` is a scratch home directory (for example `/private/tmp/h`) and `D` is `H/Library/Application Support/com.agenticdevelopmentstudio.stenographer.instances`.
+Vectors 041 to 044 are `StenographerInstancePortTests` (`Tests/AgenticDeveloperHubSDKCoreTests/Stenographer/StenographerInstancePortTests.swift`); no other test in this repository exercises the type. Its doc comment on `validate` names `tests/fixtures/instance_definition_cases.json` as the cases both it and `scripts/stenographer_instance.py` are tested against, but that fixture is not among the given sources, so every other vector below is derived from the source. In the vectors, `H` is a scratch home directory (for example `/private/tmp/h`) and `D` is `H/Library/Application Support/com.agenticdevelopmentstudio.stenographer.instances`.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
@@ -184,6 +184,10 @@ The source has no test file in this repository. Its doc comment on `validate` na
 | stenographer-instance-038 | current-once | Read `current` twice in one process after changing the definition file between reads | Both reads return the same value; the file is read once. |
 | stenographer-instance-039 | equality | Two named instances resolved from the same definition; one named and the default | Equal; not equal. |
 | stenographer-instance-040 | read-only | Resolve a valid definition and an invalid one in `H` | No file or directory under `H` is created, modified or deleted. |
+| stenographer-instance-041 | port-unique-across-instances, error-description | `D/alpha.json` declares `httpPort` 22950; validate a `beta` definition with `httpPort` 22950 and a distinct data root (`testAPortAnotherDefinitionHoldsIsRefused`) | `portTakenByAnotherInstance(port: 22950, instance: "alpha")`. |
+| stenographer-instance-042 | port-unique-across-instances, other-definitions | `D/alpha.json` and `D/beta.json` both declare `httpPort` 22951; resolve `beta` (`testResolvingADefinitionWhosePortIsTakenFails`) | `portTakenByAnotherInstance(port: 22951, instance: "alpha")`. |
+| stenographer-instance-043 | port-unique-across-instances | `D/alpha.json` declares 22952; validate `beta` with 22953 (`testDistinctPortsAreAccepted`) | No error. |
+| stenographer-instance-044 | port-unique-across-instances, other-definitions | Only `D/alpha.json`, `httpPort` 22954; resolve `alpha` (`testADefinitionDoesNotCollideWithItsOwnFile`) | Resolves with `httpPort` 22954. |
 
 ## Edge Cases
 
@@ -196,8 +200,8 @@ The source has no test file in this repository. Its doc comment on `validate` na
 - **Data root inside the definitions directory**: MUST be accepted as far as installed state goes, because the comparison is by whole components and the definitions directory is not a protected root.
 - **Case and firmlink aliases**: A data root that differs from a protected root only by letter case, or by a leading `/System/Volumes/Data`, MUST be treated as the same path.
 - **Symlinks**: An existing symlink anywhere in the data root MUST be followed before comparing. A dangling symlink MUST be followed to its target. A symlink chain deeper than 32 dangling links MUST stop being followed, and the remaining component MUST be kept as written.
-- **Unreadable peer definitions**: A peer file that cannot be read, does not decode, declares a mismatched name or has a relative data root MUST be skipped in the overlap check; that peer is refused only when it is itself resolved.
-- **Two instances with the same port**: MUST be accepted by `validate` as the source stands; see the open question on `port-unique-across-instances`.
+- **Unreadable peer definitions**: A peer file that cannot be read, does not decode, declares a mismatched name or has a relative data root MUST be skipped in the overlap and port checks; that peer is refused only when it is itself resolved.
+- **Two instances with the same port**: MUST be refused: resolving the second throws `portTakenByAnotherInstance` naming the first (`port-unique-across-instances`).
 - **Concurrent access**: `current` is a Swift `static let`, initialised once and thread-safe. `resolve` holds no shared state and may run on any thread. The file system is not locked: a definition file written or removed between the existence check and the read MUST surface as `undefined` or `unreadable`, and two definitions written at the same moment may each pass the overlap check before the other exists; the script that writes definitions owns that ordering.
 - **Error states**: Every failure MUST be thrown as a `ResolutionError`; no failure is swallowed in `resolve` or `validate`. `otherDefinitions` deliberately returns an empty list for a missing directory and drops unreadable peers. `current` MUST turn a thrown error into a stderr line and exit status 78.
 - **Offline / disconnected state**: Not applicable: the type performs no network access; `httpPort` is a number the daemon binds elsewhere.
@@ -232,6 +236,7 @@ The `ResolutionError` descriptions are hardcoded English strings and are not loc
 | `invalidPort` | `instance httpPort <port> must be 1024-65535 and not one of 22847, 22848, 22849` | Port out of range or reserved; the reserved list is sorted ascending. |
 | `overlapsInstalledState` | `instance dataRoot '<root>' overlaps <protected>, which the installed Stenographer owns` | Data root overlaps a protected root. |
 | `overlapsAnotherInstance` | `instance dataRoot '<root>' overlaps instance '<instance>''s dataRoot '<otherRoot>'` | Data root overlaps another definition's. |
+| `portTakenByAnotherInstance` | `instance httpPort <port> is already instance '<instance>''s httpPort` | Another definition declares the same port. |
 | `socketPathTooLong` | `instance socket path <path> is <bytes> bytes; the limit is under 104` | Socket path is 104 bytes or more. |
 | (stderr prefix) | `stenographer: <description>` | Written by `current` before exit 78. |
 
@@ -278,7 +283,7 @@ a compiled doc or skill shows those rows as a derived section here. -->
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Stenographer/StenographerInstance.swift` | confirmed (1.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Stenographer/StenographerInstance.swift` | confirmed (1.0.1) |
 
 ## Design Decisions
 
@@ -329,9 +334,10 @@ a compiled doc or skill shows those rows as a derived section here. -->
 | [adc.check.reliability.data-integrity](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d773e5db-bb22-5da8-a6f1-953c35a3798d) | passed | Reliability |
 | [adc.check.user-safety.safe-defaults](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/dd43bec7-e292-559a-81e3-c0cf59156abe) | passed | User Safety |
 
-`separation-of-concerns` passes because the type only selects, reads and validates an instance; writing definitions belongs to `scripts/stenographer_instance.py`, deriving labels, ports and paths for the rest of the product belongs to `StenographerIdentifiers`, and the passive gates belong to the daemon's `InstancePolicy` and the app's `StenographerInstances`. `unit-test-coverage` fails because no test in this repository exercises `StenographerInstance`; the doc comment on `validate` names a shared fixture, `tests/fixtures/instance_definition_cases.json`, that is not present among these sources. `explicit-error-handling` passes because every refusal is a distinct `ResolutionError` case with its context, and `current` reports the error before a deliberate exit. `input-sanitization` is partial: names, data roots, ports, overlaps and socket length are all checked, but a port already held by another named definition is not, which is the open question on `port-unique-across-instances`. `data-integrity` passes because a named data root can never equal, contain or sit inside the installed copy's data or another instance's, compared after symlink, case and firmlink canonicalisation. `safe-defaults` passes because no selection means the installed default, and an unknown name is refused instead of creating an empty store.
+`separation-of-concerns` passes because the type only selects, reads and validates an instance; writing definitions belongs to `scripts/stenographer_instance.py`, deriving labels, ports and paths for the rest of the product belongs to `StenographerIdentifiers`, and the passive gates belong to the daemon's `InstancePolicy` and the app's `StenographerInstances`. `unit-test-coverage` is partial because the only test in this repository, `StenographerInstancePortTests`, covers port uniqueness alone; the doc comment on `validate` names a shared fixture, `tests/fixtures/instance_definition_cases.json`, that is not present among these sources. `explicit-error-handling` passes because every refusal is a distinct `ResolutionError` case with its context, and `current` reports the error before a deliberate exit. `input-sanitization` passes: names, data roots, ports, overlaps, a port another named definition holds, and socket length are all checked. `data-integrity` passes because a named data root can never equal, contain or sit inside the installed copy's data or another instance's, compared after symlink, case and firmlink canonicalisation. `safe-defaults` passes because no selection means the installed default, and an unknown name is refused instead of creating an empty store.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-21 | Mike Fullerton | Resolved port-unique-across-instances: validate throws portTakenByAnotherInstance for a port another definition holds, checked after the instance overlap; added its description and vectors 041 to 044. |

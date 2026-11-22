@@ -2,7 +2,7 @@
 id: 94bac7a5-3fc6-463d-86d1-7c59350cd7cb
 title: "Status Line DTOs"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-21
@@ -118,14 +118,14 @@ A few behaviors live on the types themselves: the tolerant decoders of `RateLimi
 
 - **reading-fields**: `AccountQuotaReadingDTO` MUST carry `account` (String) and the optionals `credentialKind`, `fiveHourStatus`, `sevenDayStatus`, `fableLimitStatus`, `errorText` (String), `fiveHourPct`, `sevenDayPct`, `fableLimitPct` (Double) and `fiveHourResetsAt`, `sevenDayResetsAt`, `fableLimitResetsAt` (Int). Only `account` is required on decode.
 - **reading-header-names**: The header initializer MUST read, for each window prefix `5h`, `7d` and `7d_oi`, the headers `anthropic-ratelimit-unified-<prefix>-utilization`, `-reset` and `-status`, by exact lower-case key; the caller MUST lower-case the keys first.
-- **reading-pct-times-100**: A utilization header that parses as a Double MUST become that value times 100, with no branch on its size, so `0.27` is 27 and `1.05` is 105.
+- **reading-pct-times-100**: A utilization header that parses as a Double MUST become that value times 100, with no branch on its size, so `0.27` is 27 and `1.05` is 105, as long as the product is finite (`reading-pct-non-finite`).
 - **reading-pct-unparsable**: A missing or non-numeric utilization header MUST leave its percentage nil.
 - **reading-reset-millis**: A reset header whose value is above 1e12 MUST be divided by 1000; the result MUST be truncated toward zero.
 - **reading-reset-unrepresentable**: A reset that is not an exactly representable Int after that step (`inf`, `-inf`, `nan`, `1e400`, `1e300`) MUST leave its reset nil rather than trap.
 - **reading-status-verbatim**: Each `-status` header MUST be carried verbatim, nil when absent.
 - **reading-fable-window**: The `7d_oi` window MUST fill `fableLimitPct`, `fableLimitResetsAt` and `fableLimitStatus`, which are nil when the response does not carry that window.
 - **reading-no-windows-error**: When neither the `5h` nor the `7d` utilization yields a percentage, `errorText` MUST be `"no usage readings in response"`; otherwise it MUST be nil. A `7d_oi` reading alone does not count.
-- **reading-pct-non-finite**: NEEDS REVIEW: Not implemented in source. A utilization of `nan` or `inf` parses as a Double and becomes a non-finite percentage with no guard, unlike the reset path, and it counts as a reading, so `errorText` stays nil. `StenographerWire.encoder()` keeps `JSONEncoder`'s default non-conforming-float strategy, which throws on a non-finite Double, so such a reading cannot be encoded by the wire coder; whether the parser should yield nil instead needs a decision from the toolkit owner.
+- **reading-pct-non-finite**: A utilization that parses as NaN or an infinity (`nan`, `inf`, `-inf`, `infinity`), or whose product with 100 overflows to an infinity (`1e308`), MUST leave its percentage nil, so a non-finite percentage never reaches the UI or the wire. Such a value MUST NOT count as a reading, so when neither the `5h` nor the `7d` window yields a finite percentage `errorText` is `"no usage readings in response"`. The memberwise initializer MUST drop a non-finite `fiveHourPct`, `sevenDayPct` or `fableLimitPct` to nil as well, so every `AccountQuotaReadingDTO` encodes with `StenographerWire.encoder()`.
 
 **ClaudeCredentialDTO**
 
@@ -181,6 +181,10 @@ Not applicable — these are wire data transfer objects, not a visual component.
 | status-line-dtos-026 | turn-aggregate-fields, active-hours-fields, claude-version-fields, dto-wire-spelling | Encode one of each with the snake_case encoder, remove one key from each, decode | Keys include `group_key`, `total_cost_usd`, `idle_threshold_s`, `fields_json`, `field_paths`; each decode with a removed key throws |
 | status-line-dtos-027 | dto-conformances | Pass each type to a generic function constrained to `Codable & Sendable` | Compiles |
 | status-line-dtos-028 | quota-row-labels, quota-row-min-projection | Read the static constants | `"fable quota"`, `"spend"`, `"7d quota"`, `"5h quota"`, 604800, 18000, 0.01 |
+| status-line-dtos-029 | reading-pct-non-finite, reading-no-windows-error | Header init with all three utilizations set to each of `"nan"`, `"NaN"`, `"inf"`, `"-inf"`, `"infinity"`, `"1e308"` (`AccountQuotaReadingNonFiniteTests.testNonFiniteUtilizationsYieldNilPercentages`) | All three percentages nil; `errorText` `"no usage readings in response"` |
+| status-line-dtos-030 | reading-pct-non-finite, reading-no-windows-error | Header init with `5h-utilization` `"nan"` and `7d-utilization` `"0.27"` (`testOneFiniteWindowStillCountsAsAReading`) | `fiveHourPct` nil; `sevenDayPct` 27; `errorText` nil |
+| status-line-dtos-031 | reading-pct-non-finite | Memberwise init with `fiveHourPct` NaN, `sevenDayPct` infinity, `fableLimitPct` minus infinity (`testMemberwiseInitDropsNonFinitePercentages`) | All three nil |
+| status-line-dtos-032 | reading-pct-non-finite | Header init with `5h-utilization` `"inf"` and `7d-utilization` `"nan"`, encoded with `StenographerWire.encoder()` (`testAReadingFromNonFiniteHeadersEncodesWithTheWireCoder`) | Encodes; the JSON contains neither `nan` nor `inf` |
 
 ## Edge Cases
 
@@ -189,7 +193,7 @@ Not applicable — these are wire data transfer objects, not a visual component.
 - **Version skew, older daemon and newer app**: A payload missing `account_email`, the spend pair, `hours_rows`, `hud_quota`, `account_sections`, `oauth_email`, the per-metric fields, or the quota-row optionals MUST decode with defaults. A payload missing a required key fails the whole decode, including the enclosing `UsageRowsDTO`.
 - **Nested strictness**: A key missing inside a nested type's own required set propagates out through the enclosing tolerant decoder. A present `hud_quota` without `account_email`, or an account section without `is_current`, MUST fail the whole `UsageRowsDTO` decode.
 - **Boundary values**: Percentages are not clamped anywhere: a reading of `1.05` is 105, `spendPct` MAY exceed 100, and negative utilizations pass through. A reset at exactly 1e12 is not divided; only values above it are. A negative reset is kept as a negative Int.
-- **Malformed headers**: A non-numeric utilization or reset MUST yield nil for that field. A non-finite utilization is the open question on `reading-pct-non-finite`.
+- **Malformed headers**: A non-numeric utilization or reset MUST yield nil for that field. A non-finite utilization, or one that overflows when scaled, MUST yield nil and does not count as a reading (`reading-pct-non-finite`).
 - **Whitespace in addresses**: `oneSectionPerAccount` trims spaces and tabs only; an address with a trailing newline is a different key from the same address without one.
 - **Unknown credential kinds**: A section or reading whose `credentialKind` this build does not know MUST still decode; in `oneSectionPerAccount` it counts as a login.
 - **Concurrent access**: The values are immutable and `Sendable`, so they MAY be shared across threads and actors; `oneSectionPerAccount` is a pure function.
@@ -258,7 +262,7 @@ Not applicable: this code makes no log calls.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Sessions/Wire/StatusLineDTOs.swift` | confirmed (1.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Sessions/Wire/StatusLineDTOs.swift` | confirmed (1.0.1) |
 
 ## Design Decisions
 
@@ -315,9 +319,10 @@ Not applicable: this code makes no log calls.
 | [adc.check.privacy-and-data.data-minimization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/991d2adb-3f9a-524d-8218-529592614159) | passed | Privacy and Data |
 | [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | partial | Internationalization |
 
-separation-of-concerns passes: the file declares shapes, the tolerant decoders, one header parser, one de-duplication, the section `identity` and the two credential projections; queries, formatting, thresholds, probing and refresh live in the daemon. unit-test-coverage is partial: `AccountQuotaTests` and `AccountQuotaObserveTests` cover the header parser (vectors 001 to 007), `AccountQuotaTests` decodes a `UsageRowsDTO` without `accountSections` and a `RateLimitSnapshotDTO` without `accountEmail`, and asserts `identity` for an oauth and a long-lived section, but no test exercises the `UsageHoursRowDTO` and `UsageHoursMetricDTO` decoders, the spend-pair defaults, `oneSectionPerAccount`, `resolvedWindowSeconds`, `carrying(_:)` or `probeOnly`. graceful-degradation passes because every later-added key decodes to a default for an older peer. secure-storage is partial: the type keeps the refresh token out of what the daemon retains through `probeOnly`, but its synthesized encoder writes the token and refresh token in clear to any encoder it is handed, with no redacted form. input-sanitization is partial: reset headers are guarded against non-finite and out-of-range values, but utilization headers are not, which is the open question on `reading-pct-non-finite`. token-lifecycle passes for this layer: `carrying(_:)` swaps in a rotated login and clears the one-shot `refreshWithin`, and `probeOnly` drops the refresh token once an evaluation is done; refresh timing and revocation belong to the daemon's probe. data-minimization passes: `probeOnly` is the smallest credential that still probes, and the usage records carry display text rather than raw transcripts. no-hardcoded-strings is partial: display text comes pre-formatted from the daemon, but `"no usage readings in response"` and the row labels are English literals, and the labels double as wire markers.
+separation-of-concerns passes: the file declares shapes, the tolerant decoders, one header parser, one de-duplication, the section `identity` and the two credential projections; queries, formatting, thresholds, probing and refresh live in the daemon. unit-test-coverage is partial: `AccountQuotaTests` and `AccountQuotaObserveTests` cover the header parser (vectors 001 to 007), `AccountQuotaReadingNonFiniteTests` covers non-finite utilizations (vectors 029 to 032), `AccountQuotaTests` decodes a `UsageRowsDTO` without `accountSections` and a `RateLimitSnapshotDTO` without `accountEmail`, and asserts `identity` for an oauth and a long-lived section, but no test exercises the `UsageHoursRowDTO` and `UsageHoursMetricDTO` decoders, the spend-pair defaults, `oneSectionPerAccount`, `resolvedWindowSeconds`, `carrying(_:)` or `probeOnly`. graceful-degradation passes because every later-added key decodes to a default for an older peer. secure-storage is partial: the type keeps the refresh token out of what the daemon retains through `probeOnly`, but its synthesized encoder writes the token and refresh token in clear to any encoder it is handed, with no redacted form. input-sanitization passes: reset headers are guarded against non-finite and out-of-range values, and utilization headers and the memberwise percentages against non-finite ones (`reading-pct-non-finite`). token-lifecycle passes for this layer: `carrying(_:)` swaps in a rotated login and clears the one-shot `refreshWithin`, and `probeOnly` drops the refresh token once an evaluation is done; refresh timing and revocation belong to the daemon's probe. data-minimization passes: `probeOnly` is the smallest credential that still probes, and the usage records carry display text rather than raw transcripts. no-hardcoded-strings is partial: display text comes pre-formatted from the daemon, but `"no usage readings in response"` and the row labels are English literals, and the labels double as wire markers.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-21 | Mike Fullerton | Resolved reading-pct-non-finite: a NaN, infinite or overflowing utilization is nil and no reading, and the memberwise init drops non-finite percentages; input-sanitization passes; added vectors 029 to 032. |

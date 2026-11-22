@@ -55,6 +55,10 @@
 | claude-hook-installer-052 | uninstall-keeps-router-pointer, install-keeps-router-pointer | Pointer `ours` and marker present; run `installHooks()`, then `uninstallHooks(removingRouterPointer: false)` | | `env.ANTHROPIC_BASE_URL` and the marker are untouched by both |
 | claude-hook-installer-053 | uninstall-removing-router-pointer | No hooks of this owner, `env.ANTHROPIC_BASE_URL` is another value; `uninstallHooks(removingRouterPointer: true)` | | Returns false; the other value stays |
 | claude-hook-installer-054 | router-set-errors | `settings.json` holds `[1]`; `setRouterPointer(true)` | | Throws `invalidFormat`; file unchanged |
+| claude-hook-installer-055 | router-set-marker-failure | Suspension marker that cannot be deleted, pointer `absent`; `setRouterPointer(true)` | `testEnableThrowsAndSavesNothingWhenTheMarkerCannotBeDeleted` | Throws; `settings.json` is unchanged and the marker still exists |
+| claude-hook-installer-056 | router-set-marker-failure | Suspension marker that cannot be deleted, pointer `ours`; `setRouterPointer(false)` | `testDisableThrowsAndKeepsThePointerWhenTheMarkerCannotBeDeleted` | Throws; `env.ANTHROPIC_BASE_URL` is still the router's |
+| claude-hook-installer-057 | router-set-marker-failure | No suspension marker, pointer `absent`; `setRouterPointer(true)` | `testAMissingMarkerIsNotAnError` | Returns `ours` without throwing |
+| claude-hook-installer-058 | router-set-marker-failure, uninstall-removing-router-pointer | Suspension marker that cannot be deleted, pointer `ours`; `uninstallHooks(removingRouterPointer: true)` | `testUninstallStillRemovesThePointerWhenTheMarkerCannotBeDeleted` | Does not throw; logs "Could not forget the router pointer suspension"; `env.ANTHROPIC_BASE_URL` is removed |
 
-Vectors 034 to 054 are derived from `ClaudeHookInstaller+RouterPointer.swift`; no test in `Tests/AgenticDeveloperHubSDKCoreTests` exercises the router pointer, so they name no test.
+Vectors 034 to 054 are derived from `ClaudeHookInstaller+RouterPointer.swift`; no test in `Tests/AgenticDeveloperHubSDKCoreTests` exercises them, so they name no test. Vectors 055 to 058 are `RouterPointerMarkerFailureTests` (`Tests/AgenticDeveloperHubSDKCoreTests/ClaudeHooks/RouterPointerMarkerFailureTests.swift`), which makes the marker undeletable by giving it a read-only child directory.
 

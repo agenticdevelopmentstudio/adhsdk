@@ -12,6 +12,7 @@ The `ResolutionError` descriptions are hardcoded English strings and are not loc
 | `invalidPort` | `instance httpPort <port> must be 1024-65535 and not one of 22847, 22848, 22849` | Port out of range or reserved; the reserved list is sorted ascending. |
 | `overlapsInstalledState` | `instance dataRoot '<root>' overlaps <protected>, which the installed Stenographer owns` | Data root overlaps a protected root. |
 | `overlapsAnotherInstance` | `instance dataRoot '<root>' overlaps instance '<instance>''s dataRoot '<otherRoot>'` | Data root overlaps another definition's. |
+| `portTakenByAnotherInstance` | `instance httpPort <port> is already instance '<instance>''s httpPort` | Another definition declares the same port. |
 | `socketPathTooLong` | `instance socket path <path> is <bytes> bytes; the limit is under 104` | Socket path is 104 bytes or more. |
 | (stderr prefix) | `stenographer: <description>` | Written by `current` before exit 78. |
 

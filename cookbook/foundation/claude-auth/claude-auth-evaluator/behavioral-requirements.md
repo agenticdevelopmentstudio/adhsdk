@@ -19,6 +19,7 @@
 - **round-failure-isolated**: A refresh failure for one credential MUST NOT change the state, probeability or status of any other credential in the round.
 - **refresh-precondition**: `evaluate` MUST invoke the refresher for a credential only when all four hold: its state is `.expired`, it carries a login, a refresher was supplied, and it carries an `itemKey`.
 - **refresh-at-most-once**: `evaluate` MUST invoke the refresher at most once per credential per round.
+- **refresh-once-per-token**: Within one `evaluate` call, the refresher MUST be invoked at most once per distinct refresh token. Credentials carrying the same refresh token (one login pushed under several item keys) MUST share that one refresh's result: on success each is reported `.refreshed`, each gets its own `Outcome.rotated` entry under its own `itemKey` with the same fresh login, and none is reported `.spent`; on failure each is reported with the same failure state.
 - **classify-only-mode**: A caller MAY pass `nil` as `refresh`; `evaluate` MUST then invoke no refresher and MUST classify every credential with `state(of:now:)` alone.
 - **unrefreshed-probeability**: For a credential that is not refreshed, the credential MUST appear in `Outcome.probeable` unchanged exactly when its state's `isProbeable` is true (`.usable` and `.unknown` are probeable; `.expired` is not).
 - **unrefreshed-status**: For a credential that is not refreshed, the status MUST carry its classified state and no `detail`.
@@ -135,8 +136,8 @@
 - **publish-merge**: `publish` MUST write the merge of the file's current entries with `fresh` at `now`, never `fresh` alone.
 - **publish-format**: `publish` MUST write a pretty-printed JSON object with sorted keys, `version` 1 and `tokens` mapping each fingerprint to `{"account": <name>, "seen": <epoch seconds>}`.
 - **publish-atomic**: `publish` MUST replace the file atomically, so a concurrent reader sees either the old file or the new one.
-- **publish-permissions**: `publish` MUST set the file's POSIX permissions to 0600 after writing.
-- **publish-permissions-failure**: NEEDS REVIEW: Not implemented in source. A failure to set 0600 is discarded with `try?`, so the file can stay at the atomic write's default mode with no error, log or return value; settled by the toolkit owner deciding whether that failure throws or logs, plus a test with a read-only parent.
+- **publish-permissions**: `publish` MUST write the new contents to a temporary file beside the target, set that file's POSIX permissions to 0600, and only then rename it over the target, so the published file is never readable by others, even for a moment.
+- **publish-permissions-failure**: When setting 0600 fails, `publish` MUST throw that error, MUST leave the previous file (or no file, on a first publish) exactly as it was, and MUST remove its temporary file, so a file readable by others is never published and nothing is left behind.
 - **publish-throws**: `publish` MUST throw when creating the directory, serializing the JSON or writing the file fails.
 
 ### Read cache (`AccountFingerprints` lookups)

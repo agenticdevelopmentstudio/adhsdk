@@ -4,7 +4,7 @@
     "id": "94bac7a5-3fc6-463d-86d1-7c59350cd7cb",
     "title": "Status Line DTOs",
     "type": "ingredient",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "status": "review",
     "language": "en",
     "created": "2026-11-21",
@@ -37,7 +37,7 @@
     "approved-date": ""
   },
   "names_hosts": "The subject is Claude account quota and credentials: the records carry Claude login tokens, ~/.claude.json account data and the Fable weekly-quota bucket named by the Anthropic rate-limit headers.",
-  "synced": "e759aeb682af5e57",
+  "synced": "e5aea31368959308",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

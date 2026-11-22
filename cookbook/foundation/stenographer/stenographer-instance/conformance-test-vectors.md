@@ -1,5 +1,5 @@
 
-The source has no test file in this repository. Its doc comment on `validate` names `tests/fixtures/instance_definition_cases.json` as the cases both it and `scripts/stenographer_instance.py` are tested against, but that fixture is not among the given sources, so every vector below is derived from the source. In the vectors, `H` is a scratch home directory (for example `/private/tmp/h`) and `D` is `H/Library/Application Support/com.agenticdevelopmentstudio.stenographer.instances`.
+Vectors 041 to 044 are `StenographerInstancePortTests` (`Tests/AgenticDeveloperHubSDKCoreTests/Stenographer/StenographerInstancePortTests.swift`); no other test in this repository exercises the type. Its doc comment on `validate` names `tests/fixtures/instance_definition_cases.json` as the cases both it and `scripts/stenographer_instance.py` are tested against, but that fixture is not among the given sources, so every other vector below is derived from the source. In the vectors, `H` is a scratch home directory (for example `/private/tmp/h`) and `D` is `H/Library/Application Support/com.agenticdevelopmentstudio.stenographer.instances`.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
@@ -43,4 +43,8 @@ The source has no test file in this repository. Its doc comment on `validate` na
 | stenographer-instance-038 | current-once | Read `current` twice in one process after changing the definition file between reads | Both reads return the same value; the file is read once. |
 | stenographer-instance-039 | equality | Two named instances resolved from the same definition; one named and the default | Equal; not equal. |
 | stenographer-instance-040 | read-only | Resolve a valid definition and an invalid one in `H` | No file or directory under `H` is created, modified or deleted. |
+| stenographer-instance-041 | port-unique-across-instances, error-description | `D/alpha.json` declares `httpPort` 22950; validate a `beta` definition with `httpPort` 22950 and a distinct data root (`testAPortAnotherDefinitionHoldsIsRefused`) | `portTakenByAnotherInstance(port: 22950, instance: "alpha")`. |
+| stenographer-instance-042 | port-unique-across-instances, other-definitions | `D/alpha.json` and `D/beta.json` both declare `httpPort` 22951; resolve `beta` (`testResolvingADefinitionWhosePortIsTakenFails`) | `portTakenByAnotherInstance(port: 22951, instance: "alpha")`. |
+| stenographer-instance-043 | port-unique-across-instances | `D/alpha.json` declares 22952; validate `beta` with 22953 (`testDistinctPortsAreAccepted`) | No error. |
+| stenographer-instance-044 | port-unique-across-instances, other-definitions | Only `D/alpha.json`, `httpPort` 22954; resolve `alpha` (`testADefinitionDoesNotCollideWithItsOwnFile`) | Resolves with `httpPort` 22954. |
 
