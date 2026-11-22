@@ -35,7 +35,8 @@ final class StorageRoutesTests: XCTestCase {
     }
 
     func testAWindowIsStoredSnappedAndTheStatusAnswered() async throws {
-        let response = try XCTUnwrap(await post(#"{"history_days":10}"#))
+        let reply = await post(#"{"history_days":10}"#)
+        let response = try XCTUnwrap(reply)
 
         XCTAssertEqual(response.status, 200, String(bytes: response.body, encoding: .utf8) ?? "")
         let stored = StorageHistoryWindow.snap(10)
@@ -47,14 +48,17 @@ final class StorageRoutesTests: XCTestCase {
     func testZeroDaysIsRefusedAndNothingIsStored() async throws {
         let before = try db.setting(for: StorageSettings.key)
 
-        let response = try XCTUnwrap(await post(#"{"history_days":0}"#))
+        let reply = await post(#"{"history_days":0}"#)
+
+        let response = try XCTUnwrap(reply)
 
         XCTAssertEqual(response.status, 400)
         XCTAssertEqual(try db.setting(for: StorageSettings.key), before)
     }
 
     func testAMalformedBodyIsRefused() async throws {
-        let response = try XCTUnwrap(await post(#"{"days":30}"#))
+        let reply = await post(#"{"days":30}"#)
+        let response = try XCTUnwrap(reply)
 
         XCTAssertEqual(response.status, 400)
     }
