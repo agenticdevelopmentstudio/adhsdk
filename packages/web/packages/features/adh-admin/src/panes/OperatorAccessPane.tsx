@@ -88,6 +88,14 @@ function checkDraft(d: FilterDraft): DraftErrors {
   return errors;
 }
 
+/** Whether two filter sets ask the server the same thing, blanks dropped. */
+function sameFilters(a: OperatorAccessFilters, b: OperatorAccessFilters): boolean {
+  return (
+    JSON.stringify(normalizeOperatorAccessFilters(a)) ===
+    JSON.stringify(normalizeOperatorAccessFilters(b))
+  );
+}
+
 /** The draft as the filters the server is asked for. Only this reaches the query key. */
 function toFilters(d: FilterDraft): OperatorAccessFilters {
   return {
@@ -225,12 +233,12 @@ export function OperatorAccessPane({
     // Applying the filters already in force is a request to look again. Setting an equal key
     // would do nothing (react-query hashes it the same and the data is still fresh), so the
     // window is re-read instead, and a row written a moment ago shows up.
-    const same =
-      JSON.stringify(normalizeOperatorAccessFilters(next)) ===
-      JSON.stringify(normalizeOperatorAccessFilters(applied));
-    if (same) log.refresh();
+    if (sameFilters(next, applied)) log.refresh();
     else setApplied(next);
   };
+  // The form is edited freely and takes effect only on Apply, so it can show filters the list is
+  // not using. Saying so keeps an operator from reading the list as filtered by what the form shows.
+  const pending = !sameFilters(toFilters(draft), applied);
   const clear = () => {
     setDraft(EMPTY_DRAFT);
     setErrors({});
@@ -312,6 +320,14 @@ export function OperatorAccessPane({
           <Button type="button" variant="outline" onClick={clear}>
             Clear
           </Button>
+          {pending && (
+            <span
+              className="self-center text-sm text-apt-text-muted"
+              role="status"
+            >
+              Not applied yet: the list still shows the previous filters.
+            </span>
+          )}
           {(errors.targetEcosystemId || errors.range) && (
             <div className="flex basis-full flex-col gap-1">
               {errors.targetEcosystemId && (
@@ -335,6 +351,13 @@ export function OperatorAccessPane({
             </div>
           )}
         </form>
+
+        {operators.error ? (
+          <p role="alert" className="mb-4 text-sm text-apt-red">
+            Couldn&apos;t load the operator list, so Who shows short account
+            ids and the Operator filter offers no one by name.
+          </p>
+        ) : null}
 
         {/* No actions, as on the Audit pane: the log is append-only in the database itself. */}
         <EditableList<OperatorAccessEvent>
