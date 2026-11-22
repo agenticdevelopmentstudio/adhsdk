@@ -301,6 +301,7 @@ export const RESERVED_HANDLE_WORDS: readonly string[] = [
   'roles',
   'server-bags',
   'signin-apps',
+  'signup-list',
   'storage',
   'sync',
   'teams',

@@ -93,6 +93,7 @@ import {
   Send,
   Server,
   RefreshCw,
+  ListChecks,
   Settings,
   ShieldCheck,
   ShoppingBag,
@@ -159,6 +160,7 @@ const ICONS: Record<string, LucideIcon> = {
   '/roles': ShieldCheck,
   '/server-bags': Server,
   '/settings': Settings,
+  '/signup-list': ListChecks,
   '/sync': RefreshCw,
   '/signin-apps': LogIn,
   // The workspace's ecosystem sign-in CONFIGURATION — a hub knob, which is why it is written
