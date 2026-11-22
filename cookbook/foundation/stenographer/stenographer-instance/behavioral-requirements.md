@@ -15,7 +15,7 @@
 
 - **base-label**: `baseLabel` MUST be `com.agenticdevelopmentstudio.stenographer`.
 - **default-port**: `defaultHTTPPort` MUST be `22847`.
-- **reserved-ports**: `reservedHTTPPorts` MUST be the set {22847, 22848, 22849}: the installed daemon's HTTP port, the installed account router's port (`StenographerIdentifiers.routerPort`) and the retired Kitchen daemon adkd's port.
+- **reserved-ports**: `reservedHTTPPorts` MUST be the set {22848, 22849}: the installed account router's port (`StenographerIdentifiers.routerPort`) and the retired Kitchen daemon adkd's port. The retired stenographerd's 22847 is not reserved: nothing listens there once adhd serves Stenographer.
 - **reserved-names**: `reservedNames` MUST be the set {`usagewidget`, `instances`, `daemon`}: the usage widget's bundle id suffix, the definitions directory's suffix and the installed daemon's launch-throttle identifier suffix.
 - **selection-keys**: The environment key MUST be `STENOGRAPHER_INSTANCE` and the argument flag MUST be `-instance`.
 - **socket-constants**: `socketFileName` MUST be `stenographer.sock` and `socketPathLimit` MUST be `104` (the size of Darwin's `sun_path`, including the terminating NUL).

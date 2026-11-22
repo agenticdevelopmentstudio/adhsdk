@@ -7,8 +7,8 @@
 **Rationale**: The doc comment on `requestedName` states that the daemon and the CLI are selected by environment and that an app passes its own selection to the daemon the same way, so the environment is the authoritative channel. The empty-value rule follows from the source checking for the key before its value.
 **Approved**: pending
 
-**Decision**: Reserved names and ports are fixed sets: names `usagewidget`, `instances` and `daemon`; ports 22847, 22848 and 22849.
-**Rationale**: The doc comments on `reservedNames` and `reservedHTTPPorts` give each reason: the label `<baseLabel>.<name>` is already taken by the usage widget, the definitions directory and the installed daemon's launch-throttle identifier (whose `/tmp/<identifier>.launches` an instance's app guard would share), and the ports belong to the installed daemon, the installed account router and the retired Kitchen daemon adkd that an installed Kitchen may still run.
+**Decision**: Reserved names and ports are fixed sets: names `usagewidget`, `instances` and `daemon`; ports 22848 and 22849.
+**Rationale**: The doc comments on `reservedNames` and `reservedHTTPPorts` give each reason: the label `<baseLabel>.<name>` is already taken by the usage widget, the definitions directory and the installed daemon's launch-throttle identifier (whose `/tmp/<identifier>.launches` an instance's app guard would share), and the ports belong to the installed account router and the retired Kitchen daemon adkd that an installed Kitchen may still run. The retired stenographerd's 22847 was reserved until adhd took over serving Stenographer (apps suite phase 3); nothing listens there now.
 **Approved**: pending
 
 **Decision**: A named instance's data root may not equal, contain or lie inside anything the installed copy owns: the current and legacy data roots, the current and legacy logs, and `~/.claude`.

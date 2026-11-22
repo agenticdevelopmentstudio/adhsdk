@@ -73,13 +73,15 @@ public struct StenographerInstance: Sendable, Equatable {
     }
 
     public static let baseLabel = "com.agenticdevelopmentstudio.stenographer"
+    /// The retired stenographerd's loopback port, which the default instance
+    /// still reports as its `httpPort`. Nothing listens there once adhd serves
+    /// Stenographer, so it is not reserved: a named instance may take it.
     public static let defaultHTTPPort = 22847
-    /// Ports a named instance may never take: the installed daemon's HTTP port,
-    /// the installed account router's (the obvious "next port"), and the
-    /// retired Kitchen daemon adkd's (22849), which an installed Kitchen may
-    /// still be running.
+    /// Ports a named instance may never take: the installed account router's,
+    /// and the retired Kitchen daemon adkd's (22849), which a Kitchen older
+    /// than the apps suite's Phase 3 may still be running.
     public static let reservedHTTPPorts: Set<Int> = [
-        defaultHTTPPort, StenographerIdentifiers.routerPort, 22849
+        StenographerIdentifiers.routerPort, 22849
     ]
     /// Names whose label `<baseLabel>.<name>` is already taken: the usage
     /// widget's bundle id, the directory that holds the definitions, and the
