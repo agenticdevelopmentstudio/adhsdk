@@ -59,7 +59,7 @@ extension DaemonDatabase {
     /// computed, so a Reload that only re-probed and then read them got back
     /// rows from *before* its own round: after a Wi-Fi drop, the very "offline"
     /// cards it was clicked to clear.
-    func remeasureAccountQuotas(completion: @escaping @Sendable (Bool) -> Void) {
+    public func remeasureAccountQuotas(completion: @escaping @Sendable (Bool) -> Void) {
         guard let store = accountQuotaSource else {
             completion(false)
             return
