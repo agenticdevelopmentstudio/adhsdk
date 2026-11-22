@@ -54,6 +54,12 @@ export interface WindowedList<T> {
   /** The server has rows beyond the window. */
   hasMore: boolean;
   loadMore: () => void;
+  /**
+   * Read the window again from the server, every page it holds. The key alone cannot do it: asking
+   * for the same key inside its freshness window answers from cache, so a log being watched for a
+   * request made a moment ago would never show it.
+   */
+  refresh: () => void;
   error: unknown;
 }
 
@@ -111,10 +117,13 @@ export function useWindowedList<T>({
     return out;
   }, [query.data, getRowId]);
 
-  const { fetchNextPage } = query;
+  const { fetchNextPage, refetch } = query;
   const loadMore = useCallback(() => {
     void fetchNextPage();
   }, [fetchNextPage]);
+  const refresh = useCallback(() => {
+    void refetch();
+  }, [refetch]);
 
   return {
     rows,
@@ -122,6 +131,7 @@ export function useWindowedList<T>({
     isFetchingMore: query.isFetchingNextPage,
     hasMore: query.hasNextPage,
     loadMore,
+    refresh,
     error: query.error,
   };
 }
