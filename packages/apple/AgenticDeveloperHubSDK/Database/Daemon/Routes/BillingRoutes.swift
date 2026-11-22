@@ -188,7 +188,10 @@ public enum BillingRoutes {
             guard let body = try? decode(BackfillRequest.self, request) else {
                 return .error(BillingWireError.undecodable.localizedDescription, status: 400)
             }
-            return counted { try database.resetBillingDerivation(since: body.since) }
+            guard let since = backfillSince(body.since) else {
+                return .error("Invalid 'since': expected YYYY-MM-DD or an ISO-8601 timestamp", status: 400)
+            }
+            return counted { try database.resetBillingDerivation(since: since) }
         case "preferences":
             return preferences(request, database: database)
         default:
@@ -430,10 +433,29 @@ public enum BillingRoutes {
     }
 
     /// Accepts `2026-09-01` and `2026-09-01T12:00:00Z` alike, taking the day
-    /// from either. Anything else, a day no calendar has included, is a typo
-    /// the caller should hear about.
+    /// from either: the whole string, so `2026-09-01garbage` is refused. A
+    /// timestamp is what ``TimestampParsing/parseISO8601(_:)`` accepts.
+    /// Anything else, a day no calendar has included, is a typo the caller
+    /// should hear about.
     static func isISODayOrTimestamp(_ value: String) -> Bool {
-        let day = String(value.prefix(10))
+        guard isISODay(String(value.prefix(10))) else { return false }
+        return value.count == 10 || TimestampParsing.parseISO8601(value) != nil
+    }
+
+    /// A backfill's `since` in the shape `resetBillingDerivation` compares
+    /// against: a day as given, a timestamp as a whole-second UTC instant (an
+    /// offset is converted, not compared as text). nil for anything else,
+    /// the empty string included: the store compares strings, so `""` would
+    /// re-derive the whole history and a non-date would quietly match
+    /// nothing, each answering 200.
+    static func backfillSince(_ value: String) -> String? {
+        guard isISODayOrTimestamp(value) else { return nil }
+        guard value.count > 10 else { return value }
+        return TimestampParsing.parseISO8601(value).map(UTCTimestamp.string(from:))
+    }
+
+    /// Exactly `YYYY-MM-DD`, ASCII digits, a day some calendar month has.
+    private static func isISODay(_ day: String) -> Bool {
         guard day.count == 10 else { return false }
         let parts = day.split(separator: "-", omittingEmptySubsequences: false)
         guard parts.count == 3, parts[0].count == 4, parts[1].count == 2, parts[2].count == 2 else {
