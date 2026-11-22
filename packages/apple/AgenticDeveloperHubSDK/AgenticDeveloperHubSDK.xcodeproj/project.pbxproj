@@ -1417,6 +1417,7 @@
 		45DE5A4493F67774691CCAA1 /* ImportCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE7DE0B0816B107BD27D2407 /* ImportCoordinator.swift */; };
 		45E04517950989C37DAD2FFB /* HookDecision.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09C7E5921ACBA206F3A86C79 /* HookDecision.swift */; };
 		45FAEC9CBF4002EAB86C3BA3 /* BrowserAddressBarControls.swift in Sources */ = {isa = PBXBuildFile; fileRef = DCEC4A02B2410A9EF2B04DCC /* BrowserAddressBarControls.swift */; };
+		45FDCB7F1A7938DEC1BCBAAB /* ActivityRoutesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC6E54FB7B70FB6B46E15D65 /* ActivityRoutesTests.swift */; };
 		460406128CAA43387C0FEB35 /* ClientsWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 043159A1C43DBAC24B8A0460 /* ClientsWindowController.swift */; };
 		4614F725EED86DEA01290427 /* ClaudeLoginIdentity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31B0F51CD595515A629C2436 /* ClaudeLoginIdentity.swift */; };
 		46164E974F4B09E3870CB0D9 /* LSPEditorAnnotationCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A582D19BA549802E3F72E8F /* LSPEditorAnnotationCoordinator.swift */; };
@@ -10717,6 +10718,7 @@
 		CC4AD50E23EEA33A17725432 /* CommitCrawlerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommitCrawlerTests.swift; sourceTree = "<group>"; };
 		CC59BBDC00DCE3021DD77881 /* EventStoreTrimTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventStoreTrimTests.swift; sourceTree = "<group>"; };
 		CC5FD87F75399FBACA9C9A2E /* TerminalSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalSession.swift; sourceTree = "<group>"; };
+		CC6E54FB7B70FB6B46E15D65 /* ActivityRoutesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityRoutesTests.swift; sourceTree = "<group>"; };
 		CCA39EA92C710D5274319CED /* AutoApplier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoApplier.swift; sourceTree = "<group>"; };
 		CCAA9ABC51FA037C56AB4DCF /* LLMProvidersListViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LLMProvidersListViewModel.swift; sourceTree = "<group>"; };
 		CCB89BC80E7BCAB7BADF93FE /* CardStackPresenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardStackPresenter.swift; sourceTree = "<group>"; };
@@ -12711,6 +12713,7 @@
 			isa = PBXGroup;
 			children = (
 				17A1A3A542ACA5D9756748A9 /* AccountRouterRoutesTests.swift */,
+				CC6E54FB7B70FB6B46E15D65 /* ActivityRoutesTests.swift */,
 				B17F0D52EA9E824F21FB3E70 /* BillingRoutesTests.swift */,
 				43B46E9D1790AD5B756945E3 /* SessionFeatureRoutesTests.swift */,
 				C11312A4231DCCC0FF0C25B1 /* StorageRoutesTests.swift */,
@@ -25732,6 +25735,7 @@
 				35B8E9A30FE7E2D4B52B1AA4 /* AccountRouterTestSupport.swift in Sources */,
 				E39D1FD8EA2426AC1FE1F77B /* AccountRoutingPlannerTests.swift in Sources */,
 				6C6D2570F140B3DC3C82E711 /* ActivityPersistenceSQLTests.swift in Sources */,
+				45FDCB7F1A7938DEC1BCBAAB /* ActivityRoutesTests.swift in Sources */,
 				C8C53C8ED04BFAAC092AC9E5 /* AgentIdBackfillTaskTests.swift in Sources */,
 				DF6BE82686656D315DCEA1B1 /* AppStorageLocationTests.swift in Sources */,
 				4236436E10FD9F89165C3928 /* BillingAppSpanTests.swift in Sources */,
