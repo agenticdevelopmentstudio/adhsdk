@@ -39,6 +39,7 @@ public struct StenographerInstance: Sendable, Equatable {
         case invalidPort(Int)
         case overlapsInstalledState(dataRoot: String, protected: String)
         case overlapsAnotherInstance(dataRoot: String, instance: String, otherRoot: String)
+        case portTakenByAnotherInstance(port: Int, instance: String)
         case socketPathTooLong(path: String, limit: Int)
 
         public var description: String {
@@ -63,6 +64,8 @@ public struct StenographerInstance: Sendable, Equatable {
                 return "instance dataRoot '\(root)' overlaps \(protected), which the installed Stenographer owns"
             case .overlapsAnotherInstance(let root, let instance, let otherRoot):
                 return "instance dataRoot '\(root)' overlaps instance '\(instance)''s dataRoot '\(otherRoot)'"
+            case .portTakenByAnotherInstance(let port, let instance):
+                return "instance httpPort \(port) is already instance '\(instance)''s httpPort"
             case .socketPathTooLong(let path, let limit):
                 return "instance socket path \(path) is \(path.utf8.count) bytes; the limit is under \(limit)"
             }
@@ -139,7 +142,9 @@ public struct StenographerInstance: Sendable, Equatable {
     /// The rules a definition must satisfy. `scripts/stenographer_instance.py`
     /// (`check_definition`) enforces the same ones when it writes a definition,
     /// and `tests/fixtures/instance_definition_cases.json` holds the cases both
-    /// sides are tested against.
+    /// sides are tested against. A port another readable definition already
+    /// declares is refused here (`portTakenByAnotherInstance`), so a named
+    /// instance's port is its own, as the type promises.
     public static func validate(_ definition: Definition, fileName: String, home: URL) throws {
         guard definition.name == fileName else {
             throw ResolutionError.nameMismatch(file: fileName, declared: definition.name)
@@ -157,12 +162,16 @@ public struct StenographerInstance: Sendable, Equatable {
             }
         }
         // Each instance's lock is keyed on its own label, so nothing else stops
-        // two definitions that share a data root from running on one set of databases.
+        // two definitions that share a data root from running on one set of databases,
+        // or two that share a port from one answering the other's clients.
         for other in otherDefinitions(excluding: definition.name, home: home) {
             let otherRoot = canonicalComponents(other.dataRoot)
             if root.starts(with: otherRoot) || otherRoot.starts(with: root) {
                 throw ResolutionError.overlapsAnotherInstance(
                     dataRoot: definition.dataRoot, instance: other.name, otherRoot: other.dataRoot)
+            }
+            if other.httpPort == definition.httpPort {
+                throw ResolutionError.portTakenByAnotherInstance(port: definition.httpPort, instance: other.name)
             }
         }
         let socket = URL(fileURLWithPath: definition.dataRoot, isDirectory: true)
