@@ -1028,6 +1028,8 @@ export const HUB_EXTRA_FEATURE_SEGMENTS = [
   // switch into) — kept lockstep with FEATURE_META by the reverse-lockstep test (#9).
   'applications', 'invitations', 'signin-apps', 'feature-flags',
   'server-bags', 'sync', 'llm-providers',
+  // Product roles (phase 5): a product knob, a row on the product rail and only a route here.
+  'roles',
   // Email Signup: a bespoke rail route (audience.* lists/templates/campaigns), no
   // distinct registry site of its own — same lockstep as the row above.
   'email-signup',

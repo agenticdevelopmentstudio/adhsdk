@@ -93,6 +93,7 @@ export const SITE_ROUTES_HUB: Partial<Record<SiteId, readonly string[]>> = {
     '/[workspace]/registries/[[...path]]',
     '/[workspace]/registry/[[...path]]',
     '/[workspace]/research/[[...path]]',
+    '/[workspace]/roles/[[...path]]',
     '/[workspace]/server-bags/[[...path]]',
     '/[workspace]/settings/[[...path]]',
     '/[workspace]/shipr/[[...path]]',
