@@ -5,16 +5,17 @@ import Foundation
 import GRDB
 import OSLog
 
-/// The session-event schema every session daemon shares: migrations 001-045, the
-/// tables behind hook events, sessions, transcripts, settings and the daily
-/// rollup. A daemon passes `SessionSchema.migrations` (then appends its own,
+/// The session-event schema every session daemon shares: migrations 001-045 and
+/// 1001-1007, the tables behind hook events, sessions, transcripts, settings, the
+/// daily rollup, billing (1002, 1003), app activity (1004), the account router's
+/// exchange log (1005, 1006) and the Usage summary tables (1007). A daemon passes `SessionSchema.migrations` (then appends its own,
 /// numbered 46-1000) and `SessionSchema.postMigration` to ``DaemonDatabase``.
 ///
 /// Moved verbatim from Stenographer's `DatabaseManager`: the bodies are unchanged
 /// apart from reaching the database through the `db` parameter.
 public enum SessionSchema {
 
-    /// Every shared migration, in the order it runs. 1-45 and 1001 exist now; a new shared one is
+    /// Every shared migration, in the order it runs. 1-45 and 1001-1007 exist now; a new shared one is
     /// numbered after the highest above 1000 (never 46-1000, which are each daemon's own), then added
     /// here. A daemon's database runs every version it has not recorded, so a shared step
     /// added later runs on databases that already applied the daemon's own. Never renumber.
@@ -64,7 +65,16 @@ public enum SessionSchema {
         DaemonMigration(version: 43, run: migration043),
         DaemonMigration(version: 44, run: migration044),
         DaemonMigration(version: 45, run: migration045),
-        DaemonMigration(version: 1001, run: migration1001)
+        DaemonMigration(version: 1001, run: migration1001),
+        // 1002-1007 were Stenographer's own 046-051, made shared when its
+        // features moved into the toolkit. Each is idempotent, so a database
+        // that already ran the 04x original runs the 100x copy as a no-op.
+        DaemonMigration(version: 1002, run: DaemonDatabase.migration1002),
+        DaemonMigration(version: 1003, run: DaemonDatabase.migration1003),
+        DaemonMigration(version: 1004, run: DaemonDatabase.migration1004),
+        DaemonMigration(version: 1005, run: DaemonDatabase.migration1005),
+        DaemonMigration(version: 1006, run: DaemonDatabase.migration1006),
+        DaemonMigration(version: 1007, run: { try $0.migration1007() })
     ]
 
     /// Ensure steps run after every migration pass, outside the version gate (see
@@ -73,8 +83,28 @@ public enum SessionSchema {
     /// CHECK-widening (now migration027), which permanently skips the real
     /// migration026 above — including the guarded self-heal inside it. Cheap
     /// (one PRAGMA table_info per launch) and idempotent.
+    ///
+    /// The feature ensures (billing, rate limits, the Usage summary tables, the
+    /// event-history setting) keep the order Stenographer ran them in: billing's
+    /// column self-heals and indexes between the head and the tail, the rest after.
     public static let postMigration: [@Sendable (DaemonDatabase) throws -> Void] =
-        postMigrationHead + postMigrationTail
+        postMigrationHead + featureEnsuresHead + postMigrationTail + featureEnsuresTail
+
+    /// The feature ensures that run between ``postMigrationHead`` and ``postMigrationTail``.
+    static let featureEnsuresHead: [@Sendable (DaemonDatabase) throws -> Void] = [
+        DaemonDatabase.ensureBillingEntryDescriptionEditedColumn,
+        DaemonDatabase.ensureBillingEntryBilledRangesColumn,
+        DaemonDatabase.ensureBillingIndexes,
+        DaemonDatabase.ensureRateLimitSnapshotAccountIdIndex
+    ]
+
+    /// The feature ensures that run after ``postMigrationTail``.
+    static let featureEnsuresTail: [@Sendable (DaemonDatabase) throws -> Void] = [
+        DaemonDatabase.ensureBillingDerivationPendingIndex,
+        DaemonDatabase.ensureBillingEntryLockedTriggers,
+        DaemonDatabase.ensureUsageSummaryTables,
+        StorageSettings.ensureEventHistoryDays
+    ]
 
     /// The first shared ensures. A daemon with its own ensures that belong between
     /// the shared ones composes `head + its own + tail` to keep a fixed order.
