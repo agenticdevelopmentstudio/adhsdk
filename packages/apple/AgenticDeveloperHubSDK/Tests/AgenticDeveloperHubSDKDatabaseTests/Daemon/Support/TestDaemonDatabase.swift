@@ -51,6 +51,26 @@ enum TestDaemonDatabase {
         }
     }
 
+    /// Opens a session database at `path` as a session daemon does: the shared
+    /// schema plus the feature hooks (``DaemonDatabase/sessionStatusLineIngest``,
+    /// ``DaemonDatabase/sessionUpsertHook``). The feature tests' stand-in for
+    /// Stenographer's `DatabaseManager(path:)`; the caller owns the path.
+    static func openFeatureDatabase(
+        path: String,
+        accountResolver: AccountResolver = AccountResolver(),
+        deferMigrations: Bool = false
+    ) throws -> DaemonDatabase {
+        try DaemonDatabase(
+            path: path,
+            accountResolver: accountResolver,
+            deferMigrations: deferMigrations,
+            migrations: SessionSchema.migrations,
+            postMigration: SessionSchema.postMigration,
+            statusLineIngest: DaemonDatabase.sessionStatusLineIngest,
+            sessionUpsertHook: DaemonDatabase.sessionUpsertHook
+        )
+    }
+
     /// Removes the database file and its WAL siblings, and the directory
     /// `uniquePath` made for it.
     static func remove(path: String) {
