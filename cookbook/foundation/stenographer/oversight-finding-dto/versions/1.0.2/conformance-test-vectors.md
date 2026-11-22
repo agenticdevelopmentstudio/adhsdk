@@ -1,0 +1,16 @@
+
+| ID | Requirements | Input | Expected |
+|----|-------------|-------|----------|
+| oversight-finding-dto-001 | field-set, init-all-fields | Construct with id 1, sessionId `abcdefgh-1234-5678`, observer `context`, kind `compact`, severity 88, status `pending`, source `rule`, model empty, reason `Context 88% used`, detail empty, createdAt and updatedAt `2026-01-01T00:00:00Z` | Every field reads back as given (provenance: `OversightFindingsListSourceTests` `testCellsMapsShortSessionAndKeepsFields` constructs this value) |
+| oversight-finding-dto-002 | model-empty-for-rule, detail-opaque | Construct a rule finding with model `""` and detail `""` | Both fields are the empty string; nothing substitutes a placeholder |
+| oversight-finding-dto-003 | severity-hint, decode-lenient-values | Construct with severity 0 and every string field empty | severity stays 0 and no field is rejected; every string field holds the empty string (provenance: `testCellsUsesDashForEmptyFields`) |
+| oversight-finding-dto-004 | severity-hint | Construct with severity 250 | severity is 250; the type does not clamp |
+| oversight-finding-dto-005 | wire-spelling | Encode a finding with the wire encoder | The JSON object has the keys `id`, `session_id`, `observer`, `kind`, `severity`, `status`, `source`, `model`, `reason`, `detail`, `created_at`, `updated_at` |
+| oversight-finding-dto-006 | wire-spelling, equality-all-fields | Encode then decode a finding with the wire encoder and decoder | The decoded value equals the original |
+| oversight-finding-dto-007 | decode-strict | Decode the body `{"id":7,"session_id":"s","observer":"compact","kind":"k","severity":1,"status":"acted","reason":"r","created_at":"2026-10-12T00:00:00Z"}` (the body in StenographerHTTPClientTests `testActOnFindingSuccess`) | Decoding throws because `model`, `detail` and `updated_at` are absent (provenance: the HTTP client's `try?` then yields no finding; that fallback is the client's behavior, not the DTO's). Known test gap: because this fixture cannot decode, `testActOnFindingSuccess` never covers an act reply that decodes into a finding; vector 012 covers that case |
+| oversight-finding-dto-008 | decode-lenient-values, status-lifecycle | Decode a full body with status `reopened` and source `human` | Decoding succeeds and the strings are kept as given |
+| oversight-finding-dto-009 | equality-all-fields | Two findings identical except status `pending` versus `acted` | They are not equal |
+| oversight-finding-dto-010 | timestamps-opaque | Decode a body with created_at `2026-11-14 09:30:00` (the SQLite `datetime` form the daemon column holds) | The string is kept verbatim; no date parsing occurs |
+| oversight-finding-dto-011 | decode-strict | Decode a full body that has all twelve keys except `"model": null` | Decoding throws; JSON `null` is not accepted for a string key |
+| oversight-finding-dto-012 | decode-strict, wire-spelling | Decode a full act reply with all twelve snake_case keys present (for example `{"id":7,"session_id":"s","observer":"compact","kind":"k","severity":1,"status":"acted","source":"rule","model":"","reason":"r","detail":"","created_at":"2026-10-12T00:00:00Z","updated_at":"2026-10-12T00:00:00Z"}`) | Decoding succeeds and each field holds the given value |
+

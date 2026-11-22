@@ -3,7 +3,8 @@ import Foundation
 /// Which Stenographer this process belongs to.
 ///
 /// The **default** instance is the one a person installs. It is unnamed and
-/// resolves every value exactly as Stenographer always has. A **named**
+/// resolves every value exactly as Stenographer always has, except that it
+/// has no HTTP port: the retired stenographerd served it. A **named**
 /// instance (`dev-trimming`) is a development copy that runs beside the
 /// installed one. It has its own data root, label, Mach service, port, socket
 /// and drop directory, and it never touches what the installed copy owns (see
@@ -73,10 +74,6 @@ public struct StenographerInstance: Sendable, Equatable {
     }
 
     public static let baseLabel = "com.agenticdevelopmentstudio.stenographer"
-    /// The retired stenographerd's loopback port, which the default instance
-    /// still reports as its `httpPort`. Nothing listens there once adhd serves
-    /// Stenographer, so it is not reserved: a named instance may take it.
-    public static let defaultHTTPPort = 22847
     /// Ports a named instance may never take: the installed account router's,
     /// and the retired Kitchen daemon adkd's (22849), which a Kitchen older
     /// than the apps suite's Phase 3 may still be running.
@@ -104,7 +101,11 @@ public struct StenographerInstance: Sendable, Equatable {
     public var isDefault: Bool { definition == nil }
     public var name: String? { definition?.name }
     public var label: String { definition.map { "\(Self.baseLabel).\($0.name)" } ?? Self.baseLabel }
-    public var httpPort: Int { definition?.httpPort ?? Self.defaultHTTPPort }
+    /// A named instance's declared port; nil for the default instance. The
+    /// default instance's port was the retired stenographerd's 22847, and
+    /// nothing in the default instance listens on or connects to it once adhd
+    /// serves Stenographer, so a named instance may take 22847.
+    public var httpPort: Int? { definition?.httpPort }
     public var dataRoot: URL? { definition.map { URL(fileURLWithPath: $0.dataRoot, isDirectory: true) } }
 
     public static func definitionsDirectory(home: URL) -> URL {

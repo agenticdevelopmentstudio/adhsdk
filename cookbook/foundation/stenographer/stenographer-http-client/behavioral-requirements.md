@@ -1,6 +1,6 @@
 
-- **default-base-url**: `StenographerHTTPClient.defaultBaseURL` MUST be the URL parsed from the `STENOGRAPHER_URL` environment variable when it is set and parses as a URL, and otherwise `StenographerIdentifiers.httpBaseURL` (`http://127.0.0.1:22847`).
-- **init-parameters**: `init(baseURL:session:healthPollInterval:)` MUST default `baseURL` to `defaultBaseURL`, `session` to `URLSession.shared` and `healthPollInterval` to 30 seconds.
+- **default-base-url**: The client MUST have no default base URL and MUST send every request to the `baseURL` its caller passed: the retired stenographerd's `http://127.0.0.1:22847` is no address to assume, and adhd serves Stenographer.
+- **init-parameters**: `init(baseURL:session:healthPollInterval:)` MUST require `baseURL`, and default `session` to `URLSession.shared` and `healthPollInterval` to 30 seconds.
 - **wire-coding**: The client MUST encode request bodies and decode replies with `StenographerWire.encoder()` and `StenographerWire.decoder()`.
 - **nil-on-failure**: Every read that returns an optional MUST return `nil` when the connection fails, when the status is outside 200 to 299, or when the body does not decode as the expected type.
 - **false-on-failure**: Every write that returns `Bool` MUST return `false` when the connection fails, when the body cannot be encoded, or (for the writes that read a status or a reply) when the status is outside 200 to 299 or the reply does not decode.

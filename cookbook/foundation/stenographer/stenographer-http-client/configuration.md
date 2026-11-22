@@ -1,8 +1,7 @@
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `STENOGRAPHER_URL` | environment variable | unset | Overrides the default base URL when it parses as a URL. |
-| `baseURL` | `URL` | `defaultBaseURL` | Daemon address; the default is `StenographerIdentifiers.httpBaseURL`. |
+| `baseURL` | `URL` | none (required) | Daemon address. There is no default: the retired stenographerd's `22847` is not assumed. |
 | `session` | `URLSession` | `.shared` | Injected for tests with a stub protocol. |
 | `healthPollInterval` | `TimeInterval` | 30 | Seconds between health polls once `onReconnect` has been called. |
 

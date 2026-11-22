@@ -4,7 +4,7 @@
 - **definition-fields**: `Definition` MUST carry exactly three fields, `name` (string), `dataRoot` (string) and `httpPort` (integer), and MUST decode from and encode to a JSON object with the keys `name`, `dataRoot` and `httpPort`.
 - **definition-unknown-keys**: Decoding a definition MUST ignore JSON keys other than the three fields.
 - **default-has-no-definition**: `StenographerInstance.default` MUST hold no definition, and `isDefault` MUST be true exactly when the definition is absent.
-- **default-values**: The default instance MUST report `name` as absent, `label` as `com.agenticdevelopmentstudio.stenographer`, `httpPort` as `22847` and `dataRoot` as absent.
+- **default-values**: The default instance MUST report `name` as absent, `label` as `com.agenticdevelopmentstudio.stenographer`, `httpPort` as absent and `dataRoot` as absent.
 - **named-label**: A named instance's `label` MUST be the base label, a dot and the instance name (`com.agenticdevelopmentstudio.stenographer.<name>`).
 - **named-port**: A named instance's `httpPort` MUST be the definition's `httpPort`.
 - **named-data-root**: A named instance's `dataRoot` MUST be a directory URL for the definition's `dataRoot` string.
@@ -14,7 +14,7 @@
 ### Constants
 
 - **base-label**: `baseLabel` MUST be `com.agenticdevelopmentstudio.stenographer`.
-- **default-port**: `defaultHTTPPort` MUST be `22847`.
+- **default-port**: The type MUST NOT declare a default HTTP port: the default instance's was the retired stenographerd's `22847`, and nothing in the default instance listens on it or connects to it.
 - **reserved-ports**: `reservedHTTPPorts` MUST be the set {22848, 22849}: the installed account router's port (`StenographerIdentifiers.routerPort`) and the retired Kitchen daemon adkd's port. The retired stenographerd's 22847 is not reserved: nothing listens there once adhd serves Stenographer.
 - **reserved-names**: `reservedNames` MUST be the set {`usagewidget`, `instances`, `daemon`}: the usage widget's bundle id suffix, the definitions directory's suffix and the installed daemon's launch-throttle identifier suffix.
 - **selection-keys**: The environment key MUST be `STENOGRAPHER_INSTANCE` and the argument flag MUST be `-instance`.

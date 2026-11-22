@@ -2,11 +2,11 @@
 id: 7d2280c6-ae67-4ecc-9aae-dbee574b1eab
 title: "Oversight Finding DTO"
 type: ingredient
-version: 1.0.2
+version: 1.0.3
 status: review
 language: en
 created: 2026-11-14
-modified: 2026-11-14
+modified: 2026-11-22
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -135,7 +135,7 @@ Not applicable: this code emits no analytics events.
 
 - **Data collected**: `sessionId`, `reason` and `detail` describe a user's live coding session and may name projects or contain structured context.
 - **Storage**: The type stores nothing; the daemon persists findings in its own database.
-- **Transmission**: Over XPC to the app and over HTTP on the daemon's loopback address (`http://127.0.0.1:22847` by default) to the CLI and app.
+- **Transmission**: Over XPC to the app and over HTTP on the session daemon's (adhd's) loopback API to the CLI and app; the retired stenographerd's `22847` is not used.
 - **Retention**: Not set by this type; the daemon's findings table owns it.
 
 ## Logging
@@ -187,5 +187,6 @@ separation-of-concerns passes: the file declares the value and nothing else; sto
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.3 | 2026-11-22 | Mike Fullerton | Privacy no longer names the retired stenographerd port 22847 (review f1). |
 | 1.0.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (OversightFindingDTOConformanceTests.swift, 12 of 12 vectors); unit-test-coverage now passed. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Producer-only rules restated as daemon obligations, delivery routes moved to a link to the daemon spec, vectors 011 (null key) and 012 (full act reply) added, stale DatabaseManager decision and source path dropped, depends-on and related linked. |

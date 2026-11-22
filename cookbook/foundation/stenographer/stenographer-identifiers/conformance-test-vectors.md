@@ -3,7 +3,7 @@ The source has no test file of its own; every vector is derived from the source.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
-| stenographer-identifiers-001 | http-port | `httpPort`, `httpBaseURL` | `22847` and `http://127.0.0.1:22847`. |
+| stenographer-identifiers-001 | http-port | The type's members. | No `httpPort` or `httpBaseURL`; only the router's `routerPort` and `routerBaseURL` name a port. |
 | stenographer-identifiers-002 | router-port | `routerPort`, `routerBaseURL` | `22848` and `http://127.0.0.1:22848`, different from the HTTP port. |
 | stenographer-identifiers-003 | label-value, keychain-service-values | The label and keychain constants. | `com.agenticdevelopmentstudio.stenographer`; `daemonKeychainService` `com.agenticdevelopmentstudio.stenographer.daemon`; legacy daemon service `com.agentic-cookbook.stenographer.daemon`. |
 | stenographer-identifiers-004 | subsystem-suffix | `subsystem("db")` and `subsystem("")` | `com.agenticdevelopmentstudio.stenographer.db` and the label followed by a trailing dot. |

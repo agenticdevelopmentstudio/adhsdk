@@ -27,7 +27,7 @@ final class StenographerHTTPClientTests: XCTestCase {
         let config = URLSessionConfiguration.ephemeral
         config.protocolClasses = [StubDaemonProtocol.self]
         return StenographerHTTPClient(
-            baseURL: URL(string: "http://127.0.0.1:22847")!,
+            baseURL: URL(string: "http://127.0.0.1:22950")!,
             session: URLSession(configuration: config),
             healthPollInterval: healthPollInterval)
     }
@@ -246,16 +246,21 @@ final class StenographerHTTPClientTests: XCTestCase {
         XCTAssertEqual(count.value, 0)
     }
 
-    func testV17_defaultBaseURLHonoursEnvironment() {
-        let key = "STENOGRAPHER_URL"
-        let previous = ProcessInfo.processInfo.environment[key]
-        defer {
-            if let previous { setenv(key, previous, 1) } else { unsetenv(key) }
+    /// The retired stenographerd's 22847 is no default: every request goes to
+    /// the base URL the caller named, and nothing else.
+    func testV17_requestsGoToTheNamedBaseURL() async {
+        let captured = Captured()
+        StubDaemonProtocol.handler = { request in
+            captured.set(request.url!)
+            return (200, Data("{}".utf8))
         }
-        setenv(key, "http://localhost:9999", 1)
-        XCTAssertEqual(StenographerHTTPClient.defaultBaseURL.absoluteString, "http://localhost:9999")
-        unsetenv(key)
-        XCTAssertEqual(StenographerHTTPClient.defaultBaseURL.absoluteString, "http://127.0.0.1:22847")
+        let config = URLSessionConfiguration.ephemeral
+        config.protocolClasses = [StubDaemonProtocol.self]
+        let client = StenographerHTTPClient(
+            baseURL: URL(string: "http://localhost:9999")!,
+            session: URLSession(configuration: config), healthPollInterval: 3600)
+        _ = await client.health()
+        XCTAssertEqual(captured.url?.absoluteString, "http://localhost:9999/health")
     }
 
     func testV18_baseURLPathIsReplacedAndNoQueryWhenCountsIncluded() async {
@@ -267,10 +272,10 @@ final class StenographerHTTPClientTests: XCTestCase {
         let config = URLSessionConfiguration.ephemeral
         config.protocolClasses = [StubDaemonProtocol.self]
         let client = StenographerHTTPClient(
-            baseURL: URL(string: "http://127.0.0.1:22847/ignored")!,
+            baseURL: URL(string: "http://127.0.0.1:22950/ignored")!,
             session: URLSession(configuration: config), healthPollInterval: 3600)
         _ = await client.session(id: "s1", includeCounts: true)
-        XCTAssertEqual(captured.url?.absoluteString, "http://127.0.0.1:22847/sessions/s1")
+        XCTAssertEqual(captured.url?.absoluteString, "http://127.0.0.1:22950/sessions/s1")
     }
 
     func testV19_contentTypeOnlyWhenThereIsABody() async {

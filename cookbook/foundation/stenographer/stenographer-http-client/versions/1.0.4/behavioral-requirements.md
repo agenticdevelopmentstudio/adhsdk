@@ -1,0 +1,44 @@
+
+- **default-base-url**: `StenographerHTTPClient.defaultBaseURL` MUST be the URL parsed from the `STENOGRAPHER_URL` environment variable when it is set and parses as a URL, and otherwise `StenographerIdentifiers.httpBaseURL` (`http://127.0.0.1:22847`).
+- **init-parameters**: `init(baseURL:session:healthPollInterval:)` MUST default `baseURL` to `defaultBaseURL`, `session` to `URLSession.shared` and `healthPollInterval` to 30 seconds.
+- **wire-coding**: The client MUST encode request bodies and decode replies with `StenographerWire.encoder()` and `StenographerWire.decoder()`.
+- **nil-on-failure**: Every read that returns an optional MUST return `nil` when the connection fails, when the status is outside 200 to 299, or when the body does not decode as the expected type.
+- **false-on-failure**: Every write that returns `Bool` MUST return `false` when the connection fails, when the body cannot be encoded, or (for the writes that read a status or a reply) when the status is outside 200 to 299 or the reply does not decode.
+- **health-route**: `health()` MUST send `GET /health` and return a decoded `HealthDTO`.
+- **sessions-query**: `sessions(status:project:sinceHours:includeCounts:)` MUST send `GET /sessions` with `status` only when non-nil, `project` only when non-nil, `since_hours` only when `sinceHours` is greater than 0, and `counts=false` only when `includeCounts` is false.
+- **session-detail**: `session(id:includeCounts:)` MUST send `GET /sessions/<id>`, adding `counts=false` when `includeCounts` is false, and return the `session` of the decoded `SessionDetailDTO` wrapped in `.some`.
+- **session-not-found**: `session(id:includeCounts:)` MUST return `.some(nil)` (the inner value nil) for a 404 reply, and the outer `nil` for an unreachable daemon, a non-2xx status other than 404, or an undecodable body.
+- **summarize-route**: `summarize(sessionId:)` MUST send `POST /sessions/<id>/summarize` with an empty body.
+- **summarize-transport-error**: `summarize(sessionId:)` MUST throw `URLError(.cannotConnectToHost)` when the request produces no reply.
+- **summarize-daemon-failure**: `summarize(sessionId:)` MUST throw `SummarizeDaemonFailure` for a status outside 200 to 299, with `reason` set to the `error` field of the reply body, or `HTTP <status>` when the body has no such field.
+- **conversations-query**: `conversations(limit:includeWorkOutput:before:sessionId:)` MUST send `GET /conversations` with `limit` always, `work=true` only when `includeWorkOutput` is true, `before` only when non-nil and `session_id` only when non-nil.
+- **oversight-findings-query**: `oversightFindings(status:)` MUST send `GET /oversight/findings`, adding `status` only when non-nil.
+- **oversight-action-target**: `oversightActionTarget(findingId:)` MUST send `GET /oversight/findings/<findingId>/action`.
+- **act-on-finding-route**: `actOnOversightFinding(findingId:)` MUST send `POST /oversight/findings/<findingId>/act` with an empty body.
+- **act-on-finding-success**: `actOnOversightFinding(findingId:)` MUST return an `OversightActResultDTO` with `succeeded` true, an empty `reason`, and `status` taken from the decoded `OversightFindingDTO` of the reply, or `acted` when that body does not decode, for any 2xx status.
+- **act-on-finding-failure**: `actOnOversightFinding(findingId:)` MUST return an `OversightActResultDTO` with `succeeded` false, an empty `status` and `reason` set to the `error` field of the reply body (or `HTTP <status>`) for a non-2xx status.
+- **act-on-finding-unreachable**: `actOnOversightFinding(findingId:)` MUST return `nil` when the request produces no reply.
+- **oversight-scripts-read**: `oversightScripts()` MUST send `GET /oversight/scripts`.
+- **save-oversight-script**: `saveOversightScript(_:)` MUST send `POST /oversight/scripts/<script.id>` with the script encoded in wire spelling, return `nil` when encoding fails, and otherwise return the decoded reply.
+- **delete-oversight-script**: `deleteOversightScript(id:)` MUST send `POST /oversight/scripts/<id>/delete` with an empty body and return true for any 2xx status (including 204 with no body).
+- **reset-oversight-script**: `resetOversightScript(id:)` MUST send `POST /oversight/scripts/<id>/reset` with an empty body and return the decoded `OversightScript`.
+- **ai-interactions-read**: `aiInteractions(limit:)` MUST send `GET /ai/interactions` with `limit`, and `aiInteraction(id:)` MUST send `GET /ai/interactions/<id>`.
+- **preference-reads**: `aiProviderConfigs()` MUST send `GET /preferences/ai/configs`, `summaryPreferences()` MUST send `GET /preferences/summaries` and `oversightPreferences()` MUST send `GET /preferences/oversight`.
+- **set-preferences-wire**: `setSummaryPreferences(_:)` and `setOversightPreferences(_:)` MUST send `POST /preferences/summaries` and `POST /preferences/oversight` with the request encoded in wire spelling, and return true only when the reply decodes as the matching response type.
+- **set-ai-preferences-plain-encoder**: `setAIPreferences(_:)` MUST encode the `AIProviderConfigSync` with a default `JSONEncoder`, so its keys stay camelCase, because `POST /preferences/ai` decodes the registry with a default `JSONDecoder`.
+- **set-ai-preferences-status**: `setAIPreferences(_:)` MUST return true for any 2xx status regardless of the reply body, and false for a non-2xx status or no reply.
+- **url-construction**: Every request MUST be built by replacing the path of `baseURL` with the route path and setting the query items only when the list is non-empty; a URL that cannot be formed MUST read as an unreachable daemon.
+- **json-content-type**: A request that carries a body (including the empty body of the action routes) MUST set `Content-Type: application/json`, and a request without a body MUST NOT set it.
+- **timeouts**: `timeout(method:path:)` MUST return 605 seconds for a `POST` whose path ends in `/summarize`, 15 seconds for a `GET` of `/conversations`, `/ai/interactions` or a path starting `/ai/interactions/`, and 10 seconds for every other request.
+- **error-body-format**: The failure reason MUST be read from a reply body shaped `{"error": "..."}`, the body DaemonKit's `HTTPResponse.error` produces; any other body yields no reason.
+- **reconnect-registration**: `onReconnect(_:)` MUST append the handler to the registered list and start the health poll only when no poll is running.
+- **reconnect-detection**: Each poll MUST call `health()`, record the returned `uptime`, and call every registered handler once when the new `uptime` is lower than the previously recorded one.
+- **reconnect-first-poll**: The first successful poll MUST NOT call any handler, because there is no earlier `uptime` to compare with.
+- **reconnect-failed-poll**: A poll whose `health()` returns `nil` MUST NOT change the recorded `uptime` and MUST NOT call any handler.
+- **reconnect-interval**: The poll MUST run immediately when started and then wait `healthPollInterval` seconds between polls until the task is cancelled or the client is released.
+- **reconnect-lifetime**: The poll task MUST hold the client weakly and stop when the client is released, and `deinit` MUST cancel the stored task.
+- **handlers-outside-lock**: Handlers MUST be called after the lock is released, so a handler may call back into the client.
+- **reconnect-start-race**: NEEDS REVIEW: Not implemented in source. `onReconnect` decides under the lock whether to start a poll and stores `healthTask` under a second, separate acquisition, so two concurrent first registrations can each see no running poll and each start one, leaving one task unreferenced by `healthTask`; evidence that would settle it is a decision on whether the second registration must wait for the first task to be stored, plus a concurrent-registration test.
+- **sendability**: The class is declared `@unchecked Sendable`; the handler list, the last recorded `uptime` and the task reference MUST only be read or written while holding the `NSLock`. The decision to start a poll and the store of `healthTask` are two separate acquisitions, which is the gap described in `reconnect-start-race`.
+- **no-retry**: The client MUST NOT retry a failed request, and MUST NOT send an idempotency key; each call sends exactly one request, and the daemon's reply surfaces unchanged.
+

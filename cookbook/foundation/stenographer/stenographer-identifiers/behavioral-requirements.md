@@ -4,7 +4,7 @@
 - **subsystem-is-label**: `StenographerIdentifiers.subsystem` MUST equal `label`.
 - **subsystem-suffix**: `subsystem(_:)` MUST return the label, a dot and the given suffix, with no escaping or validation of the suffix.
 - **keychain-service-values**: `keychainService` MUST equal `label`, `daemonKeychainService` MUST be the label followed by `.daemon`, and `legacyDaemonKeychainService` MUST be `com.agentic-cookbook.stenographer.daemon`.
-- **http-port**: `httpPort` MUST be `22847`, and `httpBaseURL` MUST be `http://127.0.0.1:` followed by `httpPort`.
+- **http-port**: The type MUST NOT spell a daemon HTTP port or base URL: the retired stenographerd's `22847` went with it, and adhd serves Stenographer.
 - **router-port**: `routerPort` MUST be `22848` and `routerBaseURL` MUST be `http://127.0.0.1:` followed by `routerPort`; it is where `ANTHROPIC_BASE_URL` points when account routing is used and MUST NOT be the same listener as `httpPort`.
 - **file-names**: `StenographerPaths.databaseFileName` MUST be `stenographer.db`, `launchdStdoutLogName` MUST be `stdout.log` and `launchdStderrLogName` MUST be `stderr.log`.
 - **home-injection**: `StenographerPaths.init(home:exists:)` MUST default `home` to the current user's home directory and `exists` to a file-system check of the URL's path, and every path property MUST be derived from them.

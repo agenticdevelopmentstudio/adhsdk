@@ -1,10 +1,13 @@
 import Foundation
 
-/// Everything the moved windows ask stenographerd for, as one injectable seam.
+/// Everything the moved windows ask the session daemon (adhd) for, as one
+/// injectable seam.
 ///
 /// Reads answer nil when the daemon cannot be reached (callers keep what is on
 /// screen); writes answer `false`/nil the same way. The production
-/// implementation is ``StenographerHTTPClient``; tests hand the windows a stub.
+/// implementation is adhd's `DaemonStenographerService`; ``StenographerHTTPClient``
+/// speaks the same routes over HTTP to a named base URL; tests hand the
+/// windows a stub.
 public protocol StenographerDaemonService: Sendable {
     func health() async -> HealthDTO?
 

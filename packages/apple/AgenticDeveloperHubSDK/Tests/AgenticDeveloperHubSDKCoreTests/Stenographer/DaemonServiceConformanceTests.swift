@@ -55,7 +55,7 @@ final class DaemonServiceConformanceTests: XCTestCase {
         let config = URLSessionConfiguration.ephemeral
         config.protocolClasses = [StubDaemonProtocol.self]
         return StenographerHTTPClient(
-            baseURL: URL(string: "http://127.0.0.1:22847")!,
+            baseURL: URL(string: "http://127.0.0.1:22950")!,
             session: URLSession(configuration: config),
             healthPollInterval: 3600)
     }
@@ -109,7 +109,7 @@ final class DaemonServiceConformanceTests: XCTestCase {
         let config = URLSessionConfiguration.ephemeral
         config.protocolClasses = [TimedOutDaemonProtocol.self]
         let client = StenographerHTTPClient(
-            baseURL: URL(string: "http://127.0.0.1:22847")!, session: URLSession(configuration: config))
+            baseURL: URL(string: "http://127.0.0.1:22950")!, session: URLSession(configuration: config))
         do {
             try await client.summarize(sessionId: "s1")
             XCTFail("expected a throw")

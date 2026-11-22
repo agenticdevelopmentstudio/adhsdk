@@ -2,11 +2,11 @@
 id: b6d96b0b-3ca0-48ac-8e94-a25a8ee68e43
 title: "Stenographer Identifiers"
 type: ingredient
-version: 1.0.4
+version: 2.0.0
 status: review
 language: en
 created: 2026-11-14
-modified: 2026-11-21
+modified: 2026-11-22
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -43,7 +43,7 @@ Stenographer 1.0.173 renamed the product's identifiers. The `legacy*` values are
 - **subsystem-is-label**: `StenographerIdentifiers.subsystem` MUST equal `label`.
 - **subsystem-suffix**: `subsystem(_:)` MUST return the label, a dot and the given suffix, with no escaping or validation of the suffix.
 - **keychain-service-values**: `keychainService` MUST equal `label`, `daemonKeychainService` MUST be the label followed by `.daemon`, and `legacyDaemonKeychainService` MUST be `com.agentic-cookbook.stenographer.daemon`.
-- **http-port**: `httpPort` MUST be `22847`, and `httpBaseURL` MUST be `http://127.0.0.1:` followed by `httpPort`.
+- **http-port**: The type MUST NOT spell a daemon HTTP port or base URL: the retired stenographerd's `22847` went with it, and adhd serves Stenographer.
 - **router-port**: `routerPort` MUST be `22848` and `routerBaseURL` MUST be `http://127.0.0.1:` followed by `routerPort`; it is where `ANTHROPIC_BASE_URL` points when account routing is used and MUST NOT be the same listener as `httpPort`.
 - **file-names**: `StenographerPaths.databaseFileName` MUST be `stenographer.db`, `launchdStdoutLogName` MUST be `stdout.log` and `launchdStderrLogName` MUST be `stderr.log`.
 - **home-injection**: `StenographerPaths.init(home:exists:)` MUST default `home` to the current user's home directory and `exists` to a file-system check of the URL's path, and every path property MUST be derived from them.
@@ -80,7 +80,7 @@ The source has no test file of its own; every vector is derived from the source.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
-| stenographer-identifiers-001 | http-port | `httpPort`, `httpBaseURL` | `22847` and `http://127.0.0.1:22847`. |
+| stenographer-identifiers-001 | http-port | The type's members. | No `httpPort` or `httpBaseURL`; only the router's `routerPort` and `routerBaseURL` name a port. |
 | stenographer-identifiers-002 | router-port | `routerPort`, `routerBaseURL` | `22848` and `http://127.0.0.1:22848`, different from the HTTP port. |
 | stenographer-identifiers-003 | label-value, keychain-service-values | The label and keychain constants. | `com.agenticdevelopmentstudio.stenographer`; `daemonKeychainService` `com.agenticdevelopmentstudio.stenographer.daemon`; legacy daemon service `com.agentic-cookbook.stenographer.daemon`. |
 | stenographer-identifiers-004 | subsystem-suffix | `subsystem("db")` and `subsystem("")` | `com.agenticdevelopmentstudio.stenographer.db` and the label followed by a trailing dot. |
@@ -207,7 +207,7 @@ Not applicable: the types call no logging API; `subsystem(_:)` only builds the s
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
-| 1.0.4 | 2026-11-21 | Mike Fullerton | Dropped the retired Kitchen daemon's identifiers (ADKDIdentifiers was deleted). |
+| 2.0.0 | 2026-11-22 | Mike Fullerton | Retired the stenographerd port 22847: no default HTTP port, base URL or client address; a named instance may take 22847 (review f1). |
 | 1.0.3 | 2026-11-14 | Mike Fullerton | Conformance tests added (StenographerIdentifiersConformanceTests.swift, 21 of 21 vectors); unit-test-coverage now passed. |
 | 1.0.2 | 2026-11-14 | Mike Fullerton | Recorded the silent give-up and the logs-directory asymmetry as decisions, cited each decision's source symbol, added eight test vectors and the ADKDIdentifiers link, and named the product version. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Each design decision carries its own approval line |

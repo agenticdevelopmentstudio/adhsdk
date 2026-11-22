@@ -3,8 +3,8 @@ Vectors 041 to 044 are `StenographerInstancePortTests` (`Tests/AgenticDeveloperH
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
-| stenographer-instance-001 | default-has-no-definition, default-values | `StenographerInstance.default` | `isDefault` true; `name` absent; `label` `com.agenticdevelopmentstudio.stenographer`; `httpPort` 22847; `dataRoot` absent. |
-| stenographer-instance-002 | base-label, default-port, reserved-ports, reserved-names, selection-keys, socket-constants | The static constants. | `baseLabel` `com.agenticdevelopmentstudio.stenographer`; `defaultHTTPPort` 22847; `reservedHTTPPorts` {22848, 22849}; `reservedNames` {usagewidget, instances, daemon}; `environmentKey` `STENOGRAPHER_INSTANCE`; `argumentFlag` `-instance`; `socketFileName` `stenographer.sock`; `socketPathLimit` 104. |
+| stenographer-instance-001 | default-has-no-definition, default-values | `StenographerInstance.default` | `isDefault` true; `name` absent; `label` `com.agenticdevelopmentstudio.stenographer`; `httpPort` absent; `dataRoot` absent. |
+| stenographer-instance-002 | base-label, default-port, reserved-ports, reserved-names, selection-keys, socket-constants | The static constants. | `baseLabel` `com.agenticdevelopmentstudio.stenographer`; no `defaultHTTPPort`; `reservedHTTPPorts` {22848, 22849}; `reservedNames` {usagewidget, instances, daemon}; `environmentKey` `STENOGRAPHER_INSTANCE`; `argumentFlag` `-instance`; `socketFileName` `stenographer.sock`; `socketPathLimit` 104. |
 | stenographer-instance-003 | definitions-directory | `definitionsDirectory(home: /h)` | `/h/Library/Application Support/com.agenticdevelopmentstudio.stenographer.instances/`. |
 | stenographer-instance-004 | environment-wins | environment `{STENOGRAPHER_INSTANCE: "dev"}`, arguments `["app", "-instance", "other"]` | `"dev"`. |
 | stenographer-instance-005 | empty-environment-is-default | environment `{STENOGRAPHER_INSTANCE: ""}`, arguments `["app", "-instance", "other"]` | absent. |
