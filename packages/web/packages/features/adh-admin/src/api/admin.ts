@@ -647,6 +647,111 @@ export function useAccessAudit() {
   });
 }
 
+// ── Operator Access ────────────────────────────────────────────────────────
+//
+// Admin-only READ of the operator log via `GET /api/v1/system/operator_access`: one row per
+// operator-mode transaction (migration 0298), newest first, paged by `starting_after`. The gateway
+// pages within the newest 200 rows of each filter set, so an operator after something older
+// narrows by time rather than walking further. The legacy `after` cursor is never sent.
+
+/** One `system.operator_access` row: who acted in operator mode, when, on what request. */
+export interface OperatorAccessEvent {
+  id: string;
+  /** Postgres timestamptz text (`2026-11-21 10:00:00.123+00`), as access-audit's `at`. */
+  at: string;
+  operatorAccountId: string;
+  tokenId: string | null;
+  method: string;
+  path: string;
+  /** The matched route pattern, where the request matched one. */
+  route: string | null;
+  targetEcosystemId: string | null;
+  requestId: string | null;
+  ip: string | null;
+  userAgent: string | null;
+}
+
+/** The server-side filters. Ids are uuids; `from` (inclusive) and `to` (exclusive) are ISO text. */
+export interface OperatorAccessFilters {
+  operatorAccountId?: string;
+  targetEcosystemId?: string;
+  from?: string;
+  to?: string;
+}
+
+type OperatorAccessWire = SuccessBody<"/v1/system/operator_access", "get">["data"][number];
+
+function toOperatorAccessEvent(w: OperatorAccessWire): OperatorAccessEvent {
+  return {
+    id: w.id,
+    at: w.at,
+    operatorAccountId: w.operator_account_id,
+    tokenId: w.token_id ?? null,
+    method: w.method,
+    path: w.path,
+    route: w.route ?? null,
+    targetEcosystemId: w.target_ecosystem_id ?? null,
+    requestId: w.request_id ?? null,
+    ip: w.ip ?? null,
+    userAgent: w.user_agent ?? null,
+  };
+}
+
+/** A filter value, trimmed; blank means "no filter", so it is left off the query entirely. */
+function filterValue(v: string | undefined): string | undefined {
+  const t = v?.trim();
+  return t ? t : undefined;
+}
+
+/** The filters with blanks dropped, in one fixed key order (the query key and the URL agree). */
+export function normalizeOperatorAccessFilters(f: OperatorAccessFilters): OperatorAccessFilters {
+  const out: OperatorAccessFilters = {};
+  const operatorAccountId = filterValue(f.operatorAccountId);
+  const targetEcosystemId = filterValue(f.targetEcosystemId);
+  const from = filterValue(f.from);
+  const to = filterValue(f.to);
+  if (operatorAccountId) out.operatorAccountId = operatorAccountId;
+  if (targetEcosystemId) out.targetEcosystemId = targetEcosystemId;
+  if (from) out.from = from;
+  if (to) out.to = to;
+  return out;
+}
+
+/** The collection URL carrying the filters; `fetchV1WindowPage` adds `limit` and `starting_after`. */
+export function operatorAccessUrl(filters: OperatorAccessFilters = {}): string {
+  const f = normalizeOperatorAccessFilters(filters);
+  return withV1Query("/api/v1/system/operator_access", {
+    operator_account_id: f.operatorAccountId,
+    target_ecosystem_id: f.targetEcosystemId,
+    from: f.from,
+    to: f.to,
+  });
+}
+
+/**
+ * The operator log as a GROWING WINDOW, one per filter set.
+ *
+ * The filters are part of the query key, so changing them starts a fresh window. That is why the
+ * caller passes the APPLIED filters, never a field's live text: `useWindowedList`'s key must not
+ * hold what the operator is still typing, or every keystroke would throw the window away.
+ */
+export function useOperatorAccess(filters: OperatorAccessFilters = {}) {
+  const applied = normalizeOperatorAccessFilters(filters);
+  return useWindowedList<OperatorAccessEvent>({
+    key: ["admin", "operator-access", applied],
+    getRowId: (e) => e.id,
+    pageSize: 100,
+    fetchPage: async (after, pageSize) => {
+      const page = await fetchV1WindowPage<OperatorAccessWire>(
+        operatorAccessUrl(applied),
+        after,
+        pageSize,
+      );
+      return { items: page.items.map(toOperatorAccessEvent), hasMore: page.hasMore };
+    },
+  });
+}
+
 // ── Messaging ────────────────────────────────────────────────────────────
 //
 // Admin messaging routes under `/api/v1/messaging` gated by isAdmin(): `GET /messages` (the
