@@ -1308,6 +1308,7 @@
 		3FA16BFF78C5B08D5FC939F8 /* DaemonPluginConfigTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F447BF71FCE17A72BEB5D77D /* DaemonPluginConfigTests.swift */; };
 		3FA4FBE59E0607E16D32C7B7 /* MarkdownTextTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1ACDF5A10A0DC092E324C007 /* MarkdownTextTests.swift */; };
 		3FA57D014324AD5F8A07FE8B /* PaneTitleBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 161CEE6E13D56744812CABCB /* PaneTitleBarView.swift */; };
+		3FAFEBD5B5D101EA9F9210B5 /* StorageRoutesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C11312A4231DCCC0FF0C25B1 /* StorageRoutesTests.swift */; };
 		3FB5DD105B01FF8375C6E5CC /* ITermColorsParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0278062E6645CE152D764FF5 /* ITermColorsParser.swift */; };
 		3FC0130CE27B2D1B2D0E1695 /* AIPluginKitTestSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = E6D2FFF26A68471CDD46844E /* AIPluginKitTestSupport.swift */; };
 		3FD3EE383A6B15ADF42C8682 /* BrowserWebView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB5175EF251288CE237DD3F0 /* BrowserWebView.swift */; };
@@ -10584,6 +10585,7 @@
 		C103B4FC654FB21F07F59472 /* SqliteStorageProviderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SqliteStorageProviderTests.swift; sourceTree = "<group>"; };
 		C1053F3FE5FC50EE79A19910 /* EmptyProjectWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmptyProjectWindowController.swift; sourceTree = "<group>"; };
 		C10FC63EBD9F38A791465ED5 /* UsageSummaryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UsageSummaryTests.swift; sourceTree = "<group>"; };
+		C11312A4231DCCC0FF0C25B1 /* StorageRoutesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StorageRoutesTests.swift; sourceTree = "<group>"; };
 		C118C2D12E581FCA90F2FEF8 /* ShellQuoting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShellQuoting.swift; sourceTree = "<group>"; };
 		C13A1D20546263F5E99DB04A /* EcosystemsModule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EcosystemsModule.swift; sourceTree = "<group>"; };
 		C15C05C2918C6C18A0B44DA6 /* GitDiffLineModelsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GitDiffLineModelsTests.swift; sourceTree = "<group>"; };
@@ -12711,6 +12713,7 @@
 				17A1A3A542ACA5D9756748A9 /* AccountRouterRoutesTests.swift */,
 				B17F0D52EA9E824F21FB3E70 /* BillingRoutesTests.swift */,
 				43B46E9D1790AD5B756945E3 /* SessionFeatureRoutesTests.swift */,
+				C11312A4231DCCC0FF0C25B1 /* StorageRoutesTests.swift */,
 			);
 			path = Routes;
 			sourceTree = "<group>";
@@ -25827,6 +25830,7 @@
 				890E20E520981B9B8034C3EC /* SessionSchemaTests.swift in Sources */,
 				8E150FF7E08AEB841BFC4776 /* SessionUpsertHookTests.swift in Sources */,
 				8269FD4981F9DE2DD6292ABA /* StatusLineIngestHookTests.swift in Sources */,
+				3FAFEBD5B5D101EA9F9210B5 /* StorageRoutesTests.swift in Sources */,
 				4109A1203B68CB4C5EA8BE3C /* StorageSettingsTests.swift in Sources */,
 				E1AE7509E859FAE2AC92F4AF /* TestDaemonDatabase.swift in Sources */,
 				ACEC9ED8A0963580229B9B12 /* TranscriptTailerTests.swift in Sources */,
