@@ -31,6 +31,9 @@ function shortId(id: string | null): string {
   return id ? id.slice(0, 8) : "";
 }
 
+/** A row's identity, hoisted: `useEditableList` memoizes on it, so an inline arrow rebuilt it per render. */
+const eventId = (e: OperatorAccessEvent): string => e.id;
+
 /** What the filter form holds while the operator edits it. Times are `datetime-local` text. */
 interface FilterDraft {
   operatorAccountId: string;
@@ -174,7 +177,7 @@ export function OperatorAccessPane({
 
   const list = useEditableList<OperatorAccessEvent>({
     rows: log.rows,
-    getRowId: (e) => e.id,
+    getRowId: eventId,
     columns,
     facets,
     initialSort: { key: "at", dir: "desc" },
