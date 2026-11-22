@@ -293,11 +293,48 @@ final class BillingRoutesTests: XCTestCase {
         let key = db.billingSettingsKeys.defaultRateCents
 
         let snapshot = try object(try await post("/billing/preferences", json: "{\"\(key)\":\"15000\"}"))
-        let unchanged = try object(try await post("/billing/preferences", json: "not json"))
+        let unchanged = try object(try await send("POST", "/billing/preferences", body: Data()))
 
         XCTAssertEqual(snapshot["default_rate_cents"] as? Int, 15_000)
         XCTAssertEqual(unchanged["default_rate_cents"] as? Int, 15_000,
-                       "an unreadable body writes nothing and answers what is in force")
+                       "an empty body writes nothing and answers what is in force")
+    }
+
+    /// Numbers and bools are values, not a decode failure that reads as a save.
+    func testPreferencesTakeJSONNumbersAndBools() async throws {
+        let keys = db.billingSettingsKeys
+
+        let reply = try object(try await post(
+            "/billing/preferences",
+            json: "{\"\(keys.roundingMinutes)\":15,\"\(keys.idleCutoffMinutes)\":10,\"\(keys.trackUnassigned)\":false}"
+        ))
+
+        XCTAssertEqual(reply["rounding_minutes"] as? Int, 15)
+        XCTAssertEqual(reply["idle_cutoff_minutes"] as? Int, 10)
+        XCTAssertEqual(reply["track_unassigned"] as? Bool, false)
+        XCTAssertEqual(try db.setting(for: keys.roundingMinutes), "15")
+        XCTAssertEqual(try db.setting(for: keys.trackUnassigned), "false")
+    }
+
+    /// A body that is not an object of scalars writes nothing and is a 400.
+    func testAnUnreadablePreferencesBodyIs400AndWritesNothing() async throws {
+        let key = db.billingSettingsKeys.defaultRateCents
+        _ = try await post("/billing/preferences", json: "{\"\(key)\":\"15000\"}")
+
+        for body in ["not json", "[]", "{\"\(key)\":null}", "{\"\(key)\":[1]}", "{\"\(key)\":{\"a\":1}}"] {
+            let response = try await post("/billing/preferences", json: body)
+            XCTAssertEqual(response?.status, 400, body)
+            XCTAssertEqual(try message(response), BillingRoutes.BillingWireError.undecodable.errorDescription, body)
+        }
+        XCTAssertEqual(try db.setting(for: key), "15000")
+    }
+
+    func testAPreferenceValueKeepsTheTextTheSettingsTableStores() throws {
+        let decoded = try JSONDecoder().decode(
+            [String: BillingRoutes.PreferenceValue].self,
+            from: Data(#"{"a":"day","b":15,"c":true,"d":1.5,"e":0}"#.utf8)
+        )
+        XCTAssertEqual(decoded.mapValues(\.settingText), ["a": "day", "b": "15", "c": "true", "d": "1.5", "e": "0"])
     }
 
     func testAppNamesReadsAtMostTheCap() async throws {
