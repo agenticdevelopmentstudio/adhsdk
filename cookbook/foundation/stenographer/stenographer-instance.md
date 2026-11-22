@@ -2,11 +2,11 @@
 id: fe798f91-076e-41fc-9713-907b744c5539
 title: "Stenographer Instance"
 type: ingredient
-version: 1.0.1
+version: 1.1.0
 status: review
 language: en
 created: 2026-11-21
-modified: 2026-11-21
+modified: 2026-11-22
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -56,7 +56,7 @@ The type is a `Sendable`, `Equatable` struct holding an optional `Definition`. I
 
 - **base-label**: `baseLabel` MUST be `com.agenticdevelopmentstudio.stenographer`.
 - **default-port**: `defaultHTTPPort` MUST be `22847`.
-- **reserved-ports**: `reservedHTTPPorts` MUST be the set {22847, 22848, 22849}: the installed daemon's HTTP port, the installed account router's port (`StenographerIdentifiers.routerPort`) and the retired Kitchen daemon adkd's port.
+- **reserved-ports**: `reservedHTTPPorts` MUST be the set {22848, 22849}: the installed account router's port (`StenographerIdentifiers.routerPort`) and the retired Kitchen daemon adkd's port. The retired stenographerd's 22847 is not reserved: nothing listens there once adhd serves Stenographer.
 - **reserved-names**: `reservedNames` MUST be the set {`usagewidget`, `instances`, `daemon`}: the usage widget's bundle id suffix, the definitions directory's suffix and the installed daemon's launch-throttle identifier suffix.
 - **selection-keys**: The environment key MUST be `STENOGRAPHER_INSTANCE` and the argument flag MUST be `-instance`.
 - **socket-constants**: `socketFileName` MUST be `stenographer.sock` and `socketPathLimit` MUST be `104` (the size of Darwin's `sun_path`, including the terminating NUL).
@@ -145,7 +145,7 @@ Vectors 041 to 044 are `StenographerInstancePortTests` (`Tests/AgenticDeveloperH
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
 | stenographer-instance-001 | default-has-no-definition, default-values | `StenographerInstance.default` | `isDefault` true; `name` absent; `label` `com.agenticdevelopmentstudio.stenographer`; `httpPort` 22847; `dataRoot` absent. |
-| stenographer-instance-002 | base-label, default-port, reserved-ports, reserved-names, selection-keys, socket-constants | The static constants. | `baseLabel` `com.agenticdevelopmentstudio.stenographer`; `defaultHTTPPort` 22847; `reservedHTTPPorts` {22847, 22848, 22849}; `reservedNames` {usagewidget, instances, daemon}; `environmentKey` `STENOGRAPHER_INSTANCE`; `argumentFlag` `-instance`; `socketFileName` `stenographer.sock`; `socketPathLimit` 104. |
+| stenographer-instance-002 | base-label, default-port, reserved-ports, reserved-names, selection-keys, socket-constants | The static constants. | `baseLabel` `com.agenticdevelopmentstudio.stenographer`; `defaultHTTPPort` 22847; `reservedHTTPPorts` {22848, 22849}; `reservedNames` {usagewidget, instances, daemon}; `environmentKey` `STENOGRAPHER_INSTANCE`; `argumentFlag` `-instance`; `socketFileName` `stenographer.sock`; `socketPathLimit` 104. |
 | stenographer-instance-003 | definitions-directory | `definitionsDirectory(home: /h)` | `/h/Library/Application Support/com.agenticdevelopmentstudio.stenographer.instances/`. |
 | stenographer-instance-004 | environment-wins | environment `{STENOGRAPHER_INSTANCE: "dev"}`, arguments `["app", "-instance", "other"]` | `"dev"`. |
 | stenographer-instance-005 | empty-environment-is-default | environment `{STENOGRAPHER_INSTANCE: ""}`, arguments `["app", "-instance", "other"]` | absent. |
@@ -165,7 +165,7 @@ Vectors 041 to 044 are `StenographerInstancePortTests` (`Tests/AgenticDeveloperH
 | stenographer-instance-019 | absolute-data-root | `dataRoot` `"steno-dev"` | `relativeDataRoot("steno-dev")`. |
 | stenographer-instance-020 | port-range | `httpPort` 1023, then 65536 | `invalidPort(1023)`, then `invalidPort(65536)`. |
 | stenographer-instance-021 | port-range | `httpPort` 1024, then 65535 | Both pass the port check. |
-| stenographer-instance-022 | port-not-reserved | `httpPort` 22847, 22848 and 22849 | `invalidPort` for each. |
+| stenographer-instance-022 | port-not-reserved | `httpPort` 22848 and 22849; then 22847 | `invalidPort` for each of the first two; 22847 resolves. |
 | stenographer-instance-023 | protected-roots | `protectedRoots(home: /h)` | Five URLs in order: `/h/Library/Application Support/com.agenticdevelopmentstudio.stenographer`, `/h/Library/Logs/com.agenticdevelopmentstudio.stenographer`, `/h/Library/Application Support/com.agentic-cookbook.stenographer`, `/h/Library/Logs/com.agentic-cookbook.stenographer`, `/h/.claude`. |
 | stenographer-instance-024 | installed-overlap | `dataRoot` `H/Library/Application Support/com.agenticdevelopmentstudio.stenographer/dev` | `overlapsInstalledState` naming the current support directory (the data root lies inside it). |
 | stenographer-instance-025 | installed-overlap | `dataRoot` equal to `H` | `overlapsInstalledState` naming the current support directory (the data root contains it). |
@@ -179,7 +179,7 @@ Vectors 041 to 044 are `StenographerInstancePortTests` (`Tests/AgenticDeveloperH
 | stenographer-instance-033 | socket-length | `dataRoot` is an 85-byte absolute path (socket path 103 bytes) | Passes the socket check. |
 | stenographer-instance-034 | socket-length | `dataRoot` is an 86-byte absolute path (socket path 104 bytes) | `socketPathTooLong(path: <dataRoot>/stenographer.sock, limit: 104)`. |
 | stenographer-instance-035 | validate-order | `D/dev.json` declares `"name": "daemon"`, `dataRoot` `"x"`, `httpPort` 1 | `nameMismatch(file: "dev", declared: "daemon")`, the first check. |
-| stenographer-instance-036 | error-description | `invalidPort(80)`; `reservedName("daemon")` | `instance httpPort 80 must be 1024-65535 and not one of 22847, 22848, 22849`; `instance name 'daemon' is reserved: com.agenticdevelopmentstudio.stenographer.daemon already names something else`. |
+| stenographer-instance-036 | error-description | `invalidPort(80)`; `reservedName("daemon")` | `instance httpPort 80 must be 1024-65535 and not one of 22848, 22849`; `instance name 'daemon' is reserved: com.agenticdevelopmentstudio.stenographer.daemon already names something else`. |
 | stenographer-instance-037 | current-failure-exit, current-failure-status | Launch a process that reads `current` with `STENOGRAPHER_INSTANCE=nosuch` and no definition | Standard error is `stenographer: instance 'nosuch' is not defined (no <path>); create it with scripts/stenographer_instance.py create` and the exit status is 78. |
 | stenographer-instance-038 | current-once | Read `current` twice in one process after changing the definition file between reads | Both reads return the same value; the file is read once. |
 | stenographer-instance-039 | equality | Two named instances resolved from the same definition; one named and the default | Equal; not equal. |
@@ -233,7 +233,7 @@ The `ResolutionError` descriptions are hardcoded English strings and are not loc
 | `unreadable` | `instance definition <path> is unreadable: <reason>` | Read or decode failed. |
 | `nameMismatch` | `instance definition <file>.json declares name '<declared>'` | Declared name differs from the file name. |
 | `relativeDataRoot` | `instance dataRoot '<root>' must be an absolute path` | Data root does not start with `/`. |
-| `invalidPort` | `instance httpPort <port> must be 1024-65535 and not one of 22847, 22848, 22849` | Port out of range or reserved; the reserved list is sorted ascending. |
+| `invalidPort` | `instance httpPort <port> must be 1024-65535 and not one of 22848, 22849` | Port out of range or reserved; the reserved list is sorted ascending. |
 | `overlapsInstalledState` | `instance dataRoot '<root>' overlaps <protected>, which the installed Stenographer owns` | Data root overlaps a protected root. |
 | `overlapsAnotherInstance` | `instance dataRoot '<root>' overlaps instance '<instance>''s dataRoot '<otherRoot>'` | Data root overlaps another definition's. |
 | `portTakenByAnotherInstance` | `instance httpPort <port> is already instance '<instance>''s httpPort` | Another definition declares the same port. |
@@ -295,8 +295,8 @@ a compiled doc or skill shows those rows as a derived section here. -->
 **Rationale**: The doc comment on `requestedName` states that the daemon and the CLI are selected by environment and that an app passes its own selection to the daemon the same way, so the environment is the authoritative channel. The empty-value rule follows from the source checking for the key before its value.
 **Approved**: pending
 
-**Decision**: Reserved names and ports are fixed sets: names `usagewidget`, `instances` and `daemon`; ports 22847, 22848 and 22849.
-**Rationale**: The doc comments on `reservedNames` and `reservedHTTPPorts` give each reason: the label `<baseLabel>.<name>` is already taken by the usage widget, the definitions directory and the installed daemon's launch-throttle identifier (whose `/tmp/<identifier>.launches` an instance's app guard would share), and the ports belong to the installed daemon, the installed account router and the retired Kitchen daemon adkd that an installed Kitchen may still run.
+**Decision**: Reserved names and ports are fixed sets: names `usagewidget`, `instances` and `daemon`; ports 22848 and 22849.
+**Rationale**: The doc comments on `reservedNames` and `reservedHTTPPorts` give each reason: the label `<baseLabel>.<name>` is already taken by the usage widget, the definitions directory and the installed daemon's launch-throttle identifier (whose `/tmp/<identifier>.launches` an instance's app guard would share), and the ports belong to the installed account router and the retired Kitchen daemon adkd that an installed Kitchen may still run. The retired stenographerd's 22847 was reserved until adhd took over serving Stenographer (apps suite phase 3); nothing listens there now.
 **Approved**: pending
 
 **Decision**: A named instance's data root may not equal, contain or lie inside anything the installed copy owns: the current and legacy data roots, the current and legacy logs, and `~/.claude`.
@@ -340,4 +340,5 @@ a compiled doc or skill shows those rows as a derived section here. -->
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.0 | 2026-11-22 | Mike Fullerton | The retired stenographerd's port 22847 is no longer reserved; reservedHTTPPorts is {22848, 22849}. |
 | 1.0.1 | 2026-11-21 | Mike Fullerton | Resolved port-unique-across-instances: validate throws portTakenByAnotherInstance for a port another definition holds, checked after the instance overlap; added its description and vectors 041 to 044. |

@@ -4,11 +4,11 @@
     "id": "fe798f91-076e-41fc-9713-907b744c5539",
     "title": "Stenographer Instance",
     "type": "ingredient",
-    "version": "1.0.1",
+    "version": "1.1.0",
     "status": "review",
     "language": "en",
     "created": "2026-11-21",
-    "modified": "2026-11-21",
+    "modified": "2026-11-22",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -34,7 +34,7 @@
     "approved-date": ""
   },
   "names_hosts": "The installed copy's protected roots include the literal `~/.claude` directory (hook socket, drop directory, settings.json), named as path data.",
-  "synced": "2200d4b253c571b5",
+  "synced": "6ebdcd5c712b4d4b",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
