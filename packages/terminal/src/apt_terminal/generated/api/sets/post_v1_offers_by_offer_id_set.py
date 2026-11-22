@@ -95,7 +95,8 @@ def sync_detailed(
     """Set the set an offer sells
 
      null stops the offer granting a set. Refused (rule 9) when the set conflicts with another live
-    offer's set; a personal set is never sold (400).
+    offer's set; a personal set is never sold (400). A product admin, signed in through the product's
+    admin site, is refused (403): what an offer sells is billing.
 
     Replaces PUT /sets/offers/{offerId}.
 
@@ -132,7 +133,8 @@ def sync(
     """Set the set an offer sells
 
      null stops the offer granting a set. Refused (rule 9) when the set conflicts with another live
-    offer's set; a personal set is never sold (400).
+    offer's set; a personal set is never sold (400). A product admin, signed in through the product's
+    admin site, is refused (403): what an offer sells is billing.
 
     Replaces PUT /sets/offers/{offerId}.
 
@@ -164,7 +166,8 @@ async def asyncio_detailed(
     """Set the set an offer sells
 
      null stops the offer granting a set. Refused (rule 9) when the set conflicts with another live
-    offer's set; a personal set is never sold (400).
+    offer's set; a personal set is never sold (400). A product admin, signed in through the product's
+    admin site, is refused (403): what an offer sells is billing.
 
     Replaces PUT /sets/offers/{offerId}.
 
@@ -199,7 +202,8 @@ async def asyncio(
     """Set the set an offer sells
 
      null stops the offer granting a set. Refused (rule 9) when the set conflicts with another live
-    offer's set; a personal set is never sold (400).
+    offer's set; a personal set is never sold (400). A product admin, signed in through the product's
+    admin site, is refused (403): what an offer sells is billing.
 
     Replaces PUT /sets/offers/{offerId}.
 

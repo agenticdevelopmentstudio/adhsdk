@@ -93,6 +93,8 @@ def sync_detailed(
     """Replace a set's permissions and limits
 
      Every key must be one the catalog's `setEntries` declares, with a value of its type (400 otherwise).
+    A product admin, signed in through the product's admin site, may not write `usage.tier`, nor a
+    `storage.quota_bytes` above the default quota (403).
 
     Replaces PUT /sets/{id}/values.
 
@@ -129,6 +131,8 @@ def sync(
     """Replace a set's permissions and limits
 
      Every key must be one the catalog's `setEntries` declares, with a value of its type (400 otherwise).
+    A product admin, signed in through the product's admin site, may not write `usage.tier`, nor a
+    `storage.quota_bytes` above the default quota (403).
 
     Replaces PUT /sets/{id}/values.
 
@@ -160,6 +164,8 @@ async def asyncio_detailed(
     """Replace a set's permissions and limits
 
      Every key must be one the catalog's `setEntries` declares, with a value of its type (400 otherwise).
+    A product admin, signed in through the product's admin site, may not write `usage.tier`, nor a
+    `storage.quota_bytes` above the default quota (403).
 
     Replaces PUT /sets/{id}/values.
 
@@ -194,6 +200,8 @@ async def asyncio(
     """Replace a set's permissions and limits
 
      Every key must be one the catalog's `setEntries` declares, with a value of its type (400 otherwise).
+    A product admin, signed in through the product's admin site, may not write `usage.tier`, nor a
+    `storage.quota_bytes` above the default quota (403).
 
     Replaces PUT /sets/{id}/values.
 

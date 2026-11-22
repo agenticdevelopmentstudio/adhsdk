@@ -101,7 +101,9 @@ export interface paths {
         put?: never;
         /**
          * Grant (or replace) a role for a subject at a scope — requires M + no-escalation
-         * @description Replaces PUT /access/assignments.
+         * @description A product admin replacing an `admin` seat, their own or another, is 422 with code `admin_seat_protected`.
+         *
+         *     Replaces PUT /access/assignments.
          */
         post: operations["postV1AccessRoleAssignments"];
         delete?: never;
@@ -122,7 +124,9 @@ export interface paths {
         post?: never;
         /**
          * Revoke an assignment (requires M at its scope)
-         * @description Replaces DELETE /access/assignments/{id}.
+         * @description A product admin revoking an `admin` seat, their own or another, is 422 with code `admin_seat_protected`.
+         *
+         *     Replaces DELETE /access/assignments/{id}.
          */
         delete: operations["deleteV1AccessRoleAssignmentsById"];
         options?: never;
@@ -715,6 +719,38 @@ export interface paths {
          */
         post: operations["postV1AdminNotes"];
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin_site": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * A product's admin site and whether admin sites are switched on
+         * @description Replaces GET /ecosystem/admin-site.
+         */
+        get: operations["getV1AdminSite"];
+        put?: never;
+        /**
+         * Set up or move a product's admin site
+         * @description Makes (or reuses, or revives) the product's staff `admin-site` application and gives it a login registration whose one return origin is `https://<host>` and whose one redirect is `https://<host>/auth/callback`. 409 when the product has its own `admin-site` application, or another product's site already uses the host.
+         *
+         *     Replaces PUT /ecosystem/admin-site.
+         */
+        post: operations["postV1AdminSite"];
+        /**
+         * Take a product's admin site down
+         * @description Removes the site, soft-deletes its application and removes its registration.
+         *
+         *     Replaces DELETE /ecosystem/admin-site.
+         */
+        delete: operations["deleteV1AdminSite"];
         options?: never;
         head?: never;
         patch?: never;
@@ -8905,7 +8941,7 @@ export interface paths {
         put?: never;
         /**
          * Set the set an offer sells
-         * @description null stops the offer granting a set. Refused (rule 9) when the set conflicts with another live offer's set; a personal set is never sold (400).
+         * @description null stops the offer granting a set. Refused (rule 9) when the set conflicts with another live offer's set; a personal set is never sold (400). A product admin, signed in through the product's admin site, is refused (403): what an offer sells is billing.
          *
          *     Replaces PUT /sets/offers/{offerId}.
          */
@@ -10372,6 +10408,138 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/product_admin/customers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * A product's live customers, newest first, 50 a page
+         * @description Product admins only; a manager is 403.
+         *
+         *     Replaces GET /product-admin/customers.
+         */
+        get: operations["getV1ProductAdminCustomers"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/product_admin/customers/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Delete a customer
+         * @description Tombstones the customer and revokes their tokens and sessions. 409 while they still own data; 422 for the caller or another admin.
+         *
+         *     Replaces DELETE /product-admin/customers/{id}.
+         */
+        delete: operations["deleteV1ProductAdminCustomersById"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/product_admin/customers/{id}/pause": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Pause a customer
+         * @description Refuses their sign-in and every request from the next one, and revokes their sign-in sessions. 422 for the caller or another admin.
+         *
+         *     Replaces POST /product-admin/customers/{id}/pause.
+         */
+        post: operations["postV1ProductAdminCustomersByIdPause"];
+        /**
+         * Lift a customer's pause
+         * @description Replaces DELETE /product-admin/customers/{id}/pause.
+         */
+        delete: operations["deleteV1ProductAdminCustomersByIdPause"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/product_admin/customers/{id}/quota": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Set a customer's storage quota
+         * @description Replaces PUT /product-admin/customers/{id}/quota.
+         */
+        post: operations["postV1ProductAdminCustomersByIdQuota"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/product_admin/totals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * A product's totals
+         * @description Counts only. Admits a manager of the product and a product admin alike.
+         *
+         *     Replaces GET /product-admin/totals.
+         */
+        get: operations["getV1ProductAdminTotals"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/product_admin_sites/{host}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Which product an admin site host belongs to (unauthenticated)
+         * @description Replaces GET /public/product-admin-sites/{host}.
+         */
+        get: operations["getV1ProductAdminSitesByHost"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/programs": {
         parameters: {
             query?: never;
@@ -11651,7 +11819,7 @@ export interface paths {
         put?: never;
         /**
          * Replace a set's permissions and limits
-         * @description Every key must be one the catalog's `setEntries` declares, with a value of its type (400 otherwise).
+         * @description Every key must be one the catalog's `setEntries` declares, with a value of its type (400 otherwise). A product admin, signed in through the product's admin site, may not write `usage.tier`, nor a `storage.quota_bytes` above the default quota (403).
          *
          *     Replaces PUT /sets/{id}/values.
          */
@@ -18765,6 +18933,99 @@ export interface components {
             /** Format: uuid */
             set_id: string | null;
         };
+        AdminSite: {
+            /** Format: uuid */
+            id: string;
+            /** @description The lower-case host the site answers on. */
+            host: string;
+            /**
+             * Format: uuid
+             * @description The product's staff `admin-site` application.
+             */
+            application_id: string;
+            /** @description That application's login registration. */
+            client_id: string;
+            /** @description Unix timestamp, in seconds. */
+            created: number;
+            /** @description Unix timestamp, in seconds. */
+            updated: number;
+        };
+        AdminSiteState: {
+            site: components["schemas"]["AdminSite"] | null;
+            /** @description Whether the `product_admin_site` switch is on (sites answer and sign in). */
+            enabled: boolean;
+        };
+        AdminSitePut: {
+            /** @description A DNS name with at least two labels; no scheme, port or path. */
+            host: string;
+        };
+        ProductAdminSiteLookup: {
+            /** Format: uuid */
+            ecosystem_id: string;
+            /** @description The product's name. */
+            name: string;
+            /** @description The client the site starts a sign-in with. */
+            client_id: string;
+            /** @description The Hydra issuer URL. */
+            issuer: string | null;
+        };
+        ProductTotals: {
+            /** @description Live customers. */
+            customers: number;
+            /** @description Customers made in the last 7 days. */
+            new7d: number;
+            /** @description Customers made in the last 30 days. */
+            new30d: number;
+            /** @description Customers with usage in the last 7 days. */
+            active7d: number;
+            /** @description Customers with usage in the last 30 days. */
+            active30d: number;
+            /** @description Bytes in the customers' ready attachments. */
+            storage_bytes: number;
+            /** @description Invitations sent and not yet used. */
+            pending_invitations: number;
+            /** @description Requests for an invitation. */
+            pending_requests: number;
+        };
+        ProductCustomerRole: {
+            /** Format: uuid */
+            id: string;
+            slug: string;
+            name: string;
+        };
+        ProductCustomer: {
+            /** Format: uuid */
+            id: string;
+            email: string | null;
+            display_name: string | null;
+            avatar_url: string;
+            external_id: string | null;
+            /** @description Unix timestamp, in seconds. */
+            created: number;
+            /**
+             * Format: date
+             * @description The last UTC day with usage in this product.
+             */
+            last_active_day: string | null;
+            /** @description The product roles held product-wide. */
+            roles: components["schemas"]["ProductCustomerRole"][];
+            /** @description The ids of the sets granted and not revoked. */
+            sets: string[];
+            storage_bytes: number;
+            quota_bytes: number;
+            paused: boolean;
+        };
+        ProductCustomerPage: {
+            items: components["schemas"]["ProductCustomer"][];
+            next_cursor: string | null;
+        };
+        ProductCustomerPause: {
+            reason?: string;
+        };
+        ProductCustomerQuota: {
+            /** @description At most the default quota (403 above it). */
+            bytes: number;
+        };
         TeamReachGrant: {
             id: string;
             /** @description the canonical uuid of the ecosystem reached INTO (never the rdid form) */
@@ -19476,7 +19737,7 @@ export interface operations {
             query: {
                 /** @description The hub workspace (slug). Exactly one of `workspace` and `ecosystem`. */
                 workspace?: string;
-                /** @description An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem (403 otherwise). */
+                /** @description An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise). */
                 ecosystem?: string;
                 feature: string;
                 subject_kind: string;
@@ -19546,7 +19807,7 @@ export interface operations {
             query?: {
                 /** @description The hub workspace (slug). Exactly one of `workspace` and `ecosystem`. */
                 workspace?: string;
-                /** @description An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem (403 otherwise). */
+                /** @description An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise). */
                 ecosystem?: string;
                 /** @description Page size, 1–100 (default 10). */
                 limit?: number;
@@ -19615,7 +19876,7 @@ export interface operations {
             query?: {
                 /** @description The hub workspace (slug). Exactly one of `workspace` and `ecosystem`. */
                 workspace?: string;
-                /** @description An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem (403 otherwise). */
+                /** @description An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise). */
                 ecosystem?: string;
             };
             header?: never;
@@ -19686,7 +19947,7 @@ export interface operations {
             query?: {
                 /** @description The hub workspace (slug). Exactly one of `workspace` and `ecosystem`. */
                 workspace?: string;
-                /** @description An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem (403 otherwise). */
+                /** @description An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise). */
                 ecosystem?: string;
             };
             header?: never;
@@ -19757,7 +20018,7 @@ export interface operations {
             query?: {
                 /** @description The hub workspace (slug). Exactly one of `workspace` and `ecosystem`. */
                 workspace?: string;
-                /** @description An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem (403 otherwise). */
+                /** @description An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise). */
                 ecosystem?: string;
                 feature?: string;
                 item_id?: string;
@@ -19825,7 +20086,7 @@ export interface operations {
             query?: {
                 /** @description The hub workspace (slug). Exactly one of `workspace` and `ecosystem`. */
                 workspace?: string;
-                /** @description An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem (403 otherwise). */
+                /** @description An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise). */
                 ecosystem?: string;
             };
             header?: never;
@@ -19894,6 +20155,15 @@ export interface operations {
                     "application/json": components["schemas"]["StripeError"];
                 };
             };
+            /** @description Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
         };
     };
     deleteV1AccessRoleAssignmentsById: {
@@ -19901,7 +20171,7 @@ export interface operations {
             query?: {
                 /** @description The hub workspace (slug). Exactly one of `workspace` and `ecosystem`. */
                 workspace?: string;
-                /** @description An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem (403 otherwise). */
+                /** @description An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise). */
                 ecosystem?: string;
             };
             header?: never;
@@ -19948,6 +20218,15 @@ export interface operations {
                     "application/json": components["schemas"]["StripeError"];
                 };
             };
+            /** @description Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
         };
     };
     getV1AccessRoles: {
@@ -19955,7 +20234,7 @@ export interface operations {
             query?: {
                 /** @description The hub workspace (slug). Exactly one of `workspace` and `ecosystem`. */
                 workspace?: string;
-                /** @description An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem (403 otherwise). */
+                /** @description An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise). */
                 ecosystem?: string;
                 /** @description Page size, 1–100 (default 10). */
                 limit?: number;
@@ -20024,7 +20303,7 @@ export interface operations {
             query?: {
                 /** @description The hub workspace (slug). Exactly one of `workspace` and `ecosystem`. */
                 workspace?: string;
-                /** @description An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem (403 otherwise). */
+                /** @description An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise). */
                 ecosystem?: string;
             };
             header?: never;
@@ -20108,7 +20387,7 @@ export interface operations {
             query?: {
                 /** @description The hub workspace (slug). Exactly one of `workspace` and `ecosystem`. */
                 workspace?: string;
-                /** @description An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem (403 otherwise). */
+                /** @description An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise). */
                 ecosystem?: string;
             };
             header?: never;
@@ -20193,7 +20472,7 @@ export interface operations {
             query?: {
                 /** @description The hub workspace (slug). Exactly one of `workspace` and `ecosystem`. */
                 workspace?: string;
-                /** @description An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem (403 otherwise). */
+                /** @description An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise). */
                 ecosystem?: string;
             };
             header?: never;
@@ -20256,7 +20535,7 @@ export interface operations {
             query?: {
                 /** @description The hub workspace (slug). Exactly one of `workspace` and `ecosystem`. */
                 workspace?: string;
-                /** @description An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem (403 otherwise). */
+                /** @description An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise). */
                 ecosystem?: string;
                 q?: string;
                 after?: string;
@@ -22488,6 +22767,196 @@ export interface operations {
                         object?: "admin_note";
                         ok: boolean;
                     };
+                };
+            };
+            /** @description Error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+        };
+    };
+    getV1AdminSite: {
+        parameters: {
+            query?: {
+                /** @description Related objects to return in full instead of as an id. Up to four levels, e.g. `ecosystem_id`; on a list, `data.<field>`. */
+                "expand[]"?: string[];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The site, or null when it has none */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        object?: "admin_site";
+                    } & components["schemas"]["AdminSiteState"];
+                };
+            };
+            /** @description Error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+        };
+    };
+    postV1AdminSite: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AdminSitePut"];
+            };
+        };
+        responses: {
+            /** @description The site after the change */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        object?: "admin_site";
+                    } & components["schemas"]["AdminSiteState"];
+                };
+            };
+            /** @description Error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+        };
+    };
+    deleteV1AdminSite: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deleted */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Deleted"];
                 };
             };
             /** @description Error */
@@ -68426,6 +68895,442 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+        };
+    };
+    getV1ProductAdminCustomers: {
+        parameters: {
+            query?: {
+                /** @description Related objects to return in full instead of as an id. Up to four levels, e.g. `ecosystem_id`; on a list, `data.<field>`. */
+                "expand[]"?: string[];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description One page */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        object?: "product_admin.customer";
+                    } & components["schemas"]["ProductCustomerPage"];
+                };
+            };
+            /** @description Error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+        };
+    };
+    deleteV1ProductAdminCustomersById: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deleted */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Deleted"];
+                };
+            };
+            /** @description Error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+        };
+    };
+    postV1ProductAdminCustomersByIdPause: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProductCustomerPause"];
+            };
+        };
+        responses: {
+            /** @description Paused */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        object?: "product_admin.customer";
+                        paused: boolean;
+                    };
+                };
+            };
+            /** @description Error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+        };
+    };
+    deleteV1ProductAdminCustomersByIdPause: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deleted */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Deleted"];
+                };
+            };
+            /** @description Error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+        };
+    };
+    postV1ProductAdminCustomersByIdQuota: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProductCustomerQuota"];
+            };
+        };
+        responses: {
+            /** @description The quota now */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        object?: "product_admin.customer";
+                        quota_bytes: number;
+                    };
+                };
+            };
+            /** @description Error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+        };
+    };
+    getV1ProductAdminTotals: {
+        parameters: {
+            query?: {
+                /** @description Related objects to return in full instead of as an id. Up to four levels, e.g. `ecosystem_id`; on a list, `data.<field>`. */
+                "expand[]"?: string[];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The totals */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        object?: "product_admin.total";
+                    } & components["schemas"]["ProductTotals"];
+                };
+            };
+            /** @description Error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+        };
+    };
+    getV1ProductAdminSitesByHost: {
+        parameters: {
+            query?: {
+                /** @description Related objects to return in full instead of as an id. Up to four levels, e.g. `ecosystem_id`; on a list, `data.<field>`. */
+                "expand[]"?: string[];
+            };
+            header?: never;
+            path: {
+                host: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The product and the client to sign in with */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        object?: "product_admin_site";
+                    } & components["schemas"]["ProductAdminSiteLookup"];
                 };
             };
             /** @description Error */

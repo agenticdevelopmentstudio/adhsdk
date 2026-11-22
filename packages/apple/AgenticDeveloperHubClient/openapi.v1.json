@@ -24,6 +24,9 @@
       "name": "access"
     },
     {
+      "name": "admin-site"
+    },
+    {
       "name": "announcements"
     },
     {
@@ -124,6 +127,9 @@
     },
     {
       "name": "processing"
+    },
+    {
+      "name": "product-admin"
     },
     {
       "name": "project"
@@ -16962,6 +16968,290 @@
           }
         }
       },
+      "AdminSite": {
+        "type": "object",
+        "required": [
+          "id",
+          "host",
+          "application_id",
+          "client_id",
+          "created",
+          "updated"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "host": {
+            "type": "string",
+            "description": "The lower-case host the site answers on."
+          },
+          "application_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "The product's staff `admin-site` application."
+          },
+          "client_id": {
+            "type": "string",
+            "description": "That application's login registration."
+          },
+          "created": {
+            "type": "integer",
+            "description": "Unix timestamp, in seconds."
+          },
+          "updated": {
+            "type": "integer",
+            "description": "Unix timestamp, in seconds."
+          }
+        }
+      },
+      "AdminSiteState": {
+        "type": "object",
+        "required": [
+          "site",
+          "enabled"
+        ],
+        "properties": {
+          "site": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AdminSite"
+              }
+            ],
+            "nullable": true
+          },
+          "enabled": {
+            "type": "boolean",
+            "description": "Whether the `product_admin_site` switch is on (sites answer and sign in)."
+          }
+        }
+      },
+      "AdminSitePut": {
+        "type": "object",
+        "required": [
+          "host"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "host": {
+            "type": "string",
+            "maxLength": 253,
+            "description": "A DNS name with at least two labels; no scheme, port or path."
+          }
+        }
+      },
+      "ProductAdminSiteLookup": {
+        "type": "object",
+        "required": [
+          "ecosystem_id",
+          "name",
+          "client_id",
+          "issuer"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "ecosystem_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "description": "The product's name."
+          },
+          "client_id": {
+            "type": "string",
+            "description": "The client the site starts a sign-in with."
+          },
+          "issuer": {
+            "type": "string",
+            "nullable": true,
+            "description": "The Hydra issuer URL."
+          }
+        }
+      },
+      "ProductTotals": {
+        "type": "object",
+        "required": [
+          "customers",
+          "new7d",
+          "new30d",
+          "active7d",
+          "active30d",
+          "storage_bytes",
+          "pending_invitations",
+          "pending_requests"
+        ],
+        "properties": {
+          "customers": {
+            "type": "integer",
+            "description": "Live customers."
+          },
+          "new7d": {
+            "type": "integer",
+            "description": "Customers made in the last 7 days."
+          },
+          "new30d": {
+            "type": "integer",
+            "description": "Customers made in the last 30 days."
+          },
+          "active7d": {
+            "type": "integer",
+            "description": "Customers with usage in the last 7 days."
+          },
+          "active30d": {
+            "type": "integer",
+            "description": "Customers with usage in the last 30 days."
+          },
+          "storage_bytes": {
+            "type": "integer",
+            "description": "Bytes in the customers' ready attachments."
+          },
+          "pending_invitations": {
+            "type": "integer",
+            "description": "Invitations sent and not yet used."
+          },
+          "pending_requests": {
+            "type": "integer",
+            "description": "Requests for an invitation."
+          }
+        }
+      },
+      "ProductCustomerRole": {
+        "type": "object",
+        "required": [
+          "id",
+          "slug",
+          "name"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          }
+        }
+      },
+      "ProductCustomer": {
+        "type": "object",
+        "required": [
+          "id",
+          "email",
+          "display_name",
+          "avatar_url",
+          "external_id",
+          "created",
+          "last_active_day",
+          "roles",
+          "sets",
+          "storage_bytes",
+          "quota_bytes",
+          "paused"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "email": {
+            "type": "string",
+            "nullable": true
+          },
+          "display_name": {
+            "type": "string",
+            "nullable": true
+          },
+          "avatar_url": {
+            "type": "string"
+          },
+          "external_id": {
+            "type": "string",
+            "nullable": true
+          },
+          "created": {
+            "type": "integer",
+            "description": "Unix timestamp, in seconds."
+          },
+          "last_active_day": {
+            "type": "string",
+            "format": "date",
+            "nullable": true,
+            "description": "The last UTC day with usage in this product."
+          },
+          "roles": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProductCustomerRole"
+            },
+            "description": "The product roles held product-wide."
+          },
+          "sets": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "The ids of the sets granted and not revoked."
+          },
+          "storage_bytes": {
+            "type": "integer"
+          },
+          "quota_bytes": {
+            "type": "integer"
+          },
+          "paused": {
+            "type": "boolean"
+          }
+        }
+      },
+      "ProductCustomerPage": {
+        "type": "object",
+        "required": [
+          "items",
+          "next_cursor"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProductCustomer"
+            }
+          },
+          "next_cursor": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "ProductCustomerPause": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "reason": {
+            "type": "string",
+            "maxLength": 500
+          }
+        }
+      },
+      "ProductCustomerQuota": {
+        "type": "object",
+        "required": [
+          "bytes"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "bytes": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "At most the default quota (403 above it)."
+          }
+        }
+      },
       "TeamReachGrant": {
         "type": "object",
         "required": [
@@ -19125,7 +19415,7 @@
             "schema": {
               "type": "string"
             },
-            "description": "An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem (403 otherwise)."
+            "description": "An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise)."
           },
           {
             "name": "feature",
@@ -19275,7 +19565,7 @@
             "schema": {
               "type": "string"
             },
-            "description": "An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem (403 otherwise)."
+            "description": "An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise)."
           },
           {
             "name": "limit",
@@ -19437,7 +19727,7 @@
             "schema": {
               "type": "string"
             },
-            "description": "An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem (403 otherwise)."
+            "description": "An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise)."
           }
         ],
         "requestBody": {
@@ -19565,7 +19855,7 @@
             "schema": {
               "type": "string"
             },
-            "description": "An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem (403 otherwise)."
+            "description": "An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise)."
           }
         ],
         "requestBody": {
@@ -19693,7 +19983,7 @@
             "schema": {
               "type": "string"
             },
-            "description": "An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem (403 otherwise)."
+            "description": "An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise)."
           },
           {
             "name": "feature",
@@ -19801,7 +20091,7 @@
           "access"
         ],
         "summary": "Grant (or replace) a role for a subject at a scope — requires M + no-escalation",
-        "description": "Replaces PUT /access/assignments.",
+        "description": "A product admin replacing an `admin` seat, their own or another, is 422 with code `admin_seat_protected`.\n\nReplaces PUT /access/assignments.",
         "operationId": "postV1AccessRoleAssignments",
         "security": [
           {
@@ -19825,7 +20115,7 @@
             "schema": {
               "type": "string"
             },
-            "description": "An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem (403 otherwise)."
+            "description": "An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise)."
           }
         ],
         "requestBody": {
@@ -19934,6 +20224,16 @@
                 }
               }
             }
+          },
+          "422": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
           }
         },
         "x-adh-object": "access.role_assignment",
@@ -19948,7 +20248,7 @@
           "access"
         ],
         "summary": "Revoke an assignment (requires M at its scope)",
-        "description": "Replaces DELETE /access/assignments/{id}.",
+        "description": "A product admin revoking an `admin` seat, their own or another, is 422 with code `admin_seat_protected`.\n\nReplaces DELETE /access/assignments/{id}.",
         "operationId": "deleteV1AccessRoleAssignmentsById",
         "security": [
           {
@@ -19980,7 +20280,7 @@
             "schema": {
               "type": "string"
             },
-            "description": "An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem (403 otherwise)."
+            "description": "An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise)."
           }
         ],
         "responses": {
@@ -20015,6 +20315,16 @@
             }
           },
           "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "422": {
             "description": "Error",
             "content": {
               "application/json": {
@@ -20061,7 +20371,7 @@
             "schema": {
               "type": "string"
             },
-            "description": "An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem (403 otherwise)."
+            "description": "An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise)."
           },
           {
             "name": "limit",
@@ -20221,7 +20531,7 @@
             "schema": {
               "type": "string"
             },
-            "description": "An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem (403 otherwise)."
+            "description": "An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise)."
           }
         ],
         "requestBody": {
@@ -20389,7 +20699,7 @@
             "schema": {
               "type": "string"
             },
-            "description": "An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem (403 otherwise)."
+            "description": "An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise)."
           }
         ],
         "responses": {
@@ -20486,7 +20796,7 @@
             "schema": {
               "type": "string"
             },
-            "description": "An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem (403 otherwise)."
+            "description": "An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise)."
           }
         ],
         "requestBody": {
@@ -20635,7 +20945,7 @@
             "schema": {
               "type": "string"
             },
-            "description": "An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem (403 otherwise)."
+            "description": "An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise)."
           },
           {
             "name": "q",
@@ -25507,6 +25817,277 @@
         "x-adh-replaces": [
           "PUT /auth/ecosystems/{ecosystemId}/admin-notes",
           "PUT /system/admin-notes"
+        ]
+      }
+    },
+    "/v1/admin_site": {
+      "delete": {
+        "tags": [
+          "admin-site"
+        ],
+        "summary": "Take a product's admin site down",
+        "description": "Removes the site, soft-deletes its application and removes its registration.\n\nReplaces DELETE /ecosystem/admin-site.",
+        "operationId": "deleteV1AdminSite",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Deleted"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          }
+        },
+        "x-adh-object": "admin_site",
+        "x-adh-replaces": [
+          "DELETE /ecosystem/admin-site"
+        ]
+      },
+      "get": {
+        "tags": [
+          "admin-site"
+        ],
+        "summary": "A product's admin site and whether admin sites are switched on",
+        "description": "Replaces GET /ecosystem/admin-site.",
+        "operationId": "getV1AdminSite",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "expand[]",
+            "in": "query",
+            "required": false,
+            "description": "Related objects to return in full instead of as an id. Up to four levels, e.g. `ecosystem_id`; on a list, `data.<field>`.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "style": "form",
+            "explode": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The site, or null when it has none",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "object": {
+                          "type": "string",
+                          "const": "admin_site"
+                        }
+                      }
+                    },
+                    {
+                      "$ref": "#/components/schemas/AdminSiteState"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          }
+        },
+        "x-adh-object": "admin_site",
+        "x-adh-replaces": [
+          "GET /ecosystem/admin-site"
+        ]
+      },
+      "post": {
+        "tags": [
+          "admin-site"
+        ],
+        "summary": "Set up or move a product's admin site",
+        "description": "Makes (or reuses, or revives) the product's staff `admin-site` application and gives it a login registration whose one return origin is `https://<host>` and whose one redirect is `https://<host>/auth/callback`. 409 when the product has its own `admin-site` application, or another product's site already uses the host.\n\nReplaces PUT /ecosystem/admin-site.",
+        "operationId": "postV1AdminSite",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminSitePut"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The site after the change",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "object": {
+                          "type": "string",
+                          "const": "admin_site"
+                        }
+                      }
+                    },
+                    {
+                      "$ref": "#/components/schemas/AdminSiteState"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          }
+        },
+        "x-adh-object": "admin_site",
+        "x-adh-replaces": [
+          "PUT /ecosystem/admin-site"
         ]
       }
     },
@@ -121500,7 +122081,7 @@
           "sets"
         ],
         "summary": "Set the set an offer sells",
-        "description": "null stops the offer granting a set. Refused (rule 9) when the set conflicts with another live offer's set; a personal set is never sold (400).\n\nReplaces PUT /sets/offers/{offerId}.",
+        "description": "null stops the offer granting a set. Refused (rule 9) when the set conflicts with another live offer's set; a personal set is never sold (400). A product admin, signed in through the product's admin site, is refused (403): what an offer sells is billing.\n\nReplaces PUT /sets/offers/{offerId}.",
         "operationId": "postV1OffersByOfferIdSet",
         "security": [
           {
@@ -134153,6 +134734,675 @@
         ]
       }
     },
+    "/v1/product_admin/customers": {
+      "get": {
+        "tags": [
+          "product-admin"
+        ],
+        "summary": "A product's live customers, newest first, 50 a page",
+        "description": "Product admins only; a manager is 403.\n\nReplaces GET /product-admin/customers.",
+        "operationId": "getV1ProductAdminCustomers",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "expand[]",
+            "in": "query",
+            "required": false,
+            "description": "Related objects to return in full instead of as an id. Up to four levels, e.g. `ecosystem_id`; on a list, `data.<field>`.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "style": "form",
+            "explode": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "One page",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "object": {
+                          "type": "string",
+                          "const": "product_admin.customer"
+                        }
+                      }
+                    },
+                    {
+                      "$ref": "#/components/schemas/ProductCustomerPage"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          }
+        },
+        "x-adh-object": "product_admin.customer",
+        "x-adh-replaces": [
+          "GET /product-admin/customers"
+        ]
+      }
+    },
+    "/v1/product_admin/customers/{id}": {
+      "delete": {
+        "tags": [
+          "product-admin"
+        ],
+        "summary": "Delete a customer",
+        "description": "Tombstones the customer and revokes their tokens and sessions. 409 while they still own data; 422 for the caller or another admin.\n\nReplaces DELETE /product-admin/customers/{id}.",
+        "operationId": "deleteV1ProductAdminCustomersById",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Deleted"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          }
+        },
+        "x-adh-object": "product_admin.customer",
+        "x-adh-replaces": [
+          "DELETE /product-admin/customers/{id}"
+        ]
+      }
+    },
+    "/v1/product_admin/customers/{id}/pause": {
+      "delete": {
+        "tags": [
+          "product-admin"
+        ],
+        "summary": "Lift a customer's pause",
+        "description": "Replaces DELETE /product-admin/customers/{id}/pause.",
+        "operationId": "deleteV1ProductAdminCustomersByIdPause",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Deleted"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          }
+        },
+        "x-adh-object": "product_admin.customer",
+        "x-adh-replaces": [
+          "DELETE /product-admin/customers/{id}/pause"
+        ]
+      },
+      "post": {
+        "tags": [
+          "product-admin"
+        ],
+        "summary": "Pause a customer",
+        "description": "Refuses their sign-in and every request from the next one, and revokes their sign-in sessions. 422 for the caller or another admin.\n\nReplaces POST /product-admin/customers/{id}/pause.",
+        "operationId": "postV1ProductAdminCustomersByIdPause",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProductCustomerPause"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Paused",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "paused"
+                  ],
+                  "properties": {
+                    "object": {
+                      "type": "string",
+                      "const": "product_admin.customer"
+                    },
+                    "paused": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          }
+        },
+        "x-adh-object": "product_admin.customer",
+        "x-adh-replaces": [
+          "POST /product-admin/customers/{id}/pause"
+        ]
+      }
+    },
+    "/v1/product_admin/customers/{id}/quota": {
+      "post": {
+        "tags": [
+          "product-admin"
+        ],
+        "summary": "Set a customer's storage quota",
+        "description": "Replaces PUT /product-admin/customers/{id}/quota.",
+        "operationId": "postV1ProductAdminCustomersByIdQuota",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProductCustomerQuota"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The quota now",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "quota_bytes"
+                  ],
+                  "properties": {
+                    "object": {
+                      "type": "string",
+                      "const": "product_admin.customer"
+                    },
+                    "quota_bytes": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          }
+        },
+        "x-adh-object": "product_admin.customer",
+        "x-adh-replaces": [
+          "PUT /product-admin/customers/{id}/quota"
+        ]
+      }
+    },
+    "/v1/product_admin/totals": {
+      "get": {
+        "tags": [
+          "product-admin"
+        ],
+        "summary": "A product's totals",
+        "description": "Counts only. Admits a manager of the product and a product admin alike.\n\nReplaces GET /product-admin/totals.",
+        "operationId": "getV1ProductAdminTotals",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "expand[]",
+            "in": "query",
+            "required": false,
+            "description": "Related objects to return in full instead of as an id. Up to four levels, e.g. `ecosystem_id`; on a list, `data.<field>`.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "style": "form",
+            "explode": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The totals",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "object": {
+                          "type": "string",
+                          "const": "product_admin.total"
+                        }
+                      }
+                    },
+                    {
+                      "$ref": "#/components/schemas/ProductTotals"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          }
+        },
+        "x-adh-object": "product_admin.total",
+        "x-adh-replaces": [
+          "GET /product-admin/totals"
+        ]
+      }
+    },
+    "/v1/product_admin_sites/{host}": {
+      "get": {
+        "tags": [
+          "admin-site"
+        ],
+        "summary": "Which product an admin site host belongs to (unauthenticated)",
+        "description": "Replaces GET /public/product-admin-sites/{host}.",
+        "operationId": "getV1ProductAdminSitesByHost",
+        "parameters": [
+          {
+            "name": "host",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "expand[]",
+            "in": "query",
+            "required": false,
+            "description": "Related objects to return in full instead of as an id. Up to four levels, e.g. `ecosystem_id`; on a list, `data.<field>`.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "style": "form",
+            "explode": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The product and the client to sign in with",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "object": {
+                          "type": "string",
+                          "const": "product_admin_site"
+                        }
+                      }
+                    },
+                    {
+                      "$ref": "#/components/schemas/ProductAdminSiteLookup"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          }
+        },
+        "x-adh-object": "product_admin_site",
+        "x-adh-replaces": [
+          "GET /public/product-admin-sites/{host}"
+        ]
+      }
+    },
     "/v1/programs": {
       "get": {
         "tags": [
@@ -146341,7 +147591,7 @@
           "sets"
         ],
         "summary": "Replace a set's permissions and limits",
-        "description": "Every key must be one the catalog's `setEntries` declares, with a value of its type (400 otherwise).\n\nReplaces PUT /sets/{id}/values.",
+        "description": "Every key must be one the catalog's `setEntries` declares, with a value of its type (400 otherwise). A product admin, signed in through the product's admin site, may not write `usage.tier`, nor a `storage.quota_bytes` above the default quota (403).\n\nReplaces PUT /sets/{id}/values.",
         "operationId": "postV1SetsByIdValues",
         "security": [
           {

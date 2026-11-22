@@ -2,7 +2,7 @@
 
 import { reportAuthError } from './report'
 import { authConfig } from './config'
-import { clearTokens, readTokens, tokensFromResponse, writeTokens, type BackendTokenFields } from './tokens'
+import { accessTokenSource, clearTokens, readTokens, tokensFromResponse, writeTokens, type BackendTokenFields } from './tokens'
 
 let inFlight: Promise<string | null> | null = null
 // Bumped by invalidateRefresh() on every login/logout. doRefresh captures the
@@ -26,6 +26,10 @@ export function invalidateRefresh(): void {
 }
 
 export function refreshAccessToken(): Promise<string | null> {
+  // An in-memory source (see setAccessTokenSource) owns its own refresh and single-flight;
+  // the storage-and-cookie session below is not its session.
+  const source = accessTokenSource()
+  if (source) return source.refresh()
   if (inFlight) return inFlight
   const startGen = generation
   const promise = doRefresh(startGen).finally(() => {
