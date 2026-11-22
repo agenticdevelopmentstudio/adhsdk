@@ -11,7 +11,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, cleanup } from "@testing-library/react";
 
 vi.mock("@adh-sdk/auth", () => ({
-  useAuth: () => ({ user: { email: "owner@example.com" } }),
+  useOptionalAuth: () => ({ user: { email: "owner@example.com" } }),
 }));
 
 const {
@@ -109,5 +109,32 @@ describe("EcoInvitesPane", () => {
     const grid = screen.getByRole("grid", { name: "Sent invites" });
     expect(api.compareDocumentPosition(grid) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(screen.getAllByRole("button", { name: /API/ })).toHaveLength(1);
+  });
+});
+
+// The product admin site (phase 6) mounts the three panes under its own auth provider and keeps
+// no admin records: `hideAdminRecords` drops the notes editor, the history and the action.
+describe("hideAdminRecords", () => {
+  const PANES = [EcoRequestsPane, EcoPendingUsersPane, EcoInvitesPane] as const;
+
+  it("mounts the notes editor and offers Admin notes by default", () => {
+    for (const Pane of PANES) {
+      cleanup();
+      vi.clearAllMocks();
+      render(<Pane ecosystemRdid="eco-1" />);
+      expect(useEcoSaveNotes).toHaveBeenCalled();
+      expect(screen.queryAllByText("Admin notes")).not.toHaveLength(0);
+    }
+  });
+
+  it("mounts no notes editor and offers no Admin notes when set", () => {
+    for (const Pane of PANES) {
+      cleanup();
+      vi.clearAllMocks();
+      render(<Pane ecosystemRdid="eco-1" hideAdminRecords />);
+      expect(useEcoSaveNotes).not.toHaveBeenCalled();
+      expect(useEcoRowNotes).not.toHaveBeenCalled();
+      expect(screen.queryAllByText("Admin notes")).toHaveLength(0);
+    }
   });
 });

@@ -17,6 +17,7 @@ import { Button } from "@adh-sdk/ui/components/button";
 import { ErrorText } from "@adh-sdk/ui/components/error-text";
 import { List, ListItem } from "@adh-sdk/ui/components/list";
 import { Select } from "@adh-sdk/ui/components/select";
+import type { PaneCaller } from "./pane-caller";
 
 /**
  * An owner-made ECOSYSTEM's product roles (phase 5): the roles its product users hold, what each
@@ -31,8 +32,13 @@ import { Select } from "@adh-sdk/ui/components/select";
 export function ProductRolesPane({
   ecosystemId,
   leaf,
+  caller = "manager",
 }: {
   ecosystemId?: string;
+  /** `product_admin` (the product's own admin site, phase 6): the `admin` role's seats are shown
+   *  but not revoked here. The backend refuses a product admin any change to an admin seat
+   *  (422 `admin_seat_protected`), so offering the button would only ever fail. */
+  caller?: PaneCaller;
   /** Unused: the breadcrumb names the pane (kept for the ScopedPane prop shape). */
   title?: ReactNode;
   /** Unused: the roles editor has no help slot (kept for the ScopedPane prop shape). */
@@ -41,8 +47,10 @@ export function ProductRolesPane({
 }) {
   const roleFooter = useCallback(
     (role: AccessRoleRow) =>
-      ecosystemId ? <RoleHolders key={role.id} ecosystemId={ecosystemId} role={role} /> : null,
-    [ecosystemId],
+      ecosystemId ? (
+        <RoleHolders key={role.id} ecosystemId={ecosystemId} role={role} caller={caller} />
+      ) : null,
+    [ecosystemId, caller],
   );
 
   if (!ecosystemId) {
@@ -63,9 +71,22 @@ export function ProductRolesPane({
   );
 }
 
+/** The product's `admin` system role: the one that opens the product's admin site. */
+export const isAdminRole = (role: Pick<AccessRoleRow, "slug" | "isSystem">) =>
+  role.isSystem && role.slug === "admin";
+
 /** Who holds one product role: its workspace-wide grants, a grant picker and revoke. Exported for
  *  the package's own test only. */
-export function RoleHolders({ ecosystemId, role }: { ecosystemId: string; role: AccessRoleRow }) {
+export function RoleHolders({
+  ecosystemId,
+  role,
+  caller = "manager",
+}: {
+  ecosystemId: string;
+  role: AccessRoleRow;
+  caller?: PaneCaller;
+}) {
+  const seatsProtected = caller === "product_admin" && isAdminRole(role);
   const target = useMemo(() => ({ ecosystem: ecosystemId }), [ecosystemId]);
   const key = accessTargetKey(target);
 
@@ -139,6 +160,11 @@ export function RoleHolders({ ecosystemId, role }: { ecosystemId: string; role: 
 
   return (
     <FieldGroup title="Who holds it">
+      {seatsProtected && (
+        <p className="text-sm text-apt-text-muted">
+          Admins are added here and removed by the product&apos;s managers.
+        </p>
+      )}
       {role.defaultFor === "customer" && (
         <p className="text-sm text-apt-text-muted">
           Every product user holds this role. Grant it here only to keep it if the default changes.
@@ -158,15 +184,17 @@ export function RoleHolders({ ecosystemId, role }: { ecosystemId: string; role: 
               <ListItem key={a.id} className="flex items-center gap-3">
                 <UserRound size={14} aria-hidden className="text-apt-text-muted" />
                 <span className="min-w-0 flex-1 truncate font-mono text-sm text-apt-text">{label}</span>
-                <Button
-                  size="sm"
-                  variant="destructive-ghost"
-                  aria-label={`Revoke ${label}`}
-                  disabled={busy}
-                  onClick={() => onRevoke(a)}
-                >
-                  <Trash2 size={14} aria-hidden />
-                </Button>
+                {!seatsProtected && (
+                  <Button
+                    size="sm"
+                    variant="destructive-ghost"
+                    aria-label={`Revoke ${label}`}
+                    disabled={busy}
+                    onClick={() => onRevoke(a)}
+                  >
+                    <Trash2 size={14} aria-hidden />
+                  </Button>
+                )}
               </ListItem>
             );
           })}

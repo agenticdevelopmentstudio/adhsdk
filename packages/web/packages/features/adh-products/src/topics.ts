@@ -83,6 +83,9 @@ export const PRODUCT_TOPICS = [
   // Sets (phase 5): bundles of the product's permissions and limits its customers hold, through
   // an offer, the sign-up list or a direct grant. On `users`, as its holders are the product's.
   { id: "sets", label: "Sets", dividerAfter: false, features: ["users"] },
+  // Admin site (phase 6): the product's own admin site, where its admins run its users, roles,
+  // sign-up list and sets. Set up here by a manager; see visibleProductTopics for when it shows.
+  { id: "admin-site", label: "Admin site", dividerAfter: false, features: ["users"] },
   // (Communities sat here, was removed for having no surface on any host, and came back below
   // with the rest of the hub's Products group — parked deliberately this time, because the
   // workspace rail offered it and moving that rail down whole is what dropping it would undo.)
@@ -121,6 +124,29 @@ export const PRODUCT_TOPICS = [
 ] as const;
 
 export type ProductTopicId = (typeof PRODUCT_TOPICS)[number]["id"];
+
+/** The rows a product's own admin site takes over from the hub once the site is up. */
+export const ADMIN_SITE_MOVED_TOPIC_IDS = ["invitations", "roles", "signup-list", "sets"] as const;
+
+/**
+ * The rail for one product, given its admin site (phase 6): `enabled` is the
+ * `product_admin_site` switch, `hasSite` whether the product has a site set up.
+ *
+ * - Switch off: no Admin site row, and the hub keeps every pane.
+ * - Switch on, no site yet: the Admin site row is drawn, so a manager can set the site up, and the
+ *   hub keeps every pane (add before remove: nothing moves until the site exists).
+ * - Switch on and a site: Users, Product roles, Sign-up list and Sets leave the hub for the site,
+ *   and the Admin site row stays, as the place the site is changed or taken down.
+ */
+export function visibleProductTopics<T extends { id: string }>(
+  topics: readonly T[],
+  { enabled, hasSite }: { enabled: boolean; hasSite: boolean },
+): T[] {
+  if (!enabled) return topics.filter((t) => t.id !== "admin-site");
+  if (!hasSite) return [...topics];
+  const moved = new Set<string>(ADMIN_SITE_MOVED_TOPIC_IDS);
+  return topics.filter((t) => !moved.has(t.id));
+}
 
 /**
  * Old top-level topic ids → the host-owned group that holds that pane now. `signin-apps` (Client

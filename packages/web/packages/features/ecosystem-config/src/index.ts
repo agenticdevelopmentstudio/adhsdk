@@ -30,6 +30,12 @@ export { SyncTablesPane, SyncTablesEditor } from "./SyncTablesPane";
 export { ProductRolesPane } from "./ProductRolesPane";
 export { SignupListPane } from "./SignupListPane";
 export { SetsPane } from "./SetsPane";
+// Who is editing through those three: a manager in the hub, or a product admin on the product's
+// own admin site (phase 6), which mounts the same panes.
+export type { PaneCaller } from "./pane-caller";
+// The hub's Admin site pane for a product (phase 6), and the totals it and the admin site share.
+export { AdminSitePane } from "./AdminSitePane";
+export { ProductTotalsPane } from "./ProductTotalsPane";
 export {
   useSyncTables,
   useSetSyncOverride,

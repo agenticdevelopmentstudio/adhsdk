@@ -30,7 +30,9 @@ import {
   ShieldCheck,
   ListChecks,
   Layers,
+  UserCog,
 } from "lucide-react";
+import { useAdminSite } from "@adh-sdk/data/product-admin";
 import { useDetailTitle } from "@adh-sdk/ui/blocks/detail-title";
 import type { TopicLeaf } from "@adh-sdk/resource";
 import {
@@ -56,6 +58,7 @@ import {
   ProductRolesPane,
   SignupListPane,
   SetsPane,
+  AdminSitePane,
 } from "@adh-sdk/ecosystem-config";
 import { AccessPane } from "@adh-sdk/authentication";
 import { helpFor } from "@adh-sdk/adh/help/store";
@@ -64,6 +67,7 @@ import {
   PRODUCT_MEMBER_MOVES,
   PRODUCT_TOPIC_ALIASES,
   PRODUCT_TOPICS,
+  visibleProductTopics,
 } from "./topics";
 import { ApplicationsGroup } from "./ApplicationsGroup";
 import { GamingGroup } from "./GamingGroup";
@@ -110,6 +114,8 @@ const ICONS: Record<string, ReactNode> = {
   roles: <ShieldCheck size={16} aria-hidden />,
   "signup-list": <ListChecks size={16} aria-hidden />,
   sets: <Layers size={16} aria-hidden />,
+  // The glyph the hub's `/admin-site` row has (menu-icons).
+  "admin-site": <UserCog size={16} aria-hidden />,
   gaming: <Gamepad2 size={16} aria-hidden />,
   gamification: <Trophy size={16} aria-hidden />,
   "feature-flags": <Flag size={16} aria-hidden />,
@@ -342,6 +348,16 @@ export function productTopicPaneRenderer({
             help={helpFor("ecosystems/sets")}
           />
         );
+      case "admin-site":
+        // The product's own admin site: its address, its admins and its totals. The pane answers
+        // "No product selected." itself before the id resolves, so the claim holds without one.
+        return (
+          <AdminSitePane
+            key={ctx.ecosystemId}
+            ecosystemId={ctx.ecosystemId}
+            help={helpFor("ecosystems/admin-site")}
+          />
+        );
       // Users ▸ Authentication: the ecosystem's client auth — how its customers sign in and sign up.
       // Its "Only listed people" switch names the Sign-up list row, so it links there.
       case "auth":
@@ -435,12 +451,21 @@ export function ProductsFeature({
     () => productTopicPaneRenderer({ workspaceSlug, renderTransfer, basePath }),
     [workspaceSlug, renderTransfer, basePath],
   );
+  // The open product's admin site decides which rows the hub keeps (visibleProductTopics). Until
+  // it answers, the product reads as switch-off: every pane stays and the Admin site row waits.
+  const { data: adminSite } = useAdminSite(activeEcoId);
+  const enabled = adminSite?.enabled ?? false;
+  const hasSite = adminSite?.site != null;
+  const topics = useMemo(
+    () => visibleProductTopics(PRODUCT_TOPIC_CONFIGS, { enabled, hasSite }),
+    [enabled, hasSite],
+  );
   return (
     <EcosystemsFeature
       basePath={basePath}
       workspaceSlug={workspaceSlug}
       listFirst
-      topics={PRODUCT_TOPIC_CONFIGS}
+      topics={topics}
       renderFeaturePanel={renderFeaturePanel}
       renderTopicPane={renderTopicPane}
       helpFor={helpFor}

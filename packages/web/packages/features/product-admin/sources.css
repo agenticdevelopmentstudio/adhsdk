@@ -1,0 +1,11 @@
+/* Tailwind source self-registration for @adh-sdk/product-admin.
+ *
+ * Tailwind does not scan node_modules, so the product admin site adds one line:
+ *
+ *   @import "@adh-sdk/product-admin/sources.css";
+ *
+ * The paths are relative to THIS file and travel with the package: `src` covers
+ * `next dev`, `dist` covers prod builds. Mirrors @adh-sdk/ecosystem-config's. */
+
+@source "./src/**/*.{ts,tsx}";
+@source "./dist/**/*.js";

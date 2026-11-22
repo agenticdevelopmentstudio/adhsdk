@@ -345,4 +345,21 @@ describe('invitation-panes', () => {
     expect(lastRequest.render(pending({ lastRequestDate: '2026-01-02' }))).toBe('2026-01-02')
     expect(lastInvite.render(pending({ lastInviteSentDate: '2026-01-03' }))).toBe('2026-01-03')
   })
+
+  // The product admin site (phase 6) keeps no admin records: it passes neither notes slot.
+  it('invitation-panes-035 without the notes slots there is no Admin notes action, modal or history', () => {
+    const bare = { renderNotesAndHistory: undefined, renderNotesModal: undefined }
+    for (const [pane, row] of [[requestsPane, request], [pendingPane, pending()], [invitesPane, invite]] as const) {
+      cleanup()
+      render(pane(bare))
+      expect(action('notes')).toBeUndefined()
+      expect(screen.queryByTestId('notes-modal')).toBeNull()
+      const { container } = render(<>{captured.list.renderDetail(row)}</>)
+      expect(container.querySelector('[data-testid="notes-history"]')).toBeNull()
+    }
+    expect(notes.renderNotesModal).not.toHaveBeenCalled()
+    expect(notes.renderNotesAndHistory).not.toHaveBeenCalled()
+    render(pendingPane(bare))
+    expect(action('send')).toBeDefined()
+  })
 })

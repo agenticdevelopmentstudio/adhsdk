@@ -154,4 +154,12 @@ describe("SignupListPane", () => {
     await waitFor(() => expect(api.remove).toHaveBeenCalledWith(eco(), "e2"));
     await waitFor(() => expect(api.list).toHaveBeenCalledTimes(2));
   });
+
+  // The product admin site (phase 6) mounts it with only the uuid and the caller: no hub context.
+  it("runs for a product admin from the ecosystemId prop alone", async () => {
+    render(<SignupListPane ecosystemId={eco()} caller="product_admin" />);
+    expect(await screen.findByText("ann@x.test")).toBeInTheDocument();
+    expect(api.list).toHaveBeenCalledWith(eco());
+    expect(roles.listRoles).toHaveBeenCalledWith({ ecosystem: eco() });
+  });
 });

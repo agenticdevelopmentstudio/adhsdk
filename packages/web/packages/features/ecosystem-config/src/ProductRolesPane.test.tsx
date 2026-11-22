@@ -131,3 +131,34 @@ describe("RoleHolders", () => {
     expect(await screen.findByText(/Every product user holds this role/)).toBeTruthy();
   });
 });
+
+// The product admin site mounts the same pane with no hub around it (phase 6). The backend refuses
+// a product admin any change to an `admin` seat, so those seats are shown and not revocable.
+describe("ProductRolesPane for a product admin", () => {
+  const ADMIN = role({ id: "r-admin", slug: "admin", name: "Admin", isSystem: true });
+
+  it("reads the roles from the ecosystemId prop alone", async () => {
+    render(<ProductRolesPane ecosystemId={eco()} caller="product_admin" />);
+    await waitFor(() => expect(api.listRoles).toHaveBeenCalledWith({ ecosystem: eco() }));
+  });
+
+  it("shows the admin role's holders without a revoke, and still grants it", async () => {
+    api.listAssignments.mockResolvedValue({ assignments: [assignment("a1", "cust-ann", "r-admin")] });
+    render(<RoleHolders ecosystemId={eco()} role={ADMIN} caller="product_admin" />);
+    expect(await screen.findByText("Ann")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Revoke Ann" })).toBeNull();
+    expect(screen.getByText(/removed by the product's managers/)).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Grant" })).toBeTruthy();
+  });
+
+  it("keeps revoke on every other role", async () => {
+    render(<RoleHolders ecosystemId={eco()} role={EDITOR} caller="product_admin" />);
+    expect(await screen.findByRole("button", { name: "Revoke Ann" })).toBeTruthy();
+  });
+
+  it("keeps revoke on the admin role for a manager", async () => {
+    api.listAssignments.mockResolvedValue({ assignments: [assignment("a1", "cust-ann", "r-admin")] });
+    render(<RoleHolders ecosystemId={eco()} role={ADMIN} />);
+    expect(await screen.findByRole("button", { name: "Revoke Ann" })).toBeTruthy();
+  });
+});
