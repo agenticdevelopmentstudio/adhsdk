@@ -190,7 +190,7 @@ export function OperatorAccessPane({ help }: { help?: ReactNode } = {}) {
 
   return (
     <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-      <FeatureTitle title="Operator access" help={help} />
+      <FeatureTitle title="Operator Access" help={help} />
       <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto px-6 pb-8 pt-2">
         <p className="mb-6 max-w-2xl text-sm text-apt-text-muted">
           Every request an operator made with operator access — reaching past

@@ -201,7 +201,7 @@ export const ADMIN_TOPICS: AdminTopic[] = [
   {
     id: "operator-access",
     category: "access",
-    label: "Operator access",
+    label: "Operator Access",
     description: "Every request made with operator access, and who made it",
     icon: Eye,
   },
