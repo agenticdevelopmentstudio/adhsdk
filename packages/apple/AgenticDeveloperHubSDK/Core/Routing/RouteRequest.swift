@@ -97,6 +97,51 @@ public struct RouteRequest: Sendable, Equatable {
         return Self.normalizedTimestamp(raw, name: name).map { Optional($0) }
     }
 
+    /// A bound on a column that holds UTC days (`YYYY-MM-DD`): the day as
+    /// given, or the UTC day of a full ISO8601 timestamp. A day compared as
+    /// text against a malformed bound fails the same quiet way a timestamp
+    /// does (`11/01/2026` sorts below every day), so it is a 400 too. Returns
+    /// `.success(nil)` when the parameter is absent or empty.
+    public func validatedDay(_ name: String) -> Result<String?, InvalidTimestamp> {
+        guard let raw = query(name), !raw.isEmpty else { return .success(nil) }
+        guard Self.isISODayOrTimestamp(raw) else {
+            return .failure(InvalidTimestamp(
+                message: "`\(name)` must be a day (YYYY-MM-DD) or an ISO8601 timestamp; got \"\(raw)\""
+            ))
+        }
+        guard raw.count > 10, let instant = TimestampParsing.parseISO8601(raw) else { return .success(raw) }
+        return .success(String(UTCTimestamp.string(from: instant).prefix(10)))
+    }
+
+    /// Accepts `2026-09-01` and `2026-09-01T12:00:00Z` alike, taking the day
+    /// from either: the whole string, so `2026-09-01garbage` is refused. A
+    /// timestamp is what ``TimestampParsing/parseISO8601(_:)`` accepts.
+    /// Anything else, a day no calendar has included, is a typo the caller
+    /// should hear about.
+    public static func isISODayOrTimestamp(_ value: String) -> Bool {
+        guard isISODay(String(value.prefix(10))) else { return false }
+        return value.count == 10 || TimestampParsing.parseISO8601(value) != nil
+    }
+
+    /// Exactly `YYYY-MM-DD`, ASCII digits, a day some calendar month has.
+    private static func isISODay(_ day: String) -> Bool {
+        guard day.count == 10 else { return false }
+        let parts = day.split(separator: "-", omittingEmptySubsequences: false)
+        guard parts.count == 3, parts[0].count == 4, parts[1].count == 2, parts[2].count == 2 else {
+            return false
+        }
+        // ASCII digits only (`isNumber` also accepts other scripts' digits and
+        // fractions), and a real calendar day, so `2026-13-01` is refused.
+        guard parts.allSatisfy({ $0.allSatisfy { $0.isASCII && $0.isWholeNumber } }),
+              let year = Int(parts[0]), let month = Int(parts[1]), let dayOfMonth = Int(parts[2]),
+              (1...12).contains(month) else { return false }
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(identifier: "UTC") ?? .current
+        guard let firstOfMonth = calendar.date(from: DateComponents(year: year, month: month, day: 1)),
+              let days = calendar.range(of: .day, in: .month, for: firstOfMonth) else { return false }
+        return days.contains(dayOfMonth)
+    }
+
     /// The parse-and-canonicalise step behind `validatedTimestamp`, for the
     /// fractional-seconds `timestamp` columns. Not the activity parser: a column
     /// that stores whole seconds reads its `since` through

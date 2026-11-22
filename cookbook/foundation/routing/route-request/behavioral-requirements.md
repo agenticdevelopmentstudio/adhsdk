@@ -33,6 +33,9 @@
 - **timestamp-fraction-preserved**: A valid value with fractional seconds MUST keep them (`2026-01-31T00:00:00.500Z` is unchanged).
 - **normalized-timestamp-static**: `RouteRequest.normalizedTimestamp(raw, name:)` MUST apply the same parse-and-canonicalize step to a given string, and MUST return `.failure` for a string `TimestampParsing.parseISO8601` rejects.
 - **failure-message-format**: A rejection MUST carry exactly the message ``"`{name}` must be an ISO8601 timestamp (e.g. 2026-01-31T00:00:00Z); got \"{raw}\""``, where `{name}` is the parameter name and `{raw}` is the rejected value, unescaped, so a caller knows which of several bounds was wrong.
+- **day-absent-is-unbounded**: `validatedDay(name)` MUST return `.success(nil)` when the parameter is absent or its last value is empty.
+- **day-validated**: `validatedDay(name)` MUST return `.failure(InvalidTimestamp)` naming the parameter unless the whole value is a real calendar day `YYYY-MM-DD` or an ISO-8601 instant `TimestampParsing.parseISO8601` accepts (`RouteRequest.isISODayOrTimestamp`); a value that merely starts with a day is refused.
+- **day-utc**: `validatedDay(name)` MUST return a day as given and an instant as its UTC day (`2026-11-01T01:00:00+02:00` becomes `2026-10-31`).
 - **activity-since-absent-is-empty**: `RouteRequest.activitySince(raw)` MUST return `.success("")` when `raw` is `nil` or empty.
 - **activity-since-whole-seconds**: `RouteRequest.activitySince(raw)` MUST return the instant in the whole-second `UTCTimestamp` form with fractions truncated (`2026-10-03T11:00:00.500Z` becomes `2026-10-03T11:00:00Z`), because the fractional form would compare wrongly byte for byte against whole-second columns.
 - **activity-since-name**: `RouteRequest.activitySince(raw)` MUST name the parameter `since` in a rejection and MUST take only the text, not a parameter name.

@@ -103,7 +103,7 @@ public enum BillingRoutes {
                 // local day, so an ISO timestamp would compare against a
                 // ten-character column and quietly match nothing.
                 let since = request.query("since") ?? ""
-                guard since.isEmpty || isISODayOrTimestamp(since) else {
+                guard since.isEmpty || RouteRequest.isISODayOrTimestamp(since) else {
                     return .error("Invalid 'since': expected YYYY-MM-DD", status: 400)
                 }
                 return .json(try database.billingEntries(
@@ -432,16 +432,6 @@ public enum BillingRoutes {
         }
     }
 
-    /// Accepts `2026-09-01` and `2026-09-01T12:00:00Z` alike, taking the day
-    /// from either: the whole string, so `2026-09-01garbage` is refused. A
-    /// timestamp is what ``TimestampParsing/parseISO8601(_:)`` accepts.
-    /// Anything else, a day no calendar has included, is a typo the caller
-    /// should hear about.
-    static func isISODayOrTimestamp(_ value: String) -> Bool {
-        guard isISODay(String(value.prefix(10))) else { return false }
-        return value.count == 10 || TimestampParsing.parseISO8601(value) != nil
-    }
-
     /// A backfill's `since` in the shape `resetBillingDerivation` compares
     /// against: a day as given, a timestamp as a whole-second UTC instant (an
     /// offset is converted, not compared as text). nil for anything else,
@@ -449,28 +439,9 @@ public enum BillingRoutes {
     /// re-derive the whole history and a non-date would quietly match
     /// nothing, each answering 200.
     static func backfillSince(_ value: String) -> String? {
-        guard isISODayOrTimestamp(value) else { return nil }
+        guard RouteRequest.isISODayOrTimestamp(value) else { return nil }
         guard value.count > 10 else { return value }
         return TimestampParsing.parseISO8601(value).map(UTCTimestamp.string(from:))
-    }
-
-    /// Exactly `YYYY-MM-DD`, ASCII digits, a day some calendar month has.
-    private static func isISODay(_ day: String) -> Bool {
-        guard day.count == 10 else { return false }
-        let parts = day.split(separator: "-", omittingEmptySubsequences: false)
-        guard parts.count == 3, parts[0].count == 4, parts[1].count == 2, parts[2].count == 2 else {
-            return false
-        }
-        // ASCII digits only (`isNumber` also accepts other scripts' digits and
-        // fractions), and a real calendar day, so `2026-13-01` is refused.
-        guard parts.allSatisfy({ $0.allSatisfy { $0.isASCII && $0.isWholeNumber } }),
-              let year = Int(parts[0]), let month = Int(parts[1]), let dayOfMonth = Int(parts[2]),
-              (1...12).contains(month) else { return false }
-        var calendar = Calendar(identifier: .gregorian)
-        calendar.timeZone = TimeZone(identifier: "UTC") ?? .current
-        guard let firstOfMonth = calendar.date(from: DateComponents(year: year, month: month, day: 1)),
-              let days = calendar.range(of: .day, in: .month, for: firstOfMonth) else { return false }
-        return days.contains(dayOfMonth)
     }
 }
 #endif
