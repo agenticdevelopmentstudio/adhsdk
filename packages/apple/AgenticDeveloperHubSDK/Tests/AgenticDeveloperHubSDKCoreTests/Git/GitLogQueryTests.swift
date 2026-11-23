@@ -18,6 +18,13 @@ struct GitLogQueryTests {
         #expect(!arguments.contains("-z"))
     }
 
+    @Test("since is an ISO-8601 --since in UTC")
+    func since() {
+        var query = GitLogQuery()
+        query.since = Date(timeIntervalSince1970: 1_800_000_000)
+        #expect(query.arguments().contains("--since=2027-01-15T08:00:00Z"))
+    }
+
     @Test("a path without follow keeps the revisions before the separator")
     func pathWithoutFollow() {
         var query = GitLogQuery()

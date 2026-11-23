@@ -13,6 +13,9 @@ public struct GitLogQuery: Sendable, Hashable {
     public var messageGrep: String?
     /// Commits that change the number of occurrences of this text (`-S`).
     public var pickaxe: String?
+    /// Only commits committed at or after this time (`--since`, which git reads as the
+    /// committer date).
+    public var since: Date?
     /// List each commit's changed paths and their status after its record (`--name-status`).
     public var nameStatus = false
     public var limit = 500
@@ -38,6 +41,7 @@ public struct GitLogQuery: Sendable, Hashable {
         // finds itself, and a stray `[` is not an error.
         if author != nil || messageGrep != nil { arguments.append("--fixed-strings") }
         if let pickaxe { arguments.append("-S" + pickaxe) }
+        if let since { arguments.append("--since=" + ISO8601DateFormatter().string(from: since)) }
         if nameStatus { arguments.append("--name-status") }
         if let path {
             // Literal and from the top: `[ab].txt` names that file alone, not `a.txt` and `b.txt`,
