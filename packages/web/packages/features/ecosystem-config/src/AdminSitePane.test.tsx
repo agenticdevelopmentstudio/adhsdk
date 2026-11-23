@@ -8,6 +8,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn() }) }));
 
+// The real data package, with revalidateResources watched so a test can see which lists a write
+// asks to be read again.
+vi.mock("@adh-sdk/data", async (importOriginal) => {
+  const real = await importOriginal<typeof import("@adh-sdk/data")>();
+  return { ...real, revalidateResources: vi.fn(real.revalidateResources) };
+});
+
 vi.mock("@adh-sdk/data/access", async (importOriginal) => ({
   accessTargetKey: (await importOriginal<typeof import("@adh-sdk/data/access")>()).accessTargetKey,
   accessApi: {
@@ -51,6 +58,7 @@ vi.mock("@adh-sdk/data/product-admin", async () => {
   };
 });
 
+import { revalidateResources } from "@adh-sdk/data";
 import { accessApi, type AccessRoleRow } from "@adh-sdk/data/access";
 import { signupListApi } from "@adh-sdk/data/ecosystem-config";
 import { adminSiteApi, type AdminSite } from "@adh-sdk/data/product-admin";
@@ -163,6 +171,10 @@ describe("AdminSitePane", () => {
       expect(signup.put).toHaveBeenCalledWith(eco(), { email: "cy@x.test", roleId: "r-admin", setId: null }),
     );
     expect(await screen.findByText("cy@x.test is on the sign-up list as an admin.")).toBeInTheDocument();
+    // The Sign-up list pane's cached copy is read again, and no other list.
+    const match = vi.mocked(revalidateResources).mock.calls.at(-1)?.[0];
+    expect(match?.(`signup-list:${eco()}`)).toBe(true);
+    expect(match?.(`signup-list:other`)).toBe(false);
   });
 
   it("keeps the set of an address already on the sign-up list, and changes only its role", async () => {
