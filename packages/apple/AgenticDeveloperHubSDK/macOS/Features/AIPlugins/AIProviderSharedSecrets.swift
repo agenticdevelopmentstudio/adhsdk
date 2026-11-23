@@ -48,6 +48,62 @@ public struct SharedGroupAIProviderKeychain: AIProviderSecretKeychain {
     }
 }
 
+/// A payload-free signal between processes: one process posts it, every
+/// process observing it hears it, the poster included. A protocol so a test
+/// can fire it by hand.
+public protocol CrossProcessSignal: AnyObject, Sendable {
+    func post()
+    /// Calls `handler` on every post, from any process, on any thread. One
+    /// handler per signal; a second call replaces the first.
+    func observe(_ handler: @escaping @Sendable () -> Void)
+}
+
+/// A `CrossProcessSignal` over a Darwin notification, which reaches every
+/// process of the user's session and carries no data.
+public final class DarwinNotificationSignal: CrossProcessSignal, @unchecked Sendable {
+
+    public let name: String
+    private let lock = NSLock()
+    private var handler: (@Sendable () -> Void)?
+    private var isObserving = false
+
+    public init(name: String) {
+        self.name = name
+    }
+
+    deinit {
+        CFNotificationCenterRemoveEveryObserver(
+            CFNotificationCenterGetDarwinNotifyCenter(), Unmanaged.passUnretained(self).toOpaque())
+    }
+
+    public func post() {
+        CFNotificationCenterPostNotification(
+            CFNotificationCenterGetDarwinNotifyCenter(), CFNotificationName(name as CFString), nil, nil, true)
+    }
+
+    public func observe(_ handler: @escaping @Sendable () -> Void) {
+        let alreadyObserving = lock.withLock { () -> Bool in
+            self.handler = handler
+            let was = self.isObserving
+            self.isObserving = true
+            return was
+        }
+        guard !alreadyObserving else { return }
+        CFNotificationCenterAddObserver(
+            CFNotificationCenterGetDarwinNotifyCenter(),
+            Unmanaged.passUnretained(self).toOpaque(),
+            { _, observer, _, _, _ in
+                guard let observer else { return }
+                Unmanaged<DarwinNotificationSignal>.fromOpaque(observer).takeUnretainedValue().fire()
+            },
+            name as CFString, nil, .deliverImmediately)
+    }
+
+    private func fire() {
+        lock.withLock { handler }?()
+    }
+}
+
 /// The secure-settings provider that keeps AI provider secrets in the shared
 /// Keychain group, so every app in the suite reads the same item.
 ///
@@ -64,13 +120,20 @@ public struct SharedGroupAIProviderKeychain: AIProviderSecretKeychain {
 ///
 /// Reads are memoized like `KeychainSecureSettingsStorageProvider`'s: every
 /// Keychain read is a round trip to `securityd`, and AI configurations are
-/// resolved in bulk on the main thread.
+/// resolved in bulk on the main thread. Because another app writes the same
+/// items, a write here posts `changeSignal` and a post from any app re-reads
+/// the memoized items (``reloadFromSharedGroup()``), announcing those that
+/// changed.
 @MainActor
 public final class AIProviderSharedSecretsProvider: SecureSettingsStorageProvider {
+
+    /// The Darwin notification the suite's apps post after writing a secret.
+    public static let changeNotificationName = SharedGroupAIProviderKeychain.service + ".changed"
 
     public let sharedGroup: AIProviderSecretKeychain
     public let fallback: SecureSettingsStorageProvider
     public let prefix: String
+    private let changeSignal: (any CrossProcessSignal)?
 
     private var cache: [String: String?] = [:]
     private let changeSubject = PassthroughSubject<String, Never>()
@@ -81,16 +144,36 @@ public final class AIProviderSharedSecretsProvider: SecureSettingsStorageProvide
     public init(
         sharedGroup: AIProviderSecretKeychain,
         fallback: SecureSettingsStorageProvider,
-        prefix: String = SharedSettingKeys.aiProviderConfigPrefix
+        prefix: String = SharedSettingKeys.aiProviderConfigPrefix,
+        changeSignal: (any CrossProcessSignal)? = nil
     ) {
         self.sharedGroup = sharedGroup
         self.fallback = fallback
         self.prefix = prefix
+        self.changeSignal = changeSignal
         let subject = changeSubject
         let prefix = prefix
         fallbackChanges = fallback.changes
             .filter { !$0.hasPrefix(prefix) }
             .sink { subject.send($0) }
+        changeSignal?.observe { [weak self] in
+            Task { @MainActor in self?.reloadFromSharedGroup() }
+        }
+    }
+
+    /// Re-reads every memoized item from the shared group and announces each
+    /// one whose value another app changed. This app's own write comes back
+    /// equal, and silent.
+    public func reloadFromSharedGroup() {
+        for (name, memoized) in Array(cache) {
+            let current = sharedGroup.value(forAccount: name)
+            guard current != memoized else { continue }
+            // Removed elsewhere reads as removed here too: the memo holds the
+            // absence, so a legacy copy in this app's own service is not
+            // copied forward again.
+            cache.updateValue(current, forKey: name)
+            changeSubject.send(name)
+        }
     }
 
     public var changes: AnyPublisher<String, Never> {
@@ -121,6 +204,7 @@ public final class AIProviderSharedSecretsProvider: SecureSettingsStorageProvide
         }
         cache[key.name] = string
         changeSubject.send(key.name)
+        changeSignal?.post()
     }
 
     public func remove<Value: Codable & Sendable>(_ key: any StorableSetting<Value>) {
@@ -132,6 +216,7 @@ public final class AIProviderSharedSecretsProvider: SecureSettingsStorageProvide
         fallback.remove(key)
         cache.updateValue(nil, forKey: key.name)
         changeSubject.send(key.name)
+        changeSignal?.post()
     }
 
     public func contains<Value: Codable & Sendable>(_ key: any StorableSetting<Value>) -> Bool {
@@ -197,7 +282,8 @@ extension AIProviderConfigStore {
         }
         UserSettings.install(secureProvider: AIProviderSharedSecretsProvider(
             sharedGroup: SharedGroupAIProviderKeychain(accessGroup: accessGroup),
-            fallback: UserSettings.shared.secureSettingsStorageProvider
+            fallback: UserSettings.shared.secureSettingsStorageProvider,
+            changeSignal: DarwinNotificationSignal(name: AIProviderSharedSecretsProvider.changeNotificationName)
         ))
         return true
     }
