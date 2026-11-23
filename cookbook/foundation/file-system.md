@@ -2,11 +2,11 @@
 id: 016f5ba0-f4ee-4b39-b1a2-83629768acdd
 title: "File System"
 type: ingredient
-version: 1.2.0
+version: 1.3.0
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-11-15
+modified: 2026-11-23
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -305,6 +305,10 @@ original error otherwise.
   resolved web address in a web browser, a directory in a File Browser
   window, a file in a Document window (where the single-document tab
   setting says it opens), and MUST refuse invalid text with an alert.
+- **helper-tool-in-contents-helpers**: `CommandLineToolLink.helper(_:in:directory:)`
+  MUST look for the tool at `Contents/Helpers/<name>` of the bundle and
+  answer a link only when that file is executable, else nil, because a
+  suite app's CLI there may differ from the app's executable only in case.
 ## Appearance
 
 Not applicable — this is a file-system service, not a visual component.
@@ -352,6 +356,7 @@ Not applicable — this is a file-system service, not a visual component.
 | file-system-029 | rename-hard-link-and-inode-identity | Perform the rename operation with the overwrite flag true, where the destination is a hard link to a different name for the very inode already at the source's eventual destination shape. | The other name is replaced correctly rather than treated as identical to the source. |
 | file-system-030 | calls-serialize-on-the-queue | Perform eight concurrent read-file operations into one service instance, each against a different file with distinct contents. | Each caller's call returns exactly its own file's bytes, with none mixed up. |
 | file-system-031 | open-location-resolves-typed-text | Resolve `  https://example.com  `, `example.com/page`, `~/` (an existing directory), the path of an existing file, `/no/such/path`, `localhost`, and an empty string. | Web `https://example.com`; web `https://example.com/page`; a directory; a file; invalid; invalid; invalid |
+| file-system-032 | helper-tool-in-contents-helpers | A bundle whose `Contents/Helpers/fake` is executable; the same file without the execute bit; a name with no file. | A link named `fake` to that file in the given directory; nil; nil. |
 ## Edge Cases
 
 - **Null and empty input**: The read-file, read-directory, stat, delete,
@@ -753,6 +758,7 @@ where it already was (`rename-case-only-and-self-renames-succeed`).
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.3.0 | 2026-11-23 | Mike Fullerton | CommandLineToolLink.helper finds a suite app's CLI in Contents/Helpers. |
 | 1.2.0 | 2026-11-15 | Mike Fullerton | Describes Open Location, which lives in the same directory: how typed text resolves (open-location-resolves-typed-text, open-location-touches-only-existence, vector file-system-031) and that a file opens in a Document window (open-location-file-opens-in-a-document-window) |
 | 1.1.1 | 2026-10-04 | Mike Fullerton | Matches its type's shape: required fields, title heading, and only the type's own sections. |
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to foundation/. |

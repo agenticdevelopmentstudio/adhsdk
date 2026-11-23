@@ -34,3 +34,6 @@
 | sed-031 | credential-relay, credential-relay-no-echo | one long-lived credential posted to an empty in-memory store | 200, `changed` is `true`, the store holds the token and saved once, the reply does not contain it (`testRelayStoresTheSetAndEchoesNoToken`) |
 | sed-032 | set-credentials-change | the same body posted twice | the second reply has `changed: false`; `saves` stays `1` (`testRelayingTheSameSetAgainChangesNothing`) |
 | sed-033 | credential-relay-no-echo | a truncated array carrying a token, an empty body, a JSON object | 400 each, no token or account in the reply, nothing saved (`testAnUndecodableBodyIs400AndEchoesNothing`) |
+| sed-034 | follower-syncs-then-applies | a registry holding one project, then an insert, an update and a delete | the local file holds the first project after `start`, then each change (`testStartMirrorsTheProjectsAlreadyRegistered`, `testARegistryChangeReachesTheLocalFile`) |
+| sed-035 | follower-keeps-local-path | a registry project at the kept path | the local file never holds it (`testTheKeptPathIsNeverMirrored`) |
+| sed-036 | follower-stop | `stop()`, then an insert in the registry | the earlier rows stay; the insert never arrives (`testStopLeavesTheMirroredRowsAndFollowsNoFurther`) |

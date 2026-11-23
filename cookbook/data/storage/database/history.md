@@ -1,6 +1,7 @@
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.4.0 | 2026-11-23 | Mike Fullerton | Project registry follower (keeps a local Projects.db in step with adhd's registry) moved in from the Kitchen. |
 | 1.3.1 | 2026-11-23 | Mike Fullerton | billing-routes-since: GET /billing/entries reads a timestamp `since` as the earliest calendar day that instant falls on in any zone (UTC-12), not its text prefix, and its 400 names both accepted forms (review f8). |
 | 1.3.0 | 2026-11-21 | Mike Fullerton | Account credential store, quota probe, account router and its routes (credential relay) moved into Database/Daemon. Billing routes (every stenographerd billing call) and activity routes with a work tracker's controls added for adhd. |
 | 1.2.2 | 2026-11-19 | Mike Fullerton | Name the CLI sentinel without the host's name |

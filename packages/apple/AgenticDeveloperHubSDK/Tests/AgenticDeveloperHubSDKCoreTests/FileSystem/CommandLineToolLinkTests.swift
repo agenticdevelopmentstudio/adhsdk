@@ -52,4 +52,36 @@ final class CommandLineToolLinkTests: XCTestCase {
                                        directory: bin)
         XCTAssertEqual(link.state, .linkedElsewhere(other.path))
     }
+
+    // MARK: - helper(_:in:)
+
+    /// A suite app's CLI in `Contents/Helpers`, beside an app whose name
+    /// differs from the tool's only in case.
+    func testAHelperIsFoundInContentsHelpers() throws {
+        let bundle = try makeBundle(helper: "fake", executable: true)
+        let link = try XCTUnwrap(CommandLineToolLink.helper("fake", in: bundle, directory: bin))
+        XCTAssertEqual(link.name, "fake")
+        XCTAssertEqual(link.tool.resolvingSymlinksInPath().path,
+                       bundle.bundleURL.appending(path: "Contents/Helpers/fake").resolvingSymlinksInPath().path)
+        XCTAssertEqual(link.directory, bin)
+    }
+
+    func testAMissingOrNonExecutableHelperIsNil() throws {
+        let bundle = try makeBundle(helper: "fake", executable: false)
+        XCTAssertNil(CommandLineToolLink.helper("fake", in: bundle, directory: bin))
+        XCTAssertNil(CommandLineToolLink.helper("absent", in: bundle, directory: bin))
+    }
+
+    private func makeBundle(helper name: String, executable: Bool) throws -> Bundle {
+        let app = root.appendingPathComponent("Fake.app", isDirectory: true)
+        let helpers = app.appending(path: "Contents/Helpers", directoryHint: .isDirectory)
+        try FileManager.default.createDirectory(at: helpers, withIntermediateDirectories: true)
+        let plist = try PropertyListSerialization.data(
+            fromPropertyList: ["CFBundleIdentifier": "com.example.fake"], format: .xml, options: 0)
+        try plist.write(to: app.appending(path: "Contents/Info.plist"))
+        FileManager.default.createFile(atPath: helpers.appendingPathComponent(name).path,
+                                       contents: Data("#!/bin/sh\n".utf8),
+                                       attributes: [.posixPermissions: executable ? 0o755 : 0o644])
+        return try XCTUnwrap(Bundle(url: app))
+    }
 }
