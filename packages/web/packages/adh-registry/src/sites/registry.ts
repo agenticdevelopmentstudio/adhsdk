@@ -1243,6 +1243,9 @@ export const HUB_ROUTE_SEGMENTS = new Set<string>([
   'login',
   'oidc',
   'signup',
+  // `support` is the page a customer's emailed support-access link opens (phase 7), signed
+  // out like the rest of the group.
+  'support',
   // app/(hub)/ — the two marketing surfaces that stayed at the root.
   'contact',
   'explore',
