@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { Boxes } from "lucide-react";
 import { reportUnexpectedAuthError } from "@adh-sdk/auth";
 import { useDirtyDraft } from "@adh-sdk/ui/hooks/useDirtyDraft";
@@ -583,12 +583,16 @@ function NewServiceForm({
  */
 function ServiceEditor({
   service,
+  onChanged,
   onSaved,
   onDeleted,
   onCancel,
 }: {
-  /** The service to edit (never null — create is a modal). */
+  /** The service to edit (never null — create is a modal), as the shared list last holds it. */
   service: UserService;
+  /** Writes a newer copy of this service into the shared services list (its cache entry), so the
+   *  pane, the rail and the persona editor's picker all show it before the re-read lands. */
+  onChanged: (update: (prev: UserService) => UserService) => void;
   onSaved: (saved: UserService) => void;
   onDeleted: () => void;
   onCancel: () => void;
@@ -605,11 +609,9 @@ function ServiceEditor({
   // Null while clean: registration is gated on dirt, never on "an editor is mounted", or browsing
   // services would prompt on the way out of every one of them.
   useRailExitGuard(dirty ? { isDirty: () => true } : null);
-  // Live service state: updated after connect/refresh without a full remount.
-  const [liveService, setLiveService] = useState<UserService>(service);
-  // Follow the list's re-read of this service (after a save, connect, refresh or an availability
-  // change revalidates the cache), so the models table shows the row as last read.
-  useEffect(() => setLiveService(service), [service]);
+  // The service is read straight from the prop, never copied into state: connect, refresh, save
+  // and availability changes write their answers into the shared list through `onChanged`, and the
+  // list's re-read lands here the same way, so there is one copy and nothing to keep in sync.
   const [saving, setSaving] = useState(false);
   const [connecting, setConnecting] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -636,6 +638,7 @@ function ServiceEditor({
       // Adopt the saved row as the new baseline so Save re-disables until the next edit —
       // this instance stays mounted (onSaved re-selects the SAME id, no remount).
       commit(fromService(saved));
+      onChanged(() => saved);
       onSaved(saved);
     } catch (err) {
       reportUnexpectedAuthError(err, { feature: "services", step: "save" });
@@ -663,7 +666,7 @@ function ServiceEditor({
     setConnecting(true);
     try {
       const updated = await api.services.connect(service.id);
-      setLiveService(updated);
+      onChanged(() => updated);
       onSaved(updated);
     } catch (err) {
       reportUnexpectedAuthError(err, { feature: "services", step: "connect" });
@@ -676,7 +679,7 @@ function ServiceEditor({
     setRefreshing(true);
     try {
       const updated = await api.services.refreshModels(service.id);
-      setLiveService(updated);
+      onChanged(() => updated);
       onSaved(updated);
     } catch (err) {
       reportUnexpectedAuthError(err, { feature: "services", step: "refreshModels" });
@@ -723,16 +726,16 @@ function ServiceEditor({
           draft={draft}
           onChange={(next) => patch(next)}
           providerDisabled
-          apiKeyHint={liveService.hasApiKey ? "Leave blank to keep the existing key." : undefined}
-          apiKeyPlaceholder={liveService.hasApiKey ? "•••• set" : "sk-…"}
+          apiKeyHint={service.hasApiKey ? "Leave blank to keep the existing key." : undefined}
+          apiKeyPlaceholder={service.hasApiKey ? "•••• set" : "sk-…"}
         />
 
         <FieldGroup
           title="Connection"
           trailing={
-            liveService.lastConnectedAt ? (
+            service.lastConnectedAt ? (
               <span className="font-mono text-[0.65rem] text-apt-text-dim">
-                Last: {fmtDate(liveService.lastConnectedAt)}
+                Last: {fmtDate(service.lastConnectedAt)}
               </span>
             ) : undefined
           }
@@ -741,10 +744,10 @@ function ServiceEditor({
             <Button size="sm" onClick={() => void handleConnect()} disabled={connecting}>
               {connecting ? "Connecting…" : "Connect"}
             </Button>
-            {liveService.connectStatus === "failed" && liveService.connectError && (
-              <ErrorText error={liveService.connectError} />
+            {service.connectStatus === "failed" && service.connectError && (
+              <ErrorText error={service.connectError} />
             )}
-            {liveService.connectStatus === "connected" && (
+            {service.connectStatus === "connected" && (
               <p className="text-sm text-apt-green">Connected successfully.</p>
             )}
           </div>
@@ -753,9 +756,9 @@ function ServiceEditor({
         <FieldGroup
           title="Models"
           trailing={
-            liveService.modelsFetchedAt ? (
+            service.modelsFetchedAt ? (
               <span className="font-mono text-[0.65rem] text-apt-text-dim">
-                Fetched: {fmtDate(liveService.modelsFetchedAt)}
+                Fetched: {fmtDate(service.modelsFetchedAt)}
               </span>
             ) : undefined
           }
@@ -764,9 +767,9 @@ function ServiceEditor({
             {refreshing ? "Refreshing…" : "Refresh"}
           </Button>
           <ModelsTable
-            serviceId={liveService.id}
-            models={liveService.models}
-            onUpdated={setLiveService}
+            serviceId={service.id}
+            models={service.models}
+            onUpdated={(updated) => onChanged(() => updated)}
           />
         </FieldGroup>
       </div>
@@ -825,7 +828,7 @@ export function ServicesSection({
 
   // The services, cached: coming back to this pane paints the list on the first frame and re-reads
   // behind that paint, instead of showing "Loading…" for the length of a round trip every time.
-  const { items: services, reload, error, isFetching } = useUserServices();
+  const { items: services, reload, setItems, error, isFetching } = useUserServices();
 
   // Swallowing: every caller below re-reads AFTER its own write succeeded, so a failed re-read must
   // not surface as an unhandled rejection. It still reaches the screen — as `error`.
@@ -881,6 +884,9 @@ export function ServicesSection({
       <ServiceEditor
         key={openService.id}
         service={openService}
+        onChanged={(update) =>
+          setItems((prev) => prev?.map((s) => (s.id === openService.id ? update(s) : s)) ?? prev)
+        }
         onSaved={(saved) => {
           selectService(saved.id);
           refresh();
