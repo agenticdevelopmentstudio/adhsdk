@@ -8,7 +8,7 @@
     "status": "review",
     "language": "en",
     "created": "2026-11-21",
-    "modified": "2026-11-22",
+    "modified": "2026-11-23",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -34,7 +34,7 @@
     "approved-date": ""
   },
   "names_hosts": "The installed copy's protected roots include the literal `~/.claude` directory (hook socket, drop directory, settings.json), named as path data.",
-  "synced": "d20b5fa4e76b9c70",
+  "synced": "57150fdc5ba64c6a",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
