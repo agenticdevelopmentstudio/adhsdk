@@ -13,7 +13,7 @@
 // product's site uses the host; the backend's message says which, and the pane shows it.
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { authedJson, authedRequest, unixToIso, withV1Query } from "../http";
+import { authedJson, authedRequest, isNotFound, unixToIso, withV1Query } from "../http";
 
 export interface AdminSiteWire {
   id: string;
@@ -94,12 +94,17 @@ export const adminSiteApi = {
 
 export const ADMIN_SITE_KEY = (ecosystemId: string) => ["product-admin", ecosystemId, "admin-site"] as const;
 
-/** The product's admin site and the switch. Disabled until there is an id to ask about. */
+/**
+ * The product's admin site and the switch. Disabled until there is an id to ask about. A 404 is
+ * not retried: an ecosystem that can have no admin site (a workspace's, asked by AllDataPane)
+ * answers it every time, so a retry only doubles the failed requests.
+ */
 export function useAdminSite(ecosystemId: string | null | undefined) {
   return useQuery({
     queryKey: ADMIN_SITE_KEY(ecosystemId ?? ""),
     queryFn: () => adminSiteApi.get(ecosystemId as string),
     enabled: Boolean(ecosystemId),
+    retry: (count, err) => !isNotFound(err) && count < 1,
   });
 }
 
