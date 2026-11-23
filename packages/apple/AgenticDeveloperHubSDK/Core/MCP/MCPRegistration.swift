@@ -69,7 +69,7 @@ public enum MCPRegistration {
         let entry: [String: String] = [
             "type": "http",
             "url": url(port: port),
-            "headersHelper": headersHelper(adhdPath: adhdPath),
+            "headersHelper": headersHelper(adhdPath: adhdPath)
         ]
         let data = (try? JSONSerialization.data(withJSONObject: entry,
                                                 options: [.sortedKeys, .withoutEscapingSlashes])) ?? Data()

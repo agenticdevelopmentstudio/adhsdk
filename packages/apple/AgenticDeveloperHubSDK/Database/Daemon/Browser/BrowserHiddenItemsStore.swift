@@ -373,7 +373,7 @@ public final class BrowserHiddenItemsStore: @unchecked Sendable {
                 arguments: [item.id]) ?? false
             let values: StatementArguments = [
                 item.list.rawValue, item.site, item.selector, item.scope.rawValue, item.label,
-                item.enabled, item.created.timeIntervalSinceReferenceDate,
+                item.enabled, item.created.timeIntervalSinceReferenceDate
             ]
             if idTaken {
                 try connection.execute(sql: """
