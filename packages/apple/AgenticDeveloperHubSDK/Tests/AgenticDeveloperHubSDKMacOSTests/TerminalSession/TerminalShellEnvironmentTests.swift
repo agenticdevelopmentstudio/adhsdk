@@ -4,8 +4,8 @@ import XCTest
 final class TerminalShellEnvironmentTests: XCTestCase {
 
     func testExtraKeysAreAppended() {
-        let env = TerminalSession.shellEnvironment(base: ["TERM=xterm-256color"], extra: ["ADKITCHEN_PANE_ID": "abc"])
-        XCTAssertEqual(env, ["TERM=xterm-256color", "ADKITCHEN_PANE_ID=abc"])
+        let env = TerminalSession.shellEnvironment(base: ["TERM=xterm-256color"], extra: ["ADHD_PANE_ID": "abc"])
+        XCTAssertEqual(env, ["TERM=xterm-256color", "ADHD_PANE_ID=abc"])
     }
 
     func testExistingKeyIsReplacedInPlace() {
@@ -22,6 +22,12 @@ final class TerminalShellEnvironmentTests: XCTestCase {
         // "ADKITCHEN_PANE" must not be mistaken for "ADKITCHEN_PANE_ID".
         let env = TerminalSession.shellEnvironment(base: ["ADKITCHEN_PANE_ID=old"], extra: ["ADKITCHEN_PANE": "x"])
         XCTAssertEqual(env, ["ADKITCHEN_PANE_ID=old", "ADKITCHEN_PANE=x"])
+    }
+
+    func testAPaneExportsItsIDAsADHDPaneID() {
+        let id = UUID()
+        let env = ComposableTabsViewRegistry.paneEnvironment(paneID: id, projectName: "p")
+        XCTAssertEqual(env, ["ADHD_PANE_ID": id.uuidString, "ADKITCHEN_PROJECT": "p"])
     }
 
     @MainActor

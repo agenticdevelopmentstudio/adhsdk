@@ -10,7 +10,7 @@
 - **terminal-opens-live**: A terminal pane MUST add its first shell session when it is created, so it never opens empty.
 - **private-terminal-vault**: A private terminal pane MUST be created with the family's privacy vault and the pane's working directory.
 - **environment-late-read**: The shell environment MUST be read from a closure each time a terminal or private terminal pane's content is created, not when the pane type is registered, so a value the host learns after registering reaches every pane opened after it is known. The pane hands the resulting dictionary to its session manager, which gives it to every shell that pane starts, so a pane already open keeps the values it was created with. The dictionary overloads wrap a fixed dictionary in such a closure.
-- **pane-environment-variables**: Every terminal and private terminal shell MUST receive ADKITCHEN_PANE_ID set to the pane's node identifier string and ADKITCHEN_PROJECT set to the project's display name.
+- **pane-environment-variables**: Every terminal and private terminal shell MUST receive ADHD_PANE_ID set to the pane's node identifier string and ADKITCHEN_PROJECT set to the project's display name.
 - **pane-environment-wins**: WHEN the host environment and the pane environment name the same variable, the pane's value MUST win.
 - **terminal-chat-state-store**: A terminal chat pane MUST be created with a pane state store using the prefix "terminalChat".
 - **terminal-chat-listing**: A terminal chat pane MUST be listed under an identifier derived from its node identifier, with the project display name, working directory and pane number.

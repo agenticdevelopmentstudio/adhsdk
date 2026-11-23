@@ -4,8 +4,8 @@ import Combine
 import AgenticDeveloperHubSDKUI
 import AgenticDeveloperHubSDKCore
 
-/// The CLI settings panel: how a command-line agent (Claude Code) reaches the
-/// app's MCP endpoint. Whether models may drive browser panes is the browser's
+/// The CLI settings panel: how a command-line agent (Claude Code) reaches
+/// adhd's MCP endpoint, which serves every suite app's tools. Whether models may drive browser panes is the browser's
 /// own setting, in its Agent Privacy group (`AgentPrivacySettingsGroup`).
 @MainActor
 public final class CLISettingsPanelViewController: ComposableSettings.SettingsPanelViewController {
@@ -37,9 +37,11 @@ public final class CLISettingsPanelViewController: ComposableSettings.SettingsPa
     public override var helpContent: ComposableSettings.PanelHelp? {
         ComposableSettings.PanelHelp(topics: [
             .init(title: "MCP Endpoint",
-                  body: "The app serves its tools over MCP on this Mac only. Claude Code run from a "
-                      + "terminal pane finds it through the shell's environment; Claude Code run "
-                      + "anywhere else needs the copied command, once. Whether a model may drive "
+                  body: "adhd serves the tools of every suite app over MCP on this Mac only, at "
+                      + "127.0.0.1 on its channel's port (22871 for a Debug build, 22850 for a "
+                      + "Release one), path /mcp. adhd's installer registers it with Claude Code; "
+                      + "the copied command registers it by hand, once. A terminal pane tells "
+                      + "adhd which pane is asking through ADHD_PANE_ID. Whether a model may drive "
                       + "browser panes is set in Web Browser > Privacy and Security, under Agent "
                       + "Privacy.")
         ])

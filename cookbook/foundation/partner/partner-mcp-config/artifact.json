@@ -4,11 +4,11 @@
     "id": "ad0b0d88-6ade-49aa-8fd3-5d9926060112",
     "title": "Partner MCP Config",
     "type": "ingredient",
-    "version": "1.0.2",
+    "version": "1.1.0",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
-    "modified": "2026-11-14",
+    "modified": "2026-11-23",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -33,7 +33,7 @@
     "approved-date": ""
   },
   "names_hosts": "The partner drives the Claude CLI (its stream-json protocol, flags and model names); the host is its subject.",
-  "synced": "3b0559535c7a68dd",
+  "synced": "467d18f35512015f",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

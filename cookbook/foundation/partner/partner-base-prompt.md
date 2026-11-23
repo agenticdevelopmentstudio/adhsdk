@@ -2,11 +2,11 @@
 id: 1abdd016-954c-4058-8db3-224c52712365
 title: "Partner Base Prompt"
 type: ingredient
-version: 1.0.2
+version: 1.1.0
 status: review
 language: en
 created: 2026-11-14
-modified: 2026-11-14
+modified: 2026-11-23
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -118,6 +118,8 @@ The base text is the following, with no leading or trailing line break. The bloc
 > Between messages you do nothing. Never loop, sleep or poll to wait for something; a later message will wake you.
 >
 > ## Tools
+>
+> adhd serves these tools under the app's name: `partner_projects_list` arrives as `kitchen_partner_projects_list`.
 >
 > | Tool | Does |
 > |---|---|
@@ -314,6 +316,7 @@ Not applicable: The source calls no logging API.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.0 | 2026-11-23 | Mike Fullerton | The tools section says adhd serves the tools under the app's name. |
 | 1.0.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (PartnerBasePromptTests.swift, 20 of 20 vectors); unit-test-coverage now passed. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Linked partner-job and partner-job-defaults in depends-on and related, quoted the exact base text and a full code-review steps section, stated the unchecked skill id, accepted the backtick risk, marked vectors 009 onward untested and removed unsupported consumer claims. |
 | 1.0.0 | 2026-11-14 | Mike Fullerton | Initial creation |

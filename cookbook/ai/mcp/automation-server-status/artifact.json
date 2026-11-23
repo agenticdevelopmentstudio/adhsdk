@@ -29,7 +29,7 @@
     "approved-date": ""
   },
   "names_hosts": "The code this spec describes names Claude itself (its CLI, hook events, paths or literal labels); the spec states those values.",
-  "synced": "dfab5d5343361d16",
+  "synced": "4a40171a2ee6363a",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

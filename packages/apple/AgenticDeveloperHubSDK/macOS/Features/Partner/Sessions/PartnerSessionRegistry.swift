@@ -6,7 +6,7 @@ import os
 /// The terminals the coding partner has open, newest first.
 ///
 /// Opens each one in its own ``TerminalSessionManager`` with the variables
-/// that tell a shell which pane it is (`ADKITCHEN_PANE_ID`) and which project
+/// that tell a shell which pane it is (`ADHD_PANE_ID`) and which project
 /// (`ADKITCHEN_PROJECT`), records it in the store, and turns its detector's
 /// reports into ``PartnerInbound`` events for the partner.
 @MainActor
@@ -44,13 +44,13 @@ public final class PartnerSessionRegistry: ObservableObject {
                      reviewID: String? = nil) -> PartnerSession {
         let id = UUID()
         var variables = environment()
-        variables["ADKITCHEN_PANE_ID"] = id.uuidString
+        variables[ComposableTabsViewRegistry.paneIDVariable] = id.uuidString
         // What Claude Code's hooks record as the session's terminal, so the
         // Stop detector can tell this pane's agent from any other in the same
         // directory. Set here, over anything inherited, or every pane would
         // carry the same one.
         variables["TERM_SESSION_ID"] = id.uuidString
-        variables["ADKITCHEN_PROJECT"] = directory
+        variables[ComposableTabsViewRegistry.projectVariable] = directory
         let manager = TerminalSessionManager(workingDirectory: directory, environment: variables)
         let terminal = manager.addSession()
         let chat = TerminalChatSession()

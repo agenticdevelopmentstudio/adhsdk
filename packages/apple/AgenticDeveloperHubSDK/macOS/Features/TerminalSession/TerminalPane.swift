@@ -91,13 +91,24 @@ extension ComposableTabsViewRegistry {
         }
     }
 
-    /// The two variables that say which pane a shell runs in. A process in
-    /// the shell sends `ADKITCHEN_PANE_ID` as the MCP caller header, which is
-    /// how "this pane" resolves to the Browser pane beside it.
+    /// The variable naming the pane a shell runs in. `adhd mcp headers`
+    /// sends its value as the MCP caller header (`HostMCPServer.callerHeader`),
+    /// which is how "this pane" resolves to the Browser pane beside it.
+    public nonisolated static let paneIDVariable = "ADHD_PANE_ID"
+    /// The variable naming the project a shell's pane belongs to.
+    public nonisolated static let projectVariable = "ADKITCHEN_PROJECT"
+
+    /// The two variables that say which pane a shell runs in.
     @MainActor
     static func paneEnvironment(for context: ComposableTabsViewContext) -> [String: String] {
-        ["ADKITCHEN_PANE_ID": context.nodeID.uuidString,
-         "ADKITCHEN_PROJECT": context.project.displayName]
+        paneEnvironment(paneID: context.nodeID, projectName: context.project.displayName)
+    }
+
+    /// The same two variables for a pane with this layout node id in this
+    /// project: what every terminal pane exports over the host's own
+    /// environment (the host's values never win over these).
+    public nonisolated static func paneEnvironment(paneID: UUID, projectName: String) -> [String: String] {
+        [paneIDVariable: paneID.uuidString, projectVariable: projectName]
     }
 
     /// Registers the terminal chat pane: a chat whose messages are typed into

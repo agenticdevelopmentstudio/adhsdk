@@ -12,7 +12,7 @@
 **Approved**: pending
 
 **Decision**: The pane's own variables replace host variables of the same name.
-**Rationale**: ADKITCHEN_PANE_ID is how "this pane" resolves to the Browser pane beside it, so a host value must not override it.
+**Rationale**: ADHD_PANE_ID is how "this pane" resolves to the Browser pane beside it, so a host value must not override it.
 **Approved**: pending
 
 **Decision**: Registration and allowance come from one family value.

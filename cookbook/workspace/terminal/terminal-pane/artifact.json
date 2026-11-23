@@ -4,11 +4,11 @@
     "id": "b8e3f3f9-3d5e-45ef-8859-61d168f4c14d",
     "title": "Terminal Pane Family",
     "type": "ingredient",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
-    "modified": "2026-11-14",
+    "modified": "2026-11-23",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -28,7 +28,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "51ae52d09f7c7417",
+  "synced": "5f8f5cdfb64adc06",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

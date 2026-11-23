@@ -221,6 +221,9 @@ struct PartnerBasePromptTests {
 
         ## Tools
 
+        adhd serves these tools under the app's name: `partner_projects_list` arrives as \
+        `kitchen_partner_projects_list`.
+
         | Tool | Does |
         |---|---|
         | `partner_projects_list` | Lists the Projects registry: id, name, path, remote, current branch. |

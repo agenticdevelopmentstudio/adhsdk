@@ -1,0 +1,28 @@
+
+- **terminal-view-id**: The terminal pane's view identifier MUST have the raw value "terminal", because persisted layout rows already name it and it MUST NOT change.
+- **view-id-values**: The terminal chat, persona terminal chat and private terminal view identifiers MUST have the raw values "terminal-chat", "persona-terminal-chat" and "private-terminal".
+- **terminal-descriptor**: The terminal pane MUST be registered with the display name "Terminal", the symbol "terminal", the caller's preferred axis and a minimum thickness of 300.
+- **private-terminal-descriptor**: The private terminal pane MUST be registered with the display name "Private Terminal", the symbol "eye.slash", the caller's preferred axis and a minimum thickness of 300.
+- **terminal-chat-descriptor**: The terminal chat pane MUST be registered with the display name "Terminal Chat", the symbol "bubble.left.and.text.bubble.right", a horizontal preferred axis and a minimum thickness of 260.
+- **persona-chat-descriptor**: The persona terminal chat pane MUST be registered with the display name "Persona Terminal Chat", the symbol "person.crop.circle.badge.questionmark", a horizontal preferred axis and a minimum thickness of 260.
+- **terminal-no-session-list**: A terminal pane MUST hold one shell and MUST NOT show a session list, because the tab already carries the directory and branch that list would identify a shell by.
+- **terminal-working-directory**: A terminal pane's shell MUST be opened in the pane's working directory.
+- **terminal-opens-live**: A terminal pane MUST add its first shell session when it is created, so it never opens empty.
+- **private-terminal-vault**: A private terminal pane MUST be created with the family's privacy vault and the pane's working directory.
+- **environment-late-read**: The shell environment MUST be read from a closure each time a terminal or private terminal pane's content is created, not when the pane type is registered, so a value the host learns after registering reaches every pane opened after it is known. The pane hands the resulting dictionary to its session manager, which gives it to every shell that pane starts, so a pane already open keeps the values it was created with. The dictionary overloads wrap a fixed dictionary in such a closure.
+- **pane-environment-variables**: Every terminal and private terminal shell MUST receive ADKITCHEN_PANE_ID set to the pane's node identifier string and ADKITCHEN_PROJECT set to the project's display name.
+- **pane-environment-wins**: WHEN the host environment and the pane environment name the same variable, the pane's value MUST win.
+- **terminal-chat-state-store**: A terminal chat pane MUST be created with a pane state store using the prefix "terminalChat".
+- **terminal-chat-listing**: A terminal chat pane MUST be listed under an identifier derived from its node identifier, with the project display name, working directory and pane number.
+- **terminal-chat-directory-optional**: WHEN no chat directory is supplied, terminal chats MUST stay private to the window.
+- **persona-chat-creation**: A persona terminal chat pane MUST be created with a pane state store using the prefix "personaTerminalChat", the plugin manager, the optional browser tools and the pane's node identifier.
+- **family-registers-terminal**: The family's registration MUST always register the terminal pane and the terminal chat pane.
+- **family-private-needs-vault**: The family MUST register the private terminal pane only when a privacy vault is supplied.
+- **family-persona-needs-plugins**: The family MUST register the persona terminal chat pane only when a plugin manager is supplied.
+- **allowances-match-registrations**: The family's allowances MUST be unbounded, carry the family's preferred axis, and name exactly the panes the family registers, so the registered set and the allowed set are equal.
+- **allowance-order**: The allowances MUST be ordered terminal, private terminal (if offered), terminal chat, persona terminal chat (if offered).
+- **terminal-only-layout**: The terminal-only layout MUST be a horizontal split containing one terminal pane, allowing the family's allowances plus an unbounded placeholder, built over a registry the family has registered into.
+- **terminal-only-axis**: The terminal-only layout MUST use a horizontal preferred axis for its family.
+- **terminal-only-throws**: Building the terminal-only layout MUST propagate a failure to construct the layout rather than swallow it.
+- **main-actor**: Registration and the family type MUST be used on the main actor.
+

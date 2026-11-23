@@ -1,0 +1,3 @@
+
+`PartnerMCPConfig` is a case-less enumeration that produces the JSON file handed to the partner's `claude` process through `--mcp-config`. The file names one HTTP MCP server, `adkitchen`, at `http://127.0.0.1:<port>/mcp`, and carries two headers: an `Authorization: Bearer <token>` header and an `X-ADKitchen-Pane: <callerID>` header that tells the endpoint which caller is speaking. `json` builds the bytes; `write` stores them in a file that the owner alone can read at every moment. The partner controller writes it each time it starts the partner, using the port and token of the app's MCP endpoint.
+
