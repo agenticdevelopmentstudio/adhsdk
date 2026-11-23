@@ -262,6 +262,18 @@ public actor MCPStatelessHTTPHandler {
         default:
             body = answer.bodyData ?? Data()
         }
-        return (status: answer.statusCode, headers: answer.headers, body: restoreID(in: body, using: rewrite))
+        return (status: answer.statusCode, headers: withoutFraming(answer.headers),
+                body: restoreID(in: body, using: rewrite))
+    }
+
+    /// The SDK's headers less the ones that describe its body's framing.
+    /// Putting the caller's id back changes the body's length, and a
+    /// collected stream is no longer chunked, so a forwarded Content-Length
+    /// or Transfer-Encoding would lie; the host frames the body it sends.
+    static func withoutFraming(_ headers: [String: String]) -> [String: String] {
+        headers.filter { name, _ in
+            name.caseInsensitiveCompare("Content-Length") != .orderedSame
+                && name.caseInsensitiveCompare("Transfer-Encoding") != .orderedSame
+        }
     }
 }
