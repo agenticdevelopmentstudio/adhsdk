@@ -50,6 +50,10 @@ public final class ProjectsCoordinator: AppFeature {
     private let mirror: LocalProjectMirror?
     /// Follows `registry.changes` for the coordinator's lifetime.
     private var registryTask: Task<Void, Never>?
+    /// `loadFromRegistry()` calls awaiting the registry, and the changes the
+    /// feed applied meanwhile, which each load puts back on top of its list.
+    private var loadsInFlight = 0
+    private var changesDuringLoads: [ProjectRegistryChange] = []
     /// A reload asked for and not yet run, so a burst of changes posts one
     /// notification.
     private var reloadScheduled = false
@@ -395,7 +399,16 @@ public final class ProjectsCoordinator: AppFeature {
 
     /// Reads the registry's whole list, mirrors it, and makes it `repos`.
     /// A registry that cannot be read leaves the local copy showing.
+    ///
+    /// A change the feed applies while the read is out may be newer than the
+    /// list the read brings back, so each one is put back on top of it.
     func loadFromRegistry() async {
+        loadsInFlight += 1
+        let firstChange = changesDuringLoads.count
+        defer {
+            loadsInFlight -= 1
+            if loadsInFlight == 0 { changesDuringLoads.removeAll() }
+        }
         do {
             let projects = try await registry.projects()
             if let mirror {
@@ -404,6 +417,9 @@ public final class ProjectsCoordinator: AppFeature {
                 }
             }
             repos = projects
+            for change in changesDuringLoads[firstChange...] {
+                applyLocally(change, recording: false)
+            }
             reload()
         } catch {
             Self.logger.error("Could not read the project registry: \(error)")
@@ -426,7 +442,8 @@ public final class ProjectsCoordinator: AppFeature {
     /// Puts one change into `repos` and, when there is one, the local mirror.
     /// Safe to repeat: a change arrives once from the write that made it and
     /// once more from the registry's feed.
-    private func applyLocally(_ change: ProjectRegistryChange) {
+    private func applyLocally(_ change: ProjectRegistryChange, recording: Bool = true) {
+        if recording, loadsInFlight > 0 { changesDuringLoads.append(change) }
         if let mirror {
             do { try mirror.apply(change) } catch {
                 Self.logger.error("Could not mirror \(change.id.uuidString, privacy: .public): \(error)")
