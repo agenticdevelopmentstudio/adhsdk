@@ -241,8 +241,19 @@ class SharedFolderTests(EmbedAdhdTestCase):
         self.assertEqual(mine, embed_adhd.worktree_token(self.repo), "the token is stable")
 
     def test_a_worktree_keeps_its_directory_name(self):
-        (self.repo / ".git").write_text("gitdir: /somewhere\n")
+        (self.repo / ".git").write_text("gitdir: /somewhere/.git/worktrees/kitchen\n")
         self.assertEqual(embed_adhd.worktree_token(self.repo), "kitchen")
+
+    def test_a_submodule_checkout_is_not_a_worktree(self):
+        """A submodule's `.git` is a file too, pointing into `.git/modules`;
+        it gets a main checkout's hashed token, not its directory's name."""
+        (self.repo / ".git").write_text("gitdir: ../.git/modules/kitchen\n")
+        token = embed_adhd.worktree_token(self.repo)
+        self.assertTrue(token.startswith("managed-"), token)
+
+    def test_a_git_file_with_no_gitdir_line_is_not_a_worktree(self):
+        (self.repo / ".git").write_text("nonsense\n")
+        self.assertTrue(embed_adhd.worktree_token(self.repo).startswith("managed-"))
 
 
 class XcodegenTests(EmbedAdhdTestCase):

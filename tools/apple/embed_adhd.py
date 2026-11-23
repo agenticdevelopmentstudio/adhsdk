@@ -111,11 +111,33 @@ def worktree_token(repo: Path) -> str:
     plain `managed`, which is every non-worktree clone's name at once; two
     clones at different adh-daemon pins sharing one adhd folder would embed
     each other's daemon, so the main checkout's token carries a short hash of
-    its absolute path."""
-    if (repo / ".git").is_file():
+    its absolute path.
+
+    A `.git` file is not proof of a worktree: a submodule checkout has one too
+    (`gitdir: ../.git/modules/<name>`), and it is a checkout of its own, not a
+    worktree named for its directory. Only a `gitdir:` that points into a
+    `worktrees/` directory is a linked worktree."""
+    if is_linked_worktree(repo):
         return repo.name
     digest = hashlib.sha256(str(repo.resolve()).encode()).hexdigest()[:8]
     return f"managed-{digest}"
+
+
+def is_linked_worktree(repo: Path) -> bool:
+    """Whether `repo` is a linked worktree: its `.git` is a file whose
+    `gitdir:` names a directory inside a `worktrees/` folder."""
+    marker = repo / ".git"
+    if not marker.is_file():
+        return False
+    try:
+        text = marker.read_text(errors="replace")
+    except OSError:
+        return False
+    for line in text.splitlines():
+        if line.startswith("gitdir:"):
+            parts = Path(line[len("gitdir:"):].strip()).parts
+            return "worktrees" in parts[:-1]
+    return False
 
 
 def adhd_derived_data(checkout: Checkout) -> Path:
