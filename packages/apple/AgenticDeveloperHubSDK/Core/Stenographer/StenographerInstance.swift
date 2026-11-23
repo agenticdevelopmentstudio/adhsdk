@@ -79,9 +79,9 @@ public struct StenographerInstance: Sendable, Equatable {
     /// the apps suite's Phase 3 may still be running, and the Hub daemon
     /// adhd's on both channels (``adhdHTTPPorts``), which serves Stenographer
     /// now.
-    public static let reservedHTTPPorts: Set<Int> = [
+    public static let reservedHTTPPorts: Set<Int> = Set([
         StenographerIdentifiers.routerPort, 22849
-    ].union(adhdHTTPPorts)
+    ]).union(adhdHTTPPorts)
     /// adhd's loopback ports: the release daemon's 22850 (`DaemonContract.port`
     /// in `AgenticDeveloperHubClient`, which this tier cannot import) and the
     /// dev daemon's 22871 (adh-daemon's `DaemonIdentity.devPort`). Mirrored
