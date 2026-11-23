@@ -260,6 +260,17 @@ public final class BrowserHiddenItemsStore: @unchecked Sendable {
         }
     }
 
+    /// Every switch of `list` that has been set, by site. A site missing
+    /// here is on (`isSiteSwitchOn`).
+    public func siteSwitches(list: BrowserHiddenItemList) throws -> [String: Bool] {
+        try database.read { connection in
+            let rows = try Row.fetchAll(
+                connection, sql: #"SELECT site, "on" FROM site_switch WHERE list = ? ORDER BY site"#,
+                arguments: [list.rawValue])
+            return Dictionary(rows.map { ($0["site"] as String, $0["on"] as Bool) }, uniquingKeysWith: { $1 })
+        }
+    }
+
     /// Every entry of `list`, on every site, enabled and disabled alike,
     /// oldest first.
     public func allItems(list: BrowserHiddenItemList) throws -> [BrowserHiddenItem] {

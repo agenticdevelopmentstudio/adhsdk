@@ -119,6 +119,17 @@ final class BrowserHiddenItemsStoreTests: XCTestCase {
         XCTAssertTrue(try store.isSiteSwitchOn(list: .agent, site: "example.com/*"))
     }
 
+    func test_siteSwitchesListsOnlyTheSetSwitchesOfTheList() throws {
+        let store = try makeStore()
+        XCTAssertEqual(try store.siteSwitches(list: .user), [:])
+        try store.setSiteSwitch(list: .user, site: "example.com/*", on: false)
+        try store.setSiteSwitch(list: .user, site: "other.org/*", on: true)
+        try store.setSiteSwitch(list: .agent, site: "agent.net/*", on: false)
+
+        XCTAssertEqual(try store.siteSwitches(list: .user), ["example.com/*": false, "other.org/*": true])
+        XCTAssertEqual(try store.siteSwitches(list: .agent), ["agent.net/*": false])
+    }
+
     // hidden-items-store-010
     func test_siteSwitchOffHidesUserList() throws {
         let store = try makeStore()
