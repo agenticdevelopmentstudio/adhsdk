@@ -149,6 +149,20 @@ final class RoutedSettingsStorageProviderTests: XCTestCase {
         XCTAssertEqual(provider.get(themeID), "default-theme", "a key the backend lacks reads its default")
     }
 
+    func testTheLoadAnnouncesAFallbackOnlyKeyThatNowReadsItsDefault() async throws {
+        let fallback = InMemorySettingsStorageProvider()
+        fallback.set("solarized-light", for: themeID)
+        let provider = RoutedSettingsStorageProvider(backend: FakeSharedSettingsBackend(), fallback: fallback)
+        XCTAssertEqual(provider.get(themeID), "solarized-light")
+
+        var announced: [String] = []
+        provider.changes.sink { announced.append($0) }.store(in: &cancellables)
+        try await provider.start()
+
+        XCTAssertEqual(provider.get(themeID), "default-theme")
+        XCTAssertTrue(announced.contains(themeID.name), "a reader of the old value has to hear it changed")
+    }
+
     // MARK: - Backend changes
 
     func testABackendChangeUpdatesTheCacheAndFiresUserSettingsChanges() async throws {

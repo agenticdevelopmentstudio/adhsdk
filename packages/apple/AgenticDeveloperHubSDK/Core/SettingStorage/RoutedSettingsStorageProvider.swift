@@ -118,7 +118,12 @@ public final class RoutedSettingsStorageProvider: SettingsStorageProvider {
         for key in pendingWrites.keys {
             next[key] = cache[key] ?? nil
         }
-        let names = Set(next.keys).union(cache.keys)
+        var names = Set(next.keys).union(cache.keys)
+        // Before the first load a routed key the backend lacks read the
+        // fallback; it reads its default now, so it changed too.
+        if !isLoaded {
+            names.formUnion(fallback.keys(withPrefix: "").filter { routed.contains($0) })
+        }
         for name in names where (next[name] ?? nil) != (cache[name] ?? nil) || !isKnown(name) {
             changed.append(name)
         }
