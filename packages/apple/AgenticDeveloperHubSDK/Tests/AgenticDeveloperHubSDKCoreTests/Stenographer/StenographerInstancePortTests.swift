@@ -69,16 +69,25 @@ final class StenographerInstancePortTests: XCTestCase {
         XCTAssertNil(StenographerInstance.default.httpPort)
     }
 
-    /// 22847 is free for a named instance; the router's and adkd's are not.
+    /// 22847 is free for a named instance; the router's, adkd's and adhd's
+    /// (release and dev) are not.
     func testTheRetiredStenographerdPortIsFreeButTheReservedOnesAreNot() throws {
-        XCTAssertEqual(StenographerInstance.reservedHTTPPorts, [22848, 22849])
+        XCTAssertEqual(StenographerInstance.reservedHTTPPorts, [22848, 22849, 22850, 22871])
         let dev = StenographerInstance.Definition(name: "dev", dataRoot: dataRoot("dev"), httpPort: 22847)
         XCTAssertNoThrow(try StenographerInstance.validate(dev, fileName: "dev", home: home))
-        for port in [22848, 22849] {
+        for port in [22848, 22849, 22850, 22871] {
             let taken = StenographerInstance.Definition(name: "dev", dataRoot: dataRoot("dev"), httpPort: port)
             XCTAssertThrowsError(try StenographerInstance.validate(taken, fileName: "dev", home: home)) { error in
                 XCTAssertEqual(error as? StenographerInstance.ResolutionError, .invalidPort(port))
             }
         }
+    }
+
+    /// Every well-known daemon port is reserved: adhd's release port
+    /// (`DaemonContract.port`) and dev port (`DaemonIdentity.devPort`).
+    func testEveryWellKnownDaemonPortIsReserved() {
+        XCTAssertEqual(StenographerInstance.adhdHTTPPorts, [22850, 22871])
+        XCTAssertTrue(StenographerInstance.adhdHTTPPorts.isSubset(of: StenographerInstance.reservedHTTPPorts))
+        XCTAssertTrue(StenographerInstance.reservedHTTPPorts.contains(StenographerIdentifiers.routerPort))
     }
 }
