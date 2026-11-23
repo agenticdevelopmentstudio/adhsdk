@@ -82,6 +82,26 @@ final class RepoStateRefresherTests: XCTestCase {
         XCTAssertEqual(announced, [id])
     }
 
+    private struct FailingReader: RepoStateReading {
+        struct Unreadable: Error {}
+        func readState(at directory: URL) async throws -> RepoStateSnapshot { throw Unreadable() }
+    }
+
+    func testASweepLoadsTheRegistrysSnapshotsEvenWhenGitCannotBeRead() async throws {
+        let store = MemoryStore()
+        let id = UUID()
+        let stored = RepoStateSnapshot(
+            checkouts: [.init(path: "/r", branch: "feature", isMain: true)],
+            branches: ["feature"], refreshedAt: Date())
+        try await store.saveRepoState(stored, id: id)
+        let refresher = RepoStateRefresher(registry: store, reader: FailingReader())
+        XCTAssertNil(refresher.cachedState(forRepo: id))
+
+        await refresher.sweep([(id: id, directory: URL(fileURLWithPath: "/r"))])
+
+        XCTAssertEqual(refresher.cachedState(forRepo: id)?.branches, ["feature"])
+    }
+
     func testAnUnchangedStateIsNotRewritten() async {
         let store = MemoryStore()
         let refresher = RepoStateRefresher(registry: store, reader: FixedReader(branches: ["main"]))

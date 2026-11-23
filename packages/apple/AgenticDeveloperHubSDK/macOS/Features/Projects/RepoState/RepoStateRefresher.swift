@@ -77,7 +77,17 @@ public final class RepoStateRefresher {
     /// Refreshes every repository, at most `maxConcurrent` at once, in the
     /// order given — most recently opened first, so the projects likeliest to
     /// be switched to are warm soonest.
+    ///
+    /// The registry's snapshots are loaded into memory first, all of them,
+    /// before any git read: a window built before git has answered for its
+    /// project then shows the registry's state, which another app may have
+    /// kept current, rather than the window-state database's own copy, which
+    /// nothing writes once the registry is shared.
     public func sweep(_ repos: [(id: UUID, directory: URL)], maxConcurrent: Int = 4) async {
+        for repo in repos {
+            guard !Task.isCancelled else { return }
+            await load(repo.id)
+        }
         sweepQueue = repos[...]
         let workers = (0..<max(1, maxConcurrent)).map { _ in
             Task { @MainActor in
