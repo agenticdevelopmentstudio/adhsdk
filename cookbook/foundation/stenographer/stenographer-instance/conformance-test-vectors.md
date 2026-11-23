@@ -47,4 +47,7 @@ Vectors 041 to 044 are `StenographerInstancePortTests` (`Tests/AgenticDeveloperH
 | stenographer-instance-042 | port-unique-across-instances, other-definitions | `D/alpha.json` and `D/beta.json` both declare `httpPort` 22951; resolve `beta` (`testResolvingADefinitionWhosePortIsTakenFails`) | `portTakenByAnotherInstance(port: 22951, instance: "alpha")`. |
 | stenographer-instance-043 | port-unique-across-instances | `D/alpha.json` declares 22952; validate `beta` with 22953 (`testDistinctPortsAreAccepted`) | No error. |
 | stenographer-instance-044 | port-unique-across-instances, other-definitions | Only `D/alpha.json`, `httpPort` 22954; resolve `alpha` (`testADefinitionDoesNotCollideWithItsOwnFile`) | Resolves with `httpPort` 22954. |
+| stenographer-instance-045 | definition-precedence, port-unique-across-instances | `D/home.json` created first and `D/lab.json` later both declare 22960 (`testTheEarlierDefinitionKeepsItsPort`) | `home` resolves with 22960; resolving `lab` throws `portTakenByAnotherInstance(port: 22960, instance: "home")`. |
+| stenographer-instance-046 | definition-precedence | `D/zulu.json` created before `D/alpha.json`, both 22961 (`testPrecedenceFollowsCreationNotName`) | `zulu` resolves; `alpha` throws `portTakenByAnotherInstance(port: 22961, instance: "zulu")`. |
+| stenographer-instance-047 | definition-precedence, instance-overlap | `D/home.json` created before `D/lab.json`, one shared data root (`testTheEarlierDefinitionKeepsItsDataRoot`) | `home` resolves; `lab` throws `overlapsAnotherInstance` naming `home`. |
 
