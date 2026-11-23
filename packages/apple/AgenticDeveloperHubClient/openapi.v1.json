@@ -159,6 +159,9 @@
       "name": "storage"
     },
     {
+      "name": "support"
+    },
+    {
       "name": "sync"
     },
     {
@@ -17079,6 +17082,7 @@
           "active7d",
           "active30d",
           "storage_bytes",
+          "jobs_by_status",
           "pending_invitations",
           "pending_requests"
         ],
@@ -17106,6 +17110,13 @@
           "storage_bytes": {
             "type": "integer",
             "description": "Bytes in the customers' ready attachments."
+          },
+          "jobs_by_status": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "description": "Jobs of the product's customers, by status."
           },
           "pending_invitations": {
             "type": "integer",
@@ -17249,6 +17260,531 @@
             "type": "integer",
             "minimum": 0,
             "description": "At most the default quota (403 above it)."
+          }
+        }
+      },
+      "SupportGrant": {
+        "type": "object",
+        "required": [
+          "id",
+          "ecosystem_id",
+          "target",
+          "grantee",
+          "reason",
+          "scope",
+          "consent",
+          "status",
+          "requested_hours",
+          "requested_at",
+          "decision",
+          "decided_at",
+          "expires_at",
+          "revoked_at",
+          "revoked_by_kind"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "ecosystem_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "target": {
+            "type": "object",
+            "required": [
+              "kind",
+              "id",
+              "display_name"
+            ],
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "customer",
+                  "account"
+                ]
+              },
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "display_name": {
+                "type": "string",
+                "nullable": true
+              }
+            }
+          },
+          "grantee": {
+            "type": "object",
+            "required": [
+              "kind",
+              "display_name",
+              "role_label"
+            ],
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "product_admin",
+                  "operator"
+                ]
+              },
+              "display_name": {
+                "type": "string",
+                "description": "A name, never an email."
+              },
+              "role_label": {
+                "type": "string",
+                "description": "For example \"Support at Acme\"."
+              }
+            }
+          },
+          "reason": {
+            "type": "string"
+          },
+          "scope": {
+            "type": "string",
+            "enum": [
+              "read_all"
+            ]
+          },
+          "consent": {
+            "type": "string",
+            "enum": [
+              "customer",
+              "break_glass"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "live",
+              "denied",
+              "lapsed",
+              "expired",
+              "revoked"
+            ]
+          },
+          "requested_hours": {
+            "type": "integer",
+            "description": "How long the grant runs once approved."
+          },
+          "requested_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "decision": {
+            "type": "string",
+            "enum": [
+              "approved",
+              "denied"
+            ],
+            "nullable": true
+          },
+          "decided_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "revoked_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "revoked_by_kind": {
+            "type": "string",
+            "enum": [
+              "target",
+              "grantee",
+              "operator",
+              "manager",
+              "system"
+            ],
+            "nullable": true
+          },
+          "grantee_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Operators only."
+          },
+          "attestation": {
+            "type": "string",
+            "nullable": true,
+            "description": "Operators only."
+          },
+          "attestation_ref": {
+            "type": "string",
+            "nullable": true,
+            "description": "Operators only."
+          }
+        }
+      },
+      "SupportGrantList": {
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SupportGrant"
+            }
+          }
+        }
+      },
+      "SupportGrantCreated": {
+        "type": "object",
+        "required": [
+          "grant"
+        ],
+        "properties": {
+          "grant": {
+            "$ref": "#/components/schemas/SupportGrant"
+          }
+        }
+      },
+      "SupportGrantRequest": {
+        "type": "object",
+        "required": [
+          "target_id",
+          "reason"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "target_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "A live customer of the product."
+          },
+          "reason": {
+            "type": "string",
+            "description": "10 to 500 characters (422 otherwise)."
+          },
+          "hours": {
+            "type": "integer",
+            "description": "How long the grant runs once approved: 1 to 168 (422 otherwise); 24 if absent."
+          }
+        }
+      },
+      "SupportViewerRow": {
+        "type": "object",
+        "additionalProperties": true,
+        "description": "One row of the content table, in generic CRUD's wire shape."
+      },
+      "SupportGrantPage": {
+        "type": "object",
+        "required": [
+          "items",
+          "has_more"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SupportGrant"
+            }
+          },
+          "has_more": {
+            "type": "boolean"
+          }
+        }
+      },
+      "SystemSupportGrantRequest": {
+        "type": "object",
+        "required": [
+          "target_kind",
+          "target_id",
+          "reason"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "target_kind": {
+            "type": "string",
+            "enum": [
+              "customer",
+              "account"
+            ]
+          },
+          "target_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "ecosystem_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "The customer's product; required for a customer, ignored for a hub account."
+          },
+          "reason": {
+            "type": "string",
+            "description": "10 to 500 characters (422 otherwise)."
+          },
+          "hours": {
+            "type": "integer",
+            "description": "How long the grant runs once approved: 1 to 168 (422 otherwise); 24 if absent."
+          }
+        }
+      },
+      "SupportBreakGlassRequest": {
+        "type": "object",
+        "required": [
+          "target_kind",
+          "target_id",
+          "reason",
+          "attestation",
+          "attestation_ref"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "target_kind": {
+            "type": "string",
+            "enum": [
+              "customer",
+              "account"
+            ]
+          },
+          "target_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "ecosystem_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "The customer's product; required for a customer, ignored for a hub account."
+          },
+          "reason": {
+            "type": "string",
+            "description": "10 to 500 characters (422 otherwise)."
+          },
+          "attestation": {
+            "type": "string",
+            "description": "40 characters or more (422 otherwise)."
+          },
+          "attestation_ref": {
+            "type": "string",
+            "description": "The case or incident reference."
+          },
+          "hours": {
+            "type": "integer",
+            "description": "1 to 4 (422 otherwise); 1 if absent."
+          }
+        }
+      },
+      "SupportAccessRow": {
+        "type": "object",
+        "required": [
+          "id",
+          "grant_id",
+          "actor_id",
+          "method",
+          "path",
+          "route",
+          "request_id",
+          "at"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "grant_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "actor_id": {
+            "type": "string"
+          },
+          "method": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          },
+          "route": {
+            "type": "string",
+            "nullable": true
+          },
+          "request_id": {
+            "type": "string",
+            "nullable": true
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "SupportAccessPage": {
+        "type": "object",
+        "required": [
+          "items",
+          "has_more"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SupportAccessRow"
+            }
+          },
+          "has_more": {
+            "type": "boolean"
+          }
+        }
+      },
+      "SupportGrantDecided": {
+        "type": "object",
+        "required": [
+          "grant"
+        ],
+        "properties": {
+          "grant": {
+            "$ref": "#/components/schemas/SupportGrant"
+          }
+        }
+      },
+      "SupportRead": {
+        "type": "object",
+        "required": [
+          "id",
+          "grant_id",
+          "grantee",
+          "route",
+          "path",
+          "at"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "grant_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "grantee": {
+            "type": "object",
+            "required": [
+              "kind",
+              "display_name",
+              "role_label"
+            ],
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "product_admin",
+                  "operator"
+                ]
+              },
+              "display_name": {
+                "type": "string",
+                "description": "A name, never an email."
+              },
+              "role_label": {
+                "type": "string",
+                "description": "For example \"Support at Acme\"."
+              }
+            }
+          },
+          "route": {
+            "type": "string",
+            "nullable": true,
+            "description": "The route pattern that was read."
+          },
+          "path": {
+            "type": "string"
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "SupportReadPage": {
+        "type": "object",
+        "required": [
+          "items",
+          "has_more"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SupportRead"
+            }
+          },
+          "has_more": {
+            "type": "boolean"
+          }
+        }
+      },
+      "SupportLinkGrant": {
+        "type": "object",
+        "required": [
+          "grant",
+          "reads"
+        ],
+        "properties": {
+          "grant": {
+            "$ref": "#/components/schemas/SupportGrant"
+          },
+          "reads": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SupportRead"
+            },
+            "description": "The latest 50 reads under the grant, newest first."
+          }
+        }
+      },
+      "SupportLinkToken": {
+        "type": "object",
+        "required": [
+          "token"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "token": {
+            "type": "string",
+            "description": "The email link's token."
+          }
+        }
+      },
+      "SupportLinkApprove": {
+        "type": "object",
+        "required": [
+          "token",
+          "code"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "token": {
+            "type": "string",
+            "description": "The email link's token."
+          },
+          "code": {
+            "type": "string",
+            "description": "The code emailed by `approve/code`."
+          }
+        }
+      },
+      "SupportLinkCodeSent": {
+        "type": "object",
+        "required": [
+          "ok"
+        ],
+        "properties": {
+          "ok": {
+            "type": "boolean"
           }
         }
       },
@@ -24411,6 +24947,617 @@
         "x-adh-object": "account.mfa.totp",
         "x-adh-replaces": [
           "POST /account/mfa/totp/confirm"
+        ]
+      }
+    },
+    "/v1/account/support/access": {
+      "get": {
+        "tags": [
+          "support"
+        ],
+        "summary": "The reads made under the support grants on the signed-in hub account, newest first",
+        "description": "Each read names its grant, who read (a name and a role, never an email), the route and path, and when. `cursor` is the id of the last read the caller holds.\n\nReplaces GET /account/support/access.",
+        "operationId": "getV1AccountSupportAccess",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "grant_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Only the reads under this grant (a uuid)."
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The id of the last read already held."
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "description": "Page size, 1–100 (default 10).",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 10
+            }
+          },
+          {
+            "name": "starting_after",
+            "in": "query",
+            "required": false,
+            "description": "Cursor: an object id; returns the page after it.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "ending_before",
+            "in": "query",
+            "required": false,
+            "description": "Cursor: an object id; returns the page before it.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "expand[]",
+            "in": "query",
+            "required": false,
+            "description": "Related objects to return in full instead of as an id. Up to four levels, e.g. `ecosystem_id`; on a list, `data.<field>`.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "style": "form",
+            "explode": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "One page",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "object",
+                    "data",
+                    "has_more",
+                    "url"
+                  ],
+                  "properties": {
+                    "object": {
+                      "type": "string",
+                      "const": "list"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "allOf": [
+                          {
+                            "type": "object",
+                            "properties": {
+                              "object": {
+                                "type": "string",
+                                "const": "account.support.access"
+                              }
+                            }
+                          },
+                          {
+                            "$ref": "#/components/schemas/SupportRead"
+                          }
+                        ]
+                      }
+                    },
+                    "has_more": {
+                      "type": "boolean"
+                    },
+                    "url": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          }
+        },
+        "x-adh-object": "account.support.access",
+        "x-adh-replaces": [
+          "GET /account/support/access"
+        ]
+      }
+    },
+    "/v1/account/support/grants": {
+      "get": {
+        "tags": [
+          "support"
+        ],
+        "summary": "The support grants on the signed-in hub account, newest first",
+        "description": "Requests waiting on a decision, and grants live or ended. Never an email.\n\nReplaces GET /account/support/grants.",
+        "operationId": "getV1AccountSupportGrants",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "description": "Page size, 1–100 (default 10).",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 10
+            }
+          },
+          {
+            "name": "starting_after",
+            "in": "query",
+            "required": false,
+            "description": "Cursor: an object id; returns the page after it.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "ending_before",
+            "in": "query",
+            "required": false,
+            "description": "Cursor: an object id; returns the page before it.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "expand[]",
+            "in": "query",
+            "required": false,
+            "description": "Related objects to return in full instead of as an id. Up to four levels, e.g. `ecosystem_id`; on a list, `data.<field>`.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "style": "form",
+            "explode": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The grants",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "object",
+                    "data",
+                    "has_more",
+                    "url"
+                  ],
+                  "properties": {
+                    "object": {
+                      "type": "string",
+                      "const": "list"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "allOf": [
+                          {
+                            "type": "object",
+                            "properties": {
+                              "object": {
+                                "type": "string",
+                                "const": "account.support.grant"
+                              }
+                            }
+                          },
+                          {
+                            "$ref": "#/components/schemas/SupportGrant"
+                          }
+                        ]
+                      }
+                    },
+                    "has_more": {
+                      "type": "boolean"
+                    },
+                    "url": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          }
+        },
+        "x-adh-object": "account.support.grant",
+        "x-adh-replaces": [
+          "GET /account/support/grants"
+        ]
+      }
+    },
+    "/v1/account/support/grants/{id}/approve": {
+      "post": {
+        "tags": [
+          "support"
+        ],
+        "summary": "Approve a support request",
+        "description": "By session: no code is needed. 409 `decided` once decided or revoked; 410 `lapsed` for a request not decided within seven days.\n\nReplaces POST /account/support/grants/{id}/approve.",
+        "operationId": "postV1AccountSupportGrantsByIdApprove",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The grant, live",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "object": {
+                          "type": "string",
+                          "const": "account.support.grant"
+                        }
+                      }
+                    },
+                    {
+                      "$ref": "#/components/schemas/SupportGrant"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          }
+        },
+        "x-adh-object": "account.support.grant",
+        "x-adh-replaces": [
+          "POST /account/support/grants/{id}/approve"
+        ]
+      }
+    },
+    "/v1/account/support/grants/{id}/deny": {
+      "post": {
+        "tags": [
+          "support"
+        ],
+        "summary": "Deny a support request",
+        "description": "409 `decided` once decided or revoked; 410 `lapsed` for a request not decided within seven days.\n\nReplaces POST /account/support/grants/{id}/deny.",
+        "operationId": "postV1AccountSupportGrantsByIdDeny",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The grant, denied",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "object": {
+                          "type": "string",
+                          "const": "account.support.grant"
+                        }
+                      }
+                    },
+                    {
+                      "$ref": "#/components/schemas/SupportGrant"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          }
+        },
+        "x-adh-object": "account.support.grant",
+        "x-adh-replaces": [
+          "POST /account/support/grants/{id}/deny"
+        ]
+      }
+    },
+    "/v1/account/support/grants/{id}/revoke": {
+      "post": {
+        "tags": [
+          "support"
+        ],
+        "summary": "End a live support grant",
+        "description": "409 `not_live` for a grant that is not live.\n\nReplaces POST /account/support/grants/{id}/revoke.",
+        "operationId": "postV1AccountSupportGrantsByIdRevoke",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "object": {
+                      "type": "string",
+                      "const": "account.support.grant"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          }
+        },
+        "x-adh-object": "account.support.grant",
+        "x-adh-replaces": [
+          "POST /account/support/grants/{id}/revoke"
         ]
       }
     },
@@ -66042,6 +67189,617 @@
         "x-adh-object": "content.url",
         "x-adh-replaces": [
           "PUT /content/urls/{id}"
+        ]
+      }
+    },
+    "/v1/customer/support/access": {
+      "get": {
+        "tags": [
+          "support"
+        ],
+        "summary": "The reads made under the support grants on the signed-in customer's account, newest first",
+        "description": "Each read names its grant, who read (a name and a role, never an email), the route and path, and when. `cursor` is the id of the last read the caller holds.\n\nReplaces GET /customer/support/access.",
+        "operationId": "getV1CustomerSupportAccess",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "grant_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Only the reads under this grant (a uuid)."
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The id of the last read already held."
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "description": "Page size, 1–100 (default 10).",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 10
+            }
+          },
+          {
+            "name": "starting_after",
+            "in": "query",
+            "required": false,
+            "description": "Cursor: an object id; returns the page after it.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "ending_before",
+            "in": "query",
+            "required": false,
+            "description": "Cursor: an object id; returns the page before it.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "expand[]",
+            "in": "query",
+            "required": false,
+            "description": "Related objects to return in full instead of as an id. Up to four levels, e.g. `ecosystem_id`; on a list, `data.<field>`.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "style": "form",
+            "explode": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "One page",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "object",
+                    "data",
+                    "has_more",
+                    "url"
+                  ],
+                  "properties": {
+                    "object": {
+                      "type": "string",
+                      "const": "list"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "allOf": [
+                          {
+                            "type": "object",
+                            "properties": {
+                              "object": {
+                                "type": "string",
+                                "const": "customer.support.access"
+                              }
+                            }
+                          },
+                          {
+                            "$ref": "#/components/schemas/SupportRead"
+                          }
+                        ]
+                      }
+                    },
+                    "has_more": {
+                      "type": "boolean"
+                    },
+                    "url": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          }
+        },
+        "x-adh-object": "customer.support.access",
+        "x-adh-replaces": [
+          "GET /customer/support/access"
+        ]
+      }
+    },
+    "/v1/customer/support/grants": {
+      "get": {
+        "tags": [
+          "support"
+        ],
+        "summary": "The support grants on the signed-in customer's account, newest first",
+        "description": "Requests waiting on a decision, and grants live or ended. Never an email.\n\nReplaces GET /customer/support/grants.",
+        "operationId": "getV1CustomerSupportGrants",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "description": "Page size, 1–100 (default 10).",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 10
+            }
+          },
+          {
+            "name": "starting_after",
+            "in": "query",
+            "required": false,
+            "description": "Cursor: an object id; returns the page after it.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "ending_before",
+            "in": "query",
+            "required": false,
+            "description": "Cursor: an object id; returns the page before it.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "expand[]",
+            "in": "query",
+            "required": false,
+            "description": "Related objects to return in full instead of as an id. Up to four levels, e.g. `ecosystem_id`; on a list, `data.<field>`.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "style": "form",
+            "explode": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The grants",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "object",
+                    "data",
+                    "has_more",
+                    "url"
+                  ],
+                  "properties": {
+                    "object": {
+                      "type": "string",
+                      "const": "list"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "allOf": [
+                          {
+                            "type": "object",
+                            "properties": {
+                              "object": {
+                                "type": "string",
+                                "const": "customer.support.grant"
+                              }
+                            }
+                          },
+                          {
+                            "$ref": "#/components/schemas/SupportGrant"
+                          }
+                        ]
+                      }
+                    },
+                    "has_more": {
+                      "type": "boolean"
+                    },
+                    "url": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          }
+        },
+        "x-adh-object": "customer.support.grant",
+        "x-adh-replaces": [
+          "GET /customer/support/grants"
+        ]
+      }
+    },
+    "/v1/customer/support/grants/{id}/approve": {
+      "post": {
+        "tags": [
+          "support"
+        ],
+        "summary": "Approve a support request",
+        "description": "By session: no code is needed. 409 `decided` once decided or revoked; 410 `lapsed` for a request not decided within seven days.\n\nReplaces POST /customer/support/grants/{id}/approve.",
+        "operationId": "postV1CustomerSupportGrantsByIdApprove",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The grant, live",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "object": {
+                          "type": "string",
+                          "const": "customer.support.grant"
+                        }
+                      }
+                    },
+                    {
+                      "$ref": "#/components/schemas/SupportGrant"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          }
+        },
+        "x-adh-object": "customer.support.grant",
+        "x-adh-replaces": [
+          "POST /customer/support/grants/{id}/approve"
+        ]
+      }
+    },
+    "/v1/customer/support/grants/{id}/deny": {
+      "post": {
+        "tags": [
+          "support"
+        ],
+        "summary": "Deny a support request",
+        "description": "409 `decided` once decided or revoked; 410 `lapsed` for a request not decided within seven days.\n\nReplaces POST /customer/support/grants/{id}/deny.",
+        "operationId": "postV1CustomerSupportGrantsByIdDeny",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The grant, denied",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "object": {
+                          "type": "string",
+                          "const": "customer.support.grant"
+                        }
+                      }
+                    },
+                    {
+                      "$ref": "#/components/schemas/SupportGrant"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          }
+        },
+        "x-adh-object": "customer.support.grant",
+        "x-adh-replaces": [
+          "POST /customer/support/grants/{id}/deny"
+        ]
+      }
+    },
+    "/v1/customer/support/grants/{id}/revoke": {
+      "post": {
+        "tags": [
+          "support"
+        ],
+        "summary": "End a live support grant",
+        "description": "409 `not_live` for a grant that is not live.\n\nReplaces POST /customer/support/grants/{id}/revoke.",
+        "operationId": "postV1CustomerSupportGrantsByIdRevoke",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "object": {
+                      "type": "string",
+                      "const": "customer.support.grant"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          }
+        },
+        "x-adh-object": "customer.support.grant",
+        "x-adh-replaces": [
+          "POST /customer/support/grants/{id}/revoke"
         ]
       }
     },
@@ -135222,6 +136980,16 @@
                 }
               }
             }
+          },
+          "422": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
           }
         },
         "x-adh-object": "product_admin.customer",
@@ -141627,6 +143395,574 @@
         "x-adh-object": "provider_template",
         "x-adh-replaces": [
           "POST /persona/provider-templates/{id}/verify"
+        ]
+      }
+    },
+    "/v1/public/support/grants/{id}": {
+      "get": {
+        "tags": [
+          "support"
+        ],
+        "summary": "A support request, by its email link",
+        "description": "The grant and the reads under it, while it is pending or live. 409 `decided` for a grant denied, ended or revoked; 410 `lapsed` for one not decided within seven days.\n\nReplaces GET /public/support/grants/{id}.",
+        "operationId": "getV1PublicSupportGrantsById",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "token",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The email link's token."
+          },
+          {
+            "name": "expand[]",
+            "in": "query",
+            "required": false,
+            "description": "Related objects to return in full instead of as an id. Up to four levels, e.g. `ecosystem_id`; on a list, `data.<field>`.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "style": "form",
+            "explode": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The grant and its reads",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "object": {
+                          "type": "string",
+                          "const": "public.support.grant"
+                        }
+                      }
+                    },
+                    {
+                      "$ref": "#/components/schemas/SupportLinkGrant"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          }
+        },
+        "x-adh-object": "public.support.grant",
+        "x-adh-replaces": [
+          "GET /public/support/grants/{id}"
+        ]
+      }
+    },
+    "/v1/public/support/grants/{id}/approve": {
+      "post": {
+        "tags": [
+          "support"
+        ],
+        "summary": "Approve a support request by its email link",
+        "description": "Needs the emailed code: 403 `code_invalid` for a wrong, expired or missing one. 409 `decided` once decided or revoked; 410 `lapsed` for a request not decided within seven days.\n\nReplaces POST /public/support/grants/{id}/approve.",
+        "operationId": "postV1PublicSupportGrantsByIdApprove",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SupportLinkApprove"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The grant, live",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "object": {
+                          "type": "string",
+                          "const": "public.support.grant"
+                        }
+                      }
+                    },
+                    {
+                      "$ref": "#/components/schemas/SupportGrant"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          }
+        },
+        "x-adh-object": "public.support.grant",
+        "x-adh-replaces": [
+          "POST /public/support/grants/{id}/approve"
+        ]
+      }
+    },
+    "/v1/public/support/grants/{id}/approve/code": {
+      "post": {
+        "tags": [
+          "support"
+        ],
+        "summary": "Email a code that approves a support request",
+        "description": "The code goes to the target's primary verified email. 429 within 30 seconds of the last code; 422 when there is no verified email or the send failed. 409 `decided` once decided or revoked; 410 `lapsed` for a request not decided within seven days.\n\nReplaces POST /public/support/grants/{id}/approve/code.",
+        "operationId": "postV1PublicSupportGrantsByIdApproveCode",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SupportLinkToken"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "The code was sent",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "object": {
+                          "type": "string",
+                          "const": "code"
+                        }
+                      }
+                    },
+                    {
+                      "$ref": "#/components/schemas/SupportLinkCodeSent"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          }
+        },
+        "x-adh-object": "code",
+        "x-adh-replaces": [
+          "POST /public/support/grants/{id}/approve/code"
+        ]
+      }
+    },
+    "/v1/public/support/grants/{id}/deny": {
+      "post": {
+        "tags": [
+          "support"
+        ],
+        "summary": "Deny a support request by its email link",
+        "description": "The token alone; no code. 409 `decided` once decided or revoked; 410 `lapsed` for a request not decided within seven days.\n\nReplaces POST /public/support/grants/{id}/deny.",
+        "operationId": "postV1PublicSupportGrantsByIdDeny",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SupportLinkToken"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The grant, denied",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "object": {
+                          "type": "string",
+                          "const": "public.support.grant"
+                        }
+                      }
+                    },
+                    {
+                      "$ref": "#/components/schemas/SupportGrant"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          }
+        },
+        "x-adh-object": "public.support.grant",
+        "x-adh-replaces": [
+          "POST /public/support/grants/{id}/deny"
+        ]
+      }
+    },
+    "/v1/public/support/grants/{id}/revoke": {
+      "post": {
+        "tags": [
+          "support"
+        ],
+        "summary": "Revoke a support grant by its email link",
+        "description": "The token alone; no code. The link revokes for the grant's life, pending or live, and the revoke is recorded as the target's. 409 `not_live` once the grant is denied, lapsed, expired or already revoked.\n\nReplaces POST /public/support/grants/{id}/revoke.",
+        "operationId": "postV1PublicSupportGrantsByIdRevoke",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SupportLinkToken"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The grant, revoked",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "object": {
+                          "type": "string",
+                          "const": "public.support.grant"
+                        }
+                      }
+                    },
+                    {
+                      "$ref": "#/components/schemas/SupportGrant"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          }
+        },
+        "x-adh-object": "public.support.grant",
+        "x-adh-replaces": [
+          "POST /public/support/grants/{id}/revoke"
         ]
       }
     },
@@ -153084,6 +155420,659 @@
         ]
       }
     },
+    "/v1/support/grants": {
+      "get": {
+        "tags": [
+          "support"
+        ],
+        "summary": "A product's support grants, newest first",
+        "description": "Product admins only; a manager is 403.\n\nReplaces GET /support/grants.",
+        "operationId": "getV1SupportGrants",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "description": "Page size, 1–100 (default 10).",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 10
+            }
+          },
+          {
+            "name": "starting_after",
+            "in": "query",
+            "required": false,
+            "description": "Cursor: an object id; returns the page after it.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "ending_before",
+            "in": "query",
+            "required": false,
+            "description": "Cursor: an object id; returns the page before it.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "expand[]",
+            "in": "query",
+            "required": false,
+            "description": "Related objects to return in full instead of as an id. Up to four levels, e.g. `ecosystem_id`; on a list, `data.<field>`.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "style": "form",
+            "explode": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The grants",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "object",
+                    "data",
+                    "has_more",
+                    "url"
+                  ],
+                  "properties": {
+                    "object": {
+                      "type": "string",
+                      "const": "list"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "allOf": [
+                          {
+                            "type": "object",
+                            "properties": {
+                              "object": {
+                                "type": "string",
+                                "const": "support.grant"
+                              }
+                            }
+                          },
+                          {
+                            "$ref": "#/components/schemas/SupportGrant"
+                          }
+                        ]
+                      }
+                    },
+                    "has_more": {
+                      "type": "boolean"
+                    },
+                    "url": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          }
+        },
+        "x-adh-object": "support.grant",
+        "x-adh-replaces": [
+          "GET /support/grants"
+        ]
+      },
+      "post": {
+        "tags": [
+          "support"
+        ],
+        "summary": "Ask a customer for consent to read their content",
+        "description": "Product admins only. Needs a second factor from a sign-in in the last ten minutes: 403 with `error.code` `step_up_required` otherwise. 403 `not_target` for someone who is not a live customer of the product; 409 `exists` while a live grant for the pair stands.\n\nReplaces POST /support/grants.",
+        "operationId": "postV1SupportGrants",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SupportGrantRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "The grant, pending",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "object": {
+                          "type": "string",
+                          "const": "support.grant"
+                        }
+                      }
+                    },
+                    {
+                      "$ref": "#/components/schemas/SupportGrant"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          }
+        },
+        "x-adh-object": "support.grant",
+        "x-adh-replaces": [
+          "POST /support/grants"
+        ]
+      }
+    },
+    "/v1/support/grants/{id}/data/{schema}/{table}": {
+      "get": {
+        "tags": [
+          "support"
+        ],
+        "summary": "A content table's rows under a support grant, newest first",
+        "description": "The grant's grantee only, with aal 2 (403 otherwise). An operator's grant is read by the operator; a product admin's through the product's admin site. A grant that is not live is 403 with `error.code` `not_live`. Every request writes a row to the grant's read log before anything is read, and only rows in the grant's reach (the target and their personas) are returned, with the ownership key columns left out.\n\nReplaces GET /support/grants/{id}/data/{schema}/{table}.",
+        "operationId": "getV1SupportGrantsByIdDataBySchemaByTable",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "schema",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "table",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "description": "Page size, 1–100 (default 10).",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 10
+            }
+          },
+          {
+            "name": "starting_after",
+            "in": "query",
+            "required": false,
+            "description": "Cursor: an object id; returns the page after it.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "ending_before",
+            "in": "query",
+            "required": false,
+            "description": "Cursor: an object id; returns the page before it.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "expand[]",
+            "in": "query",
+            "required": false,
+            "description": "Related objects to return in full instead of as an id. Up to four levels, e.g. `ecosystem_id`; on a list, `data.<field>`.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "style": "form",
+            "explode": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The rows",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "object",
+                    "data",
+                    "has_more",
+                    "url"
+                  ],
+                  "properties": {
+                    "object": {
+                      "type": "string",
+                      "const": "list"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "allOf": [
+                          {
+                            "type": "object",
+                            "properties": {
+                              "object": {
+                                "type": "string",
+                                "const": "data"
+                              }
+                            }
+                          },
+                          {
+                            "$ref": "#/components/schemas/SupportViewerRow"
+                          }
+                        ]
+                      }
+                    },
+                    "has_more": {
+                      "type": "boolean"
+                    },
+                    "url": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          }
+        },
+        "x-adh-object": "data",
+        "x-adh-replaces": [
+          "GET /support/grants/{id}/data/{schema}/{table}"
+        ]
+      }
+    },
+    "/v1/support/grants/{id}/data/{schema}/{table}/{row_id}": {
+      "get": {
+        "tags": [
+          "support"
+        ],
+        "summary": "One content row under a support grant",
+        "description": "The grant's grantee only, with aal 2 (403 otherwise). An operator's grant is read by the operator; a product admin's through the product's admin site. A grant that is not live is 403 with `error.code` `not_live`. Every request writes a row to the grant's read log before anything is read, and only rows in the grant's reach (the target and their personas) are returned, with the ownership key columns left out. A table keyed on more than one column has no row read (404).\n\nReplaces GET /support/grants/{id}/data/{schema}/{table}/{rowId}.",
+        "operationId": "getV1SupportGrantsByIdDataBySchemaByTableByRowId",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "schema",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "table",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "row_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "expand[]",
+            "in": "query",
+            "required": false,
+            "description": "Related objects to return in full instead of as an id. Up to four levels, e.g. `ecosystem_id`; on a list, `data.<field>`.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "style": "form",
+            "explode": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The row",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "object": {
+                          "type": "string",
+                          "const": "data"
+                        }
+                      }
+                    },
+                    {
+                      "$ref": "#/components/schemas/SupportViewerRow"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          }
+        },
+        "x-adh-object": "data",
+        "x-adh-replaces": [
+          "GET /support/grants/{id}/data/{schema}/{table}/{rowId}"
+        ]
+      }
+    },
+    "/v1/support/grants/{id}/revoke": {
+      "post": {
+        "tags": [
+          "support"
+        ],
+        "summary": "End a support grant",
+        "description": "Its grantee, or a manager of the product for a product admin's grant. 409 `not_live` for a grant already ended.\n\nReplaces POST /support/grants/{id}/revoke.",
+        "operationId": "postV1SupportGrantsByIdRevoke",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "object": {
+                      "type": "string",
+                      "const": "support.grant"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          }
+        },
+        "x-adh-object": "support.grant",
+        "x-adh-replaces": [
+          "POST /support/grants/{id}/revoke"
+        ]
+      }
+    },
     "/v1/sync/pull": {
       "get": {
         "summary": "Delta-pull all changed rows for the caller across sync-registered resources",
@@ -154055,6 +157044,684 @@
         "x-adh-object": "system.operator_access",
         "x-adh-replaces": [
           "GET /system/operator-access"
+        ]
+      }
+    },
+    "/v1/system/support_access": {
+      "get": {
+        "tags": [
+          "system"
+        ],
+        "summary": "One support grant's read log, newest first",
+        "description": "Replaces GET /system/support-access.",
+        "operationId": "getV1SystemSupportAccess",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "grant_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The support grant."
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The id of the last row the caller holds."
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "description": "Page size, 1–100 (default 10).",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 10
+            }
+          },
+          {
+            "name": "starting_after",
+            "in": "query",
+            "required": false,
+            "description": "Cursor: an object id; returns the page after it.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "ending_before",
+            "in": "query",
+            "required": false,
+            "description": "Cursor: an object id; returns the page before it.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "expand[]",
+            "in": "query",
+            "required": false,
+            "description": "Related objects to return in full instead of as an id. Up to four levels, e.g. `ecosystem_id`; on a list, `data.<field>`.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "style": "form",
+            "explode": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "One page",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "object",
+                    "data",
+                    "has_more",
+                    "url"
+                  ],
+                  "properties": {
+                    "object": {
+                      "type": "string",
+                      "const": "list"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "allOf": [
+                          {
+                            "type": "object",
+                            "properties": {
+                              "object": {
+                                "type": "string",
+                                "const": "system.support_access"
+                              }
+                            }
+                          },
+                          {
+                            "$ref": "#/components/schemas/SupportAccessRow"
+                          }
+                        ]
+                      }
+                    },
+                    "has_more": {
+                      "type": "boolean"
+                    },
+                    "url": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          }
+        },
+        "x-adh-object": "system.support_access",
+        "x-adh-replaces": [
+          "GET /system/support-access"
+        ]
+      }
+    },
+    "/v1/system/support_grants": {
+      "get": {
+        "tags": [
+          "system"
+        ],
+        "summary": "Every support grant, newest first",
+        "description": "Replaces GET /system/support-grants.",
+        "operationId": "getV1SystemSupportGrants",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "description": "Only grants in this state.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "pending",
+                "live",
+                "denied",
+                "lapsed",
+                "expired",
+                "revoked"
+              ]
+            }
+          },
+          {
+            "name": "consent",
+            "in": "query",
+            "required": false,
+            "description": "Only grants of this kind.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "customer",
+                "break_glass"
+              ]
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The id of the last row the caller holds."
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "description": "Page size, 1–100 (default 10).",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 10
+            }
+          },
+          {
+            "name": "starting_after",
+            "in": "query",
+            "required": false,
+            "description": "Cursor: an object id; returns the page after it.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "ending_before",
+            "in": "query",
+            "required": false,
+            "description": "Cursor: an object id; returns the page before it.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "expand[]",
+            "in": "query",
+            "required": false,
+            "description": "Related objects to return in full instead of as an id. Up to four levels, e.g. `ecosystem_id`; on a list, `data.<field>`.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "style": "form",
+            "explode": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "One page",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "object",
+                    "data",
+                    "has_more",
+                    "url"
+                  ],
+                  "properties": {
+                    "object": {
+                      "type": "string",
+                      "const": "list"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "allOf": [
+                          {
+                            "type": "object",
+                            "properties": {
+                              "object": {
+                                "type": "string",
+                                "const": "system.support_grant"
+                              }
+                            }
+                          },
+                          {
+                            "$ref": "#/components/schemas/SupportGrant"
+                          }
+                        ]
+                      }
+                    },
+                    "has_more": {
+                      "type": "boolean"
+                    },
+                    "url": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          }
+        },
+        "x-adh-object": "system.support_grant",
+        "x-adh-replaces": [
+          "GET /system/support-grants"
+        ]
+      },
+      "post": {
+        "tags": [
+          "system"
+        ],
+        "summary": "Ask a customer or hub account for consent to read their content",
+        "description": "Needs a second factor from a sign-in in the last ten minutes: 403 with `error.code` `step_up_required` otherwise.\n\nReplaces POST /system/support-grants.",
+        "operationId": "postV1SystemSupportGrants",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SystemSupportGrantRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "The grant, pending",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "object": {
+                          "type": "string",
+                          "const": "system.support_grant"
+                        }
+                      }
+                    },
+                    {
+                      "$ref": "#/components/schemas/SupportGrant"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          }
+        },
+        "x-adh-object": "system.support_grant",
+        "x-adh-replaces": [
+          "POST /system/support-grants"
+        ]
+      }
+    },
+    "/v1/system/support_grants/break_glass": {
+      "post": {
+        "tags": [
+          "system"
+        ],
+        "summary": "Open a support grant at once, without consent",
+        "description": "Needs a second factor from a sign-in in the last ten minutes: 403 with `error.code` `step_up_required` otherwise. The grant is approved at once, and the target is told. 422 for an attestation under 40 characters, a missing reference or more than four hours.\n\nReplaces POST /system/support-grants/break-glass.",
+        "operationId": "postV1SystemSupportGrantsBreakGlass",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SupportBreakGlassRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "The grant, live",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "object": {
+                          "type": "string",
+                          "const": "system.support_grants.break_glass"
+                        }
+                      }
+                    },
+                    {
+                      "$ref": "#/components/schemas/SupportGrant"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          }
+        },
+        "x-adh-object": "system.support_grants.break_glass",
+        "x-adh-replaces": [
+          "POST /system/support-grants/break-glass"
+        ]
+      }
+    },
+    "/v1/system/support_grants/{id}/revoke": {
+      "post": {
+        "tags": [
+          "system"
+        ],
+        "summary": "End a support grant",
+        "description": "409 `not_live` for a grant already ended.\n\nReplaces POST /system/support-grants/{id}/revoke.",
+        "operationId": "postV1SystemSupportGrantsByIdRevoke",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "object": {
+                      "type": "string",
+                      "const": "system.support_grant"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          }
+        },
+        "x-adh-object": "system.support_grant",
+        "x-adh-replaces": [
+          "POST /system/support-grants/{id}/revoke"
         ]
       }
     },

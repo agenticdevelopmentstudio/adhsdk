@@ -1,10 +1,14 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Any, TypeVar
+from typing import TYPE_CHECKING, Any, TypeVar
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
+
+if TYPE_CHECKING:
+    from ..models.product_totals_jobs_by_status import ProductTotalsJobsByStatus
+
 
 T = TypeVar("T", bound="ProductTotals")
 
@@ -19,6 +23,7 @@ class ProductTotals:
         active7d (int): Customers with usage in the last 7 days.
         active30d (int): Customers with usage in the last 30 days.
         storage_bytes (int): Bytes in the customers' ready attachments.
+        jobs_by_status (ProductTotalsJobsByStatus): Jobs of the product's customers, by status.
         pending_invitations (int): Invitations sent and not yet used.
         pending_requests (int): Requests for an invitation.
     """
@@ -29,6 +34,7 @@ class ProductTotals:
     active7d: int
     active30d: int
     storage_bytes: int
+    jobs_by_status: ProductTotalsJobsByStatus
     pending_invitations: int
     pending_requests: int
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
@@ -46,6 +52,8 @@ class ProductTotals:
 
         storage_bytes = self.storage_bytes
 
+        jobs_by_status = self.jobs_by_status.to_dict()
+
         pending_invitations = self.pending_invitations
 
         pending_requests = self.pending_requests
@@ -60,6 +68,7 @@ class ProductTotals:
                 "active7d": active7d,
                 "active30d": active30d,
                 "storage_bytes": storage_bytes,
+                "jobs_by_status": jobs_by_status,
                 "pending_invitations": pending_invitations,
                 "pending_requests": pending_requests,
             }
@@ -69,6 +78,10 @@ class ProductTotals:
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
+        from ..models.product_totals_jobs_by_status import (
+            ProductTotalsJobsByStatus,
+        )
+
         d = dict(src_dict)
         customers = d.pop("customers")
 
@@ -82,6 +95,8 @@ class ProductTotals:
 
         storage_bytes = d.pop("storage_bytes")
 
+        jobs_by_status = ProductTotalsJobsByStatus.from_dict(d.pop("jobs_by_status"))
+
         pending_invitations = d.pop("pending_invitations")
 
         pending_requests = d.pop("pending_requests")
@@ -93,6 +108,7 @@ class ProductTotals:
             active7d=active7d,
             active30d=active30d,
             storage_bytes=storage_bytes,
+            jobs_by_status=jobs_by_status,
             pending_invitations=pending_invitations,
             pending_requests=pending_requests,
         )

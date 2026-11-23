@@ -27,6 +27,7 @@ export default defineConfig({
     'src/profile/index.ts',
     'src/sets/index.ts',
     'src/product-admin/index.ts',
+    'src/support/index.ts',
   ],
   outDir: 'dist',
   format: ['esm'],

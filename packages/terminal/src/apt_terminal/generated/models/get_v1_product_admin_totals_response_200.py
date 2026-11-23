@@ -1,12 +1,16 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Any, Literal, TypeVar, cast
+from typing import TYPE_CHECKING, Any, Literal, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
 from ..types import UNSET, Unset
+
+if TYPE_CHECKING:
+    from ..models.product_totals_jobs_by_status import ProductTotalsJobsByStatus
+
 
 T = TypeVar("T", bound="GetV1ProductAdminTotalsResponse200")
 
@@ -21,6 +25,7 @@ class GetV1ProductAdminTotalsResponse200:
         active7d (int): Customers with usage in the last 7 days.
         active30d (int): Customers with usage in the last 30 days.
         storage_bytes (int): Bytes in the customers' ready attachments.
+        jobs_by_status (ProductTotalsJobsByStatus): Jobs of the product's customers, by status.
         pending_invitations (int): Invitations sent and not yet used.
         pending_requests (int): Requests for an invitation.
         object_ (Literal['product_admin.total'] | Unset):
@@ -32,6 +37,7 @@ class GetV1ProductAdminTotalsResponse200:
     active7d: int
     active30d: int
     storage_bytes: int
+    jobs_by_status: ProductTotalsJobsByStatus
     pending_invitations: int
     pending_requests: int
     object_: Literal["product_admin.total"] | Unset = UNSET
@@ -50,6 +56,8 @@ class GetV1ProductAdminTotalsResponse200:
 
         storage_bytes = self.storage_bytes
 
+        jobs_by_status = self.jobs_by_status.to_dict()
+
         pending_invitations = self.pending_invitations
 
         pending_requests = self.pending_requests
@@ -66,6 +74,7 @@ class GetV1ProductAdminTotalsResponse200:
                 "active7d": active7d,
                 "active30d": active30d,
                 "storage_bytes": storage_bytes,
+                "jobs_by_status": jobs_by_status,
                 "pending_invitations": pending_invitations,
                 "pending_requests": pending_requests,
             }
@@ -77,6 +86,10 @@ class GetV1ProductAdminTotalsResponse200:
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
+        from ..models.product_totals_jobs_by_status import (
+            ProductTotalsJobsByStatus,
+        )
+
         d = dict(src_dict)
         customers = d.pop("customers")
 
@@ -89,6 +102,8 @@ class GetV1ProductAdminTotalsResponse200:
         active30d = d.pop("active30d")
 
         storage_bytes = d.pop("storage_bytes")
+
+        jobs_by_status = ProductTotalsJobsByStatus.from_dict(d.pop("jobs_by_status"))
 
         pending_invitations = d.pop("pending_invitations")
 
@@ -105,6 +120,7 @@ class GetV1ProductAdminTotalsResponse200:
             active7d=active7d,
             active30d=active30d,
             storage_bytes=storage_bytes,
+            jobs_by_status=jobs_by_status,
             pending_invitations=pending_invitations,
             pending_requests=pending_requests,
             object_=object_,

@@ -379,6 +379,14 @@ from .get_v1_account_mfa_response_200_preferred_method_type_3_type_1 import (
 )
 from .get_v1_account_response_200 import GetV1AccountResponse200
 from .get_v1_account_response_200_privacy import GetV1AccountResponse200Privacy
+from .get_v1_account_support_access_response_200 import GetV1AccountSupportAccessResponse200
+from .get_v1_account_support_access_response_200_data_item import (
+    GetV1AccountSupportAccessResponse200DataItem,
+)
+from .get_v1_account_support_grants_response_200 import GetV1AccountSupportGrantsResponse200
+from .get_v1_account_support_grants_response_200_data_item import (
+    GetV1AccountSupportGrantsResponse200DataItem,
+)
 from .get_v1_accounts_by_id_response_200 import GetV1AccountsByIdResponse200
 from .get_v1_accounts_response_200 import GetV1AccountsResponse200
 from .get_v1_accounts_response_200_data_item import GetV1AccountsResponse200DataItem
@@ -680,6 +688,14 @@ from .get_v1_content_urls_response_200_data_item import GetV1ContentUrlsResponse
 from .get_v1_customer_memberships_response_200 import GetV1CustomerMembershipsResponse200
 from .get_v1_customer_memberships_response_200_data_item import (
     GetV1CustomerMembershipsResponse200DataItem,
+)
+from .get_v1_customer_support_access_response_200 import GetV1CustomerSupportAccessResponse200
+from .get_v1_customer_support_access_response_200_data_item import (
+    GetV1CustomerSupportAccessResponse200DataItem,
+)
+from .get_v1_customer_support_grants_response_200 import GetV1CustomerSupportGrantsResponse200
+from .get_v1_customer_support_grants_response_200_data_item import (
+    GetV1CustomerSupportGrantsResponse200DataItem,
 )
 from .get_v1_customers_by_id_response_200 import GetV1CustomersByIdResponse200
 from .get_v1_customers_response_200 import GetV1CustomersResponse200
@@ -1290,6 +1306,7 @@ from .get_v1_provider_templates_response_200_data_item import (
 from .get_v1_provider_templates_response_200_sync_status import (
     GetV1ProviderTemplatesResponse200SyncStatus,
 )
+from .get_v1_public_support_grants_by_id_response_200 import GetV1PublicSupportGrantsByIdResponse200
 from .get_v1_regions_by_id_response_200 import GetV1RegionsByIdResponse200
 from .get_v1_regions_response_200 import GetV1RegionsResponse200
 from .get_v1_regions_response_200_data_item import GetV1RegionsResponse200DataItem
@@ -1389,6 +1406,17 @@ from .get_v1_special_interests_response_200 import GetV1SpecialInterestsResponse
 from .get_v1_special_interests_response_200_data_item import (
     GetV1SpecialInterestsResponse200DataItem,
 )
+from .get_v1_support_grants_by_id_data_by_schema_by_table_by_row_id_response_200 import (
+    GetV1SupportGrantsByIdDataBySchemaByTableByRowIdResponse200,
+)
+from .get_v1_support_grants_by_id_data_by_schema_by_table_response_200 import (
+    GetV1SupportGrantsByIdDataBySchemaByTableResponse200,
+)
+from .get_v1_support_grants_by_id_data_by_schema_by_table_response_200_data_item import (
+    GetV1SupportGrantsByIdDataBySchemaByTableResponse200DataItem,
+)
+from .get_v1_support_grants_response_200 import GetV1SupportGrantsResponse200
+from .get_v1_support_grants_response_200_data_item import GetV1SupportGrantsResponse200DataItem
 from .get_v1_sync_pull_response_200 import GetV1SyncPullResponse200
 from .get_v1_sync_tables_by_id_response_200 import GetV1SyncTablesByIdResponse200
 from .get_v1_sync_tables_by_id_response_200_data_item import GetV1SyncTablesByIdResponse200DataItem
@@ -1402,6 +1430,16 @@ from .get_v1_system_operator_access_response_200 import GetV1SystemOperatorAcces
 from .get_v1_system_operator_access_response_200_data_item import (
     GetV1SystemOperatorAccessResponse200DataItem,
 )
+from .get_v1_system_support_access_response_200 import GetV1SystemSupportAccessResponse200
+from .get_v1_system_support_access_response_200_data_item import (
+    GetV1SystemSupportAccessResponse200DataItem,
+)
+from .get_v1_system_support_grants_consent import GetV1SystemSupportGrantsConsent
+from .get_v1_system_support_grants_response_200 import GetV1SystemSupportGrantsResponse200
+from .get_v1_system_support_grants_response_200_data_item import (
+    GetV1SystemSupportGrantsResponse200DataItem,
+)
+from .get_v1_system_support_grants_status import GetV1SystemSupportGrantsStatus
 from .get_v1_tasks_by_id_response_200 import GetV1TasksByIdResponse200
 from .get_v1_tasks_response_200 import GetV1TasksResponse200
 from .get_v1_tasks_response_200_data_item import GetV1TasksResponse200DataItem
@@ -1778,6 +1816,15 @@ from .post_v1_account_mfa_totp_confirm_body import PostV1AccountMfaTotpConfirmBo
 from .post_v1_account_mfa_totp_confirm_response_200 import PostV1AccountMfaTotpConfirmResponse200
 from .post_v1_account_mfa_totp_response_200 import PostV1AccountMfaTotpResponse200
 from .post_v1_account_response_200 import PostV1AccountResponse200
+from .post_v1_account_support_grants_by_id_approve_response_200 import (
+    PostV1AccountSupportGrantsByIdApproveResponse200,
+)
+from .post_v1_account_support_grants_by_id_deny_response_200 import (
+    PostV1AccountSupportGrantsByIdDenyResponse200,
+)
+from .post_v1_account_support_grants_by_id_revoke_response_200 import (
+    PostV1AccountSupportGrantsByIdRevokeResponse200,
+)
 from .post_v1_accounts_body import PostV1AccountsBody
 from .post_v1_accounts_by_id_body import PostV1AccountsByIdBody
 from .post_v1_accounts_by_id_response_200 import PostV1AccountsByIdResponse200
@@ -2135,6 +2182,15 @@ from .post_v1_customer_sessions_revoke_response_200 import PostV1CustomerSession
 from .post_v1_customer_sessions_sms_codes_body import PostV1CustomerSessionsSmsCodesBody
 from .post_v1_customer_sessions_sms_codes_response_202 import (
     PostV1CustomerSessionsSmsCodesResponse202,
+)
+from .post_v1_customer_support_grants_by_id_approve_response_200 import (
+    PostV1CustomerSupportGrantsByIdApproveResponse200,
+)
+from .post_v1_customer_support_grants_by_id_deny_response_200 import (
+    PostV1CustomerSupportGrantsByIdDenyResponse200,
+)
+from .post_v1_customer_support_grants_by_id_revoke_response_200 import (
+    PostV1CustomerSupportGrantsByIdRevokeResponse200,
 )
 from .post_v1_customers_body import PostV1CustomersBody
 from .post_v1_customers_by_id_body import PostV1CustomersByIdBody
@@ -2991,6 +3047,18 @@ from .post_v1_provider_templates_by_id_verify_response_200 import (
 )
 from .post_v1_provider_templates_response_201 import PostV1ProviderTemplatesResponse201
 from .post_v1_provider_templates_sync_response_200 import PostV1ProviderTemplatesSyncResponse200
+from .post_v1_public_support_grants_by_id_approve_code_response_202 import (
+    PostV1PublicSupportGrantsByIdApproveCodeResponse202,
+)
+from .post_v1_public_support_grants_by_id_approve_response_200 import (
+    PostV1PublicSupportGrantsByIdApproveResponse200,
+)
+from .post_v1_public_support_grants_by_id_deny_response_200 import (
+    PostV1PublicSupportGrantsByIdDenyResponse200,
+)
+from .post_v1_public_support_grants_by_id_revoke_response_200 import (
+    PostV1PublicSupportGrantsByIdRevokeResponse200,
+)
 from .post_v1_regions_body import PostV1RegionsBody
 from .post_v1_regions_by_id_body import PostV1RegionsByIdBody
 from .post_v1_regions_by_id_response_200 import PostV1RegionsByIdResponse200
@@ -3186,10 +3254,21 @@ from .post_v1_special_interests_body import PostV1SpecialInterestsBody
 from .post_v1_special_interests_by_id_body import PostV1SpecialInterestsByIdBody
 from .post_v1_special_interests_by_id_response_200 import PostV1SpecialInterestsByIdResponse200
 from .post_v1_special_interests_response_201 import PostV1SpecialInterestsResponse201
+from .post_v1_support_grants_by_id_revoke_response_200 import (
+    PostV1SupportGrantsByIdRevokeResponse200,
+)
+from .post_v1_support_grants_response_201 import PostV1SupportGrantsResponse201
 from .post_v1_sync_push_response_200 import PostV1SyncPushResponse200
 from .post_v1_sync_tables_by_id_resources_by_resource_response_200 import (
     PostV1SyncTablesByIdResourcesByResourceResponse200,
 )
+from .post_v1_system_support_grants_break_glass_response_201 import (
+    PostV1SystemSupportGrantsBreakGlassResponse201,
+)
+from .post_v1_system_support_grants_by_id_revoke_response_200 import (
+    PostV1SystemSupportGrantsByIdRevokeResponse200,
+)
+from .post_v1_system_support_grants_response_201 import PostV1SystemSupportGrantsResponse201
 from .post_v1_tasks_body import PostV1TasksBody
 from .post_v1_tasks_by_id_body import PostV1TasksByIdBody
 from .post_v1_tasks_by_id_response_200 import PostV1TasksByIdResponse200
@@ -3302,6 +3381,7 @@ from .product_customer_pause import ProductCustomerPause
 from .product_customer_quota import ProductCustomerQuota
 from .product_customer_role import ProductCustomerRole
 from .product_totals import ProductTotals
+from .product_totals_jobs_by_status import ProductTotalsJobsByStatus
 from .project import Project
 from .project_activity import ProjectActivity
 from .project_activity_detail_type_0 import ProjectActivityDetailType0
@@ -3547,6 +3627,34 @@ from .subject_sheet import SubjectSheet
 from .subject_sheet_badges_item import SubjectSheetBadgesItem
 from .subject_sheet_stats import SubjectSheetStats
 from .subject_sheet_trend import SubjectSheetTrend
+from .support_access_page import SupportAccessPage
+from .support_access_row import SupportAccessRow
+from .support_break_glass_request import SupportBreakGlassRequest
+from .support_break_glass_request_target_kind import SupportBreakGlassRequestTargetKind
+from .support_grant import SupportGrant
+from .support_grant_consent import SupportGrantConsent
+from .support_grant_created import SupportGrantCreated
+from .support_grant_decided import SupportGrantDecided
+from .support_grant_decision import SupportGrantDecision
+from .support_grant_grantee import SupportGrantGrantee
+from .support_grant_grantee_kind import SupportGrantGranteeKind
+from .support_grant_list import SupportGrantList
+from .support_grant_page import SupportGrantPage
+from .support_grant_request import SupportGrantRequest
+from .support_grant_revoked_by_kind import SupportGrantRevokedByKind
+from .support_grant_scope import SupportGrantScope
+from .support_grant_status import SupportGrantStatus
+from .support_grant_target import SupportGrantTarget
+from .support_grant_target_kind import SupportGrantTargetKind
+from .support_link_approve import SupportLinkApprove
+from .support_link_code_sent import SupportLinkCodeSent
+from .support_link_grant import SupportLinkGrant
+from .support_link_token import SupportLinkToken
+from .support_read import SupportRead
+from .support_read_grantee import SupportReadGrantee
+from .support_read_grantee_kind import SupportReadGranteeKind
+from .support_read_page import SupportReadPage
+from .support_viewer_row import SupportViewerRow
 from .sync_change import SyncChange
 from .sync_change_data import SyncChangeData
 from .sync_change_op import SyncChangeOp
@@ -3565,6 +3673,8 @@ from .sync_push_response import SyncPushResponse
 from .sync_push_result import SyncPushResult
 from .sync_push_result_current_type_0 import SyncPushResultCurrentType0
 from .sync_push_result_status import SyncPushResultStatus
+from .system_support_grant_request import SystemSupportGrantRequest
+from .system_support_grant_request_target_kind import SystemSupportGrantRequestTargetKind
 from .target_descriptor import TargetDescriptor
 from .team_member import TeamMember
 from .team_member_counts import TeamMemberCounts
@@ -4025,6 +4135,10 @@ __all__ = (
     "GetV1AccountMfaResponse200PreferredMethodType3Type1",
     "GetV1AccountResponse200",
     "GetV1AccountResponse200Privacy",
+    "GetV1AccountSupportAccessResponse200",
+    "GetV1AccountSupportAccessResponse200DataItem",
+    "GetV1AccountSupportGrantsResponse200",
+    "GetV1AccountSupportGrantsResponse200DataItem",
     "GetV1AccountsByIdResponse200",
     "GetV1AccountsResponse200",
     "GetV1AccountsResponse200DataItem",
@@ -4215,6 +4329,10 @@ __all__ = (
     "GetV1ContentUrlsResponse200DataItem",
     "GetV1CustomerMembershipsResponse200",
     "GetV1CustomerMembershipsResponse200DataItem",
+    "GetV1CustomerSupportAccessResponse200",
+    "GetV1CustomerSupportAccessResponse200DataItem",
+    "GetV1CustomerSupportGrantsResponse200",
+    "GetV1CustomerSupportGrantsResponse200DataItem",
     "GetV1CustomersByIdResponse200",
     "GetV1CustomersResponse200",
     "GetV1CustomersResponse200DataItem",
@@ -4572,6 +4690,7 @@ __all__ = (
     "GetV1ProviderTemplatesResponse200",
     "GetV1ProviderTemplatesResponse200DataItem",
     "GetV1ProviderTemplatesResponse200SyncStatus",
+    "GetV1PublicSupportGrantsByIdResponse200",
     "GetV1RegionsByIdResponse200",
     "GetV1RegionsResponse200",
     "GetV1RegionsResponse200DataItem",
@@ -4633,6 +4752,11 @@ __all__ = (
     "GetV1SpecialInterestsByIdResponse200",
     "GetV1SpecialInterestsResponse200",
     "GetV1SpecialInterestsResponse200DataItem",
+    "GetV1SupportGrantsByIdDataBySchemaByTableByRowIdResponse200",
+    "GetV1SupportGrantsByIdDataBySchemaByTableResponse200",
+    "GetV1SupportGrantsByIdDataBySchemaByTableResponse200DataItem",
+    "GetV1SupportGrantsResponse200",
+    "GetV1SupportGrantsResponse200DataItem",
     "GetV1SyncPullResponse200",
     "GetV1SyncTablesByIdResponse200",
     "GetV1SyncTablesByIdResponse200DataItem",
@@ -4642,6 +4766,12 @@ __all__ = (
     "GetV1SystemDebugEnvResponse200DataItem",
     "GetV1SystemOperatorAccessResponse200",
     "GetV1SystemOperatorAccessResponse200DataItem",
+    "GetV1SystemSupportAccessResponse200",
+    "GetV1SystemSupportAccessResponse200DataItem",
+    "GetV1SystemSupportGrantsConsent",
+    "GetV1SystemSupportGrantsResponse200",
+    "GetV1SystemSupportGrantsResponse200DataItem",
+    "GetV1SystemSupportGrantsStatus",
     "GetV1TasksByIdResponse200",
     "GetV1TasksResponse200",
     "GetV1TasksResponse200DataItem",
@@ -4960,6 +5090,9 @@ __all__ = (
     "PostV1AccountMfaTotpConfirmResponse200",
     "PostV1AccountMfaTotpResponse200",
     "PostV1AccountResponse200",
+    "PostV1AccountSupportGrantsByIdApproveResponse200",
+    "PostV1AccountSupportGrantsByIdDenyResponse200",
+    "PostV1AccountSupportGrantsByIdRevokeResponse200",
     "PostV1AccountsBody",
     "PostV1AccountsByIdBody",
     "PostV1AccountsByIdResponse200",
@@ -5224,6 +5357,9 @@ __all__ = (
     "PostV1CustomerSessionsRevokeResponse200",
     "PostV1CustomerSessionsSmsCodesBody",
     "PostV1CustomerSessionsSmsCodesResponse202",
+    "PostV1CustomerSupportGrantsByIdApproveResponse200",
+    "PostV1CustomerSupportGrantsByIdDenyResponse200",
+    "PostV1CustomerSupportGrantsByIdRevokeResponse200",
     "PostV1CustomersBody",
     "PostV1CustomersByIdBody",
     "PostV1CustomersByIdResponse200",
@@ -5739,6 +5875,10 @@ __all__ = (
     "PostV1ProviderTemplatesByIdVerifyResponse200",
     "PostV1ProviderTemplatesResponse201",
     "PostV1ProviderTemplatesSyncResponse200",
+    "PostV1PublicSupportGrantsByIdApproveCodeResponse202",
+    "PostV1PublicSupportGrantsByIdApproveResponse200",
+    "PostV1PublicSupportGrantsByIdDenyResponse200",
+    "PostV1PublicSupportGrantsByIdRevokeResponse200",
     "PostV1RegionsBody",
     "PostV1RegionsByIdBody",
     "PostV1RegionsByIdResponse200",
@@ -5858,8 +5998,13 @@ __all__ = (
     "PostV1SpecialInterestsByIdBody",
     "PostV1SpecialInterestsByIdResponse200",
     "PostV1SpecialInterestsResponse201",
+    "PostV1SupportGrantsByIdRevokeResponse200",
+    "PostV1SupportGrantsResponse201",
     "PostV1SyncPushResponse200",
     "PostV1SyncTablesByIdResourcesByResourceResponse200",
+    "PostV1SystemSupportGrantsBreakGlassResponse201",
+    "PostV1SystemSupportGrantsByIdRevokeResponse200",
+    "PostV1SystemSupportGrantsResponse201",
     "PostV1TasksBody",
     "PostV1TasksByIdBody",
     "PostV1TasksByIdResponse200",
@@ -5948,6 +6093,7 @@ __all__ = (
     "ProductCustomerQuota",
     "ProductCustomerRole",
     "ProductTotals",
+    "ProductTotalsJobsByStatus",
     "Project",
     "ProjectActivity",
     "ProjectActivityDetailType0",
@@ -6191,6 +6337,34 @@ __all__ = (
     "SubjectSheetBadgesItem",
     "SubjectSheetStats",
     "SubjectSheetTrend",
+    "SupportAccessPage",
+    "SupportAccessRow",
+    "SupportBreakGlassRequest",
+    "SupportBreakGlassRequestTargetKind",
+    "SupportGrant",
+    "SupportGrantConsent",
+    "SupportGrantCreated",
+    "SupportGrantDecided",
+    "SupportGrantDecision",
+    "SupportGrantGrantee",
+    "SupportGrantGranteeKind",
+    "SupportGrantList",
+    "SupportGrantPage",
+    "SupportGrantRequest",
+    "SupportGrantRevokedByKind",
+    "SupportGrantScope",
+    "SupportGrantStatus",
+    "SupportGrantTarget",
+    "SupportGrantTargetKind",
+    "SupportLinkApprove",
+    "SupportLinkCodeSent",
+    "SupportLinkGrant",
+    "SupportLinkToken",
+    "SupportRead",
+    "SupportReadGrantee",
+    "SupportReadGranteeKind",
+    "SupportReadPage",
+    "SupportViewerRow",
     "SyncChange",
     "SyncChangeData",
     "SyncChangeOp",
@@ -6209,6 +6383,8 @@ __all__ = (
     "SyncPushResult",
     "SyncPushResultCurrentType0",
     "SyncPushResultStatus",
+    "SystemSupportGrantRequest",
+    "SystemSupportGrantRequestTargetKind",
     "TargetDescriptor",
     "TeamMember",
     "TeamMemberCounts",
