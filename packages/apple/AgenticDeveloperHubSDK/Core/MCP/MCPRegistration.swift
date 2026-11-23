@@ -44,7 +44,9 @@ public enum MCPRegistration {
         public var url: String { MCPRegistration.url(port: port) }
     }
 
-    /// The subcommand of adhd that prints `{"Authorization":"Bearer <token>"}`.
+    /// The subcommand of adhd that prints `{"Authorization":"Bearer <token>"}`,
+    /// plus `X-ADHD-Pane` when the session runs in a pane that exports
+    /// `ADHD_PANE_ID`.
     public static let headersSubcommand = "mcp headers"
 
     /// `http://127.0.0.1:<port>/mcp`.

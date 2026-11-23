@@ -120,4 +120,24 @@ final class MCPStatelessHTTPHandlerTests: XCTestCase {
         XCTAssertEqual((renamed["params"] as? [String: Any])?["requestId"] as? String, "u-1")
         XCTAssertNil(MCPStatelessHTTPHandler.cancellation(in: Data(rpc("tools/list").utf8)))
     }
+
+    func testTwoRequestsUnderOneKeyAreBothKeptAndNeitherIsCancelledByGuess() async {
+        // Two sessions outside any pane, both sending id 3.
+        let key = MCPStatelessHTTPHandler.inFlightKey(caller: nil, originalIDJSON: Data("[3]".utf8))
+        let inFlight = MCPStatelessHTTPHandler.InFlightRequests()
+        await inFlight.begin(key, uniqueID: "a")
+        let alone = await inFlight.uniqueID(for: key)
+        XCTAssertEqual(alone, "a")
+
+        await inFlight.begin(key, uniqueID: "b")
+        let ambiguous = await inFlight.uniqueID(for: key)
+        XCTAssertNil(ambiguous, "a cancellation that could mean either cancels neither")
+
+        await inFlight.end(key, uniqueID: "a")
+        let remaining = await inFlight.uniqueID(for: key)
+        XCTAssertEqual(remaining, "b")
+        await inFlight.end(key, uniqueID: "b")
+        let none = await inFlight.uniqueID(for: key)
+        XCTAssertNil(none)
+    }
 }
