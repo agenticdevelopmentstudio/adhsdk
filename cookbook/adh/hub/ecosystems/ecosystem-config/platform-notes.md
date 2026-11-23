@@ -103,6 +103,13 @@
   owner-scoped customer listing to pick from. The email shape check is a local
   regular expression in `client-auth-model.ts`, because no shared web package
   exports an email validator; the backend's zod check stays authoritative.
+  `pane-caller.ts` declares `PaneCaller` (`manager` or `product_admin`); the
+  sign-up list, roles and sets panes take it as `caller`, and `SetsPane.tsx` exports
+  `setEntryFeaturesFor` (the catalog entries a caller may edit),
+  `USAGE_TIER_LIMIT_KEY` and `STORAGE_QUOTA_LIMIT_KEY`, importing the quota ceiling
+  `DEFAULT_QUOTA_BYTES` from `@adh-sdk/data/product-admin`. `ProductRolesPane.tsx`
+  exports `isAdminRole`. The phase-6 `AdminSitePane` and `ProductTotalsPane` are in
+  the product admin site recipe.
   The phase-5 panes are `SignupListPane.tsx`, `ProductRolesPane.tsx` (with
   `RoleHolders`), `SetsPane.tsx` (with `refusalText` and `valuesOfDraft`) and
   `BillingPane.tsx`, each taking `{ ecosystemId, title, help }` so a host renders

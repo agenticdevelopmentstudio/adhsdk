@@ -35,4 +35,4 @@
 | invitation-panes-032 | shows-delete-confirm-copy | Inspect the Invites pane's delete-confirmation copy | title "Delete invites?", description "This removes the selected sent invites." |
 | invitation-panes-033 | requests-and-pending-show-source-and-note | Select a pending-user row with lastSource "referral", lastNote "thanks" | Detail shows "Source: referral" and "Note from user: thanks" above the notes/history content |
 | invitation-panes-034 | pending-null-dates-render-dash | Render the Pending Users pane with a row whose "Last request" and "Last invite" values are both null | Both columns render "—" |
-
+| invitation-panes-035 | notes-slots-optional | Each of the three panes rendered with no notes renderers, a row selected | No "Admin notes" action in the toolbar and no notes or history content in the detail; the Pending Users pane still offers "Send invitation" and "Add users"; nothing throws |

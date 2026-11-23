@@ -17,7 +17,15 @@
   Requests — "Delete requests?" / "This removes the selected invitation requests.";
   Pending Users — "Delete pending users?" / "This removes the selected pending
   users."; Invites — "Delete invites?" / "This removes the selected sent invites."
-- **notes-action-requires-selection**: The "Admin notes" toolbar action MUST
+- **notes-slots-optional**: Both notes render-prop slots (the notes-and-history
+  renderer and the notes-modal renderer) are optional. A pane given neither (the
+  product admin site, phase 6, which keeps no admin records) MUST render no notes or
+  history content in a row's detail (the Requests and Pending Users details keep
+  their Source and note lines, and the Invites detail is empty), MUST render no notes
+  modal, and MUST NOT offer the "Admin notes" toolbar action; the Pending Users pane
+  keeps "Send invitation" and "Add users". With the modal renderer given, the
+  action is offered as below.
+- **notes-action-requires-selection**: When offered, the "Admin notes" toolbar action MUST
   require a non-empty selection.
 - **notes-action-sets-first-selected-id**: Activating "Admin notes" MUST set the
   pane's admin-notes target id to the first id among the ids the action was

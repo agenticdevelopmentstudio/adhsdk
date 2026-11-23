@@ -8,3 +8,4 @@
 | 1.2.1 | 2026-10-04 | Mike Fullerton | Add separation-of-concerns and unit-test-coverage compliance. |
 | 1.2.2 | 2026-10-04 | Mike Fullerton | Legacy recipe citations restored to the legacy recipes' own adhsdk://recipes/ domains; the adhsdk://recipes/ form named nothing. |
 | 1.2.3 | 2026-11-14 | Mike Fullerton | Conformance tests added (invitationPanes.test.tsx, 34 of 34 vectors); unit-test-coverage now passed. |
+| 2.0.0 | 2026-11-23 | Mike Fullerton | Phase 6: both notes slots optional; without them no Admin notes action, notes or history (product admin site) |

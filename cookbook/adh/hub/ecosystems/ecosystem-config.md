@@ -2,11 +2,11 @@
 id: 87ca0139-6cd0-46dd-a9fb-40ad3406f175
 title: "Ecosystem Config"
 type: ingredient
-version: 2.1.0
+version: 2.2.0
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-11-22
+modified: 2026-11-23
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -457,6 +457,18 @@ replaces the allow-list field the client-auth form used to carry.
   assignment with subject kind `customer`, the chosen subject and the role, on the
   ecosystem target. Revoke MUST delete that holder's assignment. Both MUST reload
   the holders afterward, run one at a time, and show a failure in the pane.
+- **pane-caller**: the sign-up list, product roles and sets panes MUST accept an
+  optional caller, either `manager` (the default: a workspace manager in the hub)
+  or `product_admin` (a product's own admin on its admin site, phase 6), so the
+  admin site mounts the same panes the hub does. A caller narrows only what the
+  backend would refuse that caller anyway. The sign-up list pane behaves the same
+  for both.
+- **product-roles-admin-seats-protected**: for the `product_admin` caller, the
+  holders of the product's `admin` role (the system role whose slug is `admin`)
+  MUST be listed without a Revoke button and the pane MUST say "Admins are added here
+  and removed by the product's managers."; every other role keeps Revoke, and the
+  manager caller keeps Revoke on every role. The backend refuses a product admin any
+  change to an admin seat (422 `admin_seat_protected`).
 
 ### Sets (web)
 
@@ -489,6 +501,19 @@ replaces the allow-list field the client-auth form used to carry.
   with each set's name (its id when unknown), then `<N> customer would conflict.` or
   `<N> customers would conflict.` when a count is given. Any other error MUST show
   its own message, or "Something went wrong." when it has none.
+- **sets-pane-caller-limits**: for the `product_admin` caller, the editor MUST NOT
+  show the usage-tier limit (`usage.tier`), and MUST cap the storage-quota limit
+  (`storage.quota_bytes`) at the default quota (5 GiB): the field's maximum is that
+  many bytes and a larger whole number is refused with "<label> can be at most <N>."
+  with nothing sent. The manager caller sees every limit and no cap.
+- **sets-pane-tier-locked**: for the `product_admin` caller, a set whose stored values
+  include `usage.tier` MUST show "This set has a usage tier, which only the product's
+  managers can change, so its permissions and limits are theirs to change too. What it
+  contains is yours." and a Save that would change its values MUST show that text and
+  send nothing, because a set's values are written whole and the backend refuses a
+  product admin any write naming the tier; a change to what the set contains is still
+  sent.
+
 
 ### Billing and the workspace gate (web)
 
@@ -578,7 +603,9 @@ component not among these given sources.
 | ecosystem-config-046 | sets-refusal-text | A refusal under rule 8 reading "the edit unsettles a container or puts a holder in conflict", naming limit `usage.tier` and the set "Basic" | "Refused under rule 8: the edit unsettles a container or puts a holder in conflict. Limits: usage.tier. Sets affected: Basic." |
 | ecosystem-config-047 | gate-resolve-or-explain, gate-reports-busy | The gate with a scope still resolving, then resolved, then a failed re-read behind a resolved id, then a first read that failed | The busy report is true while resolving, false once resolved and true again on a cached re-read; the failed re-read keeps the pane; the failed first read replaces it with the resolution-error notice |
 | ecosystem-config-048 | auth-password-enabled, client-auth-post-update | A policy whose `passwordEnabled` differs from the saved one, then saved on an ecosystem and on an application | The patch carries `passwordEnabled`; each update is a `POST` with a `client_auth` body |
-
+| ecosystem-config-049 | product-roles-admin-seats-protected, pane-caller | The roles pane for the `product_admin` caller, then for the manager caller, each showing the `admin` role with a holder and another role with a holder | For `product_admin` the admin role's holder has no Revoke button and the note "Admins are added here and removed by the product's managers." shows, while the other role's holder keeps Revoke; for the manager both keep Revoke and no note shows |
+| ecosystem-config-050 | sets-pane-caller-limits | The sets editor for the `product_admin` caller on a catalog declaring a usage tier and a storage quota; the quota set to 5368709121, then Save | The tier field is absent and the quota field's maximum is 5368709120; the Save shows "<label> can be at most 5368709120." and sends nothing |
+| ecosystem-config-051 | sets-pane-tier-locked | A set whose values include `usage.tier`, opened by the `product_admin` caller; a permission toggled, then Save; then only a contained set toggled, then Save | The locked note shows; the first Save shows it as an error and sends nothing; the second sends the containment alone |
 ## Edge Cases
 
 - **Path deeper than one segment**: sign-in apps, feature flags, server bags, and
@@ -837,6 +864,13 @@ kind.
   owner-scoped customer listing to pick from. The email shape check is a local
   regular expression in `client-auth-model.ts`, because no shared web package
   exports an email validator; the backend's zod check stays authoritative.
+  `pane-caller.ts` declares `PaneCaller` (`manager` or `product_admin`); the
+  sign-up list, roles and sets panes take it as `caller`, and `SetsPane.tsx` exports
+  `setEntryFeaturesFor` (the catalog entries a caller may edit),
+  `USAGE_TIER_LIMIT_KEY` and `STORAGE_QUOTA_LIMIT_KEY`, importing the quota ceiling
+  `DEFAULT_QUOTA_BYTES` from `@adh-sdk/data/product-admin`. `ProductRolesPane.tsx`
+  exports `isAdminRole`. The phase-6 `AdminSitePane` and `ProductTotalsPane` are in
+  the product admin site recipe.
   The phase-5 panes are `SignupListPane.tsx`, `ProductRolesPane.tsx` (with
   `RoleHolders`), `SetsPane.tsx` (with `refusalText` and `valuesOfDraft`) and
   `BillingPane.tsx`, each taking `{ ecosystemId, title, help }` so a host renders
@@ -888,39 +922,39 @@ kind.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/EcosystemConfig/` | confirmed (2.1.0) |
-| web | `packages/web/packages/data/src/ecosystem-config/` | confirmed (2.1.0) |
-| web | `packages/web/packages/features/ecosystem-config/src/` | confirmed (2.1.0) |
-| web | `packages/web/packages/data/src/ecosystem-config/sync-tables.ts` | confirmed (2.1.0) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/EcosystemConfig/AuthSettingsTopic.swift` | confirmed (2.1.0) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/EcosystemConfig/EcosystemConfigModels.swift` | confirmed (2.1.0) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/EcosystemConfig/FeatureFlagsTopic.swift` | confirmed (2.1.0) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/EcosystemConfig/ServerBagsTopic.swift` | confirmed (2.1.0) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/EcosystemConfig/SigninAppsTopic.swift` | confirmed (2.1.0) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/EcosystemConfig/StorageTokensRail.swift` | confirmed (2.1.0) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/EcosystemConfig/StorageTokensTopic.swift` | confirmed (2.1.0) |
-| web | `packages/web/packages/data/src/ecosystem-config/feature-flags.ts` | confirmed (2.1.0) |
-| web | `packages/web/packages/data/src/ecosystem-config/server-bags.ts` | confirmed (2.1.0) |
-| web | `packages/web/packages/data/src/ecosystem-config/client-auth.ts` | confirmed (2.1.0) |
-| web | `packages/web/packages/data/src/ecosystem-config/storage-tokens.ts` | confirmed (2.1.0) |
-| web | `packages/web/packages/data/src/ecosystem-config/wire.ts` | confirmed (2.1.0) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKHubTests/EcosystemConfigTopicsTests.swift` | confirmed (2.1.0) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/Ecosystems/EcosystemTopic.swift` | confirmed (2.1.0) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/Ecosystems/EcosystemsModels.swift` | confirmed (2.1.0) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/Support/Slug.swift` | confirmed (2.1.0) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/Support/HubDates.swift` | confirmed (2.1.0) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/Support/HubText.swift` | confirmed (2.1.0) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/Support/JSONValue.swift` | confirmed (2.1.0) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/Applications/ApplicationsTopic.swift` | confirmed (2.1.0) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/project.yml` | confirmed (2.1.0) |
-| web | `packages/web/packages/features/ecosystem-config/src/dialog-state/bag-dialog-state.ts` | confirmed (2.1.0) |
-| web | `packages/web/packages/features/ecosystem-config/src/dialog-state/flag-dialog-state.ts` | confirmed (2.1.0) |
-| web | `packages/web/packages/features/ecosystem-config/src/ApplicationClientAuthSection.tsx` | confirmed (2.1.0) |
-| web | `packages/web/packages/features/ecosystem-config/src/SyncTablesPane.tsx` | confirmed (2.1.0) |
-| web | `packages/web/packages/features/ecosystem-config/src/sync-tables-hooks.ts` | confirmed (2.1.0) |
-| web | `packages/web/packages/features/ecosystem-config/src/ClientAuthFields.tsx` | confirmed (2.1.0) |
-| web | `packages/web/packages/features/ecosystem-config/src/client-auth-model.ts` | confirmed (2.1.0) |
-| web | `packages/web/packages/features/ecosystem-config/src/ClientAuthSettingsPane.tsx` | confirmed (2.1.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/EcosystemConfig/` | confirmed (2.2.0) |
+| web | `packages/web/packages/data/src/ecosystem-config/` | confirmed (2.2.0) |
+| web | `packages/web/packages/features/ecosystem-config/src/` | confirmed (2.2.0) |
+| web | `packages/web/packages/data/src/ecosystem-config/sync-tables.ts` | confirmed (2.2.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/EcosystemConfig/AuthSettingsTopic.swift` | confirmed (2.2.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/EcosystemConfig/EcosystemConfigModels.swift` | confirmed (2.2.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/EcosystemConfig/FeatureFlagsTopic.swift` | confirmed (2.2.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/EcosystemConfig/ServerBagsTopic.swift` | confirmed (2.2.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/EcosystemConfig/SigninAppsTopic.swift` | confirmed (2.2.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/EcosystemConfig/StorageTokensRail.swift` | confirmed (2.2.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/EcosystemConfig/StorageTokensTopic.swift` | confirmed (2.2.0) |
+| web | `packages/web/packages/data/src/ecosystem-config/feature-flags.ts` | confirmed (2.2.0) |
+| web | `packages/web/packages/data/src/ecosystem-config/server-bags.ts` | confirmed (2.2.0) |
+| web | `packages/web/packages/data/src/ecosystem-config/client-auth.ts` | confirmed (2.2.0) |
+| web | `packages/web/packages/data/src/ecosystem-config/storage-tokens.ts` | confirmed (2.2.0) |
+| web | `packages/web/packages/data/src/ecosystem-config/wire.ts` | confirmed (2.2.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKHubTests/EcosystemConfigTopicsTests.swift` | confirmed (2.2.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/Ecosystems/EcosystemTopic.swift` | confirmed (2.2.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/Ecosystems/EcosystemsModels.swift` | confirmed (2.2.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/Support/Slug.swift` | confirmed (2.2.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/Support/HubDates.swift` | confirmed (2.2.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/Support/HubText.swift` | confirmed (2.2.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/Support/JSONValue.swift` | confirmed (2.2.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/Applications/ApplicationsTopic.swift` | confirmed (2.2.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/project.yml` | confirmed (2.2.0) |
+| web | `packages/web/packages/features/ecosystem-config/src/dialog-state/bag-dialog-state.ts` | confirmed (2.2.0) |
+| web | `packages/web/packages/features/ecosystem-config/src/dialog-state/flag-dialog-state.ts` | confirmed (2.2.0) |
+| web | `packages/web/packages/features/ecosystem-config/src/ApplicationClientAuthSection.tsx` | confirmed (2.2.0) |
+| web | `packages/web/packages/features/ecosystem-config/src/SyncTablesPane.tsx` | confirmed (2.2.0) |
+| web | `packages/web/packages/features/ecosystem-config/src/sync-tables-hooks.ts` | confirmed (2.2.0) |
+| web | `packages/web/packages/features/ecosystem-config/src/ClientAuthFields.tsx` | confirmed (2.2.0) |
+| web | `packages/web/packages/features/ecosystem-config/src/client-auth-model.ts` | confirmed (2.2.0) |
+| web | `packages/web/packages/features/ecosystem-config/src/ClientAuthSettingsPane.tsx` | confirmed (2.2.0) |
 
 ## Design Decisions
 
@@ -985,6 +1019,7 @@ console already sits above it. The owner approved this in the Temporal plan on 2
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 2.2.0 | 2026-11-23 | Mike Fullerton | Phase 6: a pane caller for the sign-up list, roles and sets panes; admin seats protected, usage tier hidden, storage quota capped for a product admin |
 | 2.1.0 | 2026-11-22 | Mike Fullerton | Phase 5: sign-up list, product roles, sets, billing placeholder and workspace gate panes; the login allow-list is now a switch whose emails live in the sign-up list; client-auth updates are POSTs; passwordEnabled |
 | 2.0.0 | 2026-11-15 | Mike Fullerton | Login allow-list by email (loginAllowedEmails, login_allowed_emails): the client-auth pane's Who can sign in editor, lowercased on save, with email-shape, 254-character and 500-entry bounds |
 | 1.2.1 | 2026-10-04 | Mike Fullerton | Design Decisions keep the Decision / Rationale / Approved triple; each decision's platform line is folded into its rationale. |
