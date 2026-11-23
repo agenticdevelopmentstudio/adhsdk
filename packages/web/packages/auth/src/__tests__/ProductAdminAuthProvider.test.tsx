@@ -163,6 +163,46 @@ describe('ProductAdminAuthProvider', () => {
     expect(navigate).toHaveBeenLastCalledWith('/auth/signin')
   })
 
+  it('drops a refresh that lands after sign-out, and signs out after it settles', async () => {
+    let n = 0
+    let release: (r: Response) => void = () => undefined
+    const order: string[] = []
+    fetchMock.mockImplementation(async (url: string) => {
+      order.push(url)
+      if (url === '/auth/session') {
+        n += 1
+        if (n === 1) return json(200, { accessToken: 'tok-1', expiresAt: Math.floor(Date.now() / 1000) + 3600 })
+        return new Promise<Response>((r) => (release = r))
+      }
+      if (url === '/api/v1/account') return json(200, account(['admin']))
+      if (url === '/auth/signout') return new Response(null, { status: 204 })
+      throw new Error(`unexpected fetch ${url}`)
+    })
+    render(
+      <ProductAdminAuthProvider navigate={navigate}>
+        <Probe />
+      </ProductAdminAuthProvider>,
+    )
+    await waitFor(() => expect(seen?.status).toBe('ready'))
+    // A refresh goes out (as the timer or a 401 retry would send it) and is still pending.
+    const pending = accessTokenSource()!.refresh()
+    let signedOut: Promise<void> | undefined
+    await act(async () => {
+      signedOut = seen?.signOut()
+    })
+    // Sign-out waits for the refresh to settle at the server before it posts.
+    expect(callsTo('/auth/signout')).toHaveLength(0)
+    await act(async () => {
+      release(json(200, { accessToken: 'tok-2', expiresAt: Math.floor(Date.now() / 1000) + 3600 }))
+      await signedOut
+    })
+    await expect(pending).resolves.toBeNull()
+    expect(order.lastIndexOf('/auth/session')).toBeLessThan(order.indexOf('/auth/signout'))
+    expect(seen?.accessToken).toBeNull()
+    expect(readAccessToken()).toBeNull()
+    expect(navigate).toHaveBeenLastCalledWith('/auth/signin')
+  })
+
   it('refreshes once on mount when the host passes navigate as an inline arrow', async () => {
     routes({
       '/auth/session': () => json(200, { accessToken: 'tok-1', expiresAt: Math.floor(Date.now() / 1000) + 3600 }),
