@@ -22128,7 +22128,7 @@
             "state": "confirmed",
             "version": "1.0.0"
           },
-          "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/MCP/MCPRegistration.swift",
+          "location": "packages/apple/AgenticDeveloperHubSDK/Core/MCP/MCPRegistration.swift",
           "platform": "macos"
         },
         {

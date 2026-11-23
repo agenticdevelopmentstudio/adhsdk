@@ -18,3 +18,7 @@
 **Decision**: The URL is fixed as `http://127.0.0.1`.
 **Rationale**: The endpoint binds only the loopback address and speaks plain HTTP guarded by a bearer token, so the registered URL cannot name any other host.
 **Approved**: pending
+
+**Decision**: `MCPRegistration` lives in Core, with port forms beside the channel forms.
+**Rationale**: adhd, which links no macOS UI framework, prints the registration command itself (`adhd mcp command`) for whatever port it listens on, and the installer's Python copy must agree with it byte for byte; one Swift source keeps the pane, the CLI and the tests on the same text.
+**Approved**: pending

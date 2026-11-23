@@ -15,7 +15,7 @@ import OSLog
 /// which the handler turns into a cancellation of the tool call.
 public actor MCPHTTPEndpoint {
 
-    public static let path = "/mcp"
+    public static let path = MCPRegistration.path
     public static let preferredPort: UInt16 = 51477
 
     /// A navigation or wait can legitimately run for a while; FlyingFox wraps
