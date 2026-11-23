@@ -12,7 +12,7 @@
 | Connect failed | The connect error is shown under the button. |
 | Connected | "Connected successfully." in green. |
 | Refreshing | The Refresh button reads "Refreshing…" and is disabled. |
-| No models | The table is replaced by the text "No models yet", a dash, then "Connect or Refresh." |
+| No models | The table is replaced by the text "No models yet — Connect or Refresh." |
 | Model available | The row's Available checkbox is ticked. |
 | Model unavailable | The row's Available checkbox is unticked. |
 | Model no longer offered | The row shows "No longer offered" and an unticked, enabled checkbox. |

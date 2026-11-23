@@ -18,13 +18,13 @@ has no test yet; that file is not written.
 | ai-settings-010 | blank-draft-validation | Press Save in the create modal with a provider chosen and the name blank, then with a name only, then with a name and provider | "A name is required.", then "Select a provider.", then "A base URL is required."; with every field empty Save is disabled. |
 | ai-settings-011 | unfilled-url-vars | Template base URL `https://{region}.example.com` with the region left blank | Create is refused with "Fill in all the URL fields."; with region "eu" the Base URL reads `https://eu.example.com`. |
 | ai-settings-012 | template-label | Template "Fal" with modalities `["image"]`; template "OpenAI" with modalities null; template "X" with `["chat","audio"]` | "Fal (image)"; "OpenAI"; "X (audio)". |
-| ai-settings-013 | number-format | Context 1,500,000; 128,000; 900; absent | "1.5M"; "128K"; "900"; the dash glyph. |
-| ai-settings-014 | price-format, dash-for-missing | Input price 3, output price absent | "$3.00" and the dash glyph. |
-| ai-settings-015 | capability-chips | A model supporting tools and thinking only; a model supporting none | Chips "tools" and "thinking"; a lone dash glyph. |
+| ai-settings-013 | number-format | Context 1,500,000; 128,000; 900; absent | "1.5M"; "128K"; "900"; an em dash ("—"). |
+| ai-settings-014 | price-format, dash-for-missing | Input price 3, output price absent | "$3.00" and an em dash ("—"). |
+| ai-settings-015 | capability-chips | A model supporting tools and thinking only; a model supporting none | Chips "tools" and "thinking"; a lone em dash ("—"). |
 | ai-settings-016 | available-checkbox | A model `{ id: "m1", available: true }`; one with `available: false`; one with no `available` (owed: ModelsTable.test.tsx (phase 8 Task 10)) | Ticked; unticked; ticked. |
 | ai-settings-017 | available-change, set-availability-call | Untick the box of model `m1` on service `svc_1` (owed: ModelsTable.test.tsx (phase 8 Task 10)) | `setModelAvailability("svc_1", "m1", false)` is called and the services cache is revalidated. |
 | ai-settings-018 | no-longer-offered, disabled-names-appended | A model with `offered: false` and `available: false` (owed: ModelsTable.test.tsx (phase 8 Task 10)) | The row shows "No longer offered" and an unticked checkbox. |
-| ai-settings-019 | table-empty | A service with an empty model list | the text "No models yet", a dash, then "Connect or Refresh." and no table. |
+| ai-settings-019 | table-empty | A service with an empty model list | the text "No models yet — Connect or Refresh." and no table. |
 | ai-settings-020 | cache-key-kept | Import `PERSONA_SERVICES_CACHE_KEY` from this package | It is the string `"persona-services"`. |
 | ai-settings-021 | ai-settings-section | Render `AiSettingsSection` | The rail heading reads "AI Settings". |
 | ai-settings-022 | services-read-failure | The list call rejects | The failure is reported with feature `services`, step `list`, and the pane shows the error rather than "Loading…". |

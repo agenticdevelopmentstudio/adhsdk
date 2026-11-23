@@ -1,7 +1,7 @@
 
 - **Null and empty input**: A null list with no error shows "Loading…" (MUST). An empty list shows "No
-  services yet." (MUST). A service with no models shows the text "No models yet", a dash, then "Connect or Refresh." (MUST). A
-  model with no display name shows its id (MUST). Missing numbers show the dash glyph (MUST).
+  services yet." (MUST). A service with no models shows the text "No models yet — Connect or Refresh." (MUST). A
+  model with no display name shows its id (MUST). Missing numbers show an em dash ("—") (MUST).
 - **Boundary values**: Context or max-output of exactly 1,000 shows "1K" and exactly 1,000,000 shows
   "1.0M" (MUST). A base URL holding any `{word}` token is refused on create (MUST). A name of only
   spaces counts as blank (MUST).

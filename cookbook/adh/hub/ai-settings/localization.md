@@ -6,7 +6,7 @@
 | n/a (literal) | No services yet. | Empty rail |
 | n/a (literal) | New Service, New service | Rail action; create modal title |
 | n/a (literal) | Loading… | First read outstanding |
-| n/a (literal) | No models yet, a dash, then Connect or Refresh. | Empty models table |
+| n/a (literal) | No models yet — Connect or Refresh. | Empty models table |
 | n/a (literal) | Available, No longer offered | Table column; unlisted model |
 | n/a (literal) | Connect, Connecting…, Refresh, Refreshing… | Connection and Models buttons |
 | n/a (literal) | Connected successfully. | Connect result |
@@ -28,7 +28,7 @@
 | n/a (literal) | Start from a template, Custom (no template) | Template group and its first option |
 | n/a (literal) | e.g. <example>, Filled in from the values above. | URL variable hint; read-only Base URL hint |
 | n/a (literal) | No first-party API, Use <name> | Informational template cards and gateway button |
-| n/a (literal) | Authenticates via the `<header>` header., Uses AWS SigV4 signing, a dash, then not yet supported by this client., Uses OAuth, a dash, then not yet supported by this client. | Auth hints for header, sigv4 and oauth2 templates |
+| n/a (literal) | Authenticates via the `<header>` header., Uses AWS SigV4 signing — not yet supported by this client., Uses OAuth — not yet supported by this client. | Auth hints for header, sigv4 and oauth2 templates |
 
 All strings are literals in source with no message catalog; number formatting uses fixed "K" and "M"
 suffixes and a fixed dollar sign, not locale formatting.

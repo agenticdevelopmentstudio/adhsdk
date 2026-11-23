@@ -158,8 +158,7 @@ Available column and "No longer offered" were added in the same phase.
   connection spec verbatim with the collected non-blank header values as its extra headers, and
   MUST NOT forward the template's own static extra headers; with none, it MUST send no connection spec.
 - **auth-hint**: A template whose auth is not bearer MUST show a one-line hint: "Authenticates via
-  the" then the header name in backticks then "header." for header auth, "Uses AWS SigV4 signing", a dash, then "not yet supported by this client." for sigv4 and "Uses OAuth", a dash, then
-  "not yet supported by this client." for oauth2; a bearer or missing auth MUST show none.
+  the" then the header name in backticks then "header." for header auth, "Uses AWS SigV4 signing — not yet supported by this client." for sigv4 and "Uses OAuth — not yet supported by this client." for oauth2; a bearer or missing auth MUST show none.
 - **informational-templates**: A template that names `availableVia` MUST NOT appear in the picker. It
   MUST render as a read-only card under "No first-party API" with its note.
 - **use-gateway-button**: An informational card MUST show a "Use <name>" button for each named gateway
@@ -210,19 +209,19 @@ Available column and "No longer offered" were added in the same phase.
 
 ### The models table
 
-- **table-empty**: With no models the table MUST be replaced by the text "No models yet", a dash, then "Connect or Refresh."
+- **table-empty**: With no models the table MUST be replaced by the text "No models yet — Connect or Refresh."
 - **table-columns**: The table MUST show the columns Model, Family, Context, Max out, $/1M in, $/1M
   out, Caps and Available, in that order, so Available is the last column.
 - **models-from-service-row**: The table MUST render the models carried by the service row, not a live
   model route.
 - **model-name**: A model's first column MUST show its display name, else its id.
-- **dash-for-missing**: Family, Context, Max out and both prices MUST show the dash glyph when absent.
+- **dash-for-missing**: Family, Context, Max out and both prices MUST show an em dash ("—") when absent.
 - **number-format**: Context and Max out MUST show a value of 1,000,000 or more as millions with one
   decimal and "M", a value of 1,000 or more as thousands rounded to a whole number with "K", and a
   smaller value as is.
 - **price-format**: A price MUST show a dollar sign and two decimals.
 - **capability-chips**: Caps MUST show a chip for each of tools, vision and thinking the model supports,
-  and the dash glyph when it supports none.
+  and an em dash ("—") when it supports none.
 - **available-checkbox**: Each row MUST show an Available checkbox, ticked exactly when the model's
   `available` is true; a model with no `available` value MUST read as available.
 - **available-change**: Changing the checkbox MUST call the data client's `setModelAvailability` with the
@@ -289,7 +288,7 @@ All values are design tokens and utility classes in source; the component define
 | Connect failed | The connect error is shown under the button. |
 | Connected | "Connected successfully." in green. |
 | Refreshing | The Refresh button reads "Refreshing…" and is disabled. |
-| No models | The table is replaced by the text "No models yet", a dash, then "Connect or Refresh." |
+| No models | The table is replaced by the text "No models yet — Connect or Refresh." |
 | Model available | The row's Available checkbox is ticked. |
 | Model unavailable | The row's Available checkbox is unticked. |
 | Model no longer offered | The row shows "No longer offered" and an unticked, enabled checkbox. |
@@ -341,13 +340,13 @@ has no test yet; that file is not written.
 | ai-settings-010 | blank-draft-validation | Press Save in the create modal with a provider chosen and the name blank, then with a name only, then with a name and provider | "A name is required.", then "Select a provider.", then "A base URL is required."; with every field empty Save is disabled. |
 | ai-settings-011 | unfilled-url-vars | Template base URL `https://{region}.example.com` with the region left blank | Create is refused with "Fill in all the URL fields."; with region "eu" the Base URL reads `https://eu.example.com`. |
 | ai-settings-012 | template-label | Template "Fal" with modalities `["image"]`; template "OpenAI" with modalities null; template "X" with `["chat","audio"]` | "Fal (image)"; "OpenAI"; "X (audio)". |
-| ai-settings-013 | number-format | Context 1,500,000; 128,000; 900; absent | "1.5M"; "128K"; "900"; the dash glyph. |
-| ai-settings-014 | price-format, dash-for-missing | Input price 3, output price absent | "$3.00" and the dash glyph. |
-| ai-settings-015 | capability-chips | A model supporting tools and thinking only; a model supporting none | Chips "tools" and "thinking"; a lone dash glyph. |
+| ai-settings-013 | number-format | Context 1,500,000; 128,000; 900; absent | "1.5M"; "128K"; "900"; an em dash ("—"). |
+| ai-settings-014 | price-format, dash-for-missing | Input price 3, output price absent | "$3.00" and an em dash ("—"). |
+| ai-settings-015 | capability-chips | A model supporting tools and thinking only; a model supporting none | Chips "tools" and "thinking"; a lone em dash ("—"). |
 | ai-settings-016 | available-checkbox | A model `{ id: "m1", available: true }`; one with `available: false`; one with no `available` (owed: ModelsTable.test.tsx (phase 8 Task 10)) | Ticked; unticked; ticked. |
 | ai-settings-017 | available-change, set-availability-call | Untick the box of model `m1` on service `svc_1` (owed: ModelsTable.test.tsx (phase 8 Task 10)) | `setModelAvailability("svc_1", "m1", false)` is called and the services cache is revalidated. |
 | ai-settings-018 | no-longer-offered, disabled-names-appended | A model with `offered: false` and `available: false` (owed: ModelsTable.test.tsx (phase 8 Task 10)) | The row shows "No longer offered" and an unticked checkbox. |
-| ai-settings-019 | table-empty | A service with an empty model list | the text "No models yet", a dash, then "Connect or Refresh." and no table. |
+| ai-settings-019 | table-empty | A service with an empty model list | the text "No models yet — Connect or Refresh." and no table. |
 | ai-settings-020 | cache-key-kept | Import `PERSONA_SERVICES_CACHE_KEY` from this package | It is the string `"persona-services"`. |
 | ai-settings-021 | ai-settings-section | Render `AiSettingsSection` | The rail heading reads "AI Settings". |
 | ai-settings-022 | services-read-failure | The list call rejects | The failure is reported with feature `services`, step `list`, and the pane shows the error rather than "Loading…". |
@@ -359,8 +358,8 @@ has no test yet; that file is not written.
 ## Edge Cases
 
 - **Null and empty input**: A null list with no error shows "Loading…" (MUST). An empty list shows "No
-  services yet." (MUST). A service with no models shows the text "No models yet", a dash, then "Connect or Refresh." (MUST). A
-  model with no display name shows its id (MUST). Missing numbers show the dash glyph (MUST).
+  services yet." (MUST). A service with no models shows the text "No models yet — Connect or Refresh." (MUST). A
+  model with no display name shows its id (MUST). Missing numbers show an em dash ("—") (MUST).
 - **Boundary values**: Context or max-output of exactly 1,000 shows "1K" and exactly 1,000,000 shows
   "1.0M" (MUST). A base URL holding any `{word}` token is refused on create (MUST). A name of only
   spaces counts as blank (MUST).
@@ -413,7 +412,7 @@ segments specified by [adhsdk.ingredient.adh.sites.site-registry](cookbook:9069c
 | n/a (literal) | No services yet. | Empty rail |
 | n/a (literal) | New Service, New service | Rail action; create modal title |
 | n/a (literal) | Loading… | First read outstanding |
-| n/a (literal) | No models yet, a dash, then Connect or Refresh. | Empty models table |
+| n/a (literal) | No models yet — Connect or Refresh. | Empty models table |
 | n/a (literal) | Available, No longer offered | Table column; unlisted model |
 | n/a (literal) | Connect, Connecting…, Refresh, Refreshing… | Connection and Models buttons |
 | n/a (literal) | Connected successfully. | Connect result |
@@ -435,7 +434,7 @@ segments specified by [adhsdk.ingredient.adh.sites.site-registry](cookbook:9069c
 | n/a (literal) | Start from a template, Custom (no template) | Template group and its first option |
 | n/a (literal) | e.g. <example>, Filled in from the values above. | URL variable hint; read-only Base URL hint |
 | n/a (literal) | No first-party API, Use <name> | Informational template cards and gateway button |
-| n/a (literal) | Authenticates via the `<header>` header., Uses AWS SigV4 signing, a dash, then not yet supported by this client., Uses OAuth, a dash, then not yet supported by this client. | Auth hints for header, sigv4 and oauth2 templates |
+| n/a (literal) | Authenticates via the `<header>` header., Uses AWS SigV4 signing — not yet supported by this client., Uses OAuth — not yet supported by this client. | Auth hints for header, sigv4 and oauth2 templates |
 
 All strings are literals in source with no message catalog; number formatting uses fixed "K" and "M"
 suffixes and a fixed dollar sign, not locale formatting.

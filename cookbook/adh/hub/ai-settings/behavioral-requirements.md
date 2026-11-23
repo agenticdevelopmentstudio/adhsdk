@@ -95,8 +95,7 @@
   connection spec verbatim with the collected non-blank header values as its extra headers, and
   MUST NOT forward the template's own static extra headers; with none, it MUST send no connection spec.
 - **auth-hint**: A template whose auth is not bearer MUST show a one-line hint: "Authenticates via
-  the" then the header name in backticks then "header." for header auth, "Uses AWS SigV4 signing", a dash, then "not yet supported by this client." for sigv4 and "Uses OAuth", a dash, then
-  "not yet supported by this client." for oauth2; a bearer or missing auth MUST show none.
+  the" then the header name in backticks then "header." for header auth, "Uses AWS SigV4 signing — not yet supported by this client." for sigv4 and "Uses OAuth — not yet supported by this client." for oauth2; a bearer or missing auth MUST show none.
 - **informational-templates**: A template that names `availableVia` MUST NOT appear in the picker. It
   MUST render as a read-only card under "No first-party API" with its note.
 - **use-gateway-button**: An informational card MUST show a "Use <name>" button for each named gateway
@@ -147,19 +146,19 @@
 
 ### The models table
 
-- **table-empty**: With no models the table MUST be replaced by the text "No models yet", a dash, then "Connect or Refresh."
+- **table-empty**: With no models the table MUST be replaced by the text "No models yet — Connect or Refresh."
 - **table-columns**: The table MUST show the columns Model, Family, Context, Max out, $/1M in, $/1M
   out, Caps and Available, in that order, so Available is the last column.
 - **models-from-service-row**: The table MUST render the models carried by the service row, not a live
   model route.
 - **model-name**: A model's first column MUST show its display name, else its id.
-- **dash-for-missing**: Family, Context, Max out and both prices MUST show the dash glyph when absent.
+- **dash-for-missing**: Family, Context, Max out and both prices MUST show an em dash ("—") when absent.
 - **number-format**: Context and Max out MUST show a value of 1,000,000 or more as millions with one
   decimal and "M", a value of 1,000 or more as thousands rounded to a whole number with "K", and a
   smaller value as is.
 - **price-format**: A price MUST show a dollar sign and two decimals.
 - **capability-chips**: Caps MUST show a chip for each of tools, vision and thinking the model supports,
-  and the dash glyph when it supports none.
+  and an em dash ("—") when it supports none.
 - **available-checkbox**: Each row MUST show an Available checkbox, ticked exactly when the model's
   `available` is true; a model with no `available` value MUST read as available.
 - **available-change**: Changing the checkbox MUST call the data client's `setModelAvailability` with the
