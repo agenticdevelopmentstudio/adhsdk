@@ -52,7 +52,9 @@ extension ClaudeHookInstaller {
     /// its display form, turning off leaves it and returns `.other`. An `env`
     /// that is not a JSON object counts as such a value. Nothing is written
     /// when nothing changes. A suspension marker that exists but cannot be
-    /// deleted is thrown, with `settings.json` left as it was.
+    /// deleted is thrown, with `settings.json` left as it was. A refused change
+    /// (a conflict) has no side effect: the suspension marker is only removed
+    /// once the change is known to go ahead, and before it is saved.
     @discardableResult
     public func setRouterPointer(
         _ enabled: Bool, routerBaseURL: String = StenographerIdentifiers.routerBaseURL
@@ -60,12 +62,17 @@ extension ClaudeHookInstaller {
         let marker = routerPointerSuspendedMarkerURL
         var changed = false
         let result: RouterPointer = try modifySettings { settings in
+            let current = Self.routerPointer(in: settings, routerBaseURL: routerBaseURL)
+            // A conflict is refused before anything is touched, so the
+            // suspension survives a call that changed nothing.
+            if enabled, case .other(let display) = current {
+                throw RouterPointerError.routerPointerConflict(display)
+            }
             // The user's own choice replaces a suspension: nothing is put back later.
             // A marker that cannot be deleted aborts the change with nothing
             // saved, or a later resume would put back a pointer the user just
             // turned off.
             try Self.removeSuspensionMarker(at: marker)
-            let current = Self.routerPointer(in: settings, routerBaseURL: routerBaseURL)
             switch (enabled, current) {
             case (true, .ours), (false, .absent), (false, .other):
                 return current

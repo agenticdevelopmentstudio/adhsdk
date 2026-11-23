@@ -73,6 +73,30 @@ final class RouterPointerMarkerFailureTests: XCTestCase {
         XCTAssertEqual(installer.routerPointer(routerBaseURL: Self.routerBaseURL), .ours)
     }
 
+    /// A refused enable (another value is in `ANTHROPIC_BASE_URL`) keeps the
+    /// suspension: the call changed nothing, so it has no side effect.
+    func testARefusedEnableKeepsTheSuspension() throws {
+        try writeSettings(["env": ["ANTHROPIC_BASE_URL": "https://proxy.example.com"]])
+        try Data().write(to: installer.routerPointerSuspendedMarkerURL)
+
+        XCTAssertThrowsError(try installer.setRouterPointer(true, routerBaseURL: Self.routerBaseURL)) { error in
+            guard case .routerPointerConflict? = error as? RouterPointerError
+            else { return XCTFail("expected routerPointerConflict, got \(error)") }
+        }
+
+        XCTAssertTrue(markerExists, "the suspension survives a refused call")
+    }
+
+    /// An accepted change still replaces the suspension.
+    func testAnAcceptedEnableForgetsTheSuspension() throws {
+        try writeSettings([:])
+        try Data().write(to: installer.routerPointerSuspendedMarkerURL)
+
+        XCTAssertEqual(try installer.setRouterPointer(true, routerBaseURL: Self.routerBaseURL), .ours)
+
+        XCTAssertFalse(markerExists)
+    }
+
     func testAMissingMarkerIsNotAnError() throws {
         try writeSettings([:])
         XCTAssertFalse(markerExists)
