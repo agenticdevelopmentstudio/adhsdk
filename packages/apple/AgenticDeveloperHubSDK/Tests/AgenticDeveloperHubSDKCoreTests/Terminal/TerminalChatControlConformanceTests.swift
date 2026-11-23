@@ -2,28 +2,13 @@ import XCTest
 import Foundation
 @testable import AgenticDeveloperHubSDKCore
 
-/// Conformance vectors for `TerminalChatControl`: the resolver, defaults, wire shapes and socket helpers.
+/// Conformance vectors for `TerminalChatControl`: the resolver, defaults and wire shapes.
 final class TerminalChatControlConformanceTests: XCTestCase {
-
-    private var tmpDir: URL!
-
-    override func setUpWithError() throws {
-        tmpDir = FileManager.default.temporaryDirectory.appendingPathComponent("tcc-\(UUID().uuidString)")
-        try FileManager.default.createDirectory(at: tmpDir, withIntermediateDirectories: true)
-    }
-
-    override func tearDownWithError() throws {
-        try? FileManager.default.removeItem(at: tmpDir)
-    }
 
     private func chat(_ identifier: String) -> TerminalChatControl.Chat {
         TerminalChatControl.Chat(
             id: identifier, project: "P", directory: "/tmp", paneNumber: 1, connected: true
         )
-    }
-
-    private func touch(_ name: String) throws {
-        try Data().write(to: tmpDir.appendingPathComponent(name))
     }
 
     func testV001_resolveOnlyChat() throws {
@@ -113,78 +98,12 @@ final class TerminalChatControlConformanceTests: XCTestCase {
         XCTAssertTrue(TerminalChatControl.Response(output: "ok").isSuccess)
     }
 
-    func testV013_socketURL() {
-        let url = TerminalChatControl.socketURL(pid: 4242, in: tmpDir)
-        XCTAssertEqual(url, tmpDir.appendingPathComponent("4242.sock"))
-    }
-
-    func testV014_prepareCreatesOwnerOnlyDirectory() throws {
-        let directory = tmpDir.appendingPathComponent("sockets")
-        try TerminalChatControl.prepareSocketDirectory(directory)
-        let attributes = try FileManager.default.attributesOfItem(atPath: directory.path)
-        XCTAssertEqual(attributes[.posixPermissions] as? Int, 0o700)
-    }
-
-    func testV015_runningHostsSkipsOddNames() throws {
-        let ownPid = ProcessInfo.processInfo.processIdentifier
-        try touch("\(ownPid).sock")
-        try touch("notes.txt")
-        try touch("abc.sock")
-        let hosts = TerminalChatControl.runningHosts(in: tmpDir)
-        XCTAssertEqual(hosts.map(\.pid), [ownPid])
-    }
-
-    func testV016_prepareRemovesStaleSocket() throws {
-        let process = Process()
-        process.executableURL = URL(fileURLWithPath: "/usr/bin/true")
-        try process.run()
-        process.waitUntilExit()
-        let exitedPid = process.processIdentifier
-        try touch("\(exitedPid).sock")
-        try TerminalChatControl.prepareSocketDirectory(tmpDir)
-        XCTAssertFalse(FileManager.default.fileExists(
-            atPath: tmpDir.appendingPathComponent("\(exitedPid).sock").path))
-    }
-
-    func testV017_runningHostsMissingDirectoryIsEmpty() {
-        let missing = tmpDir.appendingPathComponent("nope")
-        XCTAssertTrue(TerminalChatControl.runningHosts(in: missing).isEmpty)
-    }
-
-    func testV018_runningHostsSortedByPid() throws {
-        let ownPid = ProcessInfo.processInfo.processIdentifier
-        try touch("\(ownPid).sock")
-        try touch("1.sock")
-        let hosts = TerminalChatControl.runningHosts(in: tmpDir)
-        XCTAssertEqual(hosts.map(\.pid), [1, ownPid].sorted())
-    }
-
-    func testV019_sendWaitMargin() throws {
-        throw XCTSkip("Needs a host that answers after 40 real seconds; real time beyond a second")
-    }
-
-    func testV020_sendToNothingListeningThrows() {
-        let host = TerminalChatControl.Host(pid: 1, socket: tmpDir.appendingPathComponent("none.sock"))
-        XCTAssertThrowsError(try TerminalChatControl.send(.init(action: .list), to: host, wait: 1))
-    }
-
     func testV021_resolveErrorMessageAndEquality() {
         guard case .failure(let failure) = TerminalChatControl.resolve("zz", in: []) else {
             return XCTFail("expected failure")
         }
         XCTAssertEqual(failure.message, "No Terminal Chat with id zz.")
         XCTAssertEqual(failure, TerminalChatControl.ResolveError(message: "No Terminal Chat with id zz."))
-    }
-
-    func testV022_prepareThrowsWhenParentIsAFile() throws {
-        try touch("plain")
-        let directory = tmpDir.appendingPathComponent("plain/sockets")
-        XCTAssertThrowsError(try TerminalChatControl.prepareSocketDirectory(directory))
-    }
-
-    func testV023_pidOneCountsAsRunning() throws {
-        try touch("1.sock")
-        XCTAssertEqual(TerminalChatControl.runningHosts(in: tmpDir).map(\.pid), [1])
     }
 
     func testV024_emptyQueryMatchesEveryChat() {

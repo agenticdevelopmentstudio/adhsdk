@@ -2,7 +2,7 @@ import AgenticDeveloperHubSDKCore
 import XCTest
 @testable import AgenticDeveloperHubSDKMacOS
 
-/// Drives a real shell through a `TerminalChatSession`, the way `adterm` and
+/// Drives a real shell through a `TerminalChatSession`, the way the Terminal Chat tools and
 /// a persona's terminal tools do, and checks what each caller is handed back.
 ///
 /// Each test starts `/bin/sh` rather than the user's shell, so the prompt and
