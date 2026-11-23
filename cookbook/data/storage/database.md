@@ -2,7 +2,7 @@
 id: ea580796-8b16-4832-b11d-ad3cae991ecd
 title: "Database"
 type: ingredient
-version: 1.3.1
+version: 1.4.0
 status: review
 language: en
 created: 2026-09-24
@@ -224,6 +224,13 @@ account router, moved out of stenographerd so any daemon can host it:
 - **activity-preferences**: `POST /activity/preferences` MUST decode a whole snake_case `WorkTrackingPreferences`, apply it and answer the status it produced; an undecodable body MUST answer 400 and change nothing.
 - **activity-recheck**: `POST /activity/recheck` MUST ask for Accessibility again and answer the resulting status.
 - **activity-spans**: `GET /activity/spans` MUST answer the spans since `since`, limited to 1...1000 (default 100); a malformed `since` MUST answer 400.
+
+### Project Registry Follower
+
+- **follower-subscribes-first**: `ProjectRegistryFollower.start(onFailure:)` MUST subscribe to the registry's `changes` before it reads the projects, so no change made between the read and the subscription is lost.
+- **follower-syncs-then-applies**: The follower MUST `sync` the local `LocalProjectMirror` to the registry's projects, then `apply` each change as it arrives, so the local file's rows match the registry's.
+- **follower-keeps-local-path**: Given `keepingLocal`, the follower MUST NOT mirror a project at that path, neither in the first sync nor in a later upsert.
+- **follower-stop**: `stop()` MUST end the follow and leave the rows already mirrored in place; a failure to read or subscribe MUST reach `onFailure`.
 ## Appearance
 
 Not applicable — this is a database access layer and storage-path helper, not a visual component.
@@ -273,6 +280,9 @@ Not applicable — this is a database access layer and storage-path helper, not 
 | sed-031 | credential-relay, credential-relay-no-echo | one long-lived credential posted to an empty in-memory store | 200, `changed` is `true`, the store holds the token and saved once, the reply does not contain it (`testRelayStoresTheSetAndEchoesNoToken`) |
 | sed-032 | set-credentials-change | the same body posted twice | the second reply has `changed: false`; `saves` stays `1` (`testRelayingTheSameSetAgainChangesNothing`) |
 | sed-033 | credential-relay-no-echo | a truncated array carrying a token, an empty body, a JSON object | 400 each, no token or account in the reply, nothing saved (`testAnUndecodableBodyIs400AndEchoesNothing`) |
+| sed-034 | follower-syncs-then-applies | a registry holding one project, then an insert, an update and a delete | the local file holds the first project after `start`, then each change (`testStartMirrorsTheProjectsAlreadyRegistered`, `testARegistryChangeReachesTheLocalFile`) |
+| sed-035 | follower-keeps-local-path | a registry project at the kept path | the local file never holds it (`testTheKeptPathIsNeverMirrored`) |
+| sed-036 | follower-stop | `stop()`, then an insert in the registry | the earlier rows stay; the insert never arrives (`testStopLeavesTheMirroredRowsAndFollowsNoFurther`) |
 ## Edge Cases
 
 - **Empty display name**: The token-deriving operation applied to an empty string, or to a name made only of spaces or punctuation, MUST return `"AgenticDeveloperHubSDK"`; a missing or empty declared display name MUST make the display-name reader return `"AgenticDeveloperHubSDK"`.
@@ -374,6 +384,7 @@ The bounded database and the storage-location helper do not log; ejections surfa
 | Platform | Location | Conformance |
 |----------|----------|-------------|
 | apple | `packages/apple/AgenticDeveloperHubSDK/Database/` | confirmed (1.3.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Database/Daemon/Projects/ProjectRegistryFollower.swift` | unverified |
 
 ## Design Decisions
 
@@ -475,6 +486,7 @@ The module keeps storage mechanics (pool, deadlines, metrics) and storage naming
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.4.0 | 2026-11-23 | Mike Fullerton | Project registry follower (keeps a local Projects.db in step with adhd's registry) moved in from the Kitchen. |
 | 1.3.1 | 2026-11-23 | Mike Fullerton | billing-routes-since: GET /billing/entries reads a timestamp `since` as the earliest calendar day that instant falls on in any zone (UTC-12), not its text prefix, and its 400 names both accepted forms (review f8). |
 | 1.3.0 | 2026-11-21 | Mike Fullerton | Account credential store, quota probe, account router and its routes (credential relay) moved into Database/Daemon. Billing routes (every stenographerd billing call) and activity routes with a work tracker's controls added for adhd. |
 | 1.2.2 | 2026-11-19 | Mike Fullerton | Name the CLI sentinel without the host's name |

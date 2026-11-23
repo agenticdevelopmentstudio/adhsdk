@@ -21758,6 +21758,13 @@
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Database/",
           "platform": "apple"
+        },
+        {
+          "conformance": {
+            "state": "unverified"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/Database/Daemon/Projects/ProjectRegistryFollower.swift",
+          "platform": "apple"
         }
       ],
       "kind": "ingredient",

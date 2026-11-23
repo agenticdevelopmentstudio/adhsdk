@@ -48,6 +48,18 @@ public struct CommandLineToolLink: Sendable, Equatable {
         bundle.url(forAuxiliaryExecutable: name).map { CommandLineToolLink(name: name, tool: $0, directory: directory) }
     }
 
+    /// The tool `bundle` ships in `Contents/Helpers/<name>`, or nil when it
+    /// ships no executable of that name there. Where a suite app puts a CLI
+    /// whose name differs from the app's only in case (`adnotes` beside
+    /// `ADNotes`), which in `Contents/MacOS` would be one file on a
+    /// case-insensitive volume, so `bundled` cannot find it.
+    public static func helper(_ name: String, in bundle: Bundle = .main,
+                              directory: URL = userBinDirectory) -> CommandLineToolLink? {
+        let tool = bundle.bundleURL.appending(path: "Contents/Helpers/\(name)")
+        guard FileManager.default.isExecutableFile(atPath: tool.path) else { return nil }
+        return CommandLineToolLink(name: name, tool: tool, directory: directory)
+    }
+
     /// `~/.local/bin`.
     public static var userBinDirectory: URL {
         FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent(".local/bin", isDirectory: true)

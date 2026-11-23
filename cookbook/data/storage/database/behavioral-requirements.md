@@ -139,3 +139,10 @@
 - **activity-preferences**: `POST /activity/preferences` MUST decode a whole snake_case `WorkTrackingPreferences`, apply it and answer the status it produced; an undecodable body MUST answer 400 and change nothing.
 - **activity-recheck**: `POST /activity/recheck` MUST ask for Accessibility again and answer the resulting status.
 - **activity-spans**: `GET /activity/spans` MUST answer the spans since `since`, limited to 1...1000 (default 100); a malformed `since` MUST answer 400.
+
+### Project Registry Follower
+
+- **follower-subscribes-first**: `ProjectRegistryFollower.start(onFailure:)` MUST subscribe to the registry's `changes` before it reads the projects, so no change made between the read and the subscription is lost.
+- **follower-syncs-then-applies**: The follower MUST `sync` the local `LocalProjectMirror` to the registry's projects, then `apply` each change as it arrives, so the local file's rows match the registry's.
+- **follower-keeps-local-path**: Given `keepingLocal`, the follower MUST NOT mirror a project at that path, neither in the first sync nor in a later upsert.
+- **follower-stop**: `stop()` MUST end the follow and leave the rows already mirrored in place; a failure to read or subscribe MUST reach `onFailure`.

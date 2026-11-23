@@ -243,3 +243,7 @@
   resolved web address in a web browser, a directory in a File Browser
   window, a file in a Document window (where the single-document tab
   setting says it opens), and MUST refuse invalid text with an alert.
+- **helper-tool-in-contents-helpers**: `CommandLineToolLink.helper(_:in:directory:)`
+  MUST look for the tool at `Contents/Helpers/<name>` of the bundle and
+  answer a link only when that file is executable, else nil, because a
+  suite app's CLI there may differ from the app's executable only in case.

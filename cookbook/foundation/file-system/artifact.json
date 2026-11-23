@@ -4,11 +4,11 @@
     "id": "016f5ba0-f4ee-4b39-b1a2-83629768acdd",
     "title": "File System",
     "type": "ingredient",
-    "version": "1.2.0",
+    "version": "1.3.0",
     "status": "review",
     "language": "en",
     "created": "2026-09-24",
-    "modified": "2026-11-15",
+    "modified": "2026-11-23",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -36,7 +36,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "12f4efd79b4bc0f9",
+  "synced": "58d51b51b454fdfb",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
