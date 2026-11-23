@@ -23,7 +23,8 @@ const messageOf = (e: unknown) => (e instanceof Error ? e.message : "Something w
  *
  * Adding an admin writes a sign-up list entry carrying the `admin` role: the person gets the role
  * the first time they prove the address, at the site's own sign-in. It is how the first admin is
- * made, and the developer's way back in if every admin has gone.
+ * made, and the developer's way back in if every admin has gone. An address already on the list
+ * keeps the set its entry grants; only the role changes.
  */
 export function AdminSitePane({
   ecosystemId,
@@ -176,7 +177,16 @@ function ProductAdmins({ ecosystemId }: { ecosystemId: string }) {
     setAdded(null);
     try {
       const address = email.trim();
-      await signupListApi.put(ecosystemId, { email: address, roleId: adminRole.id, setId: null });
+      // The entry is keyed on the address and a write replaces its role AND its set, so an
+      // address already listed keeps the set it was going to receive: read it first.
+      const listed = (await signupListApi.list(ecosystemId)).find(
+        (entry) => entry.email === address.toLowerCase(),
+      );
+      await signupListApi.put(ecosystemId, {
+        email: address,
+        roleId: adminRole.id,
+        setId: listed?.setId ?? null,
+      });
       setAdded(address);
       setEmail("");
     } catch (err) {

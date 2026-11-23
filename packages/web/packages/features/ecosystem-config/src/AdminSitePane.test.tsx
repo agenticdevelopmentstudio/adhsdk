@@ -90,6 +90,7 @@ beforeEach(() => {
     { kind: "customer", id: "cust-ann", label: "Ann", email: "ann@x.test", slug: "ann" },
   ]);
   site.get.mockResolvedValue({ site: null, enabled: true });
+  signup.list.mockResolvedValue([]);
   signup.put.mockResolvedValue({
     id: "e1",
     email: "cy@x.test",
@@ -162,6 +163,27 @@ describe("AdminSitePane", () => {
       expect(signup.put).toHaveBeenCalledWith(eco(), { email: "cy@x.test", roleId: "r-admin", setId: null }),
     );
     expect(await screen.findByText("cy@x.test is on the sign-up list as an admin.")).toBeInTheDocument();
+  });
+
+  it("keeps the set of an address already on the sign-up list, and changes only its role", async () => {
+    signup.list.mockResolvedValue([
+      {
+        id: "e0",
+        email: "alice@x.test",
+        roleId: "r-editor",
+        setId: "set-pro",
+        createdAt: "2026-11-20T00:00:00.000Z",
+        grantedAt: null,
+        grantedCustomerId: null,
+      },
+    ]);
+    renderPane(<AdminSitePane ecosystemId={eco()} />);
+    fireEvent.change(await screen.findByLabelText("Admin email"), { target: { value: "Alice@X.test" } });
+    fireEvent.click(screen.getByRole("button", { name: "Add an admin" }));
+    await waitFor(() =>
+      expect(signup.put).toHaveBeenCalledWith(eco(), { email: "Alice@X.test", roleId: "r-admin", setId: "set-pro" }),
+    );
+    expect(signup.list).toHaveBeenCalledWith(eco());
   });
 
   it("refuses an address that is not an email, and sends nothing", async () => {
