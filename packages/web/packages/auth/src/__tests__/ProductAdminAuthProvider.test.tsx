@@ -3,7 +3,7 @@
 // /api/v1/account and /auth/signout are asserted, and the bearer it supplies is read back through
 // readAccessToken, the same seam every @adh-sdk/data client sends from.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { StrictMode } from 'react'
+import { StrictMode, useEffect } from 'react'
 import { act, render, waitFor } from '@testing-library/react'
 import {
   PRODUCT_ADMIN_REFRESH_LEAD_MS,
@@ -11,7 +11,7 @@ import {
   useProductAdminAuth,
   type ProductAdminAuthValue,
 } from '../ProductAdminAuthProvider'
-import { readAccessToken, accessTokenSource } from '../tokens'
+import { readAccessToken, accessTokenSource, clearTokens, writeTokens } from '../tokens'
 
 const json = (status: number, body: unknown) =>
   new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } })
@@ -48,6 +48,7 @@ beforeEach(() => {
   navigate.mockReset()
   vi.stubGlobal('fetch', fetchMock)
   window.history.replaceState(null, '', '/users?q=a')
+  clearTokens()
 })
 
 afterEach(() => {
@@ -243,6 +244,32 @@ describe('ProductAdminAuthProvider', () => {
     expect(callsTo('/auth/session')).toHaveLength(1)
     expect(readAccessToken()).toBe('tok-1')
     expect(navigate).not.toHaveBeenCalled()
+  })
+
+  it("installs its token source before a child's first effect, so no stored token leaks out", async () => {
+    // Another session's token in the shared storage key: before the fix a child's mount query
+    // sent it, since the source was not yet installed.
+    writeTokens({ accessToken: 'other-session', refreshToken: '' })
+    routes({
+      '/auth/session': () => json(200, { accessToken: 'tok-1', expiresAt: Math.floor(Date.now() / 1000) + 3600 }),
+      '/api/v1/account': () => json(200, account(['admin'])),
+    })
+    const atChildMount: { installed: boolean; token: string | null }[] = []
+    function Child() {
+      useEffect(() => {
+        atChildMount.push({ installed: accessTokenSource() !== null, token: readAccessToken() })
+      }, [])
+      return null
+    }
+    render(
+      <ProductAdminAuthProvider navigate={navigate}>
+        <Child />
+        <Probe />
+      </ProductAdminAuthProvider>,
+    )
+    expect(atChildMount).toEqual([{ installed: true, token: null }])
+    await waitFor(() => expect(seen?.status).toBe('ready'))
+    expect(readAccessToken()).toBe('tok-1')
   })
 
   it('removes its token source on unmount', async () => {
