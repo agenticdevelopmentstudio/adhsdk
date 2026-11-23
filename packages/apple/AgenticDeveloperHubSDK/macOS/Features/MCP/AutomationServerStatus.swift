@@ -7,9 +7,13 @@ import Combine
 public final class AutomationServerStatus: ObservableObject {
     /// The port actually listening; nil until started, or when it failed.
     @Published public var port: UInt16?
-    /// The bearer token, for the registration command.
+    /// The bearer token the Coding Partner's MCP config carries.
     @Published public var token: String?
-    /// Whether `~/.claude.json` lists this server on this port.
+    /// The line that registers the endpoint with Claude Code
+    /// (`MCPRegistration.claudeCommand(channel:adhdPath:)`, or what
+    /// `adhd mcp command` prints); nil until it is known.
+    @Published public var command: String?
+    /// Whether `~/.claude.json` lists this server at this address.
     @Published public var isRegistered = false
     /// Why the endpoint is not running, when it is not.
     @Published public var failureReason: String?

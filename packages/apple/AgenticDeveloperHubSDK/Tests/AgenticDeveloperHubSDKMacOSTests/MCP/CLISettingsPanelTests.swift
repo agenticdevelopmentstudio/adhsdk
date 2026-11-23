@@ -46,15 +46,15 @@ final class CLISettingsPanelTests: XCTestCase {
 
     func testCopyPutsTheClaudeCommandOnThePasteboard() {
         let status = AutomationServerStatus()
-        status.port = 51477
-        status.token = "tok"
+        let command = MCPRegistration.claudeCommand(channel: .dev, adhdPath: "/opt/adhd/adhd")
+        status.port = MCPRegistration.Channel.dev.port
+        status.command = command
         let pasteboard = NSPasteboard(name: NSPasteboard.Name("adkitchen.tests." + UUID().uuidString))
         addTeardownBlock { pasteboard.releaseGlobally() }
         let panel = makePanel(status: status, pasteboard: pasteboard)
         let copy = button("settings.automation.copy-command", in: panel.view)
         XCTAssertNotNil(copy)
         copy?.performClick(nil)
-        XCTAssertEqual(pasteboard.string(forType: .string),
-                       MCPRegistration.claudeCommand(port: 51477, token: "tok"))
+        XCTAssertEqual(pasteboard.string(forType: .string), command)
     }
 }

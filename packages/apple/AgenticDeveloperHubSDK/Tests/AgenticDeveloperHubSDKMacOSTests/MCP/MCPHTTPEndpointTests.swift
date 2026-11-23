@@ -178,6 +178,15 @@ final class MCPHTTPEndpointTests: XCTestCase {
         XCTAssertEqual(content?["text"] as? String, "caller:pane-7")
     }
 
+    /// A terminal or registration made before the rename still names its pane.
+    func testLegacyCallerHeaderReachesTheSource() async throws {
+        let (status, json) = try await send(body: rpc("tools/call", params: #"{"name":"whoami","arguments":{}}"#),
+                                            extraHeaders: [HostMCPServer.legacyCallerHeader: "pane-old"])
+        XCTAssertEqual(status, 200)
+        let content = ((json?["result"] as? [String: Any])?["content"] as? [[String: Any]])?.first
+        XCTAssertEqual(content?["text"] as? String, "caller:pane-old")
+    }
+
     func testMissingCallerHeaderIsNone() async throws {
         let (_, json) = try await send(body: rpc("tools/call", params: #"{"name":"whoami","arguments":{}}"#))
         let content = ((json?["result"] as? [String: Any])?["content"] as? [[String: Any]])?.first

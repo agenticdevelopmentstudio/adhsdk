@@ -132,9 +132,15 @@ final class HostMCPServerTests: XCTestCase {
     func testCallerHeaderReachesTheSource() async throws {
         // `Server.HandlerContext` cannot be built outside the SDK, so the
         // header read (`caller(from:)`) and the call path are tested in turn.
-        let request = HTTPRequest(method: "POST", headers: ["x-adkitchen-pane": "pane-7"])
+        let request = HTTPRequest(method: "POST", headers: ["x-adhd-pane": "pane-7"])
         let caller = HostMCPServer.caller(from: request)
         XCTAssertEqual(caller, "pane-7")
+        // The name the header had before adhd is still read, and the new one
+        // wins when both are sent.
+        XCTAssertEqual(HostMCPServer.caller(from: HTTPRequest(
+            method: "POST", headers: ["X-ADKitchen-Pane": "pane-old"])), "pane-old")
+        XCTAssertEqual(HostMCPServer.caller(from: HTTPRequest(
+            method: "POST", headers: ["X-ADKitchen-Pane": "pane-old", "X-ADHD-Pane": "pane-new"])), "pane-new")
         XCTAssertNil(HostMCPServer.caller(from: nil))
         XCTAssertNil(HostMCPServer.caller(from: HTTPRequest(method: "POST")))
 

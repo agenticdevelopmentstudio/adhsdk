@@ -10,7 +10,14 @@ import OSLog
 public actor HostMCPServer {
 
     /// The request header a caller sets to say which pane it speaks from.
-    public static let callerHeader = "X-ADKitchen-Pane"
+    public static let callerHeader = "X-ADHD-Pane"
+
+    /// The name the header had before adhd served the tools. Still read, so a
+    /// terminal or registration made earlier keeps naming its pane.
+    public static let legacyCallerHeader = "X-ADKitchen-Pane"
+
+    /// Every name a caller's pane is read from, in the order they are tried.
+    public static let callerHeaders = [callerHeader, legacyCallerHeader]
 
     private struct Registration {
         let source: any ChatToolSource
@@ -80,9 +87,11 @@ public actor HostMCPServer {
         }
     }
 
-    /// The pane id the HTTP request names in `callerHeader`, if any.
+    /// The pane id the HTTP request names in `callerHeader` (or, failing
+    /// that, `legacyCallerHeader`), if any.
     static func caller(from request: HTTPRequest?) -> String? {
-        request?.header(callerHeader)
+        guard let request else { return nil }
+        return callerHeaders.lazy.compactMap { request.header($0) }.first
     }
 
     private func listTools() async -> [MCP.Tool] {
