@@ -5,7 +5,8 @@ import Foundation
 ///
 /// The retired stenographerd served these routes on 22847. It is gone and adhd
 /// serves Stenographer (through `DaemonStenographerService`), so this client
-/// has no default address and never assumes one.
+/// takes the address its caller names. The deprecated ``defaultBaseURL`` and
+/// no-argument `init` remain only so older consumers still build.
 ///
 /// Same routes `steno` uses: everything is JSON in `StenographerWire` spelling
 /// (snake_case, ISO-8601). A failed connection, a non-2xx reply or a body that
@@ -48,6 +49,30 @@ public final class StenographerHTTPClient: StenographerDaemonService, @unchecked
         self.baseURL = baseURL
         self.session = session
         self.healthPollInterval = healthPollInterval
+    }
+
+    /// The retired stenographerd's address, or `STENOGRAPHER_URL` when it
+    /// parses. Kept, deprecated, so a consumer that still names it builds; it
+    /// is nothing this toolkit uses, and the daemon on 22847 is gone.
+    @available(*, deprecated,
+               message: "stenographerd is retired; pass init(baseURL:) the URL of the daemon that serves Stenographer")
+    public static var defaultBaseURL: URL {
+        if let raw = ProcessInfo.processInfo.environment["STENOGRAPHER_URL"], let url = URL(string: raw) {
+            return url
+        }
+        return URL(string: "http://127.0.0.1:22847")!
+    }
+
+    /// The client at ``defaultBaseURL``: what `StenographerHTTPClient()` meant
+    /// before the base URL became required. Kept, deprecated, until every
+    /// consumer passes its own.
+    @available(*, deprecated,
+               message: "stenographerd is retired; pass init(baseURL:) the URL of the daemon that serves Stenographer")
+    public convenience init(
+        session: URLSession = StenographerHTTPClient.uncachedSession,
+        healthPollInterval: TimeInterval = 30
+    ) {
+        self.init(baseURL: Self.defaultBaseURL, session: session, healthPollInterval: healthPollInterval)
     }
 
     deinit { lock.withLock { healthTask }?.cancel() }
