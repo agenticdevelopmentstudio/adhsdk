@@ -106,13 +106,16 @@ public final class WebBrowserWindowController: SingleWindowController {
     /// brings it forward. `nil`, logged, when no host has set `makePane`.
     /// `configure` writes the window's own settings before the browser is
     /// built, so construction-time keys (the storage jar) take effect too.
+    /// `engine` asks for a browser on that engine: Safari is always built
+    /// here, and any other engine only when `makePane` builds it; when it
+    /// does not, nothing opens and the answer is nil.
     @discardableResult
     public static func openNew(
-        url: URL? = nil, purpose: Purpose = .browsing,
+        url: URL? = nil, purpose: Purpose = .browsing, engine: BrowserEngineKind? = nil,
         configure: ((SettingsStore) -> Void)? = nil
     ) -> WebBrowserWindowController? {
         let build: (PaneStateStore, SettingsStore) -> WebBrowserPaneViewController
-        if purpose == .safariExtensions {
+        if purpose == .safariExtensions || engine == .safari {
             build = { SafariBrowserPaneViewController(store: $0, settings: $1) }
         } else if let makePane {
             build = makePane
@@ -134,7 +137,14 @@ public final class WebBrowserWindowController: SingleWindowController {
             settings.set(true, for: UserSettings.browserPrivateBrowsing)
         }
         configure?(settings)
-        let controller = WebBrowserWindowController(pane: build(store, settings), purpose: purpose)
+        let pane = build(store, settings)
+        if let engine, pane.engineKind != engine {
+            logger.info(
+                "web browser window not opened: no \(engine.displayName, privacy: .public) browser to put in it")
+            pane.paneContentWillBeDiscarded()
+            return nil
+        }
+        let controller = WebBrowserWindowController(pane: pane, purpose: purpose)
         openWindows.append(controller)
         controller.showWindow()
         if let url { controller.pane.load(url) }
@@ -296,5 +306,28 @@ public final class WebBrowserWindowController: SingleWindowController {
         Self.openWindows.removeAll { $0 === self }
         // Unique to this window, so nothing will ask for it again.
         WindowManager.shared.forgetOneOffWindow(self)
+    }
+}
+
+extension WebBrowserWindowController: StandaloneBrowserWindow {
+    public var browserWindowID: String { windowID }
+    public var browserWindowTitle: String { window?.title ?? pane.paneTitle }
+    public var browserWindow: NSWindow? { window }
+
+    /// Puts the window on screen without activating the app or taking the
+    /// key window: a drive needs the page visible, never the person's
+    /// keystrokes.
+    public func revealBrowserWindow() {
+        guard let window else {
+            showWindow()
+            return
+        }
+        if window.isMiniaturized { window.deminiaturize(nil) }
+        if !window.isVisible { window.orderFront(nil) }
+    }
+
+    /// Closes the window the way its close button would.
+    public func closeBrowserWindow() {
+        window?.performClose(nil)
     }
 }

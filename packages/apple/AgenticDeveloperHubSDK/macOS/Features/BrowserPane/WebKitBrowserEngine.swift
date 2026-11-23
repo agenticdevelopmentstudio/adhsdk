@@ -10,6 +10,7 @@ import WebKit
 import AgenticDeveloperHubSDKCore
 import AgenticDeveloperHubSDKCoreUI
 import AgenticDeveloperHubSDKCoreMacOS
+import AgenticDeveloperHubSDKDatabase
 
 /// Drives a `WKWebView` for automation, and nothing more: it sets no
 /// delegates, so whoever owns the web view keeps owning its navigation.
@@ -525,7 +526,7 @@ public final class WebKitBrowserEngine: WebKitPageDriver, BrowserEngine {
     /// Re-renders the page showing whenever the hidden-items store changes,
     /// and once now for whatever the web view starts on.
     private func observeHiddenItems() {
-        NotificationCenter.default.publisher(for: BrowserHiddenItemsStore.didChangeNotification)
+        NotificationCenter.default.publisher(for: .browserHiddenItemsDidChange)
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in self?.refreshHiddenItems(live: true) }
             .store(in: &cancellables)
@@ -605,9 +606,9 @@ public final class WebKitBrowserEngine: WebKitPageDriver, BrowserEngine {
     private func readHiddenItemSelectors(for url: URL?, checkingGeneration: Bool = true) async -> HiddenItemsRead {
         if checkingGeneration { hiddenItemsGeneration += 1 }
         let generation = hiddenItemsGeneration
-        guard let store = await BrowserHiddenItemsStore.sharedStore() else { return .selectors([]) }
+        guard let store = await BrowserHiddenItemsStore.currentStore() else { return .selectors([]) }
         do {
-            let selectors = try await store.perform { try $0.enabledSelectors(list: .user, for: url) }
+            let selectors = try await store.enabledSelectors(list: .user, for: url)
             let current = !checkingGeneration || generation == hiddenItemsGeneration
             return current ? .selectors(selectors) : .superseded
         } catch {

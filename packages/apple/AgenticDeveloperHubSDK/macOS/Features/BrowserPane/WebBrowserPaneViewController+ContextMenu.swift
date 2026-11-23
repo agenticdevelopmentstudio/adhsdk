@@ -8,6 +8,7 @@ import os
 import WebKit
 import AgenticDeveloperHubSDKCore
 import AgenticDeveloperHubSDKCoreUI
+import AgenticDeveloperHubSDKDatabase
 
 /// The pane's items in a page's context menu, on the live page and in the
 /// Agent preview:

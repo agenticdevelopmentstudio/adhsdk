@@ -1,6 +1,7 @@
 import WebKit
 import XCTest
 @testable import AgenticDeveloperHubSDKMacOS
+import AgenticDeveloperHubSDKDatabase
 
 /// The hidden-items style's scripts (recipe
 /// workspace/browser/hidden-items-rendering, vectors 001–005, 011, 012).

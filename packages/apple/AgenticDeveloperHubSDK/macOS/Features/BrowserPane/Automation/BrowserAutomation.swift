@@ -2,6 +2,7 @@
 import AppKit
 import Combine
 import WebKit
+import AgenticDeveloperHubSDKDatabase
 
 public struct BrowserDialog: Sendable, Equatable {
     public enum Kind: String, Sendable { case alert, confirm, prompt }
@@ -176,7 +177,7 @@ public final class BrowserAutomation: NSObject {
     /// must not stay clickable until the next snapshot.
     private func observeHiddenItems() {
         hiddenItemsObservation = NotificationCenter.default
-            .publisher(for: BrowserHiddenItemsStore.didChangeNotification)
+            .publisher(for: .browserHiddenItemsDidChange)
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
                 Task { @MainActor in await self?.invalidateRefs() }

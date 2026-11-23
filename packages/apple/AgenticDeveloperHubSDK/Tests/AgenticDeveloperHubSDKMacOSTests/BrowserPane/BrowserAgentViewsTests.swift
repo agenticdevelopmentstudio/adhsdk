@@ -3,6 +3,7 @@ import WebKit
 import XCTest
 import AgenticDeveloperHubSDKCore
 @testable import AgenticDeveloperHubSDKMacOS
+import AgenticDeveloperHubSDKDatabase
 
 /// The Agent preview and Agent source views and the control that picks them
 /// (recipe `workspace/browser/agent-views`, spec section 2.4).
@@ -94,9 +95,9 @@ final class BrowserAgentViewsTests: XCTestCase {
 
     func test_websiteModeRestoresPage() async {
         let pane = makePane()
-        let saved = BrowserHiddenItemsStore.shared
-        BrowserHiddenItemsStore.shared = nil
-        defer { BrowserHiddenItemsStore.shared = saved }
+        let saved = BrowserHiddenItemsStore.current
+        BrowserHiddenItemsStore.current = nil
+        defer { BrowserHiddenItemsStore.current = saved }
         pane.view.layoutSubtreeIfNeeded()
         pane.setAgentViewMode(.agentPreview)
         XCTAssertEqual(pane.agentViewControl.selectedSegment, BrowserAgentViewMode.agentPreview.segment)
@@ -361,9 +362,9 @@ final class BrowserAgentViewsTests: XCTestCase {
     }
 
     func test_refreshOnAgentListChange() async {
-        let saved = BrowserHiddenItemsStore.shared
-        BrowserHiddenItemsStore.shared = nil
-        defer { BrowserHiddenItemsStore.shared = saved }
+        let saved = BrowserHiddenItemsStore.current
+        BrowserHiddenItemsStore.current = nil
+        defer { BrowserHiddenItemsStore.current = saved }
         let pane = makePane()
         pane.setAgentViewMode(.agentSource)
         guard let views = pane.activeAgentViews else { return XCTFail("no agent views after leaving Website") }

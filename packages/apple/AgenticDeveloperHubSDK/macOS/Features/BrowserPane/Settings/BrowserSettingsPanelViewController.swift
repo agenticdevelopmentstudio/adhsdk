@@ -9,6 +9,7 @@ import WebKit
 
 import AgenticDeveloperHubSDKUI
 import AgenticDeveloperHubSDKCore
+import AgenticDeveloperHubSDKDatabase
 
 /// Which settings a Browser panel shows and writes (spec section 3).
 ///
@@ -46,7 +47,7 @@ public enum BrowserSettingsScope {
 @MainActor
 public final class BrowserSettingsPanelViewController: ComposableSettings.SettingsPanelSplitViewController {
 
-    private let history: BrowserHistoryStore?
+    private let history: (any BrowserHistoryStoring)?
     private let siteData: BrowserSiteData
     private let chrome: BrowserEngineMaintenance?
     /// Every row's store and the bookkeeping behind its override marker.
@@ -73,7 +74,7 @@ public final class BrowserSettingsPanelViewController: ComposableSettings.Settin
     ///     passed. It must be the instance the panes and private terminals
     ///     share: a vault ignores its own process's change notification.
     public init(
-        history: BrowserHistoryStore?,
+        history: (any BrowserHistoryStoring)?,
         siteData: BrowserSiteData = BrowserSiteData(),
         settings: SettingsStore = UserSettings.shared,
         scope: BrowserSettingsScope = .global,

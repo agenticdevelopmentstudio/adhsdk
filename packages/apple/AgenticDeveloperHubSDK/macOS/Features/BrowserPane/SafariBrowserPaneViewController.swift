@@ -6,6 +6,7 @@
 import AppKit
 import WebKit
 import AgenticDeveloperHubSDKCore
+import AgenticDeveloperHubSDKDatabase
 
 /// The Safari Web Browser pane: a `WebBrowserPaneViewController` over WebKit.
 /// Everything but the engine, privacy included, is the base class's.
@@ -23,7 +24,7 @@ public final class SafariBrowserPaneViewController: WebBrowserPaneViewController
     public init(
         store: PaneStateStore,
         settings: SettingsStore = UserSettings.shared,
-        history: BrowserHistoryStore? = nil,
+        history: (any BrowserHistoryStoring)? = nil,
         homeURL: URL = WebBrowserPaneViewController.blankPage,
         context: BrowserPaneContext = .detached
     ) {

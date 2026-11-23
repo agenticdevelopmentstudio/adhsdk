@@ -1,5 +1,6 @@
 import Foundation
 import AgenticDeveloperHubSDKCore
+import AgenticDeveloperHubSDKDatabase
 
 /// The twenty-one `browser_*` tools. A `ChatToolSource`, so the same object
 /// serves the in-app chats and the MCP server.
@@ -26,8 +27,8 @@ public final class BrowserToolSet: ChatToolSource, @unchecked Sendable {
 
     private let directory: any BrowserPaneDirectory
     private let settings: SettingsStore
-    /// The agent lists (`BrowserHiddenItemsStore.shared` in the app).
-    private let hiddenItems: @MainActor () -> BrowserHiddenItemsStore?
+    /// The agent lists (`BrowserHiddenItemsStore.current` in the app).
+    private let hiddenItems: @MainActor () -> (any BrowserHiddenItemsStoring)?
     /// The one way a tool reads a pane's page (recipe `single-gatekeeper`):
     /// an `AgentPageSource` over the pane's page with the privacy the call
     /// runs under, a spy in tests.
@@ -37,13 +38,13 @@ public final class BrowserToolSet: ChatToolSource, @unchecked Sendable {
     public convenience init(directory: any BrowserPaneDirectory, settings: SettingsStore = UserSettings.shared) {
         // The blocking getter is right here: a tool call drives a page the
         // engine has already read its rules for, so the launch open is done.
-        self.init(directory: directory, settings: settings, hiddenItems: { BrowserHiddenItemsStore.shared })
+        self.init(directory: directory, settings: settings, hiddenItems: { BrowserHiddenItemsStore.current })
     }
 
     @MainActor
     init(
         directory: any BrowserPaneDirectory, settings: SettingsStore,
-        hiddenItems: @escaping @MainActor () -> BrowserHiddenItemsStore?,
+        hiddenItems: @escaping @MainActor () -> (any BrowserHiddenItemsStoring)?,
         agentPages: (@MainActor (BrowserPaneHandle, BrowserAgentPrivacy) -> any AgentPageReader)? = nil
     ) {
         self.directory = directory
@@ -59,7 +60,7 @@ public final class BrowserToolSet: ChatToolSource, @unchecked Sendable {
     /// so the agent receives what the pane's Agent preview shows.
     @MainActor
     static func agentPageSource(for pane: BrowserPaneHandle, privacy: BrowserAgentPrivacy,
-                                hiddenItems: BrowserHiddenItemsStore?) -> AgentPageSource {
+                                hiddenItems: (any BrowserHiddenItemsStoring)?) -> AgentPageSource {
         AgentPageSource.reading(pane.automation.driver, hiddenItems: hiddenItems, privacy: privacy,
                                 hideImages: pane.hidesImages)
     }
@@ -326,7 +327,7 @@ public final class BrowserToolSet: ChatToolSource, @unchecked Sendable {
         }
         let url = now.automation.driver.url
         do {
-            let selectors = try await store.perform { try $0.enabledSelectors(list: .agent, for: url) }
+            let selectors = try await store.enabledSelectors(list: .agent, for: url)
             return selectors.isEmpty ? nil : BrowserAgentPrivacy.agentListRefusal
         } catch {
             return AgentPage.unavailablePrefix + error.localizedDescription

@@ -4,6 +4,7 @@ import WebKit
 import XCTest
 @testable import AgenticDeveloperHubSDKMacOS
 import AgenticDeveloperHubSDKCore
+import AgenticDeveloperHubSDKDatabase
 
 /// `AgentPageWalker.js` through `AgentPageSource`, in a real offscreen web
 /// view (recipe workspace/browser/agent-page-builder, vectors 010 and

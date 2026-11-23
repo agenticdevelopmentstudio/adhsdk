@@ -1,4 +1,5 @@
 import Foundation
+import AgenticDeveloperHubSDKDatabase
 
 /// One visit as `browser_history` lists it: a back/forward entry, or a row
 /// of the history store. `when` is nil when the source keeps no time (a
@@ -19,7 +20,7 @@ public struct BrowserVisitLine: Sendable, Equatable {
 /// every enabled word whatever its sites (the Agent History Tool
 /// recipe). It reads nothing on the main actor: the back/forward list is
 /// handed in, read there by the caller, and the store is read through
-/// `BrowserHistoryStore.perform`, off the caller's thread.
+/// `BrowserHistoryStoring`'s async calls, off the caller's thread.
 struct BrowserHistoryTool {
 
     static let defaultLimit = 50
@@ -37,7 +38,7 @@ struct BrowserHistoryTool {
 
     static func run(
         access: BrowserAgentHistoryAccess, query: String?, limit: Int,
-        store: BrowserHistoryStore?, backForward: [BrowserVisitLine], privacy: BrowserAgentPrivacy
+        store: (any BrowserHistoryStoring)?, backForward: [BrowserVisitLine], privacy: BrowserAgentPrivacy
     ) async throws -> String {
         // `requireAccess` has already refused a closed privacy; refusing here
         // too means this function can never answer through one.
@@ -57,9 +58,10 @@ struct BrowserHistoryTool {
             if let query, privacy.isOn {
                 visits = try await concealedMatches(query, limit: limit, store: store, conceal: conceal)
             } else {
-                let rows = try await store.perform { store in
-                    if let query { return try store.search(query, limit: limit, excludingLocalFiles: true) }
-                    return try store.recent(limit: limit, excludingLocalFiles: true)
+                let rows = if let query {
+                    try await store.search(query, limit: limit, excludingLocalFiles: true)
+                } else {
+                    try await store.recent(limit: limit, before: nil, excludingLocalFiles: true)
                 }
                 visits = rows.map(visitLine).filter(isShareable).map { concealed($0, conceal) }
             }
@@ -79,16 +81,14 @@ struct BrowserHistoryTool {
     /// (`query-matches-concealed-text`), and it would miss a stand-in the
     /// agent was shown.
     private static func concealedMatches(
-        _ query: String, limit: Int, store: BrowserHistoryStore,
+        _ query: String, limit: Int, store: any BrowserHistoryStoring,
         conceal: (String) -> String
     ) async throws -> [BrowserVisitLine] {
         var found: [BrowserVisitLine] = []
         var cursor: BrowserVisit?
         while found.count < limit {
             let after = cursor
-            let page = try await store.perform { store in
-                try store.recent(limit: matchPageSize, before: after, excludingLocalFiles: true)
-            }
+            let page = try await store.recent(limit: matchPageSize, before: after, excludingLocalFiles: true)
             for row in page {
                 let visit = visitLine(row)
                 guard isShareable(visit) else { continue }

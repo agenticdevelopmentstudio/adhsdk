@@ -6,6 +6,7 @@
 import AppKit
 import AgenticDeveloperHubSDKCore
 import AgenticDeveloperHubSDKMacOS
+import AgenticDeveloperHubSDKDatabase
 
 /// The Chrome Web Browser pane: a `WebBrowserPaneViewController` over
 /// Chromium. Everything but the engine, privacy included, is the base
@@ -24,7 +25,7 @@ public final class ChromeBrowserPaneViewController: WebBrowserPaneViewController
     public init(
         store: PaneStateStore,
         settings: SettingsStore = UserSettings.shared,
-        history: BrowserHistoryStore? = nil,
+        history: (any BrowserHistoryStoring)? = nil,
         homeURL: URL = WebBrowserPaneViewController.blankPage,
         context: BrowserPaneContext = .detached
     ) {
@@ -46,7 +47,7 @@ public final class ChromeBrowserPaneViewController: WebBrowserPaneViewController
     /// windows hold Chrome: a pane that belongs to no project, recording
     /// visits in `history`.
     public static func standaloneFactory(
-        history: BrowserHistoryStore?
+        history: (any BrowserHistoryStoring)?
     ) -> (PaneStateStore, SettingsStore) -> WebBrowserPaneViewController {
         { store, settings in
             let pane = ChromeBrowserPaneViewController(store: store, settings: settings, history: history)
@@ -70,7 +71,7 @@ extension ComposableTabsViewRegistry {
         preferredAxis: ComposableTabsAxis,
         homeURL: URL = WebBrowserPaneViewController.blankPage,
         settings: SettingsStore = UserSettings.shared,
-        history: BrowserHistoryStore? = nil,
+        history: (any BrowserHistoryStoring)? = nil,
         privacyVault: PrivacyWordsVault? = nil
     ) {
         ChromiumLauncher.registerJarStores()

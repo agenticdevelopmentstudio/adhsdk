@@ -6,6 +6,7 @@
 import AppKit
 import WebKit
 import os
+import AgenticDeveloperHubSDKDatabase
 
 /// Whether Safari panes can run web extensions here, and where they keep
 /// them. The app sets `homeDirectory` at launch; until it does, and on a
@@ -16,6 +17,26 @@ public enum SafariExtensionSupport {
     /// The home the app's storage is under (`APP_TEST_HOME` in a scratch
     /// run), so a scratch home gets scratch extensions.
     public static var homeDirectory: URL?
+
+    /// The catalog the hosts keep their extensions in, set by the
+    /// composition (adhd's in a Debug app); nil is a
+    /// `LocalSafariExtensionCatalog` in `homeDirectory`'s app storage.
+    @MainActor public static var catalog: (any SafariExtensionCatalog)?
+
+    /// Where a host stages downloads before the person answers; nil is
+    /// beside the installed files, which is right only for a catalog in the
+    /// app's own storage. Set it (`SafariExtensionLibrary.temporaryStagingRoot`)
+    /// with a catalog the app does not own.
+    @MainActor public static var stagingRoot: ((SafariExtensionScope) -> URL)?
+
+    /// The library `profile`'s host uses under `home`: `catalog`, or a local
+    /// one there.
+    @MainActor static func library(inHome home: URL, profile: BrowserExtensionProfile) -> SafariExtensionLibrary {
+        let catalog = catalog
+            ?? LocalSafariExtensionCatalog(root: LocalSafariExtensionCatalog.defaultRoot(inHome: home))
+        let scope = profile.catalogScope
+        return SafariExtensionLibrary(catalog: catalog, scope: scope, stagingRoot: stagingRoot?(scope))
+    }
 
     public static var isAvailable: Bool {
         guard homeDirectory != nil else { return false }
@@ -83,8 +104,7 @@ public final class SafariExtensionHost: NSObject {
         guard let home = SafariExtensionSupport.homeDirectory else { return nil }
         if let host = hosts[profile] { return host }
         let host = SafariExtensionHost(
-            profile: profile,
-            library: SafariExtensionLibrary(root: SafariExtensionLibrary.root(inHome: home, profile: profile)))
+            profile: profile, library: SafariExtensionSupport.library(inHome: home, profile: profile))
         hosts[profile] = host
         host.loadInstalled()
         return host
@@ -192,20 +212,29 @@ public final class SafariExtensionHost: NSObject {
     }
 
     /// Reads every installed extension and turns on the ones that were on.
+    /// The records come from the catalog off the main actor; an install that
+    /// lands before they do is kept, after them.
     private func loadInstalled() {
-        let records: [SafariExtensionRecord]
-        do {
-            records = try library.records()
-        } catch {
-            libraryError = "The installed extensions could not be read: \(error.localizedDescription)"
-            logger.error("\(self.libraryError ?? "", privacy: .public)")
-            return
-        }
-        entries = records.map(Entry.init(record:))
-        guard !entries.isEmpty else { return }
         isLoading = true
         Task { @MainActor in
-            for entry in entries { await open(entry) }
+            let records: [SafariExtensionRecord]
+            do {
+                records = try await library.records()
+            } catch {
+                libraryError = "The installed extensions could not be read: \(error.localizedDescription)"
+                logger.error("\(self.libraryError ?? "", privacy: .public)")
+                isLoading = false
+                changed()
+                return
+            }
+            let installedMeanwhile = Set(entries.map(\.record.id))
+            let loaded = records.filter { !installedMeanwhile.contains($0.id) }.map(Entry.init(record:))
+            entries = loaded + entries
+            guard !loaded.isEmpty else {
+                isLoading = false
+                return
+            }
+            for entry in loaded { await open(entry) }
             isLoading = false
             changed()
             await checkForUpdates(presentingOn: nil)
@@ -318,13 +347,30 @@ public final class SafariExtensionHost: NSObject {
         entries.first { $0.record.id == id }
     }
 
+    /// Writes the records. Saves reach the catalog one at a time, in the
+    /// order they were made, so a later one is never overtaken by an earlier.
     private func save() {
         guard libraryError == nil else { return }
-        do {
-            try library.save(entries.map(\.record))
-        } catch {
-            logger.error("extension records not saved: \(error.localizedDescription, privacy: .public)")
+        let records = entries.map(\.record)
+        let library = library
+        let logger = logger
+        let previous = lastSave
+        lastSave = Task {
+            await previous?.value
+            do {
+                try await library.save(records)
+            } catch {
+                logger.error("extension records not saved: \(error.localizedDescription, privacy: .public)")
+            }
         }
+    }
+
+    /// The last save handed to the catalog; each waits on the one before.
+    private var lastSave: Task<Void, Never>?
+
+    /// Returns once every save made so far has reached the catalog.
+    func savesFinished() async {
+        await lastSave?.value
     }
 
     private func changed() {
@@ -593,7 +639,7 @@ public final class SafariExtensionHost: NSObject {
         let entry = existing ?? Entry(record: newRecord())
         let wasEnabled = entry.record.isEnabled
         stop(entry)
-        try library.commitStaged(id)
+        try await library.commitStaged(id)
         if replacing != nil {
             // Other files now: not the store's, not an app's, and granted
             // only what the person just agreed to. The sheet asks nothing
@@ -735,7 +781,9 @@ public final class SafariExtensionHost: NSObject {
         }
         stop(entry)
         entries.removeAll { $0 === entry }
-        try library.removeFiles(of: id)
+        // A save still on its way would bring the record back.
+        await lastSave?.value
+        try await library.remove(id)
         save()
         changed()
     }

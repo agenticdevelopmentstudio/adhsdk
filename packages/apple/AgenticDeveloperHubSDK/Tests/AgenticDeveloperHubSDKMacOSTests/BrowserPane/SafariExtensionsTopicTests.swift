@@ -2,6 +2,7 @@ import XCTest
 import WebKit
 import AgenticDeveloperHubSDKCore
 @testable import AgenticDeveloperHubSDKMacOS
+import AgenticDeveloperHubSDKDatabase
 
 /// The Extensions topic (the Extensions Settings Topic recipe): its columns,
 /// the header's + and ↻ in place of a button bar, the Add Extension menu,
@@ -28,8 +29,19 @@ final class SafariExtensionsTopicTests: XCTestCase {
     // MARK: - Fixtures
 
     private func makeHost() -> SafariExtensionHost {
-        SafariExtensionHost(
-            profile: .global, library: SafariExtensionLibrary(root: root.appendingPathComponent("Library")))
+        SafariExtensionHost(profile: .global, library: library)
+    }
+
+    /// A library over a scratch catalog, never the person's.
+    private var library: SafariExtensionLibrary {
+        SafariExtensionLibrary(
+            catalog: LocalSafariExtensionCatalog(root: root.appendingPathComponent("Library")), scope: .global)
+    }
+
+    /// The records as the catalog holds them once `host`'s saves are in.
+    private func savedRecords(of host: SafariExtensionHost) async throws -> [SafariExtensionRecord] {
+        await host.savesFinished()
+        return try await library.records()
     }
 
     private func makePanel(_ host: SafariExtensionHost) -> SafariExtensionsTopicPanel {
@@ -286,8 +298,8 @@ final class SafariExtensionsTopicTests: XCTestCase {
         XCTAssertEqual(details.name, "Impostor")
         XCTAssertFalse(details.allowsPrivateBrowsing)
         XCTAssertFalse(details.allowsFileAccess)
-        let saved = try XCTUnwrap(SafariExtensionLibrary(root: root.appendingPathComponent("Library"))
-            .records().first { $0.id == keyed })
+        let records = try await savedRecords(of: host)
+        let saved = try XCTUnwrap(records.first { $0.id == keyed })
         XCTAssertNotEqual(saved.allowsPrivateBrowsing, true)
         XCTAssertNotEqual(saved.allowsFileAccess, true)
     }
@@ -311,8 +323,8 @@ final class SafariExtensionsTopicTests: XCTestCase {
         let details = try XCTUnwrap(host.details(of: keyed))
         XCTAssertEqual(details.siteAccess, .specificSites)
         XCTAssertEqual(details.sites, [site])
-        let saved = try XCTUnwrap(SafariExtensionLibrary(root: root.appendingPathComponent("Library"))
-            .records().first { $0.id == keyed })
+        let records = try await savedRecords(of: host)
+        let saved = try XCTUnwrap(records.first { $0.id == keyed })
         XCTAssertEqual(saved.grantedOrigins, [site])
     }
 

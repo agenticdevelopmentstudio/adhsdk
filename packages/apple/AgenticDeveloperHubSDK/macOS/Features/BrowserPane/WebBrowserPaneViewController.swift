@@ -11,6 +11,7 @@ import AgenticDeveloperHubSDKUI
 import AgenticDeveloperHubSDKCore
 import AgenticDeveloperHubSDKCoreUI
 import AgenticDeveloperHubSDKCoreMacOS
+import AgenticDeveloperHubSDKDatabase
 
 /// A web browser in a pane: an address bar over a page some `BrowserEngine`
 /// renders, remembering where it was so a project window reopens on the same
@@ -143,7 +144,7 @@ open class WebBrowserPaneViewController: NSViewController {
     var onEngineMade: ((BrowserEngine) -> Void)?
     private let store: PaneStateStore
     let settings: SettingsStore
-    private let history: BrowserHistoryStore?
+    private let history: (any BrowserHistoryStoring)?
     private let fallbackHomeURL: URL
     /// Which engine draws the page; what the model tools report and open by.
     public let engineKind: BrowserEngineKind
@@ -186,7 +187,7 @@ open class WebBrowserPaneViewController: NSViewController {
     public var agentHidesImages: Bool { settings.get(UserSettings.browserPrivacyHideImages) }
     /// The history store this pane records into, which `browser_history`
     /// reads under All history.
-    public var historyStore: BrowserHistoryStore? { history }
+    public var historyStore: (any BrowserHistoryStoring)? { history }
     /// Whether the agent is held off this pane: its events are paused and its
     /// Agent while paused setting says the agent pauses too.
     public var isPausedForAgent: Bool {
@@ -434,7 +435,7 @@ open class WebBrowserPaneViewController: NSViewController {
         minimizedSymbol: String,
         store: PaneStateStore,
         settings: SettingsStore,
-        history: BrowserHistoryStore?,
+        history: (any BrowserHistoryStoring)?,
         homeURL: URL,
         context: BrowserPaneContext = .detached
     ) {
@@ -789,7 +790,7 @@ open class WebBrowserPaneViewController: NSViewController {
             }
             .store(in: &cancellables)
         // The agent list changes what the agent receives on every page.
-        NotificationCenter.default.publisher(for: BrowserHiddenItemsStore.didChangeNotification)
+        NotificationCenter.default.publisher(for: .browserHiddenItemsDidChange)
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in self?.refreshAgentViews() }
             .store(in: &cancellables)
@@ -971,7 +972,7 @@ open class WebBrowserPaneViewController: NSViewController {
         guard let history, let cutoff = settings.get(UserSettings.browserHistoryRetention).cutoff() else { return }
         Task { [logger] in
             do {
-                try await history.perform { try $0.removeVisits(before: cutoff) }
+                try await history.removeVisits(before: cutoff)
             } catch {
                 logger.error("browser history prune failed: \(error.localizedDescription, privacy: .public)")
             }
@@ -1320,8 +1321,8 @@ open class WebBrowserPaneViewController: NSViewController {
 
     /// The shared store, awaited rather than blocked on: a button pressed
     /// while the launch open runs waits for it without stalling the app.
-    func openHiddenItemsStore() async -> BrowserHiddenItemsStore? {
-        guard let store = await BrowserHiddenItemsStore.sharedStore() else {
+    func openHiddenItemsStore() async -> (any BrowserHiddenItemsStoring)? {
+        guard let store = await BrowserHiddenItemsStore.currentStore() else {
             Self.logger.error("hidden items: no store is open")
             NSSound.beep()
             return nil
@@ -1335,7 +1336,7 @@ open class WebBrowserPaneViewController: NSViewController {
     /// and on the live page otherwise. Agent source has nothing to pick, so
     /// it beeps. One selecting mode per pane: a mode for another engine,
     /// list or view ends before the new one begins.
-    func beginSelectingItems(store: BrowserHiddenItemsStore, list: BrowserHiddenItemList = .user) {
+    func beginSelectingItems(store: any BrowserHiddenItemsStoring, list: BrowserHiddenItemList = .user) {
         guard let webKit = engine as? WebKitBrowserEngine, BrowserSelectingMode.canSelect(on: engine.url) else {
             NSSound.beep()
             return
@@ -1372,7 +1373,7 @@ open class WebBrowserPaneViewController: NSViewController {
     /// `list`, without the picker; a selecting mode already running ends
     /// first, so a pane never has two.
     func pickOnceForHiding(
-        _ candidate: BrowserPickCandidate, list: BrowserHiddenItemList, store: BrowserHiddenItemsStore,
+        _ candidate: BrowserPickCandidate, list: BrowserHiddenItemList, store: any BrowserHiddenItemsStoring,
         preview: BrowserAgentPreviewViewController?
     ) {
         guard let webKit = engine as? WebKitBrowserEngine else {
@@ -1634,7 +1635,7 @@ open class WebBrowserPaneViewController: NSViewController {
         guard let history else { return }
         Task { [logger] in
             do {
-                try await history.perform { try $0.updateTitle(ofVisit: visitID, to: title) }
+                try await history.updateTitle(ofVisit: visitID, to: title)
             } catch {
                 logger.error("browser history title update failed: \(error.localizedDescription, privacy: .public)")
             }
@@ -1685,7 +1686,7 @@ open class WebBrowserPaneViewController: NSViewController {
         let title = storedTitle(of: engine) ?? ""
         Task { [weak self, weak tab, logger] in
             do {
-                let visitID = try await history.perform { try $0.record(url, title: title) }
+                let visitID = try await history.record(url, title: title, at: Date())
                 guard let self, let tab, tab.visitGeneration == generation, tab.engine === engine else { return }
                 tab.currentVisitID = visitID
                 // A title that arrived while the row was being written found
@@ -2686,7 +2687,7 @@ extension WebBrowserPaneViewController {
     /// while the launch open may still run.
     func agentPageSource(engine tabEngine: BrowserEngine) async -> AgentPageSource {
         AgentPageSource.reading(
-            tabEngine, hiddenItems: await BrowserHiddenItemsStore.sharedStore(),
+            tabEngine, hiddenItems: await BrowserHiddenItemsStore.currentStore(),
             privacy: agentPrivacy(at: Self.privacyWordsURL(tabEngine.url)), hideImages: agentHidesImages)
     }
 }

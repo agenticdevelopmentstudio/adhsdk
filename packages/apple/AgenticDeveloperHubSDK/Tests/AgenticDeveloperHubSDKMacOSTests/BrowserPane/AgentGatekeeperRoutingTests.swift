@@ -2,6 +2,7 @@ import WebKit
 import XCTest
 @testable import AgenticDeveloperHubSDKCore
 @testable import AgenticDeveloperHubSDKMacOS
+import AgenticDeveloperHubSDKDatabase
 
 /// A reader that hands out one canned walk and counts the walks asked of it.
 @MainActor

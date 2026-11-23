@@ -4,6 +4,7 @@
 //
 
 import Foundation
+import AgenticDeveloperHubSDKDatabase
 
 /// "Hide distracting items": the style that takes the user list's enabled
 /// selectors off the page (recipe `workspace/browser/hidden-items-rendering`).

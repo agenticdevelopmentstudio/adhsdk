@@ -1,3 +1,4 @@
+#if canImport(AgenticDeveloperHubSDKCore)
 //
 //  BrowserHistoryStore.swift
 //  AgenticDeveloperHubSDK
@@ -5,7 +6,6 @@
 
 import Foundation
 import GRDB
-import AgenticDeveloperHubSDKDatabase
 
 /// One page the browser was on.
 public struct BrowserVisit: Equatable, Sendable, Identifiable {
@@ -36,7 +36,9 @@ public struct BrowserVisit: Equatable, Sendable, Identifiable {
 ///
 /// Every method here runs on the caller's thread and returns when the file
 /// has answered. The pane and the panel are on the main actor, and a WAL
-/// commit waits on the disk, so they go through ``perform(_:)``.
+/// commit waits on the disk, so they go through ``perform(_:)``, or through
+/// ``BrowserHistoryStoring``, whose async methods wrap it. Consumers above
+/// this tier hold the protocol, so the daemon's adapter can stand in.
 public final class BrowserHistoryStore: @unchecked Sendable {
 
     public static let fileName = "BrowserHistory.db"
@@ -44,7 +46,8 @@ public final class BrowserHistoryStore: @unchecked Sendable {
     /// Posted, with the store as its object, after every write that
     /// succeeded, on the thread that made it. A list showing the history
     /// rereads on it, so a visit recorded while it is open appears.
-    public static let didChangeNotification = Notification.Name("BrowserHistoryStore.didChange")
+    /// The same name every ``BrowserHistoryStoring`` posts.
+    public static let didChangeNotification = Notification.Name.browserHistoryDidChange
 
     private func changed() {
         NotificationCenter.default.post(name: Self.didChangeNotification, object: self)
@@ -211,3 +214,39 @@ public final class BrowserHistoryStore: @unchecked Sendable {
         )
     }
 }
+
+extension BrowserHistoryStore: BrowserHistoryStoring {
+    @discardableResult
+    public func record(_ url: URL, title: String, at date: Date) async throws -> Int64 {
+        try await perform { try $0.record(url, title: title, at: date) }
+    }
+
+    public func updateTitle(ofVisit id: Int64, to title: String) async throws {
+        try await perform { try $0.updateTitle(ofVisit: id, to: title) }
+    }
+
+    public func remove(visit id: Int64) async throws {
+        try await perform { try $0.remove(visit: id) }
+    }
+
+    public func removeVisits(before cutoff: Date) async throws {
+        try await perform { try $0.removeVisits(before: cutoff) }
+    }
+
+    public func removeAll() async throws {
+        try await perform { try $0.removeAll() }
+    }
+
+    public func recent(limit: Int, before: BrowserVisit?, excludingLocalFiles: Bool) async throws -> [BrowserVisit] {
+        try await perform { try $0.recent(limit: limit, before: before, excludingLocalFiles: excludingLocalFiles) }
+    }
+
+    public func search(_ text: String, limit: Int, excludingLocalFiles: Bool) async throws -> [BrowserVisit] {
+        try await perform { try $0.search(text, limit: limit, excludingLocalFiles: excludingLocalFiles) }
+    }
+
+    public func count() async throws -> Int {
+        try await perform { try $0.count() }
+    }
+}
+#endif

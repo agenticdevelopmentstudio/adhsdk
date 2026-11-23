@@ -4,17 +4,10 @@
 //
 
 import Foundation
+import AgenticDeveloperHubSDKDatabase
 
-/// Which sites an extension may read and change, as Chrome's details page
-/// offers it.
-public enum SafariExtensionSiteAccess: String, Codable, CaseIterable, Sendable {
-    /// Only the page in front, and only once the person clicks its button.
-    case onClick
-    /// The sites the person listed.
-    case specificSites
-    /// Every site the extension asks for.
-    case allSites
-
+/// What the details page calls each mode.
+extension SafariExtensionSiteAccess {
     public var title: String {
         switch self {
         case .onClick: "On click"

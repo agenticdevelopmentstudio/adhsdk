@@ -1,10 +1,10 @@
+#if canImport(AgenticDeveloperHubSDKCore)
 //
 //  BrowserHiddenItemsStore.swift
 //  AgenticDeveloperHubSDK
 //
 
 import AgenticDeveloperHubSDKCore
-import AgenticDeveloperHubSDKDatabase
 import Foundation
 import GRDB
 
@@ -30,20 +30,24 @@ public enum BrowserHiddenItemsStoreError: Error, Equatable, Sendable {
 ///
 /// Every change posts ``didChangeNotification`` (object: the store) after it
 /// is committed. Every method runs on the caller's thread; main-actor callers
-/// go through ``perform(_:)``.
+/// go through ``perform(_:)``, or through ``BrowserHiddenItemsStoring``, whose
+/// async methods wrap it. Consumers above this tier hold the protocol, so the
+/// daemon's adapter can stand in.
 public final class BrowserHiddenItemsStore: @unchecked Sendable {
 
     public static let fileName = "BrowserHiddenItems.db"
 
     /// Posted after every add, enable or disable, remove and site-switch
     /// change, with the store as the object.
-    public static let didChangeNotification = Notification.Name("BrowserHiddenItemsStore.didChange")
+    /// The same name every ``BrowserHiddenItemsStoring`` posts.
+    public static let didChangeNotification = Notification.Name.browserHiddenItemsDidChange
 
     /// The one store the browser feature opens at launch
     /// (`WebBrowserWindowsFeature`), shared by every pane; nil before launch
-    /// or when the file could not be opened.
+    /// or when the file could not be opened. A host that keeps the lists
+    /// somewhere else (the daemon's adapter) sets its own store here.
     ///
-    /// The launch open runs off the main thread (``openShared(at:onFailure:)``).
+    /// The launch open runs off the main thread (``openCurrent(at:onFailure:)``).
     /// A read that comes before it has finished waits for it rather than
     /// answering "no store", which would show the agent what its list hides:
     /// privacy fails closed. Setting it (a host, a test) replaces any open in
@@ -52,46 +56,47 @@ public final class BrowserHiddenItemsStore: @unchecked Sendable {
     /// This getter blocks the main thread while the open runs, so it is for
     /// callers after launch (an agent's tool call) only. Anything that can run
     /// while the app is launching (an engine's first read, a toolbar button)
-    /// awaits ``sharedStore()`` instead.
-    @MainActor public static var shared: BrowserHiddenItemsStore? {
+    /// awaits ``currentStore()`` instead.
+    @MainActor public static var current: (any BrowserHiddenItemsStoring)? {
         get {
             if let pendingOpen {
-                storedShared = pendingOpen.wait()
+                storedCurrent = pendingOpen.wait()
                 self.pendingOpen = nil
             }
-            return storedShared
+            return storedCurrent
         }
         set {
             pendingOpen = nil
-            storedShared = newValue
+            storedCurrent = newValue
         }
     }
 
-    /// ``shared`` without blocking: awaits an open in flight and answers what
-    /// it opened, or nil when the file could not be opened (every consumer
-    /// takes nil as "no store", never as an empty list it may show past).
-    @MainActor public static func sharedStore() async -> BrowserHiddenItemsStore? {
-        guard let pending = pendingOpen else { return storedShared }
+    /// ``current`` without blocking: awaits an open in flight and answers
+    /// what it opened, or nil when the file could not be opened (every
+    /// consumer takes nil as "no store", never as an empty list it may show
+    /// past).
+    @MainActor public static func currentStore() async -> (any BrowserHiddenItemsStoring)? {
+        guard let pending = pendingOpen else { return storedCurrent }
         let store = await pending.value()
         if pendingOpen === pending {
-            storedShared = store
+            storedCurrent = store
             pendingOpen = nil
             return store
         }
         // A setter or a newer open replaced this one while it ran.
-        return await sharedStore()
+        return await currentStore()
     }
 
-    /// Whether ``shared`` is set or being opened, without waiting for it.
-    @MainActor public static var hasShared: Bool { storedShared != nil || pendingOpen != nil }
+    /// Whether ``current`` is set or being opened, without waiting for it.
+    @MainActor public static var hasCurrent: Bool { storedCurrent != nil || pendingOpen != nil }
 
-    @MainActor private static var storedShared: BrowserHiddenItemsStore?
+    @MainActor private static var storedCurrent: (any BrowserHiddenItemsStoring)?
     @MainActor private static var pendingOpen: PendingOpen?
 
-    /// Opens the store at `url` on a background queue as ``shared``. A file
-    /// that cannot be opened leaves ``shared`` nil and reports to
+    /// Opens the store at `url` on a background queue as ``current``. A file
+    /// that cannot be opened leaves ``current`` nil and reports to
     /// `onFailure`, on that queue.
-    @MainActor public static func openShared(
+    @MainActor public static func openCurrent(
         at url: URL, onFailure: @escaping @Sendable (Error) -> Void = { _ in }
     ) {
         let pending = PendingOpen()
@@ -109,7 +114,7 @@ public final class BrowserHiddenItemsStore: @unchecked Sendable {
                 MainActor.assumeIsolated {
                     // Unless a read already took it, or a setter replaced it.
                     guard pendingOpen === pending else { return }
-                    storedShared = store
+                    storedCurrent = store
                     pendingOpen = nil
                 }
             }
@@ -117,7 +122,7 @@ public final class BrowserHiddenItemsStore: @unchecked Sendable {
     }
 
     /// One background open, which a main-actor read can wait on, blocking
-    /// (``shared``) or awaiting (``sharedStore()``).
+    /// (``current``) or awaiting (``currentStore()``).
     private final class PendingOpen: @unchecked Sendable {
         private let condition = NSCondition()
         private var isDone = false
@@ -255,7 +260,9 @@ public final class BrowserHiddenItemsStore: @unchecked Sendable {
         }
     }
 
-    private func allItems(list: BrowserHiddenItemList) throws -> [BrowserHiddenItem] {
+    /// Every entry of `list`, on every site, enabled and disabled alike,
+    /// oldest first.
+    public func allItems(list: BrowserHiddenItemList) throws -> [BrowserHiddenItem] {
         try database.read { connection in
             try Row.fetchAll(connection, sql: """
                 SELECT id, list, site, selector, scope, label, enabled, created FROM hidden_item
@@ -342,3 +349,39 @@ public final class BrowserHiddenItemsStore: @unchecked Sendable {
         NotificationCenter.default.post(name: Self.didChangeNotification, object: self)
     }
 }
+
+extension BrowserHiddenItemsStore: BrowserHiddenItemsStoring {
+    public func items(list: BrowserHiddenItemList, for url: URL?) async throws -> [BrowserHiddenItem] {
+        try await perform { try $0.items(list: list, for: url) }
+    }
+
+    public func allItems(list: BrowserHiddenItemList) async throws -> [BrowserHiddenItem] {
+        try await perform { try $0.allItems(list: list) }
+    }
+
+    public func enabledSelectors(list: BrowserHiddenItemList, for url: URL?) async throws -> [String] {
+        try await perform { try $0.enabledSelectors(list: list, for: url) }
+    }
+
+    public func isSiteSwitchOn(list: BrowserHiddenItemList, site: String) async throws -> Bool {
+        try await perform { try $0.isSiteSwitchOn(list: list, site: site) }
+    }
+
+    @discardableResult
+    public func add(_ item: BrowserHiddenItem) async throws -> BrowserHiddenItem {
+        try await perform { try $0.add(item) }
+    }
+
+    public func setEnabled(_ id: Int64, _ isOn: Bool) async throws {
+        try await perform { try $0.setEnabled(id, isOn) }
+    }
+
+    public func remove(_ id: Int64) async throws {
+        try await perform { try $0.remove(id) }
+    }
+
+    public func setSiteSwitch(list: BrowserHiddenItemList, site: String, on isOn: Bool) async throws {
+        try await perform { try $0.setSiteSwitch(list: list, site: site, on: isOn) }
+    }
+}
+#endif

@@ -5,6 +5,7 @@
 
 import AgenticDeveloperHubSDKCoreMacOS
 import AppKit
+import AgenticDeveloperHubSDKDatabase
 
 /// The dialog a pick opens (recipe `workspace/browser/element-picker`):
 ///

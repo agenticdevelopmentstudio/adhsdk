@@ -1,5 +1,6 @@
 import XCTest
 @testable import AgenticDeveloperHubSDKMacOS
+import AgenticDeveloperHubSDKDatabase
 
 /// The rules behind a Safari extension's details page: what each site access
 /// mode grants, what a typed site means, when file access is offered, and

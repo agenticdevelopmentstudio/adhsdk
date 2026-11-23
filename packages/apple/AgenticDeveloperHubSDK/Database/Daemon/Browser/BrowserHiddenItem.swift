@@ -1,3 +1,4 @@
+#if canImport(AgenticDeveloperHubSDKCore)
 //
 //  BrowserHiddenItem.swift
 //  AgenticDeveloperHubSDK
@@ -23,7 +24,7 @@ public enum BrowserHiddenItemScope: String, Codable, Sendable {
 
 /// One item hidden on a site: a CSS selector, the site pattern it applies on
 /// (`PrivacySitePattern`'s rules), and the label the lists show it by.
-/// `id` is nil until ``BrowserHiddenItemsStore/add(_:)`` assigns one.
+/// `id` is nil until a store's `add(_:)` assigns one.
 public struct BrowserHiddenItem: Codable, Hashable, Identifiable, Sendable {
     public var id: Int64?
     public var list: BrowserHiddenItemList
@@ -71,3 +72,4 @@ public struct BrowserHiddenItem: Codable, Hashable, Identifiable, Sendable {
             scope: scope, label: label, enabled: enabled, created: created)
     }
 }
+#endif

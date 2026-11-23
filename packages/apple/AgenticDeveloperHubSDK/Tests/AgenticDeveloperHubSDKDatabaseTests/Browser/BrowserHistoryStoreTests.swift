@@ -1,5 +1,5 @@
 import XCTest
-@testable import AgenticDeveloperHubSDKMacOS
+@testable import AgenticDeveloperHubSDKDatabase
 
 final class BrowserHistoryStoreTests: XCTestCase {
 

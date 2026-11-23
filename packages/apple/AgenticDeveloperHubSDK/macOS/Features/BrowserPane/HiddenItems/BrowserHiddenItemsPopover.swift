@@ -6,6 +6,7 @@
 import AgenticDeveloperHubSDKCore
 import AppKit
 import OSLog
+import AgenticDeveloperHubSDKDatabase
 
 /// The popover the address bar's "Hide distracting items" button opens
 /// (recipe `workspace/browser/element-picker`): for the page's site, the
@@ -27,7 +28,7 @@ final class BrowserHiddenItemsPopover: NSViewController, NSTableViewDataSource, 
     }
 
     let list: BrowserHiddenItemList
-    private let store: BrowserHiddenItemsStore
+    private let store: any BrowserHiddenItemsStoring
     private let url: URL?
     private let onSelect: () -> Void
     /// The site pattern the switch and new entries use for this page.
@@ -51,7 +52,7 @@ final class BrowserHiddenItemsPopover: NSViewController, NSTableViewDataSource, 
     private(set) var closingPressNumber: Int?
     private static let logger = Logger(subsystem: "AgenticDeveloperHubSDK", category: "BrowserPane")
 
-    init(list: BrowserHiddenItemList, store: BrowserHiddenItemsStore, url: URL?,
+    init(list: BrowserHiddenItemList, store: any BrowserHiddenItemsStoring, url: URL?,
          onSelect: @escaping () -> Void) {
         self.list = list
         self.store = store
@@ -63,7 +64,7 @@ final class BrowserHiddenItemsPopover: NSViewController, NSTableViewDataSource, 
         popover.contentViewController = self
         popover.delegate = self
         changeObserver = NotificationCenter.default.addObserver(
-            forName: BrowserHiddenItemsStore.didChangeNotification, object: store, queue: .main
+            forName: .browserHiddenItemsDidChange, object: store, queue: .main
         ) { [weak self] _ in
             MainActor.assumeIsolated { self?.reload() }
         }
@@ -206,9 +207,8 @@ final class BrowserHiddenItemsPopover: NSViewController, NSTableViewDataSource, 
         let site = site
         Task { [weak self, store] in
             do {
-                let loaded = try await store.perform { store in
-                    (try store.items(list: list, for: url), try store.isSiteSwitchOn(list: list, site: site))
-                }
+                let items = try await store.items(list: list, for: url)
+                let loaded = (items, try await store.isSiteSwitchOn(list: list, site: site))
                 guard let self, generation == self.loadGeneration else { return }
                 self.show(items: loaded.0, siteSwitchOn: loaded.1)
             } catch {
@@ -243,7 +243,7 @@ final class BrowserHiddenItemsPopover: NSViewController, NSTableViewDataSource, 
         let isOn = sender.state == .on
         let list = list
         let site = site
-        write { try $0.setSiteSwitch(list: list, site: site, on: isOn) }
+        write { try await $0.setSiteSwitch(list: list, site: site, on: isOn) }
     }
 
     @objc func selectItems(_ sender: Any?) {
@@ -257,18 +257,18 @@ final class BrowserHiddenItemsPopover: NSViewController, NSTableViewDataSource, 
         let row = tableView.row(for: sender)
         guard items.indices.contains(row), let id = items[row].id else { return }
         let isOn = sender.state == .on
-        write { try $0.setEnabled(id, isOn) }
+        write { try await $0.setEnabled(id, isOn) }
     }
 
     @objc func removeSelected(_ sender: Any?) {
         guard let id = selectedItem?.id else { return }
-        write { try $0.remove(id) }
+        write { try await $0.remove(id) }
     }
 
-    private func write(_ change: @escaping @Sendable (BrowserHiddenItemsStore) throws -> Void) {
+    private func write(_ change: @escaping @Sendable (any BrowserHiddenItemsStoring) async throws -> Void) {
         Task { [store] in
             do {
-                try await store.perform(change)
+                try await change(store)
             } catch {
                 Self.logger.error("hidden items could not be changed: \(error.localizedDescription, privacy: .public)")
                 await MainActor.run { NSSound.beep() }

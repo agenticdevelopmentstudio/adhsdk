@@ -1,6 +1,7 @@
 import XCTest
 import AgenticDeveloperHubSDKCore
 @testable import AgenticDeveloperHubSDKMacOS
+import AgenticDeveloperHubSDKDatabase
 
 /// An engine with a toolbar of its own (Chrome's) takes the navigation
 /// controls' place, so the pane's bar keeps only its badges.
@@ -385,7 +386,9 @@ final class BrowserPaneToolbarTests: XCTestCase {
             .appendingPathComponent("BrowserPaneToolbarTests-\(UUID().uuidString)", isDirectory: true)
         defer { try? FileManager.default.removeItem(at: root) }
         let host = SafariExtensionHost(
-            profile: .global, library: SafariExtensionLibrary(root: root.appendingPathComponent("Library")))
+            profile: .global,
+            library: SafariExtensionLibrary(
+                catalog: LocalSafariExtensionCatalog(root: root.appendingPathComponent("Library")), scope: .global))
         let pane = makePane(ownToolbar: false)
         let window = SafariExtensionWindow(pane: pane, host: host)
         let toolbar = SafariExtensionToolbar(window: window, host: host)
