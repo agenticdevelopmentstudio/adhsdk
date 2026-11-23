@@ -328,7 +328,7 @@ export function PersonaEditor({
     patch(keepModel ? { serviceId } : { serviceId, model: null });
   }
   // The select lists only the models switched on in AI Settings. The current model, when it is
-  // one the workspace switched off, stays as the select's value under a "(not available)" label
+  // one the user switched off, stays as the select's value under a "(not available)" label
   // with a note, so saving another field never changes the model behind the user's back.
   const availableModels = useMemo(
     () => activeService?.models.filter((m) => m.available !== false) ?? [],

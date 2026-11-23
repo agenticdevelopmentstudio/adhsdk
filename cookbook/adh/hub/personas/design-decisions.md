@@ -19,9 +19,10 @@ and value so the admin host that shares the cache entry is untouched.
 **Decision**: the persona editor keeps the draft's switched-off model as the current value,
 labelled "(not available)" with an inline note, instead of dropping it from the select.
 **Rationale**: a select with no matching option would silently change the model on the next save
-of an unrelated field. The existing reset when the service changes is unchanged, and it counts a
-switched-off model as listed, so a model the new service lists but has switched off survives a
-service switch and shows as "(not available)" rather than being cleared.
+of an unrelated field. That carve-out is only for a model the persona was already saved on: when
+the user picks another service, a model the new service has switched off is cleared like one it
+does not list, because carrying it over would select a model the user cannot use. The reset runs in
+the Service select's change handler rather than an effect, so opening a persona never clears it.
 **Approved**: pending
 
 **Decision**: `Persona.cannedChat`/`.chatStatus` are typed as the Hub `JSONValue` (with

@@ -436,7 +436,7 @@ describe("PersonaEditor model details seam", () => {
   });
 });
 
-// AI Settings switches models off per workspace. The editor's model select lists only the models
+// AI Settings switches models off for the user's connections, in every workspace. The editor's model select lists only the models
 // still on, but a persona already set to a switched-off model keeps it: the select shows it as the
 // value under "(not available)" with a note, so saving some other field never changes the model.
 describe("PersonaEditor model availability", () => {
@@ -453,17 +453,23 @@ describe("PersonaEditor model availability", () => {
   const NOTE =
     "This model is switched off in AI Settings. Choose another model, or switch it back on in AI Settings.";
 
-  function renderWith(persona: Persona, subtab: string) {
+  function renderWith(
+    persona: Persona,
+    subtab: string,
+    services: UserService[] = [SERVICE],
+    renderModelDetails?: ComponentProps<typeof PersonaEditor>["renderModelDetails"],
+  ) {
     return (
       <PersonaEditor
         persona={persona}
-        services={[SERVICE]}
+        services={services}
         onSaved={vi.fn()}
         onCancel={vi.fn()}
         activeSubtab={subtab}
         onSubtabChange={vi.fn()}
         renderKnowledgeBases={renderKnowledgeBases}
         renderChatPane={renderChatPane}
+        renderModelDetails={renderModelDetails}
       />
     );
   }
@@ -507,6 +513,49 @@ describe("PersonaEditor model availability", () => {
       expect.objectContaining({ name: "Bobby", model: "b" }),
       { workspace: undefined },
     );
+  });
+
+  // The second service lists `a` switched off and `c` on; the third lists `a` on.
+  const OFF_ELSEWHERE = {
+    id: "svc-2",
+    name: "Other",
+    models: [
+      { id: "a", available: false, offered: true },
+      { id: "c", available: true, offered: true },
+    ],
+  } as unknown as UserService;
+  const ON_ELSEWHERE = {
+    id: "svc-3",
+    name: "Third",
+    models: [{ id: "a", available: true, offered: true }],
+  } as unknown as UserService;
+
+  it("switching to a service that has the model switched off clears it", () => {
+    const persona = { ...PERSONA, serviceId: "svc-1", model: "a" } as unknown as Persona;
+    render(renderWith(persona, "llm", [SERVICE, OFF_ELSEWHERE, ON_ELSEWHERE]));
+    fireEvent.change(screen.getByDisplayValue("Anthropic"), { target: { value: "svc-2" } });
+    const model = screen.getByDisplayValue("No model selected") as HTMLSelectElement;
+    expect(model.value).toBe("");
+    expect(optionValues(model)).toEqual(["", "c"]);
+    expect(screen.queryByText(NOTE)).toBeNull();
+  });
+
+  it("switching to a service that has the model on keeps it", () => {
+    const persona = { ...PERSONA, serviceId: "svc-1", model: "a" } as unknown as Persona;
+    render(renderWith(persona, "llm", [SERVICE, OFF_ELSEWHERE, ON_ELSEWHERE]));
+    fireEvent.change(screen.getByDisplayValue("Anthropic"), { target: { value: "svc-3" } });
+    expect((screen.getByDisplayValue("Third") as HTMLSelectElement).value).toBe("svc-3");
+    expect((screen.getByDisplayValue("a") as HTMLSelectElement).value).toBe("a");
+  });
+
+  it("hands the model browser only the models switched on", () => {
+    const persona = { ...PERSONA, serviceId: "svc-1", model: "a" } as unknown as Persona;
+    render(
+      renderWith(persona, "llm", [SERVICE], ({ service }) => (
+        <span data-testid="browsable">{service.models.map((m) => m.id).join(",")}</span>
+      )),
+    );
+    expect(screen.getByTestId("browsable").textContent).toBe("a");
   });
 });
 

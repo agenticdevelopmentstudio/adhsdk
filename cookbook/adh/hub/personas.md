@@ -272,10 +272,11 @@ re-exporting it until a later cleanup, and filters its model select by availabil
 - **model-bare-string-read-as-id**: a wire model item that is a bare string MUST be read as
   `{ id }` with that string as its id, and so, by the two defaults above, as available and
   offered. The data client's service-from-wire mapping (`serviceFromWire` in `personas.ts`) does
-  this.
+  this. An entry that is neither a string nor an object with a string `id` MUST be dropped
+  (`modelsFromWire`) rather than failing the whole list.
 - **model-unoffered-names-appended**: the backend appends to the service's `models`, after the
   listed models, an entry with `available: false` and `offered: false` for each model name the
-  provider no longer lists but that is still switched off for the workspace; the client MUST keep
+  provider no longer lists but that is still switched off for the user; the client MUST keep
   these entries in the order read, and MUST keep their `available` and `offered` flags as read.
 - **set-model-availability-request**: `services.setModelAvailability(id, model, available)` MUST
   send one `POST` to `/api/v1/ai_services/{id}/model_availability` (the client's `V1` prefix, the
@@ -319,19 +320,23 @@ re-exporting it until a later cleanup, and filters its model select by availabil
   switched off from its DRAFT, not from the saved persona: it looks up the draft's `serviceId` in
   the `services` prop and, within that service's `models`, the entry whose id equals the draft's
   `model` with `available === false`. When one is found, the select MUST show that model as the
-  current value, labelled with the model id followed by " (not available)" and placed first after
+  current value, labelled with the model's display name (else its id) followed by " (not available)" and placed first after
   the "No model selected" option, together with an inline note that reads "This model is switched
   off in AI Settings. Choose another model, or switch it back on in AI Settings.", so saving other
   fields does not silently change the model. The check is re-evaluated against the draft, so it
   follows a service or model the user changes before saving.
 - **editor-model-select-disabled-when-empty**: the model select MUST be disabled when the draft
   has no service, or when its service has no available model and no switched-off current model.
-- **editor-service-switch-reset-unchanged**: when the draft's service changes, the editor MUST
-  clear the draft's model if the new service is found and none of its `models` has that id; the
-  availability filter does not alter that reset, which counts a switched-off model as listed. A
-  model the new service lists but has switched off is therefore kept, and then shows as "(not
-  available)". The reset runs only when the draft's `serviceId` changes, not when the `services`
-  prop reloads, and it does nothing when the new service is not in `services`.
+- **editor-service-switch-reset**: when the user picks another service, the editor MUST clear the
+  draft's model unless the new service lists it with `available` not false. A model the new service
+  has switched off is cleared, never carried over as "(not available)": that label is only for a
+  persona already saved on a model its own service later switched off. The reset runs in the
+  Service select's change handler, never on a render, so it does not run when the `services` prop
+  reloads or when a persona opens on a switched-off model, and it keeps the model when the new
+  service is not in `services`.
+- **editor-model-browser-available-only**: the editor MUST hand `renderModelDetails` the active
+  service with only the models whose `available` is not `false`, the same list the model select
+  offers, so the host's browser never offers a switched-off model.
 
 ### Special interests and interest documents
 
@@ -389,6 +394,9 @@ component.
 | Persona editor, service offering models `a` (available) and `b` (`available: false`), persona's saved model `a` | The model select lists `a` and not `b` (options `""`, `a`) and shows no note | `PersonaEditor.test.tsx`, "lists only the models switched on" |
 | Persona editor, same service, persona's saved model `b` | The select's current value is `b`, labelled "b (not available)", options `""`, `b`, `a`, with the inline note "This model is switched off in AI Settings. Choose another model, or switch it back on in AI Settings." | `PersonaEditor.test.tsx`, "keeps a saved switched-off model as the value, labelled (not available), with the note" |
 | Persona editor, same service, persona's saved model `b`; edit the name and save | The update call carries `name == "Bobby"` and `model == "b"` | `PersonaEditor.test.tsx`, "saving another field leaves the switched-off model in place" |
+| Persona editor on service `svc-1` with model `a`; pick service `svc-2`, which lists `a` switched off and `c` on | The model select reads "No model selected" with options `""`, `c`, and no note | `PersonaEditor.test.tsx`, "switching to a service that has the model switched off clears it" |
+| Persona editor on service `svc-1` with model `a`; pick service `svc-3`, which lists `a` on | The service select reads `svc-3` and the model stays `a` | `PersonaEditor.test.tsx`, "switching to a service that has the model on keeps it" |
+| Persona editor on a service listing `a` (available) and `b` (`available: false`), with a host `renderModelDetails` | The host is handed a service whose models are `a` only | `PersonaEditor.test.tsx`, "hands the model browser only the models switched on" |
 | Persona editor with no service chosen, or with a service whose models are all switched off and no saved model | The model select is disabled | `PersonaEditor` model `Select` `disabled` expression; no test yet |
 | Decode a persona payload with extra fields `userId`/`ownerKind`/`ownerId` | Decode succeeds; the resulting record's `name == "Ada"`, the unknown fields are dropped, and `cannedChat` decodes to the opaque JSON object `{"mode": "script", "turns": []}` | `testPersonaDecodesFromWebJSON` |
 | The demo-eligibility check, given `{ enabled: true, ink: { source: "* [unclosed\n", signInLine: "x" } }` | `true` — a syntax error in the ink script still advertises a demo | canned.test.ts, "does not compile the ink — a syntax error still advertises a demo" |
@@ -411,7 +419,7 @@ component.
   (stale selection, or the service was switched) MUST clear `model` to absent on save rather than
   persist a mismatched pair.
 - A model that is switched off and no longer offered by the provider stays in the service's
-  `models` (`available: false`, `offered: false`) so the workspace can switch it back on; the
+  `models` (`available: false`, `offered: false`) so the user can switch it back on; the
   editor's select MUST NOT list it, but MUST still show it as the current value when the draft's
   model is that model.
 - A wire model item that omits `available` or `offered` MUST be read as `true` for each by the web
@@ -422,9 +430,9 @@ component.
 - A service whose models are all switched off leaves the editor's model select with no choice
   beyond "No model selected" (and the draft's model, if any, labelled "(not available)"); with
   no draft model the select is disabled.
-- Switching the draft's service to one that lists the current model but has it switched off keeps
-  the model, because the reset counts any listed model; the select then shows it as "(not
-  available)". Switching to a service that does not list it clears the model.
+- Switching the draft's service to one that lists the current model but has it switched off clears
+  the model, as does switching to a service that does not list it; only a service that lists it
+  switched on keeps it. Switching to a service missing from `services` keeps it.
 - Any failure from the underlying data source (e.g. offline) on the root-level listing,
   child-content resolution, create, save, or delete MUST propagate as a wrapped domain error,
   never be swallowed.
@@ -607,9 +615,10 @@ and value so the admin host that shares the cache entry is untouched.
 **Decision**: the persona editor keeps the draft's switched-off model as the current value,
 labelled "(not available)" with an inline note, instead of dropping it from the select.
 **Rationale**: a select with no matching option would silently change the model on the next save
-of an unrelated field. The existing reset when the service changes is unchanged, and it counts a
-switched-off model as listed, so a model the new service lists but has switched off survives a
-service switch and shows as "(not available)" rather than being cleared.
+of an unrelated field. That carve-out is only for a model the persona was already saved on: when
+the user picks another service, a model the new service has switched off is cleared like one it
+does not list, because carrying it over would select a model the user cannot use. The reset runs in
+the Service select's change handler rather than an effect, so opening a persona never clears it.
 **Approved**: pending
 
 **Decision**: `Persona.cannedChat`/`.chatStatus` are typed as the Hub `JSONValue` (with

@@ -12,7 +12,7 @@
   (stale selection, or the service was switched) MUST clear `model` to absent on save rather than
   persist a mismatched pair.
 - A model that is switched off and no longer offered by the provider stays in the service's
-  `models` (`available: false`, `offered: false`) so the workspace can switch it back on; the
+  `models` (`available: false`, `offered: false`) so the user can switch it back on; the
   editor's select MUST NOT list it, but MUST still show it as the current value when the draft's
   model is that model.
 - A wire model item that omits `available` or `offered` MUST be read as `true` for each by the web
@@ -23,9 +23,9 @@
 - A service whose models are all switched off leaves the editor's model select with no choice
   beyond "No model selected" (and the draft's model, if any, labelled "(not available)"); with
   no draft model the select is disabled.
-- Switching the draft's service to one that lists the current model but has it switched off keeps
-  the model, because the reset counts any listed model; the select then shows it as "(not
-  available)". Switching to a service that does not list it clears the model.
+- Switching the draft's service to one that lists the current model but has it switched off clears
+  the model, as does switching to a service that does not list it; only a service that lists it
+  switched on keeps it. Switching to a service missing from `services` keeps it.
 - Any failure from the underlying data source (e.g. offline) on the root-level listing,
   child-content resolution, create, save, or delete MUST propagate as a wrapped domain error,
   never be swallowed.
