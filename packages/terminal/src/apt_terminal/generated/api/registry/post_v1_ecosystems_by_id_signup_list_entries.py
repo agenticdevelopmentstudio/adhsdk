@@ -95,7 +95,9 @@ def sync_detailed(
     """Add or change a sign-up list entry
 
      Upserts by email. While the ecosystem limits sign-in to a list of emails, the email is added to that
-    list in the same transaction.
+    list in the same transaction. While the product's admin site is live and `consented_access` is on, a
+    manager may write only an entry granting the `admin` role, keeping its set; anything else is 403
+    `managed_at_admin_site`.
 
     Replaces PUT /ecosystem/signup-list/{id}.
 
@@ -132,7 +134,9 @@ def sync(
     """Add or change a sign-up list entry
 
      Upserts by email. While the ecosystem limits sign-in to a list of emails, the email is added to that
-    list in the same transaction.
+    list in the same transaction. While the product's admin site is live and `consented_access` is on, a
+    manager may write only an entry granting the `admin` role, keeping its set; anything else is 403
+    `managed_at_admin_site`.
 
     Replaces PUT /ecosystem/signup-list/{id}.
 
@@ -164,7 +168,9 @@ async def asyncio_detailed(
     """Add or change a sign-up list entry
 
      Upserts by email. While the ecosystem limits sign-in to a list of emails, the email is added to that
-    list in the same transaction.
+    list in the same transaction. While the product's admin site is live and `consented_access` is on, a
+    manager may write only an entry granting the `admin` role, keeping its set; anything else is 403
+    `managed_at_admin_site`.
 
     Replaces PUT /ecosystem/signup-list/{id}.
 
@@ -199,7 +205,9 @@ async def asyncio(
     """Add or change a sign-up list entry
 
      Upserts by email. While the ecosystem limits sign-in to a list of emails, the email is added to that
-    list in the same transaction.
+    list in the same transaction. While the product's admin site is live and `consented_access` is on, a
+    manager may write only an entry granting the `admin` role, keeping its set; anything else is 403
+    `managed_at_admin_site`.
 
     Replaces PUT /ecosystem/signup-list/{id}.
 

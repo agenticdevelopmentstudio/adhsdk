@@ -99,7 +99,10 @@ def sync_detailed(
 ) -> Response[GetV1EcosystemsByIdSignupListEntriesResponse200 | StripeError]:
     """List an ecosystem's sign-up list
 
-     Replaces GET /ecosystem/signup-list/{id}.
+     While the product's admin site is live and `consented_access` is on, a manager sees only the entries
+    that grant the `admin` role.
+
+    Replaces GET /ecosystem/signup-list/{id}.
 
     Args:
         id (str):
@@ -142,7 +145,10 @@ def sync(
 ) -> GetV1EcosystemsByIdSignupListEntriesResponse200 | StripeError | None:
     """List an ecosystem's sign-up list
 
-     Replaces GET /ecosystem/signup-list/{id}.
+     While the product's admin site is live and `consented_access` is on, a manager sees only the entries
+    that grant the `admin` role.
+
+    Replaces GET /ecosystem/signup-list/{id}.
 
     Args:
         id (str):
@@ -180,7 +186,10 @@ async def asyncio_detailed(
 ) -> Response[GetV1EcosystemsByIdSignupListEntriesResponse200 | StripeError]:
     """List an ecosystem's sign-up list
 
-     Replaces GET /ecosystem/signup-list/{id}.
+     While the product's admin site is live and `consented_access` is on, a manager sees only the entries
+    that grant the `admin` role.
+
+    Replaces GET /ecosystem/signup-list/{id}.
 
     Args:
         id (str):
@@ -221,7 +230,10 @@ async def asyncio(
 ) -> GetV1EcosystemsByIdSignupListEntriesResponse200 | StripeError | None:
     """List an ecosystem's sign-up list
 
-     Replaces GET /ecosystem/signup-list/{id}.
+     While the product's admin site is live and `consented_access` is on, a manager sees only the entries
+    that grant the `admin` role.
+
+    Replaces GET /ecosystem/signup-list/{id}.
 
     Args:
         id (str):

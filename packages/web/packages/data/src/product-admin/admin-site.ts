@@ -2,7 +2,9 @@
 
 // A product's ADMIN SITE (phase 6), for the product's managers at the hub: the host the
 // product's own admins sign in at, and whether admin sites are switched on at all. The hub reads
-// `enabled` and `site` together to decide which panes a product shows.
+// `enabled` and `site` together to decide which panes a product shows. `contentGated` (phase 7) is
+// content enforcement: while it is on, the hub reads only the product's house rows, never what its
+// customers own, and All Data says so.
 //
 // Route: /api/v1/admin_site?ecosystem=<uuid>   read (GET), set up or move (POST; PUT inside),
 //                                              take down (DELETE)
@@ -25,6 +27,8 @@ export interface AdminSiteWire {
 export interface AdminSiteStateWire {
   site: AdminSiteWire | null;
   enabled: boolean;
+  /** Phase 7. Absent from a backend that predates it, which reads as not gated. */
+  content_gated?: boolean;
 }
 
 export interface AdminSite {
@@ -43,6 +47,8 @@ export interface AdminSiteState {
   site: AdminSite | null;
   /** Whether the `product_admin_site` switch is on. */
   enabled: boolean;
+  /** Whether content enforcement is on: the hub reads only the product's house rows. */
+  contentGated: boolean;
 }
 
 export const ADMIN_SITE_PATH = "/api/v1/admin_site";
@@ -59,6 +65,7 @@ export const toAdminSite = (w: AdminSiteWire): AdminSite => ({
 export const toAdminSiteState = (w: AdminSiteStateWire): AdminSiteState => ({
   site: w.site ? toAdminSite(w.site) : null,
   enabled: Boolean(w.enabled),
+  contentGated: Boolean(w.content_gated),
 });
 
 const url = (ecosystemId: string) => withV1Query(ADMIN_SITE_PATH, { ecosystem: ecosystemId });

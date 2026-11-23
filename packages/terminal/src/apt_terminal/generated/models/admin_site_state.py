@@ -19,10 +19,13 @@ class AdminSiteState:
     Attributes:
         site (AdminSite | None):
         enabled (bool): Whether the `product_admin_site` switch is on (sites answer and sign in).
+        content_gated (bool): Whether content enforcement is on (`app_rls.content_enforced()`): the hub reads only a
+            product's house rows, never what its customers own.
     """
 
     site: AdminSite | None
     enabled: bool
+    content_gated: bool
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -36,12 +39,15 @@ class AdminSiteState:
 
         enabled = self.enabled
 
+        content_gated = self.content_gated
+
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
                 "site": site,
                 "enabled": enabled,
+                "content_gated": content_gated,
             }
         )
 
@@ -70,9 +76,12 @@ class AdminSiteState:
 
         enabled = d.pop("enabled")
 
+        content_gated = d.pop("content_gated")
+
         admin_site_state = cls(
             site=site,
             enabled=enabled,
+            content_gated=content_gated,
         )
 
         admin_site_state.additional_properties = d

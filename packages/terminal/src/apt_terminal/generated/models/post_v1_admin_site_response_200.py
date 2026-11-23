@@ -21,11 +21,14 @@ class PostV1AdminSiteResponse200:
     Attributes:
         site (AdminSite | None):
         enabled (bool): Whether the `product_admin_site` switch is on (sites answer and sign in).
+        content_gated (bool): Whether content enforcement is on (`app_rls.content_enforced()`): the hub reads only a
+            product's house rows, never what its customers own.
         object_ (Literal['admin_site'] | Unset):
     """
 
     site: AdminSite | None
     enabled: bool
+    content_gated: bool
     object_: Literal["admin_site"] | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
@@ -40,6 +43,8 @@ class PostV1AdminSiteResponse200:
 
         enabled = self.enabled
 
+        content_gated = self.content_gated
+
         object_ = self.object_
 
         field_dict: dict[str, Any] = {}
@@ -48,6 +53,7 @@ class PostV1AdminSiteResponse200:
             {
                 "site": site,
                 "enabled": enabled,
+                "content_gated": content_gated,
             }
         )
         if object_ is not UNSET:
@@ -78,6 +84,8 @@ class PostV1AdminSiteResponse200:
 
         enabled = d.pop("enabled")
 
+        content_gated = d.pop("content_gated")
+
         object_ = cast(Literal["admin_site"] | Unset, d.pop("object", UNSET))
         if object_ != "admin_site" and not isinstance(object_, Unset):
             raise ValueError(f"object must match const 'admin_site', got '{object_}'")
@@ -85,6 +93,7 @@ class PostV1AdminSiteResponse200:
         post_v1_admin_site_response_200 = cls(
             site=site,
             enabled=enabled,
+            content_gated=content_gated,
             object_=object_,
         )
 

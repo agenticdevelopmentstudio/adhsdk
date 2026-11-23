@@ -75,7 +75,9 @@ def sync_detailed(
     """Remove a sign-up list entry
 
      While the ecosystem limits sign-in to a list of emails, the email is removed from that list too. A
-    role already granted stays granted.
+    role already granted stays granted. While the product's admin site is live and `consented_access` is
+    on, a manager may remove only an entry granting the `admin` role; anything else is 403
+    `managed_at_admin_site`.
 
     Replaces DELETE /ecosystem/signup-list/{id}/entries/{entryId}.
 
@@ -112,7 +114,9 @@ def sync(
     """Remove a sign-up list entry
 
      While the ecosystem limits sign-in to a list of emails, the email is removed from that list too. A
-    role already granted stays granted.
+    role already granted stays granted. While the product's admin site is live and `consented_access` is
+    on, a manager may remove only an entry granting the `admin` role; anything else is 403
+    `managed_at_admin_site`.
 
     Replaces DELETE /ecosystem/signup-list/{id}/entries/{entryId}.
 
@@ -144,7 +148,9 @@ async def asyncio_detailed(
     """Remove a sign-up list entry
 
      While the ecosystem limits sign-in to a list of emails, the email is removed from that list too. A
-    role already granted stays granted.
+    role already granted stays granted. While the product's admin site is live and `consented_access` is
+    on, a manager may remove only an entry granting the `admin` role; anything else is 403
+    `managed_at_admin_site`.
 
     Replaces DELETE /ecosystem/signup-list/{id}/entries/{entryId}.
 
@@ -179,7 +185,9 @@ async def asyncio(
     """Remove a sign-up list entry
 
      While the ecosystem limits sign-in to a list of emails, the email is removed from that list too. A
-    role already granted stays granted.
+    role already granted stays granted. While the product's admin site is live and `consented_access` is
+    on, a manager may remove only an entry granting the `admin` role; anything else is 403
+    `managed_at_admin_site`.
 
     Replaces DELETE /ecosystem/signup-list/{id}/entries/{entryId}.
 

@@ -51,7 +51,7 @@ vi.mock("@adh-sdk/data/product-admin", async () => {
       const qc = rq.useQueryClient();
       return rq.useMutation({
         mutationFn: () => adminSiteApi.remove(eco),
-        onSuccess: () => qc.setQueryData(key(eco), { site: null, enabled: true }),
+        onSuccess: () => qc.setQueryData(key(eco), { site: null, enabled: true, contentGated: false }),
       });
     },
     useProductTotals: vi.fn(() => ({ data: undefined, error: null, isPending: true })),
@@ -97,7 +97,7 @@ beforeEach(() => {
   access.listSubjects.mockResolvedValue([
     { kind: "customer", id: "cust-ann", label: "Ann", email: "ann@x.test", slug: "ann" },
   ]);
-  site.get.mockResolvedValue({ site: null, enabled: true });
+  site.get.mockResolvedValue({ site: null, enabled: true, contentGated: false });
   signup.list.mockResolvedValue([]);
   signup.put.mockResolvedValue({
     id: "e1",
@@ -127,7 +127,7 @@ describe("AdminSitePane", () => {
   });
 
   it("sets a site up at a host", async () => {
-    site.put.mockResolvedValue({ site: SITE, enabled: true });
+    site.put.mockResolvedValue({ site: SITE, enabled: true, contentGated: false });
     renderPane(<AdminSitePane ecosystemId={eco()} productName="Notes" />);
     expect(await screen.findByText(/Notes has no admin site yet/)).toBeInTheDocument();
     fireEvent.change(screen.getByLabelText("Host"), { target: { value: " Admin.Example.com " } });
@@ -149,7 +149,7 @@ describe("AdminSitePane", () => {
   });
 
   it("removes a site only after the confirmation", async () => {
-    site.get.mockResolvedValue({ site: SITE, enabled: true });
+    site.get.mockResolvedValue({ site: SITE, enabled: true, contentGated: false });
     site.remove.mockResolvedValue(undefined);
     renderPane(<AdminSitePane ecosystemId={eco()} />);
     fireEvent.click(await screen.findByRole("button", { name: "Remove" }));
@@ -161,7 +161,7 @@ describe("AdminSitePane", () => {
   });
 
   it("sends nothing when the removal is cancelled", async () => {
-    site.get.mockResolvedValue({ site: SITE, enabled: true });
+    site.get.mockResolvedValue({ site: SITE, enabled: true, contentGated: false });
     renderPane(<AdminSitePane ecosystemId={eco()} />);
     fireEvent.click(await screen.findByRole("button", { name: "Remove" }));
     await screen.findByText("Remove the admin site?");

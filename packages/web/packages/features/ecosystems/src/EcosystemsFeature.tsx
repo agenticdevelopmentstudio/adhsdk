@@ -268,7 +268,7 @@ function groupMembers(
         render: (subLeaf) => renderTopicPane("access", { ecosystemId: ecoId, title: titleFor("Access"), leaf: subLeaf }) },
       { id: "all-data", label: "All Data", icon: <Database size={16} aria-hidden />,
         description: "Browse and edit the raw rows behind every bucket.",
-        // Scoped to THIS ecosystem, not the workspace — "ONLY THE ECOSYSTEMS TABLES SHOULD SHOW - this is a huge huge huge data leak" (Mike, 2026-09-24).
+        // Scoped to THIS ecosystem, and since phase 7 the database's content gate (`content_enforced`) keeps a product's customers' rows out of it, so it shows only the product's house rows.
         render: () => renderFeaturePanel("all-data", { ecosystemId: ecoId }) },
       // Comes with Storage (the catalog's `includedWith`): tokens read and write its buckets, so
       // they sit with them, not with sign-in (Mike, 2026-09-29).

@@ -5473,13 +5473,15 @@ export interface paths {
         };
         /**
          * List an ecosystem's sign-up list
-         * @description Replaces GET /ecosystem/signup-list/{id}.
+         * @description While the product's admin site is live and `consented_access` is on, a manager sees only the entries that grant the `admin` role.
+         *
+         *     Replaces GET /ecosystem/signup-list/{id}.
          */
         get: operations["getV1EcosystemsByIdSignupListEntries"];
         put?: never;
         /**
          * Add or change a sign-up list entry
-         * @description Upserts by email. While the ecosystem limits sign-in to a list of emails, the email is added to that list in the same transaction.
+         * @description Upserts by email. While the ecosystem limits sign-in to a list of emails, the email is added to that list in the same transaction. While the product's admin site is live and `consented_access` is on, a manager may write only an entry granting the `admin` role, keeping its set; anything else is 403 `managed_at_admin_site`.
          *
          *     Replaces PUT /ecosystem/signup-list/{id}.
          */
@@ -5502,7 +5504,7 @@ export interface paths {
         post?: never;
         /**
          * Remove a sign-up list entry
-         * @description While the ecosystem limits sign-in to a list of emails, the email is removed from that list too. A role already granted stays granted.
+         * @description While the ecosystem limits sign-in to a list of emails, the email is removed from that list too. A role already granted stays granted. While the product's admin site is live and `consented_access` is on, a manager may remove only an entry granting the `admin` role; anything else is 403 `managed_at_admin_site`.
          *
          *     Replaces DELETE /ecosystem/signup-list/{id}/entries/{entryId}.
          */
@@ -19468,6 +19470,8 @@ export interface components {
             site: components["schemas"]["AdminSite"] | null;
             /** @description Whether the `product_admin_site` switch is on (sites answer and sign in). */
             enabled: boolean;
+            /** @description Whether content enforcement is on (`app_rls.content_enforced()`): the hub reads only a product's house rows, never what its customers own. */
+            content_gated: boolean;
         };
         AdminSitePut: {
             /** @description A DNS name with at least two labels; no scheme, port or path. */
@@ -20426,7 +20430,7 @@ export interface operations {
             query: {
                 /** @description The hub workspace (slug). Exactly one of `workspace` and `ecosystem`. */
                 workspace?: string;
-                /** @description An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise). */
+                /** @description An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise). While the product's admin site is live and `consented_access` is on, a manager keeps only reading the roles and the assignments and removing an `admin` assignment; anything else is 403 `managed_at_admin_site`. */
                 ecosystem?: string;
                 feature: string;
                 subject_kind: string;
@@ -20496,7 +20500,7 @@ export interface operations {
             query?: {
                 /** @description The hub workspace (slug). Exactly one of `workspace` and `ecosystem`. */
                 workspace?: string;
-                /** @description An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise). */
+                /** @description An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise). While the product's admin site is live and `consented_access` is on, a manager keeps only reading the roles and the assignments and removing an `admin` assignment; anything else is 403 `managed_at_admin_site`. */
                 ecosystem?: string;
                 /** @description Page size, 1–100 (default 10). */
                 limit?: number;
@@ -20550,6 +20554,15 @@ export interface operations {
                 };
             };
             /** @description Error */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
             404: {
                 headers: {
                     [name: string]: unknown;
@@ -20565,7 +20578,7 @@ export interface operations {
             query?: {
                 /** @description The hub workspace (slug). Exactly one of `workspace` and `ecosystem`. */
                 workspace?: string;
-                /** @description An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise). */
+                /** @description An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise). While the product's admin site is live and `consented_access` is on, a manager keeps only reading the roles and the assignments and removing an `admin` assignment; anything else is 403 `managed_at_admin_site`. */
                 ecosystem?: string;
             };
             header?: never;
@@ -20636,7 +20649,7 @@ export interface operations {
             query?: {
                 /** @description The hub workspace (slug). Exactly one of `workspace` and `ecosystem`. */
                 workspace?: string;
-                /** @description An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise). */
+                /** @description An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise). While the product's admin site is live and `consented_access` is on, a manager keeps only reading the roles and the assignments and removing an `admin` assignment; anything else is 403 `managed_at_admin_site`. */
                 ecosystem?: string;
             };
             header?: never;
@@ -20707,7 +20720,7 @@ export interface operations {
             query?: {
                 /** @description The hub workspace (slug). Exactly one of `workspace` and `ecosystem`. */
                 workspace?: string;
-                /** @description An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise). */
+                /** @description An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise). While the product's admin site is live and `consented_access` is on, a manager keeps only reading the roles and the assignments and removing an `admin` assignment; anything else is 403 `managed_at_admin_site`. */
                 ecosystem?: string;
                 feature?: string;
                 item_id?: string;
@@ -20775,7 +20788,7 @@ export interface operations {
             query?: {
                 /** @description The hub workspace (slug). Exactly one of `workspace` and `ecosystem`. */
                 workspace?: string;
-                /** @description An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise). */
+                /** @description An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise). While the product's admin site is live and `consented_access` is on, a manager keeps only reading the roles and the assignments and removing an `admin` assignment; anything else is 403 `managed_at_admin_site`. */
                 ecosystem?: string;
             };
             header?: never;
@@ -20860,7 +20873,7 @@ export interface operations {
             query?: {
                 /** @description The hub workspace (slug). Exactly one of `workspace` and `ecosystem`. */
                 workspace?: string;
-                /** @description An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise). */
+                /** @description An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise). While the product's admin site is live and `consented_access` is on, a manager keeps only reading the roles and the assignments and removing an `admin` assignment; anything else is 403 `managed_at_admin_site`. */
                 ecosystem?: string;
             };
             header?: never;
@@ -20923,7 +20936,7 @@ export interface operations {
             query?: {
                 /** @description The hub workspace (slug). Exactly one of `workspace` and `ecosystem`. */
                 workspace?: string;
-                /** @description An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise). */
+                /** @description An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise). While the product's admin site is live and `consented_access` is on, a manager keeps only reading the roles and the assignments and removing an `admin` assignment; anything else is 403 `managed_at_admin_site`. */
                 ecosystem?: string;
                 /** @description Page size, 1–100 (default 10). */
                 limit?: number;
@@ -20977,6 +20990,15 @@ export interface operations {
                 };
             };
             /** @description Error */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
             404: {
                 headers: {
                     [name: string]: unknown;
@@ -20992,7 +21014,7 @@ export interface operations {
             query?: {
                 /** @description The hub workspace (slug). Exactly one of `workspace` and `ecosystem`. */
                 workspace?: string;
-                /** @description An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise). */
+                /** @description An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise). While the product's admin site is live and `consented_access` is on, a manager keeps only reading the roles and the assignments and removing an `admin` assignment; anything else is 403 `managed_at_admin_site`. */
                 ecosystem?: string;
             };
             header?: never;
@@ -21076,7 +21098,7 @@ export interface operations {
             query?: {
                 /** @description The hub workspace (slug). Exactly one of `workspace` and `ecosystem`. */
                 workspace?: string;
-                /** @description An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise). */
+                /** @description An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise). While the product's admin site is live and `consented_access` is on, a manager keeps only reading the roles and the assignments and removing an `admin` assignment; anything else is 403 `managed_at_admin_site`. */
                 ecosystem?: string;
             };
             header?: never;
@@ -21161,7 +21183,7 @@ export interface operations {
             query?: {
                 /** @description The hub workspace (slug). Exactly one of `workspace` and `ecosystem`. */
                 workspace?: string;
-                /** @description An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise). */
+                /** @description An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise). While the product's admin site is live and `consented_access` is on, a manager keeps only reading the roles and the assignments and removing an `admin` assignment; anything else is 403 `managed_at_admin_site`. */
                 ecosystem?: string;
             };
             header?: never;
@@ -21224,7 +21246,7 @@ export interface operations {
             query?: {
                 /** @description The hub workspace (slug). Exactly one of `workspace` and `ecosystem`. */
                 workspace?: string;
-                /** @description An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise). */
+                /** @description An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise). While the product's admin site is live and `consented_access` is on, a manager keeps only reading the roles and the assignments and removing an `admin` assignment; anything else is 403 `managed_at_admin_site`. */
                 ecosystem?: string;
                 q?: string;
                 after?: string;

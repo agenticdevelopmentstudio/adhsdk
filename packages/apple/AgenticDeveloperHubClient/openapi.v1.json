@@ -17013,7 +17013,8 @@
         "type": "object",
         "required": [
           "site",
-          "enabled"
+          "enabled",
+          "content_gated"
         ],
         "properties": {
           "site": {
@@ -17027,6 +17028,10 @@
           "enabled": {
             "type": "boolean",
             "description": "Whether the `product_admin_site` switch is on (sites answer and sign in)."
+          },
+          "content_gated": {
+            "type": "boolean",
+            "description": "Whether content enforcement is on (`app_rls.content_enforced()`): the hub reads only a product's house rows, never what its customers own."
           }
         }
       },
@@ -19951,7 +19956,7 @@
             "schema": {
               "type": "string"
             },
-            "description": "An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise)."
+            "description": "An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise). While the product's admin site is live and `consented_access` is on, a manager keeps only reading the roles and the assignments and removing an `admin` assignment; anything else is 403 `managed_at_admin_site`."
           },
           {
             "name": "feature",
@@ -20101,7 +20106,7 @@
             "schema": {
               "type": "string"
             },
-            "description": "An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise)."
+            "description": "An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise). While the product's admin site is live and `consented_access` is on, a manager keeps only reading the roles and the assignments and removing an `admin` assignment; anything else is 403 `managed_at_admin_site`."
           },
           {
             "name": "limit",
@@ -20216,6 +20221,16 @@
               }
             }
           },
+          "403": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
           "404": {
             "description": "Error",
             "content": {
@@ -20263,7 +20278,7 @@
             "schema": {
               "type": "string"
             },
-            "description": "An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise)."
+            "description": "An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise). While the product's admin site is live and `consented_access` is on, a manager keeps only reading the roles and the assignments and removing an `admin` assignment; anything else is 403 `managed_at_admin_site`."
           }
         ],
         "requestBody": {
@@ -20391,7 +20406,7 @@
             "schema": {
               "type": "string"
             },
-            "description": "An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise)."
+            "description": "An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise). While the product's admin site is live and `consented_access` is on, a manager keeps only reading the roles and the assignments and removing an `admin` assignment; anything else is 403 `managed_at_admin_site`."
           }
         ],
         "requestBody": {
@@ -20519,7 +20534,7 @@
             "schema": {
               "type": "string"
             },
-            "description": "An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise)."
+            "description": "An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise). While the product's admin site is live and `consented_access` is on, a manager keeps only reading the roles and the assignments and removing an `admin` assignment; anything else is 403 `managed_at_admin_site`."
           },
           {
             "name": "feature",
@@ -20651,7 +20666,7 @@
             "schema": {
               "type": "string"
             },
-            "description": "An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise)."
+            "description": "An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise). While the product's admin site is live and `consented_access` is on, a manager keeps only reading the roles and the assignments and removing an `admin` assignment; anything else is 403 `managed_at_admin_site`."
           }
         ],
         "requestBody": {
@@ -20816,7 +20831,7 @@
             "schema": {
               "type": "string"
             },
-            "description": "An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise)."
+            "description": "An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise). While the product's admin site is live and `consented_access` is on, a manager keeps only reading the roles and the assignments and removing an `admin` assignment; anything else is 403 `managed_at_admin_site`."
           }
         ],
         "responses": {
@@ -20907,7 +20922,7 @@
             "schema": {
               "type": "string"
             },
-            "description": "An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise)."
+            "description": "An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise). While the product's admin site is live and `consented_access` is on, a manager keeps only reading the roles and the assignments and removing an `admin` assignment; anything else is 403 `managed_at_admin_site`."
           },
           {
             "name": "limit",
@@ -21022,6 +21037,16 @@
               }
             }
           },
+          "403": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
           "404": {
             "description": "Error",
             "content": {
@@ -21067,7 +21092,7 @@
             "schema": {
               "type": "string"
             },
-            "description": "An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise)."
+            "description": "An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise). While the product's admin site is live and `consented_access` is on, a manager keeps only reading the roles and the assignments and removing an `admin` assignment; anything else is 403 `managed_at_admin_site`."
           }
         ],
         "requestBody": {
@@ -21235,7 +21260,7 @@
             "schema": {
               "type": "string"
             },
-            "description": "An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise)."
+            "description": "An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise). While the product's admin site is live and `consented_access` is on, a manager keeps only reading the roles and the assignments and removing an `admin` assignment; anything else is 403 `managed_at_admin_site`."
           }
         ],
         "responses": {
@@ -21332,7 +21357,7 @@
             "schema": {
               "type": "string"
             },
-            "description": "An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise)."
+            "description": "An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise). While the product's admin site is live and `consented_access` is on, a manager keeps only reading the roles and the assignments and removing an `admin` assignment; anything else is 403 `managed_at_admin_site`."
           }
         ],
         "requestBody": {
@@ -21481,7 +21506,7 @@
             "schema": {
               "type": "string"
             },
-            "description": "An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise)."
+            "description": "An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise). While the product's admin site is live and `consented_access` is on, a manager keeps only reading the roles and the assignments and removing an `admin` assignment; anything else is 403 `managed_at_admin_site`."
           },
           {
             "name": "q",
@@ -79225,7 +79250,7 @@
           "registry"
         ],
         "summary": "List an ecosystem's sign-up list",
-        "description": "Replaces GET /ecosystem/signup-list/{id}.",
+        "description": "While the product's admin site is live and `consented_access` is on, a manager sees only the entries that grant the `admin` role.\n\nReplaces GET /ecosystem/signup-list/{id}.",
         "operationId": "getV1EcosystemsByIdSignupListEntries",
         "security": [
           {
@@ -79375,7 +79400,7 @@
           "registry"
         ],
         "summary": "Add or change a sign-up list entry",
-        "description": "Upserts by email. While the ecosystem limits sign-in to a list of emails, the email is added to that list in the same transaction.\n\nReplaces PUT /ecosystem/signup-list/{id}.",
+        "description": "Upserts by email. While the ecosystem limits sign-in to a list of emails, the email is added to that list in the same transaction. While the product's admin site is live and `consented_access` is on, a manager may write only an entry granting the `admin` role, keeping its set; anything else is 403 `managed_at_admin_site`.\n\nReplaces PUT /ecosystem/signup-list/{id}.",
         "operationId": "postV1EcosystemsByIdSignupListEntries",
         "security": [
           {
@@ -79489,7 +79514,7 @@
           "registry"
         ],
         "summary": "Remove a sign-up list entry",
-        "description": "While the ecosystem limits sign-in to a list of emails, the email is removed from that list too. A role already granted stays granted.\n\nReplaces DELETE /ecosystem/signup-list/{id}/entries/{entryId}.",
+        "description": "While the ecosystem limits sign-in to a list of emails, the email is removed from that list too. A role already granted stays granted. While the product's admin site is live and `consented_access` is on, a manager may remove only an entry granting the `admin` role; anything else is 403 `managed_at_admin_site`.\n\nReplaces DELETE /ecosystem/signup-list/{id}/entries/{entryId}.",
         "operationId": "deleteV1EcosystemsByIdSignupListEntriesByEntryId",
         "security": [
           {

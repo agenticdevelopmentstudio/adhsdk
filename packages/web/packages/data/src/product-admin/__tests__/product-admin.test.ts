@@ -199,18 +199,29 @@ describe("adminSiteApi", () => {
   };
 
   it("reads the site and the switch", async () => {
-    mockedJson.mockResolvedValueOnce({ site: siteWire, enabled: true });
+    mockedJson.mockResolvedValueOnce({ site: siteWire, enabled: true, content_gated: false });
     const s = await adminSiteApi.get(ECO);
     const c = call(mockedJson);
     expect(c.path).toBe("/api/v1/admin_site");
     expect(c.params).toEqual({ ecosystem: ECO });
     expect(s.enabled).toBe(true);
+    expect(s.contentGated).toBe(false);
     expect(s.site).toMatchObject({ host: "admin.example.test", applicationId: "app1", clientId: "cl1" });
   });
 
   it("reads no site", async () => {
-    mockedJson.mockResolvedValueOnce({ site: null, enabled: false });
-    expect(await adminSiteApi.get(ECO)).toEqual({ site: null, enabled: false });
+    mockedJson.mockResolvedValueOnce({ site: null, enabled: false, content_gated: false });
+    expect(await adminSiteApi.get(ECO)).toEqual({ site: null, enabled: false, contentGated: false });
+  });
+
+  it("reads content enforcement as contentGated (phase 7)", async () => {
+    mockedJson.mockResolvedValueOnce({ site: null, enabled: true, content_gated: true });
+    expect((await adminSiteApi.get(ECO)).contentGated).toBe(true);
+  });
+
+  it("reads a backend without content_gated as not gated", async () => {
+    mockedJson.mockResolvedValueOnce({ site: null, enabled: true });
+    expect((await adminSiteApi.get(ECO)).contentGated).toBe(false);
   });
 
   it("sets the site up with POST and the host", async () => {

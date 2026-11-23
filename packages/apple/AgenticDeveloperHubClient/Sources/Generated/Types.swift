@@ -3017,6 +3017,8 @@ public protocol APIProtocol: Sendable {
     func deleteV1EcosystemsByIdSigninAppsByClientId(_ input: Operations.DeleteV1EcosystemsByIdSigninAppsByClientId.Input) async throws -> Operations.DeleteV1EcosystemsByIdSigninAppsByClientId.Output
     /// List an ecosystem's sign-up list
     ///
+    /// While the product's admin site is live and `consented_access` is on, a manager sees only the entries that grant the `admin` role.
+    ///
     /// Replaces GET /ecosystem/signup-list/{id}.
     ///
     /// - Remark: HTTP `GET /v1/ecosystems/{id}/signup_list_entries`.
@@ -3024,7 +3026,7 @@ public protocol APIProtocol: Sendable {
     func getV1EcosystemsByIdSignupListEntries(_ input: Operations.GetV1EcosystemsByIdSignupListEntries.Input) async throws -> Operations.GetV1EcosystemsByIdSignupListEntries.Output
     /// Add or change a sign-up list entry
     ///
-    /// Upserts by email. While the ecosystem limits sign-in to a list of emails, the email is added to that list in the same transaction.
+    /// Upserts by email. While the ecosystem limits sign-in to a list of emails, the email is added to that list in the same transaction. While the product's admin site is live and `consented_access` is on, a manager may write only an entry granting the `admin` role, keeping its set; anything else is 403 `managed_at_admin_site`.
     ///
     /// Replaces PUT /ecosystem/signup-list/{id}.
     ///
@@ -3033,7 +3035,7 @@ public protocol APIProtocol: Sendable {
     func postV1EcosystemsByIdSignupListEntries(_ input: Operations.PostV1EcosystemsByIdSignupListEntries.Input) async throws -> Operations.PostV1EcosystemsByIdSignupListEntries.Output
     /// Remove a sign-up list entry
     ///
-    /// While the ecosystem limits sign-in to a list of emails, the email is removed from that list too. A role already granted stays granted.
+    /// While the ecosystem limits sign-in to a list of emails, the email is removed from that list too. A role already granted stays granted. While the product's admin site is live and `consented_access` is on, a manager may remove only an entry granting the `admin` role; anything else is 403 `managed_at_admin_site`.
     ///
     /// Replaces DELETE /ecosystem/signup-list/{id}/entries/{entryId}.
     ///
@@ -14358,6 +14360,8 @@ extension APIProtocol {
     }
     /// List an ecosystem's sign-up list
     ///
+    /// While the product's admin site is live and `consented_access` is on, a manager sees only the entries that grant the `admin` role.
+    ///
     /// Replaces GET /ecosystem/signup-list/{id}.
     ///
     /// - Remark: HTTP `GET /v1/ecosystems/{id}/signup_list_entries`.
@@ -14375,7 +14379,7 @@ extension APIProtocol {
     }
     /// Add or change a sign-up list entry
     ///
-    /// Upserts by email. While the ecosystem limits sign-in to a list of emails, the email is added to that list in the same transaction.
+    /// Upserts by email. While the ecosystem limits sign-in to a list of emails, the email is added to that list in the same transaction. While the product's admin site is live and `consented_access` is on, a manager may write only an entry granting the `admin` role, keeping its set; anything else is 403 `managed_at_admin_site`.
     ///
     /// Replaces PUT /ecosystem/signup-list/{id}.
     ///
@@ -14394,7 +14398,7 @@ extension APIProtocol {
     }
     /// Remove a sign-up list entry
     ///
-    /// While the ecosystem limits sign-in to a list of emails, the email is removed from that list too. A role already granted stays granted.
+    /// While the ecosystem limits sign-in to a list of emails, the email is removed from that list too. A role already granted stays granted. While the product's admin site is live and `consented_access` is on, a manager may remove only an entry granting the `admin` role; anything else is 403 `managed_at_admin_site`.
     ///
     /// Replaces DELETE /ecosystem/signup-list/{id}/entries/{entryId}.
     ///
@@ -51569,21 +51573,29 @@ public enum Components {
             ///
             /// - Remark: Generated from `#/components/schemas/AdminSiteState/enabled`.
             public var enabled: Swift.Bool
+            /// Whether content enforcement is on (`app_rls.content_enforced()`): the hub reads only a product's house rows, never what its customers own.
+            ///
+            /// - Remark: Generated from `#/components/schemas/AdminSiteState/content_gated`.
+            public var contentGated: Swift.Bool
             /// Creates a new `AdminSiteState`.
             ///
             /// - Parameters:
             ///   - site:
             ///   - enabled: Whether the `product_admin_site` switch is on (sites answer and sign in).
+            ///   - contentGated: Whether content enforcement is on (`app_rls.content_enforced()`): the hub reads only a product's house rows, never what its customers own.
             public init(
                 site: Components.Schemas.AdminSiteState.SitePayload? = nil,
-                enabled: Swift.Bool
+                enabled: Swift.Bool,
+                contentGated: Swift.Bool
             ) {
                 self.site = site
                 self.enabled = enabled
+                self.contentGated = contentGated
             }
             public enum CodingKeys: String, CodingKey {
                 case site
                 case enabled
+                case contentGated = "content_gated"
             }
         }
         /// - Remark: Generated from `#/components/schemas/AdminSitePut`.
@@ -56335,7 +56347,7 @@ public enum Operations {
                 ///
                 /// - Remark: Generated from `#/paths/v1/access/effective_permissions/GET/query/workspace`.
                 public var workspace: Swift.String?
-                /// An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise).
+                /// An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise). While the product's admin site is live and `consented_access` is on, a manager keeps only reading the roles and the assignments and removing an `admin` assignment; anything else is 403 `managed_at_admin_site`.
                 ///
                 /// - Remark: Generated from `#/paths/v1/access/effective_permissions/GET/query/ecosystem`.
                 public var ecosystem: Swift.String?
@@ -56355,7 +56367,7 @@ public enum Operations {
                 ///
                 /// - Parameters:
                 ///   - workspace: The hub workspace (slug). Exactly one of `workspace` and `ecosystem`.
-                ///   - ecosystem: An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise).
+                ///   - ecosystem: An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise). While the product's admin site is live and `consented_access` is on, a manager keeps only reading the roles and the assignments and removing an `admin` assignment; anything else is 403 `managed_at_admin_site`.
                 ///   - feature:
                 ///   - subjectKind:
                 ///   - subjectId:
@@ -56755,7 +56767,7 @@ public enum Operations {
                 ///
                 /// - Remark: Generated from `#/paths/v1/access/features/GET/query/workspace`.
                 public var workspace: Swift.String?
-                /// An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise).
+                /// An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise). While the product's admin site is live and `consented_access` is on, a manager keeps only reading the roles and the assignments and removing an `admin` assignment; anything else is 403 `managed_at_admin_site`.
                 ///
                 /// - Remark: Generated from `#/paths/v1/access/features/GET/query/ecosystem`.
                 public var ecosystem: Swift.String?
@@ -56779,7 +56791,7 @@ public enum Operations {
                 ///
                 /// - Parameters:
                 ///   - workspace: The hub workspace (slug). Exactly one of `workspace` and `ecosystem`.
-                ///   - ecosystem: An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise).
+                ///   - ecosystem: An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise). While the product's admin site is live and `consented_access` is on, a manager keeps only reading the roles and the assignments and removing an `admin` assignment; anything else is 403 `managed_at_admin_site`.
                 ///   - limit: Page size, 1–100 (default 10).
                 ///   - startingAfter: Cursor: an object id; returns the page after it.
                 ///   - endingBefore: Cursor: an object id; returns the page before it.
@@ -57067,6 +57079,57 @@ public enum Operations {
                     }
                 }
             }
+            public struct Forbidden: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/access/features/GET/responses/403/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/access/features/GET/responses/403/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.GetV1AccessFeatures.Output.Forbidden.Body
+                /// Creates a new `Forbidden`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.GetV1AccessFeatures.Output.Forbidden.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/access/features/get(getV1AccessFeatures)/responses/403`.
+            ///
+            /// HTTP response code: `403 forbidden`.
+            case forbidden(Operations.GetV1AccessFeatures.Output.Forbidden)
+            /// The associated value of the enum case if `self` is `.forbidden`.
+            ///
+            /// - Throws: An error if `self` is not `.forbidden`.
+            /// - SeeAlso: `.forbidden`.
+            public var forbidden: Operations.GetV1AccessFeatures.Output.Forbidden {
+                get throws {
+                    switch self {
+                    case let .forbidden(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "forbidden",
+                            response: self
+                        )
+                    }
+                }
+            }
             public struct NotFound: Sendable, Hashable {
                 /// - Remark: Generated from `#/paths/v1/access/features/GET/responses/404/content`.
                 @frozen public enum Body: Sendable, Hashable {
@@ -57164,7 +57227,7 @@ public enum Operations {
                 ///
                 /// - Remark: Generated from `#/paths/v1/access/items/restore/POST/query/workspace`.
                 public var workspace: Swift.String?
-                /// An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise).
+                /// An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise). While the product's admin site is live and `consented_access` is on, a manager keeps only reading the roles and the assignments and removing an `admin` assignment; anything else is 403 `managed_at_admin_site`.
                 ///
                 /// - Remark: Generated from `#/paths/v1/access/items/restore/POST/query/ecosystem`.
                 public var ecosystem: Swift.String?
@@ -57172,7 +57235,7 @@ public enum Operations {
                 ///
                 /// - Parameters:
                 ///   - workspace: The hub workspace (slug). Exactly one of `workspace` and `ecosystem`.
-                ///   - ecosystem: An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise).
+                ///   - ecosystem: An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise). While the product's admin site is live and `consented_access` is on, a manager keeps only reading the roles and the assignments and removing an `admin` assignment; anything else is 403 `managed_at_admin_site`.
                 public init(
                     workspace: Swift.String? = nil,
                     ecosystem: Swift.String? = nil
@@ -57587,7 +57650,7 @@ public enum Operations {
                 ///
                 /// - Remark: Generated from `#/paths/v1/access/items/restrict/POST/query/workspace`.
                 public var workspace: Swift.String?
-                /// An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise).
+                /// An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise). While the product's admin site is live and `consented_access` is on, a manager keeps only reading the roles and the assignments and removing an `admin` assignment; anything else is 403 `managed_at_admin_site`.
                 ///
                 /// - Remark: Generated from `#/paths/v1/access/items/restrict/POST/query/ecosystem`.
                 public var ecosystem: Swift.String?
@@ -57595,7 +57658,7 @@ public enum Operations {
                 ///
                 /// - Parameters:
                 ///   - workspace: The hub workspace (slug). Exactly one of `workspace` and `ecosystem`.
-                ///   - ecosystem: An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise).
+                ///   - ecosystem: An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise). While the product's admin site is live and `consented_access` is on, a manager keeps only reading the roles and the assignments and removing an `admin` assignment; anything else is 403 `managed_at_admin_site`.
                 public init(
                     workspace: Swift.String? = nil,
                     ecosystem: Swift.String? = nil
@@ -58010,7 +58073,7 @@ public enum Operations {
                 ///
                 /// - Remark: Generated from `#/paths/v1/access/role_assignments/GET/query/workspace`.
                 public var workspace: Swift.String?
-                /// An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise).
+                /// An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise). While the product's admin site is live and `consented_access` is on, a manager keeps only reading the roles and the assignments and removing an `admin` assignment; anything else is 403 `managed_at_admin_site`.
                 ///
                 /// - Remark: Generated from `#/paths/v1/access/role_assignments/GET/query/ecosystem`.
                 public var ecosystem: Swift.String?
@@ -58026,7 +58089,7 @@ public enum Operations {
                 ///
                 /// - Parameters:
                 ///   - workspace: The hub workspace (slug). Exactly one of `workspace` and `ecosystem`.
-                ///   - ecosystem: An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise).
+                ///   - ecosystem: An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise). While the product's admin site is live and `consented_access` is on, a manager keeps only reading the roles and the assignments and removing an `admin` assignment; anything else is 403 `managed_at_admin_site`.
                 ///   - feature:
                 ///   - itemId:
                 ///   - expand_lbrack__rbrack_: Related objects to return in full instead of as an id. Up to four levels, e.g. `ecosystem_id`; on a list, `data.<field>`.
@@ -58420,7 +58483,7 @@ public enum Operations {
                 ///
                 /// - Remark: Generated from `#/paths/v1/access/role_assignments/POST/query/workspace`.
                 public var workspace: Swift.String?
-                /// An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise).
+                /// An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise). While the product's admin site is live and `consented_access` is on, a manager keeps only reading the roles and the assignments and removing an `admin` assignment; anything else is 403 `managed_at_admin_site`.
                 ///
                 /// - Remark: Generated from `#/paths/v1/access/role_assignments/POST/query/ecosystem`.
                 public var ecosystem: Swift.String?
@@ -58428,7 +58491,7 @@ public enum Operations {
                 ///
                 /// - Parameters:
                 ///   - workspace: The hub workspace (slug). Exactly one of `workspace` and `ecosystem`.
-                ///   - ecosystem: An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise).
+                ///   - ecosystem: An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise). While the product's admin site is live and `consented_access` is on, a manager keeps only reading the roles and the assignments and removing an `admin` assignment; anything else is 403 `managed_at_admin_site`.
                 public init(
                     workspace: Swift.String? = nil,
                     ecosystem: Swift.String? = nil
@@ -58935,7 +58998,7 @@ public enum Operations {
                 ///
                 /// - Remark: Generated from `#/paths/v1/access/role_assignments/{id}/DELETE/query/workspace`.
                 public var workspace: Swift.String?
-                /// An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise).
+                /// An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise). While the product's admin site is live and `consented_access` is on, a manager keeps only reading the roles and the assignments and removing an `admin` assignment; anything else is 403 `managed_at_admin_site`.
                 ///
                 /// - Remark: Generated from `#/paths/v1/access/role_assignments/{id}/DELETE/query/ecosystem`.
                 public var ecosystem: Swift.String?
@@ -58943,7 +59006,7 @@ public enum Operations {
                 ///
                 /// - Parameters:
                 ///   - workspace: The hub workspace (slug). Exactly one of `workspace` and `ecosystem`.
-                ///   - ecosystem: An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise).
+                ///   - ecosystem: An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise). While the product's admin site is live and `consented_access` is on, a manager keeps only reading the roles and the assignments and removing an `admin` assignment; anything else is 403 `managed_at_admin_site`.
                 public init(
                     workspace: Swift.String? = nil,
                     ecosystem: Swift.String? = nil
@@ -59283,7 +59346,7 @@ public enum Operations {
                 ///
                 /// - Remark: Generated from `#/paths/v1/access/roles/GET/query/workspace`.
                 public var workspace: Swift.String?
-                /// An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise).
+                /// An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise). While the product's admin site is live and `consented_access` is on, a manager keeps only reading the roles and the assignments and removing an `admin` assignment; anything else is 403 `managed_at_admin_site`.
                 ///
                 /// - Remark: Generated from `#/paths/v1/access/roles/GET/query/ecosystem`.
                 public var ecosystem: Swift.String?
@@ -59307,7 +59370,7 @@ public enum Operations {
                 ///
                 /// - Parameters:
                 ///   - workspace: The hub workspace (slug). Exactly one of `workspace` and `ecosystem`.
-                ///   - ecosystem: An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise).
+                ///   - ecosystem: An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise). While the product's admin site is live and `consented_access` is on, a manager keeps only reading the roles and the assignments and removing an `admin` assignment; anything else is 403 `managed_at_admin_site`.
                 ///   - limit: Page size, 1–100 (default 10).
                 ///   - startingAfter: Cursor: an object id; returns the page after it.
                 ///   - endingBefore: Cursor: an object id; returns the page before it.
@@ -59595,6 +59658,57 @@ public enum Operations {
                     }
                 }
             }
+            public struct Forbidden: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/access/roles/GET/responses/403/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/access/roles/GET/responses/403/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.GetV1AccessRoles.Output.Forbidden.Body
+                /// Creates a new `Forbidden`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.GetV1AccessRoles.Output.Forbidden.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/access/roles/get(getV1AccessRoles)/responses/403`.
+            ///
+            /// HTTP response code: `403 forbidden`.
+            case forbidden(Operations.GetV1AccessRoles.Output.Forbidden)
+            /// The associated value of the enum case if `self` is `.forbidden`.
+            ///
+            /// - Throws: An error if `self` is not `.forbidden`.
+            /// - SeeAlso: `.forbidden`.
+            public var forbidden: Operations.GetV1AccessRoles.Output.Forbidden {
+                get throws {
+                    switch self {
+                    case let .forbidden(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "forbidden",
+                            response: self
+                        )
+                    }
+                }
+            }
             public struct NotFound: Sendable, Hashable {
                 /// - Remark: Generated from `#/paths/v1/access/roles/GET/responses/404/content`.
                 @frozen public enum Body: Sendable, Hashable {
@@ -59692,7 +59806,7 @@ public enum Operations {
                 ///
                 /// - Remark: Generated from `#/paths/v1/access/roles/POST/query/workspace`.
                 public var workspace: Swift.String?
-                /// An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise).
+                /// An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise). While the product's admin site is live and `consented_access` is on, a manager keeps only reading the roles and the assignments and removing an `admin` assignment; anything else is 403 `managed_at_admin_site`.
                 ///
                 /// - Remark: Generated from `#/paths/v1/access/roles/POST/query/ecosystem`.
                 public var ecosystem: Swift.String?
@@ -59700,7 +59814,7 @@ public enum Operations {
                 ///
                 /// - Parameters:
                 ///   - workspace: The hub workspace (slug). Exactly one of `workspace` and `ecosystem`.
-                ///   - ecosystem: An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise).
+                ///   - ecosystem: An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise). While the product's admin site is live and `consented_access` is on, a manager keeps only reading the roles and the assignments and removing an `admin` assignment; anything else is 403 `managed_at_admin_site`.
                 public init(
                     workspace: Swift.String? = nil,
                     ecosystem: Swift.String? = nil
@@ -60203,7 +60317,7 @@ public enum Operations {
                 ///
                 /// - Remark: Generated from `#/paths/v1/access/roles/{id}/POST/query/workspace`.
                 public var workspace: Swift.String?
-                /// An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise).
+                /// An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise). While the product's admin site is live and `consented_access` is on, a manager keeps only reading the roles and the assignments and removing an `admin` assignment; anything else is 403 `managed_at_admin_site`.
                 ///
                 /// - Remark: Generated from `#/paths/v1/access/roles/{id}/POST/query/ecosystem`.
                 public var ecosystem: Swift.String?
@@ -60211,7 +60325,7 @@ public enum Operations {
                 ///
                 /// - Parameters:
                 ///   - workspace: The hub workspace (slug). Exactly one of `workspace` and `ecosystem`.
-                ///   - ecosystem: An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise).
+                ///   - ecosystem: An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise). While the product's admin site is live and `consented_access` is on, a manager keeps only reading the roles and the assignments and removing an `admin` assignment; anything else is 403 `managed_at_admin_site`.
                 public init(
                     workspace: Swift.String? = nil,
                     ecosystem: Swift.String? = nil
@@ -60711,7 +60825,7 @@ public enum Operations {
                 ///
                 /// - Remark: Generated from `#/paths/v1/access/roles/{id}/DELETE/query/workspace`.
                 public var workspace: Swift.String?
-                /// An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise).
+                /// An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise). While the product's admin site is live and `consented_access` is on, a manager keeps only reading the roles and the assignments and removing an `admin` assignment; anything else is 403 `managed_at_admin_site`.
                 ///
                 /// - Remark: Generated from `#/paths/v1/access/roles/{id}/DELETE/query/ecosystem`.
                 public var ecosystem: Swift.String?
@@ -60719,7 +60833,7 @@ public enum Operations {
                 ///
                 /// - Parameters:
                 ///   - workspace: The hub workspace (slug). Exactly one of `workspace` and `ecosystem`.
-                ///   - ecosystem: An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise).
+                ///   - ecosystem: An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise). While the product's admin site is live and `consented_access` is on, a manager keeps only reading the roles and the assignments and removing an `admin` assignment; anything else is 403 `managed_at_admin_site`.
                 public init(
                     workspace: Swift.String? = nil,
                     ecosystem: Swift.String? = nil
@@ -61061,7 +61175,7 @@ public enum Operations {
                 ///
                 /// - Remark: Generated from `#/paths/v1/access/subjects/GET/query/workspace`.
                 public var workspace: Swift.String?
-                /// An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise).
+                /// An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise). While the product's admin site is live and `consented_access` is on, a manager keeps only reading the roles and the assignments and removing an `admin` assignment; anything else is 403 `managed_at_admin_site`.
                 ///
                 /// - Remark: Generated from `#/paths/v1/access/subjects/GET/query/ecosystem`.
                 public var ecosystem: Swift.String?
@@ -61089,7 +61203,7 @@ public enum Operations {
                 ///
                 /// - Parameters:
                 ///   - workspace: The hub workspace (slug). Exactly one of `workspace` and `ecosystem`.
-                ///   - ecosystem: An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise).
+                ///   - ecosystem: An owner-made ecosystem's id: manage its product roles. Exactly one of `workspace` and `ecosystem`; the caller must manage the ecosystem, or hold its `admin` role and sign in through the product's admin site (403 otherwise). While the product's admin site is live and `consented_access` is on, a manager keeps only reading the roles and the assignments and removing an `admin` assignment; anything else is 403 `managed_at_admin_site`.
                 ///   - q:
                 ///   - after:
                 ///   - limit: Page size, 1–100 (default 10).
@@ -222112,6 +222226,8 @@ public enum Operations {
     }
     /// List an ecosystem's sign-up list
     ///
+    /// While the product's admin site is live and `consented_access` is on, a manager sees only the entries that grant the `admin` role.
+    ///
     /// Replaces GET /ecosystem/signup-list/{id}.
     ///
     /// - Remark: HTTP `GET /v1/ecosystems/{id}/signup_list_entries`.
@@ -222523,7 +222639,7 @@ public enum Operations {
     }
     /// Add or change a sign-up list entry
     ///
-    /// Upserts by email. While the ecosystem limits sign-in to a list of emails, the email is added to that list in the same transaction.
+    /// Upserts by email. While the ecosystem limits sign-in to a list of emails, the email is added to that list in the same transaction. While the product's admin site is live and `consented_access` is on, a manager may write only an entry granting the `admin` role, keeping its set; anything else is 403 `managed_at_admin_site`.
     ///
     /// Replaces PUT /ecosystem/signup-list/{id}.
     ///
@@ -222965,7 +223081,7 @@ public enum Operations {
     }
     /// Remove a sign-up list entry
     ///
-    /// While the ecosystem limits sign-in to a list of emails, the email is removed from that list too. A role already granted stays granted.
+    /// While the ecosystem limits sign-in to a list of emails, the email is removed from that list too. A role already granted stays granted. While the product's admin site is live and `consented_access` is on, a manager may remove only an entry granting the `admin` role; anything else is 403 `managed_at_admin_site`.
     ///
     /// Replaces DELETE /ecosystem/signup-list/{id}/entries/{entryId}.
     ///

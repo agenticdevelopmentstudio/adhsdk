@@ -375,6 +375,28 @@ public struct Client: APIProtocol {
                         preconditionFailure("bestContentType chose an invalid content type.")
                     }
                     return .unauthorized(.init(body: body))
+                case 403:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.GetV1AccessFeatures.Output.Forbidden.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas.StripeError.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .forbidden(.init(body: body))
                 case 404:
                     let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
                     let body: Operations.GetV1AccessFeatures.Output.NotFound.Body
@@ -1441,6 +1463,28 @@ public struct Client: APIProtocol {
                         preconditionFailure("bestContentType chose an invalid content type.")
                     }
                     return .unauthorized(.init(body: body))
+                case 403:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.GetV1AccessRoles.Output.Forbidden.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas.StripeError.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .forbidden(.init(body: body))
                 case 404:
                     let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
                     let body: Operations.GetV1AccessRoles.Output.NotFound.Body
@@ -55132,6 +55176,8 @@ public struct Client: APIProtocol {
     }
     /// List an ecosystem's sign-up list
     ///
+    /// While the product's admin site is live and `consented_access` is on, a manager sees only the entries that grant the `admin` role.
+    ///
     /// Replaces GET /ecosystem/signup-list/{id}.
     ///
     /// - Remark: HTTP `GET /v1/ecosystems/{id}/signup_list_entries`.
@@ -55290,7 +55336,7 @@ public struct Client: APIProtocol {
     }
     /// Add or change a sign-up list entry
     ///
-    /// Upserts by email. While the ecosystem limits sign-in to a list of emails, the email is added to that list in the same transaction.
+    /// Upserts by email. While the ecosystem limits sign-in to a list of emails, the email is added to that list in the same transaction. While the product's admin site is live and `consented_access` is on, a manager may write only an entry granting the `admin` role, keeping its set; anything else is 403 `managed_at_admin_site`.
     ///
     /// Replaces PUT /ecosystem/signup-list/{id}.
     ///
@@ -55475,7 +55521,7 @@ public struct Client: APIProtocol {
     }
     /// Remove a sign-up list entry
     ///
-    /// While the ecosystem limits sign-in to a list of emails, the email is removed from that list too. A role already granted stays granted.
+    /// While the ecosystem limits sign-in to a list of emails, the email is removed from that list too. A role already granted stays granted. While the product's admin site is live and `consented_access` is on, a manager may remove only an entry granting the `admin` role; anything else is 403 `managed_at_admin_site`.
     ///
     /// Replaces DELETE /ecosystem/signup-list/{id}/entries/{entryId}.
     ///
