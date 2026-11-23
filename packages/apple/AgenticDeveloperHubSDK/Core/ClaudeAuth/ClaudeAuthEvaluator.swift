@@ -124,9 +124,16 @@ public enum ClaudeAuthEvaluator {
         let judgments = replacingSpentCopies(credentials, judgments: rawJudgments, now: now)
 
         var outcome = Outcome(probeable: [], rotated: [], statuses: [])
+        // One rotation per item key: two copies pushed under the same key are
+        // one Keychain item, so the client is told to store it once. The
+        // first copy's rotation wins (copies sharing a refresh token carry
+        // the same fresh pair anyway).
+        var rotatedKeys: Set<String> = []
         for judgment in judgments {
             if let probeable = judgment.probeable { outcome.probeable.append(probeable) }
-            if let rotated = judgment.rotated { outcome.rotated.append(rotated) }
+            if let rotated = judgment.rotated, rotatedKeys.insert(rotated.itemKey).inserted {
+                outcome.rotated.append(rotated)
+            }
             outcome.statuses.append(judgment.status)
         }
         return outcome

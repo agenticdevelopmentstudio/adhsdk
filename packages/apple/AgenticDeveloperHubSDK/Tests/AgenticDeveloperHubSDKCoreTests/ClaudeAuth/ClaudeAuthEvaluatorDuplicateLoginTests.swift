@@ -76,6 +76,23 @@ final class ClaudeAuthEvaluatorDuplicateLoginTests: XCTestCase {
         XCTAssertEqual(outcome.probeable.map(\.token), ["access-1", "access-1", "old-access"])
     }
 
+    /// Two identical expired copies under one item key: the token is spent
+    /// once and the item is rotated once, not twice.
+    func testTwoIdenticalCopiesUnderOneItemKeyAreRotatedOnce() async throws {
+        let endpoint = FakeEndpoint()
+        let login = expiredLogin(refreshToken: "shared-refresh")
+        let copy = Sessions.ClaudeCredentialDTO(
+            account: "a@x.com", credentialKind: "oauth", token: login.accessToken,
+            itemKey: "oauth:a@x.com", oauth: login)
+
+        let outcome = await ClaudeAuthEvaluator.evaluate([copy, copy], refresh: { try await endpoint.refresh($0) })
+
+        let calls = await endpoint.calls
+        XCTAssertEqual(calls, 1, "the shared refresh token is spent once")
+        XCTAssertEqual(outcome.rotated.map(\.itemKey), ["oauth:a@x.com"], "one rotation for the one item")
+        XCTAssertEqual(outcome.statuses.map(\.state), ["refreshed", "refreshed"])
+    }
+
     func testDifferentLoginsAreEachRefreshed() async throws {
         let endpoint = FakeEndpoint()
         let first = expiredLogin(refreshToken: "refresh-a")
