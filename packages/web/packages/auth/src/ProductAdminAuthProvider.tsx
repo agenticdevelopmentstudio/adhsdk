@@ -18,7 +18,6 @@ import {
   createContext,
   useCallback,
   useContext,
-  useEffect,
   useLayoutEffect,
   useMemo,
   useRef,
@@ -188,7 +187,12 @@ export function ProductAdminAuthProvider({ children, navigate }: ProductAdminAut
     return run
   }, [adopt, go])
 
-  useEffect(() => {
+  // A LAYOUT effect, so the token source is in place before any child's passive effect runs: React
+  // runs a child's effects before its parent's, so from a plain effect a page's first queries went
+  // out before the source existed, with no bearer, or with another session's token from storage.
+  // With the source in, a query sent while the session loads carries no bearer, and its 401 joins
+  // the refresh already in flight rather than starting one.
+  useLayoutEffect(() => {
     genRef.current += 1
     inFlightRef.current = null
     const source: AccessTokenSource = { read: () => tokenRef.current, refresh }
