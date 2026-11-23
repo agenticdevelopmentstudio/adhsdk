@@ -105,7 +105,7 @@ extension ComposableTabsViewRegistry {
     /// terminal prints.
     ///
     /// - Parameter directory: Where each chat lists itself for processes
-    ///   outside the app to drive (`TerminalChatControlServer`); nil keeps
+    ///   outside the app to drive (`TerminalChatDirectoryToolSource`); nil keeps
     ///   them private to the window.
     @MainActor
     public func registerTerminalChat(directory: TerminalChatDirectory? = nil) {

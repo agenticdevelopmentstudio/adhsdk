@@ -1,14 +1,14 @@
 import Foundation
 
-/// How a process outside an app — `adterm`, run by Claude Code in an ordinary
-/// terminal — drives the app's Terminal Chats: lists them, types a command
-/// into one, and gets back what the terminal printed, concealed by that chat's
-/// substitutions exactly as its own transcript shows it.
+/// How something outside a Terminal Chat — Claude Code, through the MCP
+/// tools an app serves (`TerminalChatDirectoryToolSource`) — drives the app's
+/// Terminal Chats: lists them, types a command into one, and gets back what
+/// the terminal printed, concealed by that chat's substitutions exactly as its
+/// own transcript shows it.
 ///
-/// Each app that hosts Terminal Chats listens on a Unix-domain socket named
-/// for its process id in ``socketDirectory``, and answers one JSON request per
-/// connection (`UnixSocketLineServer`). The directory is not named after any
-/// one app, so a client finds every running host the same way.
+/// This is the protocol's vocabulary — the actions, the request and reply
+/// shapes, the defaults and limits, and how a chat id prefix resolves —
+/// independent of any transport.
 public enum TerminalChatControl {
 
     public enum Action: String, Codable, Sendable {
@@ -26,7 +26,7 @@ public enum TerminalChatControl {
 
     /// What a request that leaves a field out gets, and the most it may ask
     /// for — the one statement of them, read by the session's own defaults,
-    /// the app's server, the transport's wait and `adterm`'s usage text.
+    /// the app's tools and their descriptions.
     public enum Defaults {
         /// Seconds output has to stop for before a reply is complete.
         public static let settle: Double = 1.5
@@ -129,67 +129,5 @@ public enum TerminalChatControl {
 
     public struct ResolveError: Error, Equatable {
         public let message: String
-    }
-
-    // MARK: - Where the sockets are
-
-    /// `~/Library/Application Support/TerminalChat/sockets` — owner-only, so
-    /// the sockets in it are reachable by this user alone.
-    public static var socketDirectory: URL {
-        FileManager.default.homeDirectoryForCurrentUser
-            .appendingPathComponent("Library/Application Support/TerminalChat/sockets", isDirectory: true)
-    }
-
-    public static func socketURL(pid: Int32, in directory: URL = socketDirectory) -> URL {
-        directory.appendingPathComponent("\(pid).sock")
-    }
-
-    /// Creates ``socketDirectory`` owner-only, and removes the sockets of
-    /// processes that are no longer running.
-    public static func prepareSocketDirectory(_ directory: URL = socketDirectory) throws {
-        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true,
-                                                attributes: [.posixPermissions: 0o700])
-        try FileManager.default.setAttributes([.posixPermissions: 0o700], ofItemAtPath: directory.path)
-        for host in runningHosts(in: directory, includeStale: true) where !isRunning(host.pid) {
-            try? FileManager.default.removeItem(at: host.socket)
-        }
-    }
-
-    public struct Host: Sendable, Equatable {
-        public let pid: Int32
-        public let socket: URL
-    }
-
-    /// Every app with a control socket whose process is still running.
-    public static func runningHosts(in directory: URL = socketDirectory) -> [Host] {
-        runningHosts(in: directory, includeStale: false)
-    }
-
-    private static func runningHosts(in directory: URL, includeStale: Bool) -> [Host] {
-        let names = (try? FileManager.default.contentsOfDirectory(atPath: directory.path)) ?? []
-        return names.compactMap { name -> Host? in
-            guard name.hasSuffix(".sock"), let pid = Int32(name.dropLast(5)) else { return nil }
-            guard includeStale || isRunning(pid) else { return nil }
-            return Host(pid: pid, socket: directory.appendingPathComponent(name))
-        }.sorted { $0.pid < $1.pid }
-    }
-
-    private static func isRunning(_ pid: Int32) -> Bool {
-        kill(pid, 0) == 0 || errno == EPERM
-    }
-
-    // MARK: - Asking
-
-    /// Sends `request` to the app at `host` and decodes its answer.
-    ///
-    /// The wait is the request's own timeout plus a margin, so a long `run`
-    /// is not cut off by the transport before the app reports it. A request
-    /// that runs nothing, such as a `list` asked of every host, passes a
-    /// short `wait` instead, so one stalled app cannot hold up the rest.
-    public static func send(_ request: Request, to host: Host, wait: TimeInterval? = nil) throws -> Response {
-        let payload = try JSONEncoder().encode(request)
-        let waitSeconds = wait ?? (request.timeout ?? Defaults.timeout(for: request.action)) + 15
-        let reply = try UnixSocketLineClient.request(payload, path: host.socket.path, timeout: waitSeconds)
-        return try JSONDecoder().decode(Response.self, from: reply)
     }
 }
