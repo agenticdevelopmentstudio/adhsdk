@@ -1,10 +1,11 @@
 
 - **main-actor-isolation**: The type MUST be `@MainActor`, so every property read and write, and the `url` and `line` accessors, run on the main actor. The static `line(port:isRegistered:failureReason:)` is a pure function of its arguments and is not tied to an instance.
-- **observable-object**: The type MUST be an `ObservableObject` whose four stored values are `@Published`, so a view can observe changes.
-- **initial-values**: A new instance MUST have `port` nil, `token` nil, `isRegistered` false and `failureReason` nil. `init()` takes no arguments.
+- **observable-object**: The type MUST be an `ObservableObject` whose five stored values are `@Published`, so a view can observe changes.
+- **initial-values**: A new instance MUST have `port` nil, `token` nil, `command` nil, `isRegistered` false and `failureReason` nil. `init()` takes no arguments.
 - **port-meaning**: `port` MUST hold the port actually listening as a `UInt16`, nil until the endpoint starts or when it failed. The model does not set or clear it; the host does.
-- **token-meaning**: `token` MUST hold the bearer token for the registration command, or nil. The model does not generate, store or redact it.
-- **registered-meaning**: `isRegistered` MUST mean whether `~/.claude.json` lists this server on this port. The model does not read that file; the host sets the flag.
+- **token-meaning**: `token` MUST hold the bearer token the Coding Partner's MCP config carries, or nil. The model does not generate, store or redact it.
+- **command-meaning**: `command` MUST hold the line that registers the endpoint with Claude Code (`MCPRegistration.claudeCommand(channel:adhdPath:)`, or what `adhd mcp command` prints), or nil until it is known; it carries no token. The model does not build it; the host sets it, and the panel's Copy button copies it.
+- **registered-meaning**: `isRegistered` MUST mean whether `~/.claude.json` lists this server at this address. The model does not read that file; the host sets the flag.
 - **failure-reason-meaning**: `failureReason` MUST hold why the endpoint is not running, when it is not, or nil. The model does not clear it when `port` changes.
 - **url-nil-without-port**: `url` MUST be nil when `port` is nil.
 - **url-format**: When `port` is set, `url` MUST be `http://127.0.0.1:<port><MCPHTTPEndpoint.path>`, where `MCPHTTPEndpoint.path` is `/mcp`, so a port of 51477 gives `http://127.0.0.1:51477/mcp`.

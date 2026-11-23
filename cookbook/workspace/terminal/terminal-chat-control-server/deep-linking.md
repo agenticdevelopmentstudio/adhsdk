@@ -1,3 +1,2 @@
 
-Not applicable: the server defines no URL scheme; it listens on a socket path named for the process id.
-
+Not applicable: the tools define no URL scheme; they are reached through the MCP host that serves them.

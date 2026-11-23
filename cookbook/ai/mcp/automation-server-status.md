@@ -2,11 +2,11 @@
 id: 456bc5f5-b955-4844-906d-007506405d3d
 title: "Automation Server Status"
 type: ingredient
-version: 1.0.1
+version: 1.1.0
 status: review
 language: en
 created: 2026-11-14
-modified: 2026-11-18
+modified: 2026-11-23
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -29,16 +29,17 @@ approved-date: ""
 
 ## Overview
 
-`AutomationServerStatus` is an `ObservableObject` that holds what the CLI settings panel shows about the host's MCP endpoint. Its doc comment gives the division of labor: it is "filled by the host's automation feature when it starts, read by the panel." The host writes four published values (`port`, `token`, `isRegistered`, `failureReason`); the model derives the endpoint `url` and a one-sentence status `line` from them. It starts and stops nothing, performs no registration, and owns no I/O.
+`AutomationServerStatus` is an `ObservableObject` that holds what the CLI settings panel shows about the host's MCP endpoint. Its doc comment gives the division of labor: it is "filled by the host's automation feature when it starts, read by the panel." The host writes five published values (`port`, `token`, `command`, `isRegistered`, `failureReason`); the model derives the endpoint `url` and a one-sentence status `line` from them. It starts and stops nothing, performs no registration, and owns no I/O.
 
 ## Behavioral Requirements
 
 - **main-actor-isolation**: The type MUST be `@MainActor`, so every property read and write, and the `url` and `line` accessors, run on the main actor. The static `line(port:isRegistered:failureReason:)` is a pure function of its arguments and is not tied to an instance.
-- **observable-object**: The type MUST be an `ObservableObject` whose four stored values are `@Published`, so a view can observe changes.
-- **initial-values**: A new instance MUST have `port` nil, `token` nil, `isRegistered` false and `failureReason` nil. `init()` takes no arguments.
+- **observable-object**: The type MUST be an `ObservableObject` whose five stored values are `@Published`, so a view can observe changes.
+- **initial-values**: A new instance MUST have `port` nil, `token` nil, `command` nil, `isRegistered` false and `failureReason` nil. `init()` takes no arguments.
 - **port-meaning**: `port` MUST hold the port actually listening as a `UInt16`, nil until the endpoint starts or when it failed. The model does not set or clear it; the host does.
-- **token-meaning**: `token` MUST hold the bearer token for the registration command, or nil. The model does not generate, store or redact it.
-- **registered-meaning**: `isRegistered` MUST mean whether `~/.claude.json` lists this server on this port. The model does not read that file; the host sets the flag.
+- **token-meaning**: `token` MUST hold the bearer token the Coding Partner's MCP config carries, or nil. The model does not generate, store or redact it.
+- **command-meaning**: `command` MUST hold the line that registers the endpoint with Claude Code (`MCPRegistration.claudeCommand(channel:adhdPath:)`, or what `adhd mcp command` prints), or nil until it is known; it carries no token. The model does not build it; the host sets it, and the panel's Copy button copies it.
+- **registered-meaning**: `isRegistered` MUST mean whether `~/.claude.json` lists this server at this address. The model does not read that file; the host sets the flag.
 - **failure-reason-meaning**: `failureReason` MUST hold why the endpoint is not running, when it is not, or nil. The model does not clear it when `port` changes.
 - **url-nil-without-port**: `url` MUST be nil when `port` is nil.
 - **url-format**: When `port` is set, `url` MUST be `http://127.0.0.1:<port><MCPHTTPEndpoint.path>`, where `MCPHTTPEndpoint.path` is `/mcp`, so a port of 51477 gives `http://127.0.0.1:51477/mcp`.
@@ -69,7 +70,7 @@ Not applicable — this is an observable status model, not a visual component.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
-| automation-status-001 | initial-values, line-starting | `AutomationServerStatus()` | `port` nil, `token` nil, `isRegistered` false, `failureReason` nil, `line` is `Starting.`, `url` nil |
+| automation-status-001 | initial-values, line-starting | `AutomationServerStatus()` | `port` nil, `token` nil, `command` nil, `isRegistered` false, `failureReason` nil, `line` is `Starting.`, `url` nil |
 | automation-status-002 | line-listening-unregistered, line-port-unformatted | `port = 51477`, `isRegistered = false` | `line` is `Listening on port 51477. Not registered with Claude Code.` (`CLISettingsPanelTests.testStatusLineNamesThePortAndRegistration`) |
 | automation-status-003 | line-listening-registered | Same instance, then `isRegistered = true` | `line` is `Listening on port 51477. Registered with Claude Code.` (same test) |
 | automation-status-004 | line-failure-first | `failureReason = "could not write /x/mcp-token: Permission denied"` with `port` nil | `line` is `Not running: could not write /x/mcp-token: Permission denied` (`CLISettingsPanelTests.testFailureReasonIsTheStatusLine`) |
@@ -97,8 +98,9 @@ Not applicable — this is an observable status model, not a visual component.
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `port` | `UInt16?` | `nil` | Port the endpoint is listening on. |
-| `token` | `String?` | `nil` | Bearer token for the registration command. |
-| `isRegistered` | `Bool` | `false` | Whether `~/.claude.json` lists this server on this port. |
+| `token` | `String?` | `nil` | Bearer token the Coding Partner's MCP config carries. |
+| `command` | `String?` | `nil` | The line that registers the endpoint with Claude Code; the panel copies it. |
+| `isRegistered` | `Bool` | `false` | Whether `~/.claude.json` lists this server at this address. |
 | `failureReason` | `String?` | `nil` | Why the endpoint is not running. |
 
 The component defines no environment variable and no settings key. It reads `MCPHTTPEndpoint.path` (`/mcp`) to build `url`, and is injected into the CLI settings panel and `PartnerCoordinator`.
@@ -127,7 +129,7 @@ Not applicable: the component contains no analytics or event-tracking call.
 
 - **Data collected**: The model holds a bearer token for the MCP endpoint, a credential that lets a caller use the host's automation tools, plus a port and a free-text failure reason that may include a file path.
 - **Storage**: In memory only, as a `@Published` `String?`. The model does not write the token to disk, Keychain or logs; where the token is persisted is up to the host feature that fills it.
-- **Transmission**: None by the component. The token is made available to the registration command (see `MCPRegistration.claudeCommand(port:token:)`, which the panel copies to the pasteboard), and `url` is a `127.0.0.1` loopback URL.
+- **Transmission**: None by the component. The token is made available to the Coding Partner's MCP config; the registration command the panel copies to the pasteboard is `command`, which carries no token (its `headersHelper` runs `adhd mcp headers`), and `url` is a `127.0.0.1` loopback URL.
 - **Retention**: The token lives as long as the instance and is not cleared by the model. `line` and `url` never include the token, but the token property is readable by anything holding the instance.
 
 ## Logging
@@ -137,7 +139,7 @@ Not applicable: the component contains no logging call.
 ## Platform Notes
 
 - **SwiftUI**: The source is `packages/apple/AgenticDeveloperHubSDK/macOS/Features/MCP/AutomationServerStatus.swift`. It is already an `ObservableObject`, so a SwiftUI view holds it as `@ObservedObject` or `@StateObject` and reads `line` and `url` directly; the static `line` is needed only for Combine sinks, which receive values before the property changes.
-- **Compose**: Model it as a `ViewModel` exposing a `StateFlow<AutomationStatus>` data class of `port: Int?`, `token: String?`, `isRegistered: Boolean`, `failureReason: String?`. Compute `line` and `url` as pure functions of the data class, so the Swift pre-change publication problem does not arise (a collected value is always the new one). Update the flow from the main dispatcher. Validate port range 0 to 65535 yourself, as Swift gets it from `UInt16`.
+- **Compose**: Model it as a `ViewModel` exposing a `StateFlow<AutomationStatus>` data class of `port: Int?`, `token: String?`, `command: String?`, `isRegistered: Boolean`, `failureReason: String?`. Compute `line` and `url` as pure functions of the data class, so the Swift pre-change publication problem does not arise (a collected value is always the new one). Update the flow from the main dispatcher. Validate port range 0 to 65535 yourself, as Swift gets it from `UInt16`.
 - **React/Web**: Hold the four values in a store (a React context, Zustand or `useReducer` state) and derive `line` and `url` with pure selector functions of the state. Rendering from the new state removes the need for a separate static helper. A web port has no `~/.claude.json`; `isRegistered` would come from a service call.
 - **AppKit / UIKit**: The reference is `macOS/Features/MCP/AutomationServerStatus.swift`, `@MainActor public final class` conforming to `ObservableObject` with `Foundation` and `Combine`. `CLISettingsPanelViewController` (the CLI settings panel) subscribes to the published values with `Publishers.CombineLatest4` and calls `AutomationServerStatus.line(port:isRegistered:failureReason:)` with the received values because of the willSet-time publication noted in the source. The tests are in `Tests/AgenticDeveloperHubSDKMacOSTests/MCP/CLISettingsPanelTests.swift`.
 - **WinUI 3**: Implement a class that implements `INotifyPropertyChanged` with `Port` (`ushort?`), `Token`, `IsRegistered`, `FailureReason`, and computed `Url` and `Line` properties. Raise `PropertyChanged` for `Url` and `Line` whenever one of the four inputs changes. Unlike Swift's `@Published`, `PropertyChanged` fires after the field is set, so `Line` can be read off the instance and the static helper is not needed (keep it for parity if tests call it). Update from the UI thread via `DispatcherQueue.TryEnqueue` to mirror `@MainActor`, and bind in XAML with `{x:Bind ViewModel.Line, Mode=OneWay}` to a `TextBlock`. Build the URL with `$"http://127.0.0.1:{Port}{McpHttpEndpoint.Path}"`.
@@ -167,7 +169,7 @@ Not applicable: the component contains no logging call.
 **Approved**: pending
 
 **Decision**: The model is `@MainActor` and publishes the bearer token as a plain `String?`.
-**Rationale**: The panel is main-thread UI, so isolating the model there avoids locking. The token is published only so the panel can build the registration command; the model adds no protection for it, so where it is persisted and who can read it is decided by the host feature and the instance's holders.
+**Rationale**: The panel is main-thread UI, so isolating the model there avoids locking. The token is published only for the Coding Partner's MCP config, and the registration command is published ready-made as `command`, so the panel copies text that holds no token; the model adds no protection for it, so where it is persisted and who can read it is decided by the host feature and the instance's holders.
 **Approved**: pending
 
 ## Compliance
@@ -185,5 +187,6 @@ The model keeps state apart from the host feature that fills it and the panel th
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.0 | 2026-11-23 | Mike Fullerton | Apps suite Phase 4: a published command, the registration line the panel copies, which carries no token. |
 | 1.0.1 | 2026-11-18 | Mike Fullerton | The panel that reads it is now the CLI settings panel (`CLISettingsPanelViewController`); the Automation panel is gone, its browser switches moved to the browser's Agent Privacy group. |
 | 1.0.0 | 2026-11-14 | Mike Fullerton | Initial creation |

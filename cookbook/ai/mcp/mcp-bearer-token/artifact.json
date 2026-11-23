@@ -4,11 +4,11 @@
     "id": "8ced488f-9037-4254-907a-ef5444f8690f",
     "title": "MCPBearerToken",
     "type": "ingredient",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
-    "modified": "2026-11-14",
+    "modified": "2026-11-23",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -32,7 +32,7 @@
     "approved-date": ""
   },
   "names_hosts": "The code this spec describes names Claude itself (its CLI, hook events, paths or literal labels); the spec states those values.",
-  "synced": "25a27588349f6d02",
+  "synced": "9e42a18907bcaca0",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

@@ -1,9 +1,8 @@
 
-- **Null and empty input**: An empty `token` MUST produce `${ADKITCHEN_MCP_TOKEN:-}`, a valid but credential-less default (MUST; nothing rejects it). An empty config file or a file with no `mcpServers` key MUST yield false (MUST).
-- **Boundary values**: `port` is a `UInt16`, so the command's URL carries any value from 0 to 65535 as a plain decimal; port 0 produces `127.0.0.1:0/mcp` with no validation (MUST, per the type and the unvalidated interpolation). Because the match string begins `127.0.0.1:` and ends with the path, a registered port of 51477 does not match a query for port 1477, and a registered port of 1477 does not match a query for 51477 (MUST).
-- **Substring match leniency**: The check is a substring test, so a URL such as `http://127.0.0.1:51477/mcp/extra` or one with a longer host ending in `127.0.0.1` also counts as registered (a consequence of `registered-port-match`; the source documents the match as "names `port`").
-- **Concurrent access**: Both functions are free of shared state. `isRegistered` reads the file once, synchronously; if Claude Code rewrites `~/.claude.json` mid-read and the read sees partial JSON, the call reports false (MUST, per `registered-failure-is-false`). Not an ordering concern otherwise: nothing is serialised because nothing is shared.
-- **Error states**: A missing, unreadable or malformed config file is reported as false; the source swallows the underlying error (`try?`) and returns no reason, so a caller cannot tell "never registered" from "config unreadable" (MUST, per `registered-failure-is-false`).
-- **Offline or disconnected state**: Not applicable — neither function uses the network; the only I/O is one local file read.
-- **Cancellation, timeouts**: Not applicable — both functions are synchronous and run to completion.
-
+- **Null and empty input**: An empty `adhdPath` MUST be quoted as `''`, giving the helper `'' mcp headers`, which fails when Claude Code runs it (MUST; nothing rejects it). An empty config file or a file with no `mcpServers` key MUST yield false (MUST).
+- **Boundary values**: The ports are fixed per channel; the check is an exact string comparison, so a trailing slash, another host spelling such as `localhost`, or an environment-default form all count as not registered (MUST).
+- **Paths with spaces or quotes**: The path is one shell word inside the helper, and the whole entry is one shell word in the command, so a path holding spaces or single quotes survives both levels of quoting (MUST).
+- **Concurrent access**: The functions are free of shared state. `isRegistered` reads the file once, synchronously; if Claude Code rewrites `~/.claude.json` mid-read and the read sees partial JSON, the call reports false (MUST, per `registered-failure-is-false`).
+- **Error states**: A missing, unreadable or malformed config file is reported as false; the source swallows the underlying error (`try?`) and returns no reason (MUST).
+- **Offline or disconnected state**: Not applicable: no function uses the network; the only I/O is one local file read.
+- **Cancellation, timeouts**: Not applicable: every function is synchronous and runs to completion.

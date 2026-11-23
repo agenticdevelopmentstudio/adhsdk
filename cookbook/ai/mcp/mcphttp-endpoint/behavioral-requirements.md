@@ -12,7 +12,7 @@ Starting and stopping
 - **start-loopback-only**: The listening address MUST be `127.0.0.1`, never a wildcard or external address.
 - **start-falls-back-to-ephemeral**: When binding the preferred port fails and the preferred port is not 0 and no stop was requested, `start()` MUST log that the port is taken and bind port 0, then return the ephemeral port the system gave.
 - **start-idempotent-when-running**: `start()` called while running MUST return the port it is already on without binding again.
-- **start-serves-before-listening**: `start()` MUST first call `server.serve(over:)` with a fresh stateless transport, and only then bind the socket, so the first request already finds a served server.
+- **start-serves-before-listening**: `start()` MUST first build an `MCPStatelessHTTPHandler` over the server (which calls `server.serve(over:)` with a fresh stateless transport), and only then bind the socket, so the first request already finds a served server.
 - **start-while-starting-or-stopping**: `start()` called while another `start()` is binding, or while a `stop()` is tearing down, MUST throw `StartError.alreadyStarting`.
 - **start-bind-confirmation**: `start()` MUST treat the bind as failed when the HTTP server's run loop ends early or does not report listening within 5 seconds, and MUST read the bound port from the listening address (IPv4 or IPv6); any other address kind, or no address, MUST fail with a file-not-found Cocoa error.
 - **start-failure-cleans-up**: When `start()` throws for any reason, it MUST tear down everything it built (listener, run task, transport, port, server), return to idle, clear the stop request, and rethrow.
@@ -30,38 +30,43 @@ Authorization
 
 Routing
 
-- **route-post-only**: Only `POST /mcp` MUST reach the MCP transport.
+- **route-post-only**: Only `POST /mcp` MUST reach the handler, which passes it to the MCP transport.
 - **route-wrong-method-405**: A request to `/mcp` with any other method MUST be answered 405 with the header `Allow: POST`.
 - **route-wrong-path-404**: A request to any other path MUST be answered 404.
 
-Id rewriting
+Id rewriting (in `MCPStatelessHTTPHandler`)
 
 - **rewrite-single-object-with-id**: A request body that is a single JSON object whose `id` is a string or an integer MUST be forwarded with its `id` replaced by a fresh UUID string, and the original id MUST be remembered.
-- **rewrite-passthrough**: A body that is an array, has no `id`, has a null, boolean or fractional `id`, or cannot be parsed or re-serialised MUST be forwarded unchanged. A null id is no id to the SDK (a notification), so the endpoint MUST NOT turn it into a request.
-- **rewrite-restore-response**: In the response body, when it is a JSON object whose `id` equals the unique id, the endpoint MUST put the caller's original id back, preserving its type (integer stays integer, string stays string). Any other response body MUST pass through unchanged.
+- **rewrite-passthrough**: A body that is an array, has no `id`, has a null, boolean or fractional `id`, or cannot be parsed or re-serialised MUST be forwarded unchanged. A null id is no id to the SDK (a notification), so the handler MUST NOT turn it into a request.
+- **rewrite-restore-response**: In the response body, when it is a JSON object whose `id` equals the unique id, the handler MUST put the caller's original id back, preserving its type (integer stays integer, string stays string). Any other response body MUST pass through unchanged.
 
 Caller identity
 
-- **caller-header-forwarded**: The endpoint MUST forward every request header to the transport so the server can read the caller header (`HostMCPServer.callerHeader`, `X-ADKitchen-Pane`) and give the tool source the caller id; a request without it reaches the source with no caller.
+- **caller-header-forwarded**: The endpoint MUST forward every request header to the handler and the handler to the transport, so the server can read the caller header (`HostMCPServer.callerHeader`, `X-ADHD-Pane`, or the legacy `X-ADKitchen-Pane`, matched without regard to case, the new name winning when both are sent) and give the tool source the caller id; a request without either reaches the source with no caller.
 
-Cancellation
+Cancellation (in `MCPStatelessHTTPHandler`)
 
 - **cancel-recognise**: A body MUST be treated as a cancellation when it is a JSON object with no rewritable id, whose `method` is the MCP cancelled-notification name (`notifications/cancelled`), and whose `params.requestId` is a string or an integer.
-- **cancel-keyed-by-caller**: The endpoint MUST track in-flight requests by the pair (caller header value or empty, the id the caller sent) so a cancellation from one caller cannot stop another caller's request that happens to use the same id.
-- **cancel-translate**: For a recognised cancellation whose key is in flight, the endpoint MUST forward the notification with `params.requestId` replaced by the unique id, then release the waiting request (see `cancel-release`).
-- **cancel-unknown-passes**: For a cancellation whose key is not in flight (already answered, or another caller's), the endpoint MUST forward it unchanged and the SDK ignores it; the HTTP answer to the notification itself MUST be the transport's (202 with no body).
+- **cancel-keyed-by-caller**: The handler MUST track in-flight requests by the pair (caller header value or empty, the id the caller sent) so a cancellation from one caller cannot stop another caller's request that happens to use the same id.
+- **cancel-translate**: For a recognised cancellation whose key is in flight, the handler MUST forward the notification with `params.requestId` replaced by the unique id, then release the waiting request (see `cancel-release`).
+- **cancel-unknown-passes**: For a cancellation whose key is not in flight (already answered, or another caller's), the handler MUST forward it unchanged and the SDK ignores it; the HTTP answer to the notification itself MUST be the transport's (202 with no body).
 - **cancel-release**: Releasing a cancelled request MUST send the transport a JSON-RPC error response for the unique id with code `-32800` and message `request cancelled: <reason>`, so the HTTP call waiting on it is answered rather than held open until the timeout. A release arriving after a real response finds no waiter and the transport drops it.
-- **cancel-timeout-forwarded**: When FlyingFox's request timeout cancels a handler, the endpoint MUST send the transport a `notifications/cancelled` for the unique id with reason `the HTTP request timed out`, and then release it, so the tool call stops and the client is answered.
+- **cancel-timeout-forwarded**: When the task awaiting `handle(method:headers:body:)` is cancelled (FlyingFox's request timeout cancels the endpoint's request handler, or a connection drops), the handler MUST send the transport a `notifications/cancelled` for the unique id with reason `the HTTP request was cancelled`, and then release it, so the tool call stops and the client is answered.
 - **inflight-reuse-last-wins**: When a caller reuses an id while the first request is still in flight, the later request's unique id MUST win the key; the earlier request's completion MUST NOT forget the later entry.
 - **inflight-cleared-on-completion**: A request's in-flight entry MUST be removed when its handler returns.
 
 Response mapping
 
-- **response-status-map**: The SDK's status code MUST be mapped to the matching FlyingFox status for 200, 202, 400, 401, 403, 404, 405, 406, 421 and 500, and to a status with that numeric code and an empty phrase otherwise.
-- **response-headers-copied**: The SDK response's headers MUST be copied onto the FlyingFox response.
-- **response-stream-collected**: A streamed SDK response MUST be collected into one body. A stream that fails midway MUST become an empty 500, never a truncated 200.
+- **response-status-map**: The handler's status code MUST be mapped to the matching FlyingFox status for 200, 202, 400, 401, 403, 404, 405, 406, 421 and 500, and to a status with that numeric code and an empty phrase otherwise.
+- **response-headers-copied**: The handler response's headers MUST be copied onto the FlyingFox response.
+- **response-stream-collected**: The handler MUST collect a streamed SDK response into one body. A stream that fails midway MUST become an empty 500, never a truncated 200.
 
 Logging
 
 - **log-outcomes**: The endpoint MUST log each handled request's path and status, each 401, each cancellation, the port-taken fallback, and the listening port, none of which includes the token or body.
 
+The handler on its own
+
+- **handler-api**: `MCPStatelessHTTPHandler` MUST be a `public actor` with `init(server: HostMCPServer, path: String = "/mcp") async throws`, which serves the server over a fresh stateless transport, and `handle(method:headers:body:) async -> (status: Int, headers: [String: String], body: Data)`.
+- **handler-post-only**: `handle` MUST answer any method other than `POST` (compared without regard to case) with 405, the header `Allow: POST` and an empty body, without reaching the transport.
+- **handler-no-auth**: The handler MUST NOT check authentication or the path; both stay with whatever owns the socket.

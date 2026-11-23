@@ -2,11 +2,11 @@
 id: 6363b5ff-f511-4e21-9ba7-6850787dba62
 title: "Settings Storage"
 type: ingredient
-version: 1.3.0
+version: 1.4.0
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-11-14
+modified: 2026-11-23
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -36,6 +36,7 @@ approved-date: ""
 
 `settings-storage` is the toolkit's typed key/value persistence layer for user preferences and secrets. A setting key is a typed descriptor: a stable name, a default value, and an is-secure flag. A storage provider is the pluggable backend contract — get/set/remove/contains plus a change stream that names which key changed, with a per-key live view and a per-key value stream derived from it. Six concrete backends implement the contract: an in-memory backend and its secure variant (for tests and previews), a plain persistent backend, a secure persistent backend, an embedded-database backend (SQLite), and a cloud-synced backend. A settings store — and its process-wide shared instance — routes each key to a secure or plain backend by the key's is-secure flag and merges both backends' change streams into one. Call sites almost never touch a provider directly: they declare a static observable setting (a live mirror of the store's value for that key) and read/write it through a value accessor, or wrap it in a setting-observer/observed-setting wrapper for a plain callback outside the reactive UI layer. A color setting is an observable setting whose value type is a color value.
 
+Settings the apps of a suite share (the theme, the terminal's look, the AI provider registry) are kept outside any one app. A shared-settings key set names them, by exact name or name prefix. A routed provider wraps the provider it replaces, sends the shared keys to a shared-settings backend (a daemon's store, reached through its client) through a cache of their JSON values, and sends every other key to the provider it wraps; a host installs it into the shared settings store instance without replacing that instance. The daemon's side is a shared-settings store: one SQLite table of key, JSON value and version. Secret AI provider fields stay in the secure store, in a Keychain access group every app of the suite shares, copied forward from the app's own service on first read and never deleted from it.
 ## Behavioral Requirements
 
 ### Setting keys
@@ -123,6 +124,25 @@ approved-date: ""
 
 - **confines-to-ui-thread**: The component MUST be usable only on the UI thread. This covers the settings store, every setting and observer, and every storage provider (including the in-memory, plain persistent, secure persistent, embedded-database, and cloud-synced backends); plain value types such as colors are not confined. Consumers built on these types, such as settings-window models, are specified in their own ingredients.
 
+Shared settings
+
+- **shared-keys-membership**: A shared-settings key set MUST contain a key exactly when the key's name is one of its names or starts with one of its prefixes. The suite's set MUST hold the active theme id, the custom themes, the terminal font name, font size, cursor shape and cursor blink, the AI provider configuration list, and the prefix `aiplugin.config.`.
+- **routed-unrouted-to-fallback**: The routed provider MUST send every get, set, remove and contains for a key outside its key set to the provider it wraps, unchanged.
+- **routed-reads-before-load**: Until a load has succeeded, a routed key MUST read the cached value when one was written through this provider, and otherwise the wrapped provider's value, so an app that cannot reach the backend still shows the values it had.
+- **routed-reads-after-load**: Once a load has succeeded, every routed key MUST be answered from the cache, and a routed key the backend does not hold MUST read as its default.
+- **routed-write-order**: A routed set or remove MUST update the cache at once, publish the key on the change stream, and then reach the backend after every earlier routed write, in the order written. The wrapped provider MUST NOT be written for a routed key.
+- **routed-backend-change**: A backend change for a routed key MUST refetch that key; the cache MUST be updated and the key published only when the value differs, and a change for a key with a write still unanswered MUST NOT be applied, so the echo of the app's own write is silent.
+- **routed-load-failure**: A failed load MUST throw and leave the wrapped provider answering; calling start again retries it.
+- **routed-install-keeps-instance**: Installing a routed provider MUST replace the shared settings store instance's plain provider without replacing the instance, so observable settings constructed earlier keep reading through it and keep hearing its changes.
+- **shared-store-versions**: The shared-settings store MUST give a key version 1 on its first write and one more on each later write; a key with no row is at version 0.
+- **shared-store-optimistic**: A write or remove that names an expected version MUST be refused with a version-conflict error when the key is at any other version, leaving the value as it was; a write that names none always succeeds.
+- **shared-store-json-only**: The shared-settings store MUST refuse a value that is not one JSON value (a fragment such as `13` or `"Menlo"` counts as one).
+- **shared-store-import-if-absent**: The import's write MUST store a value only when the key has none, and MUST report whether it stored it.
+- **shared-store-change-stream**: Every write or remove that changes something MUST publish the key on the store's change stream.
+- **shared-secrets-read**: For a secure AI provider key (`aiplugin.config.` prefix), a read MUST try the shared Keychain group first; on a miss it MUST read the app's own secure provider and, when that holds a value, copy it into the shared group without deleting it from the app's own service.
+- **shared-secrets-write-remove**: A write of such a key MUST go to the shared group only; a remove MUST clear it from both places, so a cleared secret is not copied forward again.
+- **shared-secrets-other-keys**: Every other secure key MUST stay with the app's own secure provider.
+- **shared-secrets-install-once**: Installing the shared-group provider twice MUST NOT stack a second provider, and a binary without the access-group entitlement MUST install nothing.
 ## Appearance
 
 Not applicable — this is a settings persistence layer (typed keys and pluggable key/value backends), not a visual component.
@@ -176,7 +196,18 @@ Not applicable — this is a settings persistence layer, not a visual component.
 | settings-storage-035 | observedsetting-wraps-observer, colorsetting-alias | An observed-setting wrapper around a setting; read its wrapped and projected values; a color setting used as an observable setting over a color value | Wrapped value proxies the observer's value, projected value is the underlying observable setting; the color setting type-checks as an observable setting over a color value — traced to the wrapper and the color-setting alias |
 | settings-storage-036 | usersettings-shared-replacement-timing | Replace the shared settings store instance before constructing any observable setting | Every subsequently-constructed observable setting reads and subscribes against the new instance consistently, contrasting with `usersettings-shared-reassignment` in Edge Cases — traced to the shared instance's declaration as a mutable, replaceable reference |
 | settings-storage-037 | confines-to-ui-thread | Use a confined part from a thread other than the UI thread | The use is rejected, at build time or by a runtime check; the component's state is unchanged |
-
+| settings-storage-038 | shared-keys-membership, routed-unrouted-to-fallback | A routed provider over the suite's set; set an unrouted key, then an `aiplugin.config.<uuid>.model` key | The first lands in the wrapped provider only; the second is routed (`RoutedSettingsStorageProviderTests.testAnUnroutedKeyGoesToTheFallback`, `testTheAIConfigPrefixIsRouted`) |
+| settings-storage-039 | routed-write-order | Set, then remove, a routed key | Each is readable at once and reaches the backend; the remove reads the default (`testARoutedWriteIsVisibleAtOnceAndReachesTheBackend`, `testARoutedRemoveReadsTheDefaultAndReachesTheBackend`) |
+| settings-storage-040 | routed-reads-after-load, routed-backend-change | Load from a backend holding values; then change one in the backend | Reads answer the loaded values; the change updates the cache and an observable setting hears it (`testTheLoadedValuesAnswerRoutedReads`, `testABackendChangeUpdatesTheCacheAndFiresUserSettingsChanges`) |
+| settings-storage-041 | routed-backend-change | Write a routed key and let the backend echo it | No second change is published (`testTheEchoOfItsOwnWriteIsSilent`) |
+| settings-storage-042 | routed-load-failure, routed-reads-before-load | A backend whose load throws | The wrapped provider's values still answer (`testALoadFailureLeavesTheFallbacksValues`) |
+| settings-storage-043 | routed-install-keeps-instance | Construct an observable setting, install a routed provider, then change the key | The setting hears the change (`testTheStaticInstallKeepsExistingSettingsListening`) |
+| settings-storage-044 | shared-store-versions | Set a key, set it again; read an unset key | Versions 1 then 2; the unset key reads nil and is at version 0 (`SharedSettingsStoreTests.testSetThenReadReturnsTheValueAtVersionOne`, `testEachWriteBumpsTheVersion`, `testAnUnsetKeyReadsNil`, `testAnUnsetKeyIsAtVersionZero`) |
+| settings-storage-045 | shared-store-optimistic | Write at the current version; write and remove at a stale one | The first succeeds; the stale ones throw a version conflict and leave the value (`testAWriteAtTheCurrentVersionSucceeds`, `testAStaleWriteIsRefusedAndLeavesTheValue`, `testAStaleRemoveIsRefused`) |
+| settings-storage-046 | shared-store-json-only | Store bytes that are not JSON | Refused (`testAValueThatIsNotJSONIsRefused`) |
+| settings-storage-047 | shared-store-import-if-absent, shared-store-change-stream | Import over an existing value; write a key while listening | The import stores nothing and answers false; the write is announced (`testImportIfAbsentNeverOverwrites`, `testAWriteIsAnnouncedOnTheChangeStream`) |
+| settings-storage-048 | shared-secrets-read | A secret only in the app's own service, then in the shared group | Read from the shared group first; a miss copies forward without deleting; neither reads empty (`AIProviderSecretSharedGroupTests.testTheSharedGroupIsReadFirst`, `testAMissReadsTheBundleServiceAndCopiesForwardWithoutDeleting`, `testASecretInNeitherPlaceReadsEmpty`) |
+| settings-storage-049 | shared-secrets-write-remove, shared-secrets-other-keys, shared-secrets-install-once | Write, remove, a non-AI secure key, installing twice | Write to the group only; remove clears both; the other key stays in the fallback; one provider (`testAWriteGoesToTheSharedGroupOnly`, `testARemoveClearsBothSoNothingIsCopiedForwardAgain`, `testAnotherSecureKeyStaysWithTheFallback`, `testInstallingTwiceDoesNotStack`) |
 ## Edge Cases
 
 - **empty-collection-vs-absent**: Setting an empty array for a key MUST be distinguishable from never having set it: `contains` MUST return `true` after storing an empty array even though `get` also returns an empty array for an absent key whose `defaultValue` happens to be empty — traced to `testEmptyArrayRoundTrip`.
@@ -308,6 +339,11 @@ The in-memory provider, in-memory secure provider, plain persistent provider, an
 | apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/ViewModels/ThemeChoiceViewModel.swift` | confirmed (1.3.0) |
 | apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/ViewModels/ViewModel.swift` | confirmed (1.3.0) |
 | apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/LaunchAtLogin/LaunchAtLoginManager.swift` | confirmed (1.3.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/SharedSettingKeys.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/SharedSettingsBackend.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/RoutedSettingsStorageProvider.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Database/Daemon/SharedSettings/SharedSettingsStore.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIPlugins/AIProviderSharedSecrets.swift` | unverified |
 
 ## Design Decisions
 
@@ -335,6 +371,13 @@ The in-memory provider, in-memory secure provider, plain persistent provider, an
 **Rationale**: It stands today because `set` has no failure channel and every stored type is expected to encode; closing the gap would mean a logged error or a throwing `set` across every provider, which is an interface change. See `plain-provider-encode-failure` and `cloudsync-provider-encode-failure`. Revisit when `set` gains a failure channel or a stored type can fail to encode.
 **Approved**: pending
 
+**Decision**: Shared settings are routed by an explicit key set through a provider that wraps the app's own, served from a cache.
+**Rationale**: The settings layer is synchronous on the UI thread and the daemon is neither; a cache keeps every read synchronous, and the wrapped provider answers until the daemon does, so an app that cannot reach it loses nothing.
+**Approved**: pending
+
+**Decision**: Values and secrets are copied forward and never deleted from where an app kept them before.
+**Rationale**: An older build of an app still reads its own defaults domain and Keychain service, so the move is reversible until every app has moved.
+**Approved**: pending
 ## Compliance
 
 | Check | Status | Category |
@@ -352,6 +395,7 @@ The `SettingsStorageProvider` contract cleanly separates the key/value contract 
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.4.0 | 2026-11-23 | Mike Fullerton | Apps suite Phase 4: shared settings: SharedSettingKeys, RoutedSettingsStorageProvider, SharedSettingsStore and AI provider secrets in the shared Keychain group. |
 | 1.3.0 | 2026-11-14 | Mike Fullerton | Storage base moved to the foundation SDK for every Apple platform |
 | 1.2.1 | 2026-10-04 | Mike Fullerton | Swift-only constructs in normative sections restated as platform-neutral behavior; the Apple mechanism is in Platform Notes; added confines-to-ui-thread and corrected the provider-concurrency claims to match the code. |
 | 1.2.0 | 2026-10-04 | Mike Fullerton | Resolved NEEDS REVIEW markers as current behavior plus a pending design decision |

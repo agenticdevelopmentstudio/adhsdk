@@ -1,0 +1,43 @@
+
+- **terminal-weak**: The session MUST hold its terminal weakly, so a closed pane's terminal is not kept alive by the chat.
+- **initial-state**: Subscribing to the event stream MUST yield a ready state first, then any events held from before anyone listened, in order, and MUST never report a responding state, because a shell has no turns.
+- **unsent-events**: Replies and the exit text produced before the stream is subscribed MUST be kept and handed over once on subscription. The user message and failed turn that `send(_:)` emits are written straight to the stream and are not held: with no subscriber they are lost.
+- **connect-replace**: `connect(to:)` MUST replace the current terminal, release the old terminal's output and exit subscriptions and cancel pending report timers.
+- **connect-same**: `connect(to:)` with the terminal already connected MUST do nothing, and with nil when already disconnected MUST change nothing.
+- **connect-initial-output**: On connecting, what the terminal has already printed MUST be reported at once as the first reply, so the chat opens on what the terminal shows, and that reply MUST NOT be taken as an answer by any waiting caller.
+- **connect-drops-input**: Connecting to a new terminal MUST drop input still queued for the old one; disconnecting (nil) MUST let queued input finish in the old terminal.
+- **output-report-quiet**: Terminal output MUST be reported as one reply once it has been quiet for the quiet period (300 ms by default), with the timer restarted by each new output.
+- **output-report-latency**: Terminal output that keeps arriving MUST be reported once the maximum latency (1 s by default) has passed since the first unreported output, so a stream that never pauses still reaches the transcript.
+- **reply-events**: Each report MUST be emitted as a started event, one delta with the whole text and a finished event under one new message id, with no stop reason.
+- **no-empty-reply**: A report MUST emit nothing when the tracker finds no new output.
+- **send-user-message**: `send(_:)` MUST first emit the text as a user message, as written.
+- **send-not-connected**: `send(_:)` with no terminal MUST emit a non-retryable failed turn "Not connected to a terminal." and type nothing.
+- **send-typed-text**: `send(_:)` MUST type the text into the terminal with each newline replaced by a carriage return, so a multi-line message goes in as several lines the way a paste would.
+- **send-return-separate**: `send(_:)` MUST write Return as a separate write after the return delay (250 ms by default), never inside the text write, so a program that reads keystrokes sees a key press.
+- **send-empty**: `send(_:)` with empty text MUST write only the Return.
+- **send-order**: Messages MUST be typed in the order sent, each one's Return before the next one's text, even when sent quickly.
+- **send-echo**: The session MUST tell the tracker the last line of the text as the terminal presents it, so the shell's echo of that line is left out of the next reply.
+- **send-closes-target**: Text already typed MUST get its Return in the terminal it was typed into, even after the chat has closed or connected to another terminal, so a command is never left typed but not run.
+- **interrupt**: `interrupt()` MUST drop queued messages not yet typed, MUST drop the Return of text already typed and MUST send Control-C to the terminal.
+- **close**: `close()` MUST disconnect, finish the event stream and release it.
+- **run-not-connected**: `run`, `waitForOutput` and `interruptAndWait` with no terminal MUST return "The Terminal Chat is not connected to a terminal."
+- **run-reply**: `run(_:settle:timeout:)` MUST send the text as `send(_:)` does and return the output reported until output has been quiet for the settle time.
+- **run-armed-late**: A run MUST NOT count its settle or timeout until its Return has been written, so the echo of the text alone cannot settle the wait early and the timeout counts from the Return.
+- **run-fresh**: A run MUST start its wait empty, not with earlier unclaimed output.
+- **wait-replay**: `waitForOutput` MUST start with the output reported since the last caller stopped listening, then collect what arrives until the output has been quiet for the settle time.
+- **interrupt-wait**: `interruptAndWait` MUST begin its wait before sending Control-C, start it empty and default its timeout to the interrupt timeout (10 s).
+- **wait-single**: Only one wait MUST be active; beginning a new wait MUST end the previous one with what it had.
+- **wait-settle-cap**: A wait's settle time MUST be held to half its timeout.
+- **wait-timeout**: A wait that has not settled by its timeout MUST end with what it had (or "(no output)" when it had none) followed by the line "[still running — wait for more output, or interrupt it]". A wait's settle only starts once output has arrived, so a wait on a terminal that prints nothing runs to its timeout.
+- **wait-empty**: A wait that ends by settling or being replaced with no output collected MUST return "(no output)".
+- **wait-flush**: A wait that ends by its settle or its timeout MUST first report output the terminal printed but the chat has not yet reported, so none is lost inside the quiet period.
+- **wait-activity**: Quiet MUST be measured from the terminal's own output activity, not from reports, so a stream reported once per maximum latency is not judged finished between two reports.
+- **unclaimed-keep**: A reply reported while no caller waits MUST be kept, and only the latest 64 KiB of characters kept, dropping the oldest whole replies but never the only one.
+- **unclaimed-dropped-marker**: A wait that replays unclaimed output after dropping some MUST begin with the line "[… earlier output dropped]".
+- **unclaimed-cleared**: Starting any wait MUST discard the unclaimed output.
+- **exit-handling**: When the terminal's state becomes terminated, the session MUST report what the shell printed last, emit "[the terminal's shell has exited]" as a reply, give a waiting caller that text and end its wait at once, disconnect, and then call `terminalDidExit`.
+- **screen-lines**: `screen(lines:)` MUST return the last `lines` lines of the terminal's screen, with trailing blank lines removed, and at least one line when `lines` is below one.
+- **screen-not-connected**: `screen(lines:)` MUST return nil when there is no terminal.
+- **main-actor**: The session MUST be used only from the main actor.
+- **alternate-screen**: Output drawn while a full-screen program has the alternate screen up MUST NOT be reported: the session reads the terminal's screen snapshot through the tracker, and the tracker returns nothing while the snapshot says the alternate screen is current. The session has no check of its own.
+- **pre-connection-send**: A message sent while no terminal is connected MUST NOT be queued for a later connection; the failed turn described under `send-not-connected` is the only result.

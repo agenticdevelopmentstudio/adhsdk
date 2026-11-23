@@ -23,3 +23,10 @@
 **Rationale**: It stands today because `set` has no failure channel and every stored type is expected to encode; closing the gap would mean a logged error or a throwing `set` across every provider, which is an interface change. See `plain-provider-encode-failure` and `cloudsync-provider-encode-failure`. Revisit when `set` gains a failure channel or a stored type can fail to encode.
 **Approved**: pending
 
+**Decision**: Shared settings are routed by an explicit key set through a provider that wraps the app's own, served from a cache.
+**Rationale**: The settings layer is synchronous on the UI thread and the daemon is neither; a cache keeps every read synchronous, and the wrapped provider answers until the daemon does, so an app that cannot reach it loses nothing.
+**Approved**: pending
+
+**Decision**: Values and secrets are copied forward and never deleted from where an app kept them before.
+**Rationale**: An older build of an app still reads its own defaults domain and Keychain service, so the move is reversible until every app has moved.
+**Approved**: pending

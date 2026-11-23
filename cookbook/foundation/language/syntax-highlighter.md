@@ -2,11 +2,11 @@
 id: 6708bfd4-5b29-4bf9-b180-05904873906e
 title: "Syntax Highlighter"
 type: ingredient
-version: 1.2.1
+version: 1.3.0
 status: review
 language: en
 created: 2026-11-13
-modified: 2026-11-16
+modified: 2026-11-23
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -39,6 +39,7 @@ Colours source text with TextMate grammars. A `GrammarRegistry` answers grammar 
 ## Behavioral Requirements
 
 - **resources-validated**: `TextMateResources(directory:)` MUST throw when `highlighter.js`, `onig.wasm`, `languages.json` or `manifest.json` is missing from the directory; code receives the directory by injection, never from a bundle lookup.
+- **bundled-resources**: `BundledTextMateResources.load(from:)` MUST look for the folder `BundledTextMateResources.folderName` (`TextMate`) in the bundle's resources and answer `TextMateResources(directory:)` over it; when the bundle has no resource directory, or the folder is missing or lacks a required file, it MUST answer nil and log the error, never throw.
 - **bundled-source**: `BundledGrammarSource` MUST read its languages from `languages.json` and map every scope name in `manifest.json`'s `grammars` (embed-only grammars included) to `grammars/<name>.json`, reading a grammar's text only when asked for it.
 - **directory-source**: `DirectoryGrammarSource` MUST offer every `*.tmLanguage.json` in its directory whose JSON has a string `scopeName`, as a language whose id is the file name without `.tmLanguage.json` and whose `fileTypes` are matched as TextMate matches them: each is an extension, lowercased with a leading dot, and each that does not start with a dot is also an exact file name as written (`Makefile`). A grammar with no non-empty `fileTypes` MUST still give its text by scope name but MUST give no language: an entry with no extension or file name would resolve no file and would hide a later source's language of the same id (a user `swift.tmLanguage.json` with no `fileTypes` overrides the bundled Swift grammar, and `.swift` files still resolve to `swift`). A file that is not such JSON, and a second file for a scope already taken, MUST be skipped with a log line, and a missing directory MUST give no languages.
 - **extension-source**: `ExtensionGrammarSource`, built by `GrammarContributionPoint` from the extensions it has applied (the registry applies only enabled ones, and withdraws an extension when it is disabled), MUST offer every `contributes.grammars` entry whose `path` resolves inside its extension and ends in `.json` (`.tmLanguage.json` included); a plist `.tmLanguage`, a path that escapes the extension, a missing file, and a second claim on a scope (extensions taken in identifier order, then manifest order) MUST be skipped with a log line, a contested scope logged once while the conflict stands rather than on every rebuild. Every offered grammar MUST give its text by scope name. An entry with a `language` MUST also give a language with that id, the grammar's scope, and the aliases, extensions (lowercased with a leading dot, multi-dot values kept, glob and empty values dropped) and file names of every applied extension's `contributes.languages` entry with that id, whichever extension declares it, but only when that yields at least one extension or file name: an entry with neither would resolve no file and would hide a later source's language of the same id. One without a `language` (an injection grammar) MUST give no language. The source is a snapshot: it does not change when extensions do, and `hasGrammar` is a lookup.
@@ -96,6 +97,7 @@ Not applicable: The highlighter presents no UI.
 | syntax-highlighter-022 | limits | a grammar matching `a` once per character: a 9 000-character line with `lineTimeLimit` 1 ms, and fifty 2 000-character lines with `timeBudget` 0 | nil both times; a following one-line call is highlighted. |
 
 | syntax-highlighter-023 | cancellation | `highlight` called from a task already cancelled, on a new highlighter | throws `CancellationError`; no engine created. |
+| syntax-highlighter-024 | bundled-resources | a bundle with no `TextMate` folder; one whose folder holds only `highlighter.js` and `onig.wasm`; one whose folder holds every required file | nil; nil; resources over that folder (`BundledTextMateResourcesTests.testABundleWithoutTheFolderAnswersNil`, `testAFolderMissingARequiredFileAnswersNil`, `testTheFixtureFolderLoads`) |
 ## Edge Cases
 
 - **Null / empty input**: An empty text is one line with no runs.
@@ -156,6 +158,7 @@ The bundle's `console` output and skipped user and extension grammar files go to
 | apple | `packages/apple/AgenticDeveloperHubSDK/Language/Syntax/SyntaxHighlighter.swift` | confirmed (1.2.1) |
 | apple | `packages/apple/AgenticDeveloperHubSDK/Language/Syntax/StyledLine.swift` | confirmed (1.2.1) |
 | macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/GrammarContributionPoint.swift` | confirmed (1.2.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Language/Syntax/BundledTextMateResources.swift` | unverified |
 
 ## Design Decisions
 
@@ -183,6 +186,7 @@ The bundle's `console` output and skipped user and extension grammar files go to
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.3.0 | 2026-11-23 | Mike Fullerton | Apps suite Phase 4: BundledTextMateResources.load(from:) finds a bundle's TextMate folder. |
 | 1.2.1 | 2026-11-16 | Mike Fullerton | Final review: -z worktrees, file-contents containment, --cleanup=whitespace, reset --, top-level apply, no-newline split and CRLF lines, configured git in the todo, literal log pathspec; cancellation |
 | 1.2.0 | 2026-11-14 | Mike Fullerton | Review fixes: a user grammar with no fileTypes no longer shadows a bundled language; tokenizing a line has a time limit |
 | 1.1.1 | 2026-11-13 | Mike Fullerton | A grammar adds a language only when its join yields an extension or file name; a contested scope is logged once while it stands |
