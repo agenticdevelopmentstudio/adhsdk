@@ -40,7 +40,7 @@ vi.mock('@adh-sdk/authentication', () => ({ TokensPanel: () => null }))
 vi.mock('@adh-sdk/personas', () => ({ AssistantsPanel: () => null }))
 vi.mock('@adh-sdk/api-explorer', () => ({ RecordApiButton: () => null }))
 
-import { buildSettingsTopics, useSettingsTopics } from '../registry'
+import { buildSettingsTopics, useSettingsTopics, visibleTopicId } from '../registry'
 
 afterEach(() => {
   cleanup()
@@ -90,5 +90,18 @@ describe('buildSettingsTopics', () => {
       (t) => t.id,
     )
     expect(shown).toEqual(all.filter((id) => id !== 'usage' && id !== 'support-access'))
+  })
+})
+
+describe('visibleTopicId', () => {
+  // `/settings/support-access`, or the overlay left on that section, while the switch is off:
+  // SettingsLayout would find no topic for the id and show an empty pane.
+  it('lands a hidden section on the default rather than an empty pane', () => {
+    const topics = buildSettingsTopics({ hidden: new Set(['support-access']) })
+    expect(visibleTopicId(topics, 'support-access')).toBe('appearance')
+  })
+
+  it('keeps a section that is shown', () => {
+    expect(visibleTopicId(buildSettingsTopics(), 'support-access')).toBe('support-access')
   })
 })

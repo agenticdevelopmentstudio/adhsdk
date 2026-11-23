@@ -70,6 +70,7 @@ import { HubPreferencesPanel } from "./HubPreferencesPanel";
 // settings/index barrel — using it here too keeps one documented route, in and out of the
 // package. See topics.ts's and settings/index.ts's own header comments.
 import {
+  DEFAULT_SETTINGS_TOPIC,
   SETTINGS_TOPICS,
   resolveSettingsTopic,
   type SettingsTopicId,
@@ -226,6 +227,16 @@ export function useSettingsTopics(): Topic[] {
 }
 
 /**
+ * The topic to show: `id` while it is among `topics`, else the default. A hidden topic (Support
+ * access with its switch off) can still be asked for, by `/settings/support-access` or by the
+ * overlay having been on it when the read answered 404; SettingsLayout finds no topic for that
+ * id and renders an empty pane, so the caller lands on the default instead.
+ */
+export function visibleTopicId(topics: readonly Topic[], id: string): string {
+  return topics.some((t) => t.id === id) ? id : DEFAULT_SETTINGS_TOPIC;
+}
+
+/**
  * The User Settings tab, rendered as a routed page — used by hub's own /settings, and
  * kept available here for any other host that wants a standalone route rather than the
  * overlay. Builds its own SettingsDirtyProvider so a dirty panel is caught even under no
@@ -239,7 +250,7 @@ export function SettingsTab({ activeTopic }: { activeTopic?: string }) {
     <SettingsDirtyProvider>
       <SettingsLayout
         topics={topics}
-        activeId={resolveSettingsTopic(activeTopic)}
+        activeId={visibleTopicId(topics, resolveSettingsTopic(activeTopic))}
       />
     </SettingsDirtyProvider>
   );

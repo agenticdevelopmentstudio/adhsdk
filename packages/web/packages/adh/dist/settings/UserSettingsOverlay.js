@@ -132,6 +132,11 @@ var SITE_ROUTE_SEGMENTS = [
   "oidc",
   "explore",
   "old-landing",
+  // hub — app/(hub)/(auth)/support, the page a customer's emailed support-access link opens
+  // (phase 7), beside `/<workspace>/support`.
+  // A real top-level directory, so it shadows a workspace slugged `support` exactly as the words
+  // above do; it used to sit in RESERVED_HANDLE_WORDS as taste, before the page existed.
+  "support",
   // hub — app/{privacy-policy,terms-of-use}, the family's legal text bare at the hub's root
   // (adh-registry's `sites/legal.ts`). Every site's footer links these two addresses, and the
   // hub's own `/privacy` and `/terms` redirect to them; the template's `privacy` and `terms` are
@@ -230,7 +235,6 @@ var RESERVED_HANDLE_WORDS = [
   "signup",
   "static",
   "status",
-  "support",
   "user",
   "users",
   // The hub's feature vocabulary. Every one of these is a SECOND segment — `/<workspace>/teams`,
@@ -589,6 +593,7 @@ function HubPreferencesPanel() {
 
 // src/settings/registry.tsx
 import {
+  DEFAULT_SETTINGS_TOPIC,
   SETTINGS_TOPICS,
   resolveSettingsTopic
 } from "@adh-sdk/adh/settings/topics";
@@ -697,19 +702,22 @@ function useSettingsTopics() {
   const support = useSupportGrants("account");
   return buildSettingsTopics({ hidden: isSupportOff(support.error) ? SUPPORT_OFF : void 0 });
 }
+function visibleTopicId(topics, id) {
+  return topics.some((t) => t.id === id) ? id : DEFAULT_SETTINGS_TOPIC;
+}
 function SettingsTab({ activeTopic }) {
   const topics = useSettingsTopics();
   return /* @__PURE__ */ jsx3(SettingsDirtyProvider, { children: /* @__PURE__ */ jsx3(
     SettingsLayout,
     {
       topics,
-      activeId: resolveSettingsTopic(activeTopic)
+      activeId: visibleTopicId(topics, resolveSettingsTopic(activeTopic))
     }
   ) });
 }
 
 // src/settings/UserSettingsOverlay.tsx
-import { DEFAULT_SETTINGS_TOPIC } from "@adh-sdk/adh/settings/topics";
+import { DEFAULT_SETTINGS_TOPIC as DEFAULT_SETTINGS_TOPIC2 } from "@adh-sdk/adh/settings/topics";
 import { jsx as jsx4, jsxs as jsxs4 } from "react/jsx-runtime";
 function UserSettingsOverlay({
   open,
@@ -721,13 +729,14 @@ function UserSettingsDialog({
   open,
   onOpenChange
 }) {
-  const [topic, setTopic] = useState2(DEFAULT_SETTINGS_TOPIC);
+  const [topic, setTopic] = useState2(DEFAULT_SETTINGS_TOPIC2);
   const [openedWith, setOpenedWith] = useState2(open);
   if (open !== openedWith) {
     setOpenedWith(open);
-    if (open) setTopic(DEFAULT_SETTINGS_TOPIC);
+    if (open) setTopic(DEFAULT_SETTINGS_TOPIC2);
   }
   const topics = useSettingsTopics();
+  const shown = visibleTopicId(topics, topic);
   const { isAnyDirty } = useSettingsDirty();
   const [pendingExit, setPendingExit] = useState2(null);
   function attemptExit(action) {
@@ -752,9 +761,9 @@ function UserSettingsDialog({
           SettingsLayout2,
           {
             topics,
-            activeId: topic,
+            activeId: shown,
             onNavigate: (t) => {
-              if (t.id === topic) return;
+              if (t.id === shown) return;
               attemptExit(() => setTopic(t.id));
             }
           }
@@ -778,6 +787,7 @@ export {
   SettingsTab,
   UserSettingsOverlay,
   buildSettingsTopics,
-  useSettingsTopics
+  useSettingsTopics,
+  visibleTopicId
 };
 //# sourceMappingURL=UserSettingsOverlay.js.map

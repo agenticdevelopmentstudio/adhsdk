@@ -15,6 +15,13 @@ export declare function buildSettingsTopics({ hidden }?: {
  */
 export declare function useSettingsTopics(): Topic[];
 /**
+ * The topic to show: `id` while it is among `topics`, else the default. A hidden topic (Support
+ * access with its switch off) can still be asked for, by `/settings/support-access` or by the
+ * overlay having been on it when the read answered 404; SettingsLayout finds no topic for that
+ * id and renders an empty pane, so the caller lands on the default instead.
+ */
+export declare function visibleTopicId(topics: readonly Topic[], id: string): string;
+/**
  * The User Settings tab, rendered as a routed page — used by hub's own /settings, and
  * kept available here for any other host that wants a standalone route rather than the
  * overlay. Builds its own SettingsDirtyProvider so a dirty panel is caught even under no

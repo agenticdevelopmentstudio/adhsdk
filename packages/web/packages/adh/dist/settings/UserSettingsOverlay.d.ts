@@ -8,6 +8,6 @@ export declare function UserSettingsOverlay({ open, onOpenChange, }: {
     open: boolean;
     onOpenChange: (open: boolean) => void;
 }): import("react").JSX.Element;
-export { buildSettingsTopics, SettingsTab, useSettingsTopics } from "./registry";
+export { buildSettingsTopics, SettingsTab, useSettingsTopics, visibleTopicId } from "./registry";
 export type { Topic } from "@adh-sdk/account";
 //# sourceMappingURL=UserSettingsOverlay.d.ts.map
