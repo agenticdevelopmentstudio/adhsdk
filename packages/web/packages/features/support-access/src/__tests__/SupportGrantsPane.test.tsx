@@ -150,6 +150,20 @@ describe("SupportGrantsPane: the request", () => {
     expect(await screen.findByText(/The customer has been sent the request/)).toBeTruthy();
   });
 
+  it("never sends to a customer the search has filtered out of the list", () => {
+    renderPane();
+    fillForm({ customer: "cust-2" });
+    // The search narrows the roster to Sam alone; the picker no longer shows the chosen customer.
+    hooks.useProductCustomers.mockReturnValue({
+      data: { items: [{ id: "cust-1", email: "sam@x.test", displayName: "Sam" }], nextCursor: null },
+    });
+    fireEvent.change(screen.getByLabelText("Find a customer"), { target: { value: "sam" } });
+    expect((screen.getByLabelText("Customer") as HTMLSelectElement).value).toBe("");
+    submit();
+    expect(within(form()).getByRole("alert").textContent).toMatch("Choose a customer.");
+    expect(hooks.request).not.toHaveBeenCalled();
+  });
+
   it.each([
     ["no customer", { customer: "" }, "Choose a customer."],
     ["a short reason", { reason: "too short" }, /at least 10 characters/],

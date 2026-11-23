@@ -91,12 +91,18 @@ export function SupportGrantsPane({ ecosystemId, returnPath = "/support", onStep
     show(isStepUpRequired(err) ? "Sign in again with your second factor, then try again." : message(err));
   };
 
+  const roster = customers.data?.items ?? [];
+  // The customer the request goes to is only ever one the admin can see in the list: a search
+  // that filters the chosen customer out leaves the Select on "Choose a customer", so the form
+  // must not quietly send to the hidden one.
+  const chosenId = roster.some((c) => c.id === targetId) ? targetId : "";
+
   const submit = async (e: FormEvent) => {
     e.preventDefault();
     if (request.isPending) return;
     setFormError(null);
     setSent(false);
-    if (!targetId) {
+    if (!chosenId) {
       setFormError("Choose a customer.");
       return;
     }
@@ -107,7 +113,7 @@ export function SupportGrantsPane({ ecosystemId, returnPath = "/support", onStep
       return;
     }
     try {
-      await request.mutateAsync({ targetId, reason: reason.trim(), hours: h });
+      await request.mutateAsync({ targetId: chosenId, reason: reason.trim(), hours: h });
       setReason("");
       setSent(true);
     } catch (err) {
@@ -130,7 +136,6 @@ export function SupportGrantsPane({ ecosystemId, returnPath = "/support", onStep
   };
 
   const rows = ordered(grants.data ?? [], new Date());
-  const roster = customers.data?.items ?? [];
 
   return (
     <div className="flex flex-col gap-8">
@@ -153,7 +158,7 @@ export function SupportGrantsPane({ ecosystemId, returnPath = "/support", onStep
         </div>
         <div className="flex flex-col gap-1">
           <Label htmlFor="support-customer">Customer</Label>
-          <Select id="support-customer" value={targetId} onChange={(e) => setTargetId(e.target.value)}>
+          <Select id="support-customer" value={chosenId} onChange={(e) => setTargetId(e.target.value)}>
             <option value="">Choose a customer</option>
             {roster.map((c) => (
               <option key={c.id} value={c.id}>
