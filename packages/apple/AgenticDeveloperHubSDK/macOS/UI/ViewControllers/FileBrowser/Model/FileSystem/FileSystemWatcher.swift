@@ -115,8 +115,12 @@ public final class FileSystemWatcher: @unchecked Sendable {
                 separatingRescans: rescanHandler != nil
             )
             if !rescan.isEmpty {
+                // The paths are the user's (a home directory, client and
+                // project names), so only their count is public.
+                let joined = rescan.joined(separator: ", ")
+                let count = rescan.count
                 FileSystemWatcher.logger.info(
-                    "FSEvents asked for a rescan of \(rescan.joined(separator: ", "), privacy: .public)"
+                    "FSEvents asked for a rescan of \(count, privacy: .public) path(s): \(joined, privacy: .private)"
                 )
             }
 
@@ -143,7 +147,11 @@ public final class FileSystemWatcher: @unchecked Sendable {
 
         FSEventStreamSetDispatchQueue(stream, queue)
         FSEventStreamStart(stream)
-        logger.info("Started file system watcher for \(self.rootPaths.joined(separator: ", "), privacy: .public)")
+        let roots = rootPaths.joined(separator: ", ")
+        let count = rootPaths.count
+        logger.info(
+            "Started file system watcher for \(count, privacy: .public) root(s): \(roots, privacy: .private)"
+        )
     }
 
     public func stop() {
