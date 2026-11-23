@@ -106,9 +106,11 @@ function CapChip({ label }: { label: string }) {
 
 /** The service's models, each with an Available checkbox that switches the model on or off for
  *  the workspace. The box is controlled by the model's `available` as last read, so a failed
- *  change leaves it showing the service's last known state; a successful one hands the answered
- *  service to `onUpdated` and revalidates the shared services cache (the persona editor's picker
- *  reads the same entry). A model the provider no longer lists but which is still switched off
+ *  change leaves it showing the service's last known state; a successful one hands `onUpdated`
+ *  that one model's entry from the answer (or undefined when the answer no longer lists it) and
+ *  revalidates the shared services cache (the persona editor's picker reads the same entry). Only
+ *  the changed model is taken from the answer: two changes in flight can answer out of order, and
+ *  a whole-service snapshot from the earlier write would undo the later one. A model the provider no longer lists but which is still switched off
  *  arrives with `offered: false`: it shows "No longer offered", and its box stays enabled so it can
  *  be switched back on, after which the backend stops appending it and the row goes. A missing
  *  `available` or `offered` reads as true. Each box is disabled while its own change is in flight;
@@ -120,7 +122,7 @@ function ModelsTable({
 }: {
   serviceId: string;
   models: ModelInfo[];
-  onUpdated?: (updated: UserService) => void;
+  onUpdated?: (model: string, entry: ModelInfo | undefined) => void;
 }) {
   const [error, setError] = useState<string | null>(null);
   // The models whose change is in flight, by id. A set, not one id: two quick changes on different
@@ -134,7 +136,10 @@ function ModelsTable({
     setError(null);
     try {
       const updated = await api.services.setModelAvailability(serviceId, model, available);
-      onUpdated?.(updated);
+      onUpdated?.(
+        model,
+        updated.models.find((m) => m.id === model),
+      );
       revalidateResources((key) => key === PERSONA_SERVICES_CACHE_KEY);
     } catch (err) {
       reportUnexpectedAuthError(err, { feature: "services", step: "setModelAvailability" });
@@ -769,7 +774,16 @@ function ServiceEditor({
           <ModelsTable
             serviceId={service.id}
             models={service.models}
-            onUpdated={(updated) => onChanged(() => updated)}
+            onUpdated={(model, entry) =>
+              onChanged((prev) => ({
+                ...prev,
+                // A model the answer no longer lists (switched back on after the provider dropped
+                // it) leaves the table; any other keeps its place with the answered entry.
+                models: entry
+                  ? prev.models.map((m) => (m.id === model ? entry : m))
+                  : prev.models.filter((m) => m.id !== model),
+              }))
+            }
           />
         </FieldGroup>
       </div>

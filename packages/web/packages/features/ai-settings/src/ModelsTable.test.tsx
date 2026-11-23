@@ -221,6 +221,44 @@ describe("ModelsTable Available column", () => {
     });
   });
 
+  it("answers that arrive out of order each change only their own model", async () => {
+    const both = withModels([
+      { id: "m1", available: true, offered: true },
+      { id: "m2", available: true, offered: true },
+    ]);
+    // The re-read after each answer fails, so only the answers themselves can move the boxes.
+    list.mockResolvedValueOnce([both]).mockRejectedValue(new Error("re-read failed"));
+    const settle: Record<string, (s: UserService) => void> = {};
+    setModelAvailability.mockImplementation(
+      (_service, model) =>
+        new Promise<UserService>((resolve) => {
+          settle[model] = resolve;
+        }),
+    );
+    renderSection();
+
+    fireEvent.click(await screen.findByRole("checkbox", { name: "Available: m1" }));
+    fireEvent.click(box("m2"));
+    await waitFor(() => expect(setModelAvailability).toHaveBeenCalledTimes(2));
+
+    // m2's write answers first; m1's answer, committed earlier, arrives last with m2 still on.
+    settle.m2!(
+      withModels([
+        { id: "m1", available: false, offered: true },
+        { id: "m2", available: false, offered: true },
+      ]),
+    );
+    await waitFor(() => expect(box("m2")).toHaveAttribute("aria-checked", "false"));
+    settle.m1!(
+      withModels([
+        { id: "m1", available: false, offered: true },
+        { id: "m2", available: true, offered: true },
+      ]),
+    );
+    await waitFor(() => expect(box("m1")).toHaveAttribute("aria-checked", "false"));
+    expect(box("m2")).toHaveAttribute("aria-checked", "false");
+  });
+
   // ai-settings-027
   it("re-enabling a no-longer-offered model calls through, and the re-read list drops its row", async () => {
     const before = withModels([
