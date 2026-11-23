@@ -1,8 +1,19 @@
 import { type Topic } from "@adh-sdk/account";
+import { type SettingsTopicId } from "@adh-sdk/adh/settings/topics";
 /** The settings sections (Account, Subscription, Profile) as master-detail
  *  topics — each leads with a gold title and carries its own panel + button bar.
- *  Shared by hub's /settings route and the User Settings overlay every site mounts. */
-export declare function buildSettingsTopics(): Topic[];
+ *  Shared by hub's /settings route and the User Settings overlay every site mounts.
+ *  `hidden` leaves sections out of the rail; `useSettingsTopics` is the live answer. */
+export declare function buildSettingsTopics({ hidden }?: {
+    hidden?: ReadonlySet<SettingsTopicId>;
+}): Topic[];
+/**
+ * The settings topics, less any section the backend says is not there. Today that is Support
+ * access alone: hidden when `/v1/account/support/grants` answers 404, which is the backend's
+ * `consented_access` switch being off. Shown while the read is in flight or failed any other
+ * way, so the tab is never hidden by a slow or broken network, and the pane then says what failed.
+ */
+export declare function useSettingsTopics(): Topic[];
 /**
  * The User Settings tab, rendered as a routed page — used by hub's own /settings, and
  * kept available here for any other host that wants a standalone route rather than the

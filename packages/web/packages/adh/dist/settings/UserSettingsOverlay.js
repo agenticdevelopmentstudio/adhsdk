@@ -29,8 +29,11 @@ import {
   Shield,
   Bot,
   Archive,
-  Keyboard
+  Keyboard,
+  LifeBuoy
 } from "lucide-react";
+import { isSupportOff, useSupportGrants } from "@adh-sdk/data/support";
+import { SupportAccessPane } from "@adh-sdk/support-access";
 import {
   AccountPanel,
   ArchivedPanel,
@@ -595,6 +598,7 @@ var ICONS = {
   account: /* @__PURE__ */ jsx3(User, { size: 16, "aria-hidden": true }),
   security: /* @__PURE__ */ jsx3(Shield, { size: 16, "aria-hidden": true }),
   subscription: /* @__PURE__ */ jsx3(CreditCard, { size: 16, "aria-hidden": true }),
+  "support-access": /* @__PURE__ */ jsx3(LifeBuoy, { size: 16, "aria-hidden": true }),
   usage: /* @__PURE__ */ jsx3(Gauge, { size: 16, "aria-hidden": true }),
   profile: /* @__PURE__ */ jsx3(Globe, { size: 16, "aria-hidden": true }),
   appearance: /* @__PURE__ */ jsx3(Palette, { size: 16, "aria-hidden": true }),
@@ -612,6 +616,7 @@ var HELP = {
   security: "Two-factor authentication, passkeys and recovery codes.",
   notifications: "What the hub tells you about, and on which channel.",
   subscription: "Your plan and billing.",
+  "support-access": "Who has asked to see your content, what you allowed, and what they viewed.",
   usage: "This period\u2019s calls, data, tokens and spend, per principal.",
   profile: "Your public display name and profile URL.",
   appearance: "Theme, motion, contrast, text size, and spacing.",
@@ -627,6 +632,7 @@ var PANELS = {
   account: /* @__PURE__ */ jsx3(AccountPanel, {}),
   security: /* @__PURE__ */ jsx3(SecurityWorkspace, {}),
   subscription: /* @__PURE__ */ jsx3(SubscriptionPanel, {}),
+  "support-access": /* @__PURE__ */ jsx3("div", { className: "min-h-0 flex-1 overflow-y-auto px-6 py-6", children: /* @__PURE__ */ jsx3(SupportAccessPane, { side: "account" }) }),
   usage: /* @__PURE__ */ jsx3(UsagePanel, {}),
   profile: /* @__PURE__ */ jsx3(
     ProfilePanel,
@@ -648,6 +654,7 @@ var PANELS = {
 var API_PATHS = {
   account: "/v1/account",
   security: "/v1/account/mfa",
+  "support-access": "/v1/account/support/grants",
   notifications: "/v1/notification_preferences",
   usage: "/v1/usage/summary",
   profile: "/v1/account",
@@ -658,8 +665,8 @@ var API_PATHS = {
   assistants: "/v1/personas",
   archived: "/v1/workspaces"
 };
-function buildSettingsTopics() {
-  return SETTINGS_TOPICS.map((t) => {
+function buildSettingsTopics({ hidden } = {}) {
+  return SETTINGS_TOPICS.filter((t) => !hidden?.has(t.id)).map((t) => {
     const apiPath = API_PATHS[t.id];
     return {
       id: t.id,
@@ -685,11 +692,17 @@ function buildSettingsTopics() {
     };
   });
 }
+var SUPPORT_OFF = /* @__PURE__ */ new Set(["support-access"]);
+function useSettingsTopics() {
+  const support = useSupportGrants("account");
+  return buildSettingsTopics({ hidden: isSupportOff(support.error) ? SUPPORT_OFF : void 0 });
+}
 function SettingsTab({ activeTopic }) {
+  const topics = useSettingsTopics();
   return /* @__PURE__ */ jsx3(SettingsDirtyProvider, { children: /* @__PURE__ */ jsx3(
     SettingsLayout,
     {
-      topics: buildSettingsTopics(),
+      topics,
       activeId: resolveSettingsTopic(activeTopic)
     }
   ) });
@@ -714,7 +727,7 @@ function UserSettingsDialog({
     setOpenedWith(open);
     if (open) setTopic(DEFAULT_SETTINGS_TOPIC);
   }
-  const topics = buildSettingsTopics();
+  const topics = useSettingsTopics();
   const { isAnyDirty } = useSettingsDirty();
   const [pendingExit, setPendingExit] = useState2(null);
   function attemptExit(action) {
@@ -764,6 +777,7 @@ function UserSettingsDialog({
 export {
   SettingsTab,
   UserSettingsOverlay,
-  buildSettingsTopics
+  buildSettingsTopics,
+  useSettingsTopics
 };
 //# sourceMappingURL=UserSettingsOverlay.js.map

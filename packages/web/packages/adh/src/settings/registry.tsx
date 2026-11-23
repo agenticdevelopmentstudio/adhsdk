@@ -16,7 +16,10 @@ import {
   Bot,
   Archive,
   Keyboard,
+  LifeBuoy,
 } from "lucide-react";
+import { isSupportOff, useSupportGrants } from "@adh-sdk/data/support";
+import { SupportAccessPane } from "@adh-sdk/support-access";
 import {
   AccountPanel,
   ArchivedPanel,
@@ -84,6 +87,7 @@ const ICONS: Record<SettingsTopicId, ReactNode> = {
   account: <User size={16} aria-hidden />,
   security: <Shield size={16} aria-hidden />,
   subscription: <CreditCard size={16} aria-hidden />,
+  "support-access": <LifeBuoy size={16} aria-hidden />,
   usage: <Gauge size={16} aria-hidden />,
   profile: <Globe size={16} aria-hidden />,
   appearance: <Palette size={16} aria-hidden />,
@@ -102,6 +106,7 @@ const HELP: Partial<Record<SettingsTopicId, string>> = {
   security: "Two-factor authentication, passkeys and recovery codes.",
   notifications: "What the hub tells you about, and on which channel.",
   subscription: "Your plan and billing.",
+  "support-access": "Who has asked to see your content, what you allowed, and what they viewed.",
   usage: "This period’s calls, data, tokens and spend, per principal.",
   profile: "Your public display name and profile URL.",
   appearance: "Theme, motion, contrast, text size, and spacing.",
@@ -123,6 +128,11 @@ const PANELS: Record<SettingsTopicId, ReactNode> = {
   account: <AccountPanel />,
   security: <SecurityWorkspace />,
   subscription: <SubscriptionPanel />,
+  "support-access": (
+    <div className="min-h-0 flex-1 overflow-y-auto px-6 py-6">
+      <SupportAccessPane side="account" />
+    </div>
+  ),
   usage: <UsagePanel />,
   profile: (
     <ProfilePanel
@@ -155,6 +165,7 @@ const PANELS: Record<SettingsTopicId, ReactNode> = {
 const API_PATHS: Partial<Record<SettingsTopicId, string>> = {
   account: "/v1/account",
   security: "/v1/account/mfa",
+  "support-access": "/v1/account/support/grants",
   notifications: "/v1/notification_preferences",
   usage: "/v1/usage/summary",
   profile: "/v1/account",
@@ -168,9 +179,12 @@ const API_PATHS: Partial<Record<SettingsTopicId, string>> = {
 
 /** The settings sections (Account, Subscription, Profile) as master-detail
  *  topics — each leads with a gold title and carries its own panel + button bar.
- *  Shared by hub's /settings route and the User Settings overlay every site mounts. */
-export function buildSettingsTopics(): Topic[] {
-  return SETTINGS_TOPICS.map((t) => {
+ *  Shared by hub's /settings route and the User Settings overlay every site mounts.
+ *  `hidden` leaves sections out of the rail; `useSettingsTopics` is the live answer. */
+export function buildSettingsTopics(
+  { hidden }: { hidden?: ReadonlySet<SettingsTopicId> } = {},
+): Topic[] {
+  return SETTINGS_TOPICS.filter((t) => !hidden?.has(t.id)).map((t) => {
     const apiPath = API_PATHS[t.id];
     return {
       id: t.id,
@@ -198,6 +212,19 @@ export function buildSettingsTopics(): Topic[] {
   });
 }
 
+const SUPPORT_OFF: ReadonlySet<SettingsTopicId> = new Set<SettingsTopicId>(["support-access"]);
+
+/**
+ * The settings topics, less any section the backend says is not there. Today that is Support
+ * access alone: hidden when `/v1/account/support/grants` answers 404, which is the backend's
+ * `consented_access` switch being off. Shown while the read is in flight or failed any other
+ * way, so the tab is never hidden by a slow or broken network, and the pane then says what failed.
+ */
+export function useSettingsTopics(): Topic[] {
+  const support = useSupportGrants("account");
+  return buildSettingsTopics({ hidden: isSupportOff(support.error) ? SUPPORT_OFF : undefined });
+}
+
 /**
  * The User Settings tab, rendered as a routed page — used by hub's own /settings, and
  * kept available here for any other host that wants a standalone route rather than the
@@ -207,10 +234,11 @@ export function buildSettingsTopics(): Topic[] {
  * registry and the dialog frame are scoped to one mount.
  */
 export function SettingsTab({ activeTopic }: { activeTopic?: string }) {
+  const topics = useSettingsTopics();
   return (
     <SettingsDirtyProvider>
       <SettingsLayout
-        topics={buildSettingsTopics()}
+        topics={topics}
         activeId={resolveSettingsTopic(activeTopic)}
       />
     </SettingsDirtyProvider>

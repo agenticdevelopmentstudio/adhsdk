@@ -76,6 +76,7 @@
 @import "@adh-sdk/personas/sources.css";
 @import "@adh-sdk/profile/sources.css";
 @import "@adh-sdk/resource/sources.css";
+@import "@adh-sdk/support-access/sources.css";
 
 /* adh-ui ships the rdid grammar, the invitation surfaces, admin notes and the
  * ownership-transfer block that this package mounts. Carved out of `ui` in 2026-08,

@@ -54,6 +54,13 @@ vi.mock('@adh-sdk/profile', () => ({
 vi.mock('@adh-sdk/authentication', () => ({ TokensPanel: () => null }))
 vi.mock('@adh-sdk/personas', () => ({ AssistantsPanel: () => null }))
 vi.mock('@adh-sdk/api-explorer', () => ({ RecordApiButton: () => null }))
+// SettingsTab asks whether Support access is switched on (useSettingsTopics), which is a
+// react-query read; this file mounts no QueryClient, so the read is stubbed as "on, no grants".
+vi.mock('@adh-sdk/data/support', () => ({
+  useSupportGrants: () => ({ data: [], error: null }),
+  isSupportOff: () => false,
+}))
+vi.mock('@adh-sdk/support-access', () => ({ SupportAccessPane: () => null }))
 
 // This package's vitest config sets `globals: true` but has no auto-cleanup setup file, so each
 // render must be torn down explicitly or the next test's queries see BOTH mounted trees.

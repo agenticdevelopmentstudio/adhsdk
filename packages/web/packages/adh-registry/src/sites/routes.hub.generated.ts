@@ -130,6 +130,7 @@ export const SITE_ROUTES_HUB: Partial<Record<SiteId, readonly string[]>> = {
     '/privacy-policy',
     '/settings/[[...topic]]',
     '/signup',
+    '/support',
     '/terms-of-use',
     '/tour',
   ],

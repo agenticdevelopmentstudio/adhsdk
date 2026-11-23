@@ -22,7 +22,7 @@ import { SettingsDirtyProvider, useSettingsDirty } from "@adh-sdk/resource";
 // two-caches-one-subtree trap that check was added to close. Wrapping the overlay makes it
 // a real ancestor of the panels and a real descendant of the host's shell provider.
 import { ToolkitQueryProvider } from "@adh-sdk/data/query";
-import { buildSettingsTopics } from "./registry";
+import { useSettingsTopics } from "./registry";
 // Package path, not "./topics": this is the same specifier a Server Component outside this
 // package must use to reach these exports without going through the "use client"-tainted
 // settings/index barrel — using it here too keeps one documented route, in and out of the
@@ -69,7 +69,9 @@ function UserSettingsDialog({
     setOpenedWith(open);
     if (open) setTopic(DEFAULT_SETTINGS_TOPIC);
   }
-  const topics = buildSettingsTopics();
+  // Less any section the backend says is not there (Support access while its switch is off).
+  // Inside ToolkitQueryProvider, so the read that decides it has a client.
+  const topics = useSettingsTopics();
   const { isAnyDirty } = useSettingsDirty();
 
   // A close or a tab switch the user must confirm because some panel is dirty. `null` = nothing
@@ -153,5 +155,5 @@ function UserSettingsDialog({
 // settings rail as a routed page rather than as the overlay — hub's /settings, the only one —
 // imports "@adh-sdk/adh/settings/UserSettingsOverlay" itself. That host pays for the
 // panel graph on the route whose entire purpose is the panel graph; nobody else pays at all.
-export { buildSettingsTopics, SettingsTab } from "./registry";
+export { buildSettingsTopics, SettingsTab, useSettingsTopics } from "./registry";
 export type { Topic } from "@adh-sdk/account";

@@ -47,6 +47,9 @@ export declare const SETTINGS_TOPICS: readonly [{
     readonly id: "subscription";
     readonly label: "Subscription";
 }, {
+    readonly id: "support-access";
+    readonly label: "Support access";
+}, {
     readonly id: "usage";
     readonly label: "Usage";
 }];

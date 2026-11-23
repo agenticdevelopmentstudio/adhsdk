@@ -1,0 +1,11 @@
+/* Tailwind source self-registration for @adh-sdk/support-access.
+ *
+ * Tailwind does not scan node_modules, so a host that mounts these panes adds one line:
+ *
+ *   @import "@adh-sdk/support-access/sources.css";
+ *
+ * The paths are relative to THIS file and travel with the package: `src` covers
+ * `next dev`, `dist` covers prod builds. Mirrors @adh-sdk/product-admin's. */
+
+@source "./src/**/*.{ts,tsx}";
+@source "./dist/**/*.js";

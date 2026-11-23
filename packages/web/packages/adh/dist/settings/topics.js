@@ -13,6 +13,7 @@ var SETTINGS_TOPICS = [
   { id: "security", label: "Security" },
   { id: "social", label: "Social links" },
   { id: "subscription", label: "Subscription" },
+  { id: "support-access", label: "Support access" },
   { id: "usage", label: "Usage" }
 ];
 var DEFAULT_SETTINGS_TOPIC = "appearance";

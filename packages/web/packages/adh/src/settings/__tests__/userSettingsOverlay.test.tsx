@@ -26,7 +26,7 @@ vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }))
 // also use, so this file matches it rather than importing relatively), and vitest mocks
 // match the exact specifier string a module imports, not the file it resolves to.
 vi.mock('../registry', () => ({
-  buildSettingsTopics: () => [
+  useSettingsTopics: () => [
     { id: 'a', label: 'Topic A', href: '/a', content: <PanelA /> },
     { id: 'b', label: 'Topic B', href: '/b', content: <div>Topic B content</div> },
   ],
