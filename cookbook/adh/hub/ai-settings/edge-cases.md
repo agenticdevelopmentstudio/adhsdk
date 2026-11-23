@@ -13,8 +13,8 @@
   source).
 - **Error states**: A failed list read is shown (MUST). A failed save or delete shows its message
   (MUST). A failed create keeps the modal open and shows the error message, or "Failed to create."
-  (MUST). A failed template read degrades to an empty catalog (MUST). A failed connect or refresh is
-  reported but shows no message of its own (see the open question on `refresh-models-failure`). A failed
+  (MUST). A failed template read degrades to an empty catalog (MUST). A failed connect or refresh
+  request is reported and shows its message beside its button until the button is pressed again (MUST). A failed
   availability call is reported, shows an error line and leaves the checkbox at the service's last
   known state (MUST).
 - **Offline or disconnected state**: The screen does no offline handling of its own. With no

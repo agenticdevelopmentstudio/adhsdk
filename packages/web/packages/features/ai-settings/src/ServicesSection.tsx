@@ -635,6 +635,12 @@ function ServiceEditor({
   const [connecting, setConnecting] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  // A Connect or Refresh request that fails outright (network, 5xx, 403) has no answer to adopt,
+  // so its message is held here and shown beside its button until that button is pressed again.
+  // A connect the backend answers as `failed` is not this: that answer carries its own
+  // `connectError`, shown from the service.
+  const [connectRequestError, setConnectRequestError] = useState<string | null>(null);
+  const [refreshError, setRefreshError] = useState<string | null>(null);
 
   // Exactly the rules the old boolean encoded, as the reason they failed — the edit pane never
   // renders the url-var/header fields `validateServiceDraft` additionally checks (see
@@ -683,12 +689,14 @@ function ServiceEditor({
 
   async function handleConnect() {
     setConnecting(true);
+    setConnectRequestError(null);
     try {
       const updated = await api.services.connect(service.id);
       onChanged(() => updated);
       onSaved(updated);
     } catch (err) {
       reportUnexpectedAuthError(err, { feature: "services", step: "connect" });
+      setConnectRequestError(err instanceof Error ? err.message : "Failed to connect.");
     } finally {
       setConnecting(false);
     }
@@ -696,12 +704,14 @@ function ServiceEditor({
 
   async function handleRefreshModels() {
     setRefreshing(true);
+    setRefreshError(null);
     try {
       const updated = await api.services.refreshModels(service.id);
       onChanged(() => updated);
       onSaved(updated);
     } catch (err) {
       reportUnexpectedAuthError(err, { feature: "services", step: "refreshModels" });
+      setRefreshError(err instanceof Error ? err.message : "Failed to refresh the models.");
     } finally {
       setRefreshing(false);
     }
@@ -763,10 +773,11 @@ function ServiceEditor({
             <Button size="sm" onClick={() => void handleConnect()} disabled={connecting}>
               {connecting ? "Connecting…" : "Connect"}
             </Button>
-            {service.connectStatus === "failed" && service.connectError && (
+            <ErrorText error={connectRequestError} />
+            {!connectRequestError && service.connectStatus === "failed" && service.connectError && (
               <ErrorText error={service.connectError} />
             )}
-            {service.connectStatus === "connected" && (
+            {!connectRequestError && service.connectStatus === "connected" && (
               <p className="text-sm text-apt-green">Connected successfully.</p>
             )}
           </div>
@@ -785,6 +796,7 @@ function ServiceEditor({
           <Button size="sm" onClick={() => void handleRefreshModels()} disabled={refreshing}>
             {refreshing ? "Refreshing…" : "Refresh"}
           </Button>
+          <ErrorText error={refreshError} />
           <ModelsTable
             serviceId={service.id}
             models={service.models}

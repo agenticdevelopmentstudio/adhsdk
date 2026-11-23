@@ -9,15 +9,16 @@
 | Dirty editor | Save is enabled once the draft is valid; a blocker message shows when a required field is blank; an exit guard is published. |
 | Saving | The Save button reads "Saving…" and is disabled, as is Cancel; the editor's fields are unchanged. |
 | Connecting | The Connect button reads "Connecting…" and is disabled. |
-| Connect failed | The connect error is shown under the button. |
+| Connect failed | The backend's connect error, or a failed request's message, is shown under the button. |
 | Connected | "Connected successfully." in green. |
 | Refreshing | The Refresh button reads "Refreshing…" and is disabled. |
+| Refresh failed | The failed request's message is shown under the Refresh button. |
 | No models | The table is replaced by the text "No models yet — Connect or Refresh." |
 | Model available | The row's Available checkbox is ticked. |
 | Model unavailable | The row's Available checkbox is unticked. |
 | Model no longer offered | The row shows "No longer offered" and an unticked, enabled checkbox. |
 | Availability change pending | That model's Available checkbox is disabled; the other rows' checkboxes stay enabled. |
-| Availability change failed | An error line shows the message; the checkbox shows the service's last known state. |
+| Availability change failed | An error line names the model and shows the message; the checkbox shows the service's last known state. |
 | Create modal open | The "New service" modal is over the rail with its Name field focused. |
 | Create refused | The modal shows the validation message under the form. |
 | Disabled control | The Provider select in the editor is disabled. |

@@ -140,18 +140,23 @@
 - **connect-button**: The Connection group MUST offer a Connect button reading "Connecting…" and
   disabled while the call runs.
 - **connect-result**: After connecting, the editor MUST adopt the returned service. A `failed` status
-  with an error MUST show that error; a `connected` status MUST show "Connected successfully."
+  with an error MUST show that error; a `connected` status MUST show "Connected successfully." While a
+  failed Connect request's message shows (see `refresh-models-failure`), neither status line shows.
 - **last-connected**: When the service has a last-connected time, the Connection group MUST show it as
   "Last: <date>", formatted by `fmtDate`.
 - **refresh-button**: The Models group MUST offer a Refresh button reading "Refreshing…" and disabled
   while the call runs, and on success MUST adopt the returned service.
 - **fetched-at**: When the models were fetched, the Models group MUST show "Fetched: <date>", formatted
   by `fmtDate`.
-- **live-service-sync**: The editor MUST keep a live copy of its service, replaced by the `service` prop
-  whenever the prop changes (the list's re-read after a save, connect, refresh or availability change)
-  and by the service a Connect, a Refresh or an availability change answers, so the Connection group,
-  the Models group and the API key hint show the row as last read.
-- **refresh-models-failure**: NEEDS REVIEW: Not implemented in source. A failed Connect or Refresh is only reported (steps `connect` and `refreshModels`) and shows no message of its own; the screen needs a decision on whether a failed refresh should say so, settled by the owner of the screen's error design.
+- **live-service-sync**: The editor MUST read its service from the `service` prop and keep no copy of
+  it. A save, a Connect, a Refresh and an availability change MUST write what they answer into the
+  shared services list (the editor's `onChanged` callback, which the section applies to the cached list
+  through `setItems`), and the list's re-read lands through the same prop, so the Connection group, the
+  Models group and the API key hint show the row as last read.
+- **refresh-models-failure**: When a Connect or Refresh request fails outright, the editor MUST report
+  it through `reportUnexpectedAuthError` (feature `services`, steps `connect` and `refreshModels`) and
+  MUST show the error's message, else "Failed to connect." or "Failed to refresh the models.", in an
+  error line beside its button. Pressing the button again MUST clear that line before the retry.
 - **api-link**: The editor's button bar MUST carry the service API entry for path `/v1/ai_services/{id}`
   titled "Service API".
 
@@ -173,16 +178,20 @@
 - **available-checkbox**: Each row MUST show an Available checkbox, ticked exactly when the model's
   `available` is true; a model with no `available` value MUST read as available.
 - **available-change**: Changing the checkbox MUST call the data client's `setModelAvailability` with the
-  service id, the model and the new checked value, then hand the answered service to the editor and
-  revalidate the services cache (`PERSONA_SERVICES_CACHE_KEY`).
+  service id, the model and the new checked value, then hand the editor only that model's entry from the
+  answered service and revalidate the services cache (`PERSONA_SERVICES_CACHE_KEY`). The editor MUST
+  patch just that entry into the cached service, or drop the model when the answer no longer lists it,
+  so answers that arrive out of order never move another model's box.
 - **available-change-pending**: While a model's change is in flight, that model's own checkbox MUST be
   disabled and the other rows' checkboxes MUST stay enabled. Pending changes MUST be tracked per model:
   when changes on different models overlap, each box MUST stay disabled until its own request settles,
   and one request settling MUST NOT re-enable another model's box whose request is still running.
 - **available-change-failure**: When `setModelAvailability` fails, the screen MUST report the failure
   through `reportUnexpectedAuthError`, the helper its other writes use, with feature `services` and
-  step `setModelAvailability`; MUST show the error's message in an error line; and the checkbox MUST
-  show the service's last known state, so it does not stay flipped.
+  step `setModelAvailability`; MUST show the error's message, after the model's display name (else its
+  id) and a colon, in an error line of that model's own; and the checkbox MUST show the service's last
+  known state, so it does not stay flipped. A model's error line MUST stay until that model's own next
+  change; a change on another model MUST NOT clear it.
 - **no-longer-offered**: A model whose `offered` is false MUST show "No longer offered" beside its
   checkbox, which is unticked because such a model arrives with `available` false. A model with no
   `offered` value MUST read as offered.
@@ -195,8 +204,9 @@
 
 - **model-item-shape**: Each model item the screen reads MUST carry `available` (boolean, true unless
   the wire says false) and `offered` (boolean, true unless the wire says false), beside its other
-  fields; the data client's model decoder (`modelFromWire`) fills them, and reads a bare string entry
-  as a model with that id.
+  fields; the data client's model decoder (`modelFromWire`) fills them, reads a bare string entry as a
+  model with that id, and drops an entry it cannot read (neither a string nor an object with a string
+  `id`) rather than failing the whole list.
 - **set-availability-call**: The data client MUST expose `services.setModelAvailability(id, model,
   available)` beside `refreshModels`, sending `POST /api/v1/ai_services/{id}/model_availability` with
   the body `{ model, available }` and reading the answer, the updated service, with the service

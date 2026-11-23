@@ -2,7 +2,7 @@
 id: 5fdf4ce9-cb7e-4490-a6d6-066690ef07ca
 title: "AI Settings"
 type: ingredient
-version: 1.0.2
+version: 1.0.3
 status: review
 language: en
 created: 2026-11-23
@@ -203,18 +203,23 @@ Available column and "No longer offered" were added in the same phase.
 - **connect-button**: The Connection group MUST offer a Connect button reading "Connecting…" and
   disabled while the call runs.
 - **connect-result**: After connecting, the editor MUST adopt the returned service. A `failed` status
-  with an error MUST show that error; a `connected` status MUST show "Connected successfully."
+  with an error MUST show that error; a `connected` status MUST show "Connected successfully." While a
+  failed Connect request's message shows (see `refresh-models-failure`), neither status line shows.
 - **last-connected**: When the service has a last-connected time, the Connection group MUST show it as
   "Last: <date>", formatted by `fmtDate`.
 - **refresh-button**: The Models group MUST offer a Refresh button reading "Refreshing…" and disabled
   while the call runs, and on success MUST adopt the returned service.
 - **fetched-at**: When the models were fetched, the Models group MUST show "Fetched: <date>", formatted
   by `fmtDate`.
-- **live-service-sync**: The editor MUST keep a live copy of its service, replaced by the `service` prop
-  whenever the prop changes (the list's re-read after a save, connect, refresh or availability change)
-  and by the service a Connect, a Refresh or an availability change answers, so the Connection group,
-  the Models group and the API key hint show the row as last read.
-- **refresh-models-failure**: NEEDS REVIEW: Not implemented in source. A failed Connect or Refresh is only reported (steps `connect` and `refreshModels`) and shows no message of its own; the screen needs a decision on whether a failed refresh should say so, settled by the owner of the screen's error design.
+- **live-service-sync**: The editor MUST read its service from the `service` prop and keep no copy of
+  it. A save, a Connect, a Refresh and an availability change MUST write what they answer into the
+  shared services list (the editor's `onChanged` callback, which the section applies to the cached list
+  through `setItems`), and the list's re-read lands through the same prop, so the Connection group, the
+  Models group and the API key hint show the row as last read.
+- **refresh-models-failure**: When a Connect or Refresh request fails outright, the editor MUST report
+  it through `reportUnexpectedAuthError` (feature `services`, steps `connect` and `refreshModels`) and
+  MUST show the error's message, else "Failed to connect." or "Failed to refresh the models.", in an
+  error line beside its button. Pressing the button again MUST clear that line before the retry.
 - **api-link**: The editor's button bar MUST carry the service API entry for path `/v1/ai_services/{id}`
   titled "Service API".
 
@@ -236,16 +241,20 @@ Available column and "No longer offered" were added in the same phase.
 - **available-checkbox**: Each row MUST show an Available checkbox, ticked exactly when the model's
   `available` is true; a model with no `available` value MUST read as available.
 - **available-change**: Changing the checkbox MUST call the data client's `setModelAvailability` with the
-  service id, the model and the new checked value, then hand the answered service to the editor and
-  revalidate the services cache (`PERSONA_SERVICES_CACHE_KEY`).
+  service id, the model and the new checked value, then hand the editor only that model's entry from the
+  answered service and revalidate the services cache (`PERSONA_SERVICES_CACHE_KEY`). The editor MUST
+  patch just that entry into the cached service, or drop the model when the answer no longer lists it,
+  so answers that arrive out of order never move another model's box.
 - **available-change-pending**: While a model's change is in flight, that model's own checkbox MUST be
   disabled and the other rows' checkboxes MUST stay enabled. Pending changes MUST be tracked per model:
   when changes on different models overlap, each box MUST stay disabled until its own request settles,
   and one request settling MUST NOT re-enable another model's box whose request is still running.
 - **available-change-failure**: When `setModelAvailability` fails, the screen MUST report the failure
   through `reportUnexpectedAuthError`, the helper its other writes use, with feature `services` and
-  step `setModelAvailability`; MUST show the error's message in an error line; and the checkbox MUST
-  show the service's last known state, so it does not stay flipped.
+  step `setModelAvailability`; MUST show the error's message, after the model's display name (else its
+  id) and a colon, in an error line of that model's own; and the checkbox MUST show the service's last
+  known state, so it does not stay flipped. A model's error line MUST stay until that model's own next
+  change; a change on another model MUST NOT clear it.
 - **no-longer-offered**: A model whose `offered` is false MUST show "No longer offered" beside its
   checkbox, which is unticked because such a model arrives with `available` false. A model with no
   `offered` value MUST read as offered.
@@ -258,8 +267,9 @@ Available column and "No longer offered" were added in the same phase.
 
 - **model-item-shape**: Each model item the screen reads MUST carry `available` (boolean, true unless
   the wire says false) and `offered` (boolean, true unless the wire says false), beside its other
-  fields; the data client's model decoder (`modelFromWire`) fills them, and reads a bare string entry
-  as a model with that id.
+  fields; the data client's model decoder (`modelFromWire`) fills them, reads a bare string entry as a
+  model with that id, and drops an entry it cannot read (neither a string nor an object with a string
+  `id`) rather than failing the whole list.
 - **set-availability-call**: The data client MUST expose `services.setModelAvailability(id, model,
   available)` beside `refreshModels`, sending `POST /api/v1/ai_services/{id}/model_availability` with
   the body `{ model, available }` and reading the answer, the updated service, with the service
@@ -303,15 +313,16 @@ All values are design tokens and utility classes in source; the component define
 | Dirty editor | Save is enabled once the draft is valid; a blocker message shows when a required field is blank; an exit guard is published. |
 | Saving | The Save button reads "Saving…" and is disabled, as is Cancel; the editor's fields are unchanged. |
 | Connecting | The Connect button reads "Connecting…" and is disabled. |
-| Connect failed | The connect error is shown under the button. |
+| Connect failed | The backend's connect error, or a failed request's message, is shown under the button. |
 | Connected | "Connected successfully." in green. |
 | Refreshing | The Refresh button reads "Refreshing…" and is disabled. |
+| Refresh failed | The failed request's message is shown under the Refresh button. |
 | No models | The table is replaced by the text "No models yet — Connect or Refresh." |
 | Model available | The row's Available checkbox is ticked. |
 | Model unavailable | The row's Available checkbox is unticked. |
 | Model no longer offered | The row shows "No longer offered" and an unticked, enabled checkbox. |
 | Availability change pending | That model's Available checkbox is disabled; the other rows' checkboxes stay enabled. |
-| Availability change failed | An error line shows the message; the checkbox shows the service's last known state. |
+| Availability change failed | An error line names the model and shows the message; the checkbox shows the service's last known state. |
 | Create modal open | The "New service" modal is over the rail with its Name field focused. |
 | Create refused | The modal shows the validation message under the form. |
 | Disabled control | The Provider select in the editor is disabled. |
@@ -322,7 +333,7 @@ Pressed and hover states of buttons belong to the shared button component and ar
 
 - **Role/trait**: The models table is a native table with header cells; the Available control is a
   checkbox; the create modal is a modal dialog labelled "New service"; the blocker message in the
-  button bar has the status role; every error line (list, save, delete, create, connect and
+  button bar has the status role; every error line (list, save, delete, create, connect, refresh and
   availability errors) is the shared `ErrorText` with the alert role; the rail icons are marked
   decorative.
 - **available-checkbox-label**: Each row's Available checkbox MUST have the accessible name "Available"
@@ -340,9 +351,9 @@ Pressed and hover states of buttons belong to the shared button component and ar
 
 ## Conformance Test Vectors
 
-The first eight vectors come from the named tests in `ServicesSection.test.tsx` beside the source, and
-the ninth from the setup every one of them shares. Vectors 016, 017, 018, 026, 027, 028, 029 and 031 come
-from the named tests in `ModelsTable.test.tsx` beside it, which renders the real `ServicesSection` and
+The first eight vectors and vectors 034 and 035 come from the named tests in `ServicesSection.test.tsx`
+beside the source, and the ninth from the setup every one of them shares. Vectors 016, 017, 018, 026,
+027, 028, 029, 031, 032 and 033 come from the named tests in `ModelsTable.test.tsx` beside it, which renders the real `ServicesSection` and
 mocks only the personas data client. The others are derived from the source's own functions and from
 the phase 8 design.
 
@@ -372,12 +383,16 @@ the phase 8 design.
 | ai-settings-022 | services-read-failure | The list call rejects | The failure is reported with feature `services`, step `list`, and the pane shows the error rather than "Loading…". |
 | ai-settings-023 | template-failure-degrades | The template call rejects while the create modal is open | The failure is reported (step `templates`), the template group is absent and the fields work by hand. |
 | ai-settings-025 | delete-confirmation | Press Delete and decline the confirmation | No delete call is made. |
-| ai-settings-026 | available-change-failure | Untick the box of a ticked model `m1` on service `svc_1` while `setModelAvailability` rejects with "boom" (test "a failed change is reported, shows the message, and leaves the box at its last known state") | The failure is reported with feature `services`, step `setModelAvailability`; an error line reads "boom"; the box is ticked again. |
+| ai-settings-026 | available-change-failure | Untick the box of a ticked model `m1` on service `svc_1` while `setModelAvailability` rejects with "boom" (test "a failed change is reported, shows the message, and leaves the box at its last known state") | The failure is reported with feature `services`, step `setModelAvailability`; an error line reads "m1: boom"; the box is ticked again. |
 | ai-settings-027 | re-enable-no-longer-offered | Tick the box of model `m9` with `offered: false` and `available: false` on service `svc_1`; the revalidated list no longer carries `m9` (test "re-enabling a no-longer-offered model calls through, and the re-read list drops its row") | The box was enabled; `setModelAvailability("svc_1", "m9", true)` is called; after revalidation no `m9` row is shown. |
 | ai-settings-028 | table-columns | A service with one model (test "puts Available last, after Caps") | The last two column headers read "Caps" and "Available". |
 | ai-settings-029 | available-checkbox | A model with id `m1` and display name "Model One" (test "names each box after the model's display name") | A checkbox named "Available: Model One" exists. |
 | ai-settings-030 | available-change-pending | Two models; untick the first while its call is unresolved | The first model's checkbox is disabled and the second's is enabled; once the call settles the first is enabled again. |
-| ai-settings-031 | available-change-pending, available-change-failure | Untick `m1`, then `m2`, on service `svc_1` while both calls are unresolved; `m1`'s call resolves, then `m2`'s rejects with "m2 failed" (test "two overlapping changes on different models each keep their own box disabled until their own request settles") | Both boxes are disabled; after `m1` answers only `m1`'s box is enabled; after `m2` fails its box is enabled and ticked, an error line reads "m2 failed", and the failure is reported with step `setModelAvailability`. |
+| ai-settings-031 | available-change-pending, available-change-failure | Untick `m1`, then `m2`, on service `svc_1` while both calls are unresolved; `m1`'s call resolves, then `m2`'s rejects with "m2 failed" (test "two overlapping changes on different models each keep their own box disabled until their own request settles") | Both boxes are disabled; after `m1` answers only `m1`'s box is enabled; after `m2` fails its box is enabled and ticked, an error line reads "m2: m2 failed", and the failure is reported with step `setModelAvailability`. |
+| ai-settings-032 | available-change-failure | Two models; untick `m1` while `setModelAvailability` rejects with "m1 failed", then untick `m2`, which succeeds, then press `m1` again (test "one model's failure stays on screen while another model changes, until its own retry") | "m1: m1 failed" shows, and still shows after `m2`'s change settles; it is gone once `m1` is pressed again. |
+| ai-settings-033 | available-change | Untick `m1` then `m2` with both calls unresolved and every re-read failing; `m2`'s call answers first with both off, then `m1`'s with `m1` off and `m2` on (test "answers that arrive out of order each change only their own model") | `m2`'s box reads unticked after its answer; after `m1`'s later answer `m1` is unticked and `m2` stays unticked. |
+| ai-settings-034 | refresh-models-failure, connect-result | Press Connect while `connect` rejects with "network down", then again while it resolves with a connected service (test "shows a failed Connect request beside the button, and a retry that succeeds clears it") | An alert reads "network down" and "Connected successfully." is not shown; after the retry no alert shows and "Connected successfully." does. |
+| ai-settings-035 | refresh-models-failure | Press Refresh while `refreshModels` rejects with "provider unreachable", then again while it resolves (test "shows a failed Refresh beside the button, and a retry that succeeds clears it") | An alert reads "provider unreachable"; after the retry no alert shows and `refreshModels` was called twice. |
 
 ## Edge Cases
 
@@ -395,8 +410,8 @@ the phase 8 design.
   source).
 - **Error states**: A failed list read is shown (MUST). A failed save or delete shows its message
   (MUST). A failed create keeps the modal open and shows the error message, or "Failed to create."
-  (MUST). A failed template read degrades to an empty catalog (MUST). A failed connect or refresh is
-  reported but shows no message of its own (see the open question on `refresh-models-failure`). A failed
+  (MUST). A failed template read degrades to an empty catalog (MUST). A failed connect or refresh
+  request is reported and shows its message beside its button until the button is pressed again (MUST). A failed
   availability call is reported, shows an error line and leaves the checkbox at the service's last
   known state (MUST).
 - **Offline or disconnected state**: The screen does no offline handling of its own. With no
@@ -630,13 +645,12 @@ must not be reported twice under two contexts.
 `separation-of-concerns` is `partial`: transport lives in the personas data module and the services
 list in `useUserServices`, but the section, the create form, the editor, the models table and the pure
 helpers (substitution, label, number format) share one component file. `unit-test-coverage` is
-`partial`: `ServicesSection.test.tsx` covers the Save gate and the exit guard, and `ModelsTable.test.tsx`
-covers the Available column, "No longer offered", a failed availability change and re-enabling; the
-create modal, the template logic, the number and price formatting, and Connect and
-Refresh have no test beside them. `error-response-handling` is `partial`: list, save, delete,
-availability and create-form failures show a
-message, a template failure degrades, but a failed Connect or Refresh is only reported (see the open
-question on `refresh-models-failure`). `secure-storage` passes for the client: the API key is sent only
+`partial`: `ServicesSection.test.tsx` covers the Save gate, the exit guard and failed Connect and Refresh
+requests, and `ModelsTable.test.tsx` covers the Available column, "No longer offered", failed and
+out-of-order availability changes and re-enabling; the create modal, the template logic, the number
+and price formatting, and a successful Refresh's adopted answer have no test beside them.
+`error-response-handling` passes: list, save, delete, connect, refresh, availability and create-form
+failures show a message, and a template failure degrades. `secure-storage` passes for the client: the API key is sent only
 when typed, is shown in a password field and is never read back. `semantic-markup` passes: the models
 table is a native table with header cells and the controls are native elements. `caching-strategy`
 passes: the services list and the template catalog are each one cached resource, so panes share an entry
@@ -646,6 +660,7 @@ and a return to the pane paints from cache while re-reading.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.3 | 2026-11-23 | Mike Fullerton | Phase 8 review fixes: a failed Connect or Refresh request shows its message (refresh-models-failure settled), the editor reads its service from the prop, availability answers patch only their own model, errors are per model, unreadable model entries are dropped |
 | 1.0.2 | 2026-11-23 | Mike Fullerton | Track availability changes per model: overlapping changes on different models each keep their own box disabled until their own request settles; vector ai-settings-031. |
 | 1.0.1 | 2026-11-23 | Mike Fullerton | Phase 8 verify pass against the code: format.ts moved too, editor syncs liveService from its prop, a box is disabled only while its own request runs, ServicesSectionProps, ModelsTable.test.tsx vectors, Apple model item corrected |
 | 1.0.0 | 2026-11-23 | Mike Fullerton | Initial creation: the AI Settings package for phase 8 |

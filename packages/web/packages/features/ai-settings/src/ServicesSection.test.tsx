@@ -40,6 +40,8 @@ import { api, type UserService } from "@adh-sdk/data/personas";
 
 const list = vi.mocked(api.services.list);
 const patchService = vi.mocked(api.services.patch);
+const connectService = vi.mocked(api.services.connect);
+const refreshModels = vi.mocked(api.services.refreshModels);
 
 const SERVICE: UserService = {
   id: "svc_1",
@@ -230,5 +232,37 @@ describe("ServicesSection unsaved-work guard (service editor)", () => {
     fireEvent.click(save);
     await waitFor(() => expect(patchService).toHaveBeenCalled());
     await waitFor(() => expect(host.live.size).toBe(0));
+  });
+});
+
+// A Connect or Refresh request that fails outright has no answer to adopt, so the editor says so
+// beside the button, and pressing the button again clears the message before the retry.
+describe("ServicesSection connect and refresh failures (service editor)", () => {
+  it("shows a failed Connect request beside the button, and a retry that succeeds clears it", async () => {
+    connectService.mockRejectedValueOnce(new Error("network down"));
+    connectService.mockResolvedValueOnce(SERVICE);
+    render(<ServicesSection urlSelection={{ serviceId: SERVICE.id, onSelectService: vi.fn() }} />);
+
+    const connect = await screen.findByRole("button", { name: "Connect" });
+    fireEvent.click(connect);
+    expect(await screen.findByRole("alert")).toHaveTextContent("network down");
+    expect(screen.queryByText("Connected successfully.")).toBeNull();
+
+    fireEvent.click(await screen.findByRole("button", { name: "Connect" }));
+    await waitFor(() => expect(screen.queryByRole("alert")).toBeNull());
+    expect(await screen.findByText("Connected successfully.")).toBeTruthy();
+  });
+
+  it("shows a failed Refresh beside the button, and a retry that succeeds clears it", async () => {
+    refreshModels.mockRejectedValueOnce(new Error("provider unreachable"));
+    refreshModels.mockResolvedValueOnce(SERVICE);
+    render(<ServicesSection urlSelection={{ serviceId: SERVICE.id, onSelectService: vi.fn() }} />);
+
+    fireEvent.click(await screen.findByRole("button", { name: "Refresh" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("provider unreachable");
+
+    fireEvent.click(await screen.findByRole("button", { name: "Refresh" }));
+    await waitFor(() => expect(screen.queryByRole("alert")).toBeNull());
+    expect(refreshModels).toHaveBeenCalledTimes(2);
   });
 });

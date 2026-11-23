@@ -11,13 +11,12 @@
 `separation-of-concerns` is `partial`: transport lives in the personas data module and the services
 list in `useUserServices`, but the section, the create form, the editor, the models table and the pure
 helpers (substitution, label, number format) share one component file. `unit-test-coverage` is
-`partial`: `ServicesSection.test.tsx` covers the Save gate and the exit guard, and `ModelsTable.test.tsx`
-covers the Available column, "No longer offered", a failed availability change and re-enabling; the
-create modal, the template logic, the number and price formatting, and Connect and
-Refresh have no test beside them. `error-response-handling` is `partial`: list, save, delete,
-availability and create-form failures show a
-message, a template failure degrades, but a failed Connect or Refresh is only reported (see the open
-question on `refresh-models-failure`). `secure-storage` passes for the client: the API key is sent only
+`partial`: `ServicesSection.test.tsx` covers the Save gate, the exit guard and failed Connect and Refresh
+requests, and `ModelsTable.test.tsx` covers the Available column, "No longer offered", failed and
+out-of-order availability changes and re-enabling; the create modal, the template logic, the number
+and price formatting, and a successful Refresh's adopted answer have no test beside them.
+`error-response-handling` passes: list, save, delete, connect, refresh, availability and create-form
+failures show a message, and a template failure degrades. `secure-storage` passes for the client: the API key is sent only
 when typed, is shown in a password field and is never read back. `semantic-markup` passes: the models
 table is a native table with header cells and the controls are native elements. `caching-strategy`
 passes: the services list and the template catalog are each one cached resource, so panes share an entry

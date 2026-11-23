@@ -1,7 +1,7 @@
 
 - **Role/trait**: The models table is a native table with header cells; the Available control is a
   checkbox; the create modal is a modal dialog labelled "New service"; the blocker message in the
-  button bar has the status role; every error line (list, save, delete, create, connect and
+  button bar has the status role; every error line (list, save, delete, create, connect, refresh and
   availability errors) is the shared `ErrorText` with the alert role; the rail icons are marked
   decorative.
 - **available-checkbox-label**: Each row's Available checkbox MUST have the accessible name "Available"
