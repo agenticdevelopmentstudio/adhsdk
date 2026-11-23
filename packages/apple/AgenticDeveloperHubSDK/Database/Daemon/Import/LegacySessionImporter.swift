@@ -47,7 +47,11 @@ import GRDB
 ///
 /// So an import that fails part way leaves the batches before the failure
 /// committed, and a re-run (which inserts nothing it inserted before) copies
-/// the rest. A batch commits atomically within each WAL-mode file but not
+/// the rest. That failure is thrown as ``LegacyImportFailure``, whose report
+/// says what did commit: every store finished before it, and the failed store
+/// (status ``LegacyImportReport/Status/failed``) with the rows its committed
+/// batches inserted (none for the main database, whose one transaction rolls
+/// back). A batch commits atomically within each WAL-mode file but not
 /// across them: a spool row recorded in the main database's map whose spool
 /// insert was lost to a crash is the only window, and the spool is a queue of
 /// not-yet-drained hook events.
@@ -142,7 +146,7 @@ public final class LegacySessionImporter: @unchecked Sendable {
     /// (`dst_raw`, `dst_events` or `dst_spool`), while the import still holds
     /// the main database's write lane. Tests use it to write those stores
     /// between batches.
-    var batchCommitted: (String) -> Void = { _ in }
+    var batchCommitted: (String) throws -> Void = { _ in }
 
     public init(target: Target, batchRows: Int = LegacySessionImporter.defaultBatchRows) {
         self.target = target
@@ -152,11 +156,21 @@ public final class LegacySessionImporter: @unchecked Sendable {
     /// Copies every store found in `directory` into the target and reports what
     /// each table gained. Throws only when a file that is there cannot be read
     /// or written; the transaction that failed is then rolled back, and what
-    /// committed before it stays (a re-run copies the rest).
+    /// committed before it stays (a re-run copies the rest). The error is then
+    /// a ``LegacyImportFailure`` carrying the report of what committed.
     public func importStores(kind: SourceKind, directory: URL) throws -> LegacyImportReport {
+        var report = LegacyImportReport(source: kind, directory: directory.path)
+        do {
+            try copy(kind: kind, directory: directory, into: &report)
+        } catch {
+            throw LegacyImportFailure(report: report, underlying: error)
+        }
+        return report
+    }
+
+    private func copy(kind: SourceKind, directory: URL, into report: inout LegacyImportReport) throws {
         let files = SourceFiles(kind: kind, directory: directory)
         let targetFiles = TargetFiles(target: target)
-        var report = LegacyImportReport(source: kind, directory: directory.path)
 
         try target.database.writeWithoutTransaction(deadline: Self.writeDeadline) { conn in
             var attached: [String] = []
@@ -192,28 +206,29 @@ public final class LegacySessionImporter: @unchecked Sendable {
             try conn.inTransaction {
                 // Checked at commit, so the copy order never trips a reference.
                 try conn.execute(sql: "PRAGMA defer_foreign_keys = ON")
-                report.stores.append(try Self.store(
-                    file: kind.mainDatabaseFileName, present: hasMain, targetPresent: true
+                try Self.store(
+                    file: kind.mainDatabaseFileName, present: hasMain, targetPresent: true,
+                    into: &report, rollsBackOnFailure: true
                 ) { store in
                     try copier.copyMain(
                         into: &store,
                         sourcePrefix: kind.billingSettingsKeyPrefix,
                         targetPrefix: target.database.billingSettingsKeyPrefix
                     )
-                })
+                }
                 return .commit
             }
 
             // The attached stores, each in batches that commit as they go.
             // The archive before the event store: an event row's raw_ref is
             // resolved through the target archive's copy of its raw record.
-            report.stores.append(try Self.store(
-                file: SourceFiles.rawName, present: hasRaw, targetPresent: hasTargetRaw
+            try Self.store(
+                file: SourceFiles.rawName, present: hasRaw, targetPresent: hasTargetRaw, into: &report
             ) { store in
                 try copier.copyStore(from: "src_raw", to: "dst_raw", into: &store, rawRemap: false)
-            })
-            report.stores.append(try Self.store(
-                file: EventStore.fileName, present: hasEvents, targetPresent: hasTargetEvents
+            }
+            try Self.store(
+                file: EventStore.fileName, present: hasEvents, targetPresent: hasTargetEvents, into: &report
             ) { store in
                 guard hasRaw, hasTargetRaw else {
                     store.status = .notImported
@@ -221,34 +236,64 @@ public final class LegacySessionImporter: @unchecked Sendable {
                     return
                 }
                 try copier.copyStore(from: "src_events", to: "dst_events", into: &store, rawRemap: true)
-            })
-            report.stores.append(try Self.store(
-                file: IngestSpool.defaultDBName, present: hasSpool, targetPresent: hasTargetSpool
+            }
+            try Self.store(
+                file: IngestSpool.defaultDBName, present: hasSpool, targetPresent: hasTargetSpool, into: &report
             ) { store in
                 try copier.copySpool(into: &store)
-            })
+            }
         }
-        return report
     }
 
+    /// Copies one store and appends its report to `report`, even when `body`
+    /// throws: the store is then ``LegacyImportReport/Status/failed`` with the
+    /// counts its committed batches reached, or none when `rollsBackOnFailure`
+    /// (the store was copied in one transaction the failure rolls back).
     private static func store(
         file: String, present: Bool, targetPresent: Bool,
+        into report: inout LegacyImportReport, rollsBackOnFailure: Bool = false,
         _ body: (inout LegacyImportReport.Store) throws -> Void
-    ) throws -> LegacyImportReport.Store {
+    ) throws {
         var store = LegacyImportReport.Store(file: file)
         guard present else {
             store.status = .missing
-            return store
+            report.stores.append(store)
+            return
         }
         guard targetPresent else {
             store.status = .notImported
             store.note = "the target has no such store"
-            return store
+            report.stores.append(store)
+            return
         }
         store.status = .imported
-        try body(&store)
-        return store
+        do {
+            try body(&store)
+        } catch {
+            store.status = .failed
+            store.note = error.localizedDescription
+            if rollsBackOnFailure { store.inserted = [:] }
+            report.stores.append(store)
+            throw error
+        }
+        report.stores.append(store)
     }
+}
+
+/// An import that failed part way: `report` holds what committed before the
+/// failure (see ``LegacySessionImporter/importStores(kind:directory:)``), and
+/// the description is the underlying error's.
+public struct LegacyImportFailure: Error, LocalizedError, CustomStringConvertible {
+    public let report: LegacyImportReport
+    public let underlying: Error
+
+    public init(report: LegacyImportReport, underlying: Error) {
+        self.report = report
+        self.underlying = underlying
+    }
+
+    public var errorDescription: String? { underlying.localizedDescription }
+    public var description: String { "\(underlying)" }
 }
 
 // MARK: - Files
@@ -297,7 +342,7 @@ private struct TableCopier {
     let conn: Database
     let tag: String
     let batchRows: Int
-    let batchCommitted: (String) -> Void
+    let batchCommitted: (String) throws -> Void
 
     private var map: String { "main.\(LegacySessionImporter.mapTable)" }
 
@@ -417,42 +462,49 @@ private struct TableCopier {
             }
             let plan = try columnPlan(table: table, source: source, target: target)
             if !plan.sourceOnly.isEmpty { store.columnsNotCopied[table] = plan.sourceOnly }
-            store.inserted[table] = try insertOrIgnoreInBatches(
-                table, from: source, to: target, plan: plan, rawRemap: rawRemap && plan.copied.contains("raw_ref"))
+            // Counted as each batch commits, so a failure part way reports
+            // what the committed batches inserted.
+            store.inserted[table] = 0
+            try insertOrIgnoreInBatches(
+                table, from: source, to: target, plan: plan, rawRemap: rawRemap && plan.copied.contains("raw_ref"),
+                inserted: &store.inserted[table, default: 0])
         }
     }
 
     /// `insertOrIgnore` over the source's rowid ranges of at most `batchRows`
     /// rows, each range its own committed transaction. A table without a rowid
-    /// is copied in one.
+    /// is copied in one. `inserted` grows by each batch's rows once that batch
+    /// has committed, never before.
     private func insertOrIgnoreInBatches(_ table: String, from source: String, to target: String,
-                                         plan: ColumnPlan, rawRemap: Bool) throws -> Int {
+                                         plan: ColumnPlan, rawRemap: Bool, inserted: inout Int) throws {
         guard try hasRowId(table, in: source) else {
             var count = 0
             try conn.inTransaction {
                 count = try insertOrIgnore(table, from: source, to: target, plan: plan, rawRemap: rawRemap)
                 return .commit
             }
-            batchCommitted(target)
-            return count
+            inserted += count
+            try batchCommitted(target)
+            return
         }
         var after = Int64.min
-        var total = 0
         while true {
             var upper: Int64?
+            var count = 0
             try conn.inTransaction {
                 upper = try Int64.fetchOne(conn, sql: """
                     SELECT MAX(rowid) FROM (
                         SELECT rowid FROM \(quoted(source)).\(quoted(table)) WHERE rowid > ? ORDER BY rowid LIMIT ?)
                     """, arguments: [after, batchRows])
                 if let upper {
-                    total += try insertOrIgnore(
+                    count = try insertOrIgnore(
                         table, from: source, to: target, plan: plan, rawRemap: rawRemap, rowIds: (after, upper))
                 }
                 return .commit
             }
-            guard let upper else { return total }
-            batchCommitted(target)
+            guard let upper else { return }
+            inserted += count
+            try batchCommitted(target)
             after = upper
         }
     }
@@ -472,21 +524,24 @@ private struct TableCopier {
         if !plan.sourceOnly.isEmpty { store.columnsNotCopied[table] = plan.sourceOnly }
         // Batches of not-yet-recorded rows, each copied and recorded in its
         // own transaction, until a pass finds none.
-        var total = 0
+        // Counted as each batch commits, so a failure part way reports what
+        // the committed batches inserted.
+        store.inserted[table] = 0
         while true {
             var selected = 0
+            var inserted = 0
             try conn.inTransaction {
                 let pass = try copyByRowMap(
                     table, from: "src_spool", to: "dst_spool", mapName: "\(IngestSpool.defaultDBName)/\(table)",
                     plan: plan, limit: batchRows)
-                total += pass.inserted
+                inserted = pass.inserted
                 selected = pass.selected
                 return .commit
             }
             guard selected > 0 else { break }
-            batchCommitted("dst_spool")
+            store.inserted[table, default: 0] += inserted
+            try batchCommitted("dst_spool")
         }
-        store.inserted[table] = total
     }
 
     // MARK: Strategies
@@ -652,6 +707,9 @@ public struct LegacyImportReport: Codable, Sendable, Equatable, CustomStringConv
         case missing
         /// In the source directory, but not copied (see `note`).
         case notImported = "not_imported"
+        /// Copying it failed (`note` says why); `inserted` is what its
+        /// committed batches inserted before the failure.
+        case failed
     }
 
     public struct Store: Codable, Sendable, Equatable {
