@@ -179,7 +179,13 @@ describe("supportAdminApi", () => {
     expect(c.path).toBe(`/api/v1/support/grants/${GRANT}/data/content/notes`);
     expect(c.params).toEqual({ starting_after: "n0", limit: "50" });
     expect(c.init?.method ?? "GET").toBe("GET");
-    expect(page).toEqual({ rows: [{ id: "n1" }, { id: "n2" }], nextCursor: "n2" });
+    expect(page).toEqual({ rows: [{ id: "n1" }, { id: "n2" }], nextCursor: "n2", hasMore: true });
+  });
+
+  it("says more rows exist when the last row has no id to page from", async () => {
+    mockedPage.mockResolvedValueOnce({ data: [{ owner: "o1", op: 1 }], hasMore: true });
+    const page = await supportAdminApi.data(GRANT, "sync", "push_ops");
+    expect(page).toEqual({ rows: [{ owner: "o1", op: 1 }], nextCursor: null, hasMore: true });
   });
 
   it("reads one row with a GET", async () => {

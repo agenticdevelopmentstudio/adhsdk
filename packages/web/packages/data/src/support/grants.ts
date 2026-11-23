@@ -352,6 +352,10 @@ export interface SupportGrantRequest {
 export interface SupportDataPage {
   rows: Record<string, unknown>[];
   nextCursor: string | null;
+  /** The backend's `has_more`. True with a null `nextCursor` when more rows exist but the last
+   *  row has no `id` to page from (the gateway pages by `id` only), so the viewer can say the
+   *  table goes on past what it can show instead of ending in silence. */
+  hasMore: boolean;
 }
 
 const rowCursor = (rows: Record<string, unknown>[], hasMore: boolean): string | null => {
@@ -392,7 +396,7 @@ export const supportAdminApi = {
         limit: SUPPORT_PAGE_SIZE,
       }),
     );
-    return { rows: data, nextCursor: rowCursor(data, hasMore) };
+    return { rows: data, nextCursor: rowCursor(data, hasMore), hasMore };
   },
 
   /** One row of a content table under a live grant. */

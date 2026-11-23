@@ -172,6 +172,12 @@ export function SupportViewer({ grantId }: { grantId: string }) {
         </div>
       )}
 
+      {page.data?.hasMore && !page.data.nextCursor && (
+        <p className="text-sm text-apt-text-muted" role="note">
+          This table has more rows than the viewer can page through, because its rows have no id.
+        </p>
+      )}
+
       {(cursors.length > 0 || page.data?.nextCursor) && (
         <div className="flex items-center gap-2">
           <Button

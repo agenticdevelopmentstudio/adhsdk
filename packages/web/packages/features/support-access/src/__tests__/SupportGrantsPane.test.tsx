@@ -81,10 +81,15 @@ const LIVE = grant({
 const grantsAre = (data: SupportAdminGrant[] | undefined, error: unknown = null) =>
   hooks.useAdminSupportGrants.mockReturnValue({ data, error, isLoading: data === undefined && !error });
 
-const dataIs = (rows: Record<string, unknown>[], nextCursor: string | null = null, error: unknown = null) =>
+const dataIs = (
+  rows: Record<string, unknown>[],
+  nextCursor: string | null = null,
+  error: unknown = null,
+  hasMore: boolean = nextCursor !== null,
+) =>
   hooks.useSupportData.mockImplementation((_g: string, schema: string | null) =>
     schema
-      ? { data: error ? undefined : { rows, nextCursor }, error, isLoading: false }
+      ? { data: error ? undefined : { rows, nextCursor, hasMore }, error, isLoading: false }
       : { data: undefined, error: null, isLoading: false },
   );
 
@@ -304,6 +309,14 @@ describe("SupportViewer", () => {
     pick(viewer, "sync.push_ops");
     expect(within(viewer).getByText("op-1")).toBeTruthy();
     expect(within(viewer).queryByRole("button", { name: /Open row/ })).toBeNull();
+  });
+
+  it("says the table goes on when more rows exist but the last has no id to page from", () => {
+    dataIs([{ owner_kind: "customer", owner_id: "c1", op_id: "op-1" }], null, null, true);
+    const viewer = open();
+    pick(viewer, "sync.push_ops");
+    expect(within(viewer).getByRole("note").textContent).toMatch(/more rows than the viewer can page through/);
+    expect(within(viewer).queryByRole("button", { name: "Next" })).toBeNull();
   });
 
   it("never shows an edit control", async () => {
