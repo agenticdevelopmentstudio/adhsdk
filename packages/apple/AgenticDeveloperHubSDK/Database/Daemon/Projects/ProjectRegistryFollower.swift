@@ -26,7 +26,18 @@ public final class ProjectRegistryFollower: Sendable {
     public init(registry: any ProjectRegistry, mirror: LocalProjectMirror, keepingLocal path: String? = nil) {
         self.registry = registry
         self.mirror = mirror
-        self.keptPath = path
+        self.keptPath = path.map(Self.standardized)
+    }
+
+    /// The path as compared with the kept one, so a trailing slash or a `.`
+    /// component in either spelling still names the same directory.
+    static func standardized(_ path: String) -> String {
+        URL(fileURLWithPath: path).standardizedFileURL.path
+    }
+
+    private static func isKept(_ project: GitRepo, _ keptPath: String?) -> Bool {
+        guard let keptPath else { return false }
+        return standardized(project.path) == keptPath
     }
 
     /// Starts following; a second call does nothing. `onFailure` hears a
@@ -38,13 +49,13 @@ public final class ProjectRegistryFollower: Sendable {
             let changes = registry.changes
             current = Task { [registry, mirror, keptPath] in
                 do {
-                    try mirror.sync(try await registry.projects().filter { $0.path != keptPath })
+                    try mirror.sync(try await registry.projects().filter { !ProjectRegistryFollower.isKept($0, keptPath) })
                 } catch {
                     if !Task.isCancelled { onFailure(error) }
                 }
                 for await change in changes {
                     if Task.isCancelled { return }
-                    if case .upserted(let project) = change, project.path == keptPath { continue }
+                    if case .upserted(let project) = change, ProjectRegistryFollower.isKept(project, keptPath) { continue }
                     do { try mirror.apply(change) } catch { onFailure(error) }
                 }
             }
