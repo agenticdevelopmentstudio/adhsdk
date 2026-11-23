@@ -49,13 +49,15 @@ public final class ProjectRegistryFollower: Sendable {
             let changes = registry.changes
             current = Task { [registry, mirror, keptPath] in
                 do {
-                    try mirror.sync(try await registry.projects().filter { !ProjectRegistryFollower.isKept($0, keptPath) })
+                    let projects = try await registry.projects()
+                    try mirror.sync(projects.filter { !ProjectRegistryFollower.isKept($0, keptPath) })
                 } catch {
                     if !Task.isCancelled { onFailure(error) }
                 }
                 for await change in changes {
                     if Task.isCancelled { return }
-                    if case .upserted(let project) = change, ProjectRegistryFollower.isKept(project, keptPath) { continue }
+                    if case .upserted(let project) = change,
+                       ProjectRegistryFollower.isKept(project, keptPath) { continue }
                     do { try mirror.apply(change) } catch { onFailure(error) }
                 }
             }
