@@ -105,7 +105,9 @@ final class HostMCPServerConformanceTests: XCTestCase {
     }
 
     func testV011_callerHeaderName() {
-        XCTAssertEqual(HostMCPServer.callerHeader, "X-ADKitchen-Pane")
+        XCTAssertEqual(HostMCPServer.callerHeader, "X-ADHD-Pane")
+        XCTAssertEqual(HostMCPServer.legacyCallerHeader, "X-ADKitchen-Pane")
+        XCTAssertEqual(HostMCPServer.callerHeaders, ["X-ADHD-Pane", "X-ADKitchen-Pane"])
     }
 
     func testV012_undecodableSchemaFallsBackToEmptyObjectSchema() async throws {

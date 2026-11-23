@@ -1,31 +1,72 @@
 import Foundation
 import AgenticDeveloperHubSDKCore
 
-/// How a Claude Code install learns about the endpoint: one `claude mcp add`
-/// the user runs once, with the URL and token written as shell defaults so
-/// a shell inside the app (where the variables are set) wins over the
-/// values baked in at registration time.
+/// How a Claude Code install learns about adhd's MCP endpoint: one
+/// `claude mcp add-json` the user runs once, naming the channel's fixed
+/// address and a `headersHelper` that asks adhd for the bearer header each
+/// time Claude Code connects, so no token is ever written into
+/// `~/.claude.json` or a pane's environment.
+///
+/// Each channel has an entry of its own (`adhd-dev`, `adhd`), so a dev build
+/// never takes over the release entry.
 public enum MCPRegistration {
 
-    public static let serverName = "adkitchen"
+    /// Which adhd an entry points at.
+    public enum Channel: Sendable, CaseIterable {
+        case dev
+        case release
 
-    public static func claudeCommand(port: UInt16, token: String) -> String {
-        let url = "http://127.0.0.1:\(port)\(MCPHTTPEndpoint.path)"
-        return "claude mcp add --transport http --scope user \(serverName) "
-            + "'${ADKITCHEN_MCP_URL:-\(url)}' "
-            + "--header 'Authorization: Bearer ${ADKITCHEN_MCP_TOKEN:-\(token)}' "
-            + "--header '\(HostMCPServer.callerHeader): ${ADKITCHEN_PANE_ID:-}'"
+        /// The `mcpServers` key.
+        public var serverName: String {
+            switch self {
+            case .dev: return "adhd-dev"
+            case .release: return "adhd"
+            }
+        }
+
+        /// The port adhd listens on for this channel.
+        public var port: UInt16 {
+            switch self {
+            case .dev: return 22871
+            case .release: return 22850
+            }
+        }
+
+        /// The endpoint's URL.
+        public var url: String { "http://127.0.0.1:\(port)\(MCPHTTPEndpoint.path)" }
+    }
+
+    /// The subcommand of adhd that prints `{"Authorization":"Bearer <token>"}`.
+    public static let headersSubcommand = "mcp headers"
+
+    /// The entry's JSON: `type`, `url` and `headersHelper`, keys sorted. The
+    /// helper is a shell command line, so the path is one shell word.
+    public static func entryJSON(channel: Channel, adhdPath: String) -> String {
+        let entry: [String: String] = [
+            "type": "http",
+            "url": channel.url,
+            "headersHelper": PartnerStepTemplate.shellQuoted(adhdPath) + " " + headersSubcommand
+        ]
+        let data = (try? JSONSerialization.data(withJSONObject: entry,
+                                                options: [.sortedKeys, .withoutEscapingSlashes])) ?? Data()
+        return String(bytes: data, encoding: .utf8) ?? ""
+    }
+
+    /// `claude mcp add-json --scope user <name> '<entry>'`, the line the
+    /// user runs once.
+    public static func claudeCommand(channel: Channel, adhdPath: String) -> String {
+        "claude mcp add-json --scope user \(channel.serverName) "
+            + PartnerStepTemplate.shellQuoted(entryJSON(channel: channel, adhdPath: adhdPath))
     }
 
     /// Whether `claudeConfig` (normally `~/.claude.json`) has an `mcpServers`
-    /// entry named `serverName` whose URL names `port` — literally, or as the
-    /// `${ADKITCHEN_MCP_URL:-…}` default the command above writes.
-    public static func isRegistered(claudeConfig: URL, port: UInt16) -> Bool {
+    /// entry named for `channel` whose `url` is the channel's.
+    public static func isRegistered(claudeConfig: URL, channel: Channel) -> Bool {
         guard let data = try? Data(contentsOf: claudeConfig),
               let root = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
               let servers = root["mcpServers"] as? [String: Any],
-              let entry = servers[serverName] as? [String: Any],
+              let entry = servers[channel.serverName] as? [String: Any],
               let url = entry["url"] as? String else { return false }
-        return url.contains("127.0.0.1:\(port)\(MCPHTTPEndpoint.path)")
+        return url == channel.url
     }
 }

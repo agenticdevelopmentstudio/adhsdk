@@ -20,7 +20,7 @@ public final class CLISettingsPanelViewController: ComposableSettings.SettingsPa
     private var cancellables: Set<AnyCancellable> = []
 
     /// - Parameters:
-    ///   - status: the endpoint's port, token and registration.
+    ///   - status: the endpoint's port, registration command and registration.
     ///   - pasteboard: where Copy puts the registration command.
     public init(status: AutomationServerStatus, pasteboard: NSPasteboard = .general) {
         self.status = status
@@ -64,22 +64,22 @@ public final class CLISettingsPanelViewController: ComposableSettings.SettingsPa
         // @Published publishes the new value before it is stored, so render
         // from the published values themselves: reading `status` here would
         // show the old ones.
-        Publishers.CombineLatest4(status.$port, status.$token, status.$isRegistered, status.$failureReason)
-            .sink { [weak self] port, token, isRegistered, failureReason in
-                self?.render(port: port, token: token, isRegistered: isRegistered, failureReason: failureReason)
+        Publishers.CombineLatest4(status.$port, status.$command, status.$isRegistered, status.$failureReason)
+            .sink { [weak self] port, command, isRegistered, failureReason in
+                self?.render(port: port, command: command, isRegistered: isRegistered, failureReason: failureReason)
             }
             .store(in: &cancellables)
     }
 
-    private func render(port: UInt16?, token: String?, isRegistered: Bool, failureReason: String?) {
+    private func render(port: UInt16?, command: String?, isRegistered: Bool, failureReason: String?) {
         line.stringValue = AutomationServerStatus.line(
             port: port, isRegistered: isRegistered, failureReason: failureReason)
-        copyButton.isEnabled = port != nil && token != nil
+        copyButton.isEnabled = port != nil && command != nil
     }
 
     @objc private func copyCommand() {
-        guard let port = status.port, let token = status.token else { return }
+        guard status.port != nil, let command = status.command else { return }
         pasteboard.clearContents()
-        pasteboard.setString(MCPRegistration.claudeCommand(port: port, token: token), forType: .string)
+        pasteboard.setString(command, forType: .string)
     }
 }

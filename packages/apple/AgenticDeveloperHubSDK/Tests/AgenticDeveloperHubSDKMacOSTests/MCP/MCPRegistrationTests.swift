@@ -10,41 +10,57 @@ final class MCPRegistrationTests: XCTestCase {
         return url
     }
 
-    func testClaudeCommandNamesTheServerTheURLTheTokenAndThePaneHeader() {
-        let command = MCPRegistration.claudeCommand(port: 51477, token: "abc")
+    func testEachChannelHasItsOwnNameAndPort() {
+        XCTAssertEqual(MCPRegistration.Channel.dev.serverName, "adhd-dev")
+        XCTAssertEqual(MCPRegistration.Channel.dev.port, 22871)
+        XCTAssertEqual(MCPRegistration.Channel.dev.url, "http://127.0.0.1:22871/mcp")
+        XCTAssertEqual(MCPRegistration.Channel.release.serverName, "adhd")
+        XCTAssertEqual(MCPRegistration.Channel.release.port, 22850)
+        XCTAssertEqual(MCPRegistration.Channel.release.url, "http://127.0.0.1:22850/mcp")
+    }
+
+    func testClaudeCommandIsTheHeadersHelperForm() {
+        let command = MCPRegistration.claudeCommand(channel: .dev, adhdPath: "/opt/adhd/adhd")
         XCTAssertEqual(command,
-            "claude mcp add --transport http --scope user adkitchen "
-            + "'${ADKITCHEN_MCP_URL:-http://127.0.0.1:51477/mcp}' "
-            + "--header 'Authorization: Bearer ${ADKITCHEN_MCP_TOKEN:-abc}' "
-            + "--header 'X-ADKitchen-Pane: ${ADKITCHEN_PANE_ID:-}'")
+            "claude mcp add-json --scope user adhd-dev "
+            + #"'{"headersHelper":"/opt/adhd/adhd mcp headers","type":"http","url":"http://127.0.0.1:22871/mcp"}'"#)
+        XCTAssertFalse(command.contains("Bearer"))
     }
 
-    func testRegisteredWhenTheServerPointsAtThisPort() throws {
-        let url = try config(#"{"mcpServers":{"adkitchen":{"type":"http","url":"http://127.0.0.1:51477/mcp"}}}"#)
-        XCTAssertTrue(MCPRegistration.isRegistered(claudeConfig: url, port: 51477))
+    func testAPathWithSpacesIsOneShellWordInTheHelper() throws {
+        let path = "/Users/a/Library/Application Support/com.agentic-cookbook.adhd.dev/adhd"
+        let json = MCPRegistration.entryJSON(channel: .release, adhdPath: path)
+        let entry = try XCTUnwrap(JSONSerialization.jsonObject(with: Data(json.utf8)) as? [String: String])
+        XCTAssertEqual(entry["headersHelper"], "'\(path)' mcp headers")
+        XCTAssertEqual(entry["url"], "http://127.0.0.1:22850/mcp")
+        XCTAssertEqual(entry["type"], "http")
+
+        // The helper's own single quotes survive the shell quoting of the whole entry.
+        let command = MCPRegistration.claudeCommand(channel: .release, adhdPath: path)
+        XCTAssertTrue(command.hasPrefix("claude mcp add-json --scope user adhd '"))
+        XCTAssertTrue(command.contains(#"'\''"#))
     }
 
-    func testRegisteredWhenTheURLIsTheEnvironmentForm() throws {
-        let url = try config(
-            #"{"mcpServers":{"adkitchen":{"type":"http","#
-            + #""url":"${ADKITCHEN_MCP_URL:-http://127.0.0.1:51477/mcp}"}}}"#)
-        XCTAssertTrue(MCPRegistration.isRegistered(claudeConfig: url, port: 51477))
+    func testRegisteredWhenTheEntryPointsAtTheChannel() throws {
+        let url = try config(#"{"mcpServers":{"adhd-dev":{"type":"http","url":"http://127.0.0.1:22871/mcp"}}}"#)
+        XCTAssertTrue(MCPRegistration.isRegistered(claudeConfig: url, channel: .dev))
+        XCTAssertFalse(MCPRegistration.isRegistered(claudeConfig: url, channel: .release))
     }
 
-    func testNotRegisteredWhenTheServerIsMissing() throws {
-        let url = try config(#"{"mcpServers":{"other":{"type":"http","url":"http://127.0.0.1:51477/mcp"}}}"#)
-        XCTAssertFalse(MCPRegistration.isRegistered(claudeConfig: url, port: 51477))
+    func testTheOldKitchenEntryIsNotARegistration() throws {
+        let url = try config(#"{"mcpServers":{"adkitchen":{"type":"http","url":"http://127.0.0.1:22871/mcp"}}}"#)
+        XCTAssertFalse(MCPRegistration.isRegistered(claudeConfig: url, channel: .dev))
     }
 
     func testNotRegisteredWhenThePortDiffers() throws {
-        let url = try config(#"{"mcpServers":{"adkitchen":{"type":"http","url":"http://127.0.0.1:51000/mcp"}}}"#)
-        XCTAssertFalse(MCPRegistration.isRegistered(claudeConfig: url, port: 51477))
+        let url = try config(#"{"mcpServers":{"adhd-dev":{"type":"http","url":"http://127.0.0.1:22850/mcp"}}}"#)
+        XCTAssertFalse(MCPRegistration.isRegistered(claudeConfig: url, channel: .dev))
     }
 
     func testNotRegisteredWhenTheFileIsMissingOrNotJSON() throws {
         let missing = URL(fileURLWithPath: "/nonexistent/.claude.json")
-        XCTAssertFalse(MCPRegistration.isRegistered(claudeConfig: missing, port: 51477))
+        XCTAssertFalse(MCPRegistration.isRegistered(claudeConfig: missing, channel: .dev))
         let url = try config("not json")
-        XCTAssertFalse(MCPRegistration.isRegistered(claudeConfig: url, port: 51477))
+        XCTAssertFalse(MCPRegistration.isRegistered(claudeConfig: url, channel: .dev))
     }
 }
