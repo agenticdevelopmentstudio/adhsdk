@@ -107,7 +107,62 @@ final class ProjectsCoordinatorRegistryTests: XCTestCase {
         XCTAssertNotNil(try windowState.repo(id: fromRegistry.id))
     }
 
+    /// A change the feed applies while the load's read is out is newer than
+    /// the list the read brings back, and survives it.
+    func testAChangeDuringTheLoadIsNotUndoneByIt() async throws {
+        let gated = GatedRegistry(inner: registry)
+        coordinator = try ProjectsCoordinator(
+            registry: gated,
+            windowState: windowState,
+            scanner: GitRepoScanner(roots: [root]),
+            commandRegistry: CommandRegistry())
+
+        let load = Task { await self.coordinator.loadFromRegistry() }
+        try await waitUntil { gated.hasRead }
+        let added = GitRepo(path: root.appendingPathComponent("gamma").path, name: "gamma")
+        try await shared.insert(added)
+        try await waitUntil { self.coordinator.repo(id: added.id) != nil }
+
+        gated.open()
+        await load.value
+
+        XCTAssertNotNil(coordinator.repo(id: added.id), "the older list must not drop the newer project")
+        XCTAssertNotNil(try windowState.repo(id: added.id))
+    }
+
     // MARK: - Helpers
+
+    /// A registry whose `projects()` reads its list at once and then holds
+    /// the answer until `open()`, the way a slow daemon round trip does.
+    private final class GatedRegistry: ProjectRegistry, @unchecked Sendable {
+        let inner: any ProjectRegistry
+        private let lock = NSLock()
+        private var read = false
+        private var isOpen = false
+
+        init(inner: any ProjectRegistry) { self.inner = inner }
+
+        var hasRead: Bool { lock.withLock { read } }
+        func open() { lock.withLock { isOpen = true } }
+
+        func projects() async throws -> [GitRepo] {
+            let list = try await inner.projects()
+            lock.withLock { read = true }
+            while !lock.withLock({ isOpen }) { try await Task.sleep(nanoseconds: 10_000_000) }
+            return list
+        }
+        func project(id: UUID) async throws -> GitRepo? { try await inner.project(id: id) }
+        func project(path: String) async throws -> GitRepo? { try await inner.project(path: path) }
+        func insert(_ project: GitRepo) async throws { try await inner.insert(project) }
+        func update(_ project: GitRepo) async throws { try await inner.update(project) }
+        func markOpened(id: UUID, at date: Date) async throws { try await inner.markOpened(id: id, at: date) }
+        func delete(id: UUID) async throws { try await inner.delete(id: id) }
+        func repoState(id: UUID) async throws -> RepoStateSnapshot? { try await inner.repoState(id: id) }
+        func saveRepoState(_ state: RepoStateSnapshot, id: UUID) async throws {
+            try await inner.saveRepoState(state, id: id)
+        }
+        var changes: AsyncStream<ProjectRegistryChange> { inner.changes }
+    }
 
     private func makeCoordinator() throws -> ProjectsCoordinator {
         try ProjectsCoordinator(
