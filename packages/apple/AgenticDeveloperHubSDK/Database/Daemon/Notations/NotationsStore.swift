@@ -180,6 +180,46 @@ public final class NotationsStore: @unchecked Sendable {
         }
     }
 
+    /// Inserts `notation` exactly as given — its id, state and every date
+    /// kept — unless a row with its id is already here, or it is active and
+    /// its branch already has an active notation (the partial unique index).
+    /// True when it was inserted. What an import from another copy of this
+    /// store uses, so a second run adds nothing.
+    ///
+    /// `dryRun` runs the same insert and rolls it back: the answer is what a
+    /// real run would do, and nothing changes.
+    @discardableResult
+    public func importIfAbsent(_ notation: Notation, dryRun: Bool = false) throws -> Bool {
+        if dryRun {
+            return try locked {
+                var wouldInsert = false
+                do {
+                    try transaction {
+                        wouldInsert = try insertIfAbsent(notation)
+                        throw ImportRollback()
+                    }
+                } catch is ImportRollback {}
+                return wouldInsert
+            }
+        }
+        return try write { try insertIfAbsent(notation) }
+    }
+
+    /// Thrown out of a dry run's transaction to roll it back.
+    private struct ImportRollback: Error {}
+
+    private func insertIfAbsent(_ notation: Notation) throws -> Bool {
+        try run("""
+                INSERT OR IGNORE INTO notations (id, project_id, project_name, project_path, branch, fork_point,
+                                                 last_tip, content, state, created_at, modified_at, archived_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                [.text(notation.id.uuidString), .text(notation.projectID.uuidString), .text(notation.projectName),
+                 .text(notation.projectPath), .text(notation.branch), .text(notation.forkPoint),
+                 .optText(notation.lastTip), .text(notation.content), .text(notation.state.rawValue),
+                 .date(notation.createdAt), .date(notation.modifiedAt), .optDate(notation.archivedAt)]) > 0
+    }
+
     /// Records the branch tip a reconcile saw. Not a user edit, so
     /// `modified_at` stays as it was.
     public func recordTip(id: UUID, tip: String?) throws {

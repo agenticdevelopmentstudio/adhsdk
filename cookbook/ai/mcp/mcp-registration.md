@@ -34,7 +34,7 @@ MCP Registration is how a Claude Code install learns about adhd's MCP endpoint. 
 
 Each daemon channel has an entry of its own: `adhd-dev` for the dev daemon on port 22871 and `adhd` for the release daemon on port 22850, so a dev build never takes over the release entry. The entry carries no token: its `headersHelper` is a command line that runs `adhd mcp headers`, which prints the bearer header each time Claude Code connects, so no token is ever written into `~/.claude.json`, a shell history or a pane's environment. The endpoint it registers is served by adhd over [adhsdk.ingredient.ai.mcp.mcphttp-endpoint](cookbook:03ac452d-50c9-4438-9cfb-9cb2c2b65249)'s handler; the sibling [adhsdk.ingredient.ai.mcp.mcp-plumbing](cookbook:52650804-a096-4b71-b4eb-da3afa95ac56) covers the client side of MCP.
 
-The source is one file, `packages/apple/AgenticDeveloperHubSDK/macOS/Features/MCP/MCPRegistration.swift`, a public `enum MCPRegistration` with no cases, a nested `Channel` enum, one constant and three static functions.
+The source is one file, `packages/apple/AgenticDeveloperHubSDK/Core/MCP/MCPRegistration.swift`, a public `enum MCPRegistration` with no cases, a nested `Channel` enum, two constants and nine static functions. It is in Core, not macOS, so adhd itself prints the same command (`adhd mcp command`) that a pane shows, and adh-daemon's installer (`tools/daemon_install/claude_json.py`) writes the same entry byte for byte.
 ## Behavioral Requirements
 
 Channels
@@ -42,13 +42,16 @@ Channels
 - **channel-cases**: `MCPRegistration.Channel` MUST have exactly two cases, `dev` and `release`, and be `Sendable` and `CaseIterable`.
 - **channel-server-name**: `serverName` MUST be `adhd-dev` for `dev` and `adhd` for `release`.
 - **channel-port**: `port` MUST be 22871 for `dev` and 22850 for `release`.
-- **channel-url**: `url` MUST be `http://127.0.0.1:<port>` followed by the endpoint's path constant, `MCPHTTPEndpoint.path` (`/mcp`).
+- **path**: `path` MUST be `/mcp`, the one path adhd serves MCP on; `MCPHTTPEndpoint.path` MUST be this constant.
+- **channel-url**: `url` MUST be `url(port:)` of the channel's port: `http://127.0.0.1:<port>` followed by `path`.
 
 Building the entry and the command
 
 - **headers-subcommand**: `headersSubcommand` MUST be `mcp headers`, the adhd subcommand that prints `{"Authorization":"Bearer <token>"}`.
+- **port-forms**: `entryJSON(port:adhdPath:)` and `claudeCommand(serverName:port:adhdPath:)` MUST build the same text for any port and server name, and the channel forms MUST equal them called with the channel's port and server name.
+- **headers-helper**: `headersHelper(adhdPath:)` MUST be `shellQuoted(adhdPath)`, a space, and `headersSubcommand`.
 - **entry-json**: `entryJSON(channel:adhdPath:)` MUST return a JSON object with exactly the keys `headersHelper`, `type` and `url`, keys sorted and slashes unescaped, where `type` is `http`, `url` is the channel's URL and `headersHelper` is the adhd path as one shell word, a space and `headersSubcommand`.
-- **entry-path-quoting**: The adhd path MUST be left bare when it is non-empty and made only of letters, digits and `_-./:@+,`, and otherwise wrapped in single quotes with each single quote written `'\''` (`PartnerStepTemplate.shellQuoted`).
+- **entry-path-quoting**: The adhd path MUST be left bare when it is non-empty and made only of letters, digits and `_-./:@+,`, and otherwise wrapped in single quotes with each single quote written `'\''`; `shellQuoted(_:)` MUST be `PartnerStepTemplate.shellQuoted`.
 - **entry-no-token**: The entry MUST carry no token and no `Authorization` header.
 - **command-is-text-only**: `claudeCommand(channel:adhdPath:)` MUST return the command as a string and MUST NOT execute it, read any file, or touch the network.
 - **command-shape**: The command MUST be `claude mcp add-json --scope user <serverName> ` followed by the entry JSON quoted as one shell word by the same rule, so the helper's own single quotes survive.
@@ -88,6 +91,10 @@ Not applicable — this is a command builder and a config-file reader with no us
 | mcp-registration-005 | registered-old-entry | `{"mcpServers":{"adkitchen":{"type":"http","url":"http://127.0.0.1:22871/mcp"}}}` | false for `.dev` (`testTheOldKitchenEntryIsNotARegistration`) |
 | mcp-registration-006 | registered-url-equal | An `adhd-dev` entry whose url is `http://127.0.0.1:22850/mcp` | false for `.dev` (`testNotRegisteredWhenThePortDiffers`) |
 | mcp-registration-007 | registered-failure-is-false | `/nonexistent/.claude.json`, then a file containing `not json` | false in both cases, with no thrown error (`testNotRegisteredWhenTheFileIsMissingOrNotJSON`) |
+| mcp-registration-010 | port-forms | `entryJSON(port: 22871, ...)` against `entryJSON(channel: .dev, ...)`; `claudeCommand(serverName: "adhd", port: 22850, ...)` against `claudeCommand(channel: .release, ...)` | equal (`testThePortFormMatchesTheChannelForm`) |
+| mcp-registration-011 | port-forms, channel-url | `url(port: 22995)`; `claudeCommand(serverName: "adhd-dev", port: 22995, adhdPath: "/opt/adhd/adhd")` | `http://127.0.0.1:22995/mcp`; the command with that URL (`testAnyPortAndNameReachTheLine`) |
+| mcp-registration-012 | entry-path-quoting | `shellQuoted` of `/opt/adhd/adhd`, `a b`, `it's` | `/opt/adhd/adhd`, `'a b'`, `'it'\''s'` (`testShellQuotingKeepsPlainWordsAndQuotesTheRest`) |
+| mcp-registration-013 | path | `MCPRegistration.path` | `/mcp` (`testTheRegisteredPathIsTheOneServed`) |
 | mcp-registration-008 | registered-needs-server-entry | `{"mcpServers":{"adhd-dev":{"type":"http"}}}` | false, because the entry has no `url` (derived from the `guard`; no test) |
 | mcp-registration-009 | registered-ignores-headers | An `adhd-dev` entry with the right `url` and any `headersHelper` | true (derived from the single `url` check; no test) |
 ## Edge Cases
@@ -141,16 +148,17 @@ Not applicable: the source makes no logging call.
 
 ## Platform Notes
 
-- **SwiftUI**: The source is `packages/apple/AgenticDeveloperHubSDK/macOS/Features/MCP/MCPRegistration.swift`, built into the macOS framework target, importing `AgenticDeveloperHubSDKCore` for `PartnerStepTemplate.shellQuoted`. It is a caseless `public enum` of statics, with no UI. A SwiftUI view reads `claudeCommand` into a `Text` or a copy button and `isRegistered` into a status line (`AutomationServerStatus` publishes both); the file read is synchronous, so call it off the main thread if the config file can be slow.
+- **SwiftUI**: The source is `packages/apple/AgenticDeveloperHubSDK/Core/MCP/MCPRegistration.swift`, built into the Core framework target beside `PartnerStepTemplate.shellQuoted`, so a daemon with no UI framework links it. It is a caseless `public enum` of statics, with no UI. A SwiftUI view reads `claudeCommand` into a `Text` or a copy button and `isRegistered` into a status line (`AutomationServerStatus` publishes both); the file read is synchronous, so call it off the main thread if the config file can be slow.
 - **Compose**: Port `MCPRegistration` as a Kotlin `object` with an `enum class Channel` and pure functions. Build the entry with `kotlinx.serialization.json.buildJsonObject` and parse the config with `Json.parseToJsonElement`, mapping every failure to `false` with a `runCatching`. An Android app has no `~/.claude.json` to read.
 - **React/Web**: A browser cannot read `~/.claude.json`, so only `claudeCommand` ports there, as a pure function over `JSON.stringify` of a key-sorted object. In a Node.js or Electron host, `isRegistered` is `JSON.parse(fs.readFileSync(path, "utf8"))` inside a `try`, then an equality check on `mcpServers[name].url`.
 - **AppKit / UIKit**: Identical to the SwiftUI note: the component has no UI; only the surface that displays the command or status differs (an `NSTextField` plus an `NSPasteboard` copy button in AppKit).
+- **Python**: adh-daemon's installer (`tools/daemon_install/claude_json.py`) keeps a copy: `json.dumps(entry, sort_keys=True, separators=(",", ":"), ensure_ascii=False)` and a `shell_quoted` over the same plain-character set, so its entry and command match the Swift text byte for byte.
 - **WinUI 3**: Implement as a `static class McpRegistration` with a nested `enum Channel`, `EntryJson` built with `System.Text.Json.JsonSerializer` over a `SortedDictionary`, and `IsRegistered` using `JsonDocument.Parse(File.ReadAllBytes(...))` with `TryGetProperty` and a `string.Equals` check, wrapped in a `try`/`catch` that returns `false`. The single-quoted command targets POSIX shells; a Windows presentation needs a PowerShell form.
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/MCP/MCPRegistration.swift` | confirmed (1.0.0) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/Core/MCP/MCPRegistration.swift` | confirmed (1.0.0) |
 | apple | (planned) | planned |
 | web | (planned) | planned |
 | android | (planned) | planned |
@@ -176,6 +184,10 @@ Not applicable: the source makes no logging call.
 
 **Decision**: The URL is fixed as `http://127.0.0.1`.
 **Rationale**: The endpoint binds only the loopback address and speaks plain HTTP guarded by a bearer token, so the registered URL cannot name any other host.
+**Approved**: pending
+
+**Decision**: `MCPRegistration` lives in Core, with port forms beside the channel forms.
+**Rationale**: adhd, which links no macOS UI framework, prints the registration command itself (`adhd mcp command`) for whatever port it listens on, and the installer's Python copy must agree with it byte for byte; one Swift source keeps the pane, the CLI and the tests on the same text.
 **Approved**: pending
 ## Compliance
 

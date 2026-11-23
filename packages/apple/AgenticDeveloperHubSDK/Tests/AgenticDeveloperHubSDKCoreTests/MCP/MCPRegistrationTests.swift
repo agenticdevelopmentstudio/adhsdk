@@ -1,5 +1,5 @@
 import XCTest
-@testable import AgenticDeveloperHubSDKMacOS
+@testable import AgenticDeveloperHubSDKCore
 
 final class MCPRegistrationTests: XCTestCase {
 
@@ -62,5 +62,30 @@ final class MCPRegistrationTests: XCTestCase {
         XCTAssertFalse(MCPRegistration.isRegistered(claudeConfig: missing, channel: .dev))
         let url = try config("not json")
         XCTAssertFalse(MCPRegistration.isRegistered(claudeConfig: url, channel: .dev))
+    }
+
+    func testThePortFormMatchesTheChannelForm() {
+        XCTAssertEqual(MCPRegistration.entryJSON(port: 22871, adhdPath: "/opt/adhd"),
+                       MCPRegistration.entryJSON(channel: .dev, adhdPath: "/opt/adhd"))
+        XCTAssertEqual(MCPRegistration.claudeCommand(serverName: "adhd", port: 22850, adhdPath: "/opt/adhd"),
+                       MCPRegistration.claudeCommand(channel: .release, adhdPath: "/opt/adhd"))
+    }
+
+    func testAnyPortAndNameReachTheLine() {
+        XCTAssertEqual(MCPRegistration.url(port: 22995), "http://127.0.0.1:22995/mcp")
+        XCTAssertEqual(
+            MCPRegistration.claudeCommand(serverName: "adhd-dev", port: 22995, adhdPath: "/opt/adhd/adhd"),
+            "claude mcp add-json --scope user adhd-dev "
+            + #"'{"headersHelper":"/opt/adhd/adhd mcp headers","type":"http","url":"http://127.0.0.1:22995/mcp"}'"#)
+    }
+
+    func testShellQuotingKeepsPlainWordsAndQuotesTheRest() {
+        XCTAssertEqual(MCPRegistration.shellQuoted("/opt/adhd/adhd"), "/opt/adhd/adhd")
+        XCTAssertEqual(MCPRegistration.shellQuoted("a b"), "'a b'")
+        XCTAssertEqual(MCPRegistration.shellQuoted("it's"), #"'it'\''s'"#)
+    }
+
+    func testTheRegisteredPathIsTheOneServed() {
+        XCTAssertEqual(MCPRegistration.path, "/mcp")
     }
 }

@@ -111,6 +111,62 @@ public final class BrowserHistoryStore: @unchecked Sendable {
         return id
     }
 
+    /// Copies `visits` from another history store, in one transaction, and
+    /// returns the ones inserted with the ids they were given.
+    ///
+    /// A visit is the same visit when its address and time match a row here,
+    /// and that one is skipped, so a second import of the same source adds
+    /// nothing. A new visit keeps its id when no row here holds it; otherwise
+    /// it takes the next free id rather than being dropped, since an id in
+    /// another file says nothing about the rows of this one.
+    ///
+    /// `dryRun` runs the same inserts and rolls them back, so what it returns
+    /// is what a real run would insert, and nothing changes.
+    @discardableResult
+    public func importIfAbsent(_ visits: [BrowserVisit], dryRun: Bool = false) throws -> [BrowserVisit] {
+        guard !visits.isEmpty else { return [] }
+        var inserted: [BrowserVisit] = []
+        do {
+            try database.write { connection in
+                try insertAbsent(visits, into: &inserted, in: connection)
+                if dryRun { throw ImportRollback() }
+            }
+        } catch is ImportRollback {
+            return inserted
+        }
+        if !inserted.isEmpty { changed() }
+        return inserted
+    }
+
+    private func insertAbsent(_ visits: [BrowserVisit], into inserted: inout [BrowserVisit],
+                              in connection: Database) throws {
+        for visit in visits {
+            let time = visit.visitedAt.timeIntervalSince1970
+            let present = try Bool.fetchOne(
+                connection, sql: "SELECT EXISTS (SELECT 1 FROM visit WHERE url = ? AND visited_at = ?)",
+                arguments: [visit.url.absoluteString, time]) ?? false
+            if present { continue }
+            let idTaken = try Bool.fetchOne(
+                connection, sql: "SELECT EXISTS (SELECT 1 FROM visit WHERE id = ?)",
+                arguments: [visit.id]) ?? false
+            if idTaken {
+                try connection.execute(
+                    sql: "INSERT INTO visit (url, title, visited_at) VALUES (?, ?, ?)",
+                    arguments: [visit.url.absoluteString, visit.title, time])
+            } else {
+                try connection.execute(
+                    sql: "INSERT INTO visit (id, url, title, visited_at) VALUES (?, ?, ?, ?)",
+                    arguments: [visit.id, visit.url.absoluteString, visit.title, time])
+            }
+            inserted.append(BrowserVisit(
+                id: connection.lastInsertedRowID, url: visit.url, title: visit.title,
+                visitedAt: visit.visitedAt))
+        }
+    }
+
+    /// Thrown out of an import's write to roll a dry run back.
+    private struct ImportRollback: Error {}
+
     public func updateTitle(ofVisit id: Int64, to title: String) throws {
         try database.write { connection in
             try connection.execute(sql: "UPDATE visit SET title = ? WHERE id = ?", arguments: [title, id])

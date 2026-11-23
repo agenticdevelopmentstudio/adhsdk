@@ -4,13 +4,16 @@ Channels
 - **channel-cases**: `MCPRegistration.Channel` MUST have exactly two cases, `dev` and `release`, and be `Sendable` and `CaseIterable`.
 - **channel-server-name**: `serverName` MUST be `adhd-dev` for `dev` and `adhd` for `release`.
 - **channel-port**: `port` MUST be 22871 for `dev` and 22850 for `release`.
-- **channel-url**: `url` MUST be `http://127.0.0.1:<port>` followed by the endpoint's path constant, `MCPHTTPEndpoint.path` (`/mcp`).
+- **path**: `path` MUST be `/mcp`, the one path adhd serves MCP on; `MCPHTTPEndpoint.path` MUST be this constant.
+- **channel-url**: `url` MUST be `url(port:)` of the channel's port: `http://127.0.0.1:<port>` followed by `path`.
 
 Building the entry and the command
 
 - **headers-subcommand**: `headersSubcommand` MUST be `mcp headers`, the adhd subcommand that prints `{"Authorization":"Bearer <token>"}`.
+- **port-forms**: `entryJSON(port:adhdPath:)` and `claudeCommand(serverName:port:adhdPath:)` MUST build the same text for any port and server name, and the channel forms MUST equal them called with the channel's port and server name.
+- **headers-helper**: `headersHelper(adhdPath:)` MUST be `shellQuoted(adhdPath)`, a space, and `headersSubcommand`.
 - **entry-json**: `entryJSON(channel:adhdPath:)` MUST return a JSON object with exactly the keys `headersHelper`, `type` and `url`, keys sorted and slashes unescaped, where `type` is `http`, `url` is the channel's URL and `headersHelper` is the adhd path as one shell word, a space and `headersSubcommand`.
-- **entry-path-quoting**: The adhd path MUST be left bare when it is non-empty and made only of letters, digits and `_-./:@+,`, and otherwise wrapped in single quotes with each single quote written `'\''` (`PartnerStepTemplate.shellQuoted`).
+- **entry-path-quoting**: The adhd path MUST be left bare when it is non-empty and made only of letters, digits and `_-./:@+,`, and otherwise wrapped in single quotes with each single quote written `'\''`; `shellQuoted(_:)` MUST be `PartnerStepTemplate.shellQuoted`.
 - **entry-no-token**: The entry MUST carry no token and no `Authorization` header.
 - **command-is-text-only**: `claudeCommand(channel:adhdPath:)` MUST return the command as a string and MUST NOT execute it, read any file, or touch the network.
 - **command-shape**: The command MUST be `claude mcp add-json --scope user <serverName> ` followed by the entry JSON quoted as one shell word by the same rule, so the helper's own single quotes survive.

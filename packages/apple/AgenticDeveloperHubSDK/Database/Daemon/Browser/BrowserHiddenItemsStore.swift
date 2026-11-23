@@ -332,6 +332,92 @@ public final class BrowserHiddenItemsStore: @unchecked Sendable {
         return stored
     }
 
+    /// Copies `items` from another hidden-items store, in one transaction,
+    /// and returns the ones inserted with the ids they were given.
+    ///
+    /// An item is the same item when its list, site, selector and scope match
+    /// a row here, and that one is skipped (its label, switch and date stay
+    /// as they are here), so a second import of the same source adds nothing.
+    /// A new item keeps its id when no row here holds it, and otherwise takes
+    /// the next free one. An empty selector is skipped, as `add` refuses it.
+    ///
+    /// `dryRun` runs the same inserts and rolls them back, so what it returns
+    /// is what a real run would insert, and nothing changes.
+    @discardableResult
+    public func importIfAbsent(_ items: [BrowserHiddenItem], dryRun: Bool = false) throws -> [BrowserHiddenItem] {
+        let candidates = items.filter { !$0.selector.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+        guard !candidates.isEmpty else { return [] }
+        var inserted: [BrowserHiddenItem] = []
+        do {
+            try database.write { connection in
+                try Self.insertAbsent(candidates, into: &inserted, in: connection)
+                if dryRun { throw ImportRollback() }
+            }
+        } catch is ImportRollback {
+            return inserted
+        }
+        if !inserted.isEmpty { postChange() }
+        return inserted
+    }
+
+    private static func insertAbsent(_ items: [BrowserHiddenItem], into inserted: inout [BrowserHiddenItem],
+                                     in connection: Database) throws {
+        for item in items {
+            let present = try Bool.fetchOne(connection, sql: """
+                SELECT EXISTS (SELECT 1 FROM hidden_item
+                               WHERE list = ? AND site = ? AND selector = ? AND scope = ?)
+            """, arguments: [item.list.rawValue, item.site, item.selector, item.scope.rawValue]) ?? false
+            if present { continue }
+            let idTaken = try Bool.fetchOne(
+                connection, sql: "SELECT EXISTS (SELECT 1 FROM hidden_item WHERE id = ?)",
+                arguments: [item.id]) ?? false
+            let values: StatementArguments = [
+                item.list.rawValue, item.site, item.selector, item.scope.rawValue, item.label,
+                item.enabled, item.created.timeIntervalSinceReferenceDate,
+            ]
+            if idTaken {
+                try connection.execute(sql: """
+                    INSERT INTO hidden_item (list, site, selector, scope, label, enabled, created)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                """, arguments: values)
+            } else {
+                try connection.execute(sql: """
+                    INSERT INTO hidden_item (id, list, site, selector, scope, label, enabled, created)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                """, arguments: StatementArguments([item.id]) + values)
+            }
+            var stored = item
+            stored.id = connection.lastInsertedRowID
+            inserted.append(stored)
+        }
+    }
+
+    /// Copies one site switch from another store unless this one already has
+    /// a switch for that list and site, whose setting is kept. True when it
+    /// was inserted, or for a dry run (which writes nothing) would be.
+    @discardableResult
+    public func importSiteSwitchIfAbsent(list: BrowserHiddenItemList, site: String, on isOn: Bool,
+                                         dryRun: Bool = false) throws -> Bool {
+        if dryRun {
+            return try database.read { connection in
+                try Bool.fetchOne(connection, sql: """
+                    SELECT NOT EXISTS (SELECT 1 FROM site_switch WHERE list = ? AND site = ?)
+                """, arguments: [list.rawValue, site]) ?? false
+            }
+        }
+        let inserted = try database.write { connection -> Bool in
+            try connection.execute(sql: """
+                INSERT OR IGNORE INTO site_switch (list, site, "on") VALUES (?, ?, ?)
+            """, arguments: [list.rawValue, site, isOn])
+            return connection.changesCount > 0
+        }
+        if inserted { postChange() }
+        return inserted
+    }
+
+    /// Thrown out of an import's write to roll a dry run back.
+    private struct ImportRollback: Error {}
+
     public func setEnabled(_ id: Int64, _ isOn: Bool) throws {
         try database.write { connection in
             try connection.execute(sql: "UPDATE hidden_item SET enabled = ? WHERE id = ?", arguments: [isOn, id])
