@@ -7,6 +7,7 @@ import { accessApi, accessTargetKey, type AccessRoleRow } from "@adh-sdk/data/ac
 import { signupListApi } from "@adh-sdk/data/ecosystem-config";
 import { useAdminSite, usePutAdminSite, useRemoveAdminSite } from "@adh-sdk/data/product-admin";
 import { FieldGroup } from "@adh-sdk/ui/blocks";
+import { AlertModal } from "@adh-sdk/ui/components/alert-modal";
 import { Button } from "@adh-sdk/ui/components/button";
 import { ErrorText } from "@adh-sdk/ui/components/error-text";
 import { Input } from "@adh-sdk/ui/components/input";
@@ -107,9 +108,15 @@ function SiteHost({
     put.mutate(trimmed, { onError: (err) => setError(messageOf(err)) });
   };
 
+  // Removing takes the site down at once (its application and login registration go with it), so
+  // it asks first, as every other destructive action in these panes does.
+  const [confirmingRemove, setConfirmingRemove] = useState(false);
   const onRemove = () => {
     setError(null);
-    remove.mutate(undefined, { onError: (err) => setError(messageOf(err)) });
+    remove.mutate(undefined, {
+      onError: (err) => setError(messageOf(err)),
+      onSettled: () => setConfirmingRemove(false),
+    });
   };
 
   const who = productName ?? "this product";
@@ -141,12 +148,29 @@ function SiteHost({
           {host ? "Change" : "Set up"}
         </Button>
         {host && (
-          <Button type="button" size="sm" variant="destructive-ghost" disabled={busy} onClick={onRemove}>
+          <Button
+            type="button"
+            size="sm"
+            variant="destructive-ghost"
+            disabled={busy}
+            onClick={() => setConfirmingRemove(true)}
+          >
             Remove
           </Button>
         )}
       </form>
       <ErrorText error={error} />
+      <AlertModal
+        open={confirmingRemove && host !== null}
+        destructive
+        title="Remove the admin site?"
+        description={`The site at ${host ?? ""} goes offline at once, and the admins of ${who} can no longer sign in to it until it is set up again.`}
+        confirmLabel="Remove"
+        onConfirm={onRemove}
+        cancelLabel="Cancel"
+        onCancel={() => setConfirmingRemove(false)}
+        busy={remove.isPending}
+      />
     </FieldGroup>
   );
 }
