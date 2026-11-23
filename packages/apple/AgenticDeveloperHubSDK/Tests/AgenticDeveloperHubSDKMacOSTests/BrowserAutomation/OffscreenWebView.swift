@@ -2,6 +2,7 @@ import AppKit
 import WebKit
 import XCTest
 @testable import AgenticDeveloperHubSDKMacOS
+import AgenticDeveloperHubSDKDatabase
 
 /// A web view in a window that is never ordered front, so layout and
 /// `getBoundingClientRect` work without taking the screen.

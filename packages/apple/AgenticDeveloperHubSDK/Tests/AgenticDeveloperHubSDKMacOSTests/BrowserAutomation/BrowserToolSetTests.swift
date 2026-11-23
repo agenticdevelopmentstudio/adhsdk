@@ -3,6 +3,7 @@ import XCTest
 import WebKit
 @testable import AgenticDeveloperHubSDKMacOS
 @testable import AgenticDeveloperHubSDKCore
+import AgenticDeveloperHubSDKDatabase
 
 @MainActor
 final class FakeBrowserDirectory: BrowserPaneDirectory {

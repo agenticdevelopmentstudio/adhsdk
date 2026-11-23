@@ -2,6 +2,7 @@ import AppKit
 import Foundation
 import OSLog
 import WebKit
+import AgenticDeveloperHubSDKDatabase
 
 /// One message from the picker script: a `pick` with its candidate selectors,
 /// or a `cancel` (Esc pressed in the page). Recipe

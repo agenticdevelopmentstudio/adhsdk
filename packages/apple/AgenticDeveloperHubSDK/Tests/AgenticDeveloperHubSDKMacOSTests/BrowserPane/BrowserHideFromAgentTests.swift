@@ -3,6 +3,7 @@ import WebKit
 import XCTest
 import AgenticDeveloperHubSDKCore
 @testable import AgenticDeveloperHubSDKMacOS
+import AgenticDeveloperHubSDKDatabase
 
 /// The privacy toolbar's "Hide elements from agent" (recipe
 /// workspace/browser/hide-from-agent, spec section 2.5): the button and its
@@ -165,7 +166,7 @@ final class BrowserHideFromAgentTests: XCTestCase {
         XCTAssertEqual(dialog.questionLabel.stringValue, "Hide this from the agent?")
         dialog.confirm(nil)
         await mode.lastSave?.value
-        let saved = try store.items(list: .agent, for: page)
+        let saved = try await store.items(list: .agent, for: page)
         XCTAssertEqual(saved.map(\.selector), ["#promo"])
         XCTAssertEqual(saved.first?.site, "example.com/*")
         XCTAssertEqual(saved.first?.list, .agent)
@@ -209,7 +210,7 @@ final class BrowserHideFromAgentTests: XCTestCase {
         XCTAssertEqual(dialog.scopeControl.toolTip(forSegment: 1), BrowserPickDialogController.noLooserToolTip)
         dialog.confirm(nil)
         await mode.lastSave?.value
-        let saved = try store.items(list: .agent, for: page)
+        let saved = try await store.items(list: .agent, for: page)
         // The live page's selector the agent page recorded, not one computed on the preview's markup.
         XCTAssertEqual(saved.map(\.selector), ["#promo"])
         XCTAssertEqual(saved.first?.scope, .thisItem)
@@ -267,11 +268,14 @@ final class BrowserHideFromAgentTests: XCTestCase {
         await mode.lastSave?.value
         mode.end(.stop)
 
-        XCTAssertEqual(try store.items(list: .agent, for: page).count, 1)
-        XCTAssertEqual(try store.items(list: .user, for: page), [])
+        let agentItems = try await store.items(list: .agent, for: page)
+        XCTAssertEqual(agentItems.count, 1)
+        let userItems = try await store.items(list: .user, for: page)
+        XCTAssertEqual(userItems, [])
         // The user list's selectors are what the live page's style sheet is
         // built from, so an empty list is no `__adk_hidden_items` rule.
-        XCTAssertEqual(try store.enabledSelectors(list: .user, for: page), [])
+        let userSelectors = try await store.enabledSelectors(list: .user, for: page)
+        XCTAssertEqual(userSelectors, [])
     }
 
     func test_previewPickSavesTheLiveSiteUnderPrivacy() async throws {
@@ -297,7 +301,7 @@ final class BrowserHideFromAgentTests: XCTestCase {
         await mode.lastSave?.value
         mode.end(.stop)
 
-        let saved = try store.items(list: .agent, for: live)
+        let saved = try await store.items(list: .agent, for: live)
         XCTAssertEqual(saved.map(\.site), ["acme.example/*"])
         XCTAssertEqual(saved.map(\.selector), ["#promo"])
     }

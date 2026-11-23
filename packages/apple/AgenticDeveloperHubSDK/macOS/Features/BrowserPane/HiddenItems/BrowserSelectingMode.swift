@@ -7,6 +7,7 @@ import AgenticDeveloperHubSDKCore
 import AppKit
 import OSLog
 import WebKit
+import AgenticDeveloperHubSDKDatabase
 
 /// Where the agent list's picker runs in the Agent preview (recipe
 /// `workspace/browser/hide-from-agent`): the preview's web view, the agent
@@ -76,7 +77,7 @@ final class BrowserSelectingMode {
     private(set) weak var engine: WebKitBrowserEngine?
     /// The Agent preview the picker runs in; `nil` for the Website view.
     private(set) weak var preview: (any BrowserAgentPickSurface)?
-    private let store: BrowserHiddenItemsStore
+    private let store: any BrowserHiddenItemsStoring
     private let button: BrowserHideItemsButton
     /// The global layer: the notice key is global only.
     private let settings: SettingsStore
@@ -102,7 +103,7 @@ final class BrowserSelectingMode {
     private(set) var isSinglePick = false
     private static let logger = Logger(subsystem: "AgenticDeveloperHubSDK", category: "BrowserPane")
 
-    init(engine: WebKitBrowserEngine, store: BrowserHiddenItemsStore, list: BrowserHiddenItemList,
+    init(engine: WebKitBrowserEngine, store: any BrowserHiddenItemsStoring, list: BrowserHiddenItemList,
          button: BrowserHideItemsButton, preview: (any BrowserAgentPickSurface)? = nil,
          settings: SettingsStore = UserSettings.shared,
          presentDialog: DialogPresenter? = nil, presentNotice: NoticePresenter? = nil) {
@@ -321,7 +322,7 @@ final class BrowserSelectingMode {
         let store = store
         lastSave = Task {
             do {
-                _ = try await store.perform { try $0.add(item) }
+                _ = try await store.add(item)
             } catch {
                 Self.logger.error("hidden item could not be saved: \(error.localizedDescription, privacy: .public)")
                 NSSound.beep()

@@ -1,5 +1,6 @@
 import XCTest
 @testable import AgenticDeveloperHubSDKMacOS
+import AgenticDeveloperHubSDKDatabase
 
 /// The History panel's list model, on a store in a temporary directory —
 /// never the user's history file.
@@ -98,11 +99,13 @@ final class BrowserHistoryListModelTests: XCTestCase {
         try record(store, "https://example.com/2", "Two", at: 2_000)
         let model = BrowserHistoryListModel(store: store)
         await model.reload()
-        XCTAssertEqual(try store.count(), 2)
+        let countBefore = try await store.count()
+        XCTAssertEqual(countBefore, 2)
 
         await model.remove([first])
 
-        XCTAssertEqual(try store.count(), 1)
+        let countAfter = try await store.count()
+        XCTAssertEqual(countAfter, 1)
         XCTAssertEqual(model.visits.map(\.title), ["Two"])
     }
 
@@ -116,7 +119,8 @@ final class BrowserHistoryListModelTests: XCTestCase {
 
         await model.clearAll()
 
-        XCTAssertEqual(try store.count(), 0)
+        let remaining = try await store.count()
+        XCTAssertEqual(remaining, 0)
         XCTAssertTrue(model.visits.isEmpty)
     }
 

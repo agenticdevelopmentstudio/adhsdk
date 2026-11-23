@@ -1,5 +1,5 @@
 import XCTest
-@testable import AgenticDeveloperHubSDKMacOS
+@testable import AgenticDeveloperHubSDKDatabase
 
 final class BrowserHiddenItemsStoreTests: XCTestCase {
 
@@ -206,52 +206,53 @@ final class BrowserHiddenItemsStoreTests: XCTestCase {
     /// waits for the store rather than answering "no store" (final review
     /// C-M3: privacy fails closed).
     @MainActor
-    func test_sharedOpensInTheBackgroundAndAReadWaitsForIt() throws {
-        let saved = BrowserHiddenItemsStore.shared
-        defer { BrowserHiddenItemsStore.shared = saved }
-        BrowserHiddenItemsStore.shared = nil
-        XCTAssertFalse(BrowserHiddenItemsStore.hasShared)
+    func test_currentOpensInTheBackgroundAndAReadWaitsForIt() throws {
+        let saved = BrowserHiddenItemsStore.current
+        defer { BrowserHiddenItemsStore.current = saved }
+        BrowserHiddenItemsStore.current = nil
+        XCTAssertFalse(BrowserHiddenItemsStore.hasCurrent)
 
-        BrowserHiddenItemsStore.openShared(at: fileURL)
-        XCTAssertTrue(BrowserHiddenItemsStore.hasShared)
-        let store = try XCTUnwrap(BrowserHiddenItemsStore.shared, "a read in the gap saw no store")
+        BrowserHiddenItemsStore.openCurrent(at: fileURL)
+        XCTAssertTrue(BrowserHiddenItemsStore.hasCurrent)
+        let store = try XCTUnwrap(
+            BrowserHiddenItemsStore.current as? BrowserHiddenItemsStore, "a read in the gap saw no store")
         XCTAssertEqual(store.url, fileURL)
-        XCTAssertTrue(BrowserHiddenItemsStore.shared === store)
+        XCTAssertTrue(BrowserHiddenItemsStore.current === store)
 
         // A file that cannot be opened leaves no store, and says so.
         let blocker = directory.appendingPathComponent("file")
         try Data().write(to: blocker)
         let failed = expectation(description: "failure reported")
-        BrowserHiddenItemsStore.openShared(at: blocker.appendingPathComponent("x.db")) { _ in failed.fulfill() }
-        XCTAssertNil(BrowserHiddenItemsStore.shared)
+        BrowserHiddenItemsStore.openCurrent(at: blocker.appendingPathComponent("x.db")) { _ in failed.fulfill() }
+        XCTAssertNil(BrowserHiddenItemsStore.current)
         wait(for: [failed], timeout: 5)
     }
 
-    /// ``sharedStore()`` awaits the open in flight rather than blocking the
+    /// ``currentStore()`` awaits the open in flight rather than blocking the
     /// main thread on it, and answers nil when the open failed (re-review
     /// follow-up).
     @MainActor
-    func test_sharedStoreAwaitsTheOpenAndFailsClosedToNil() async throws {
-        let saved = BrowserHiddenItemsStore.shared
-        defer { BrowserHiddenItemsStore.shared = saved }
-        BrowserHiddenItemsStore.shared = nil
-        let none = await BrowserHiddenItemsStore.sharedStore()
+    func test_currentStoreAwaitsTheOpenAndFailsClosedToNil() async throws {
+        let saved = BrowserHiddenItemsStore.current
+        defer { BrowserHiddenItemsStore.current = saved }
+        BrowserHiddenItemsStore.current = nil
+        let none = await BrowserHiddenItemsStore.currentStore()
         XCTAssertNil(none)
 
-        BrowserHiddenItemsStore.openShared(at: fileURL)
-        let awaited = await BrowserHiddenItemsStore.sharedStore()
-        let store = try XCTUnwrap(awaited, "an await in the gap saw no store")
+        BrowserHiddenItemsStore.openCurrent(at: fileURL)
+        let awaited = await BrowserHiddenItemsStore.currentStore()
+        let store = try XCTUnwrap(awaited as? BrowserHiddenItemsStore, "an await in the gap saw no store")
         XCTAssertEqual(store.url, fileURL)
-        let again = await BrowserHiddenItemsStore.sharedStore()
+        let again = await BrowserHiddenItemsStore.currentStore()
         XCTAssertTrue(again === store)
-        XCTAssertTrue(BrowserHiddenItemsStore.shared === store, "the blocking getter agrees")
+        XCTAssertTrue(BrowserHiddenItemsStore.current === store, "the blocking getter agrees")
 
         let blocker = directory.appendingPathComponent("file")
         try Data().write(to: blocker)
-        BrowserHiddenItemsStore.openShared(at: blocker.appendingPathComponent("x.db"))
-        let failed = await BrowserHiddenItemsStore.sharedStore()
+        BrowserHiddenItemsStore.openCurrent(at: blocker.appendingPathComponent("x.db"))
+        let failed = await BrowserHiddenItemsStore.currentStore()
         XCTAssertNil(failed)
-        XCTAssertFalse(BrowserHiddenItemsStore.hasShared)
+        XCTAssertFalse(BrowserHiddenItemsStore.hasCurrent)
     }
 }
 

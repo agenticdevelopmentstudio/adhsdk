@@ -1,6 +1,7 @@
 import WebKit
 import XCTest
 @testable import AgenticDeveloperHubSDKMacOS
+import AgenticDeveloperHubSDKDatabase
 
 /// Pure parsing and routing of picker messages (recipe
 /// workspace/browser/element-picker, vectors 001–004).

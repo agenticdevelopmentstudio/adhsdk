@@ -2,6 +2,7 @@ import WebKit
 import XCTest
 @testable import AgenticDeveloperHubSDKMacOS
 @testable import AgenticDeveloperHubSDKCore
+import AgenticDeveloperHubSDKDatabase
 
 /// `BrowserHistoryTool.run`, the `browser_history` tool's answer apart from
 /// the pane (the Agent History Tool recipe).
@@ -72,7 +73,7 @@ final class BrowserHistoryToolTests: XCTestCase {
     // agent-history-tool-008, agent-history-tool-009
     func test_allSearchesStore() async throws {
         let store = try makeStore(visits: 5)
-        try store.record(URL(string: "https://docs.example/guide")!, title: "Guide",
+        try await store.record(URL(string: "https://docs.example/guide")!, title: "Guide",
                          at: Date(timeIntervalSince1970: 500))
 
         let recent = lines(try await run(.all, store: store))
@@ -165,11 +166,11 @@ final class BrowserHistoryToolTests: XCTestCase {
         // match has to walk past the first page and still keep its order.
         let store = try makeStore(visits: 0)
         for index in 0..<3 {
-            try store.record(URL(string: "https://bank.example/Acme/\(index)")!, title: "Acme \(index)",
+            try await store.record(URL(string: "https://bank.example/Acme/\(index)")!, title: "Acme \(index)",
                              at: Date(timeIntervalSince1970: 100 + Double(index)))
         }
         for index in 0..<(BrowserHistoryTool.matchPageSize + 10) {
-            try store.record(URL(string: "https://example.com/\(index)")!, title: "Page \(index)",
+            try await store.record(URL(string: "https://example.com/\(index)")!, title: "Page \(index)",
                              at: Date(timeIntervalSince1970: 1_000 + Double(index)))
         }
         let guess = try await run(.all, query: "acme", store: store, privacy: privacy)
@@ -200,7 +201,7 @@ final class BrowserHistoryToolTests: XCTestCase {
     func test_historyLeavesOutLocalFiles() async throws {
         let store = try makeStore(visits: 3)
         for index in 0..<5 {
-            try store.record(URL(string: "file:///Users/someone/Clients/Report\(index).html")!,
+            try await store.record(URL(string: "file:///Users/someone/Clients/Report\(index).html")!,
                              title: "Client report \(index)", at: Date(timeIntervalSince1970: 5_000 + Double(index)))
         }
         let recent = lines(try await run(.all, limit: 3, store: store))

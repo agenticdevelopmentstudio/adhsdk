@@ -5,6 +5,7 @@
 
 import AppKit
 import AgenticDeveloperHubSDKCore
+import AgenticDeveloperHubSDKDatabase
 
 extension ComposableTabsViewID {
     /// A pane holding the Safari Web Browser. It was the only browser when
@@ -90,7 +91,7 @@ extension ComposableTabsViewRegistry {
         preferredAxis: ComposableTabsAxis,
         homeURL: URL = WebBrowserPaneViewController.blankPage,
         settings: SettingsStore = UserSettings.shared,
-        history: BrowserHistoryStore? = nil,
+        history: (any BrowserHistoryStoring)? = nil,
         privacyVault: PrivacyWordsVault? = nil
     ) {
         register(

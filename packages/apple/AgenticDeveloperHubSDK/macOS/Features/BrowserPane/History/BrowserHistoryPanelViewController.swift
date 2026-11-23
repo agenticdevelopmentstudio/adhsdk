@@ -7,6 +7,7 @@ import AppKit
 import AgenticDeveloperHubSDKCore
 import AgenticDeveloperHubSDKCoreUI
 import AgenticDeveloperHubSDKCoreMacOS
+import AgenticDeveloperHubSDKDatabase
 
 /// The browsing history as a filter over a list, in the Settings sidebar's
 /// style (`TopicListViewController`): a search field and the header buttons

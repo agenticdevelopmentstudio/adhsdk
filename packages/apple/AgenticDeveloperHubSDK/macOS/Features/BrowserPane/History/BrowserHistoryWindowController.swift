@@ -8,6 +8,7 @@ import os
 import AgenticDeveloperHubSDKCore
 import AgenticDeveloperHubSDKCoreUI
 import AgenticDeveloperHubSDKCoreMacOS
+import AgenticDeveloperHubSDKDatabase
 
 /// Browser ▸ Show History: the History panel in a window of its own, shaped
 /// like the projects window — a bordered shelf card with a bar of panel
@@ -26,7 +27,7 @@ public final class BrowserHistoryWindowController: SingleWindowController {
     /// The history the window lists. The host sets it once, before the
     /// window can be shown; with none, there is nothing to show and
     /// ``show()`` logs and returns.
-    public static var store: BrowserHistoryStore?
+    public static var store: (any BrowserHistoryStoring)?
 
     /// Whether ``show()`` has a history to show.
     public static var canShow: Bool { store != nil }
@@ -58,7 +59,7 @@ public final class BrowserHistoryWindowController: SingleWindowController {
 
     private let panel: BrowserHistoryPanelViewController
 
-    private init(store: BrowserHistoryStore) {
+    private init(store: any BrowserHistoryStoring) {
         var openVisit: (URL) -> Void = { _ in }
         let panel = BrowserHistoryPanelViewController(
             model: BrowserHistoryListModel(store: store),

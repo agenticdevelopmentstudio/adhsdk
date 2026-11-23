@@ -6,6 +6,7 @@
 import AgenticDeveloperHubSDKCore
 import AppKit
 import os
+import AgenticDeveloperHubSDKDatabase
 
 /// File ▸ New Web Browser Window and New Private Web Browser Window: a
 /// window with one browser in it (`WebBrowserWindowController`). The host
@@ -22,7 +23,7 @@ import os
 /// window's browser pane, installing Back and Forward in the key command
 /// registry under "Web Browser" so the person can rebind them.
 ///
-/// It opens the hidden-items store (`BrowserHiddenItemsStore.shared`) once,
+/// It opens the hidden-items store (`BrowserHiddenItemsStore.current`) once,
 /// at launch, for every pane to share.
 @MainActor
 public final class WebBrowserWindowsFeature: AppFeature {
@@ -89,12 +90,12 @@ public final class WebBrowserWindowsFeature: AppFeature {
 
     /// Opens `BrowserHiddenItems.db` in the app home (following
     /// `APP_TEST_HOME`) off the main thread, unless a host or test already
-    /// set one. A file that cannot be opened leaves `shared` nil, which every
+    /// set one. A file that cannot be opened leaves `current` nil, which every
     /// consumer takes as "no store": a degraded mode, not a launch failure.
     private static func openHiddenItemsStore() {
-        guard !BrowserHiddenItemsStore.hasShared else { return }
+        guard !BrowserHiddenItemsStore.hasCurrent else { return }
         let logger = logger
-        BrowserHiddenItemsStore.openShared(at: BrowserHiddenItemsStore.defaultURL) { error in
+        BrowserHiddenItemsStore.openCurrent(at: BrowserHiddenItemsStore.defaultURL) { error in
             logger.error("hidden-items store unavailable: \(error.localizedDescription, privacy: .public)")
         }
     }

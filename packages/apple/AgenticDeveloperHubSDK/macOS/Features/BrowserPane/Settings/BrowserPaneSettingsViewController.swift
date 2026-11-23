@@ -8,6 +8,7 @@ import AppKit
 import AgenticDeveloperHubSDKCore
 import AgenticDeveloperHubSDKCoreUI
 import AgenticDeveloperHubSDKCoreMacOS
+import AgenticDeveloperHubSDKDatabase
 
 /// One browser pane's settings (spec section 3): the Browser panel in pane
 /// scope, over the pane's own settings layer, with an OK button. Shown in a
@@ -36,7 +37,7 @@ public final class BrowserPaneSettingsViewController: NSViewController {
 
     /// `nil` when the pane has no settings layer of its own — a pane built
     /// over the shared store directly, whose every change would be global.
-    public init?(pane: WebBrowserPaneViewController, history: BrowserHistoryStore?) {
+    public init?(pane: WebBrowserPaneViewController, history: (any BrowserHistoryStoring)?) {
         guard let layered = pane.paneSettings else { return nil }
         self.paneTitle = pane.paneTitle
         self.panels = BrowserSettingsPanelViewController(

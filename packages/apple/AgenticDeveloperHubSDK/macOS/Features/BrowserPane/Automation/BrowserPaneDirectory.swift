@@ -1,4 +1,5 @@
 import Foundation
+import AgenticDeveloperHubSDKDatabase
 
 /// One Browser pane as the tool set sees it. Title and URL are read live
 /// from `automation`, so a handle never goes stale on its own.
@@ -35,7 +36,7 @@ public struct BrowserPaneHandle {
     public let historyAccess: BrowserAgentHistoryAccess
     /// The history store `browser_history` reads under All history; nil when
     /// the host has none.
-    public let historyStore: BrowserHistoryStore?
+    public let historyStore: (any BrowserHistoryStoring)?
     /// The pane's effective Hide Images — its own override, else the global
     /// value (`WebBrowserPaneViewController.agentHidesImages`) — as it stood
     /// when the handle was made. The one value the tools and the pane's
@@ -49,7 +50,7 @@ public struct BrowserPaneHandle {
         agentPrivacy: BrowserAgentPrivacy = .off,
         historyPrivacy: BrowserAgentPrivacy? = nil,
         historyAccess: BrowserAgentHistoryAccess = .none,
-        historyStore: BrowserHistoryStore? = nil,
+        historyStore: (any BrowserHistoryStoring)? = nil,
         hidesImages: Bool
     ) {
         self.id = id; self.project = project; self.tab = tab; self.automation = automation

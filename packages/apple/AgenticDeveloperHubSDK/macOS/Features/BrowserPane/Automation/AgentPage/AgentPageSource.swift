@@ -1,4 +1,5 @@
 import Foundation
+import AgenticDeveloperHubSDKDatabase
 
 /// `AgentPageWalker.js` and the finder it records selectors with, loaded
 /// into the automation world (`BrowserScriptWorld.automation`) beside the
@@ -71,18 +72,18 @@ public struct AgentPageSource {
     public static let defaultTimeoutMs = 1500
 
     private let driver: BrowserPageDriver
-    private let hiddenItems: BrowserHiddenItemsStore?
+    private let hiddenItems: (any BrowserHiddenItemsStoring)?
     private let privacy: () -> BrowserAgentPrivacy
     private let hideImages: () -> Bool
     private let timeoutMs: Int
 
-    public init(engine: BrowserEngine, hiddenItems: BrowserHiddenItemsStore?,
+    public init(engine: BrowserEngine, hiddenItems: (any BrowserHiddenItemsStoring)?,
                 privacy: @escaping () -> BrowserAgentPrivacy, hideImages: @escaping () -> Bool) {
         self.init(driver: engine, hiddenItems: hiddenItems, privacy: privacy, hideImages: hideImages)
     }
 
     /// Any page driver (a bare web view's, in tests), and the walk's budget.
-    init(driver: BrowserPageDriver, hiddenItems: BrowserHiddenItemsStore?,
+    init(driver: BrowserPageDriver, hiddenItems: (any BrowserHiddenItemsStoring)?,
          privacy: @escaping () -> BrowserAgentPrivacy, hideImages: @escaping () -> Bool,
          timeoutMs: Int = AgentPageSource.defaultTimeoutMs) {
         self.driver = driver
@@ -156,8 +157,8 @@ public struct AgentPageSource {
     /// list and walking; a page still moving after that is refused.
     static let walkAttempts = 2
 
-    private func agentSelectors(_ store: BrowserHiddenItemsStore, for url: URL?) async throws -> [String] {
-        try await store.perform { try $0.enabledSelectors(list: .agent, for: url) }
+    private func agentSelectors(_ store: any BrowserHiddenItemsStoring, for url: URL?) async throws -> [String] {
+        try await store.enabledSelectors(list: .agent, for: url)
     }
 
     /// The walker's JSON for the current document, or nil when it returned
@@ -240,7 +241,7 @@ extension AgentPageSource {
     /// effective Hide Images (`WebBrowserPaneViewController.agentHidesImages`,
     /// which the tools receive as `BrowserPaneHandle.hidesImages`). Built
     /// afresh for each read, so each read sees the settings of its moment.
-    static func reading(_ driver: BrowserPageDriver, hiddenItems: BrowserHiddenItemsStore?,
+    static func reading(_ driver: BrowserPageDriver, hiddenItems: (any BrowserHiddenItemsStoring)?,
                         privacy: BrowserAgentPrivacy, hideImages: Bool) -> AgentPageSource {
         AgentPageSource(driver: driver, hiddenItems: hiddenItems, privacy: { privacy }, hideImages: { hideImages })
     }

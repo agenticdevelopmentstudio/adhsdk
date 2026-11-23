@@ -3,6 +3,7 @@ import WebKit
 import XCTest
 import AgenticDeveloperHubSDKCore
 @testable import AgenticDeveloperHubSDKMacOS
+import AgenticDeveloperHubSDKDatabase
 
 /// Selecting mode and its pick dialog (recipe workspace/browser/element-picker).
 /// The dialog is captured rather than run modally, and the notice is counted
@@ -147,7 +148,7 @@ final class BrowserSelectingModeTests: XCTestCase {
         let dialog = try XCTUnwrap(dialogs.first)
         dialog.confirm(nil)
         await mode.lastSave?.value
-        let saved = try store.items(list: .user, for: URL(string: "https://example.com/other")!)
+        let saved = try await store.items(list: .user, for: URL(string: "https://example.com/other")!)
         XCTAssertEqual(saved.count, 1)
         XCTAssertEqual(saved.first?.site, "example.com/*")
         XCTAssertEqual(saved.first?.scope, .thisItem)
@@ -169,7 +170,8 @@ final class BrowserSelectingModeTests: XCTestCase {
         dialog.previewToggled(nil)
         dialog.cancel(nil)
         XCTAssertNil(mode.lastSave)
-        XCTAssertEqual(try store.items(list: .user, for: page), [])
+        let saved = try await store.items(list: .user, for: page)
+        XCTAssertEqual(saved, [])
         XCTAssertEqual(mode.state, .selecting)
         XCTAssertEqual(mode.picker?.isPaused, false)
         XCTAssertNil(mode.previewSelectors)
@@ -227,7 +229,8 @@ final class BrowserSelectingModeTests: XCTestCase {
         XCTAssertNil(mode.picker)
         XCTAssertEqual(button.symbolName, BrowserHideItemsButton.idleSymbol)
         XCTAssertEqual(noticeCount, 0)
-        XCTAssertEqual(try store.items(list: .user, for: URL(string: "https://example.com/")!), [])
+        let saved = try await store.items(list: .user, for: URL(string: "https://example.com/")!)
+        XCTAssertEqual(saved, [])
         XCTAssertFalse(BrowserSelectingMode.canSelect(on: URL(string: "about:blank")))
         XCTAssertFalse(BrowserSelectingMode.canSelect(on: URL(string: "data:text/html,hi")))
         XCTAssertFalse(BrowserSelectingMode.canSelect(on: nil))
@@ -284,7 +287,7 @@ final class BrowserSelectingModeTests: XCTestCase {
         dialog.confirm(nil)
         await mode.lastSave?.value
         XCTAssertEqual(mode.state, .idle)
-        let saved = try store.items(list: .user, for: page)
+        let saved = try await store.items(list: .user, for: page)
         XCTAssertEqual(saved.map(\.selector), ["#first"])
     }
 

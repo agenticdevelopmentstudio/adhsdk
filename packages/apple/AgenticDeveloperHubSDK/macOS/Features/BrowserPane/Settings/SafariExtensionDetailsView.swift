@@ -5,6 +5,7 @@
 
 import AppKit
 import AgenticDeveloperHubSDKCore
+import AgenticDeveloperHubSDKDatabase
 
 /// One Safari extension's details page, as Chrome's extension details page
 /// lays it out: on or off; what it is, its version, size and source; what it

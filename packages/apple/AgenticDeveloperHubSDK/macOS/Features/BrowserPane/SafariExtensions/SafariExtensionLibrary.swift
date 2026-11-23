@@ -6,130 +6,82 @@
 import Foundation
 import AgenticDeveloperHubSDKDatabase
 
-/// What a Safari pane's profile remembers about one installed extension,
-/// beside the unpacked files: whether it is on, and what the person granted
-/// or refused it. WebKit keeps neither across launches on its own.
-public struct SafariExtensionRecord: Codable, Equatable, Sendable {
-    /// The Chrome Web Store ID, or a copied Safari extension's app extension
-    /// bundle identifier; also the extension's folder and its
-    /// `chrome.runtime.id`.
-    public var id: String
-    public var isEnabled: Bool
-    public var isFromWebStore: Bool
-    /// `WKWebExtension.Permission` raw values.
-    public var grantedPermissions: [String]
-    public var deniedPermissions: [String]
-    /// Match pattern strings (`*://*.example.com/*`).
-    public var grantedOrigins: [String]
-    public var deniedOrigins: [String]
-    /// Where a copied Safari extension came from; nil for a Chrome Web Store
-    /// one. Absent from records written before it existed, which decode as
-    /// nil.
-    public var appSource: AppSource?
-    /// Which sites it may read and change; nil (records written before it
-    /// existed) is every site it asks for.
-    public var siteAccess: SafariExtensionSiteAccess?
-    /// The sites `.specificSites` allows, as match patterns.
-    public var sites: [String]?
-    /// May read `file://` pages; nil is no.
-    public var allowsFileAccess: Bool?
-    /// Runs in private browsing panes; nil is no.
-    public var allowsPrivateBrowsing: Bool?
-    /// Its button is on the toolbar rather than in the extensions menu; nil
-    /// is yes.
-    public var isPinned: Bool?
-
-    /// The site access in force, with nil's meaning applied.
-    public var effectiveSiteAccess: SafariExtensionSiteAccess { siteAccess ?? .allSites }
-
-    /// The Safari extension (`SafariAppExtension`) a record's files were
-    /// copied from, as it was when they were copied.
-    public struct AppSource: Codable, Equatable, Sendable {
-        /// The `.appex` bundle's path.
-        public var appexPath: String
-        /// The version copied. A different one installed means copy again.
-        public var version: String
-        public var appName: String
-
-        public init(appexPath: String, version: String, appName: String) {
-            self.appexPath = appexPath
-            self.version = version
-            self.appName = appName
-        }
-
-        public init(_ source: SafariAppExtension) {
-            self.init(appexPath: source.appexURL.path, version: source.version, appName: source.appName)
-        }
-    }
-
-    public init(
-        id: String, isEnabled: Bool = true, isFromWebStore: Bool,
-        grantedPermissions: [String] = [], deniedPermissions: [String] = [],
-        grantedOrigins: [String] = [], deniedOrigins: [String] = [],
-        appSource: AppSource? = nil
-    ) {
-        self.id = id
-        self.isEnabled = isEnabled
-        self.isFromWebStore = isFromWebStore
-        self.grantedPermissions = grantedPermissions
-        self.deniedPermissions = deniedPermissions
-        self.grantedOrigins = grantedOrigins
-        self.deniedOrigins = deniedOrigins
-        self.appSource = appSource
+extension SafariExtensionRecord.AppSource {
+    /// The record of copying `source` as it is now.
+    public init(_ source: SafariAppExtension) {
+        self.init(appexPath: source.appexURL.path, version: source.version, appName: source.appName)
     }
 }
 
-/// One profile's extensions on disk:
-///
-///     <root>/extensions.json        the records, in install order
-///     <root>/Extensions/<id>/       each extension, unpacked
-///     <root>/Staging/<id>/          a download or copy awaiting the person's answer
-///
-/// The root is per profile (`global`, or a jar's UUID), so a jar's panes see
-/// only what was installed into that jar.
-public struct SafariExtensionLibrary: Sendable {
-    public let root: URL
-
-    public init(root: URL) {
-        self.root = root
-    }
-
-    /// The profile's folder under `home`'s app storage.
-    public static func root(inHome home: URL, profile: BrowserExtensionProfile) -> URL {
-        let name = switch profile {
-        case .global: "global"
-        case .jar(let id): id.uuidString
+extension BrowserExtensionProfile {
+    /// The catalog scope a Safari pane's profile keeps its extensions in.
+    public var catalogScope: SafariExtensionScope {
+        switch self {
+        case .global: .global
+        case .jar(let id): .jar(id)
         }
-        return AppStorageLocation.directory(inHome: home)
-            .appendingPathComponent("SafariExtensions", isDirectory: true)
-            .appendingPathComponent(name, isDirectory: true)
+    }
+}
+
+/// One profile's extensions: the installed ones and their records, kept by a
+/// `SafariExtensionCatalog` under the profile's scope, and the downloads and
+/// copies awaiting the person's answer, staged here first:
+///
+///     <stagingRoot>/<id>/        a download or copy awaiting the person's answer
+///
+/// The staging root is the app's to choose: beside the installed files for a
+/// local catalog (`<root>/<scope>/Staging`, where it always was), and under
+/// the system's temporary folder for the daemon's, which moves an install
+/// into its own directory itself. A jar's panes see only what was installed
+/// into that jar.
+public struct SafariExtensionLibrary: Sendable {
+    public let catalog: any SafariExtensionCatalog
+    public let scope: SafariExtensionScope
+    /// Where downloads and copies wait, one folder per id.
+    public let stagingRoot: URL
+
+    /// A library over `catalog`'s `scope`, staging under `stagingRoot`, or
+    /// beside the installed files when it is nil.
+    public init(catalog: any SafariExtensionCatalog, scope: SafariExtensionScope, stagingRoot: URL? = nil) {
+        self.catalog = catalog
+        self.scope = scope
+        self.stagingRoot = stagingRoot ?? Self.localStagingRoot(of: catalog, scope: scope)
     }
 
-    var recordsFile: URL { root.appendingPathComponent("extensions.json") }
+    /// `<root>/<scope>/Staging`, the staging folder of a catalog in the app's
+    /// own storage.
+    public static func localStagingRoot(of catalog: any SafariExtensionCatalog, scope: SafariExtensionScope) -> URL {
+        catalog.directory(of: scope).appendingPathComponent("Staging", isDirectory: true)
+    }
+
+    /// A staging root under the system's temporary folder, for a catalog the
+    /// app does not own (adhd's): one per scope, so two profiles never stage
+    /// over each other.
+    public static func temporaryStagingRoot(scope: SafariExtensionScope) -> URL {
+        FileManager.default.temporaryDirectory
+            .appendingPathComponent("SafariExtensionStaging", isDirectory: true)
+            .appendingPathComponent(scope.folderName, isDirectory: true)
+    }
 
     /// Where `id`'s files are unpacked.
     public func directory(of id: String) -> URL {
-        root.appendingPathComponent("Extensions", isDirectory: true).appendingPathComponent(id, isDirectory: true)
+        catalog.directory(of: id, scope: scope)
     }
 
-    /// The records, or none when nothing was installed yet. A file that does
-    /// not decode is reported rather than taken as empty, so it is never
+    /// The records, or none when nothing was installed yet. Records that do
+    /// not decode are reported rather than taken as empty, so they are never
     /// overwritten by the next save.
-    public func records() throws -> [SafariExtensionRecord] {
-        guard FileManager.default.fileExists(atPath: recordsFile.path) else { return [] }
-        return try JSONDecoder().decode([SafariExtensionRecord].self, from: Data(contentsOf: recordsFile))
+    public func records() async throws -> [SafariExtensionRecord] {
+        try await catalog.records(scope: scope)
     }
 
-    public func save(_ records: [SafariExtensionRecord]) throws {
-        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
-        let encoder = JSONEncoder()
-        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
-        try encoder.encode(records).write(to: recordsFile, options: .atomic)
+    public func save(_ records: [SafariExtensionRecord]) async throws {
+        try await catalog.save(records, scope: scope)
     }
 
     /// Where `id` waits between download and the person's answer.
     func stagingDirectory(of id: String) -> URL {
-        root.appendingPathComponent("Staging", isDirectory: true).appendingPathComponent(id, isDirectory: true)
+        stagingRoot.appendingPathComponent(id, isDirectory: true)
     }
 
     /// Unpacks `crx` into `id`'s staging folder, replacing an earlier
@@ -225,12 +177,11 @@ public struct SafariExtensionLibrary: Sendable {
         return url.path.hasPrefix(base) ? String(url.path.dropFirst(base.count)) : url.lastPathComponent
     }
 
-    /// Moves `id`'s staged files into place, replacing the installed copy.
+    /// Hands `id`'s staged files to the catalog, which moves them into
+    /// place, replacing the installed copy.
     @discardableResult
-    public func commitStaged(_ id: String) throws -> URL {
-        let destination = directory(of: id)
-        try Self.move(stagingDirectory(of: id), replacing: destination)
-        return destination
+    public func commitStaged(_ id: String) async throws -> URL {
+        try await catalog.install(stagedAt: stagingDirectory(of: id), scope: scope)
     }
 
     /// Throws away `id`'s staged files.
@@ -239,17 +190,12 @@ public struct SafariExtensionLibrary: Sendable {
     }
 
     private static func move(_ source: URL, replacing destination: URL) throws {
-        let fileManager = FileManager.default
-        try fileManager.createDirectory(at: destination.deletingLastPathComponent(), withIntermediateDirectories: true)
-        if fileManager.fileExists(atPath: destination.path) { try fileManager.removeItem(at: destination) }
-        try fileManager.moveItem(at: source, to: destination)
+        try LocalSafariExtensionCatalog.move(source, replacing: destination)
     }
 
-    /// Deletes `id`'s files.
-    public func removeFiles(of id: String) throws {
-        let directory = directory(of: id)
-        guard FileManager.default.fileExists(atPath: directory.path) else { return }
-        try FileManager.default.removeItem(at: directory)
+    /// Deletes `id`'s files and record.
+    public func remove(_ id: String) async throws {
+        try await catalog.remove(id: id, scope: scope)
     }
 
     /// Downloads `id`'s package from the Chrome Web Store.

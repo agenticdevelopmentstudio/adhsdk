@@ -5,6 +5,7 @@
 
 import Foundation
 import os
+import AgenticDeveloperHubSDKDatabase
 
 /// The visits a History panel lists, and the edits it makes to them: the
 /// store's most recent visits while the filter is empty, the visits whose
@@ -14,7 +15,7 @@ import os
 /// It owns the rules — trimming, the page size, which reload's answer is
 /// shown — so they are testable without a view and any host that shows a
 /// history gets the same ones (`separation-of-concerns`). Every store call
-/// runs through `BrowserHistoryStore.perform(_:)`, off the main actor, and
+/// is an async `BrowserHistoryStoring` call, off the main actor, and
 /// the answer is published back on it.
 @MainActor
 public final class BrowserHistoryListModel {
@@ -42,7 +43,7 @@ public final class BrowserHistoryListModel {
     public var onChange: (() -> Void)?
 
     private let pageSize: Int
-    private let store: BrowserHistoryStore
+    private let store: any BrowserHistoryStoring
     /// Advanced by every reload; an answer that comes back to a newer
     /// generation than its own is discarded, so the latest filter wins
     /// however the store's answers are ordered.
@@ -50,13 +51,13 @@ public final class BrowserHistoryListModel {
     private var reloadTask: Task<Void, Never>?
     nonisolated(unsafe) private var storeObserver: NSObjectProtocol?
 
-    public init(store: BrowserHistoryStore, pageSize: Int = 200) {
+    public init(store: any BrowserHistoryStoring, pageSize: Int = 200) {
         self.store = store
         self.pageSize = pageSize
         // A write from anywhere — a pane recording a visit, another list's
         // removal — rereads the list, which also brings its times up to date.
         storeObserver = NotificationCenter.default.addObserver(
-            forName: BrowserHistoryStore.didChangeNotification, object: store, queue: .main
+            forName: .browserHistoryDidChange, object: store, queue: .main
         ) { [weak self] _ in
             MainActor.assumeIsolated { self?.scheduleReload() }
         }
@@ -79,13 +80,13 @@ public final class BrowserHistoryListModel {
     public func remove(_ ids: [Int64]) async {
         guard !ids.isEmpty else { return }
         await write("remove visits") { store in
-            for id in ids { try store.remove(visit: id) }
+            for id in ids { try await store.remove(visit: id) }
         }
     }
 
     /// Forgets every visit, then rereads the list.
     public func clearAll() async {
-        await write("clear history") { try $0.removeAll() }
+        await write("clear history") { try await $0.removeAll() }
     }
 
     // MARK: - Private
@@ -94,9 +95,11 @@ public final class BrowserHistoryListModel {
         filter.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
-    private func write(_ what: String, _ work: @escaping @Sendable (BrowserHistoryStore) throws -> Void) async {
+    private func write(
+        _ what: String, _ work: @escaping @Sendable (any BrowserHistoryStoring) async throws -> Void
+    ) async {
         do {
-            try await store.perform(work)
+            try await work(store)
         } catch {
             Self.logger.error("could not \(what, privacy: .public): \(error.localizedDescription, privacy: .public)")
         }
@@ -112,9 +115,9 @@ public final class BrowserHistoryListModel {
         reloadTask = Task { [weak self] in
             let answer: Result<[BrowserVisit], Error>
             do {
-                answer = .success(try await store.perform { store in
-                    query.isEmpty ? try store.recent(limit: limit) : try store.search(query, limit: limit)
-                })
+                answer = .success(query.isEmpty
+                    ? try await store.recent(limit: limit, before: nil, excludingLocalFiles: false)
+                    : try await store.search(query, limit: limit, excludingLocalFiles: false))
             } catch {
                 answer = .failure(error)
             }
