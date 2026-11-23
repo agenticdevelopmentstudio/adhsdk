@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 
 import {
   DEFAULT_QUOTA_BYTES,
@@ -46,6 +46,13 @@ export function ProductUsersPane({ ecosystemId }: { ecosystemId: string }) {
   const [cursors, setCursors] = useState<string[]>([]);
   const cursor = cursors.at(-1);
   const { data: page, error: loadError, isPending: loading } = useProductCustomers(ecosystemId, { q, cursor });
+
+  // A later page that comes back empty (its last person was just deleted) steps back a page,
+  // rather than saying "No users yet." while earlier pages still hold people.
+  const emptyLaterPage = page !== undefined && page.items.length === 0 && cursors.length > 0;
+  useEffect(() => {
+    if (emptyLaterPage) setCursors((cs) => cs.slice(0, -1));
+  }, [emptyLaterPage]);
 
   const pause = usePauseCustomer(ecosystemId);
   const unpause = useUnpauseCustomer(ecosystemId);
@@ -129,7 +136,7 @@ export function ProductUsersPane({ ecosystemId }: { ecosystemId: string }) {
 
         {loadError ? (
           <ErrorText error={`Couldn't load the users: ${loadError.message}`} />
-        ) : loading ? (
+        ) : loading || emptyLaterPage ? (
           <p className="text-sm text-apt-text-muted">Loading…</p>
         ) : customers.length === 0 ? (
           <p className="text-sm text-apt-text-muted">{q ? `No users match "${q}".` : "No users yet."}</p>

@@ -96,6 +96,26 @@ describe("ProductUsersPane", () => {
     expect(screen.getByText("Ann")).toBeInTheDocument();
   });
 
+  it("steps back a page when a later page comes back empty, and never says there are no users", async () => {
+    let cyDeleted = false;
+    hooks.useProductCustomers.mockImplementation((eco: string, opts: { q?: string; cursor?: string }) => ({
+      data: opts.cursor === "c2" && cyDeleted ? { items: [], nextCursor: null } : pageFor(eco, opts),
+      error: null,
+      isPending: false,
+    }));
+    const { rerender } = render(<ProductUsersPane ecosystemId="eco-1" />);
+    fireEvent.click(screen.getByRole("button", { name: "Next" }));
+    expect(screen.getByText("Cy")).toBeInTheDocument();
+    // Cy, page two's only person, is deleted and the roster refetches to an empty page two.
+    cyDeleted = true;
+    rerender(<ProductUsersPane ecosystemId="eco-1" />);
+    await waitFor(() =>
+      expect(hooks.useProductCustomers).toHaveBeenLastCalledWith("eco-1", { q: "", cursor: undefined }),
+    );
+    expect(await screen.findByText("Ann")).toBeInTheDocument();
+    expect(screen.queryByText("No users yet.")).toBeNull();
+  });
+
   it("searches from the first page", () => {
     render(<ProductUsersPane ecosystemId="eco-1" />);
     fireEvent.click(screen.getByRole("button", { name: "Next" }));
