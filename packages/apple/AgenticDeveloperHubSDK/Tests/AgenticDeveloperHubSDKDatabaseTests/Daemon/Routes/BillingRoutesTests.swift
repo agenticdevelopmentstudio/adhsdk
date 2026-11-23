@@ -127,6 +127,37 @@ final class BillingRoutesTests: XCTestCase {
         let response = try await send("GET", "/billing/entries?since=last%20tuesday")
 
         XCTAssertEqual(response?.status, 400, "a bad filter is a bad request, not an empty list")
+        let message = String(bytes: response?.body ?? Data(), encoding: .utf8) ?? ""
+        XCTAssertTrue(message.contains("YYYY-MM-DD") && message.contains("ISO8601"),
+                      "the error names both accepted forms: \(message)")
+    }
+
+    /// A timestamp is reduced to the earliest day its instant falls on in any
+    /// zone, never to its text prefix, so no entry filed on or after it in a
+    /// zone behind the caller's offset is dropped.
+    func testEntriesSinceReadsATimestampAsItsEarliestDay() {
+        XCTAssertEqual(BillingRoutes.entriesSinceDay(""), "")
+        XCTAssertEqual(BillingRoutes.entriesSinceDay("2026-11-23"), "2026-11-23")
+        // 2026-11-22T16:00Z: the prefix would say 2026-11-23.
+        XCTAssertEqual(BillingRoutes.entriesSinceDay("2026-11-23T01:00:00+09:00"), "2026-11-22")
+        // 2026-09-01 20:00 in PDT: the prefix would say 2026-09-02.
+        XCTAssertEqual(BillingRoutes.entriesSinceDay("2026-09-02T03:00:00Z"), "2026-09-01")
+        XCTAssertEqual(BillingRoutes.entriesSinceDay("2026-09-02T13:00:00Z"), "2026-09-02")
+        XCTAssertNil(BillingRoutes.entriesSinceDay("2026-09-02garbage"))
+    }
+
+    /// An entry filed on the local day a UTC timestamp's prefix skips is kept.
+    func testEntriesRouteKeepsAnEntryOnTheDayATimestampPrefixWouldSkip() async throws {
+        let project = try seedProject()
+        _ = try BillingRollup.saveEntry(BillingEntryDTO(
+            id: "", projectId: project.id, day: "2026-09-01",
+            rawSeconds: 3600, billedSeconds: 3600, rateCents: 12_000, amountCents: 12_000
+        ), database: db)
+
+        let rows = try array(try await send("GET", "/billing/entries?since=2026-09-02T03:00:00Z"))
+
+        XCTAssertEqual(rows.map { $0["day"] as? String }, ["2026-09-01"],
+                       "a Pacific evening entry on 2026-09-01 is on or after 03:00Z on the 2nd")
     }
 
     /// The shape is not enough: a month or day that no calendar has is a

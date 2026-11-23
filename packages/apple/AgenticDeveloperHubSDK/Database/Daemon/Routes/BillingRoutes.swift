@@ -99,17 +99,18 @@ public enum BillingRoutes {
             case "repos":
                 return .json(try database.billingRepos(projectId: request.query("project_id")))
             case "entries":
-                // `since` here is a day, not an instant: entries are filed by
-                // local day, so an ISO timestamp would compare against a
-                // ten-character column and quietly match nothing.
-                let since = request.query("since") ?? ""
-                guard since.isEmpty || RouteRequest.isISODayOrTimestamp(since) else {
-                    return .error("Invalid 'since': expected YYYY-MM-DD", status: 400)
+                // `since` is compared against a day column, so a timestamp is
+                // reduced to a day first (``entriesSinceDay(_:)``).
+                let raw = request.query("since") ?? ""
+                guard let since = entriesSinceDay(raw) else {
+                    return .error(
+                        "Invalid 'since': expected a day (YYYY-MM-DD) or an ISO8601 timestamp; got \"\(raw)\"",
+                        status: 400)
                 }
                 return .json(try database.billingEntries(
                     projectId: request.query("project_id"),
                     status: request.query("status"),
-                    since: String(since.prefix(10))
+                    since: since
                 ))
             case "segments":
                 let since: String?
@@ -430,6 +431,23 @@ public enum BillingRoutes {
                 return "“\(status)” isn't a billing status."
             }
         }
+    }
+
+    /// `GET /billing/entries`' `since` as the day its `day >= ?` filter
+    /// compares: empty for none, a day as given, and for a timestamp the
+    /// earliest calendar day that instant falls on in any zone (UTC-12). An
+    /// entry is filed under the local day of its own segment's zone, which
+    /// the query does not know, so that is the one day bound that leaves out
+    /// no entry on or after the instant; the timestamp's text prefix is the
+    /// day in whatever offset it was written with, and drops entries filed
+    /// in zones behind it. nil for anything that is neither.
+    static func entriesSinceDay(_ value: String) -> String? {
+        if value.isEmpty { return "" }
+        guard RouteRequest.isISODayOrTimestamp(value) else { return nil }
+        guard value.count > 10 else { return value }
+        guard let instant = TimestampParsing.parseISO8601(value),
+              let earliestZone = TimeZone(secondsFromGMT: -12 * 3600) else { return nil }
+        return UTCTimestamp.day(of: instant, in: earliestZone)
     }
 
     /// A backfill's `since` in the shape `resetBillingDerivation` compares
