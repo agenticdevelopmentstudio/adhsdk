@@ -1210,6 +1210,9 @@ importers:
       '@adh-sdk/resource':
         specifier: workspace:*
         version: link:../../resource
+      '@adh-sdk/support-access':
+        specifier: workspace:*
+        version: link:../support-access
       '@adh-sdk/ui':
         specifier: workspace:*
         version: link:../../ui
@@ -3260,6 +3263,9 @@ importers:
 
   packages/features/support-access:
     dependencies:
+      '@adh-sdk/auth':
+        specifier: workspace:*
+        version: link:../../auth
       '@adh-sdk/data':
         specifier: workspace:*
         version: link:../../data
@@ -3273,9 +3279,6 @@ importers:
         specifier: ^1.16.0
         version: 1.34.0(react@19.2.8)
     devDependencies:
-      '@adh-sdk/auth':
-        specifier: workspace:*
-        version: link:../../auth
       '@base-ui/react':
         specifier: 1.5.0
         version: 1.5.0(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)

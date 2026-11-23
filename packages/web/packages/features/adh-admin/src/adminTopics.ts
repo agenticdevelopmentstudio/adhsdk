@@ -25,6 +25,9 @@ import {
   Settings2,
   Wallet,
   Eye,
+  Siren,
+  LifeBuoy,
+  FileSearch,
   type LucideIcon,
 } from "lucide-react";
 
@@ -67,7 +70,10 @@ export type AdminTopicId =
   | "processing-configs"
   | "operator-access"
   | "operators"
-  | "security";
+  | "security"
+  | "support-grants"
+  | "break-glass"
+  | "support-access";
 
 /** One category row of the rail's first level. */
 export type AdminCategory = {
@@ -148,6 +154,13 @@ export const ADMIN_TOPICS: AdminTopic[] = [
     label: "Authentication",
     description: "Providers and access management",
     icon: Shield,
+  },
+  {
+    id: "break-glass",
+    category: "access",
+    label: "Break Glass",
+    description: "Open a support grant at once, in an emergency, with an attestation",
+    icon: Siren,
   },
   {
     id: "breakdown",
@@ -239,6 +252,20 @@ export const ADMIN_TOPICS: AdminTopic[] = [
     label: "Server Bags",
     description: "Global key → JSON config values",
     icon: Boxes,
+  },
+  {
+    id: "support-access",
+    category: "access",
+    label: "Support Access Log",
+    description: "Every read made under a support grant",
+    icon: FileSearch,
+  },
+  {
+    id: "support-grants",
+    category: "access",
+    label: "Support Grants",
+    description: "Every support grant: ask for consent, see where each stands, revoke",
+    icon: LifeBuoy,
   },
   {
     id: "sync",

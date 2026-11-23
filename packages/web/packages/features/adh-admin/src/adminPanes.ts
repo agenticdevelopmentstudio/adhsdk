@@ -3,6 +3,7 @@ import type { ComponentType, ReactNode } from "react";
 import { AiNodesPane } from "./panes/AiNodesPane";
 import { AuditPane } from "./panes/AuditPane";
 import { AuthenticationPane } from "./panes/AuthenticationPane";
+import { BreakGlassPane } from "./panes/BreakGlassPane";
 import { BreakdownPane } from "./panes/BreakdownPane";
 import { CostsPane } from "./panes/CostsPane";
 import { FeatureFlagsPane } from "./panes/FeatureFlagsPane";
@@ -16,6 +17,8 @@ import { ProcessingConfigsPane } from "./panes/ProcessingConfigsPane";
 import { ReservedIdentifiersPane } from "./panes/ReservedIdentifiersPane";
 import { SecurityPane } from "./panes/SecurityPane";
 import { ServerBagsPane } from "./panes/ServerBagsPane";
+import { SupportAccessLogPane } from "./panes/SupportAccessLogPane";
+import { SupportGrantsAdminPane } from "./panes/SupportGrantsAdminPane";
 import { SyncPane } from "./panes/SyncPane";
 import { UsageOverviewPane } from "./panes/UsageOverviewPane";
 import { UsagePane } from "./panes/UsagePane";
@@ -53,4 +56,7 @@ export const ADMIN_PANES: Record<AdminTopicId, ComponentType<{ help?: ReactNode 
   "operator-access": OperatorAccessPane,
   operators: OperatorsPane,
   security: SecurityPane,
+  "support-grants": SupportGrantsAdminPane,
+  "break-glass": BreakGlassPane,
+  "support-access": SupportAccessLogPane,
 };
