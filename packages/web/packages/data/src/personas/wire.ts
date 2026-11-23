@@ -597,6 +597,12 @@ export interface V1AiServiceCreateBody {
   connection_spec?: V1ConnectionSpec | null;
 }
 
+/** `POST /v1/ai_services/{id}/model_availability` body. */
+export interface V1ModelAvailabilityBody {
+  model: string;
+  available: boolean;
+}
+
 /** `POST /v1/ai_services/{id}` body. */
 export interface V1AiServicePatchBody {
   name?: string;

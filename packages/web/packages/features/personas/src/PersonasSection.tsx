@@ -21,7 +21,7 @@ import {
 import { ErrorText } from "@adh-sdk/ui/components/error-text";
 import { api, type Persona } from "@adh-sdk/data/personas";
 import { PersonaEditor } from "./PersonaEditor";
-import { PERSONA_SERVICES_CACHE_KEY, useUserServices } from "./useUserServices";
+import { PERSONA_SERVICES_CACHE_KEY, useUserServices } from "@adh-sdk/ai-settings";
 
 /**
  * The Personas feature: the persona list as a stack LEVEL and the editor as the leaf (the frame's

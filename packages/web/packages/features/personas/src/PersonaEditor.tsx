@@ -20,6 +20,7 @@ import {
 import { reportUnexpectedAuthError } from "@adh-sdk/auth";
 import { CRUD_TABLES, CrudDataView, useExitGuardChannel } from "@adh-sdk/crud";
 import { ErrorText } from "@adh-sdk/ui/components/error-text";
+import { FieldFootnote } from "@adh-sdk/ui/components/field-footnote";
 import { Field, FieldGroup } from "@adh-sdk/ui/blocks";
 import { useDirtyDraft } from "@adh-sdk/ui/hooks/useDirtyDraft";
 import { useExitGate, type PaneExitGuard } from "@adh-sdk/ui/hooks/useExitGate";
@@ -321,6 +322,15 @@ export function PersonaEditor({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [draft.serviceId]);
+  // The select lists only the models switched on in AI Settings. The current model, when it is
+  // one the workspace switched off, stays as the select's value under a "(not available)" label
+  // with a note, so saving another field never changes the model behind the user's back.
+  const availableModels = useMemo(
+    () => activeService?.models.filter((m) => m.available !== false) ?? [],
+    [activeService],
+  );
+  const switchedOffModel =
+    activeService?.models.find((m) => m.id === draft.model && m.available === false) ?? null;
 
   // Returns whether the persona is now persisted — `false` on a blocked or failed save, read by
   // the Save/Cancel bar's onSave below (the button stays disabled while a request is in flight;
@@ -726,12 +736,19 @@ export function PersonaEditor({
                   <Select
                     value={draft.model ?? ""}
                     onChange={(e) => set("model", e.target.value || null)}
-                    disabled={!activeService || activeService.models.length === 0}
+                    disabled={
+                      !activeService || (availableModels.length === 0 && !switchedOffModel)
+                    }
                   >
                     <option value="">
                       {activeService ? "No model selected" : "Pick a service first"}
                     </option>
-                    {activeService?.models.map((m) => (
+                    {switchedOffModel && (
+                      <option value={switchedOffModel.id}>
+                        {`${switchedOffModel.id} (not available)`}
+                      </option>
+                    )}
+                    {availableModels.map((m) => (
                       <option key={m.id} value={m.id}>
                         {m.displayName ?? m.id}
                       </option>
@@ -745,6 +762,9 @@ export function PersonaEditor({
                     onSelect: (modelId) => set("model", modelId),
                   })}
               </div>
+              {switchedOffModel && (
+                <FieldFootnote hint="This model is switched off in AI Settings. Choose another model, or switch it back on in AI Settings." />
+              )}
             </Field>
           </FieldGroup>
           {persisted ? (

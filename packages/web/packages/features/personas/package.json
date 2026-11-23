@@ -36,6 +36,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@adh-sdk/ai-settings": "workspace:*",
     "@adh-sdk/adh-ui": "workspace:*",
     "@adh-sdk/auth": "workspace:*",
     "@adh-sdk/crud": "workspace:*",

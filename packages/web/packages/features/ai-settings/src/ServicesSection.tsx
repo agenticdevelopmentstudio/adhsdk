@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Boxes } from "lucide-react";
 import { reportUnexpectedAuthError } from "@adh-sdk/auth";
 import { useDirtyDraft } from "@adh-sdk/ui/hooks/useDirtyDraft";
@@ -14,6 +14,7 @@ import {
   SectionHeader,
 } from "@adh-sdk/ui/blocks";
 import { Button } from "@adh-sdk/ui/components/button";
+import { Checkbox } from "@adh-sdk/ui/components/checkbox";
 import { Input } from "@adh-sdk/ui/components/input";
 import { Select } from "@adh-sdk/ui/components/select";
 import {
@@ -24,9 +25,9 @@ import {
   CreateResourceDialog,
 } from "@adh-sdk/resource";
 import { ErrorText } from "@adh-sdk/ui/components/error-text";
-import { useResourceList } from "@adh-sdk/data";
+import { revalidateResources, useResourceList } from "@adh-sdk/data";
 import { fmtDate } from "./format";
-import { useUserServices } from "./useUserServices";
+import { PERSONA_SERVICES_CACHE_KEY, useUserServices } from "./useUserServices";
 import {
   api,
   type UserService,
@@ -103,57 +104,108 @@ function CapChip({ label }: { label: string }) {
   );
 }
 
-function ModelsTable({ models }: { models: ModelInfo[] }) {
+/** The service's models, each with an Available checkbox that switches the model on or off for
+ *  the workspace. The box is controlled by the model's `available` as last read, so a failed
+ *  change leaves it showing the service's last known state; a successful one hands the answered
+ *  service to `onUpdated` and revalidates the shared services cache (the persona editor's picker
+ *  reads the same entry). A model the provider no longer lists but which is still switched off
+ *  arrives with `offered: false`: it shows "No longer offered", and its box stays enabled so it can
+ *  be switched back on, after which the backend stops appending it and the row goes. A missing
+ *  `available` or `offered` reads as true. */
+function ModelsTable({
+  serviceId,
+  models,
+  onUpdated,
+}: {
+  serviceId: string;
+  models: ModelInfo[];
+  onUpdated?: (updated: UserService) => void;
+}) {
+  const [error, setError] = useState<string | null>(null);
+  const [pending, setPending] = useState<string | null>(null);
+
+  async function handleAvailableChange(model: string, available: boolean) {
+    setPending(model);
+    setError(null);
+    try {
+      const updated = await api.services.setModelAvailability(serviceId, model, available);
+      onUpdated?.(updated);
+      revalidateResources((key) => key === PERSONA_SERVICES_CACHE_KEY);
+    } catch (err) {
+      reportUnexpectedAuthError(err, { feature: "services", step: "setModelAvailability" });
+      setError(err instanceof Error ? err.message : "Failed to change the model's availability.");
+    } finally {
+      setPending(null);
+    }
+  }
+
   if (models.length === 0) {
     return (
       <p className="text-sm text-apt-text-muted">No models yet — Connect or Refresh.</p>
     );
   }
   return (
-    <div className="overflow-hidden rounded-lg border border-apt-border">
-      <table className="w-full border-collapse text-sm">
-        <thead>
-          <tr className="border-b border-apt-border bg-apt-surface-2/40 text-left font-mono text-[0.7rem] uppercase tracking-wider text-apt-text-muted">
-            <th className="px-3 py-2 font-medium">Model</th>
-            <th className="px-3 py-2 font-medium">Family</th>
-            <th className="px-3 py-2 font-medium">Context</th>
-            <th className="px-3 py-2 font-medium">Max out</th>
-            <th className="px-3 py-2 font-medium">$/1M in</th>
-            <th className="px-3 py-2 font-medium">$/1M out</th>
-            <th className="px-3 py-2 font-medium">Caps</th>
-          </tr>
-        </thead>
-        <tbody>
-          {models.map((m, i) => (
-            <tr key={m.id} className={i > 0 ? "border-t border-apt-border" : ""}>
-              <td className="px-3 py-2 text-apt-text">{m.displayName ?? m.id}</td>
-              <td className="px-3 py-2 font-mono text-xs text-apt-text-muted">{m.family ?? "—"}</td>
-              <td className="px-3 py-2 font-mono text-xs text-apt-text-muted">
-                {fmtNum(m.contextWindow)}
-              </td>
-              <td className="px-3 py-2 font-mono text-xs text-apt-text-muted">
-                {fmtNum(m.maxOutputTokens)}
-              </td>
-              <td className="px-3 py-2 font-mono text-xs text-apt-text-muted">
-                {m.inputUsdPerMTokens !== undefined ? `$${m.inputUsdPerMTokens.toFixed(2)}` : "—"}
-              </td>
-              <td className="px-3 py-2 font-mono text-xs text-apt-text-muted">
-                {m.outputUsdPerMTokens !== undefined ? `$${m.outputUsdPerMTokens.toFixed(2)}` : "—"}
-              </td>
-              <td className="px-3 py-2">
-                <div className="flex flex-wrap gap-1">
-                  {m.supportsTools && <CapChip label="tools" />}
-                  {m.supportsVision && <CapChip label="vision" />}
-                  {m.supportsThinking && <CapChip label="thinking" />}
-                  {!m.supportsTools && !m.supportsVision && !m.supportsThinking && (
-                    <span className="font-mono text-xs text-apt-text-dim">—</span>
-                  )}
-                </div>
-              </td>
+    <div className="flex flex-col gap-2">
+      <ErrorText error={error} />
+      <div className="overflow-hidden rounded-lg border border-apt-border">
+        <table className="w-full border-collapse text-sm">
+          <thead>
+            <tr className="border-b border-apt-border bg-apt-surface-2/40 text-left font-mono text-[0.7rem] uppercase tracking-wider text-apt-text-muted">
+              <th className="px-3 py-2 font-medium">Model</th>
+              <th className="px-3 py-2 font-medium">Family</th>
+              <th className="px-3 py-2 font-medium">Context</th>
+              <th className="px-3 py-2 font-medium">Max out</th>
+              <th className="px-3 py-2 font-medium">$/1M in</th>
+              <th className="px-3 py-2 font-medium">$/1M out</th>
+              <th className="px-3 py-2 font-medium">Caps</th>
+              <th className="px-3 py-2 font-medium">Available</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {models.map((m, i) => (
+              <tr key={m.id} className={i > 0 ? "border-t border-apt-border" : ""}>
+                <td className="px-3 py-2 text-apt-text">{m.displayName ?? m.id}</td>
+                <td className="px-3 py-2 font-mono text-xs text-apt-text-muted">{m.family ?? "—"}</td>
+                <td className="px-3 py-2 font-mono text-xs text-apt-text-muted">
+                  {fmtNum(m.contextWindow)}
+                </td>
+                <td className="px-3 py-2 font-mono text-xs text-apt-text-muted">
+                  {fmtNum(m.maxOutputTokens)}
+                </td>
+                <td className="px-3 py-2 font-mono text-xs text-apt-text-muted">
+                  {m.inputUsdPerMTokens !== undefined ? `$${m.inputUsdPerMTokens.toFixed(2)}` : "—"}
+                </td>
+                <td className="px-3 py-2 font-mono text-xs text-apt-text-muted">
+                  {m.outputUsdPerMTokens !== undefined ? `$${m.outputUsdPerMTokens.toFixed(2)}` : "—"}
+                </td>
+                <td className="px-3 py-2">
+                  <div className="flex flex-wrap gap-1">
+                    {m.supportsTools && <CapChip label="tools" />}
+                    {m.supportsVision && <CapChip label="vision" />}
+                    {m.supportsThinking && <CapChip label="thinking" />}
+                    {!m.supportsTools && !m.supportsVision && !m.supportsThinking && (
+                      <span className="font-mono text-xs text-apt-text-dim">—</span>
+                    )}
+                  </div>
+                </td>
+                <td className="px-3 py-2">
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      aria-label={`Available: ${m.displayName ?? m.id}`}
+                      checked={m.available !== false}
+                      disabled={pending === m.id}
+                      onCheckedChange={(checked) => void handleAvailableChange(m.id, checked)}
+                    />
+                    {m.offered === false && (
+                      <span className="text-xs text-apt-text-muted">No longer offered</span>
+                    )}
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
@@ -546,6 +598,9 @@ function ServiceEditor({
   useRailExitGuard(dirty ? { isDirty: () => true } : null);
   // Live service state: updated after connect/refresh without a full remount.
   const [liveService, setLiveService] = useState<UserService>(service);
+  // Follow the list's re-read of this service (after a save, connect, refresh or an availability
+  // change revalidates the cache), so the models table shows the row as last read.
+  useEffect(() => setLiveService(service), [service]);
   const [saving, setSaving] = useState(false);
   const [connecting, setConnecting] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -699,7 +754,11 @@ function ServiceEditor({
           <Button size="sm" onClick={() => void handleRefreshModels()} disabled={refreshing}>
             {refreshing ? "Refreshing…" : "Refresh"}
           </Button>
-          <ModelsTable models={liveService.models} />
+          <ModelsTable
+            serviceId={liveService.id}
+            models={liveService.models}
+            onUpdated={setLiveService}
+          />
         </FieldGroup>
       </div>
     </div>

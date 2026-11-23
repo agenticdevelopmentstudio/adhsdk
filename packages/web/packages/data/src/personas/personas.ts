@@ -5,7 +5,7 @@
 //         /api/v1/users?handle=, /api/v1/personas?slug= and ?owner=&slug= (public lookups),
 //         /api/v1/provider_templates,
 //         /api/v1/ai_services (list/create), /api/v1/ai_services/{id}
-//         (post/delete/connect/refresh_models), /api/v1/models?service=,
+//         (post/delete/connect/refresh_models/model_availability), /api/v1/models?service=,
 //         /api/v1/personas (list/create), /api/v1/personas/{id} (post/delete).
 //
 // Every method returns the camelCase DOMAIN shapes declared below; `./mappers` is the one place
@@ -37,6 +37,7 @@ import type {
   V1AiServiceCreateBody,
   V1AiServicePatchBody,
   V1Handle,
+  V1ModelAvailabilityBody,
   V1Persona,
   V1PersonaBody,
   V1ProviderTemplate,
@@ -75,9 +76,22 @@ async function slugAvailable(slug: string): Promise<SlugAvailability> {
   return r.available ? { available: true } : { available: false, reason: r.reason ?? "taken" };
 }
 
+/** One model item of a service row or the live catalog. A bare string is the model id alone.
+ *  `available` and `offered` read as true when the wire omits them, so an older backend that
+ *  never sends them makes every model available; an entry the backend appended for a switched-off
+ *  model the provider no longer lists keeps its `false` flags as read. */
+function modelFromWire(m: unknown): ModelInfo {
+  const item = (typeof m === "string" ? { id: m } : m) as Omit<ModelInfo, "available" | "offered"> & {
+    available?: boolean;
+    offered?: boolean;
+  };
+  return { ...item, available: item.available !== false, offered: item.offered !== false };
+}
+
 /** The service row as the registry UI consumes it: `models` is a jsonb column whose entries
  *  are plain model objects (their keys pass through the gateway untouched) — a bare string
- *  entry is the model id alone. */
+ *  entry is the model id alone. Order is kept, so the backend's appended no-longer-offered
+ *  entries stay after the listed models. */
 function serviceFromWire(r: V1AiService): UserService {
   const out: UserService = {
     id: r.id,
@@ -86,7 +100,7 @@ function serviceFromWire(r: V1AiService): UserService {
     baseUrl: r.base_url,
     hasApiKey: r.has_api_key,
     connectStatus: r.connect_status,
-    models: (r.models ?? []).map((m): ModelInfo => (typeof m === "string" ? { id: m } : (m as ModelInfo))),
+    models: (r.models ?? []).map(modelFromWire),
   };
   if (r.template_id !== undefined) out.templateId = r.template_id;
   if (r.connection_spec !== undefined) {
@@ -179,17 +193,28 @@ export const api = {
     // The connection's live model list. The gateway forwards the provider's model objects with
     // their own keys intact (only `object: 'model'` is added), so each is read back as ModelInfo.
     models: (id: string) =>
-      listAllV1<ModelInfo & { object?: string }>(withV1Query(`${V1}/models`, { service: id })).then(
-        (rows) =>
-          rows.map((row) => {
-            const { object: _object, ...model } = row;
-            return model;
-          }),
+      listAllV1<Record<string, unknown> & { object?: string }>(
+        withV1Query(`${V1}/models`, { service: id }),
+      ).then((rows) =>
+        rows.map((row) => {
+          const { object: _object, ...model } = row;
+          return modelFromWire(model);
+        }),
       ),
     refreshModels: (id: string) =>
       authedJson<V1AiService>(`${V1}/ai_services/${enc(id)}/refresh_models`, {
         method: "POST",
       }).then(serviceFromWire),
+    // Switch one model of the connection on or off for the workspace (AI Settings). Answers the
+    // updated service, whose `models` carry the new `available` flags. No error handling of its
+    // own: a non-ok answer (404 not the caller's service, 400 a bad body) rejects to the caller.
+    setModelAvailability: (id: string, model: string, available: boolean) => {
+      const wire: V1ModelAvailabilityBody = { model, available };
+      return authedJson<V1AiService>(`${V1}/ai_services/${enc(id)}/model_availability`, {
+        method: "POST",
+        body: JSON.stringify(wire),
+      }).then(serviceFromWire);
+    },
   },
   personas: {
     // `workspace` scopes EVERY op to the WORKSPACE'S owning principal (backend
@@ -267,6 +292,10 @@ export type ModelInfo = {
   supportsTools?: boolean;
   supportsVision?: boolean;
   supportsThinking?: boolean;
+  /** False when the model is switched off in AI Settings; true when the wire omits it. */
+  available: boolean;
+  /** False for a switched-off model the provider no longer lists; true when the wire omits it. */
+  offered: boolean;
 };
 // Spec-typed, but keep the rich `models` typing: the backend column is jsonb so the
 // spec documents PersonaServiceModel loosely (string | object); the registry UI needs

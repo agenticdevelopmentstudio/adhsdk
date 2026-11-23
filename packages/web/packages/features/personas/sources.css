@@ -35,5 +35,9 @@
  * specifier, and this package declares it. */
 @import "@adh-sdk/adh-ui/sources.css";
 
+/* The services screen moved to ai-settings in phase 8; this package still re-exports
+ * ServicesSection until Cleanup, so a host that registers `personas` alone keeps it styled. */
+@import "@adh-sdk/ai-settings/sources.css";
+
 @source "./src/**/*.{ts,tsx}";
 @source "./dist/**/*.js";

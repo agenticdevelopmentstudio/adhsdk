@@ -436,6 +436,80 @@ describe("PersonaEditor model details seam", () => {
   });
 });
 
+// AI Settings switches models off per workspace. The editor's model select lists only the models
+// still on, but a persona already set to a switched-off model keeps it: the select shows it as the
+// value under "(not available)" with a note, so saving some other field never changes the model.
+describe("PersonaEditor model availability", () => {
+  const SERVICE = {
+    id: "svc-1",
+    name: "Anthropic",
+    models: [
+      { id: "a", available: true, offered: true },
+      { id: "b", available: false, offered: true },
+    ],
+  } as unknown as UserService;
+  // Mocks are not reset between tests here, and the save suites below count update calls.
+  afterEach(() => updatePersona.mockClear());
+  const NOTE =
+    "This model is switched off in AI Settings. Choose another model, or switch it back on in AI Settings.";
+
+  function renderWith(persona: Persona, subtab: string) {
+    return (
+      <PersonaEditor
+        persona={persona}
+        services={[SERVICE]}
+        onSaved={vi.fn()}
+        onCancel={vi.fn()}
+        activeSubtab={subtab}
+        onSubtabChange={vi.fn()}
+        renderKnowledgeBases={renderKnowledgeBases}
+        renderChatPane={renderChatPane}
+      />
+    );
+  }
+
+  function optionValues(select: HTMLSelectElement): string[] {
+    return Array.from(select.options).map((o) => o.value);
+  }
+
+  it("lists only the models switched on", () => {
+    const persona = { ...PERSONA, serviceId: "svc-1", model: "a" } as unknown as Persona;
+    render(renderWith(persona, "llm"));
+    const select = screen.getByDisplayValue("a") as HTMLSelectElement;
+    expect(optionValues(select)).toEqual(["", "a"]);
+    expect(screen.queryByText(NOTE)).toBeNull();
+  });
+
+  it("keeps a saved switched-off model as the value, labelled (not available), with the note", () => {
+    const persona = { ...PERSONA, serviceId: "svc-1", model: "b" } as unknown as Persona;
+    render(renderWith(persona, "llm"));
+    const select = screen.getByDisplayValue("b (not available)") as HTMLSelectElement;
+    expect(select.value).toBe("b");
+    expect(optionValues(select)).toEqual(["", "b", "a"]);
+    expect(screen.getByText(NOTE)).toBeInTheDocument();
+  });
+
+  it("saving another field leaves the switched-off model in place", async () => {
+    const persona = { ...PERSONA, serviceId: "svc-1", model: "b" } as unknown as Persona;
+    updatePersona.mockClear();
+    updatePersona.mockResolvedValue({ ...persona, name: "Bobby" });
+    const { rerender } = render(renderWith(persona, "llm"));
+    expect(screen.getByDisplayValue("b (not available)")).toBeInTheDocument();
+
+    rerender(renderWith(persona, "identity"));
+    await userEvent.clear(screen.getByLabelText(/name/i));
+    await userEvent.type(screen.getByLabelText(/name/i), "Bobby");
+    await userEvent.click(screen.getByRole("button", { name: /save/i }));
+
+    await waitFor(() => expect(updatePersona).toHaveBeenCalledTimes(1));
+    expect(updatePersona).toHaveBeenCalledWith(
+      PERSONA.id,
+      expect.objectContaining({ name: "Bobby", model: "b" }),
+      { workspace: undefined },
+    );
+  });
+});
+
 // Item access is a WORKSPACE concept: the panel needs a workspace to resolve roles and subjects
 // against. The persona registry mounts this editor with no workspace at all, where the topic used
 // to be listed and then say "Open this persona from a workspace…" — a tab that can never do

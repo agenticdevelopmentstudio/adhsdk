@@ -4,7 +4,13 @@
 // that composes its own routing, e.g. the hub's PersonasGroupRoute/ServicesRoute), the site entry
 // (for a host that just wants a mounted feature), and the URL grammar both share.
 export { PersonasSection } from "./PersonasSection";
-export { ServicesSection } from "./ServicesSection";
+// The services screen moved to @adh-sdk/ai-settings in phase 8. These re-exports keep existing
+// imports working; Cleanup removes them once every host imports from ai-settings.
+export {
+  ServicesSection,
+  useUserServices,
+  PERSONA_SERVICES_CACHE_KEY,
+} from "@adh-sdk/ai-settings";
 // PersonaEditor is exported for hosts that own their own persona LIST but want the
 // real editor — the persona registry mounts it beside its own flat table. It was
 // held back while "consumers that don't exist" was true; it no longer is. A host

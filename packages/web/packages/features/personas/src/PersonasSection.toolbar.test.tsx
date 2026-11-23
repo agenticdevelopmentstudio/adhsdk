@@ -41,7 +41,7 @@ vi.mock("./PersonaEditor", () => ({
 
 // The services list is a second, unrelated read (and its own suite's business). The stub keeps the
 // exported cache key intact because PersonasSection's `reload` revalidates by that exact string.
-vi.mock("./useUserServices", () => ({
+vi.mock("@adh-sdk/ai-settings", () => ({
   PERSONA_SERVICES_CACHE_KEY: "persona-services",
   useUserServices: () => ({ items: [], error: null, reload: vi.fn() }),
 }));
