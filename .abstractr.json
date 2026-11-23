@@ -597,6 +597,7 @@
         "web-markdown",
         "web-messaging",
         "web-resource",
+        "web-support-access",
         "web-themes",
         "web-toolchain",
         "web-ui"
@@ -762,6 +763,20 @@
       "holds": "@adh-sdk/deploy-platform."
     },
     {
+      "name": "web-support-access",
+      "paths": [
+        "packages/web/packages/features/support-access/"
+      ],
+      "depends_on": [
+        "web-auth",
+        "web-data",
+        "web-toolchain",
+        "web-ui"
+      ],
+      "shared": true,
+      "holds": "@adh-sdk/support-access. The consented-access panes. Its own tier, below web-adh, because the hub settings registry in adh renders SupportAccessPane: declared on purpose so that edge points down rather than up into web-features."
+    },
+    {
       "name": "web-features",
       "paths": [
         "packages/web/packages/features/"
@@ -782,6 +797,7 @@
         "web-registry-profile",
         "web-registry-types",
         "web-resource",
+        "web-support-access",
         "web-themes",
         "web-toolchain",
         "web-ui",
