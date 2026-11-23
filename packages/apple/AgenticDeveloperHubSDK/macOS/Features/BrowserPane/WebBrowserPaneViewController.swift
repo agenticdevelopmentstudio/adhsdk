@@ -585,7 +585,7 @@ open class WebBrowserPaneViewController: NSViewController {
             tab.engine.setPageWordFilter(pageWordFilter(for: tab.engine))
             retitle(tab)
         }
-        if addressField.currentEditor() == nil { showAddress(engine.url ?? activeTab.requestedURL) }
+        if !addressFieldHoldsTheUsersText { showAddress(engine.url ?? activeTab.requestedURL) }
         announceTitleChange()
         refreshAgentPrivacyStatus()
         refreshAgentViews()
@@ -635,7 +635,22 @@ open class WebBrowserPaneViewController: NSViewController {
                 ?? address.absoluteString
         } ?? ""
         addressField.stringValue = text
+        // A field with focus shows its field editor's text, not its own.
+        (addressField.currentEditor() as? NSTextView)?.string = text
         shownAddress = url.map { (text, $0) }
+    }
+
+    /// Whether the address field holds text the user typed, which the page's
+    /// address must not overwrite: the field is being edited (it has an
+    /// editor exactly then -- not a comparison against the window's first
+    /// responder, which is nil on both sides before the pane is in a window,
+    /// as it is when the restoration load lands) and its text is not what the
+    /// pane last showed. Focus alone is not enough: a new tab focuses its
+    /// empty field, and a load that does not take focus from it (an agent's
+    /// `navigate`) would then never show its address.
+    private var addressFieldHoldsTheUsersText: Bool {
+        guard let editor = addressField.currentEditor() else { return false }
+        return editor.string != (shownAddress?.text ?? "")
     }
 
     /// What `showAddress` last wrote into the field and the address it stands
@@ -2065,13 +2080,9 @@ extension WebBrowserPaneViewController: BrowserEngineDelegate {
         // the words it was drawn through. The commit sets them.
         if isFront(engine) { updateHideItemsAvailability() }
         guard isFront(engine), let url = engine.url else { return }
-        // A field being edited is the user's; overwriting it mid-keystroke
-        // because a redirect landed would throw away what they typed. A field
-        // has an editor exactly while it is being edited, so that is the test
-        // -- not a comparison against the window's first responder, which is
-        // nil on both sides before the pane is in a window, as it is when the
-        // restoration load lands.
-        if addressField.currentEditor() == nil { showAddress(url) }
+        // Text the user typed is theirs; overwriting it mid-keystroke because
+        // a redirect landed would throw away what they typed.
+        if !addressFieldHoldsTheUsersText { showAddress(url) }
         announceTitleChange()
     }
 
