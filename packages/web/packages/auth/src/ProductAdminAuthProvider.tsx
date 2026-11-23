@@ -14,7 +14,17 @@
 // the package's AccessTokenSource seam, which is how AuthProvider's storage-held token reaches
 // them too: AuthProvider is unchanged, and a page under this provider must not also mount it.
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from 'react'
 import { authedJson } from './client'
 import { announceSessionChange, decodeBase64UrlJson, setAccessTokenSource, accessTokenSource, type AccessTokenSource } from './tokens'
 
@@ -89,10 +99,18 @@ function currentPath(): string {
 }
 
 export function ProductAdminAuthProvider({ children, navigate }: ProductAdminAuthProviderProps) {
-  const go = useCallback(
-    (url: string) => (navigate ? navigate(url) : window.location.assign(url)),
-    [navigate],
-  )
+  // `navigate` is read through a ref, never as a dependency: a host that passes an inline arrow
+  // hands in a new function every render, and since every refresh re-renders (it adopts a
+  // token), a dependency on it would re-run the mount effect and refresh again, forever.
+  const navigateRef = useRef(navigate)
+  useLayoutEffect(() => {
+    navigateRef.current = navigate
+  })
+  const go = useCallback((url: string) => {
+    const nav = navigateRef.current
+    if (nav) nav(url)
+    else window.location.assign(url)
+  }, [])
   const [status, setStatus] = useState<ProductAdminAuthStatus>('loading')
   const [account, setAccount] = useState<ProductAdminAccount | null>(null)
   const [accessToken, setAccessToken] = useState<string | null>(null)

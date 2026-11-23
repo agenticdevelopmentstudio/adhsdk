@@ -162,6 +162,24 @@ describe('ProductAdminAuthProvider', () => {
     expect(navigate).toHaveBeenLastCalledWith('/auth/signin')
   })
 
+  it('refreshes once on mount when the host passes navigate as an inline arrow', async () => {
+    routes({
+      '/auth/session': () => json(200, { accessToken: 'tok-1', expiresAt: Math.floor(Date.now() / 1000) + 3600 }),
+      '/api/v1/account': () => json(200, account(['admin'])),
+    })
+    render(
+      <ProductAdminAuthProvider navigate={(u) => navigate(u)}>
+        <Probe />
+      </ProductAdminAuthProvider>,
+    )
+    await waitFor(() => expect(seen?.status).toBe('ready'))
+    // Give a re-run, if there were one, time to fire.
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 20))
+    })
+    expect(callsTo('/auth/session')).toHaveLength(1)
+  })
+
   it('removes its token source on unmount', async () => {
     routes({
       '/auth/session': () => json(200, { accessToken: 'tok-1', expiresAt: Math.floor(Date.now() / 1000) + 3600 }),
