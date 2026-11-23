@@ -4,11 +4,11 @@
     "id": "fcff7387-19aa-49ab-b75d-f0c7bfcdf27c",
     "title": "Project Reconciler",
     "type": "ingredient",
-    "version": "1.2.0",
+    "version": "1.2.1",
     "status": "review",
     "language": "en",
     "created": "2026-09-24",
-    "modified": "2026-10-04",
+    "modified": "2026-11-23",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -27,13 +27,13 @@
     "related": [],
     "references": [
       "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectReconciler.swift (adhsdk)",
-      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/GitRepo.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Database/Daemon/Projects/GitRepo.swift (adhsdk)",
       "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/Projects/ProjectReconcilerTests.swift (adhsdk)"
     ],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "9d5b9f6a0959e389",
+  "synced": "6ef83a4b9b78a8c2",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

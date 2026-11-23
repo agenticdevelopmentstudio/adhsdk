@@ -1,6 +1,6 @@
 import AppKit
-import Combine
 import AgenticDeveloperHubSDKCore
+import AgenticDeveloperHubSDKDatabase
 import AgenticDeveloperHubSDKCoreUI
 import AgenticDeveloperHubSDKCoreMacOS
 
@@ -47,7 +47,7 @@ final class NotationsListViewController: NSViewController {
         }
     }
 
-    private let store: NotationsStore
+    private let store: any NotationsStoring
     private let searchField = ThemedSearchField(placeholder: "Filter Notations")
     private let outline = ThemedOutlineView(role: .windowBackground)
     private let scrollView = ThemedScrollView()
@@ -58,15 +58,19 @@ final class NotationsListViewController: NSViewController {
     private var roots: [NotationsProjectItem] = []
     private var filterText = ""
     private var loadGeneration = 0
-    private var changesSubscription: AnyCancellable?
+    private var changesTask: Task<Void, Never>?
 
-    init(store: NotationsStore) {
+    init(store: any NotationsStoring) {
         self.store = store
         super.init(nibName: nil, bundle: nil)
     }
 
     @available(*, unavailable)
     required init?(coder: NSCoder) { fatalError("init(coder:) is not supported") }
+
+    isolated deinit {
+        changesTask?.cancel()
+    }
 
     var selectedNotation: Notation? {
         let row = outline.selectedRow
@@ -158,11 +162,13 @@ final class NotationsListViewController: NSViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        changesSubscription = store.changes
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] _ in
-                MainActor.assumeIsolated { self?.reload() }
+        let changes = store.changes
+        changesTask = Task { [weak self] in
+            for await _ in changes {
+                guard let self else { return }
+                self.reload()
             }
+        }
         updateRemoveButton()
         reload()
     }
@@ -182,7 +188,7 @@ final class NotationsListViewController: NSViewController {
         let state = state
         Task { [weak self] in
             let notations = await Task.detached(priority: .userInitiated) {
-                (try? store.all(state: state)) ?? []
+                (try? await store.all(state: state)) ?? []
             }.value
             guard let self, generation == self.loadGeneration else { return }
             self.all = notations
@@ -354,7 +360,7 @@ final class NotationsListViewController: NSViewController {
             guard response == .alertFirstButtonReturn else { return }
             Task.detached(priority: .userInitiated) {
                 do {
-                    try store.deleteArchived(id: notation.id)
+                    try await store.deleteArchived(id: notation.id)
                 } catch {
                     NotationsListViewController.logger.error(
                         "Deleting notation \(notation.id.uuidString) failed: \(error.localizedDescription)")

@@ -1,5 +1,6 @@
 import AppKit
 import AgenticDeveloperHubSDKCore
+import AgenticDeveloperHubSDKDatabase
 import AgenticDeveloperHubSDKCoreUI
 import AgenticDeveloperHubSDKCoreMacOS
 
@@ -14,14 +15,14 @@ public final class NotationsWindowController: SingleWindowController {
 
     private var backdropObserver: ThemePaletteObserver?
 
-    public static func present(store: NotationsStore, goToProject: @escaping (Notation) -> Void) {
+    public static func present(store: any NotationsStoring, goToProject: @escaping (Notation) -> Void) {
         ensureCurrent(store: store, goToProject: goToProject)
         current?.showWindow()
     }
 
     /// Constructs the singleton (registering it with the window registry)
     /// without showing it, so restore-on-launch can reopen it.
-    public static func ensureCurrent(store: NotationsStore, goToProject: @escaping (Notation) -> Void) {
+    public static func ensureCurrent(store: any NotationsStoring, goToProject: @escaping (Notation) -> Void) {
         if current == nil {
             current = NotationsWindowController(store: store, goToProject: goToProject)
         }
@@ -41,7 +42,7 @@ public final class NotationsWindowController: SingleWindowController {
         }
     }
 
-    private init(store: NotationsStore, goToProject: @escaping (Notation) -> Void) {
+    private init(store: any NotationsStoring, goToProject: @escaping (Notation) -> Void) {
         let host = NotationsHostViewController(store: store, goToProject: goToProject)
         super.init(windowID: Self.windowID,
                    contentViewController: SafeAreaHostViewController(child: host, pinsToSafeArea: true))

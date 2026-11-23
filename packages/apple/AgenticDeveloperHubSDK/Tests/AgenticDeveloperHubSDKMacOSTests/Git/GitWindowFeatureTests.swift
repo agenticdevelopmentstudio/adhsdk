@@ -143,7 +143,7 @@ struct GitWindowFeatureTests {
         defer { feature.unregister() }
         let database = try ProjectDatabase(path: databaseURL.path)
         let stale = GitRepo(path: "/nowhere/closed-before-discard", name: "stale", kind: .gitWindow)
-        try database.insert(stale)
+        try database.insertRow(stale)
 
         feature.restoreOpenWindows()
 

@@ -9,3 +9,4 @@
 | 1.2.1 | 2026-10-04 | Mike Fullerton | Swift-only constructs in normative sections restated as platform-neutral behavior; the Apple mechanism is in Platform Notes. |
 | 1.3.0 | 2026-11-15 | Mike Fullerton | Adds repos-of-a-kind and vector 014 |
 | 1.4.0 | 2026-11-16 | Mike Fullerton | Schema version 7: migrations 5 to 7 listed; migration 7 clears a stored top edge choice. |
+| 1.5.0 | 2026-11-23 | Mike Fullerton | Moved to the Database tier; serialized by its own lock; migration data steps are injected (Upgrades); conforms to ProjectRegistry over its project rows. |

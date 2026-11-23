@@ -35,11 +35,31 @@ final class RepoStateWatcherRelevanceTests: XCTestCase {
 @MainActor
 final class RepoStateRefresherTests: XCTestCase {
 
-    private final class MemoryStore: RepoStateStore {
-        var states: [UUID: RepoStateSnapshot] = [:]
-        var saves = 0
-        func cachedRepoState(forRepo repoID: UUID) -> RepoStateSnapshot? { states[repoID] }
-        func saveRepoState(_ state: RepoStateSnapshot, forRepo repoID: UUID) { states[repoID] = state; saves += 1 }
+    /// A registry that keeps repository state in memory and counts the
+    /// writes; it has no projects, which the refresher never asks for.
+    private final class MemoryStore: ProjectRegistry, @unchecked Sendable {
+        private let lock = NSLock()
+        private var storedStates: [UUID: RepoStateSnapshot] = [:]
+        private var saveCount = 0
+
+        var states: [UUID: RepoStateSnapshot] { lock.withLock { storedStates } }
+        var saves: Int { lock.withLock { saveCount } }
+
+        func projects() async throws -> [GitRepo] { [] }
+        func project(id: UUID) async throws -> GitRepo? { nil }
+        func project(path: String) async throws -> GitRepo? { nil }
+        func insert(_ project: GitRepo) async throws {}
+        func update(_ project: GitRepo) async throws {}
+        func markOpened(id: UUID, at date: Date) async throws {}
+        func delete(id: UUID) async throws {}
+        func repoState(id: UUID) async throws -> RepoStateSnapshot? { lock.withLock { storedStates[id] } }
+        func saveRepoState(_ state: RepoStateSnapshot, id: UUID) async throws {
+            lock.withLock {
+                storedStates[id] = state
+                saveCount += 1
+            }
+        }
+        var changes: AsyncStream<ProjectRegistryChange> { AsyncStream { $0.finish() } }
     }
 
     private struct FixedReader: RepoStateReading {
@@ -53,7 +73,7 @@ final class RepoStateRefresherTests: XCTestCase {
 
     func testAChangeIsSavedAndAnnounced() async {
         let store = MemoryStore()
-        let refresher = RepoStateRefresher(store: store, reader: FixedReader(branches: ["main"]))
+        let refresher = RepoStateRefresher(registry: store, reader: FixedReader(branches: ["main"]))
         var announced: [UUID] = []
         refresher.onChange = { id, _ in announced.append(id) }
         let id = UUID()
@@ -64,7 +84,7 @@ final class RepoStateRefresherTests: XCTestCase {
 
     func testAnUnchangedStateIsNotRewritten() async {
         let store = MemoryStore()
-        let refresher = RepoStateRefresher(store: store, reader: FixedReader(branches: ["main"]))
+        let refresher = RepoStateRefresher(registry: store, reader: FixedReader(branches: ["main"]))
         let id = UUID()
         await refresher.refresh(id, at: URL(fileURLWithPath: "/r"))
         await refresher.refresh(id, at: URL(fileURLWithPath: "/r"))

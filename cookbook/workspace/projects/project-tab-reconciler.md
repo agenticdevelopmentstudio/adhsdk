@@ -2,11 +2,11 @@
 id: d7171e41-4638-4243-9821-7a46cecf15c2
 title: "Project Tab Reconciler"
 type: ingredient
-version: 1.2.0
+version: 1.2.1
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-10-04
+modified: 2026-11-23
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -30,7 +30,7 @@ references:
   - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/Projects/ProjectTabReconcilerTests.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/ComposableTabs/LayoutNode.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/MultiTabbedViewController/Edge.swift (adhsdk)
-  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectCheckout.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Database/Daemon/Projects/ProjectCheckout.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectController.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectDatabase+Layout.swift (adhsdk)
 approved-by: ""
@@ -317,7 +317,7 @@ caller is the one that acts on the plan this file returns.
   alongside it: `TabRecord` and `Edge` from
   `macOS/UI/ViewControllers/ComposableTabs/LayoutNode.swift` and
   `macOS/UI/ViewControllers/MultiTabbedViewController/Edge.swift`, and
-  `ProjectCheckout` from `macOS/Features/Projects/ProjectCheckout.swift`.
+  `ProjectCheckout` from `Database/Daemon/Projects/ProjectCheckout.swift`.
   Neither `ProjectTabReconciler` itself nor any of its four static
   functions (`plan`, `volumeIsMounted`, `arrangement`, `makeRecords`)
   declares an `actor` or `@MainActor` isolation, so every one of them is
@@ -488,6 +488,7 @@ the caller precondition in **duplicate-checkout-directory-handling**.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.2.1 | 2026-11-23 | Mike Fullerton | Source paths follow GitRepo, ProjectCheckout and ProjectDatabase into the Database tier. |
 | 1.2.0 | 2026-10-04 | Mike Fullerton | Resolved the volume-lookup NEEDS REVIEW marker against source: a try? makes failed lookups compare equal; restated as current behavior with a pending decision. |
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to workspace/projects/. |
 | 1.0.1 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |

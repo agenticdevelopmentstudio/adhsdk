@@ -45,7 +45,7 @@ takes effect on the next scan rather than the next launch"
 (`ProjectsCoordinator.swift`).
 **Approved**: pending
 
-**Decision**: A failed database read in construction or reload is discarded without a log call: the result falls back to an empty list on construction and to the existing list on reload (`database-read-failure-unsignaled`).
+**Decision**: A failed window-state read in construction is discarded without a log call: the result falls back to an empty list until the registry load replaces it (`database-read-failure-unsignaled`). Reloading reads no store.
 **Rationale**: The source reads through `try?` in both places, so an empty registry and a failed read look identical to callers. Closing it needs a log call, a way for the caller to detect a failed reload, or a comment stating the silence is intentional because a failed read is transient and self-correcting on the next reload.
 **Approved**: pending
 
@@ -53,3 +53,14 @@ takes effect on the next scan rather than the next launch"
 **Rationale**: The source calls the database checkpoint through `try?` on the stop path, unlike the sibling database calls that log. Closing it means a log call on the caught path matching those siblings, or a comment explaining why a failed checkpoint at shutdown needs no signal.
 **Approved**: pending
 
+**Decision**: The coordinator writes and follows a project registry and keeps
+its window state in the app's own database, mirroring every registry project
+into that database under the registry's id (`two-stores`).
+
+**Rationale**: The list of projects is shared by every app on a shared
+registry, while layout, panes and standalone-window rows are each app's own
+and reference project rows by foreign key. Mirroring the rows lets those keys
+resolve without moving window state into the shared store. A scan adopts the
+id of the local row at the same path so that a registry not yet given this
+app's projects does not cascade-delete the local layout.
+**Approved**: pending

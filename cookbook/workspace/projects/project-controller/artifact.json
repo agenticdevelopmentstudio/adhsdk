@@ -4,11 +4,11 @@
     "id": "5bfadad5-c93b-432a-807e-04be57ff16b4",
     "title": "Project Management",
     "type": "ingredient",
-    "version": "1.2.0",
+    "version": "1.2.1",
     "status": "review",
     "language": "en",
     "created": "2026-09-24",
-    "modified": "2026-11-15",
+    "modified": "2026-11-23",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -35,7 +35,7 @@
     "references": [
       "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectController.swift (adhsdk)",
       "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectWorkspace.swift (adhsdk)",
-      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectCheckout.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Database/Daemon/Projects/ProjectCheckout.swift (adhsdk)",
       "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectTabReconciler.swift (adhsdk)",
       "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/BranchController.swift (adhsdk)",
       "packages/apple/AgenticDeveloperHubSDK/Core/Git/GitClient.swift (adhsdk)",
@@ -50,7 +50,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "8dca97e4c0469655",
+  "synced": "14afaf0adb221b26",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

@@ -1,6 +1,7 @@
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.4.1 | 2026-11-23 | Mike Fullerton | Source paths follow GitRepo, ProjectCheckout and ProjectDatabase into the Database tier. |
 | 1.4.0 | 2026-11-17 | Mike Fullerton | Tab edges are an explicit per-project Tab Bars choice: no stored edges means follow the app-wide tab positions live, an empty enabled_edges value means no choice, and the shared tab configuration carries only the pane arrangement. |
 | 1.3.0 | 2026-11-16 | Mike Fullerton | Standalone windows take toolbar items and pass them to the window they make (vector 017) |
 | 1.2.0 | 2026-11-14 | Mike Fullerton | Document window kinds: titles, kinds and standalone windows; the front-window chain matches the visible-window and window-group lookup; the front-workspace lookup skips Document windows (is-document-window-by-controller); the standalone window rows shared by File Browser and Document windows (vectors 014-016). |

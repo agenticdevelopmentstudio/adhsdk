@@ -1,23 +1,28 @@
 import AppKit
 import AgenticDeveloperHubSDKCore
+import AgenticDeveloperHubSDKDatabase
 
 /// One notation for Cocoa Scripting: `notation id "…"` of the application.
-/// Read live from the store on each access, so a script never sees a stale
-/// copy; `content` is writable and saves through the store.
+/// Read on each access from the feature's snapshot, which follows the store's
+/// changes (Cocoa Scripting asks synchronously; the store answers
+/// asynchronously); `content` is writable and saves through the store.
 @MainActor
 @objc(ScriptableNotation)
 public final class ScriptableNotation: NSObject {
 
     public let notationID: UUID
-    private let store: NotationsStore
+    private let store: any NotationsStoring
+    private let lookup: @MainActor (UUID) -> Notation?
 
-    public init(notationID: UUID, store: NotationsStore) {
+    /// - Parameter lookup: The notation as last read, or `nil` once gone.
+    public init(notationID: UUID, store: any NotationsStoring, lookup: @escaping @MainActor (UUID) -> Notation?) {
         self.notationID = notationID
         self.store = store
+        self.lookup = lookup
         super.init()
     }
 
-    private var notation: Notation? { try? store.notation(id: notationID) }
+    private var notation: Notation? { lookup(notationID) }
 
     @objc var uniqueID: String { notationID.uuidString }
     @objc var projectName: String { notation?.projectName ?? "" }
@@ -30,7 +35,10 @@ public final class ScriptableNotation: NSObject {
 
     @objc var content: String {
         get { notation?.content ?? "" }
-        set { _ = try? store.updateContent(id: notationID, content: newValue) }
+        set {
+            let store = store, id = notationID
+            NotationsSaveQueue.shared.enqueue { _ = try? await store.updateContent(id: id, content: newValue) }
+        }
     }
 
     public override nonisolated var objectSpecifier: NSScriptObjectSpecifier? {
@@ -44,13 +52,16 @@ public final class ScriptableNotation: NSObject {
 public final class ArchiveNotationCommand: MainActorScriptCommand, @unchecked Sendable {
     public override func performMain() -> Any? {
         guard let (feature, id) = resolve() else { return nil }
-        do {
-            guard try feature.store.archive(id: id) else {
-                fail("No active notation has id \(id.uuidString).")
+        let store = feature.store
+        runSuspended {
+            do {
+                guard try await store.archive(id: id) else {
+                    return "No active notation has id \(id.uuidString)."
+                }
                 return nil
+            } catch {
+                return error.localizedDescription
             }
-        } catch {
-            fail(error.localizedDescription)
         }
         return nil
     }
@@ -62,13 +73,16 @@ public final class ArchiveNotationCommand: MainActorScriptCommand, @unchecked Se
 public final class DeleteNotationCommand: MainActorScriptCommand, @unchecked Sendable {
     public override func performMain() -> Any? {
         guard let (feature, id) = resolve() else { return nil }
-        do {
-            guard try feature.store.deleteArchived(id: id) else {
-                fail("No archived notation has id \(id.uuidString).")
+        let store = feature.store
+        runSuspended {
+            do {
+                guard try await store.deleteArchived(id: id) else {
+                    return "No archived notation has id \(id.uuidString)."
+                }
                 return nil
+            } catch {
+                return error.localizedDescription
             }
-        } catch {
-            fail(error.localizedDescription)
         }
         return nil
     }
@@ -112,6 +126,18 @@ extension MainActorScriptCommand {
             return nil
         }
         return (feature, id)
+    }
+
+    /// Suspends the script while `body` runs against the store, then
+    /// resumes it, failing with the message `body` answers, if any. Cocoa
+    /// Scripting waits for the result without blocking the main thread.
+    @MainActor
+    fileprivate func runSuspended(_ body: @escaping @Sendable () async -> String?) {
+        suspendExecution()
+        Task { @MainActor in
+            if let message = await body() { self.fail(message) }
+            self.resumeExecution(withResult: nil)
+        }
     }
 
     @MainActor

@@ -4,11 +4,11 @@
     "id": "7ae3de90-35f2-415c-93c7-cf579689e438",
     "title": "Project Checkout",
     "type": "ingredient",
-    "version": "1.1.0",
+    "version": "1.1.1",
     "status": "review",
     "language": "en",
     "created": "2026-09-24",
-    "modified": "2026-09-27",
+    "modified": "2026-11-23",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -29,7 +29,7 @@
       "92f11498-2cb2-4b04-92b9-560d9f2de6ee"
     ],
     "references": [
-      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectCheckout.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Database/Daemon/Projects/ProjectCheckout.swift (adhsdk)",
       "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/Projects/ProjectCheckoutTests.swift (adhsdk)",
       "packages/apple/AgenticDeveloperHubSDK/Core/Git/GitWorktree.swift (adhsdk)"
     ],
@@ -37,7 +37,7 @@
     "approved-date": ""
   },
   "names_hosts": "A test vector uses the literal linked-worktree path `.claude/worktrees/…` as input data.",
-  "synced": "d08323f01f92b8fc",
+  "synced": "8a069f61b7a0bbe3",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

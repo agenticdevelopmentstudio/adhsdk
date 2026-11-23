@@ -4,11 +4,11 @@
     "id": "2469d716-84aa-4984-9e71-4cfe49d05854",
     "title": "Projects Coordinator",
     "type": "ingredient",
-    "version": "1.2.1",
+    "version": "1.3.0",
     "status": "review",
     "language": "en",
     "created": "2026-09-24",
-    "modified": "2026-10-04",
+    "modified": "2026-11-23",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -36,8 +36,8 @@
     ],
     "references": [
       "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectsCoordinator.swift (adhsdk)",
-      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/GitRepo.swift (adhsdk)",
-      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectDatabase.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Database/Daemon/Projects/GitRepo.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Database/Daemon/Projects/ProjectDatabase.swift (adhsdk)",
       "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectReconciler.swift (adhsdk)",
       "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/GitRepoScanner.swift (adhsdk)",
       "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectChooserWindow.swift (adhsdk)",
@@ -54,7 +54,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "85c20f11b7f3f292",
+  "synced": "df48563a449e6311",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

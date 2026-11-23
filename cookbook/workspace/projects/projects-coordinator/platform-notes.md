@@ -3,9 +3,16 @@
   `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectsCoordinator.swift`,
   built on `AppKit` (indirectly, through the `ProjectOpening`/
   `ProjectWindowManager` seam and the `ComposableTabsWindowController`/
-  `WindowManager` frame cleanup) and `AgenticDeveloperHubSDKCore` (`GitRepo`,
-  `ProjectDatabase`, `ProjectReconciler`, `GitRepoScanner`, `AppFeature`,
-  `AppCommand`, `MenuContribution`, `CommandRegistry`, `Loggable`). It uses
+  `WindowManager` frame cleanup), `AgenticDeveloperHubSDKDatabase`
+  (`GitRepo`, `ProjectDatabase`, `ProjectRegistry`, `ProjectRegistryChange`,
+  `LocalProjectMirror`) and `AgenticDeveloperHubSDKCore` (`AppFeature`,
+  `AppCommand`, `MenuContribution`, `CommandRegistry`, `Loggable`), with
+  `ProjectReconciler` and `GitRepoScanner` from its own module. The
+  designated initializer is `init(registry:windowState:scanner:opener:commandRegistry:)`;
+  `init(database:scanner:opener:commandRegistry:)` is the convenience form
+  for an app that keeps its own registry, passing one `ProjectDatabase` as
+  both. The registry's change stream is followed by a `Task` the
+  coordinator cancels in `stop()` and in its `isolated deinit`. It uses
   no SwiftUI API of its own; a SwiftUI host would still construct this same
   `@MainActor` class as a plain observable feature object, feeding a
   project-list view from `repos` and `isScanning` rather than modeling
@@ -47,7 +54,7 @@
   command-registry equivalent and add two `MenuFlyoutItem`s under the File
   menu, matching **menu-contributions-two-file-items**'s slot/order/key
   layout (`Ctrl+Alt+P` for Open Project, mirroring the macOS
-  `[.command, .option]` combination). Back `database` with the same
+  `[.command, .option]` combination). Back `windowState` (and, for an app on its own registry, `registry`) with the same
   SQLite file through `Microsoft.Data.Sqlite` (see
   [adhsdk.ingredient.workspace.projects.project-database](cookbook:c212ea39-10e7-4146-89dd-36edb3b3455a)'s WinUI
   bullet for the schema/migration port) and call its `Checkpoint()`

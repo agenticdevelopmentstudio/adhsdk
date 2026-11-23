@@ -1,5 +1,6 @@
 import AppKit
 import AgenticDeveloperHubSDKCore
+import AgenticDeveloperHubSDKDatabase
 import AgenticDeveloperHubSDKCoreUI
 import AgenticDeveloperHubSDKCoreMacOS
 
@@ -16,7 +17,7 @@ final class NotationsHostViewController: NSViewController {
     private let detailVC: NotationsDetailViewController
     private var themeObserver: ThemePaletteObserver?
 
-    init(store: NotationsStore, goToProject: @escaping (Notation) -> Void) {
+    init(store: any NotationsStoring, goToProject: @escaping (Notation) -> Void) {
         listVC = NotationsListViewController(store: store)
         detailVC = NotationsDetailViewController(store: store)
         super.init(nibName: nil, bundle: nil)

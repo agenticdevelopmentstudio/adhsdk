@@ -1,6 +1,6 @@
 
 - **SwiftUI**: The source is
-  `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectCheckout.swift`,
+  `packages/apple/AgenticDeveloperHubSDK/Database/Daemon/Projects/ProjectCheckout.swift`,
   using only Foundation's `URL` (`resolvingSymlinksInPath()`,
   `lastPathComponent`, `path`) and the sibling type `GitWorktree` from
   `packages/apple/AgenticDeveloperHubSDK/Core/Git/GitWorktree.swift`; nothing here is

@@ -2,11 +2,11 @@
 id: 8f0a3e2b-4d61-4a2f-9e4d-6c1a7b3f0d92
 title: "Project Tree"
 type: ingredient
-version: 1.2.1
+version: 1.2.2
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-10-04
+modified: 2026-11-23
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -25,7 +25,7 @@ related:
   - 0396e49d-f933-4454-bacc-5cf97beda7de
 references:
   - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectTree.swift (adhsdk)
-  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/GitRepo.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Database/Daemon/Projects/GitRepo.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectBrowserViewController.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/Projects/ProjectTreeTests.swift (adhsdk)
 approved-by: ""
@@ -437,6 +437,7 @@ no shared fixture, no I/O, and no ordering dependency between tests.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.2.2 | 2026-11-23 | Mike Fullerton | Source paths follow GitRepo, ProjectCheckout and ProjectDatabase into the Database tier. |
 | 1.2.1 | 2026-10-04 | Mike Fullerton | Spec-local UI-thread confinement ids folded into the shared confines-to-ui-thread requirement, with a test vector; scope detail is in Platform Notes. |
 | 1.2.0 | 2026-10-04 | Mike Fullerton | Resolved two NEEDS REVIEW markers against source: folder/project path collision yields two nodes and degenerate paths are silently dropped; restated as current behavior with pending decisions. |
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to workspace/projects/. |

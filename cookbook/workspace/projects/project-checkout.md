@@ -2,11 +2,11 @@
 id: 7ae3de90-35f2-415c-93c7-cf579689e438
 title: "Project Checkout"
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-09-27
+modified: 2026-11-23
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -24,7 +24,7 @@ depends-on: []
 related:
   - 92f11498-2cb2-4b04-92b9-560d9f2de6ee
 references:
-  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectCheckout.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Database/Daemon/Projects/ProjectCheckout.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/Projects/ProjectCheckoutTests.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/Core/Git/GitWorktree.swift (adhsdk)
 approved-by: ""
@@ -209,7 +209,7 @@ Not applicable: a checkout makes no logging call of any kind.
 ## Platform Notes
 
 - **SwiftUI**: The source is
-  `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectCheckout.swift`,
+  `packages/apple/AgenticDeveloperHubSDK/Database/Daemon/Projects/ProjectCheckout.swift`,
   using only Foundation's `URL` (`resolvingSymlinksInPath()`,
   `lastPathComponent`, `path`) and the sibling type `GitWorktree` from
   `packages/apple/AgenticDeveloperHubSDK/Core/Git/GitWorktree.swift`; nothing here is
@@ -267,7 +267,7 @@ Not applicable: a checkout makes no logging call of any kind.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectCheckout.swift` | confirmed (1.1.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Database/Daemon/Projects/ProjectCheckout.swift` | confirmed (1.1.0) |
 
 ## Design Decisions
 
@@ -330,3 +330,4 @@ swallowed.
 | 1.0.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: removed source line-number citations; recipes cite files and symbols, not lines. |
 | 1.0.2 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to workspace/projects/. |
+| 1.1.1 | 2026-11-23 | Mike Fullerton | Source paths follow GitRepo, ProjectCheckout and ProjectDatabase into the Database tier. |

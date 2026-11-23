@@ -2,11 +2,11 @@
 id: 92f11498-2cb2-4b04-92b9-560d9f2de6ee
 title: "Branch Management"
 type: ingredient
-version: 1.3.0
+version: 1.3.1
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-11-14
+modified: 2026-11-23
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -26,7 +26,7 @@ related:
   - a30725ca-fa2f-4a04-8cb0-8beddf264a0a
 references:
   - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/BranchController.swift (adhsdk)
-  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectCheckout.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Database/Daemon/Projects/ProjectCheckout.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectController.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/Core/Git/GitClient.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/MultiTabbedViewController/TabPane/TabPaneDataSource.swift (adhsdk)
@@ -549,3 +549,4 @@ subprocess runs.
 | 1.2.1 | 2026-10-04 | Mike Fullerton | UI-thread confinement restated as the shared confines-to-ui-thread requirement, with a test vector; the @MainActor mechanism is in Platform Notes. |
 | 1.2.2 | 2026-10-04 | Mike Fullerton | Inverted prohibitions (none/neither/no X MUST) restated as MUST NOT. |
 | 1.3.0 | 2026-11-14 | Mike Fullerton | Open in Git Window command, offered while the Git window's open-for-path command is registered |
+| 1.3.1 | 2026-11-23 | Mike Fullerton | Source paths follow GitRepo, ProjectCheckout and ProjectDatabase into the Database tier. |

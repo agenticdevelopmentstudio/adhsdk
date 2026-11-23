@@ -6,7 +6,7 @@
   alongside it: `TabRecord` and `Edge` from
   `macOS/UI/ViewControllers/ComposableTabs/LayoutNode.swift` and
   `macOS/UI/ViewControllers/MultiTabbedViewController/Edge.swift`, and
-  `ProjectCheckout` from `macOS/Features/Projects/ProjectCheckout.swift`.
+  `ProjectCheckout` from `Database/Daemon/Projects/ProjectCheckout.swift`.
   Neither `ProjectTabReconciler` itself nor any of its four static
   functions (`plan`, `volumeIsMounted`, `arrangement`, `makeRecords`)
   declares an `actor` or `@MainActor` isolation, so every one of them is

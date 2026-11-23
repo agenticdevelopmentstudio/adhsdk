@@ -1,6 +1,7 @@
 import XCTest
 import WebKit
 import AgenticDeveloperHubSDKCore
+@_spi(ProjectDatabaseStorage) import AgenticDeveloperHubSDKDatabase
 @testable import AgenticDeveloperHubSDKMacOS
 
 @MainActor
@@ -31,7 +32,7 @@ final class BrowserJarTests: XCTestCase {
     private var databasePath: String { tempRoot.appendingPathComponent("Test.db").path }
 
     private func makeDatabase() throws -> ProjectDatabase {
-        try ProjectDatabase(path: databasePath)
+        try ProjectDatabase(path: databasePath, upgrades: .windowState)
     }
 
     private func registerRepo(in database: ProjectDatabase) throws -> GitRepo {

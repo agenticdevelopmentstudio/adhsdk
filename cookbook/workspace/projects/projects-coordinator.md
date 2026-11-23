@@ -2,11 +2,11 @@
 id: 2469d716-84aa-4984-9e71-4cfe49d05854
 title: "Projects Coordinator"
 type: ingredient
-version: 1.2.1
+version: 1.3.0
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-10-04
+modified: 2026-11-23
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -31,8 +31,8 @@ related:
   - 55a394e6-9934-404b-941d-25bebbf71378
 references:
   - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectsCoordinator.swift (adhsdk)
-  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/GitRepo.swift (adhsdk)
-  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectDatabase.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Database/Daemon/Projects/GitRepo.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Database/Daemon/Projects/ProjectDatabase.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectReconciler.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/GitRepoScanner.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectChooserWindow.swift (adhsdk)
@@ -53,7 +53,8 @@ approved-date: ""
 
 ## Overview
 
-This is the project registry feature: one database, the in-memory list of
+This is the project registry feature: a project registry, the app's own
+window-state database, the in-memory list of
 known git repositories, and the background scan that keeps that list true
 to disk. Its own doc comment states the model directly — "a 'project'
 here is a row, not a file," so a repository can be renamed or moved on
@@ -76,10 +77,20 @@ notification.
   MUST carry no payload — readers MUST re-read the repository list
   directly, which the doc comment calls "the one representation of that
   knowledge."
+- **two-stores**: The coordinator MUST hold two stores: a project
+  registry, which says which projects exist, and the app's own
+  window-state database, which holds layout, panes and standalone-window
+  rows keyed by the registry's ids. When the registry is not the
+  window-state database itself, the coordinator MUST keep a local mirror
+  of every registry project in the window-state database under the same
+  id, applied before any window can be opened for it; when they are the
+  same database, it MUST keep no mirror. A convenience construction from
+  one database MUST use that database as both stores.
 - **repos-initial-load**: Construction MUST populate the repository list
-  by reading all repositories from the database exactly once, swallowing
-  any thrown error, so a failed read leaves the repository list at its
-  default empty state rather than propagating out of construction.
+  by reading all repositories from the window-state database exactly once,
+  swallowing any thrown error, so a failed read leaves the repository list
+  at its default empty state rather than propagating out of construction;
+  construction MUST then begin following the registry's change stream.
 - **command-registry-required**: Construction MUST register an "Open
   Project…" command and a "Scan for Projects" command, both in the
   "Projects" category, on the caller-supplied command registry, and the
@@ -96,11 +107,30 @@ notification.
 - **set-opener-replaces-unconditionally**: Setting the window-opening
   delegate MUST replace the current one with the argument regardless of
   whether one was already set.
-- **start-triggers-default-scan**: Starting the feature MUST trigger a
-  scan with progress shown by default; starting is declared able to fail
-  by the interface it overrides, but its own body never actually fails.
-- **stop-checkpoints-database**: Stopping the feature MUST checkpoint the
-  database.
+- **start-loads-registry-then-scans**: Starting the feature MUST, off
+  the caller's turn, first load the registry's whole list and only then
+  trigger a scan with progress shown by default, so the scan is planned
+  against what the registry holds; starting is declared able to fail by
+  the interface it overrides, but its own body never actually fails.
+- **load-from-registry**: Loading from the registry MUST read every
+  project from it; on success it MUST sync the mirror (when there is one)
+  to that list, logging a sync failure at error level and continuing,
+  MUST make that list the repository list, and MUST reload. A registry
+  read that fails MUST be logged at error level and MUST leave the
+  repository list as it was.
+- **follow-registry-changes**: Every change the registry reports — this
+  app's own writes coming back, another app's, a scan's — MUST be applied
+  locally: to the mirror when there is one (a mirror failure logged at
+  error level naming the project's id) and to the repository list, where
+  an upsert replaces the entry with that id or appends it and the list is
+  re-sorted by lowercased name, and a deletion removes the entry with that
+  id. Applying the same change twice MUST leave the same result. Each
+  applied change MUST schedule a reload, and reloads scheduled before the
+  pending one runs MUST coalesce into that one, so a burst of changes
+  posts one notification.
+- **stop-checkpoints-database**: Stopping the feature MUST stop
+  following the registry's change stream and MUST checkpoint the
+  window-state database.
 - **terminate-casts-opener-for-language-services**: Terminating the
   feature MUST attempt to recognize the window-opening delegate as a
   project window manager; when it is one, terminating MUST await
@@ -117,28 +147,30 @@ notification.
 - **rename-trims-and-guards-no-op**: Renaming a repository MUST return
   with no effect when looking it up by id finds nothing; MUST trim the
   new name of leading and trailing whitespace and newlines; and MUST
-  return with no effect — no database write, no reload — when the
+  return with no effect — no registry write, no reload — when the
   trimmed name is empty or equal to the repository's current name.
 - **rename-persists-then-reloads-or-logs**: When the trimmed name is
-  non-empty and differs from the current name, renaming a repository
-  MUST set the local copy's name to the trimmed value and MUST write it
-  to the database; on success it MUST reload; on failure it MUST catch
-  the thrown error, log it at error level naming the repository's id at
-  public log-visibility, and MUST NOT reload on that path.
-- **open-project-marks-reloads-then-opens**: Opening a project MUST
-  record the repository's open time in the database, catching and
-  logging any thrown error without propagating it; MUST then
-  unconditionally reload, regardless of whether recording the open time
-  succeeded; and MUST hand the repository to the window-opening delegate
-  last, after the reload.
+  non-empty and differs from the current name, renaming a repository MUST
+  apply the renamed row locally and reload at once, then write it to the
+  registry off the caller's turn; on failure it MUST log the error at
+  error level naming the repository's id at public log-visibility, MUST
+  re-read that row from the registry (falling back to the row as it was
+  before the rename when the re-read fails or finds nothing), apply it
+  locally, and reload again.
+- **open-project-opens-then-marks**: Opening a project MUST start
+  recording the open time and MUST hand the repository to the
+  window-opening delegate in the same turn, so the window shows before the
+  stamp lands. Recording the open time MUST, off the caller's turn, mark
+  the project opened in the registry at the current time and apply the
+  registry's row for it locally, catching and logging any thrown error
+  without propagating it, and MUST then reload unconditionally.
 - **show-project-chooser-delegates-to-open**: Showing the project chooser
   MUST present it against the coordinator, with a callback that opens
   whatever repository the chooser passes back.
 - **reload-refreshes-then-notifies-unconditionally**: Reloading MUST
-  reread the repository list from the database, falling back to the
-  existing list unchanged when that read fails, and MUST then post the
-  change notification unconditionally — even on the path where the read
-  failed and the list did not actually change.
+  recompute the listed repositories from the current repository list,
+  re-point the repository-state watcher, and MUST then post the change
+  notification unconditionally; it reads no store.
 - **scan-guards-reentrancy**: Scanning MUST return immediately,
   performing no work, when a scan is already running; otherwise it MUST
   mark a scan as running before doing anything else. The inline comment
@@ -162,8 +194,12 @@ notification.
   what the scan found, and MUST seed the running summary as a copy of
   that plan's own summary.
 - **finish-scan-inserts-decrement-on-failure**: For each repository the
-  plan calls for inserting, finishing a scan MUST insert it into the
-  database; on failure it MUST decrement the summary's added count by
+  plan calls for inserting, finishing a scan MUST insert it through the
+  registry — under the id, name, first-seen and last-opened times of the
+  window-state database's project row at the same path when there is a
+  mirror and such a row has another id, so the local layout survives a
+  registry that has not been given this app's projects yet — and apply it
+  locally; on failure it MUST decrement the summary's added count by
   one and log the error naming the repository's path at public
   log-visibility, then MUST continue to the next insertion rather than
   aborting the loop.
@@ -174,8 +210,8 @@ notification.
   to the row it belongs to, "which after the delete is a foreign key
   that no longer resolves."
 - **finish-scan-deletes-decrement-and-clear-frames**: For each repository
-  the plan calls for deleting, finishing a scan MUST delete it from the
-  database; on failure it MUST decrement the summary's removed count,
+  the plan calls for deleting, finishing a scan MUST delete it through the
+  registry and apply the deletion locally; on failure it MUST decrement the summary's removed count,
   log the error naming the repository's path at public log-visibility,
   and skip ahead — bypassing the frame cleanup below — rather than abort
   the loop; on success it MUST clear both the saved state and the
@@ -192,8 +228,8 @@ notification.
 - **loggable-conformance**: The coordinator MUST expose a single shared
   logger for its own log messages, independent of any instance,
   following the same logging convention used across this codebase.
-- **database-read-failure-unsignaled**: both construction's initial load and reloading discard any thrown database-read error with no logging call, falling back to an empty list on construction and to the previous list on reload; a caller cannot distinguish "the registry is genuinely empty" from "the read failed", unlike every other database failure path in this file, which logs at error level (see Design Decisions).
-- **stop-checkpoint-failure-unsignaled**: stopping's checkpoint call discards a checkpoint failure with no logging call, the only write-adjacent database call in this file that neither logs nor otherwise surfaces its outcome (see Design Decisions).
+- **database-read-failure-unsignaled**: construction's initial load discards any thrown window-state read error with no logging call, falling back to an empty list; a caller cannot distinguish "no project is known locally" from "the read failed" until the registry load replaces the list, unlike every other store failure path in this file, which logs at error level (see Design Decisions).
+- **stop-checkpoint-failure-unsignaled**: stopping's checkpoint call discards a checkpoint failure with no logging call, the only write-adjacent store call in this file that neither logs nor otherwise surfaces its outcome (see Design Decisions).
 - **scan-task-not-tracked**: The background scan-and-reconcile
   continuation started by scanning is not stored, awaited, or
   cancellable: stopping and terminating can both run while it is in
@@ -201,11 +237,11 @@ notification.
   whose doc comment describes the language-server shutdown race and
   which the host's termination sweep awaits. Each write inside
   scan-finishing is caught independently, so a scan cut off mid-loop
-  does not corrupt the database; it leaves the is-scanning flag set and
+  does not corrupt either store; it leaves the is-scanning flag set and
   the last-scan summary unset for that run.
 - **finish-scan-updates-no-decrement-on-failure**: For each repository
-  the plan calls for updating, finishing a scan writes it to the
-  database and on failure logs the error naming the repository's path at
+  the plan calls for updating, finishing a scan writes it through the
+  registry, applies it locally, and on failure logs the error naming the repository's path at
   public log-visibility, as the insert and delete loops do, but unlike
   those loops it does not decrement any summary count. A failed update
   therefore leaves the summary's moved/unchanged count (whichever the
@@ -239,25 +275,28 @@ test.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
-| git-client-projects-projects-coordinator-001 | repos-initial-load | Construct the coordinator where reading all repositories from the database throws. | the repository list is empty; construction does not throw; no log call is made (see **database-read-failure-unsignaled**). |
+| git-client-projects-projects-coordinator-001 | repos-initial-load | Construct the coordinator where reading all repositories from the window-state database throws. | the repository list is empty; construction does not throw; no log call is made (see **database-read-failure-unsignaled**). |
 | git-client-projects-projects-coordinator-002 | command-registry-required, menu-contributions-two-file-items | Construct the coordinator with a fresh command registry. | the registry reports both the open-project and scan-for-projects commands as enabled; the menu contributions total two entries, both in the File-menu slot. |
-| git-client-projects-projects-coordinator-003 | rename-trims-and-guards-no-op | Rename a repository using an id that matches no row in the repository list, with a new name. | the repository list is unchanged; the database is never written; no notification is posted. |
-| git-client-projects-projects-coordinator-004 | rename-trims-and-guards-no-op | Rename an existing repository to an all-whitespace name. | the repository list is unchanged; the database is never written. |
-| git-client-projects-projects-coordinator-005 | rename-persists-then-reloads-or-logs | Rename an existing repository to a new name with leading and trailing whitespace, where the database write succeeds. | the row's name becomes the trimmed new name; reloading runs, posting the change notification. |
-| git-client-projects-projects-coordinator-006 | rename-persists-then-reloads-or-logs | Same call, but the database write throws. | the error is logged naming the repository's id; reloading does not run; no notification is posted for this call. |
-| git-client-projects-projects-coordinator-007 | open-project-marks-reloads-then-opens | Open a project where recording its open time in the database throws. | the error is logged; reloading still runs; the window-opening delegate is still handed the project, in that order. |
+| git-client-projects-projects-coordinator-003 | rename-trims-and-guards-no-op | Rename a repository using an id that matches no row in the repository list, with a new name. | the repository list is unchanged; the registry is never written; no notification is posted. |
+| git-client-projects-projects-coordinator-004 | rename-trims-and-guards-no-op | Rename an existing repository to an all-whitespace name. | the repository list is unchanged; the registry is never written. |
+| git-client-projects-projects-coordinator-005 | rename-persists-then-reloads-or-logs | Rename an existing repository to a new name with leading and trailing whitespace, where the registry write succeeds. | the listed row's name becomes the trimmed new name and the change notification posts before the registry write completes; the registry's row then carries the trimmed name. |
+| git-client-projects-projects-coordinator-006 | rename-persists-then-reloads-or-logs | Same call, but the registry write throws. | the error is logged naming the repository's id; the listed row goes back to the registry's row (or the original name when it cannot be read) and the change notification posts again. |
+| git-client-projects-projects-coordinator-007 | open-project-opens-then-marks | Open a project where marking it opened in the registry throws. | the window-opening delegate is handed the project at once; the error is logged; reloading still runs afterwards. |
 | git-client-projects-projects-coordinator-008 | scan-guards-reentrancy | Call scan a second time while a scan from a first call is still running. | the second call returns immediately; the is-scanning flag stays exactly as the first call left it; no second background scan is started. |
 | git-client-projects-projects-coordinator-009 | scan-progress-window-conditional | Scan with progress not shown. | the progress window remains unset throughout the scan; no scan-progress window is presented. |
 | git-client-projects-projects-coordinator-010 | scan-uses-injected-or-fresh-scanner | Scan on a coordinator constructed with a non-empty injected scanner. | that injected scanner's walk runs; the scan-skip-patterns setting is never read. |
-| git-client-projects-projects-coordinator-011 | finish-scan-inserts-decrement-on-failure | Finish a scan where the reconciliation plan yields one insertion and writing it to the database throws. | the summary's added count is one less than the plan's own added count; the error is logged naming that repository's path; finishing the scan continues to the deletes loop rather than stopping. |
-| git-client-projects-projects-coordinator-012 | finish-scan-updates-no-decrement-on-failure | Finish a scan where the reconciliation plan yields one update and writing it to the database throws. | the error is logged naming that repository's path; the summary's count for that row (moved or unchanged, per the plan's own attribution) is left exactly as the plan set it — not decremented (see **finish-scan-updates-no-decrement-on-failure**). |
-| git-client-projects-projects-coordinator-013 | finish-scan-closes-windows-before-deleting, finish-scan-deletes-decrement-and-clear-frames | Finish a scan where the reconciliation plan yields one deletion and the database delete succeeds. | the window-opening delegate is asked to close that project before the database delete runs; on success, that repository's window frame has both its saved state and its visibility cleared. |
-| git-client-projects-projects-coordinator-014 | finish-scan-deletes-decrement-and-clear-frames | Same setup, but the database delete throws. | the summary's removed count is one less than the plan's own removed count; the error is logged; the frame-clearing calls for that repository are skipped (the loop continues past them). |
+| git-client-projects-projects-coordinator-011 | finish-scan-inserts-decrement-on-failure | Finish a scan where the reconciliation plan yields one insertion and inserting it through the registry throws. | the summary's added count is one less than the plan's own added count; the error is logged naming that repository's path; finishing the scan continues to the deletes loop rather than stopping. |
+| git-client-projects-projects-coordinator-012 | finish-scan-updates-no-decrement-on-failure | Finish a scan where the reconciliation plan yields one update and writing it through the registry throws. | the error is logged naming that repository's path; the summary's count for that row (moved or unchanged, per the plan's own attribution) is left exactly as the plan set it — not decremented (see **finish-scan-updates-no-decrement-on-failure**). |
+| git-client-projects-projects-coordinator-013 | finish-scan-closes-windows-before-deleting, finish-scan-deletes-decrement-and-clear-frames | Finish a scan where the reconciliation plan yields one deletion and the registry delete succeeds. | the window-opening delegate is asked to close that project before the registry delete runs; on success, that repository's window frame has both its saved state and its visibility cleared. |
+| git-client-projects-projects-coordinator-014 | finish-scan-deletes-decrement-and-clear-frames | Same setup, but the registry delete throws. | the summary's removed count is one less than the plan's own removed count; the error is logged; the frame-clearing calls for that repository are skipped (the loop continues past them). |
 | git-client-projects-projects-coordinator-015 | finish-scan-final-state-order, finish-scan-logs-completion-and-dismisses-progress | Finish a scan that completes with a mix of successful insertions, updates, and deletions. | the last-scan summary is set to the (possibly decremented) running summary; the is-scanning flag is cleared; reloading has run; completion is logged with the summary's own summary text; the progress window is unset after being finished. |
 | git-client-projects-projects-coordinator-016 | terminate-casts-opener-for-language-services | Terminate a coordinator whose window-opening delegate is a project window manager. | shutting down all language services is awaited on that instance. |
 | git-client-projects-projects-coordinator-017 | terminate-casts-opener-for-language-services | Terminate a coordinator whose window-opening delegate is unset, or a project-opening stand-in that is not a project window manager. | the method returns immediately; no shutdown call is made anywhere. |
-| git-client-projects-projects-coordinator-018 | stop-checkpoint-failure-unsignaled | Stop a coordinator where checkpointing the database throws. | no log call is made; stopping returns normally (see **stop-checkpoint-failure-unsignaled**). |
+| git-client-projects-projects-coordinator-018 | stop-checkpoint-failure-unsignaled | Stop a coordinator where checkpointing the window-state database throws. | no log call is made; stopping returns normally (see **stop-checkpoint-failure-unsignaled**). |
 | git-client-projects-projects-coordinator-019 | confines-to-ui-thread | Use the component from a thread other than the UI thread | The use is rejected, at build time or by a runtime check; the component's state is unchanged |
+| git-client-projects-projects-coordinator-020 | two-stores, finish-scan-inserts-decrement-on-failure | A coordinator whose registry is a second database; the window-state database holds a project row with a saved layout at a path the registry does not know; scan a root holding that repository. | the registry gains the project under the local row's id and name; the local layout is still there. |
+| git-client-projects-projects-coordinator-021 | follow-registry-changes | A coordinator whose registry is a second database; insert, rename and then delete a project directly through the registry. | each change reaches the repository list and the window-state database's copy with no scan. |
+| git-client-projects-projects-coordinator-022 | load-from-registry | The window-state database holds one project and the registry another; load from the registry. | the repository list is the registry's one project, which the window-state database now also holds. |
 
 ## Edge Cases
 
@@ -380,9 +419,16 @@ stopping's failed checkpoint, make no log call at all — see
   `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectsCoordinator.swift`,
   built on `AppKit` (indirectly, through the `ProjectOpening`/
   `ProjectWindowManager` seam and the `ComposableTabsWindowController`/
-  `WindowManager` frame cleanup) and `AgenticDeveloperHubSDKCore` (`GitRepo`,
-  `ProjectDatabase`, `ProjectReconciler`, `GitRepoScanner`, `AppFeature`,
-  `AppCommand`, `MenuContribution`, `CommandRegistry`, `Loggable`). It uses
+  `WindowManager` frame cleanup), `AgenticDeveloperHubSDKDatabase`
+  (`GitRepo`, `ProjectDatabase`, `ProjectRegistry`, `ProjectRegistryChange`,
+  `LocalProjectMirror`) and `AgenticDeveloperHubSDKCore` (`AppFeature`,
+  `AppCommand`, `MenuContribution`, `CommandRegistry`, `Loggable`), with
+  `ProjectReconciler` and `GitRepoScanner` from its own module. The
+  designated initializer is `init(registry:windowState:scanner:opener:commandRegistry:)`;
+  `init(database:scanner:opener:commandRegistry:)` is the convenience form
+  for an app that keeps its own registry, passing one `ProjectDatabase` as
+  both. The registry's change stream is followed by a `Task` the
+  coordinator cancels in `stop()` and in its `isolated deinit`. It uses
   no SwiftUI API of its own; a SwiftUI host would still construct this same
   `@MainActor` class as a plain observable feature object, feeding a
   project-list view from `repos` and `isScanning` rather than modeling
@@ -424,7 +470,7 @@ stopping's failed checkpoint, make no log call at all — see
   command-registry equivalent and add two `MenuFlyoutItem`s under the File
   menu, matching **menu-contributions-two-file-items**'s slot/order/key
   layout (`Ctrl+Alt+P` for Open Project, mirroring the macOS
-  `[.command, .option]` combination). Back `database` with the same
+  `[.command, .option]` combination). Back `windowState` (and, for an app on its own registry, `registry`) with the same
   SQLite file through `Microsoft.Data.Sqlite` (see
   [adhsdk.ingredient.workspace.projects.project-database](cookbook:c212ea39-10e7-4146-89dd-36edb3b3455a)'s WinUI
   bullet for the schema/migration port) and call its `Checkpoint()`
@@ -499,7 +545,7 @@ takes effect on the next scan rather than the next launch"
 (`ProjectsCoordinator.swift`).
 **Approved**: pending
 
-**Decision**: A failed database read in construction or reload is discarded without a log call: the result falls back to an empty list on construction and to the existing list on reload (`database-read-failure-unsignaled`).
+**Decision**: A failed window-state read in construction is discarded without a log call: the result falls back to an empty list until the registry load replaces it (`database-read-failure-unsignaled`). Reloading reads no store.
 **Rationale**: The source reads through `try?` in both places, so an empty registry and a failed read look identical to callers. Closing it needs a log call, a way for the caller to detect a failed reload, or a comment stating the silence is intentional because a failed read is transient and self-correcting on the next reload.
 **Approved**: pending
 
@@ -507,6 +553,17 @@ takes effect on the next scan rather than the next launch"
 **Rationale**: The source calls the database checkpoint through `try?` on the stop path, unlike the sibling database calls that log. Closing it means a log call on the caught path matching those siblings, or a comment explaining why a failed checkpoint at shutdown needs no signal.
 **Approved**: pending
 
+**Decision**: The coordinator writes and follows a project registry and keeps
+its window state in the app's own database, mirroring every registry project
+into that database under the registry's id (`two-stores`).
+
+**Rationale**: The list of projects is shared by every app on a shared
+registry, while layout, panes and standalone-window rows are each app's own
+and reference project rows by foreign key. Mirroring the rows lets those keys
+resolve without moving window state into the shared store. A scan adopts the
+id of the local row at the same path so that a registry not yet given this
+app's projects does not cascade-delete the local layout.
+**Approved**: pending
 ## Compliance
 
 | Check | Status | Category |
@@ -550,6 +607,7 @@ call in a scan fails.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.3.0 | 2026-11-23 | Mike Fullerton | Writes and follows a ProjectRegistry and keeps window state in its own database, mirrored under the registry's ids; a scan adopts the local row's id. |
 | 1.2.1 | 2026-10-04 | Mike Fullerton | UI-thread confinement restated as the shared confines-to-ui-thread requirement, with a test vector; the @MainActor mechanism is in Platform Notes. |
 | 1.2.0 | 2026-10-04 | Mike Fullerton | Resolved two NEEDS REVIEW markers against source: initial/reload database reads and the stop checkpoint use try? with no logging; restated as current behavior with pending decisions. |
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to workspace/projects/. |

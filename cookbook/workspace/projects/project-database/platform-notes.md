@@ -1,27 +1,29 @@
 
 - **SwiftUI**: The source is
-  `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectDatabase.swift`,
-  importing only `Foundation`, `SQLite3` (the C SQLite library linked
-  directly, not `Core Data` or `SwiftData`), `AgenticDeveloperHubSDKCore`, and
-  `AgenticDeveloperHubSDKDatabase` (for `AppStorageLocation`); it depends on no UI
-  framework, and a caller anywhere in a SwiftUI app — an `@Observable` view
-  model, an `App`'s startup code — constructs and owns one instance
-  directly. `ProjectDatabase` is declared as a plain `final class` with no
-  `Sendable` conformance, no `actor` keyword, and no `@MainActor`
-  annotation — the mechanism behind
-  **caller-must-synchronize-cross-thread-access** — so the compiler keeps
-  it in the isolation domain of whichever context created it and does not
-  itself enforce any cross-thread safety. Its one connection is stored as
-  `database: OpaquePointer?`, opened in `init(path:)` and closed in
+  `packages/apple/AgenticDeveloperHubSDK/Database/Daemon/Projects/ProjectDatabase.swift`,
+  in the Database tier (`AgenticDeveloperHubSDKDatabase`), importing only
+  `Foundation`, `SQLite3` (the C SQLite library linked directly, not
+  `Core Data` or `SwiftData`) and `AgenticDeveloperHubSDKCore`; it depends
+  on no UI framework, so a daemon links it as readily as an app. The
+  registry conformance is the sibling `ProjectDatabase+Registry.swift`, and
+  the layout and browser-jar extensions stay in the macOS tier, reaching the
+  connection through `@_spi(ProjectDatabaseStorage)`. `ProjectDatabase` is a
+  `final class` declared `@unchecked Sendable`, holding an `NSRecursiveLock`
+  (`lock`) around every transaction and registry call — the mechanism behind
+  **transactions-and-registry-calls-serialized** — and a separate `NSLock`
+  guarding the live change streams, so a change is announced after the
+  write's lock is released. Its one connection is stored as
+  `database: OpaquePointer?`, opened in `init(path:upgrades:)` and closed in
   `deinit` only when non-`nil` — the mechanism behind
-  **connection-closed-on-teardown**. `columnExists`, `schemaVersion`,
-  `queryRepos`, `execute`, `executeBound`, `forEachRow`, `stepRow`,
-  `bindText`, `bindOptionalText`, `bindOptionalDate`, `columnText`,
-  `columnDate`, `queryScalarString`, and the `database` property itself
-  are all declared without the `public` modifier, restricting them to
-  callers in the same module; `queryScalarString` is called by no method
-  in this file, existing solely for `ProjectDatabase+Layout.swift`, a
-  sibling extension in the same module, to call.
+  **connection-closed-on-teardown**. `init(path:upgrades:)` takes a
+  `ProjectDatabase.Upgrades` defaulting to `.none`; the macOS tier supplies
+  `ProjectDatabase.Upgrades.windowState`, whose `browserJars` step is the
+  one an app's own `Projects.db` must pass. The raw insert is
+  `insertRow(_:)`; the registry's `insert(_:)` refuses any kind but
+  `project` with `ProjectDatabaseError.notAProject`. The registry's
+  `async` requirements are witnessed by synchronous methods, so a caller
+  holding the concrete type calls them synchronously and one holding
+  `any ProjectRegistry` awaits them.
 - **Compose**: Port the SQLite access with `androidx.sqlite` or a light
   wrapper over `android.database.sqlite.SQLiteOpenHelper`/`SQLiteDatabase`,
   keeping the same one-connection-per-store shape; run the seven migrations
@@ -61,5 +63,5 @@
   synchronous — this file performs every SQL call synchronously on the
   caller's thread — letting a `Task.Run` at the call site, not inside this
   component, move a call off a UI dispatcher thread.
-- **caller-must-synchronize-cross-thread-access**: On Apple platforms the class carries no actor isolation and no `Sendable` conformance.
+- **transactions-and-registry-calls-serialized**: On Apple platforms the class carries no actor isolation; it is `@unchecked Sendable` because its own recursive lock serializes every transaction and registry call.
 

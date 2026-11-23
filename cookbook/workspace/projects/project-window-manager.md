@@ -2,11 +2,11 @@
 id: 7f1b8bef-e78e-4cac-be55-c948fe9062e5
 title: "Project Window Manager"
 type: ingredient
-version: 1.4.0
+version: 1.4.1
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-11-17
+modified: 2026-11-23
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -29,8 +29,8 @@ references:
   - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectsCoordinator.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectWorkspace.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectController.swift (adhsdk)
-  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/GitRepo.swift (adhsdk)
-  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectDatabase.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Database/Daemon/Projects/GitRepo.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Database/Daemon/Projects/ProjectDatabase.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/WindowManager/WindowManager.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/Core/Concurrency/PendingTeardowns.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/Core/Loggable.swift (adhsdk)
@@ -693,6 +693,7 @@ anywhere in this file.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.4.1 | 2026-11-23 | Mike Fullerton | Source paths follow GitRepo, ProjectCheckout and ProjectDatabase into the Database tier. |
 | 1.4.0 | 2026-11-17 | Mike Fullerton | Tab edges are an explicit per-project Tab Bars choice: no stored edges means follow the app-wide tab positions live, an empty enabled_edges value means no choice, and the shared tab configuration carries only the pane arrangement. |
 | 1.3.0 | 2026-11-16 | Mike Fullerton | Standalone windows take toolbar items and pass them to the window they make (vector 017) |
 | 1.2.0 | 2026-11-14 | Mike Fullerton | Document window kinds: titles, kinds and standalone windows; the front-window chain matches the visible-window and window-group lookup; the front-workspace lookup skips Document windows (is-document-window-by-controller); the standalone window rows shared by File Browser and Document windows (vectors 014-016). |

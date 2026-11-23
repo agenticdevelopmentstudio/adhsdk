@@ -4,11 +4,11 @@
     "id": "c212ea39-10e7-4146-89dd-36edb3b3455a",
     "title": "Project Database",
     "type": "ingredient",
-    "version": "1.4.0",
+    "version": "1.5.0",
     "status": "review",
     "language": "en",
     "created": "2026-09-24",
-    "modified": "2026-11-16",
+    "modified": "2026-11-23",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -30,15 +30,15 @@
       "1463e7a2-e290-4b8c-8643-df9462a758e6"
     ],
     "references": [
-      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectDatabase.swift (adhsdk)",
-      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/GitRepo.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Database/Daemon/Projects/ProjectDatabase.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Database/Daemon/Projects/GitRepo.swift (adhsdk)",
       "packages/apple/AgenticDeveloperHubSDK/Database/AppStorageLocation.swift (adhsdk)",
       "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/Projects/ProjectDatabaseTests.swift (adhsdk)"
     ],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "93a3cb6a503d6a74",
+  "synced": "3ccf2bc5a334bc0a",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
