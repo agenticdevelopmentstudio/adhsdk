@@ -154,20 +154,30 @@ public actor MCPStatelessHTTPHandler {
 
     /// The requests in flight, keyed by caller and the id the caller sent, so
     /// a `notifications/cancelled` naming that id finds the id the SDK knows
-    /// the request by. A caller that reuses an id while the first request is
-    /// still in flight has already broken JSON-RPC; the later one wins.
+    /// the request by. Two requests can share a key: callers that name no
+    /// pane (a session outside one) share the empty caller, so two sessions
+    /// that both send `"id": 3` land on one key. Each is kept, and a
+    /// cancellation that could mean either cancels neither: cancelling the
+    /// wrong session's tool call is worse than letting one run to its end.
     actor InFlightRequests {
-        private var uniqueIDs: [String: String] = [:]
+        private var uniqueIDs: [String: [String]] = [:]
 
-        func begin(_ key: String, uniqueID: String) { uniqueIDs[key] = uniqueID }
+        func begin(_ key: String, uniqueID: String) { uniqueIDs[key, default: []].append(uniqueID) }
 
-        /// Forgets the entry only if it is still this request's, so a later
-        /// request under a reused key is not forgotten by the earlier one.
+        /// Forgets this request's entry only, so another request under the
+        /// same key stays findable.
         func end(_ key: String, uniqueID: String) {
-            if uniqueIDs[key] == uniqueID { uniqueIDs.removeValue(forKey: key) }
+            guard var ids = uniqueIDs[key] else { return }
+            ids.removeAll { $0 == uniqueID }
+            uniqueIDs[key] = ids.isEmpty ? nil : ids
         }
 
-        func uniqueID(for key: String) -> String? { uniqueIDs[key] }
+        /// The one request in flight under `key`; nil when there is none or
+        /// more than one.
+        func uniqueID(for key: String) -> String? {
+            guard let ids = uniqueIDs[key], ids.count == 1 else { return nil }
+            return ids[0]
+        }
     }
 
     static func inFlightKey(caller: String?, originalIDJSON: Data) -> String {
