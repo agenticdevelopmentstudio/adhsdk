@@ -31,11 +31,16 @@ public final class OversightCoordinator: AppFeature {
     /// Resolves the daemon's provider templates for the provider-and-model
     /// pickers; nil (Stenographer) shows the stored model only.
     private let pluginManager: AIPluginManager?
+    /// Whether `start()` starts `StenographerOversightPrefsPush`. False for a host
+    /// whose service reaches no daemon (the Kitchen under `APP_TEST_HOME`),
+    /// where every push would fail and retry for as long as the app runs.
+    public let pushesPreferences: Bool
 
     public init(service: any StenographerDaemonService, commandRegistry: CommandRegistry,
-                pluginManager: AIPluginManager? = nil) {
+                pluginManager: AIPluginManager? = nil, pushesPreferences: Bool = true) {
         self.service = service
         self.pluginManager = pluginManager
+        self.pushesPreferences = pushesPreferences
         super.init()
         featureName = "AI Oversight"
         commandRegistry.register(AppCommand(
@@ -52,7 +57,9 @@ public final class OversightCoordinator: AppFeature {
     public override func start() throws {
         // Registered unopened so the toolkit's restore-on-launch can reopen it.
         OversightFindingsWindowController.ensureCurrent(service: service, pluginManager: pluginManager)
-        StenographerOversightPrefsPush.startObserving(service: service)
+        if pushesPreferences {
+            StenographerOversightPrefsPush.startObserving(service: service)
+        }
     }
 
     public func showWindow() {

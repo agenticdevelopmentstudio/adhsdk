@@ -30,11 +30,16 @@ public final class SessionsCoordinator: AppFeature {
     /// Resolves the daemon's provider templates for the provider-and-model
     /// pickers; nil (Stenographer) shows the stored model only.
     private let pluginManager: AIPluginManager?
+    /// Whether `start()` starts `StenographerSummaryPrefsPush`. False for a host
+    /// whose service reaches no daemon (the Kitchen under `APP_TEST_HOME`),
+    /// where every push would fail and retry for as long as the app runs.
+    public let pushesPreferences: Bool
 
     public init(service: any StenographerDaemonService, commandRegistry: CommandRegistry,
-                pluginManager: AIPluginManager? = nil) {
+                pluginManager: AIPluginManager? = nil, pushesPreferences: Bool = true) {
         self.service = service
         self.pluginManager = pluginManager
+        self.pushesPreferences = pushesPreferences
         super.init()
         featureName = "Sessions"
         commandRegistry.register(AppCommand(
@@ -51,7 +56,9 @@ public final class SessionsCoordinator: AppFeature {
     public override func start() throws {
         // Registered unopened so the toolkit's restore-on-launch can reopen it.
         SessionsWindowController.ensureCurrent(service: service, pluginManager: pluginManager)
-        StenographerSummaryPrefsPush.startObserving(service: service)
+        if pushesPreferences {
+            StenographerSummaryPrefsPush.startObserving(service: service)
+        }
         // Coding Project windows show Coding Projects' own summaries, under its switch.
         ProjectSessionMonitor.shared.attach(
             StenographerSessionListSource(service: service, summaryFeature: .projects),

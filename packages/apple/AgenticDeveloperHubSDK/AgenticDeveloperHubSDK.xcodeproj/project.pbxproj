@@ -2378,6 +2378,7 @@
 		7BF5BF27D89E3F7A11874BF0 /* GitProjectRootTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D55AD03F894D9D14BC3DA971 /* GitProjectRootTests.swift */; };
 		7C01A6C47ED51C6B92C0454B /* ChatWindowTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 23166B8AEB0ED40FB736CB9E /* ChatWindowTests.swift */; };
 		7C0C0395F41BD9CCB1D0BC64 /* TerminalOutputTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 043F319FC8F1332DDDD90E09 /* TerminalOutputTracker.swift */; };
+		7C1ABAF0477811F35A1FBCD5 /* StenographerCoordinatorPushTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35707609C04FED524E005F9E /* StenographerCoordinatorPushTests.swift */; };
 		7C33A3FB1A8AE2F7C44A9C68 /* ThemeTypography.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7F9D41DAAC7881AAC6354F0 /* ThemeTypography.swift */; };
 		7C42E815ACDF4E40D6BB4415 /* GitOperationStateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E552F505FFD761E5A7F6A66C /* GitOperationStateTests.swift */; };
 		7C6E45BBDB9DEAB54DD95093 /* AttachmentPresentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37812B6379985AA7B3D56762 /* AttachmentPresentation.swift */; };
@@ -8787,6 +8788,7 @@
 		3547F8FC33595371BAE057ED /* ProviderEditorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProviderEditorTests.swift; sourceTree = "<group>"; };
 		356F09F73D36143CE56C54AB /* push-response.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "push-response.json"; sourceTree = "<group>"; };
 		356F2834F9B6EEC71D7A535B /* WindowRegistryVisibilityTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowRegistryVisibilityTests.swift; sourceTree = "<group>"; };
+		35707609C04FED524E005F9E /* StenographerCoordinatorPushTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StenographerCoordinatorPushTests.swift; sourceTree = "<group>"; };
 		3576FF0900F3D4BAA6B4A7EB /* no-session-id.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "no-session-id.json"; sourceTree = "<group>"; };
 		35807EAF8F8BBBC8BDE4974E /* ThemeDetailPanelViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeDetailPanelViewController.swift; sourceTree = "<group>"; };
 		3591EAEA6DD987D987DB2DD4 /* TerminalChatDirectoryToolSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalChatDirectoryToolSource.swift; sourceTree = "<group>"; };
@@ -20112,6 +20114,7 @@
 				555F373D6EB59D9C36E28905 /* SessionListSourceRosterTests.swift */,
 				76DE96B183C34DFD16562298 /* SessionsWindowAccessibilityTests.swift */,
 				D1A909B733EA04EF48D76500 /* StenographerAIConfigPushTests.swift */,
+				35707609C04FED524E005F9E /* StenographerCoordinatorPushTests.swift */,
 				55E480750A971B9AE8AEC2D4 /* StenographerFeaturePermissionsTests.swift */,
 				340D73451AC177B5F56CB0F4 /* StenographerPrefsPushTests.swift */,
 				6B664F10B54071FD87F839B3 /* StenographerWindowKeyCommandsTests.swift */,
@@ -24254,6 +24257,7 @@
 				9BD35F7288493EC414E5A8D1 /* SpacingTests.swift in Sources */,
 				9EEB3A338363BA8B22BB55B2 /* StandaloneBrowserPaneDirectoryTests.swift in Sources */,
 				5FD1D1540E492D4C142EBCB7 /* StenographerAIConfigPushTests.swift in Sources */,
+				7C1ABAF0477811F35A1FBCD5 /* StenographerCoordinatorPushTests.swift in Sources */,
 				3F0F023F850E7912D7A4ABD7 /* StenographerFeaturePermissionsTests.swift in Sources */,
 				49EA4D2E462A1815CC1DBA27 /* StenographerPrefsPushTests.swift in Sources */,
 				26E3DAA294CC5534F652EA02 /* StenographerWindowKeyCommandsTests.swift in Sources */,
