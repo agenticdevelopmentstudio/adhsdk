@@ -767,6 +767,22 @@ function ServiceEditor({
 
 // ─── ServicesSection ──────────────────────────────────────────────────────────
 
+/** ServicesSection's props, named so a wrapper such as AiSettingsSection can derive from them.
+ *  `ComponentProps<typeof ServicesSection>` would include `undefined` (the props argument
+ *  defaults to `{}`), and `Omit` over that union drops every prop. */
+export type ServicesSectionProps = {
+  /** The rail level's heading — the label this list appears under in the stack (e.g.
+   *  "AI Settings" when hosted by AiSettingsSection). Defaults to the feature's
+   *  own name so standalone/embedded callers are unchanged. */
+  title?: string;
+  urlSelection?: {
+    /** The open service's id, from the URL path segment (`/<slug>/persona-services/<id>`). */
+    serviceId?: string;
+    /** Route to a service (null clears back to the list). */
+    onSelectService: (id: string | null) => void;
+  };
+};
+
 /**
  * The Services section: a HierarchicalTopicDetail whose rail is the service list
  * and whose pane is the editor (the frame's select hint while nothing is open).
@@ -780,18 +796,7 @@ function ServiceEditor({
 export function ServicesSection({
   urlSelection,
   title = "Persona Services",
-}: {
-  /** The rail level's heading — the label this list appears under in the stack (e.g.
-   *  "LLM Providers" when hosted as a workspace Settings topic). Defaults to the feature's
-   *  own name so standalone/embedded callers are unchanged. */
-  title?: string;
-  urlSelection?: {
-    /** The open service's id, from the URL path segment (`/<slug>/persona-services/<id>`). */
-    serviceId?: string;
-    /** Route to a service (null clears back to the list). */
-    onSelectService: (id: string | null) => void;
-  };
-} = {}) {
+}: ServicesSectionProps = {}) {
   // Creating a service is a MODAL over the stack, never a blank editor leaf (HTD recipe
   // `must-create-in-modal`): the `+` opens it, and on save the created service is selected so its
   // editor (Connection, Models) opens.
