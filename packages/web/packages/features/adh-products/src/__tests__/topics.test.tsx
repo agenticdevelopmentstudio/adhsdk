@@ -6,6 +6,8 @@ import {
   PRODUCT_MEMBER_MOVES,
   PRODUCT_TOPIC_ALIASES,
   visibleProductTopics,
+  runAtAdminSite,
+  ADMIN_SITE_KEPT_USERS_MEMBERS,
 } from "../topics";
 import { PRODUCT_TOPIC_CONFIGS, productTopicPaneRenderer } from "../ProductsFeature";
 
@@ -168,8 +170,38 @@ describe("visibleProductTopics", () => {
 
   it("switch on and a site: the people rows leave for the site, the Admin site row stays", () => {
     const shown = ids({ enabled: true, hasSite: true });
-    expect(shown).toEqual(all.filter((id) => !MOVED.includes(id)));
+    expect(shown).toEqual(all.filter((id) => id === "invitations" || !MOVED.includes(id)));
     expect(shown).toContain("admin-site");
+  });
+
+  // The admin site runs the people but has no page for Email Signup or Authentication, so the
+  // Users row stays on the hub with those two members alone.
+  it("switch on and a site: Users keeps Email Signup and Authentication, and nothing else", () => {
+    const users = visibleProductTopics(PRODUCT_TOPICS, { enabled: true, hasSite: true }).find(
+      (t) => t.id === "invitations",
+    );
+    expect(users?.members).toEqual(["email-signup", "auth"]);
+    expect([...ADMIN_SITE_KEPT_USERS_MEMBERS]).toEqual(["email-signup", "auth"]);
+  });
+
+  it("leaves the Users row whole until a site is up", () => {
+    for (const state of [
+      { enabled: false, hasSite: false },
+      { enabled: false, hasSite: true },
+      { enabled: true, hasSite: false },
+    ]) {
+      expect(visibleProductTopics(PRODUCT_TOPICS, state).find((t) => t.id === "invitations")?.members).toBeUndefined();
+    }
+  });
+
+  // For a host that answers one topic at a time (the hub's /<slug>/<topic> routes).
+  it("runAtAdminSite: the moved topics, only with the switch on and a site", () => {
+    const on = { enabled: true, hasSite: true };
+    for (const id of MOVED) expect(runAtAdminSite(id, on)).toBe(true);
+    for (const id of ["auth", "email-signup", "admin-site", "storage"]) expect(runAtAdminSite(id, on)).toBe(false);
+    expect(runAtAdminSite("roles", { enabled: true, hasSite: false })).toBe(false);
+    expect(runAtAdminSite("roles", { enabled: false, hasSite: true })).toBe(false);
+    expect(runAtAdminSite("roles", undefined)).toBe(false);
   });
 
   it("not known yet: every pane, and no Admin site row unless the URL names it", () => {

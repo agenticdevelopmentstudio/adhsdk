@@ -125,8 +125,32 @@ export const PRODUCT_TOPICS = [
 
 export type ProductTopicId = (typeof PRODUCT_TOPICS)[number]["id"];
 
-/** The rows a product's own admin site takes over from the hub once the site is up. */
+/** The rows a product's own admin site takes over from the hub once the site is up. Users
+ *  (`invitations`) is one of them only in part: see {@link ADMIN_SITE_KEPT_USERS_MEMBERS}. */
 export const ADMIN_SITE_MOVED_TOPIC_IDS = ["invitations", "roles", "signup-list", "sets"] as const;
+
+/**
+ * The members of the Users group the hub keeps once a site is up: Email Signup's waitlists and
+ * Authentication (sign-in, sign-up mode, OAuth providers). The admin site runs the people — the
+ * roster, requests, pending users and invites — and has no page for either of these, so dropping
+ * the whole Users row left them nowhere.
+ */
+export const ADMIN_SITE_KEPT_USERS_MEMBERS = ["email-signup", "auth"] as const;
+
+/**
+ * Whether the product's admin site runs this topic instead of the hub: the switch is on, a site is
+ * set up, and the topic is one of {@link ADMIN_SITE_MOVED_TOPIC_IDS}. For a host that answers a
+ * single topic (the hub's workspace-level `/<slug>/<topic>` routes) rather than drawing the rail:
+ * there `invitations` is the roster alone, which the site does run.
+ */
+export function runAtAdminSite(topicId: string, site: AdminSiteRailState | undefined): boolean {
+  return (
+    site !== undefined &&
+    site.enabled &&
+    site.hasSite &&
+    (ADMIN_SITE_MOVED_TOPIC_IDS as readonly string[]).includes(topicId)
+  );
+}
 
 /** A product's admin site as the rail reads it: the `product_admin_site` switch, and whether the
  *  product has a site set up. */
@@ -147,20 +171,24 @@ export interface AdminSiteRailState {
  * - Switch off: no Admin site row, and the hub keeps every pane.
  * - Switch on, no site yet: the Admin site row is drawn, so a manager can set the site up, and the
  *   hub keeps every pane (add before remove: nothing moves until the site exists).
- * - Switch on and a site: Users, Product roles, Sign-up list and Sets leave the hub for the site,
- *   and the Admin site row stays, as the place the site is changed or taken down.
+ * - Switch on and a site: Product roles, Sign-up list and Sets leave the hub for the site, and
+ *   the Users row stays narrowed to the members the site does not run
+ *   ({@link ADMIN_SITE_KEPT_USERS_MEMBERS}, through the row's `members`). The Admin site row stays,
+ *   as the place the site is changed or taken down.
  */
 export function visibleProductTopics<T extends { id: string }>(
   topics: readonly T[],
   site: AdminSiteRailState | undefined,
   routed?: string,
-): T[] {
+): (T & { members?: readonly string[] })[] {
   if (site === undefined) return topics.filter((t) => t.id !== "admin-site" || t.id === routed);
   const { enabled, hasSite } = site;
   if (!enabled) return topics.filter((t) => t.id !== "admin-site");
   if (!hasSite) return [...topics];
-  const moved = new Set<string>(ADMIN_SITE_MOVED_TOPIC_IDS);
-  return topics.filter((t) => !moved.has(t.id));
+  return topics.flatMap((t) => {
+    if (t.id === "invitations") return [{ ...t, members: ADMIN_SITE_KEPT_USERS_MEMBERS }];
+    return runAtAdminSite(t.id, site) ? [] : [t];
+  });
 }
 
 /**
