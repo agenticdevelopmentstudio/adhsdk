@@ -96,10 +96,14 @@ public enum AccountFingerprints {
     /// burst of events to nobody.
     ///
     /// The file is owner-only (0600) from the moment it appears: the new
-    /// contents go to a temporary file beside it, which is set to 0600 before
-    /// it is renamed over the old one. When the mode cannot be set, `publish`
-    /// throws, the temporary file is removed and the previous file stays as it
-    /// was, so a file readable by others is never published.
+    /// contents go to a temporary file beside it, which is created 0600
+    /// (`open` with `O_CREAT | O_EXCL` and that mode, never the umask's
+    /// default) before a byte is written, set to 0600 again in case a
+    /// stricter umask is not the only thing in play, and then renamed over the
+    /// old one. When the mode cannot be set, `publish` throws, the temporary
+    /// file is removed and the previous file stays as it was, so a file
+    /// readable by others is never published, and a temporary file a crash
+    /// leaves behind is owner-only too.
     public static func publish(
         _ fresh: [String: String],
         atPath path: String = defaultPath,
@@ -132,7 +136,7 @@ public enum AccountFingerprints {
         let temporary = url.deletingLastPathComponent()
             .appendingPathComponent(".\(url.lastPathComponent).\(UUID().uuidString).tmp")
         do {
-            try data.write(to: temporary)
+            try writeOwnerOnly(data, toNewFile: temporary.path)
             try setOwnerOnly(temporary.path)
             guard rename(temporary.path, path) == 0 else {
                 throw POSIXError(POSIXErrorCode(rawValue: errno) ?? .EIO)
@@ -140,6 +144,26 @@ public enum AccountFingerprints {
         } catch {
             try? FileManager.default.removeItem(at: temporary)
             throw error
+        }
+    }
+
+    /// Creates `path`, which must not exist, with mode 0600 and writes `data`
+    /// to it, so the file is never readable by others, not even empty.
+    static func writeOwnerOnly(_ data: Data, toNewFile path: String) throws {
+        let descriptor = open(path, O_WRONLY | O_CREAT | O_EXCL, 0o600)
+        guard descriptor >= 0 else { throw POSIXError(POSIXErrorCode(rawValue: errno) ?? .EIO) }
+        defer { close(descriptor) }
+        try data.withUnsafeBytes { (buffer: UnsafeRawBufferPointer) in
+            guard let base = buffer.baseAddress else { return }
+            var offset = 0
+            while offset < buffer.count {
+                let written = write(descriptor, base + offset, buffer.count - offset)
+                if written < 0 {
+                    if errno == EINTR { continue }
+                    throw POSIXError(POSIXErrorCode(rawValue: errno) ?? .EIO)
+                }
+                offset += written
+            }
         }
     }
 
