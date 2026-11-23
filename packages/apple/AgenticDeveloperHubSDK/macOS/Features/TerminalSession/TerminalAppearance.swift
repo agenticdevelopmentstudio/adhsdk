@@ -168,15 +168,16 @@ public enum TerminalAppearance {
 extension UserSettings {
 
     /// PostScript font name for the terminal.
-    static public var terminalFontName = UserSetting<String>("terminal_font_name", default: "Menlo-Regular")
+    static public var terminalFontName = UserSetting<String>(
+        SharedSettingKeys.terminalFontName, default: "Menlo-Regular")
 
     /// Terminal font size, in points.
-    static public var terminalFontSize = UserSetting<Double>("terminal_font_size", default: 13)
+    static public var terminalFontSize = UserSetting<Double>(SharedSettingKeys.terminalFontSize, default: 13)
 
     /// Caret shape: block, hollow block, underline or bar.
     static public var terminalCursorShape =
-        UserSetting<TerminalCursorShape>("terminal_cursor_shape", default: .block)
+        UserSetting<TerminalCursorShape>(SharedSettingKeys.terminalCursorShape, default: .block)
 
     /// Whether the caret blinks.
-    static public var terminalCursorBlinks = UserSetting<Bool>("terminal_cursor_blinks", default: true)
+    static public var terminalCursorBlinks = UserSetting<Bool>(SharedSettingKeys.terminalCursorBlinks, default: true)
 }

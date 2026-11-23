@@ -6,14 +6,14 @@ extension UserSettings {
 
     /// The active theme's `ColorTheme.id`. Defaults to Solarized Dark.
     public static var activeThemeID = UserSetting<String>(
-        "theme.active_theme_id",
+        SharedSettingKeys.activeThemeID,
         default: BuiltInThemes.defaultID
     )
 
     /// User-imported and custom themes. Built-in themes are never stored here —
     /// `ThemeStore` concatenates them with `BuiltInThemes.all` at read time.
     public static var customThemes = UserSetting<[ColorTheme]>(
-        "theme.custom_themes",
+        SharedSettingKeys.customThemes,
         default: []
     )
 }
