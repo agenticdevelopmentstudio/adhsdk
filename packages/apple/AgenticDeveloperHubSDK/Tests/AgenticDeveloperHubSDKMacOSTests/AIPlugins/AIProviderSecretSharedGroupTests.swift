@@ -1,4 +1,5 @@
 import XCTest
+import Combine
 import AgenticDeveloperHubSDKCore
 @testable import AgenticDeveloperHubSDKMacOS
 
@@ -35,6 +36,27 @@ final class FakeAIProviderSecretKeychain: AIProviderSecretKeychain, @unchecked S
 
     func exists(forAccount account: String) -> Bool {
         lock.withLock { items[account] != nil }
+    }
+}
+
+/// A signal fired by hand, standing in for another app's post.
+final class FakeCrossProcessSignal: CrossProcessSignal, @unchecked Sendable {
+    private let lock = NSLock()
+    private var handler: (@Sendable () -> Void)?
+    private var postCount = 0
+
+    var posts: Int { lock.withLock { postCount } }
+
+    func post() {
+        let handler = lock.withLock { () -> (@Sendable () -> Void)? in
+            postCount += 1
+            return self.handler
+        }
+        handler?()
+    }
+
+    func observe(_ handler: @escaping @Sendable () -> Void) {
+        lock.withLock { self.handler = handler }
     }
 }
 
@@ -116,6 +138,41 @@ final class AIProviderSecretSharedGroupTests: XCTestCase {
         provider.set("token", for: otherSecret)
         XCTAssertEqual(fallback.get(otherSecret), "token")
         XCTAssertNil(shared.item(otherSecret.name))
+    }
+
+    func testAnotherAppsWriteIsReadAfterItsSignal() async {
+        let shared = FakeAIProviderSecretKeychain(items: [apiKeyName: "sk-old"])
+        let signal = FakeCrossProcessSignal()
+        let provider = AIProviderSharedSecretsProvider(
+            sharedGroup: shared, fallback: InMemorySecureSettingsStorageProvider(), changeSignal: signal)
+        XCTAssertEqual(provider.get(apiKey), "sk-old")
+        var announced: [String] = []
+        let subscription = provider.changes.sink { announced.append($0) }
+
+        // Another app rotates the key and posts.
+        _ = shared.set("sk-new", forAccount: apiKeyName)
+        signal.post()
+        for _ in 0..<20 { await Task.yield() }
+
+        XCTAssertEqual(provider.get(apiKey), "sk-new")
+        XCTAssertEqual(announced, [apiKeyName])
+        subscription.cancel()
+    }
+
+    func testItsOwnWritePostsTheSignalAndComesBackSilent() async {
+        let signal = FakeCrossProcessSignal()
+        let provider = AIProviderSharedSecretsProvider(
+            sharedGroup: FakeAIProviderSecretKeychain(), fallback: InMemorySecureSettingsStorageProvider(),
+            changeSignal: signal)
+        var announced: [String] = []
+        let subscription = provider.changes.sink { announced.append($0) }
+
+        provider.set("sk-mine", for: apiKey)
+        for _ in 0..<20 { await Task.yield() }
+
+        XCTAssertEqual(signal.posts, 1)
+        XCTAssertEqual(announced, [apiKeyName], "only the write's own announcement")
+        subscription.cancel()
     }
 
     func testInstallingTwiceDoesNotStack() {
