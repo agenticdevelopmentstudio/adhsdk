@@ -104,8 +104,9 @@ function CapChip({ label }: { label: string }) {
   );
 }
 
-/** The service's models, each with an Available checkbox that switches the model on or off for
- *  the workspace. The box is controlled by the model's `available` as last read, so a failed
+/** The service's models, each with an Available checkbox that switches the model on or off. The
+ *  services list holds the signed-in user's own connections (`GET /v1/ai_services` takes no
+ *  workspace scope), so the switch applies in every one of the user's workspaces. The box is controlled by the model's `available` as last read, so a failed
  *  change leaves it showing the service's last known state; a successful one hands `onUpdated`
  *  that one model's entry from the answer (or undefined when the answer no longer lists it) and
  *  revalidates the shared services cache (the persona editor's picker reads the same entry). Only

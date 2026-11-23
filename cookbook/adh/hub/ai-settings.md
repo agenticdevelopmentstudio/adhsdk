@@ -2,7 +2,7 @@
 id: 5fdf4ce9-cb7e-4490-a6d6-066690ef07ca
 title: "AI Settings"
 type: ingredient
-version: 1.0.3
+version: 1.0.4
 status: review
 language: en
 created: 2026-11-23
@@ -37,16 +37,16 @@ approved-date: ""
 
 ## Overview
 
-AI Settings is the screen where a workspace connects AI providers and chooses which of their models
-it can use. It is the web package `@adh-sdk/ai-settings`. Its main export, `ServicesSection`, is a
-two-part surface: a rail that lists the workspace's service connections (each labelled with its name
+AI Settings is the screen where a user connects AI providers and chooses which of their models
+they can use. It is the web package `@adh-sdk/ai-settings`. Its main export, `ServicesSection`, is a
+two-part surface: a rail that lists the signed-in user's own service connections (each labelled with its name
 and subtitled with its provider kind), and a pane that edits the open one. A service is created in a
 modal over the rail, never in a blank editor. The editor holds the service's fields (name, provider,
 base URL, API key), a Connection group with a Connect button, and a Models group with a Refresh
 button and a table of the provider's models.
 
 Each model in the table has an Available checkbox, ticked by default, which switches the model on or
-off for this workspace, and a model the provider no longer lists but which is still switched off shows
+off in every one of the user's workspaces (the connections are the user's, not a workspace's), and a model the provider no longer lists but which is still switched off shows
 as "No longer offered". `AiSettingsSection` is `ServicesSection` titled "AI Settings". The service list
 is read through `useUserServices`, one cache entry shared with the persona editor's service picker; its
 key keeps the name `PERSONA_SERVICES_CACHE_KEY` and the value `"persona-services"`. The data client, the
@@ -660,6 +660,7 @@ and a return to the pane paints from cache while re-reading.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.4 | 2026-11-23 | Mike Fullerton | Overview: the connections and the Available switch are the user's, applying in every one of their workspaces, not one workspace's |
 | 1.0.3 | 2026-11-23 | Mike Fullerton | Phase 8 review fixes: a failed Connect or Refresh request shows its message (refresh-models-failure settled), the editor reads its service from the prop, availability answers patch only their own model, errors are per model, unreadable model entries are dropped |
 | 1.0.2 | 2026-11-23 | Mike Fullerton | Track availability changes per model: overlapping changes on different models each keep their own box disabled until their own request settles; vector ai-settings-031. |
 | 1.0.1 | 2026-11-23 | Mike Fullerton | Phase 8 verify pass against the code: format.ts moved too, editor syncs liveService from its prop, a box is disabled only while its own request runs, ServicesSectionProps, ModelsTable.test.tsx vectors, Apple model item corrected |
