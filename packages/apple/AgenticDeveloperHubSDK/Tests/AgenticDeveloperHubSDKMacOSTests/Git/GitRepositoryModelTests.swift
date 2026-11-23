@@ -380,15 +380,41 @@ struct GitRepositoryModelTests {
         #expect(recorder.calls.count == 2)
         #expect(recorder.calls.last == [.refs, .history, .workingCopy, .operation])
 
-        // One inside the working tree is still a rescan of part of it.
+        // One inside the working tree is still a rescan of part of it, but only
+        // of the working copy: refs, history and operations live in the git directories.
         watcher.receive(rescanOf: ["/r/wt/src/"])
         try await Task.sleep(for: .milliseconds(700))
         #expect(recorder.calls.count == 3)
+        #expect(recorder.calls.last == [.workingCopy])
+
+        // The working tree's own root may cover anything in it: everything again.
+        watcher.receive(rescanOf: ["/r/wt"])
+        try await Task.sleep(for: .milliseconds(700))
+        #expect(recorder.calls.count == 4)
+        #expect(recorder.calls.last == [.refs, .history, .workingCopy, .operation])
 
         // A sibling whose name only starts the same, or anywhere else, is not the repository.
         watcher.receive(rescanOf: ["/r/wtx/", "/elsewhere/"])
         try await Task.sleep(for: .milliseconds(700))
-        #expect(recorder.calls.count == 3)
+        #expect(recorder.calls.count == 4)
+    }
+
+    @Test("a rescan under an in-tree build folder reloads only the working copy")
+    func watcherReloadsOnlyTheWorkingCopyForABuildFolderRescan() async throws {
+        let watcher = GitRepositoryWatcher(root: URL(fileURLWithPath: "/r/wt"),
+                                           gitDirectory: URL(fileURLWithPath: "/r/wt/.git"),
+                                           commonDirectory: URL(fileURLWithPath: "/r/wt/.git"))
+        let recorder = ChangeRecorder()
+        watcher.onChange = { recorder.record($0) }
+
+        watcher.receive(rescanOf: ["/r/wt/build/", "/r/wt/build/Products/"])
+        try await Task.sleep(for: .milliseconds(700))
+        #expect(recorder.calls == [[.workingCopy]])
+
+        // Inside the in-tree git directory is still everything.
+        watcher.receive(rescanOf: ["/r/wt/.git/refs/"])
+        try await Task.sleep(for: .milliseconds(700))
+        #expect(recorder.calls.last == [.refs, .history, .workingCopy, .operation])
     }
 
     @Test("a file system watcher sends rescans to their own handler, and every path to one without")

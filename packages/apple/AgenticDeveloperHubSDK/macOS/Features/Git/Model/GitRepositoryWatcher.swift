@@ -99,14 +99,17 @@ public final class GitRepositoryWatcher: GitRepositoryWatching, @unchecked Senda
 
     /// FSEvents lost the events under each of `paths` (fseventsd fell behind and
     /// dropped them, or coalesced them into one "rescan this directory"), so which
-    /// file changed is unknown. A path that is, contains or lies inside the working
-    /// tree, the git directory or the common directory means any part may have
-    /// changed: reload everything. Classifying the path itself would read the
-    /// working tree's root as only the working copy and the git directory as nothing,
-    /// and a branch switch lost that way would never reach the model. Main queue only.
+    /// file changed is unknown. A path that is, contains or lies inside the git
+    /// directory or the common directory, or that is or contains the working tree,
+    /// means any part may have changed: reload everything. Classifying the path
+    /// itself would read the working tree's root as only the working copy and the
+    /// git directory as nothing, and a branch switch lost that way would never reach
+    /// the model. A path strictly inside the working tree and clear of both git
+    /// directories (a build folder churning under `<root>/build`) can only have
+    /// changed the working copy, so it reloads just that. Main queue only.
     func receive(rescanOf paths: [String]) {
-        if paths.contains(where: concernsRepository) {
-            pending.formUnion(Self.rescanChanges)
+        for path in paths {
+            pending.formUnion(rescanChanges(for: path))
         }
         scheduleFlush()
     }
@@ -114,12 +117,20 @@ public final class GitRepositoryWatcher: GitRepositoryWatching, @unchecked Senda
     /// Every kind of change the watcher can post.
     static let rescanChanges: Set<GitRepositoryChange> = [.refs, .history, .workingCopy, .operation]
 
-    private func concernsRepository(_ path: String) -> Bool {
+    /// What a rescan of `path` may have changed: everything when it touches the
+    /// git or common directory or covers the whole working tree, the working copy
+    /// when it lies inside the working tree only, and nothing elsewhere.
+    private func rescanChanges(for path: String) -> Set<GitRepositoryChange> {
         let directory = path.hasSuffix("/") && path.count > 1 ? String(path.dropLast()) : path
-        return [root, gitDirectory, commonDirectory].contains { watched in
+        func isOrContains(_ watched: String) -> Bool {
             watched == directory || watched.hasPrefix(directory == "/" ? "/" : directory + "/")
-                || directory.hasPrefix(watched + "/")
         }
+        if [gitDirectory, commonDirectory].contains(where: { isOrContains($0) || directory.hasPrefix($0 + "/") }) {
+            return Self.rescanChanges
+        }
+        if isOrContains(root) { return Self.rescanChanges }
+        if directory.hasPrefix(root + "/") { return [.workingCopy] }
+        return []
     }
 
     private func scheduleFlush() {
