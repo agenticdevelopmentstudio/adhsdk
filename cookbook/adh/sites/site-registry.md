@@ -2,7 +2,7 @@
 id: 9069ccf9-0357-4311-9671-91ee2793adae
 title: "Site Registry"
 type: ingredient
-version: 1.3.0
+version: 1.4.0
 status: review
 language: en
 created: 2026-09-24
@@ -97,6 +97,7 @@ router, and a downstream OAuth-return-origin sync process.
 - **admin-only-derives-admin-ids-and-drops-footer**: The admin-only id set MUST be
   exactly the identifiers of every site definition marked `adminOnly`, and every such
   entry MUST be excluded from the footer site list.
+- **support-routes-in-shares**: the generated hub route table, `routes.hub.generated.ts`, MUST list the hosted `/support` page in the `hub` share (between `/signup` and `/terms-of-use`) and the `/support` topic in the `product-admin` share. These lines are written in the SDK by hand, because the generator runs only in the website; the website proves them with the generator's `--check`.
 - **product-admin-site-registered**: The roster MUST define a `product-admin` site (a
   product's own admin site, phase 6) that is `adminOnly`, not `crawlable`, and has no home
   route (`hasHome` false), with `product-admin.agenticdeveloperhub.com` as its production
@@ -516,6 +517,7 @@ Not applicable: this is the site family's data registry and routing-resolution m
 | site-registry-061 | site-prod-url-ignores-current-environment | The production URL builder for `hub`, path `/` (traced to "siteProdUrl is host-independent and always https") | `'https://agenticdeveloperhub.com/'` |
 | site-registry-062 | site-home-path-fallback | The home path for `hub` (traced to "siteHomePath is /home only for sites that expose one") | `'/home'` when `hasHome` is true; `'/'` otherwise |
 | site-registry-063 | product-admin-site-registered | The `product-admin` site's definition, the main-family roster, the footer list and the family roster's tail (traced to "registers the product admin site: its folder, not crawlable, admin-gated, a main app") | Its production host is `product-admin.agenticdeveloperhub.com`; the directory name `product-admin.agenticdeveloperhub` identifies it; it is not crawlable; it is in the admin-only ids and the main-family roster and not in the footer list; the roster ends `status`, `admin`, `product-admin`, `builds` |
+| site-registry-064 | support-routes-in-shares | The `hub` and `product-admin` route shares | `/support` is in each, and the website generator's `--check` reports no drift |
 ## Edge Cases
 
 - **Null and empty input** (MUST): Building the workspace link for an empty slug
@@ -815,6 +817,7 @@ second copy that could drift.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.4.0 | 2026-11-23 | Mike Fullerton | Phase 7: consented support access |
 | 1.3.0 | 2026-11-23 | Mike Fullerton | Phase 6: the product-admin site (admin-gated, hand-rolled build, main family) and the admin-site hub segment |
 | 1.2.0 | 2026-11-22 | Mike Fullerton | Added legal paths and URLs, fleet directory, nativeApp sites, local-sites list; SSO list now excludes nativeApp and grants nothing by itself. |
 | 1.1.1 | 2026-10-04 | Mike Fullerton | Inverted prohibitions (none/neither/no X MUST) restated as MUST NOT. |

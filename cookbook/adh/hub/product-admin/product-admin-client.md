@@ -15,7 +15,7 @@ tags:
 depends-on:
   - 870c182f-1a80-4254-8fec-3eb35c8f13f7
   - 3ea9329e-5acc-4c43-b5ce-bb8c50570104
-version: 1.0.0
+version: 1.1.0
 created: 2026-11-23
 modified: 2026-11-23
 author: Mike Fullerton
@@ -48,6 +48,7 @@ Every call carries the product's ecosystem uuid in an `ecosystem` query paramete
 ### Totals
 
 - **totals-read**: `fetchProductTotals` MUST `GET` `/api/v1/product_admin/totals?ecosystem=<uuid>` and map the body to `customers`, `new7d`, `new30d`, `active7d`, `active30d`, `storageBytes` (from `storage_bytes`), `pendingInvitations` (from `pending_invitations`) and `pendingRequests` (from `pending_requests`). The totals are counts only and carry no per-customer row.
+- **totals-jobs**: the totals body MAY carry `jobs_by_status`, a map of job status to count, which `fetchProductTotals` MUST map to `jobsByStatus` (`Record<string, number>`), and MUST map to an empty object when the body has none. The client MUST NOT sum or filter it.
 - **totals-hook**: `useProductTotals` MUST be disabled while the ecosystem id is empty, null or undefined, and MUST otherwise read under the query key `["product-admin", <id>, "totals"]`.
 
 ### Roster
@@ -100,7 +101,7 @@ Vectors marked with a test name are asserted in `packages/web/packages/data/src/
 | product-admin-client-011 | roster-writes-invalidate | Any roster write succeeding for "eco-1" | The roster queries and the totals query of "eco-1" are invalidated |
 | product-admin-client-012 | totals-hook, customers-hook, admin-site-hooks | Each read hook given `null`, `undefined` or `""` | No request is made |
 | product-admin-client-013 | quota | The constant `DEFAULT_QUOTA_BYTES` (test: "is the backend's 5 GiB") | 5368709120 |
-
+| product-admin-client-014 | totals-jobs | `fetchProductTotals("eco-1")` over a body with `jobs_by_status: { failed: 2, done: 9 }`, then over one without it | `jobsByStatus` is `{ failed: 2, done: 9 }`, then `{}` |
 ## Edge Cases
 
 - **Empty and absent ids (MUST)**: the read hooks are disabled for an empty, null or undefined ecosystem id and make no request; a hook given no id still builds a stable query key from an empty string.
@@ -200,4 +201,5 @@ The module keeps wire types, mapping and routes apart from transport, which it d
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.0 | 2026-11-23 | Mike Fullerton | Phase 7: consented support access |
 | 1.0.0 | | | Initial creation |

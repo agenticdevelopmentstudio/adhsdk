@@ -1,7 +1,7 @@
 
 ### Pages
 
-- **topics-list**: `PRODUCT_ADMIN_TOPICS` MUST list eight pages in this order, with these ids and paths: users (`/users`), requests, pending, invites, roles, signup-list, sets and totals, each with a label and an `href` of `/` plus its id. The ids are unique.
+- **topics-list**: `PRODUCT_ADMIN_TOPICS` MUST list nine pages in this order, with these ids and paths: users (`/users`), requests, pending, invites, roles, signup-list, sets, totals and support (`/support`, labeled "Support"), each with a label and an `href` of `/` plus its id. The ids are unique.
 - **topics-importable-server-side**: the topic list MUST be importable without the client barrel, through `@adh-sdk/product-admin/topics`.
 
 ### Users pane
@@ -16,7 +16,13 @@
 
 - **admin-site-pane**: `AdminSitePane` MUST show, for the selected product, the site's current host with a form that sets it up, changes it, or removes it; MUST say so when no product is selected; and MUST show the backend's sentence when a host is refused. A removal takes the site down at once, so it MUST wait for the manager's confirmation in a destructive alert dialog, and MUST send nothing when it is cancelled.
 - **admin-site-admins**: the page MUST list the holders of the `admin` role, read on the ecosystem target, and MUST add an admin as a sign-up list entry carrying the admin role's id. An address already on the list MUST keep the set its entry grants; only the role changes. After the write the Sign-up list page's cached list MUST be read again, and no other list. An address that is not an email MUST be refused without a request.
-- **totals-pane**: `ProductTotalsPane` MUST show the eight totals (customers, new in 7 and 30 days, active in 7 and 30 days, storage, pending invitations, pending requests) for the product it is given, and MUST say when it is loading and when it could not load.
+- **totals-pane**: `ProductTotalsPane` MUST show the eight totals (customers, new in 7 and 30 days, active in 7 and 30 days, storage, pending invitations, pending requests) for the product it is given, and MUST say when it is loading and when it could not load. When the totals carry `jobsByStatus`, it MUST also show the product's background jobs as one count for each status, and MUST show nothing for jobs when the map is empty or absent.
+
+### Support page
+
+- **support-page**: the Support page MUST render `SupportGrantsPane` ([adhsdk.ingredient.adh.hub.support.support-panes](cookbook:2eff6ca4-5479-44b3-8636-04e455009a10)) for the product it is given, at `/support`, and MUST be listed in `PRODUCT_ADMIN_TOPICS` (see **topics-list**).
+- **support-step-up**: when the Support page's request, or the opening of a live grant, is refused as `step_up_required`, the page MUST send the admin through `stepUp('/support')` of the product admin session ([adhsdk.ingredient.data.services.auth.auth-client](cookbook:3ea9329e-5acc-4c43-b5ce-bb8c50570104)) and bring them back to `/support`; the site's own sign-in route carries `prompt=login` and `max_age=600` on that second pass.
+- **support-switch-off**: when the backend answers the grants read with 404 (consented access is off), the page MUST say that support access is not available instead of showing an error.
 
 ### Which pages move
 

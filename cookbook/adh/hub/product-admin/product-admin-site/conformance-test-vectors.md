@@ -3,7 +3,7 @@ Vectors marked with a test name are asserted in `features/product-admin/src/__te
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
-| product-admin-site-001 | topics-list | `PRODUCT_ADMIN_TOPICS` (test: "names the eight pages in rail order, ids unique") | Eight rows in the order above, unique ids |
+| product-admin-site-001 | topics-list | `PRODUCT_ADMIN_TOPICS` (test: "names the nine pages in rail order, ids unique") | Nine rows in the order above, the last `support` with `/support`, unique ids |
 | product-admin-site-002 | users-roster | The pane given a product, over a roster of customers (test: "lists the roster for the product it is given, with roles, storage and paused") | One row each, with roles, storage and the paused mark |
 | product-admin-site-003 | users-search-paging | Next, then Previous; then a search (tests: "pages forward by the cursor and back again", "searches from the first page") | The next page is read by the cursor, Previous returns to the first; a search reads from the first page |
 | product-admin-site-004 | users-confirm-writes | Pause chosen and confirmed; then chosen and cancelled (tests: "pauses only after the confirmation", "sends nothing when the confirmation is cancelled") | One pause request; then none |
@@ -22,4 +22,6 @@ Vectors marked with a test name are asserted in `features/product-admin/src/__te
 | product-admin-site-018 | visible-topics | Switch on and a site (test: "switch on and a site: Users keeps Email Signup and Authentication, and nothing else") | The Users row carries members `email-signup` and `auth` |
 | product-admin-site-019 | run-at-admin-site | Each moved topic and four others, with each switch and site state (test: "runAtAdminSite: the moved topics, only with the switch on and a site") | True for the moved topics with the switch on and a site; false otherwise |
 | product-admin-site-013 | hide-admin-records | Each of the three panes given `hideAdminRecords`, then not (tests: "mounts the notes editor and offers Admin notes by default", "mounts no notes editor and offers no Admin notes when set") | Set: no notes editor, no history, no Admin notes; unset: all three |
-
+| product-admin-site-020 | support-page, support-step-up | The Support page for a product; a request refused as `step_up_required` | `SupportGrantsPane` renders for the product; `stepUp('/support')` is called |
+| product-admin-site-021 | totals-pane | Totals carrying `jobsByStatus` of `{ failed: 2, done: 9 }`, then an empty map | One count for each status; then no jobs line |
+| product-admin-site-022 | support-switch-off | The grants read answered 404 | A note that support access is not available, no error |

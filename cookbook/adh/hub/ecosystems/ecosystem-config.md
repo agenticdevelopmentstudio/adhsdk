@@ -2,7 +2,7 @@
 id: 87ca0139-6cd0-46dd-a9fb-40ad3406f175
 title: "Ecosystem Config"
 type: ingredient
-version: 2.2.0
+version: 2.3.0
 status: review
 language: en
 created: 2026-09-24
@@ -530,6 +530,9 @@ replaces the allow-list field the client-auth form used to carry.
   (not whether the pane's content is) to the topic list above it, including on a
   cached re-read, and MUST stop reporting once the scope has landed.
 
+### Product totals job counts (web)
+
+- **totals-pane-jobs**: `ProductTotalsPane` MUST, when the totals it is given carry a non-empty `jobsByStatus`, show one count for each job status beside the eight figures, and MUST show no jobs section when the map is empty or absent. The pane MUST NOT sum the statuses itself into a new total.
 ## Appearance
 
 Not applicable: this is a set of navigation/data-orchestration topics and data
@@ -606,6 +609,7 @@ component not among these given sources.
 | ecosystem-config-049 | product-roles-admin-seats-protected, pane-caller | The roles pane for the `product_admin` caller, then for the manager caller, each showing the `admin` role with a holder and another role with a holder | For `product_admin` the admin role's holder has no Revoke button and the note "Admins are added here and removed by the product's managers." shows, while the other role's holder keeps Revoke; for the manager both keep Revoke and no note shows |
 | ecosystem-config-050 | sets-pane-caller-limits | The sets editor for the `product_admin` caller on a catalog declaring a usage tier and a storage quota; the quota set to 5368709121, then Save | The tier field is absent and the quota field's maximum is 5368709120; the Save shows "<label> can be at most 5368709120." and sends nothing |
 | ecosystem-config-051 | sets-pane-tier-locked | A set whose values include `usage.tier`, opened by the `product_admin` caller; a permission toggled, then Save; then only a contained set toggled, then Save | The locked note shows; the first Save shows it as an error and sends nothing; the second sends the containment alone |
+| ecosystem-config-052 | totals-pane-jobs | `ProductTotalsPane` given totals with `jobsByStatus` of `{ failed: 2, done: 9 }`, then with `{}` | Two status counts shown; then no jobs section |
 ## Edge Cases
 
 - **Path deeper than one segment**: sign-in apps, feature flags, server bags, and
@@ -1019,6 +1023,7 @@ console already sits above it. The owner approved this in the Temporal plan on 2
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 2.3.0 | 2026-11-23 | Mike Fullerton | Phase 7: consented support access |
 | 2.2.0 | 2026-11-23 | Mike Fullerton | Phase 6: a pane caller for the sign-up list, roles and sets panes; admin seats protected, usage tier hidden, storage quota capped for a product admin |
 | 2.1.0 | 2026-11-22 | Mike Fullerton | Phase 5: sign-up list, product roles, sets, billing placeholder and workspace gate panes; the login allow-list is now a switch whose emails live in the sign-up list; client-auth updates are POSTs; passwordEnabled |
 | 2.0.0 | 2026-11-15 | Mike Fullerton | Login allow-list by email (loginAllowedEmails, login_allowed_emails): the client-auth pane's Who can sign in editor, lowercased on save, with email-shape, 254-character and 500-entry bounds |

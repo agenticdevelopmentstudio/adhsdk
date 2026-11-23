@@ -474,3 +474,6 @@ replaces the allow-list field the client-auth form used to carry.
   (not whether the pane's content is) to the topic list above it, including on a
   cached re-read, and MUST stop reporting once the scope has landed.
 
+### Product totals job counts (web)
+
+- **totals-pane-jobs**: `ProductTotalsPane` MUST, when the totals it is given carry a non-empty `jobsByStatus`, show one count for each job status beside the eight figures, and MUST show no jobs section when the map is empty or absent. The pane MUST NOT sum the statuses itself into a new total.

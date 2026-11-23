@@ -481,6 +481,8 @@ MUST NOT mount the other.
   `window.location.assign`; a new `navigate` on each render MUST NOT restart the
   session.
 
+- **product-admin-session-step-up**: the product admin session hook MUST also return `stepUp(returnPath?)`, which MUST navigate (through the provider's `navigate`, else `window.location.assign`) to `/auth/signin?return=<returnPath, or the current path and query, URL-encoded>&prompt=login&max_age=600`. It MUST NOT clear the token or the account, since the person is still signed in when it is called, and MUST NOT call `/auth/signout`. The site's own sign-in route turns `prompt` and `max_age` into the authorize request, so the second factor runs again.
+
 ### Security
 
 This recipe is a security-relevant recipe: it handles bearer session tokens,

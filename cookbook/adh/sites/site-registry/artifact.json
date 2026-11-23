@@ -4,7 +4,7 @@
     "id": "9069ccf9-0357-4311-9671-91ee2793adae",
     "title": "Site Registry",
     "type": "ingredient",
-    "version": "1.3.0",
+    "version": "1.4.0",
     "status": "review",
     "language": "en",
     "created": "2026-09-24",
@@ -31,7 +31,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "adb58e5697c38a6e",
+  "synced": "334ff66b015a7995",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

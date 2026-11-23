@@ -16,4 +16,4 @@ Vectors marked with a test name are asserted in `packages/web/packages/data/src/
 | product-admin-client-011 | roster-writes-invalidate | Any roster write succeeding for "eco-1" | The roster queries and the totals query of "eco-1" are invalidated |
 | product-admin-client-012 | totals-hook, customers-hook, admin-site-hooks | Each read hook given `null`, `undefined` or `""` | No request is made |
 | product-admin-client-013 | quota | The constant `DEFAULT_QUOTA_BYTES` (test: "is the backend's 5 GiB") | 5368709120 |
-
+| product-admin-client-014 | totals-jobs | `fetchProductTotals("eco-1")` over a body with `jobs_by_status: { failed: 2, done: 9 }`, then over one without it | `jobsByStatus` is `{ failed: 2, done: 9 }`, then `{}` |

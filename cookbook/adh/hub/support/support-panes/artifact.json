@@ -1,0 +1,55 @@
+{
+  "format": 2,
+  "meta": {
+    "id": "2eff6ca4-5479-44b3-8636-04e455009a10",
+    "title": "Support Panes",
+    "type": "ingredient",
+    "status": "draft",
+    "language": "en",
+    "summary": "The panes for consented support access: the customer's Support access pane, a product admin's request pane with its read-only viewer, and the operator's grants, break-glass and read-log panes.",
+    "platforms": [
+      "typescript",
+      "web"
+    ],
+    "tags": [
+      "support",
+      "panes",
+      "ui"
+    ],
+    "depends-on": [
+      "059c2877-d705-4ff4-b649-554fdafcfaaa",
+      "3ea9329e-5acc-4c43-b5ce-bb8c50570104"
+    ],
+    "version": "1.0.0",
+    "created": "2026-11-23",
+    "modified": "2026-11-23",
+    "author": "Mike Fullerton",
+    "copyright": "2026 Mike Fullerton",
+    "license": "MIT",
+    "related": [],
+    "references": []
+  },
+  "synced": "1c0550ef108035b7",
+  "parts": [
+    {"part": "intro"},
+    {"part": "overview", "heading": "Overview"},
+    {"part": "behavioral-requirements", "heading": "Behavioral Requirements"},
+    {"part": "appearance", "heading": "Appearance"},
+    {"part": "states", "heading": "States"},
+    {"part": "accessibility", "heading": "Accessibility"},
+    {"part": "conformance-test-vectors", "heading": "Conformance Test Vectors"},
+    {"part": "edge-cases", "heading": "Edge Cases"},
+    {"part": "configuration", "heading": "Configuration"},
+    {"part": "deep-linking", "heading": "Deep Linking"},
+    {"part": "localization", "heading": "Localization"},
+    {"part": "accessibility-options", "heading": "Accessibility Options"},
+    {"part": "feature-flags", "heading": "Feature Flags"},
+    {"part": "analytics", "heading": "Analytics"},
+    {"part": "privacy", "heading": "Privacy"},
+    {"part": "logging", "heading": "Logging"},
+    {"part": "platform-notes", "heading": "Platform Notes"},
+    {"part": "design-decisions", "heading": "Design Decisions"},
+    {"part": "compliance", "heading": "Compliance"},
+    {"part": "history", "heading": "Change History"}
+  ]
+}

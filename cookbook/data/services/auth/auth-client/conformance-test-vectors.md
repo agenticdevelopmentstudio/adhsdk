@@ -131,3 +131,4 @@
 | auth-client-128 | product-admin-session-cross-tab | Another tab holds the `adh-product-admin-session` lock | The provider's `POST /auth/session` waits for it; sign-out's `POST /auth/signout` takes the same lock |
 | auth-client-129 | product-admin-session-start | A stored hub token present, and a child that reads the access token in its first effect | The child reads the provider's token, never the stored one |
 | auth-client-130 | product-admin-session-hook | The provider given a new inline `navigate` on each render | One `POST /auth/session` is sent |
+| auth-client-131 | product-admin-session-step-up | `stepUp('/support')` called from a signed-in product admin | One navigation to `/auth/signin?return=%2Fsupport&prompt=login&max_age=600`; the token and account are kept and nothing is posted |

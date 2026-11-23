@@ -4,7 +4,7 @@
     "id": "87ca0139-6cd0-46dd-a9fb-40ad3406f175",
     "title": "Ecosystem Config",
     "type": "ingredient",
-    "version": "2.2.0",
+    "version": "2.3.0",
     "status": "review",
     "language": "en",
     "created": "2026-09-24",
@@ -36,7 +36,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "b2ec770310917ddc",
+  "synced": "ce9ee54e6d175842",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

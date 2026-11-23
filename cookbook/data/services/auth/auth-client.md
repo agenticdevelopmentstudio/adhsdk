@@ -2,7 +2,7 @@
 id: 3ea9329e-5acc-4c43-b5ce-bb8c50570104
 title: "Authentication Client"
 type: ingredient
-version: 2.0.0
+version: 2.1.0
 status: review
 language: en
 created: 2026-09-23
@@ -547,6 +547,8 @@ MUST NOT mount the other.
   `window.location.assign`; a new `navigate` on each render MUST NOT restart the
   session.
 
+- **product-admin-session-step-up**: the product admin session hook MUST also return `stepUp(returnPath?)`, which MUST navigate (through the provider's `navigate`, else `window.location.assign`) to `/auth/signin?return=<returnPath, or the current path and query, URL-encoded>&prompt=login&max_age=600`. It MUST NOT clear the token or the account, since the person is still signed in when it is called, and MUST NOT call `/auth/signout`. The site's own sign-in route turns `prompt` and `max_age` into the authorize request, so the second factor runs again.
+
 ### Security
 
 This recipe is a security-relevant recipe: it handles bearer session tokens,
@@ -738,6 +740,7 @@ component.
 | auth-client-128 | product-admin-session-cross-tab | Another tab holds the `adh-product-admin-session` lock | The provider's `POST /auth/session` waits for it; sign-out's `POST /auth/signout` takes the same lock |
 | auth-client-129 | product-admin-session-start | A stored hub token present, and a child that reads the access token in its first effect | The child reads the provider's token, never the stored one |
 | auth-client-130 | product-admin-session-hook | The provider given a new inline `navigate` on each render | One `POST /auth/session` is sent |
+| auth-client-131 | product-admin-session-step-up | `stepUp('/support')` called from a signed-in product admin | One navigation to `/auth/signin?return=%2Fsupport&prompt=login&max_age=600`; the token and account are kept and nothing is posted |
 ## Edge Cases
 
 - **Null/empty input**: token extraction from `{}` (neither field present) —
@@ -1159,6 +1162,7 @@ honestly-reported gap in the source, not a hidden one.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 2.1.0 | 2026-11-23 | Mike Fullerton | Phase 7: consented support access |
 | 2.0.0 | 2026-11-23 | Mike Fullerton | Phase 6: the access-token source seam and ProductAdminAuthProvider, the product admin site's in-memory session |
 | 1.1.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (conformance-vectors.test.ts, 119 of 120 vectors; auth-client-118 skipped as a static property); vector text corrected to the /v1 API; unit-test-coverage now passed. |
 | 1.1.1 | 2026-10-04 | Mike Fullerton | Cite separation-of-concerns and unit-test-coverage in Compliance. |

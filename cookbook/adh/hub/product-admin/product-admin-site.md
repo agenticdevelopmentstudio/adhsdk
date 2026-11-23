@@ -15,7 +15,7 @@ tags:
 depends-on:
   - 150bf00e-6c6b-4f91-a323-d307ebd5700d
   - 3ea9329e-5acc-4c43-b5ce-bb8c50570104
-version: 1.0.1
+version: 2.0.0
 created: 2026-11-23
 modified: 2026-11-23
 author: Mike Fullerton
@@ -42,7 +42,7 @@ The pieces:
 
 ### Pages
 
-- **topics-list**: `PRODUCT_ADMIN_TOPICS` MUST list eight pages in this order, with these ids and paths: users (`/users`), requests, pending, invites, roles, signup-list, sets and totals, each with a label and an `href` of `/` plus its id. The ids are unique.
+- **topics-list**: `PRODUCT_ADMIN_TOPICS` MUST list nine pages in this order, with these ids and paths: users (`/users`), requests, pending, invites, roles, signup-list, sets, totals and support (`/support`, labeled "Support"), each with a label and an `href` of `/` plus its id. The ids are unique.
 - **topics-importable-server-side**: the topic list MUST be importable without the client barrel, through `@adh-sdk/product-admin/topics`.
 
 ### Users pane
@@ -57,7 +57,13 @@ The pieces:
 
 - **admin-site-pane**: `AdminSitePane` MUST show, for the selected product, the site's current host with a form that sets it up, changes it, or removes it; MUST say so when no product is selected; and MUST show the backend's sentence when a host is refused. A removal takes the site down at once, so it MUST wait for the manager's confirmation in a destructive alert dialog, and MUST send nothing when it is cancelled.
 - **admin-site-admins**: the page MUST list the holders of the `admin` role, read on the ecosystem target, and MUST add an admin as a sign-up list entry carrying the admin role's id. An address already on the list MUST keep the set its entry grants; only the role changes. After the write the Sign-up list page's cached list MUST be read again, and no other list. An address that is not an email MUST be refused without a request.
-- **totals-pane**: `ProductTotalsPane` MUST show the eight totals (customers, new in 7 and 30 days, active in 7 and 30 days, storage, pending invitations, pending requests) for the product it is given, and MUST say when it is loading and when it could not load.
+- **totals-pane**: `ProductTotalsPane` MUST show the eight totals (customers, new in 7 and 30 days, active in 7 and 30 days, storage, pending invitations, pending requests) for the product it is given, and MUST say when it is loading and when it could not load. When the totals carry `jobsByStatus`, it MUST also show the product's background jobs as one count for each status, and MUST show nothing for jobs when the map is empty or absent.
+
+### Support page
+
+- **support-page**: the Support page MUST render `SupportGrantsPane` ([adhsdk.ingredient.adh.hub.support.support-panes](cookbook:2eff6ca4-5479-44b3-8636-04e455009a10)) for the product it is given, at `/support`, and MUST be listed in `PRODUCT_ADMIN_TOPICS` (see **topics-list**).
+- **support-step-up**: when the Support page's request, or the opening of a live grant, is refused as `step_up_required`, the page MUST send the admin through `stepUp('/support')` of the product admin session ([adhsdk.ingredient.data.services.auth.auth-client](cookbook:3ea9329e-5acc-4c43-b5ce-bb8c50570104)) and bring them back to `/support`; the site's own sign-in route carries `prompt=login` and `max_age=600` on that second pass.
+- **support-switch-off**: when the backend answers the grants read with 404 (consented access is off), the page MUST say that support access is not available instead of showing an error.
 
 ### Which pages move
 
@@ -86,7 +92,7 @@ Vectors marked with a test name are asserted in `features/product-admin/src/__te
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
-| product-admin-site-001 | topics-list | `PRODUCT_ADMIN_TOPICS` (test: "names the eight pages in rail order, ids unique") | Eight rows in the order above, unique ids |
+| product-admin-site-001 | topics-list | `PRODUCT_ADMIN_TOPICS` (test: "names the nine pages in rail order, ids unique") | Nine rows in the order above, the last `support` with `/support`, unique ids |
 | product-admin-site-002 | users-roster | The pane given a product, over a roster of customers (test: "lists the roster for the product it is given, with roles, storage and paused") | One row each, with roles, storage and the paused mark |
 | product-admin-site-003 | users-search-paging | Next, then Previous; then a search (tests: "pages forward by the cursor and back again", "searches from the first page") | The next page is read by the cursor, Previous returns to the first; a search reads from the first page |
 | product-admin-site-004 | users-confirm-writes | Pause chosen and confirmed; then chosen and cancelled (tests: "pauses only after the confirmation", "sends nothing when the confirmation is cancelled") | One pause request; then none |
@@ -105,7 +111,9 @@ Vectors marked with a test name are asserted in `features/product-admin/src/__te
 | product-admin-site-018 | visible-topics | Switch on and a site (test: "switch on and a site: Users keeps Email Signup and Authentication, and nothing else") | The Users row carries members `email-signup` and `auth` |
 | product-admin-site-019 | run-at-admin-site | Each moved topic and four others, with each switch and site state (test: "runAtAdminSite: the moved topics, only with the switch on and a site") | True for the moved topics with the switch on and a site; false otherwise |
 | product-admin-site-013 | hide-admin-records | Each of the three panes given `hideAdminRecords`, then not (tests: "mounts the notes editor and offers Admin notes by default", "mounts no notes editor and offers no Admin notes when set") | Set: no notes editor, no history, no Admin notes; unset: all three |
-
+| product-admin-site-020 | support-page, support-step-up | The Support page for a product; a request refused as `step_up_required` | `SupportGrantsPane` renders for the product; `stepUp('/support')` is called |
+| product-admin-site-021 | totals-pane | Totals carrying `jobsByStatus` of `{ failed: 2, done: 9 }`, then an empty map | One count for each status; then no jobs line |
+| product-admin-site-022 | support-switch-off | The grants read answered 404 | A note that support access is not available, no error |
 ## Edge Cases
 
 - **No product selected (MUST)**: the Admin site page and the totals page say so and make no request.
@@ -198,5 +206,6 @@ The panes keep the data calls in the client and the page list in a plain module,
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 2.0.0 | 2026-11-23 | Mike Fullerton | Phase 7: consented support access |
 | 1.0.1 | 2026-11-23 | Mike Fullerton | Admin site removal confirmed; adding an admin keeps a listed address's set and refreshes the Sign-up list; an emptied later Users page steps back; Users keeps Email Signup and Authentication once a site is up; a routed Admin site row is kept while the site is unknown; runAtAdminSite |
 | 1.0.0 | | | Initial creation |

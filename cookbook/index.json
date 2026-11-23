@@ -516,6 +516,12 @@
       "path": "landing/deck",
       "rdid": "adhsdk.ingredient.landing.deck"
     },
+    "059c2877-d705-4ff4-b649-554fdafcfaaa": {
+      "implementations": [],
+      "kind": "ingredient",
+      "path": "adh/hub/support/support-client",
+      "rdid": "adhsdk.ingredient.adh.hub.support.support-client"
+    },
     "0640ca96-95c5-4234-925e-386425cc4435": {
       "implementations": [
         {
@@ -4526,6 +4532,12 @@
       "kind": "ingredient",
       "path": "ai/ai-feature",
       "rdid": "adhsdk.ingredient.ai.ai-feature"
+    },
+    "2eff6ca4-5479-44b3-8636-04e455009a10": {
+      "implementations": [],
+      "kind": "ingredient",
+      "path": "adh/hub/support/support-panes",
+      "rdid": "adhsdk.ingredient.adh.hub.support.support-panes"
     },
     "2f1d9160-a055-4aca-8dff-86d39cc0b76a": {
       "implementations": [

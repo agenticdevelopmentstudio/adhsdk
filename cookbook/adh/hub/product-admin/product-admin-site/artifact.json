@@ -20,7 +20,7 @@
       "150bf00e-6c6b-4f91-a323-d307ebd5700d",
       "3ea9329e-5acc-4c43-b5ce-bb8c50570104"
     ],
-    "version": "1.0.1",
+    "version": "2.0.0",
     "created": "2026-11-23",
     "modified": "2026-11-23",
     "author": "Mike Fullerton",
@@ -29,7 +29,7 @@
     "related": [],
     "references": []
   },
-  "synced": "60ec3ba6b8ec9238",
+  "synced": "dce9b4e1922777be",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

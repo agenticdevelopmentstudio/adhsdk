@@ -2,6 +2,7 @@
 ### Totals
 
 - **totals-read**: `fetchProductTotals` MUST `GET` `/api/v1/product_admin/totals?ecosystem=<uuid>` and map the body to `customers`, `new7d`, `new30d`, `active7d`, `active30d`, `storageBytes` (from `storage_bytes`), `pendingInvitations` (from `pending_invitations`) and `pendingRequests` (from `pending_requests`). The totals are counts only and carry no per-customer row.
+- **totals-jobs**: the totals body MAY carry `jobs_by_status`, a map of job status to count, which `fetchProductTotals` MUST map to `jobsByStatus` (`Record<string, number>`), and MUST map to an empty object when the body has none. The client MUST NOT sum or filter it.
 - **totals-hook**: `useProductTotals` MUST be disabled while the ecosystem id is empty, null or undefined, and MUST otherwise read under the query key `["product-admin", <id>, "totals"]`.
 
 ### Roster
