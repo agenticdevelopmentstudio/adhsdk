@@ -7,6 +7,7 @@
 // site's own origin, set and rotated by the site's `/auth/*` route handlers, and the access token
 // is held here, in memory, never in storage or a URL. On mount it asks `POST /auth/session` for an
 // access token; a 401 there means no session, and the browser goes to `/auth/signin?return=<path>`.
+// Every request that spends the refresh cookie holds a Web Lock, so the site's tabs take turns.
 // It refreshes a minute before the token expires, then reads `GET /api/v1/account`: an account
 // without the product's `admin` role is `no-access`.
 //
@@ -103,10 +104,32 @@ type SessionAnswer = { accessToken: string; expiresAt: unknown } | null
 // itself (by its generation) whether to adopt what comes back.
 let sessionRequest: Promise<SessionAnswer> | null = null
 
+/** The Web Lock every tab of the site takes around a request that spends the refresh cookie. */
+const PRODUCT_ADMIN_SESSION_LOCK = 'adh-product-admin-session'
+
+/**
+ * Run `fn` holding {@link PRODUCT_ADMIN_SESSION_LOCK}, so no two TABS of the site have a
+ * cookie-spending request out at once. Two tabs that refresh together (a restored browser session,
+ * two pages opened at once) would otherwise both present the same refresh cookie, and the loser's
+ * refusal signs the admin out. Serialised, the second tab's POST leaves after the first's answer
+ * has set the rotated cookie, so it presents that one. Sign-out takes the lock too, so it never
+ * revokes a cookie another tab is in the middle of rotating. A browser without Web Locks runs `fn`
+ * unguarded; the site's `/auth/session` route is the other half of this guard.
+ */
+function withSessionLock<T>(fn: () => Promise<T>): Promise<T> {
+  const locks = typeof navigator !== 'undefined' ? navigator.locks : undefined
+  if (!locks) return fn()
+  // lib.dom types `request` as resolving to the callback's return, here itself a promise; the
+  // lock manager resolves with that promise's value.
+  return locks.request(PRODUCT_ADMIN_SESSION_LOCK, fn) as unknown as Promise<T>
+}
+
 function requestSession(): Promise<SessionAnswer> {
   if (sessionRequest) return sessionRequest
   const req = (async (): Promise<SessionAnswer> => {
-    const res = await fetch('/auth/session', { method: 'POST', credentials: 'include' })
+    const res = await withSessionLock(() =>
+      fetch('/auth/session', { method: 'POST', credentials: 'include' }),
+    )
     if (res.status === 401) return null
     if (!res.ok) throw new Error(`HTTP ${res.status} from /auth/session`)
     const body = (await res.json()) as { accessToken?: unknown; expiresAt?: unknown }
@@ -233,7 +256,7 @@ export function ProductAdminAuthProvider({ children, navigate }: ProductAdminAut
       // Let that refresh finish at the server first, so /auth/signout revokes the refresh cookie
       // it rotated to rather than the one it spent.
       await sessionRequest?.catch(() => undefined)
-      await fetch('/auth/signout', { method: 'POST', credentials: 'include' })
+      await withSessionLock(() => fetch('/auth/signout', { method: 'POST', credentials: 'include' }))
     } finally {
       adopt(null)
       setAccount(null)

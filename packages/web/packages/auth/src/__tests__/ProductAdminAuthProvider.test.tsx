@@ -272,6 +272,61 @@ describe('ProductAdminAuthProvider', () => {
     expect(readAccessToken()).toBe('tok-1')
   })
 
+  describe('across tabs', () => {
+    // A minimal LockManager: one holder per name at a time, waiters in order. Another tab is
+    // played by the test taking the lock itself.
+    function installLocks() {
+      const tails = new Map<string, Promise<unknown>>()
+      const names: string[] = []
+      const locks = {
+        request: (name: string, fn: () => Promise<unknown>) => {
+          names.push(name)
+          const prev = tails.get(name) ?? Promise.resolve()
+          const run = prev.then(() => fn())
+          tails.set(name, run.catch(() => undefined))
+          return run
+        },
+      }
+      Object.defineProperty(window.navigator, 'locks', { value: locks, configurable: true })
+      return { locks, names }
+    }
+
+    afterEach(() => {
+      delete (window.navigator as { locks?: unknown }).locks
+    })
+
+    it('waits for another tab holding the session lock before it posts /auth/session', async () => {
+      const { locks, names } = installLocks()
+      let otherTabDone: () => void = () => undefined
+      void locks.request('adh-product-admin-session', () => new Promise<void>((r) => (otherTabDone = r)))
+      routes({
+        '/auth/session': () => json(200, { accessToken: 'tok-1', expiresAt: Math.floor(Date.now() / 1000) + 3600 }),
+        '/api/v1/account': () => json(200, account(['admin'])),
+        '/auth/signout': () => new Response(null, { status: 204 }),
+      })
+      render(
+        <ProductAdminAuthProvider navigate={navigate}>
+          <Probe />
+        </ProductAdminAuthProvider>,
+      )
+      await act(async () => {
+        await new Promise((r) => setTimeout(r, 20))
+      })
+      expect(callsTo('/auth/session')).toHaveLength(0)
+      await act(async () => {
+        otherTabDone()
+      })
+      await waitFor(() => expect(seen?.status).toBe('ready'))
+      expect(callsTo('/auth/session')).toHaveLength(1)
+      await act(async () => {
+        await seen?.signOut()
+      })
+      // The session POST and the sign-out each took the lock (after the other tab's hold).
+      expect(names).toEqual(['adh-product-admin-session', 'adh-product-admin-session', 'adh-product-admin-session'])
+      expect(callsTo('/auth/signout')).toHaveLength(1)
+    })
+  })
+
   it('removes its token source on unmount', async () => {
     routes({
       '/auth/session': () => json(200, { accessToken: 'tok-1', expiresAt: Math.floor(Date.now() / 1000) + 3600 }),
