@@ -19,6 +19,15 @@ public final class FileSystemWatcher: @unchecked Sendable {
             | kFSEventStreamEventFlagKernelDropped | kFSEventStreamEventFlagRootChanged
     )
 
+    /// The stream's creation flags. `WatchRoot` is what makes FSEvents report a
+    /// watched root that moved, was renamed or was deleted (`RootChanged`, one of
+    /// ``rescanFlags``); without it that event never arrives and the watcher goes
+    /// on watching a path that no longer exists.
+    static let createFlags = FSEventStreamCreateFlags(
+        kFSEventStreamCreateFlagFileEvents | kFSEventStreamCreateFlagUseCFTypes
+            | kFSEventStreamCreateFlagWatchRoot
+    )
+
     private var streamRef: FSEventStreamRef?
     private let rootPaths: [String]
     private let excludedPrefixes: [String]
@@ -124,7 +133,7 @@ public final class FileSystemWatcher: @unchecked Sendable {
             nil, callback, &context,
             pathsToWatch, FSEventStreamEventId(kFSEventStreamEventIdSinceNow),
             0.5,
-            UInt32(kFSEventStreamCreateFlagFileEvents | kFSEventStreamCreateFlagUseCFTypes)
+            Self.createFlags
         )
 
         guard let stream = streamRef else {

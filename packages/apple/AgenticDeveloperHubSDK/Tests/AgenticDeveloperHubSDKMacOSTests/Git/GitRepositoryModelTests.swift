@@ -417,6 +417,13 @@ struct GitRepositoryModelTests {
         #expect(recorder.calls.last == [.refs, .history, .workingCopy, .operation])
     }
 
+    @Test("a file system watcher asks for the root-changed events its rescan flags count on")
+    func fileSystemWatcherWatchesItsRoots() {
+        #expect(FileSystemWatcher.createFlags & FSEventStreamCreateFlags(kFSEventStreamCreateFlagWatchRoot) != 0)
+        #expect(FileSystemWatcher.rescanFlags & FSEventStreamEventFlags(kFSEventStreamEventFlagRootChanged) != 0)
+        #expect(FileSystemWatcher.createFlags & FSEventStreamCreateFlags(kFSEventStreamCreateFlagFileEvents) != 0)
+    }
+
     @Test("a file system watcher sends rescans to their own handler, and every path to one without")
     func fileSystemWatcherPartitionsRescans() {
         let rescan = FSEventStreamEventFlags(
