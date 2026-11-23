@@ -2,8 +2,8 @@
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `serverName` | string constant | `adkitchen` | Key of the server under `mcpServers` |
-| `callerHeader` | string constant | `X-ADKitchen-Pane` | Name of the caller-id header |
-| `port` | `UInt16` | none (required) | Port of the app's MCP endpoint on the loopback address |
+| `callerHeader` | string constant | `X-ADHD-Pane` | Name of the caller-id header |
+| `port` | `UInt16` | none (required) | Port of adhd's MCP endpoint on the loopback address (the channel's port) |
 | `token` | string | none (required) | Bearer token the endpoint accepts |
 | `callerID` | string | none (required) | Identifies the caller to the endpoint |
 | `url` (`write`) | file URL | none (required) | Target file; its parent is created and secured |

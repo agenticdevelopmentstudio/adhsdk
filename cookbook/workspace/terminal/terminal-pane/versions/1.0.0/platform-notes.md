@@ -1,0 +1,7 @@
+
+- **SwiftUI**: Model the registry as a dictionary from pane identifier to a descriptor and a content factory closure; offer entries in a Menu or a Picker driven by the family's allowances, and host the AppKit terminal through a representable.
+- **Compose**: Use a registry object mapping an identifier to a descriptor (label, icon, preferred orientation, minimum size) and a composable factory; derive the allowed list from the same object so registration and allowance cannot drift.
+- **React/Web**: Use a typed registry map from pane id to metadata and a component factory, with a function that returns the allowances from the registered entries, and a hook-free layout builder that throws on invalid specs.
+- **AppKit / UIKit**: Source platform. The file is `TerminalPane.swift`, extensions on the composable-tabs view identifier and registry plus `TerminalPaneFamily` and a layout factory; everything is main-actor isolated and the environment is a main-actor closure.
+- **WinUI 3**: Register pane types in a static registry class holding a descriptor record (DisplayName, Glyph from Segoe Fluent Icons such as the terminal and hide glyphs, PreferredOrientation as Microsoft.UI.Xaml.Controls.Orientation, MinimumWidth set to 300 or 260) and a factory delegate returning the pane UserControl; a PaneFamily class registers and exposes allowances from one list; set the shell environment with ProcessStartInfo.Environment, merging so the pane's values replace the host's.
+

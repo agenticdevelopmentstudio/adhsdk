@@ -2,11 +2,11 @@
 id: ad0b0d88-6ade-49aa-8fd3-5d9926060112
 title: "Partner MCP Config"
 type: ingredient
-version: 1.0.2
+version: 1.1.0
 status: review
 language: en
 created: 2026-11-14
-modified: 2026-11-14
+modified: 2026-11-23
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -32,21 +32,21 @@ approved-date: ""
 
 ## Overview
 
-`PartnerMCPConfig` is a case-less enumeration that produces the JSON file handed to the partner's `claude` process through `--mcp-config`. The file names one HTTP MCP server, `adkitchen`, at `http://127.0.0.1:<port>/mcp`, and carries two headers: an `Authorization: Bearer <token>` header and an `X-ADKitchen-Pane: <callerID>` header that tells the endpoint which caller is speaking. `json` builds the bytes; `write` stores them in a file that the owner alone can read at every moment. The partner controller writes it each time it starts the partner, using the port and token of the app's MCP endpoint.
+`PartnerMCPConfig` is a case-less enumeration that produces the JSON file handed to the partner's `claude` process through `--mcp-config`. The file names one HTTP MCP server, `adkitchen`, at `http://127.0.0.1:<port>/mcp`, and carries two headers: an `Authorization: Bearer <token>` header and an `X-ADHD-Pane: <callerID>` header that tells the endpoint which caller is speaking. `json` builds the bytes; `write` stores them in a file that the owner alone can read at every moment. The partner controller writes it each time it starts the partner, using the port and token of the app's MCP endpoint.
 
 ## Behavioral Requirements
 
 Constants
 
 - **server-name**: `serverName` MUST be the string `adkitchen`; it is the only key under `mcpServers`.
-- **caller-header-name**: `callerHeader` MUST be the string `X-ADKitchen-Pane`.
+- **caller-header-name**: `callerHeader` MUST be the string `X-ADHD-Pane`, `HostMCPServer.callerHeader`.
 
 Building the JSON (`json(port:token:callerID:)`)
 
 - **json-shape**: The output MUST be a JSON object with one key, `mcpServers`, whose value is an object with one key, `adkitchen`, whose value is an object with exactly the keys `type`, `url` and `headers`.
 - **json-type**: `type` MUST be the string `http`.
 - **json-url**: `url` MUST be `http://127.0.0.1:` followed by the decimal port and `/mcp`; the host MUST be the loopback address, never a hostname or a configurable value.
-- **json-headers**: `headers` MUST be an object with exactly two keys: `Authorization`, whose value is `Bearer ` followed by the token, and `X-ADKitchen-Pane`, whose value is the caller id.
+- **json-headers**: `headers` MUST be an object with exactly two keys: `Authorization`, whose value is `Bearer ` followed by the token, and `X-ADHD-Pane`, whose value is the caller id.
 - **json-sorted-keys**: Keys MUST be written in sorted order, so equal inputs give byte-identical output.
 - **json-unescaped-slashes**: Forward slashes MUST NOT be escaped, so the url reads `http://127.0.0.1:...` rather than with `\/`.
 - **json-compact**: The output MUST be compact (no pretty-printing whitespace).
@@ -87,12 +87,12 @@ Vectors 001 and 002 are asserted in `PartnerProcessConfigurationTests`; the rest
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
-| partner-mcp-config-001 | write-temp-mode, write-overwrite-mode, json-headers, json-url | `write(port: 51477, token: "tok", callerID: "c1", to: <new file>)` (`mcpConfigWritesHeadersAndMode0600`) | File mode is 0600; text contains `"X-ADKitchen-Pane":"c1"` and `http://127.0.0.1:51477/mcp` |
+| partner-mcp-config-001 | write-temp-mode, write-overwrite-mode, json-headers, json-url | `write(port: 51477, token: "tok", callerID: "c1", to: <new file>)` (`mcpConfigWritesHeadersAndMode0600`) | File mode is 0600; text contains `"X-ADHD-Pane":"c1"` and `http://127.0.0.1:51477/mcp` |
 | partner-mcp-config-002 | write-parent-tightened, write-overwrite-mode, write-no-residue | Parent directory 0755 holding `mcp.json` with content `old`, mode 0644; `write(port: 1, token: "new", callerID: "c1", to: mcp.json)` (`mcpConfigOverwritesLooseFileAndSecuresDirectory`) | File mode 0600; directory mode 0700; content contains `new`; directory listing is exactly `["mcp.json"]` |
-| partner-mcp-config-003 | json-shape, json-type, json-sorted-keys, json-compact, json-unescaped-slashes | `json(port: 8080, token: "t", callerID: "c")` | `{"mcpServers":{"adkitchen":{"headers":{"Authorization":"Bearer t","X-ADKitchen-Pane":"c"},"type":"http","url":"http://127.0.0.1:8080/mcp"}}}` |
-| partner-mcp-config-004 | server-name, caller-header-name | Read `serverName` and `callerHeader` | `adkitchen` and `X-ADKitchen-Pane` |
+| partner-mcp-config-003 | json-shape, json-type, json-sorted-keys, json-compact, json-unescaped-slashes | `json(port: 8080, token: "t", callerID: "c")` | `{"mcpServers":{"adkitchen":{"headers":{"Authorization":"Bearer t","X-ADHD-Pane":"c"},"type":"http","url":"http://127.0.0.1:8080/mcp"}}}` |
+| partner-mcp-config-004 | server-name, caller-header-name | Read `serverName` and `callerHeader` | `adkitchen` and `X-ADHD-Pane` |
 | partner-mcp-config-005 | json-sorted-keys, json-pure | Call `json` twice with the same arguments | The two results are byte-identical |
-| partner-mcp-config-006 | json-no-validation | `json(port: 0, token: "", callerID: "")` | Url is `http://127.0.0.1:0/mcp`; `Authorization` is `Bearer ` (with trailing space); `X-ADKitchen-Pane` is the empty string; nothing is thrown |
+| partner-mcp-config-006 | json-no-validation | `json(port: 0, token: "", callerID: "")` | Url is `http://127.0.0.1:0/mcp`; `Authorization` is `Bearer ` (with trailing space); `X-ADHD-Pane` is the empty string; nothing is thrown |
 | partner-mcp-config-007 | json-no-validation | `json(port: 1, token: "a\"b", callerID: "c")` | The token appears JSON-escaped as `Bearer a\"b`; the result parses back to `Bearer a"b` |
 | partner-mcp-config-008 | json-url | `json(port: 65535, token: "t", callerID: "c")` | Url is `http://127.0.0.1:65535/mcp` |
 | partner-mcp-config-009 | write-parent-directory | Target in a directory that does not exist, nested two levels deep | Both levels are created; the immediate parent has mode 0700 |
@@ -120,8 +120,8 @@ Vectors 001 and 002 are asserted in `PartnerProcessConfigurationTests`; the rest
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `serverName` | string constant | `adkitchen` | Key of the server under `mcpServers` |
-| `callerHeader` | string constant | `X-ADKitchen-Pane` | Name of the caller-id header |
-| `port` | `UInt16` | none (required) | Port of the app's MCP endpoint on the loopback address |
+| `callerHeader` | string constant | `X-ADHD-Pane` | Name of the caller-id header |
+| `port` | `UInt16` | none (required) | Port of adhd's MCP endpoint on the loopback address (the channel's port) |
 | `token` | string | none (required) | Bearer token the endpoint accepts |
 | `callerID` | string | none (required) | Identifies the caller to the endpoint |
 | `url` (`write`) | file URL | none (required) | Target file; its parent is created and secured |
@@ -218,6 +218,7 @@ The type does one job, building and writing the file, so separation of concerns 
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.0 | 2026-11-23 | Mike Fullerton | The partner's config sends adhd's caller header, X-ADHD-Pane, to adhd's endpoint. |
 | 1.0.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (PartnerMCPConfigConformanceTests.swift, 13 of 14 vectors; 011 skipped); unit-test-coverage stays partial. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Corrected the umask, durability, errno, trap and vector 011/014 claims, made the dedicated-directory rule a MUST, linked the sibling recipes and trimmed the platform note. |
 | 1.0.0 | 2026-11-14 | Mike Fullerton | Initial creation |

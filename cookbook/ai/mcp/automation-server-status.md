@@ -36,18 +36,18 @@ approved-date: ""
 - **main-actor-isolation**: The type MUST be `@MainActor`, so every property read and write, and the `url` and `line` accessors, run on the main actor. The static `line(port:isRegistered:failureReason:)` is a pure function of its arguments and is not tied to an instance.
 - **observable-object**: The type MUST be an `ObservableObject` whose five stored values are `@Published`, so a view can observe changes.
 - **initial-values**: A new instance MUST have `port` nil, `token` nil, `command` nil, `isRegistered` false and `failureReason` nil. `init()` takes no arguments.
-- **port-meaning**: `port` MUST hold the port actually listening as a `UInt16`, nil until the endpoint starts or when it failed. The model does not set or clear it; the host does.
-- **token-meaning**: `token` MUST hold the bearer token the Coding Partner's MCP config carries, or nil. The model does not generate, store or redact it.
+- **port-meaning**: `port` MUST hold adhd's port (the channel's fixed port) as a `UInt16` once the host's adhd connection answers, nil until then or when it failed. The model does not set or clear it; the host does.
+- **token-meaning**: `token` MUST hold the bearer token the Coding Partner's MCP config carries (adhd's client token), or nil. The model does not generate, store or redact it.
 - **command-meaning**: `command` MUST hold the line that registers the endpoint with Claude Code (`MCPRegistration.claudeCommand(channel:adhdPath:)`, or what `adhd mcp command` prints), or nil until it is known; it carries no token. The model does not build it; the host sets it, and the panel's Copy button copies it.
-- **registered-meaning**: `isRegistered` MUST mean whether `~/.claude.json` lists this server at this address. The model does not read that file; the host sets the flag.
-- **failure-reason-meaning**: `failureReason` MUST hold why the endpoint is not running, when it is not, or nil. The model does not clear it when `port` changes.
+- **registered-meaning**: `isRegistered` MUST mean whether `~/.claude.json` lists adhd's entry for the host's channel at its address (`MCPRegistration.isRegistered(claudeConfig:channel:)`). The model does not read that file; the host sets the flag.
+- **failure-reason-meaning**: `failureReason` MUST hold why adhd cannot be reached, when it cannot, or nil. The model does not clear it when `port` changes.
 - **url-nil-without-port**: `url` MUST be nil when `port` is nil.
-- **url-format**: When `port` is set, `url` MUST be `http://127.0.0.1:<port><MCPHTTPEndpoint.path>`, where `MCPHTTPEndpoint.path` is `/mcp`, so a port of 51477 gives `http://127.0.0.1:51477/mcp`.
+- **url-format**: When `port` is set, `url` MUST be `MCPRegistration.url(port:)`, `http://127.0.0.1:<port>/mcp`, so a port of 51477 gives `http://127.0.0.1:51477/mcp`.
 - **url-ignores-failure**: `url` MUST depend on `port` alone; a set `failureReason` MUST NOT hide it.
-- **line-failure-first**: The status sentence MUST be `Not running: <failureReason>` whenever `failureReason` is non-nil, regardless of `port` and `isRegistered`.
-- **line-starting**: With `failureReason` nil and `port` nil, the sentence MUST be `Starting.`
-- **line-listening-registered**: With `failureReason` nil and `port` set, the sentence MUST be `Listening on port <port>. Registered with Claude Code.` when `isRegistered` is true.
-- **line-listening-unregistered**: With `failureReason` nil and `port` set, the sentence MUST be `Listening on port <port>. Not registered with Claude Code.` when `isRegistered` is false.
+- **line-failure-first**: The status sentence MUST be `Not reachable: <failureReason>` whenever `failureReason` is non-nil, regardless of `port` and `isRegistered`.
+- **line-starting**: With `failureReason` nil and `port` nil, the sentence MUST be `Connecting to adhd.`
+- **line-listening-registered**: With `failureReason` nil and `port` set, the sentence MUST be `adhd serves MCP at 127.0.0.1:<port>/mcp. Registered with Claude Code.` when `isRegistered` is true.
+- **line-listening-unregistered**: With `failureReason` nil and `port` set, the sentence MUST be `adhd serves MCP at 127.0.0.1:<port>/mcp. Not registered with Claude Code.` when `isRegistered` is false.
 - **line-port-unformatted**: The port in the sentence MUST be printed as a plain integer with no grouping separator.
 - **line-instance-delegates-to-static**: The instance `line` MUST return `AutomationServerStatus.line(port:isRegistered:failureReason:)` for its current values.
 - **line-static-for-publisher-values**: The static `line(port:isRegistered:failureReason:)` MUST be callable with explicit values. The reason is the source's comment: the panel renders from the value a `@Published` property publishes, which "arrive before the property itself changes", so the sentence cannot be read back off `self` there.
@@ -70,16 +70,16 @@ Not applicable — this is an observable status model, not a visual component.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
-| automation-status-001 | initial-values, line-starting | `AutomationServerStatus()` | `port` nil, `token` nil, `command` nil, `isRegistered` false, `failureReason` nil, `line` is `Starting.`, `url` nil |
-| automation-status-002 | line-listening-unregistered, line-port-unformatted | `port = 51477`, `isRegistered = false` | `line` is `Listening on port 51477. Not registered with Claude Code.` (`CLISettingsPanelTests.testStatusLineNamesThePortAndRegistration`) |
-| automation-status-003 | line-listening-registered | Same instance, then `isRegistered = true` | `line` is `Listening on port 51477. Registered with Claude Code.` (same test) |
-| automation-status-004 | line-failure-first | `failureReason = "could not write /x/mcp-token: Permission denied"` with `port` nil | `line` is `Not running: could not write /x/mcp-token: Permission denied` (`CLISettingsPanelTests.testFailureReasonIsTheStatusLine`) |
-| automation-status-005 | line-failure-first | `port = 51477`, `isRegistered = true`, `failureReason = "x"` | `line` is `Not running: x` |
+| automation-status-001 | initial-values, line-starting | `AutomationServerStatus()` | `port` nil, `token` nil, `command` nil, `isRegistered` false, `failureReason` nil, `line` is `Connecting to adhd.`, `url` nil |
+| automation-status-002 | line-listening-unregistered, line-port-unformatted | `port = 51477`, `isRegistered = false` | `line` is `adhd serves MCP at 127.0.0.1:51477/mcp. Not registered with Claude Code.` (`CLISettingsPanelTests.testStatusLineNamesThePortAndRegistration`) |
+| automation-status-003 | line-listening-registered | Same instance, then `isRegistered = true` | `line` is `adhd serves MCP at 127.0.0.1:51477/mcp. Registered with Claude Code.` (same test) |
+| automation-status-004 | line-failure-first | `failureReason = "adhd did not answer"` with `port` nil | `line` is `Not reachable: adhd did not answer` (`CLISettingsPanelTests.testFailureReasonIsTheStatusLine`) |
+| automation-status-005 | line-failure-first | `port = 51477`, `isRegistered = true`, `failureReason = "x"` | `line` is `Not reachable: x` |
 | automation-status-006 | url-format | `port = 51477` | `url` is `http://127.0.0.1:51477/mcp` |
 | automation-status-007 | url-nil-without-port | `port = nil` | `url` is nil |
-| automation-status-008 | line-static-for-publisher-values | `AutomationServerStatus.line(port: 8080, isRegistered: true, failureReason: nil)` | `Listening on port 8080. Registered with Claude Code.` |
-| automation-status-009 | url-ignores-failure | `port = 51477`, `failureReason = "x"` | `url` is `http://127.0.0.1:51477/mcp` while `line` is `Not running: x` |
-| automation-status-010 | no-validation, line-port-unformatted | `AutomationServerStatus.line(port: 0, isRegistered: false, failureReason: nil)` | `Listening on port 0. Not registered with Claude Code.` |
+| automation-status-008 | line-static-for-publisher-values | `AutomationServerStatus.line(port: 8080, isRegistered: true, failureReason: nil)` | `adhd serves MCP at 127.0.0.1:8080/mcp. Registered with Claude Code.` |
+| automation-status-009 | url-ignores-failure | `port = 51477`, `failureReason = "x"` | `url` is `http://127.0.0.1:51477/mcp` while `line` is `Not reachable: x` |
+| automation-status-010 | no-validation, line-port-unformatted | `AutomationServerStatus.line(port: 0, isRegistered: false, failureReason: nil)` | `adhd serves MCP at 127.0.0.1:0/mcp. Not registered with Claude Code.` |
 | automation-status-011 | observable-object | Subscribe to `objectWillChange`, then set `port = 1` | One change notification is received before the property reads back as 1 |
 
 ## Edge Cases

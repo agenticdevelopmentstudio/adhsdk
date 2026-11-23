@@ -1,9 +1,11 @@
 import Foundation
 
-/// The `--mcp-config` file that points the partner's claude at the app's MCP endpoint.
+/// The `--mcp-config` file that points the partner's claude at adhd's MCP endpoint, which serves the
+/// Kitchen's tools as `kitchen_<tool>`. The server keeps the name `adkitchen`, so `mcp__adkitchen` in the
+/// partner's allowed tools still names it.
 public enum PartnerMCPConfig {
     public static let serverName = "adkitchen"
-    public static let callerHeader = "X-ADKitchen-Pane"
+    public static let callerHeader = HostMCPServer.callerHeader
 
     public static func json(port: UInt16, token: String, callerID: String) -> Data {
         let server: [String: Any] = [

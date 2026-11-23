@@ -52,7 +52,7 @@ final class PartnerSessionRegistryTests: XCTestCase {
 
     func testEnvironmentNamesThePaneAndTheProject() {
         let session = registry.open(directory: directory.path, title: "t", firstCommand: nil)
-        XCTAssertEqual(session.terminal.environment["ADKITCHEN_PANE_ID"], session.id.uuidString)
+        XCTAssertEqual(session.terminal.environment["ADHD_PANE_ID"], session.id.uuidString)
         XCTAssertEqual(session.terminal.environment["ADKITCHEN_PROJECT"], directory.path)
         XCTAssertEqual(session.terminal.environment["PARTNER_TEST"], "1")
         XCTAssertEqual(session.terminal.environment["TERM_SESSION_ID"], session.id.uuidString,

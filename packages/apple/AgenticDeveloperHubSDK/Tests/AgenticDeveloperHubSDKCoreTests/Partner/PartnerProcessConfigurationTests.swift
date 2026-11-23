@@ -22,7 +22,7 @@ import Testing
         let attrs = try FileManager.default.attributesOfItem(atPath: url.path)
         #expect((attrs[.posixPermissions] as? Int) == 0o600)
         let text = String(bytes: try Data(contentsOf: url), encoding: .utf8) ?? ""
-        #expect(text.contains("\"X-ADKitchen-Pane\":\"c1\"") || text.contains("\"X-ADKitchen-Pane\" : \"c1\""))
+        #expect(text.contains("\"X-ADHD-Pane\":\"c1\"") || text.contains("\"X-ADHD-Pane\" : \"c1\""))
         #expect(text.contains("http://127.0.0.1:51477/mcp"))
     }
     @Test func mcpConfigOverwritesLooseFileAndSecuresDirectory() throws {

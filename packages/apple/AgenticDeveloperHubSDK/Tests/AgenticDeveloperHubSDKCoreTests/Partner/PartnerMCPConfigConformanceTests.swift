@@ -32,7 +32,7 @@ import Testing
         try PartnerMCPConfig.write(port: 51477, token: "tok", callerID: "c1", to: target)
         #expect(try mode(target) == 0o600)
         let body = text(try Data(contentsOf: target))
-        #expect(body.contains("\"X-ADKitchen-Pane\":\"c1\""))
+        #expect(body.contains("\"X-ADHD-Pane\":\"c1\""))
         #expect(body.contains("http://127.0.0.1:51477/mcp"))
     }
 
@@ -57,14 +57,14 @@ import Testing
     func testV3_jsonShape() {
         let body = text(PartnerMCPConfig.json(port: 8080, token: "t", callerID: "c"))
         let expected = "{\"mcpServers\":{\"adkitchen\":{\"headers\":{\"Authorization\":\"Bearer t\","
-            + "\"X-ADKitchen-Pane\":\"c\"},\"type\":\"http\",\"url\":\"http://127.0.0.1:8080/mcp\"}}}"
+            + "\"X-ADHD-Pane\":\"c\"},\"type\":\"http\",\"url\":\"http://127.0.0.1:8080/mcp\"}}}"
         #expect(body == expected)
     }
 
     @Test("V4: server name and caller header constants")
     func testV4_constants() {
         #expect(PartnerMCPConfig.serverName == "adkitchen")
-        #expect(PartnerMCPConfig.callerHeader == "X-ADKitchen-Pane")
+        #expect(PartnerMCPConfig.callerHeader == "X-ADHD-Pane")
     }
 
     @Test("V5: json is byte-identical for equal inputs")
@@ -79,7 +79,7 @@ import Testing
         let parsed = try decoded(PartnerMCPConfig.json(port: 0, token: "", callerID: ""))
         #expect(parsed.url == "http://127.0.0.1:0/mcp")
         #expect(parsed.headers["Authorization"] == "Bearer ")
-        #expect(parsed.headers["X-ADKitchen-Pane"] == "")
+        #expect(parsed.headers["X-ADHD-Pane"] == "")
     }
 
     @Test("V7: a quote in the token is JSON-escaped")

@@ -2,11 +2,11 @@
 id: b8e3f3f9-3d5e-45ef-8859-61d168f4c14d
 title: "Terminal Pane Family"
 type: ingredient
-version: 1.0.0
+version: 1.1.0
 status: review
 language: en
 created: 2026-11-14
-modified: 2026-11-14
+modified: 2026-11-23
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -44,7 +44,7 @@ The registration layer for every terminal-related pane a host can offer in a com
 - **terminal-opens-live**: A terminal pane MUST add its first shell session when it is created, so it never opens empty.
 - **private-terminal-vault**: A private terminal pane MUST be created with the family's privacy vault and the pane's working directory.
 - **environment-late-read**: The shell environment MUST be read from a closure each time a terminal or private terminal pane's content is created, not when the pane type is registered, so a value the host learns after registering reaches every pane opened after it is known. The pane hands the resulting dictionary to its session manager, which gives it to every shell that pane starts, so a pane already open keeps the values it was created with. The dictionary overloads wrap a fixed dictionary in such a closure.
-- **pane-environment-variables**: Every terminal and private terminal shell MUST receive ADKITCHEN_PANE_ID set to the pane's node identifier string and ADKITCHEN_PROJECT set to the project's display name.
+- **pane-environment-variables**: Every terminal and private terminal shell MUST receive ADHD_PANE_ID set to the pane's node identifier string and ADKITCHEN_PROJECT set to the project's display name.
 - **pane-environment-wins**: WHEN the host environment and the pane environment name the same variable, the pane's value MUST win.
 - **terminal-chat-state-store**: A terminal chat pane MUST be created with a pane state store using the prefix "terminalChat".
 - **terminal-chat-listing**: A terminal chat pane MUST be listed under an identifier derived from its node identifier, with the project display name, working directory and pane number.
@@ -94,7 +94,7 @@ The derived tests live in the macOS test bundle as `TerminalPaneFamilyTests`.
 | terminal-pane-002 | family-private-needs-vault, family-persona-needs-plugins, allowance-order, allowances-match-registrations | Test `testTheWholeFamilyAddsPrivateTerminalsAndPersonaChats`: family with plugin manager and privacy vault, vertical axis | Allowance identifiers are terminal, private terminal, terminal chat, persona terminal chat, each with the vertical axis. |
 | terminal-pane-003 | allowances-match-registrations, terminal-only-layout | Test `testEveryAllowanceIsRegistered`: register the whole family, then validate a horizontal split with one terminal pane, the allowances and a placeholder against the registry | Validation does not throw. |
 | terminal-pane-004 | terminal-view-id, view-id-values | Read the four identifiers' raw values | "terminal", "terminal-chat", "persona-terminal-chat", "private-terminal". |
-| terminal-pane-005 | pane-environment-variables, pane-environment-wins | Host environment has ADKITCHEN_PANE_ID set to X; pane node is N | The shell gets ADKITCHEN_PANE_ID equal to N's string and ADKITCHEN_PROJECT equal to the project display name. |
+| terminal-pane-005 | pane-environment-variables, pane-environment-wins | Host environment has ADHD_PANE_ID set to X; pane node is N | The shell gets ADHD_PANE_ID equal to N's string and ADKITCHEN_PROJECT equal to the project display name. |
 | terminal-pane-006 | environment-late-read | Register with a closure, then change what it returns and open a new terminal pane | The new pane's shell sees the changed value; a shell in a pane opened before the change does not. |
 | terminal-pane-007 | terminal-opens-live, terminal-working-directory, terminal-no-session-list | Create a terminal pane for a context with a working directory | One live shell session is already open in that directory and no session list is shown. |
 | terminal-pane-008 | terminal-descriptor, private-terminal-descriptor, terminal-chat-descriptor, persona-chat-descriptor | Read each registered descriptor | Names, symbols, axes and minimum thicknesses as listed in the requirements. |
@@ -128,7 +128,7 @@ The derived tests live in the macOS test bundle as `TerminalPaneFamilyTests`.
 
 ## Deep Linking
 
-Not applicable: the component registers no URL or scheme; the only external addressing is the ADKITCHEN_PANE_ID environment variable, which a process in the shell sends as the MCP caller header so "this pane" resolves to the Browser pane beside it.
+Not applicable: the component registers no URL or scheme; the only external addressing is the ADHD_PANE_ID environment variable, which `adhd mcp headers` sends as the MCP caller header (`X-ADHD-Pane`) so "this pane" resolves to the Browser pane beside it.
 
 ## Localization
 
@@ -196,7 +196,7 @@ Not applicable: the source declares no logger and writes no log entries.
 **Approved**: pending
 
 **Decision**: The pane's own variables replace host variables of the same name.
-**Rationale**: ADKITCHEN_PANE_ID is how "this pane" resolves to the Browser pane beside it, so a host value must not override it.
+**Rationale**: ADHD_PANE_ID is how "this pane" resolves to the Browser pane beside it, so a host value must not override it.
 **Approved**: pending
 
 **Decision**: Registration and allowance come from one family value.
@@ -222,3 +222,4 @@ Registration is separated from the content each pane builds, and the family keep
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.0 | 2026-11-23 | Mike Fullerton | The pane id goes out as ADHD_PANE_ID, which adhd mcp headers sends as X-ADHD-Pane. |

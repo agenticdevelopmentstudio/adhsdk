@@ -11,7 +11,7 @@ import AgenticDeveloperHubSDKDatabase
 public enum NotationsProjectLookups {
 
     /// The project and tab working directory of the pane whose layout node
-    /// id is `caller` (what a terminal sends as `ADKITCHEN_PANE_ID`).
+    /// id is `caller` (what a terminal sends as `ADHD_PANE_ID`).
     public static func callerPlace(_ caller: String) -> NotationsPlace? {
         guard let nodeID = UUID(uuidString: caller) else { return nil }
         for controller in ProjectWindowManager.shared.openWindowControllers {

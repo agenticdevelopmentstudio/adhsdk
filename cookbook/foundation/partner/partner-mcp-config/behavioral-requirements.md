@@ -2,14 +2,14 @@
 Constants
 
 - **server-name**: `serverName` MUST be the string `adkitchen`; it is the only key under `mcpServers`.
-- **caller-header-name**: `callerHeader` MUST be the string `X-ADKitchen-Pane`.
+- **caller-header-name**: `callerHeader` MUST be the string `X-ADHD-Pane`, `HostMCPServer.callerHeader`.
 
 Building the JSON (`json(port:token:callerID:)`)
 
 - **json-shape**: The output MUST be a JSON object with one key, `mcpServers`, whose value is an object with one key, `adkitchen`, whose value is an object with exactly the keys `type`, `url` and `headers`.
 - **json-type**: `type` MUST be the string `http`.
 - **json-url**: `url` MUST be `http://127.0.0.1:` followed by the decimal port and `/mcp`; the host MUST be the loopback address, never a hostname or a configurable value.
-- **json-headers**: `headers` MUST be an object with exactly two keys: `Authorization`, whose value is `Bearer ` followed by the token, and `X-ADKitchen-Pane`, whose value is the caller id.
+- **json-headers**: `headers` MUST be an object with exactly two keys: `Authorization`, whose value is `Bearer ` followed by the token, and `X-ADHD-Pane`, whose value is the caller id.
 - **json-sorted-keys**: Keys MUST be written in sorted order, so equal inputs give byte-identical output.
 - **json-unescaped-slashes**: Forward slashes MUST NOT be escaped, so the url reads `http://127.0.0.1:...` rather than with `\/`.
 - **json-compact**: The output MUST be compact (no pretty-printing whitespace).

@@ -31,17 +31,17 @@ final class CLISettingsPanelTests: XCTestCase {
         status.isRegistered = false
         let panel = makePanel(status: status)
         let line = field("settings.automation.status", in: panel.view)
-        XCTAssertEqual(line?.stringValue, "Listening on port 51477. Not registered with Claude Code.")
+        XCTAssertEqual(line?.stringValue, "adhd serves MCP at 127.0.0.1:51477/mcp. Not registered with Claude Code.")
         status.isRegistered = true
-        XCTAssertEqual(line?.stringValue, "Listening on port 51477. Registered with Claude Code.")
+        XCTAssertEqual(line?.stringValue, "adhd serves MCP at 127.0.0.1:51477/mcp. Registered with Claude Code.")
     }
 
     func testFailureReasonIsTheStatusLine() {
         let status = AutomationServerStatus()
-        status.failureReason = "could not write /x/mcp-token: Permission denied"
+        status.failureReason = "adhd did not answer"
         let panel = makePanel(status: status)
         XCTAssertEqual(field("settings.automation.status", in: panel.view)?.stringValue,
-                       "Not running: could not write /x/mcp-token: Permission denied")
+                       "Not reachable: adhd did not answer")
     }
 
     func testCopyPutsTheClaudeCommandOnThePasteboard() {
