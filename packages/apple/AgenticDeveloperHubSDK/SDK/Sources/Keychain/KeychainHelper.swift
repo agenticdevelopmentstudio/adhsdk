@@ -227,6 +227,47 @@ public enum KeychainHelper {
         return deleted
     }
 
+    // MARK: - One item in a named access group
+
+    /// The stored string for `key` under `service` in `accessGroup`, and
+    /// nowhere else: no process-wide group, no login-keychain or retired
+    /// service recovery. For a caller that keeps its own items in a group the
+    /// studio's apps share, beside whatever the process-wide settings say.
+    public static func value(forKey key: String, service: String, accessGroup: String) -> String? {
+        copyValue(forKey: key, accessGroup: accessGroup, service: service)
+    }
+
+    /// Stores `value` for `key` under `service` in `accessGroup`, replacing
+    /// any value there, readable after first unlock and never synced off
+    /// this device.
+    @discardableResult
+    public static func set(_ value: String, forKey key: String, service: String, accessGroup: String) -> Bool {
+        let base = makeQuery(account: key, accessGroup: accessGroup, service: service)
+        deleteItem(base)
+        var query = base
+        query[kSecValueData as String] = Data(value.utf8)
+        query[kSecAttrAccessible as String] = kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
+        let status = SecItemAdd(query as CFDictionary, nil)
+        if status != errSecSuccess {
+            logger.error("Keychain set failed for '\(key, privacy: .public)' in a shared group: \(status)")
+        }
+        return status == errSecSuccess
+    }
+
+    /// Deletes `key` under `service` in `accessGroup` only; true when it is
+    /// gone (or was never there).
+    @discardableResult
+    public static func delete(forKey key: String, service: String, accessGroup: String) -> Bool {
+        deleteItem(makeQuery(account: key, accessGroup: accessGroup, service: service))
+    }
+
+    /// Whether `key` is stored under `service` in `accessGroup`. Reads no secret.
+    public static func exists(forKey key: String, service: String, accessGroup: String) -> Bool {
+        var query = makeQuery(account: key, accessGroup: accessGroup, service: service)
+        query[kSecMatchLimit as String] = kSecMatchLimitOne
+        return SecItemCopyMatching(query as CFDictionary, nil) == errSecSuccess
+    }
+
     @discardableResult
     private static func deleteItem(_ query: [String: Any]) -> Bool {
         let status = SecItemDelete(query as CFDictionary)
