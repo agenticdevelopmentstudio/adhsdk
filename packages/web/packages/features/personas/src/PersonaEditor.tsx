@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import {
   AlignLeft,
   BookOpen,
@@ -293,7 +293,7 @@ export function PersonaEditor({
 }) {
   // Derive the initial draft from the persona prop; keyed remount (per id) in the
   // parent gives each persona a fresh editor, so seeding state here is safe.
-  const { draft, set, dirty, commit } = useDirtyDraft<PersonaDraft>(() =>
+  const { draft, set, patch, dirty, commit } = useDirtyDraft<PersonaDraft>(() =>
     persona ? toPersonaDraft(persona) : BLANK,
   );
   const [saving, setSaving] = useState(false);
@@ -315,13 +315,18 @@ export function PersonaEditor({
     () => services.find((s) => s.id === draft.serviceId) ?? null,
     [services, draft.serviceId],
   );
-  // A service switch invalidates the model: clear it unless the new service still offers it.
-  useEffect(() => {
-    if (draft.model && activeService && !activeService.models.some((m) => m.id === draft.model)) {
-      set("model", null);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [draft.serviceId]);
+  // A service switch invalidates the model: keep it only when the new service lists it switched
+  // on. The "(not available)" carve-out below is for a persona already saved on a model its own
+  // service later switched off, never for a model carried over from another service. Done in the
+  // switch itself, not an effect, so a persona opened on a switched-off model keeps it.
+  function changeService(serviceId: string | null): void {
+    const next = services.find((s) => s.id === serviceId) ?? null;
+    const keepModel =
+      draft.model !== null &&
+      (next === null ||
+        next.models.some((m) => m.id === draft.model && m.available !== false));
+    patch(keepModel ? { serviceId } : { serviceId, model: null });
+  }
   // The select lists only the models switched on in AI Settings. The current model, when it is
   // one the workspace switched off, stays as the select's value under a "(not available)" label
   // with a note, so saving another field never changes the model behind the user's back.
@@ -722,7 +727,7 @@ export function PersonaEditor({
             <Field label="Service" hint="The persona-service this persona runs on.">
               <Select
                 value={draft.serviceId ?? ""}
-                onChange={(e) => set("serviceId", e.target.value || null)}
+                onChange={(e) => changeService(e.target.value || null)}
               >
                 <option value="">No service</option>
                 {services.map((s) => (
