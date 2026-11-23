@@ -756,7 +756,7 @@ export function PersonaEditor({
                     </option>
                     {switchedOffModel && (
                       <option value={switchedOffModel.id}>
-                        {`${switchedOffModel.id} (not available)`}
+                        {`${switchedOffModel.displayName ?? switchedOffModel.id} (not available)`}
                       </option>
                     )}
                     {availableModels.map((m) => (
