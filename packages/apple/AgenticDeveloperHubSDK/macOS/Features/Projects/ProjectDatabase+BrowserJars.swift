@@ -1,5 +1,14 @@
 import Foundation
 import SQLite3
+@_spi(ProjectDatabaseStorage) import AgenticDeveloperHubSDKDatabase
+
+extension ProjectDatabase.Upgrades {
+    /// The data steps an app that keeps window state in the file needs:
+    /// migration 5's browser jars. Pass it when opening the app's own
+    /// `Projects.db`.
+    public static let windowState = ProjectDatabase.Upgrades(
+        browserJars: { try $0.keepExistingBrowserPanesOnTheSharedJar() })
+}
 
 /// One browser storage jar: a `WKWebsiteDataStore` identifier and what it
 /// belongs to.
@@ -194,7 +203,7 @@ extension ProjectDatabase {
     ///
     /// A pane that already overrides the jar is left as it is, and the index
     /// of overridden names is merged, not replaced (`idempotency`).
-    func keepExistingBrowserPanesOnTheSharedJar() throws {
+    public func keepExistingBrowserPanesOnTheSharedJar() throws {
         let name = BrowserStorageJar.settingName
         guard let value = String(data: try JSONEncoder().encode([BrowserStorageJar.global]), encoding: .utf8)
         else { return }

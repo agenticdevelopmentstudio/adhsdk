@@ -48,7 +48,7 @@ public struct StandaloneWindowRows {
         if let existing = try existingRow(for: url) { return existing }
         let fallback = url.lastPathComponent.isEmpty ? url.path : url.lastPathComponent
         let repo = GitRepo(path: url.path, name: name ?? fallback, kind: kind)
-        try database.insert(repo)
+        try database.insertRow(repo)
         return repo
     }
 
@@ -60,7 +60,7 @@ public struct StandaloneWindowRows {
     /// the way out lands before the row is gone rather than after.
     public func discard(_ repo: GitRepo) {
         do {
-            try database.delete(id: repo.id)
+            try database.deleteRow(id: repo.id)
         } catch {
             StandaloneWindowRowsLog.logger.error(
                 "Could not delete the row for \(repo.path, privacy: .public): \(error)")

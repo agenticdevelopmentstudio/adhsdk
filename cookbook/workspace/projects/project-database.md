@@ -2,11 +2,11 @@
 id: c212ea39-10e7-4146-89dd-36edb3b3455a
 title: "Project Database"
 type: ingredient
-version: 1.4.0
+version: 1.5.0
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-11-16
+modified: 2026-11-23
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -25,8 +25,8 @@ depends-on: []
 related:
   - 1463e7a2-e290-4b8c-8643-df9462a758e6
 references:
-  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectDatabase.swift (adhsdk)
-  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/GitRepo.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Database/Daemon/Projects/ProjectDatabase.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Database/Daemon/Projects/GitRepo.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/Database/AppStorageLocation.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/Projects/ProjectDatabaseTests.swift (adhsdk)
 approved-by: ""
@@ -68,12 +68,15 @@ bookkeeping under its own table name so the two chains cannot collide.
 
 ### Identity and concurrency
 
-- **caller-must-synchronize-cross-thread-access**: This component MUST be
-  implemented as a plain reference type with no built-in concurrency-safety
-  guarantee of its own — no serialization of its own, no automatic thread
-  confinement, and no platform-enforced concurrency-safety marker; an
-  instance is not safe to share across concurrency domains without the
-  caller's own synchronization.
+- **transactions-and-registry-calls-serialized**: This component MUST hold
+  one recursive lock, owned by the instance, around every transaction
+  (running migrations included) and every registry operation, so an
+  instance MAY be shared across concurrency domains: a statement issued
+  from one thread never lands inside another thread's open transaction,
+  and a locked operation MAY call another locked operation on the same
+  instance without deadlocking. Statements issued outside a transaction
+  and outside the registry operations rely on the connection's own
+  serialization alone.
 - **single-connection-per-instance**: Each instance of this component MUST
   own exactly one SQLite connection, opened once during construction and
   closed once when the instance is torn down; no method in this file opens
@@ -184,9 +187,17 @@ bookkeeping under its own table name so the two chains cannot collide.
 - **migration005-browser-jars**: Migration 5 MUST create, guarded by `IF NOT
   EXISTS`, table `browser_jars` (`kind` checked to `'worktree'` or
   `'pane'`) with a unique index on `(kind, repo_id, worktree_path)` for
-  worktree jars and one on `pane_node_id` where it is not null, MUST keep
-  the browser panes already in the file on the shared store, and MUST
+  worktree jars and one on `pane_node_id` where it is not null, MUST then
+  run the browser-jars data step when the opener supplied one, and MUST
   insert version row `5`.
+- **upgrades-are-injected**: Construction MUST accept an optional set of
+  migration data steps, defaulting to none. A data step rewrites rows whose
+  meaning belongs to a higher tier (the browser-jars step keeps the browser
+  panes already in a saved layout on the shared store); a file opened
+  without that step MUST still receive the full schema and the version row,
+  and MUST skip only that data rewrite. The app's own window-state file
+  MUST be opened with the window-state steps; a shared registry's copy, a
+  fresh file and a test MAY omit them.
 - **migration006-repo-kind**: Migration 6 MUST, when `git_repo` has no
   `kind` column, rebuild `git_repo` with `kind TEXT NOT NULL DEFAULT
   'project'` and `UNIQUE(path, kind)` in place of a unique `path`, copying
@@ -230,12 +241,37 @@ bookkeeping under its own table name so the two chains cannot collide.
   filter by `id = ?` bound to the id's string form, and looking up by path
   MUST filter by `path = ?` bound to the given string; both MUST return
   nothing when no row matches.
-- **repo-insert-column-set**: Inserting a repository MUST insert all seven
-  columns in a single `INSERT` bound in order to the repository's id,
-  path, name, remote (nullable), first-seen time, last-seen time, and
-  last-opened time (nullable); inserting a repository whose path
-  duplicates an existing row's path MUST raise an execution-failure error,
-  because `git_repo.path` is declared `UNIQUE` in migration 1.
+- **repo-insert-column-set**: Inserting a row MUST insert all eight
+  columns in a single `INSERT` bound in order to the row's id, path, name,
+  remote (nullable), first-seen time, last-seen time, last-opened time
+  (nullable) and kind; inserting a row whose path and kind duplicate an
+  existing row's MUST raise an execution-failure error, because
+  `(path, kind)` is unique from migration 6. The raw row insert accepts any
+  kind (File Browser, Document, Document Tabs and Git window rows come
+  through it); a project is inserted through the registry.
+
+### Registry
+
+- **is-a-project-registry**: This component MUST conform to the project
+  registry contract over its `project` rows only: listing every project,
+  looking one up by id or by path, inserting, updating, marking opened,
+  deleting, reading and saving a repository-state snapshot, and a stream
+  of changes. Every registry operation MUST run under the instance's lock.
+- **registry-refuses-other-kinds**: Inserting or updating through the
+  registry a row whose kind is not `project` MUST raise a not-a-project
+  error carrying that kind and MUST write nothing; updating, marking
+  opened and deleting through the registry MUST match only rows of kind
+  `project`, so a File Browser, Document or Git window row is never
+  changed by a registry call even when it shares the id.
+- **registry-announces-changes**: Every registry write that changed a row
+  MUST yield exactly one change to every live change stream, after the
+  lock is released: an upsert carrying the row as stored for insert,
+  update and mark-opened, and a deletion carrying the id for delete. A
+  write that matched no row MUST announce nothing. Each stream MUST buffer
+  without bound and MUST stop receiving when its reader goes away.
+- **registry-repo-state-miss**: Reading a repository-state snapshot MUST
+  return nothing when none is stored or the stored one no longer decodes,
+  and MUST raise when the read itself fails.
 - **repo-update-column-set**: Updating a repository MUST overwrite `path`,
   `name`, `remote`, `first_seen`, `last_seen`, and `last_opened` for the
   row matching its id, and MUST NOT provide any narrower, per-field update
@@ -471,28 +507,30 @@ caller through a thrown error, not written to a log by this file.
 ## Platform Notes
 
 - **SwiftUI**: The source is
-  `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectDatabase.swift`,
-  importing only `Foundation`, `SQLite3` (the C SQLite library linked
-  directly, not `Core Data` or `SwiftData`), `AgenticDeveloperHubSDKCore`, and
-  `AgenticDeveloperHubSDKDatabase` (for `AppStorageLocation`); it depends on no UI
-  framework, and a caller anywhere in a SwiftUI app — an `@Observable` view
-  model, an `App`'s startup code — constructs and owns one instance
-  directly. `ProjectDatabase` is declared as a plain `final class` with no
-  `Sendable` conformance, no `actor` keyword, and no `@MainActor`
-  annotation — the mechanism behind
-  **caller-must-synchronize-cross-thread-access** — so the compiler keeps
-  it in the isolation domain of whichever context created it and does not
-  itself enforce any cross-thread safety. Its one connection is stored as
-  `database: OpaquePointer?`, opened in `init(path:)` and closed in
+  `packages/apple/AgenticDeveloperHubSDK/Database/Daemon/Projects/ProjectDatabase.swift`,
+  in the Database tier (`AgenticDeveloperHubSDKDatabase`), importing only
+  `Foundation`, `SQLite3` (the C SQLite library linked directly, not
+  `Core Data` or `SwiftData`) and `AgenticDeveloperHubSDKCore`; it depends
+  on no UI framework, so a daemon links it as readily as an app. The
+  registry conformance is the sibling `ProjectDatabase+Registry.swift`, and
+  the layout and browser-jar extensions stay in the macOS tier, reaching the
+  connection through `@_spi(ProjectDatabaseStorage)`. `ProjectDatabase` is a
+  `final class` declared `@unchecked Sendable`, holding an `NSRecursiveLock`
+  (`lock`) around every transaction and registry call — the mechanism behind
+  **transactions-and-registry-calls-serialized** — and a separate `NSLock`
+  guarding the live change streams, so a change is announced after the
+  write's lock is released. Its one connection is stored as
+  `database: OpaquePointer?`, opened in `init(path:upgrades:)` and closed in
   `deinit` only when non-`nil` — the mechanism behind
-  **connection-closed-on-teardown**. `columnExists`, `schemaVersion`,
-  `queryRepos`, `execute`, `executeBound`, `forEachRow`, `stepRow`,
-  `bindText`, `bindOptionalText`, `bindOptionalDate`, `columnText`,
-  `columnDate`, `queryScalarString`, and the `database` property itself
-  are all declared without the `public` modifier, restricting them to
-  callers in the same module; `queryScalarString` is called by no method
-  in this file, existing solely for `ProjectDatabase+Layout.swift`, a
-  sibling extension in the same module, to call.
+  **connection-closed-on-teardown**. `init(path:upgrades:)` takes a
+  `ProjectDatabase.Upgrades` defaulting to `.none`; the macOS tier supplies
+  `ProjectDatabase.Upgrades.windowState`, whose `browserJars` step is the
+  one an app's own `Projects.db` must pass. The raw insert is
+  `insertRow(_:)`; the registry's `insert(_:)` refuses any kind but
+  `project` with `ProjectDatabaseError.notAProject`. The registry's
+  `async` requirements are witnessed by synchronous methods, so a caller
+  holding the concrete type calls them synchronously and one holding
+  `any ProjectRegistry` awaits them.
 - **Compose**: Port the SQLite access with `androidx.sqlite` or a light
   wrapper over `android.database.sqlite.SQLiteOpenHelper`/`SQLiteDatabase`,
   keeping the same one-connection-per-store shape; run the seven migrations
@@ -532,13 +570,13 @@ caller through a thrown error, not written to a log by this file.
   synchronous — this file performs every SQL call synchronously on the
   caller's thread — letting a `Task.Run` at the call site, not inside this
   component, move a call off a UI dispatcher thread.
-- **caller-must-synchronize-cross-thread-access**: On Apple platforms the class carries no actor isolation and no `Sendable` conformance.
+- **transactions-and-registry-calls-serialized**: On Apple platforms the class carries no actor isolation; it is `@unchecked Sendable` because its own recursive lock serializes every transaction and registry call.
 
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectDatabase.swift` | confirmed (1.3.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Database/Daemon/Projects/ProjectDatabase.swift` | confirmed (1.3.0) |
 
 ## Design Decisions
 
@@ -598,3 +636,4 @@ Notes: separation-of-concerns passes because `ProjectDatabase.swift` holds only 
 | 1.2.1 | 2026-10-04 | Mike Fullerton | Swift-only constructs in normative sections restated as platform-neutral behavior; the Apple mechanism is in Platform Notes. |
 | 1.3.0 | 2026-11-15 | Mike Fullerton | Adds repos-of-a-kind and vector 014 |
 | 1.4.0 | 2026-11-16 | Mike Fullerton | Schema version 7: migrations 5 to 7 listed; migration 7 clears a stored top edge choice. |
+| 1.5.0 | 2026-11-23 | Mike Fullerton | Moved to the Database tier; serialized by its own lock; migration data steps are injected (Upgrades); conforms to ProjectRegistry over its project rows. |

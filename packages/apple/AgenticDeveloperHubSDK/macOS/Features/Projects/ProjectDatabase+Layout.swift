@@ -1,5 +1,6 @@
 import Foundation
 import SQLite3
+@_spi(ProjectDatabaseStorage) import AgenticDeveloperHubSDKDatabase
 
 /// The window layout half of the project database: the tab groups a project
 /// opens with, the split tree inside each tab, and the extra directories its
@@ -110,6 +111,8 @@ extension ProjectDatabase {
         enabledEdges: [Edge]? = nil,
         repoID: UUID
     ) throws {
+        lock.lock()
+        defer { lock.unlock() }
         try execute("BEGIN IMMEDIATE TRANSACTION")
         do {
             let repoKey = repoID.uuidString
@@ -446,6 +449,8 @@ extension ProjectDatabase {
     }
 
     public func saveProjectDirectories(_ paths: [String], repoID: UUID) throws {
+        lock.lock()
+        defer { lock.unlock() }
         try execute("BEGIN IMMEDIATE TRANSACTION")
         do {
             try executeBound("DELETE FROM project_directories WHERE repo_id = ?") { stmt in

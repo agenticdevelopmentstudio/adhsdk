@@ -91,10 +91,18 @@ public final class ProjectWindowManager: ProjectOpening, ObservableObject {
     /// such a host owns it on this manager's behalf.
     private var attachedDatabase: ProjectDatabase?
 
-    /// Where windows persist their tabs and open state — the registry's
-    /// database when there is one, the attached one otherwise.
+    /// Where windows persist their tabs and open state — the coordinator's
+    /// window state when there is one, the attached database otherwise.
     private var database: ProjectDatabase? {
-        attachedDatabase ?? coordinator?.database
+        attachedDatabase ?? coordinator?.windowState
+    }
+
+    /// The project's last known checkouts: the coordinator's refresher, which
+    /// holds what this run has read and what the registry had, else this
+    /// app's own cached copy.
+    private func cachedRepoState(for repoID: UUID) -> RepoStateSnapshot? {
+        coordinator?.repoState.cachedState(forRepo: repoID)
+            ?? database?.cachedRepoState(forRepo: repoID)
     }
 
     /// One `ProjectController` per open window, keyed the same way
@@ -775,7 +783,7 @@ public final class ProjectWindowManager: ProjectOpening, ObservableObject {
         // window was seeded with (`makeProjectWindow`). The checkout scan
         // started there runs on behind it and corrects the tabs and title
         // when git answers — a switch is never kept waiting on git.
-        let cached = database?.cachedRepoState(forRepo: repo.id)
+        let cached = cachedRepoState(for: repo.id)
         controller.prepareForDisplay { cached?.branch(at: $0) }
         timing.mark("prepared for display")
         busyWindow?.setProjectAreaBusy(false)
@@ -960,7 +968,7 @@ public final class ProjectWindowManager: ProjectOpening, ObservableObject {
         // items: the last known checkouts, else the project directory as its
         // main checkout, so the window opens whole and the scan only corrects.
         projectController.seed(
-            database.cachedRepoState(forRepo: repo.id)?.projectCheckouts
+            cachedRepoState(for: repo.id)?.projectCheckouts
                 ?? [ProjectCheckout(directory: repo.url, branch: nil, isMain: true)]
         )
         // The data source is passed to the initializer, not assigned after it:

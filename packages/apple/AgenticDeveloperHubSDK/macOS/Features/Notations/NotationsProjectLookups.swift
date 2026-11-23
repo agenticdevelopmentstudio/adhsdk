@@ -1,5 +1,6 @@
 import AppKit
 import AgenticDeveloperHubSDKCore
+import AgenticDeveloperHubSDKDatabase
 
 /// How Notations finds projects in the Projects feature: the pane a tool was
 /// called from, the project a path is in, the project a window shows, and
@@ -26,17 +27,7 @@ public enum NotationsProjectLookups {
     /// The listed project whose directory holds `path` — the deepest one, so
     /// a worktree nested in its project's folder resolves to that project.
     public static func projectAtPath(_ path: String, in repos: [GitRepo]) -> NotationsPlace? {
-        let target = URL(fileURLWithPath: (path as NSString).expandingTildeInPath).standardizedFileURL.path
-        let match = repos
-            .filter { $0.kind == .project }
-            .filter { repo in
-                let root = URL(fileURLWithPath: repo.path).standardizedFileURL.path
-                return target == root || target.hasPrefix(root.hasSuffix("/") ? root : root + "/")
-            }
-            .max { $0.path.count < $1.path.count }
-        guard let match else { return nil }
-        return NotationsPlace(projectID: match.id, projectName: match.name, projectPath: match.path,
-                              workingDirectory: URL(fileURLWithPath: target))
+        NotationsPlace.project(containing: path, in: repos)
     }
 
     /// The project a Coding Project window shows; `nil` for any other

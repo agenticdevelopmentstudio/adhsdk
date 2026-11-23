@@ -1,6 +1,6 @@
 import AppKit
-import Combine
 import AgenticDeveloperHubSDKCore
+import AgenticDeveloperHubSDKDatabase
 import AgenticDeveloperHubSDKCoreUI
 import AgenticDeveloperHubSDKCoreMacOS
 import AgenticDeveloperHubSDKUI
@@ -11,7 +11,7 @@ import AgenticDeveloperHubSDKUI
 @MainActor
 final class NotationsDetailViewController: NSViewController {
 
-    private let store: NotationsStore
+    private let store: any NotationsStoring
     private let editorController = MarkdownEditorController(palette: ThemeScope.app.palette)
     private let grid = NSGridView()
     private var values: [String: ThemedLabel] = [:]
@@ -19,8 +19,8 @@ final class NotationsDetailViewController: NSViewController {
     private var pendingSave: DispatchWorkItem?
     private var pendingContent: String?
     private var savesInFlight = 0
-    private var changesSubscription: AnyCancellable?
-    private let saveQueue = DispatchQueue(label: "com.agenticdeveloperhubsdk.notations.window.save", qos: .utility)
+    private var changesTask: Task<Void, Never>?
+    private let saves = NotationsSaveQueue.shared
 
     private static let fields: [(key: String, title: String)] = [
         ("project", "Project"), ("branch", "Branch"), ("path", "Path"), ("forkPoint", "Fork point"),
@@ -34,7 +34,7 @@ final class NotationsDetailViewController: NSViewController {
         return formatter
     }()
 
-    init(store: NotationsStore) {
+    init(store: any NotationsStoring) {
         self.store = store
         super.init(nibName: nil, bundle: nil)
         NotificationCenter.default.addObserver(
@@ -42,10 +42,10 @@ final class NotationsDetailViewController: NSViewController {
             name: NotationsFeature.flushPendingSavesNotification, object: nil)
     }
 
-    /// At quit: writes the debounced edit and waits for every queued save.
+    /// At quit: writes the debounced edit; the feature then drains the save
+    /// queue before the process ends.
     @objc private func flushForTermination() {
         flushPendingSave()
-        saveQueue.sync {}
     }
 
     @available(*, unavailable)
@@ -53,9 +53,10 @@ final class NotationsDetailViewController: NSViewController {
 
     isolated deinit {
         pendingSave?.cancel()
+        changesTask?.cancel()
         if let content = pendingContent, let id = notation?.id {
             let store = store
-            saveQueue.async { _ = try? store.updateContent(id: id, content: content) }
+            saves.enqueue { _ = try? await store.updateContent(id: id, content: content) }
         }
     }
 
@@ -115,11 +116,13 @@ final class NotationsDetailViewController: NSViewController {
         editorController.view.observeTheme { [weak editorController] _, palette in
             editorController?.palette = palette
         }
-        changesSubscription = store.changes
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] _ in
-                MainActor.assumeIsolated { self?.storeChanged() }
+        let changes = store.changes
+        changesTask = Task { [weak self] in
+            for await _ in changes {
+                guard let self else { return }
+                self.storeChanged()
             }
+        }
         show(nil)
     }
 
@@ -166,16 +169,14 @@ final class NotationsDetailViewController: NSViewController {
         pendingContent = nil
         let store = store
         savesInFlight += 1
-        saveQueue.async { [weak self] in
+        saves.enqueue { [weak self] in
             do {
-                try store.updateContent(id: id, content: content)
+                try await store.updateContent(id: id, content: content)
             } catch {
                 NotationsDetailViewController.logger.error(
                     "Saving notation \(id.uuidString) failed: \(error.localizedDescription)")
             }
-            DispatchQueue.main.async {
-                MainActor.assumeIsolated { self?.savesInFlight -= 1 }
-            }
+            await MainActor.run { self?.savesInFlight -= 1 }
         }
     }
 
@@ -185,7 +186,7 @@ final class NotationsDetailViewController: NSViewController {
         guard let id = notation?.id, pendingContent == nil, savesInFlight == 0 else { return }
         let store = store
         Task { [weak self] in
-            let current = await Task.detached(priority: .utility) { try? store.notation(id: id) }.value
+            let current = await Task.detached(priority: .utility) { try? await store.notation(id: id) }.value
             guard let self, self.notation?.id == id, self.pendingContent == nil, self.savesInFlight == 0 else {
                 return
             }

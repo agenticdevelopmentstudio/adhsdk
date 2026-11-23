@@ -1,4 +1,5 @@
 import XCTest
+import AgenticDeveloperHubSDKCore
 @testable import AgenticDeveloperHubSDKMacOS
 
 final class CommitCrawlerTests: XCTestCase {

@@ -12,12 +12,15 @@
 
 ### Identity and concurrency
 
-- **caller-must-synchronize-cross-thread-access**: This component MUST be
-  implemented as a plain reference type with no built-in concurrency-safety
-  guarantee of its own — no serialization of its own, no automatic thread
-  confinement, and no platform-enforced concurrency-safety marker; an
-  instance is not safe to share across concurrency domains without the
-  caller's own synchronization.
+- **transactions-and-registry-calls-serialized**: This component MUST hold
+  one recursive lock, owned by the instance, around every transaction
+  (running migrations included) and every registry operation, so an
+  instance MAY be shared across concurrency domains: a statement issued
+  from one thread never lands inside another thread's open transaction,
+  and a locked operation MAY call another locked operation on the same
+  instance without deadlocking. Statements issued outside a transaction
+  and outside the registry operations rely on the connection's own
+  serialization alone.
 - **single-connection-per-instance**: Each instance of this component MUST
   own exactly one SQLite connection, opened once during construction and
   closed once when the instance is torn down; no method in this file opens
@@ -128,9 +131,17 @@
 - **migration005-browser-jars**: Migration 5 MUST create, guarded by `IF NOT
   EXISTS`, table `browser_jars` (`kind` checked to `'worktree'` or
   `'pane'`) with a unique index on `(kind, repo_id, worktree_path)` for
-  worktree jars and one on `pane_node_id` where it is not null, MUST keep
-  the browser panes already in the file on the shared store, and MUST
+  worktree jars and one on `pane_node_id` where it is not null, MUST then
+  run the browser-jars data step when the opener supplied one, and MUST
   insert version row `5`.
+- **upgrades-are-injected**: Construction MUST accept an optional set of
+  migration data steps, defaulting to none. A data step rewrites rows whose
+  meaning belongs to a higher tier (the browser-jars step keeps the browser
+  panes already in a saved layout on the shared store); a file opened
+  without that step MUST still receive the full schema and the version row,
+  and MUST skip only that data rewrite. The app's own window-state file
+  MUST be opened with the window-state steps; a shared registry's copy, a
+  fresh file and a test MAY omit them.
 - **migration006-repo-kind**: Migration 6 MUST, when `git_repo` has no
   `kind` column, rebuild `git_repo` with `kind TEXT NOT NULL DEFAULT
   'project'` and `UNIQUE(path, kind)` in place of a unique `path`, copying
@@ -174,12 +185,37 @@
   filter by `id = ?` bound to the id's string form, and looking up by path
   MUST filter by `path = ?` bound to the given string; both MUST return
   nothing when no row matches.
-- **repo-insert-column-set**: Inserting a repository MUST insert all seven
-  columns in a single `INSERT` bound in order to the repository's id,
-  path, name, remote (nullable), first-seen time, last-seen time, and
-  last-opened time (nullable); inserting a repository whose path
-  duplicates an existing row's path MUST raise an execution-failure error,
-  because `git_repo.path` is declared `UNIQUE` in migration 1.
+- **repo-insert-column-set**: Inserting a row MUST insert all eight
+  columns in a single `INSERT` bound in order to the row's id, path, name,
+  remote (nullable), first-seen time, last-seen time, last-opened time
+  (nullable) and kind; inserting a row whose path and kind duplicate an
+  existing row's MUST raise an execution-failure error, because
+  `(path, kind)` is unique from migration 6. The raw row insert accepts any
+  kind (File Browser, Document, Document Tabs and Git window rows come
+  through it); a project is inserted through the registry.
+
+### Registry
+
+- **is-a-project-registry**: This component MUST conform to the project
+  registry contract over its `project` rows only: listing every project,
+  looking one up by id or by path, inserting, updating, marking opened,
+  deleting, reading and saving a repository-state snapshot, and a stream
+  of changes. Every registry operation MUST run under the instance's lock.
+- **registry-refuses-other-kinds**: Inserting or updating through the
+  registry a row whose kind is not `project` MUST raise a not-a-project
+  error carrying that kind and MUST write nothing; updating, marking
+  opened and deleting through the registry MUST match only rows of kind
+  `project`, so a File Browser, Document or Git window row is never
+  changed by a registry call even when it shares the id.
+- **registry-announces-changes**: Every registry write that changed a row
+  MUST yield exactly one change to every live change stream, after the
+  lock is released: an upsert carrying the row as stored for insert,
+  update and mark-opened, and a deletion carrying the id for delete. A
+  write that matched no row MUST announce nothing. Each stream MUST buffer
+  without bound and MUST stop receiving when its reader goes away.
+- **registry-repo-state-miss**: Reading a repository-state snapshot MUST
+  return nothing when none is stored or the stored one no longer decodes,
+  and MUST raise when the read itself fails.
 - **repo-update-column-set**: Updating a repository MUST overwrite `path`,
   `name`, `remote`, `first_seen`, `last_seen`, and `last_opened` for the
   row matching its id, and MUST NOT provide any narrower, per-field update

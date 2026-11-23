@@ -2,11 +2,11 @@
 id: 1463e7a2-e290-4b8c-8643-df9462a758e6
 title: "Git Repository Record"
 type: ingredient
-version: 1.2.0
+version: 1.2.1
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-11-14
+modified: 2026-11-23
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -21,7 +21,7 @@ tags:
 depends-on: []
 related: []
 references:
-  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/GitRepo.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Database/Daemon/Projects/GitRepo.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/Projects/GitRepoScannerTests.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/Projects/ProjectReconcilerTests.swift (adhsdk)
 approved-by: ""
@@ -310,7 +310,7 @@ Not applicable: this component contains no logging call of any kind.
 ## Platform Notes
 
 - **SwiftUI**: The source is
-  `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/GitRepo.swift`, a
+  `packages/apple/AgenticDeveloperHubSDK/Database/Daemon/Projects/GitRepo.swift`, a
   plain Foundation file with no import beyond `Foundation` and no dependency
   on SwiftUI, AppKit, or UIKit at all — the three types are UI-framework-free
   and port unchanged into any Swift target.
@@ -356,7 +356,7 @@ Not applicable: this component contains no logging call of any kind.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/GitRepo.swift` | confirmed (1.2.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Database/Daemon/Projects/GitRepo.swift` | confirmed (1.2.0) |
 
 ## Design Decisions
 
@@ -443,3 +443,4 @@ anywhere in the given sources.
 | 1.0.2 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to workspace/projects/. |
 | 1.2.0 | 2026-11-14 | Mike Fullerton | Document kinds: document and documentTabs, isDocument, url of a document |
+| 1.2.1 | 2026-11-23 | Mike Fullerton | Source paths follow GitRepo, ProjectCheckout and ProjectDatabase into the Database tier. |

@@ -1,5 +1,6 @@
 
-This is the project registry feature: one database, the in-memory list of
+This is the project registry feature: a project registry, the app's own
+window-state database, the in-memory list of
 known git repositories, and the background scan that keeps that list true
 to disk. Its own doc comment states the model directly — "a 'project'
 here is a row, not a file," so a repository can be renamed or moved on

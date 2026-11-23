@@ -1,6 +1,7 @@
 import AgenticDeveloperHubSDKCore
 import SQLite3
 import XCTest
+@_spi(ProjectDatabaseStorage) import AgenticDeveloperHubSDKDatabase
 @testable import AgenticDeveloperHubSDKMacOS
 
 /// Schema v4: every tab remembers the directory its panes work in, so a later

@@ -2,11 +2,11 @@
 id: 3bec9b27-a9e3-4716-b516-688cc7f5a1c5
 title: "Git Repository Scanner"
 type: ingredient
-version: 1.2.0
+version: 1.2.1
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-10-04
+modified: 2026-11-23
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -22,7 +22,7 @@ depends-on: []
 related: []
 references:
   - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/GitRepoScanner.swift (adhsdk)
-  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/GitRepo.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Database/Daemon/Projects/GitRepo.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/UserSettings+Projects.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/Projects/GitRepoScannerTests.swift (adhsdk)
 approved-by: ""
@@ -456,3 +456,4 @@ observed as "no remote."
 | 1.0.2 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to workspace/projects/. |
 | 1.2.0 | 2026-10-04 | Mike Fullerton | Resolved the unreadable-directory NEEDS REVIEW marker against source: the directory-read catch only continues, with no log or signal; restated as current behavior with a pending decision. |
+| 1.2.1 | 2026-11-23 | Mike Fullerton | Source paths follow GitRepo, ProjectCheckout and ProjectDatabase into the Database tier. |

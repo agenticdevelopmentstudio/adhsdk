@@ -1,6 +1,7 @@
 import AppKit
 import OSLog
 import AgenticDeveloperHubSDKCore
+import AgenticDeveloperHubSDKDatabase
 
 /// Opens a project's window. Injected rather than owned so the registry — the
 /// database, the scan, the chooser — does not depend on the window layer, and
@@ -18,12 +19,20 @@ public protocol ProjectOpening: AnyObject {
     func openNewWindow()
 }
 
-/// The project registry feature: one database, the list of known git
-/// repositories, and the scan that keeps that list true.
+/// The project registry feature: the list of known git repositories, and the
+/// scan that keeps that list true.
 ///
 /// A "project" here is a row, not a file. Nothing about a project lives in the
 /// repository's own directory, so a repository can be renamed or moved without
 /// losing its settings or its window layout.
+///
+/// Two stores (apps suite Phase 4, Decision 4). `registry` says which projects
+/// exist — the app's own `ProjectDatabase`, or adhd's, shared by every app.
+/// `windowState` is always this app's own `ProjectDatabase`: layout, panes and
+/// standalone-window rows, keyed by the registry's ids. When the two differ,
+/// every project the registry reports is mirrored into `windowState` under the
+/// same id (`LocalProjectMirror`) before anything can open a window for it.
+/// The scan stays here and writes through the registry.
 @MainActor
 public final class ProjectsCoordinator: AppFeature {
 
@@ -32,7 +41,21 @@ public final class ProjectsCoordinator: AppFeature {
     /// `repos`, which is the one representation of that knowledge (`dry`).
     public static let didChangeNotification = Notification.Name("ProjectsCoordinatorDidChange")
 
-    public let database: ProjectDatabase
+    /// Which projects exist.
+    public let registry: any ProjectRegistry
+    /// This app's own window state, and the local copy of every project row.
+    public let windowState: ProjectDatabase
+    /// `nil` when the registry is `windowState` itself, which then needs no
+    /// copy of its own rows.
+    private let mirror: LocalProjectMirror?
+    /// Follows `registry.changes` for the coordinator's lifetime.
+    private var registryTask: Task<Void, Never>?
+    /// A reload asked for and not yet run, so a burst of changes posts one
+    /// notification.
+    private var reloadScheduled = false
+
+    /// Every project, in name order. Seeded from `windowState`'s copy, then
+    /// kept as the registry reports it.
     public private(set) var repos: [GitRepo] = []
     public private(set) var isScanning = false
     /// The result of the most recent scan, for anything that wants to show it
@@ -68,7 +91,7 @@ public final class ProjectsCoordinator: AppFeature {
     /// Each project's last known branches and worktrees, kept current by
     /// `startWatchingRepoState()`, so a project window can be shown from them
     /// before git has answered.
-    public private(set) lazy var repoState = RepoStateRefresher(store: database)
+    public private(set) lazy var repoState = RepoStateRefresher(registry: registry)
     private var repoStateWatcher: RepoStateWatcher?
 
     /// Starts watching every listed project's `.git` directory and sweeps
@@ -116,19 +139,30 @@ public final class ProjectsCoordinator: AppFeature {
     ///   `false`, not `true`, for an id nobody registered). Requiring the
     ///   parameter moves the failure to compile time, where it costs one line
     ///   to fix.
+    /// - Parameters:
+    ///   - registry: Which projects exist. May be `windowState` itself.
+    ///   - windowState: This app's own database, for everything that is not
+    ///     the list of projects.
     public init(
-        database: ProjectDatabase,
+        registry projectRegistry: any ProjectRegistry,
+        windowState: ProjectDatabase,
         scanner: GitRepoScanner? = nil,
         opener: ProjectOpening? = nil,
         commandRegistry registry: CommandRegistry
     ) throws {
-        self.database = database
+        self.registry = projectRegistry
+        self.windowState = windowState
+        self.mirror = (projectRegistry as? ProjectDatabase) === windowState
+            ? nil : LocalProjectMirror(database: windowState)
         self.injectedScanner = scanner
         self.opener = opener
         super.init()
 
-        self.repos = (try? database.allRepos()) ?? []
+        // The local copy answers at once; the registry's own list replaces it
+        // in `start()`.
+        self.repos = (try? windowState.allRepos()) ?? []
         self.listedRepos = Self.listed(repos, by: currentScanner)
+        followRegistry()
 
         // A settings change updates the registry at once: the list drops what
         // the new settings leave out straight away (a scan would not — it keeps
@@ -191,6 +225,25 @@ public final class ProjectsCoordinator: AppFeature {
         ]
     }
 
+    /// An app that keeps its own registry: one database for both.
+    public convenience init(
+        database: ProjectDatabase,
+        scanner: GitRepoScanner? = nil,
+        opener: ProjectOpening? = nil,
+        commandRegistry registry: CommandRegistry
+    ) throws {
+        try self.init(
+            registry: database,
+            windowState: database,
+            scanner: scanner,
+            opener: opener,
+            commandRegistry: registry)
+    }
+
+    isolated deinit {
+        registryTask?.cancel()
+    }
+
     /// Set once by the host after the window layer exists — the opener and the
     /// registry would otherwise have to be constructed in the same breath.
     public func setOpener(_ opener: ProjectOpening) {
@@ -202,12 +255,20 @@ public final class ProjectsCoordinator: AppFeature {
     /// Launching scans: the registry is only as good as its last look at disk,
     /// and the alternative is an app whose project list is quietly wrong until
     /// someone thinks to refresh it.
+    ///
+    /// The registry's list is read first, so the scan is planned against what
+    /// the registry holds rather than against a local copy that may be behind.
     public override func start() throws {
-        scan()
+        Task { [weak self] in
+            await self?.loadFromRegistry()
+            self?.scan()
+        }
     }
 
     public override func stop() {
-        try? database.checkpoint()
+        registryTask?.cancel()
+        registryTask = nil
+        try? windowState.checkpoint()
     }
 
     /// Stops every open project's language servers before the process exits.
@@ -254,16 +315,26 @@ public final class ProjectsCoordinator: AppFeature {
     }
 
     /// Renames a project. The name is the user's; a scan never overwrites it.
+    ///
+    /// The list shows the new name at once; the registry write follows, and a
+    /// write that fails puts the registry's own row back.
     public func rename(repoID: UUID, to name: String) {
-        guard var repo = repo(id: repoID) else { return }
+        guard let original = repo(id: repoID) else { return }
         let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty, trimmed != repo.name else { return }
-        repo.name = trimmed
-        do {
-            try database.update(repo)
-            reload()
-        } catch {
-            Self.logger.error("Rename failed for \(repoID.uuidString, privacy: .public): \(error)")
+        guard !trimmed.isEmpty, trimmed != original.name else { return }
+        var renamed = original
+        renamed.name = trimmed
+        applyLocally(.upserted(renamed))
+        reload()
+        Task { [weak self, registry] in
+            do {
+                try await registry.update(renamed)
+            } catch {
+                Self.logger.error("Rename failed for \(repoID.uuidString, privacy: .public): \(error)")
+                let current = (try? await registry.project(id: repoID)) ?? original
+                self?.applyLocally(.upserted(current))
+                self?.reload()
+            }
         }
     }
 
@@ -284,14 +355,16 @@ public final class ProjectsCoordinator: AppFeature {
         // Off the click: the window is what was asked for, the stamp only
         // reorders the next sweep. Done on the next main-queue turn so the
         // window shows first.
-        DispatchQueue.main.async { [weak self] in
-            guard let self else { return }
+        Task { [weak self, registry] in
             do {
-                try self.database.markOpened(id: repo.id)
+                try await registry.markOpened(id: repo.id, at: Date())
+                if let opened = try await registry.project(id: repo.id) {
+                    self?.applyLocally(.upserted(opened))
+                }
             } catch {
                 Self.logger.error("Could not record open time: \(error)")
             }
-            self.reload()
+            self?.reload()
         }
     }
 
@@ -318,8 +391,94 @@ public final class ProjectsCoordinator: AppFeature {
         return browser
     }
 
+    // MARK: - Following the registry
+
+    /// Reads the registry's whole list, mirrors it, and makes it `repos`.
+    /// A registry that cannot be read leaves the local copy showing.
+    func loadFromRegistry() async {
+        do {
+            let projects = try await registry.projects()
+            if let mirror {
+                do { try mirror.sync(projects) } catch {
+                    Self.logger.error("Could not mirror the project list: \(error)")
+                }
+            }
+            repos = projects
+            reload()
+        } catch {
+            Self.logger.error("Could not read the project registry: \(error)")
+        }
+    }
+
+    /// Applies every registry change — this app's own writes coming back,
+    /// another app's, a scan's — to the list and the local copy.
+    private func followRegistry() {
+        let changes = registry.changes
+        registryTask = Task { [weak self] in
+            for await change in changes {
+                guard let self else { return }
+                self.applyLocally(change)
+                self.scheduleReload()
+            }
+        }
+    }
+
+    /// Puts one change into `repos` and, when there is one, the local mirror.
+    /// Safe to repeat: a change arrives once from the write that made it and
+    /// once more from the registry's feed.
+    private func applyLocally(_ change: ProjectRegistryChange) {
+        if let mirror {
+            do { try mirror.apply(change) } catch {
+                Self.logger.error("Could not mirror \(change.id.uuidString, privacy: .public): \(error)")
+            }
+        }
+        switch change {
+        case .upserted(let project):
+            if let index = repos.firstIndex(where: { $0.id == project.id }) {
+                repos[index] = project
+            } else {
+                repos.append(project)
+            }
+            repos.sort { $0.name.lowercased() < $1.name.lowercased() }
+        case .deleted(let id):
+            repos.removeAll { $0.id == id }
+        }
+    }
+
+    /// A new project as the scan found it, under the id and name of the local
+    /// row already at its path when there is one.
+    ///
+    /// A shared registry that has not been given this app's projects yet
+    /// (before `adhd import-kitchen`) reports none of them, so the scan
+    /// finds each as new. Inserted under a fresh id, the mirror would then
+    /// delete the local row at that path and its layout with it; inserted
+    /// under the local id, the registry adopts the row and the layout stays.
+    private func adoptingLocalIdentity(_ planned: GitRepo) -> GitRepo {
+        guard mirror != nil,
+              let local = try? windowState.repo(path: planned.path, kind: .project),
+              local.id != planned.id else { return planned }
+        return GitRepo(
+            id: local.id,
+            path: planned.path,
+            name: local.name,
+            remote: planned.remote,
+            firstSeen: local.firstSeen,
+            lastSeen: planned.lastSeen,
+            lastOpened: local.lastOpened,
+            kind: .project)
+    }
+
+    private func scheduleReload() {
+        guard !reloadScheduled else { return }
+        reloadScheduled = true
+        Task { [weak self] in
+            guard let self else { return }
+            self.reloadScheduled = false
+            self.reload()
+        }
+    }
+
     private func reload() {
-        repos = (try? database.allRepos()) ?? repos
         listedRepos = Self.listed(repos, by: currentScanner)
         repoStateWatcher?.watch(watchedRepos)
         NotificationCenter.default.post(name: Self.didChangeNotification, object: self)
@@ -343,11 +502,11 @@ public final class ProjectsCoordinator: AppFeature {
         let scanner = currentScanner
         Task.detached(priority: .utility) {
             let found = scanner.scan()
-            await MainActor.run { self.finishScan(found: found) }
+            await self.finishScan(found: found)
         }
     }
 
-    private func finishScan(found: [ScannedGitRepo]) {
+    private func finishScan(found: [ScannedGitRepo]) async {
         let plan = ProjectReconciler.plan(existing: repos, scanned: found)
         var summary = plan.summary
 
@@ -355,14 +514,21 @@ public final class ProjectsCoordinator: AppFeature {
         // every row after it while the summary still claimed the whole plan had
         // been applied, so the registry and what the user was told disagreed
         // (`fail-fast`: report what actually happened, per row).
-        for repo in plan.inserts {
-            do { try database.insert(repo) } catch {
+        for planned in plan.inserts {
+            let repo = adoptingLocalIdentity(planned)
+            do {
+                try await registry.insert(repo)
+                applyLocally(.upserted(repo))
+            } catch {
                 summary.added -= 1
                 Self.logger.error("Could not add \(repo.path, privacy: .public): \(error)")
             }
         }
         for repo in plan.updates {
-            do { try database.update(repo) } catch {
+            do {
+                try await registry.update(repo)
+                applyLocally(.upserted(repo))
+            } catch {
                 Self.logger.error("Could not update \(repo.path, privacy: .public): \(error)")
             }
         }
@@ -372,7 +538,8 @@ public final class ProjectsCoordinator: AppFeature {
         for repo in plan.deletes { opener?.closeProject(repoID: repo.id) }
         for repo in plan.deletes {
             do {
-                try database.delete(id: repo.id)
+                try await registry.delete(id: repo.id)
+                applyLocally(.deleted(repo.id))
             } catch {
                 summary.removed -= 1
                 Self.logger.error("Could not remove \(repo.path, privacy: .public): \(error)")

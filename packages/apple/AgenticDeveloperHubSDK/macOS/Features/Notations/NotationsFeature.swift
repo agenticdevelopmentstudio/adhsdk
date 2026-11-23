@@ -1,7 +1,7 @@
 import AppKit
-import Combine
 import os
 import AgenticDeveloperHubSDKCore
+import AgenticDeveloperHubSDKDatabase
 
 /// Notations as an app feature: Notes ▸ Notations, the window's restore, the
 /// `notations_*` tools, and the reconcile passes that archive a merged
@@ -20,7 +20,11 @@ public final class NotationsFeature: AppFeature {
     /// How often the background pass runs while the app is up.
     public static let reconcileInterval: TimeInterval = 60 * 60
 
-    public let store: NotationsStore
+    public let store: any NotationsStoring
+
+    /// Every notation as last read, for Cocoa Scripting, which asks
+    /// synchronously. Read at `start()` and again after each change.
+    public private(set) var scriptingSnapshot: [Notation] = []
 
     private let reconciler: NotationsReconciler
     private let toolSource: NotationsToolSource
@@ -31,6 +35,8 @@ public final class NotationsFeature: AppFeature {
     private var timer: Timer?
     private var keyObserver: NSObjectProtocol?
     private var toolsRegistered = false
+    private var changesTask: Task<Void, Never>?
+    private var snapshotGeneration = 0
 
     nonisolated private static let logger = Logger(subsystem: "com.agenticdeveloperhubsdk", category: "Notations")
 
@@ -43,7 +49,7 @@ public final class NotationsFeature: AppFeature {
     ///   - goToProject: Brings the notation's project window forward,
     ///     opening it if needed.
     public init(
-        store: NotationsStore,
+        store: any NotationsStoring,
         commandRegistry: CommandRegistry,
         registerTools: @escaping @MainActor (any ChatToolSource) -> Void,
         callerPlace: @escaping @MainActor @Sendable (String) -> NotationsPlace?,
@@ -78,13 +84,39 @@ public final class NotationsFeature: AppFeature {
 
     public override func value(forScriptingKey key: String) -> Any? {
         guard key == Self.scriptingKey else { return nil }
-        return ((try? store.all()) ?? []).map { ScriptableNotation(notationID: $0.id, store: store) }
+        return scriptingSnapshot.map { scriptable($0.id) }
     }
 
     /// For the host's unique-id lookup (`notation id "…"`).
     public func scriptableNotation(uniqueID: String) -> ScriptableNotation? {
-        guard let id = UUID(uuidString: uniqueID), (try? store.notation(id: id)) != nil else { return nil }
-        return ScriptableNotation(notationID: id, store: store)
+        guard let id = UUID(uuidString: uniqueID), scriptedNotation(id) != nil else { return nil }
+        return scriptable(id)
+    }
+
+    /// The notation as last read, for a script.
+    public func scriptedNotation(_ id: UUID) -> Notation? {
+        scriptingSnapshot.first { $0.id == id }
+    }
+
+    private func scriptable(_ id: UUID) -> ScriptableNotation {
+        ScriptableNotation(notationID: id, store: store) { [weak self] in self?.scriptedNotation($0) }
+    }
+
+    /// Re-reads every notation into `scriptingSnapshot`; a newer read
+    /// supersedes one still in flight.
+    public func refreshScriptingSnapshot() async {
+        snapshotGeneration += 1
+        let generation = snapshotGeneration
+        let store = store
+        let notations: [Notation]
+        do {
+            notations = try await Task.detached(priority: .utility) { try await store.all() }.value
+        } catch {
+            Self.logger.error("Notations could not be read for scripting: \(error.localizedDescription)")
+            return
+        }
+        guard generation == snapshotGeneration else { return }
+        scriptingSnapshot = notations
     }
 
     public func showWindow() {
@@ -97,6 +129,14 @@ public final class NotationsFeature: AppFeature {
         if !toolsRegistered {
             toolsRegistered = true
             registerTools(toolSource)
+        }
+        let changes = store.changes
+        changesTask = Task { [weak self] in
+            await self?.refreshScriptingSnapshot()
+            for await _ in changes {
+                guard let self else { return }
+                await self.refreshScriptingSnapshot()
+            }
         }
         reconcile(projectID: nil)
         timer = Timer.scheduledTimer(withTimeInterval: Self.reconcileInterval, repeats: true) { [weak self] _ in
@@ -121,10 +161,13 @@ public final class NotationsFeature: AppFeature {
 
     public override func terminate() async {
         NotificationCenter.default.post(name: Self.flushPendingSavesNotification, object: nil)
+        await NotationsSaveQueue.shared.drain()
         await super.terminate()
     }
 
     public override func stop() {
+        changesTask?.cancel()
+        changesTask = nil
         timer?.invalidate()
         timer = nil
         if let keyObserver { NotificationCenter.default.removeObserver(keyObserver) }

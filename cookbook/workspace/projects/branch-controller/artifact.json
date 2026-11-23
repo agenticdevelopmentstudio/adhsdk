@@ -4,11 +4,11 @@
     "id": "92f11498-2cb2-4b04-92b9-560d9f2de6ee",
     "title": "Branch Management",
     "type": "ingredient",
-    "version": "1.3.0",
+    "version": "1.3.1",
     "status": "review",
     "language": "en",
     "created": "2026-09-24",
-    "modified": "2026-11-14",
+    "modified": "2026-11-23",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -31,7 +31,7 @@
     ],
     "references": [
       "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/BranchController.swift (adhsdk)",
-      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectCheckout.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Database/Daemon/Projects/ProjectCheckout.swift (adhsdk)",
       "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectController.swift (adhsdk)",
       "packages/apple/AgenticDeveloperHubSDK/Core/Git/GitClient.swift (adhsdk)",
       "packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/MultiTabbedViewController/TabPane/TabPaneDataSource.swift (adhsdk)",
@@ -46,7 +46,7 @@
     "approved-date": ""
   },
   "names_hosts": "The pane's agent name is the literal string `Claude` the source returns; the spec states that value.",
-  "synced": "8ac23f16111050b9",
+  "synced": "72cb94b442296040",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

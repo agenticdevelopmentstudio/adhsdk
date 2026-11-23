@@ -4,11 +4,11 @@
     "id": "0396e49d-f933-4454-bacc-5cf97beda7de",
     "title": "Project Filter",
     "type": "ingredient",
-    "version": "1.1.0",
+    "version": "1.1.1",
     "status": "review",
     "language": "en",
     "created": "2026-09-24",
-    "modified": "2026-09-27",
+    "modified": "2026-11-23",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -27,7 +27,7 @@
     "related": [],
     "references": [
       "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectFilter.swift (adhsdk)",
-      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/GitRepo.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Database/Daemon/Projects/GitRepo.swift (adhsdk)",
       "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectBrowserViewController.swift (adhsdk)",
       "packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/DocumentPane/BreadcrumbPopoverViewController.swift (adhsdk)",
       "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/Projects/ProjectFilterTests.swift (adhsdk)"
@@ -35,7 +35,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "a88670dd3a93dedf",
+  "synced": "fb41e5a14bdb7d90",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

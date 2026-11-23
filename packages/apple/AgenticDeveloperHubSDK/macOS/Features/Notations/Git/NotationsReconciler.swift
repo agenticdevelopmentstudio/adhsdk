@@ -1,6 +1,7 @@
 import os
 import Foundation
 import AgenticDeveloperHubSDKCore
+import AgenticDeveloperHubSDKDatabase
 
 /// Brings `Notations.db` in line with the branches on disk: archives the
 /// notations whose branch is gone or merged, records each live branch's tip,
@@ -18,13 +19,13 @@ public actor NotationsReconciler {
         public var skipped = 0
     }
 
-    private let store: NotationsStore
+    private let store: any NotationsStoring
     private let git: NotationsGit
     private let fileExists: @Sendable (String) -> Bool
     private var isRunning = false
 
     public init(
-        store: NotationsStore,
+        store: any NotationsStoring,
         git: NotationsGit = NotationsGit(),
         fileExists: @escaping @Sendable (String) -> Bool = { FileManager.default.fileExists(atPath: $0) }
     ) {
@@ -45,7 +46,7 @@ public actor NotationsReconciler {
         var summary = Summary()
         let notations: [Notation]
         do {
-            notations = try store.all().filter { projectID == nil || $0.projectID == projectID }
+            notations = try await store.all().filter { projectID == nil || $0.projectID == projectID }
         } catch {
             Self.logger.error("Notations reconcile could not read the store: \(error.localizedDescription)")
             return summary
@@ -78,7 +79,7 @@ public actor NotationsReconciler {
                                                   defaultBranches: &defaultBranches)
                     if NotationLifecycle.shouldDelete(archivedAt: notation.archivedAt, now: now,
                                                       retentionDays: retentionDays, facts: facts),
-                       try store.deleteArchived(id: notation.id) {
+                       try await store.deleteArchived(id: notation.id) {
                         summary.deleted += 1
                     }
                 }
@@ -100,16 +101,16 @@ public actor NotationsReconciler {
         now: Date
     ) async throws -> Bool {
         guard directoryExists else {
-            return try store.archive(id: notation.id, at: now)
+            return try await store.archive(id: notation.id, at: now)
         }
         let tip = try await git.tip(of: notation.branch, in: directory)
         guard let tip else {
-            return try store.archive(id: notation.id, at: now)
+            return try await store.archive(id: notation.id, at: now)
         }
         let hasHadOwnCommits = notation.lastTip.map { $0 != notation.forkPoint } ?? false
         guard let defaultBranch = try await defaultBranch(for: notation.projectPath, in: directory,
                                                           cache: &defaultBranches) else {
-            if tip != notation.lastTip { try store.recordTip(id: notation.id, tip: tip) }
+            if tip != notation.lastTip { try await store.recordTip(id: notation.id, tip: tip) }
             return false
         }
         let isDefault = notation.branch == defaultBranch
@@ -123,10 +124,10 @@ public actor NotationsReconciler {
         // The recorded tip is the branch's last commit of its own; an empty
         // branch carried along the default branch has none to record.
         if tip != notation.lastTip, !facts.isEmptyBranchMovedAlongDefault {
-            try store.recordTip(id: notation.id, tip: tip)
+            try await store.recordTip(id: notation.id, tip: tip)
         }
         guard NotationLifecycle.shouldArchive(facts) else { return false }
-        return try store.archive(id: notation.id, at: now)
+        return try await store.archive(id: notation.id, at: now)
     }
 
     private func deleteFacts(

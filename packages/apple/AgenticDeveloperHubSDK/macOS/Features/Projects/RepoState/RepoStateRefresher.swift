@@ -4,6 +4,11 @@ import AgenticDeveloperHubSDKCore
 
 /// Reads repositories' state from disk and keeps the cache in step.
 ///
+/// The cache is the registry's (`ProjectRegistry.saveRepoState`), so with a
+/// shared registry one app's read warms every app's next switch. A copy is
+/// kept in memory as well, because a window being built asks for it
+/// synchronously and the registry may be a daemon away.
+///
 /// One refresh per repository at a time: a refresh asked for while one is in
 /// flight waits for it and then runs once more, so a burst of file events
 /// costs at most two reads, and the last one sees the final state.
@@ -13,20 +18,40 @@ public final class RepoStateRefresher {
     /// A repository's cached state changed; carries the new snapshot.
     public var onChange: ((UUID, RepoStateSnapshot) -> Void)?
 
-    private let store: RepoStateStore
+    private let registry: any ProjectRegistry
+    /// Every snapshot this refresher has read or written, by repository.
+    private var memory: [UUID: RepoStateSnapshot] = [:]
     private let reader: RepoStateReading
     private var inFlight: [UUID: Task<RepoStateSnapshot?, Never>] = [:]
     private var rerunRequested: Set<UUID> = []
     /// What `sweep` has still to read; emptied to stop it.
     private var sweepQueue: ArraySlice<(id: UUID, directory: URL)> = []
 
-    public init(store: RepoStateStore, reader: RepoStateReading = GitRepoStateReader()) {
-        self.store = store
+    public init(registry: any ProjectRegistry, reader: RepoStateReading = GitRepoStateReader()) {
+        self.registry = registry
         self.reader = reader
     }
 
+    /// The last snapshot this refresher saw for the repository, from memory.
+    /// `nil` until a refresh or `load(_:)` has reached it; a caller that
+    /// needs an answer sooner reads its own `ProjectDatabase` cache.
     public func cachedState(forRepo repoID: UUID) -> RepoStateSnapshot? {
-        store.cachedRepoState(forRepo: repoID)
+        memory[repoID]
+    }
+
+    /// The registry's snapshot, remembered in memory. `nil` when there is none
+    /// or the registry cannot be read (a cache miss, never an error).
+    @discardableResult
+    public func load(_ repoID: UUID) async -> RepoStateSnapshot? {
+        if let known = memory[repoID] { return known }
+        do {
+            let stored = try await registry.repoState(id: repoID)
+            if let stored, memory[repoID] == nil { memory[repoID] = stored }
+            return memory[repoID]
+        } catch {
+            Self.logger.info("repo state cache read failed for \(repoID.uuidString, privacy: .public): \(error)")
+            return nil
+        }
     }
 
     /// Reads `repo` now and caches the answer when it differs. Returns the
@@ -76,8 +101,15 @@ public final class RepoStateRefresher {
             Self.logger.info("repo state read failed for \(directory.path, privacy: .public)")
             return nil
         }
-        if let old = store.cachedRepoState(forRepo: repoID), old.hasSameState(as: fresh) { return fresh }
-        store.saveRepoState(fresh, forRepo: repoID)
+        if let old = await load(repoID), old.hasSameState(as: fresh) { return fresh }
+        memory[repoID] = fresh
+        do {
+            try await registry.saveRepoState(fresh, id: repoID)
+        } catch {
+            // The snapshot is still right, and still announced: only the next
+            // launch's head start is lost.
+            Self.logger.error("repo state cache write failed for \(repoID.uuidString, privacy: .public): \(error)")
+        }
         onChange?(repoID, fresh)
         return fresh
     }

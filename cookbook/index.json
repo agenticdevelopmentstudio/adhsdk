@@ -1708,7 +1708,7 @@
             "state": "confirmed",
             "version": "1.2.0"
           },
-          "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/GitRepo.swift",
+          "location": "packages/apple/AgenticDeveloperHubSDK/Database/Daemon/Projects/GitRepo.swift",
           "platform": "apple"
         }
       ],
@@ -11020,7 +11020,7 @@
             "state": "confirmed",
             "version": "1.1.0"
           },
-          "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectCheckout.swift",
+          "location": "packages/apple/AgenticDeveloperHubSDK/Database/Daemon/Projects/ProjectCheckout.swift",
           "platform": "apple"
         }
       ],
@@ -18064,7 +18064,7 @@
             "state": "confirmed",
             "version": "1.3.0"
           },
-          "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectDatabase.swift",
+          "location": "packages/apple/AgenticDeveloperHubSDK/Database/Daemon/Projects/ProjectDatabase.swift",
           "platform": "apple"
         }
       ],

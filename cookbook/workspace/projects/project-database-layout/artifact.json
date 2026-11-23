@@ -4,11 +4,11 @@
     "id": "ded9b397-958d-437d-8235-48ef85ae7386",
     "title": "Project Layout Persistence",
     "type": "ingredient",
-    "version": "2.0.0",
+    "version": "2.0.1",
     "status": "review",
     "language": "en",
     "created": "2026-09-24",
-    "modified": "2026-11-16",
+    "modified": "2026-11-23",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -31,14 +31,14 @@
     ],
     "references": [
       "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectDatabase+Layout.swift (adhsdk)",
-      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectDatabase.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Database/Daemon/Projects/ProjectDatabase.swift (adhsdk)",
       "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/Projects/ProjectDatabaseLayoutTests.swift (adhsdk)",
       "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/Projects/ProjectDatabaseWorkingDirectoryTests.swift (adhsdk)"
     ],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "42f908ce70edec15",
+  "synced": "ba06871558cc16cb",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

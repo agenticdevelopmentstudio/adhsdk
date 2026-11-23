@@ -120,12 +120,16 @@ public final class TerminalWorkspaceCoordinator: AppFeature {
 
     /// The row the window is keyed on. Found by path rather than by a stored
     /// id, so the database is the only place that knows it (`dry`).
+    ///
+    /// Window state, not a registered project: this host has no registry, so
+    /// the row is written with `insertRow` and never announced — a terminal
+    /// over the home directory is not a project any other app should list.
     private func workspaceRepo() throws -> GitRepo {
         if let existing = try database.repo(path: directory.path) {
             return existing
         }
         let repo = GitRepo(path: directory.path, name: name)
-        try database.insert(repo)
+        try database.insertRow(repo)
         return repo
     }
 }

@@ -1,7 +1,7 @@
 import os
 import AppKit
-import Combine
 import AgenticDeveloperHubSDKCore
+import AgenticDeveloperHubSDKDatabase
 import AgenticDeveloperHubSDKCoreUI
 import AgenticDeveloperHubSDKCoreMacOS
 import AgenticDeveloperHubSDKUI
@@ -23,7 +23,7 @@ public final class NotationsPaneViewController: NSViewController {
 
     public static let saveDebounce: TimeInterval = 0.5
 
-    private let store: NotationsStore
+    private let store: any NotationsStoring
     private let resolver: NotationResolver
     private let git: NotationsGit
     private let projectID: UUID
@@ -44,13 +44,13 @@ public final class NotationsPaneViewController: NSViewController {
     private var resolveGeneration = 0
     private var watcher: FileSystemWatcher?
     private var headPath: String?
-    private var changesSubscription: AnyCancellable?
+    private var changesTask: Task<Void, Never>?
 
     /// Serial, so saves land in the order they were typed.
-    private let saveQueue = DispatchQueue(label: "com.agenticdeveloperhubsdk.notations.pane.save", qos: .utility)
+    private let saves = NotationsSaveQueue.shared
 
     public init(
-        store: NotationsStore,
+        store: any NotationsStoring,
         projectID: UUID,
         projectName: String,
         projectPath: String,
@@ -70,10 +70,10 @@ public final class NotationsPaneViewController: NSViewController {
             name: NotationsFeature.flushPendingSavesNotification, object: nil)
     }
 
-    /// At quit: writes the debounced edit and waits for every queued save.
+    /// At quit: writes the debounced edit; the feature then drains the save
+    /// queue before the process ends.
     @objc private func flushForTermination() {
         flushPendingSave()
-        saveQueue.sync {}
     }
 
     @available(*, unavailable)
@@ -81,6 +81,7 @@ public final class NotationsPaneViewController: NSViewController {
 
     isolated deinit {
         resolveTask?.cancel()
+        changesTask?.cancel()
         watcher?.stop()
         pendingSave?.cancel()
         // No `self` past this point: a weak reference cannot be formed to an
@@ -88,8 +89,8 @@ public final class NotationsPaneViewController: NSViewController {
         if let content = pendingContent, let key {
             let store = store
             let id = notationID
-            saveQueue.async {
-                _ = try? store.save(id: id, key: key, content: content)
+            saves.enqueue {
+                _ = try? await store.save(id: id, key: key, content: content)
             }
         }
     }
@@ -115,11 +116,13 @@ public final class NotationsPaneViewController: NSViewController {
     public override func viewDidLoad() {
         super.viewDidLoad()
         editor.onTextChange = { [weak self] text in self?.contentChanged(text) }
-        changesSubscription = store.changes
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] _ in
-                MainActor.assumeIsolated { self?.storeChanged() }
+        let changes = store.changes
+        changesTask = Task { [weak self] in
+            for await _ in changes {
+                guard let self else { return }
+                self.storeChanged()
             }
+        }
         refresh()
         startWatchingHead()
     }
@@ -228,20 +231,18 @@ public final class NotationsPaneViewController: NSViewController {
         let store = store
         let id = notationID
         savesInFlight += 1
-        saveQueue.async { [weak self] in
+        saves.enqueue { [weak self] in
             let saved: Notation?
             do {
-                saved = try store.save(id: id, key: key, content: content)
+                saved = try await store.save(id: id, key: key, content: content)
             } catch {
                 Self.logger.error("Saving the notation for \(key.branch) failed: \(error.localizedDescription)")
                 saved = nil
             }
-            DispatchQueue.main.async {
-                MainActor.assumeIsolated {
-                    guard let self else { return }
-                    self.savesInFlight -= 1
-                    if let saved, self.key == key { self.notationID = saved.id }
-                }
+            await MainActor.run {
+                guard let self else { return }
+                self.savesInFlight -= 1
+                if let saved, self.key == key { self.notationID = saved.id }
             }
         }
     }
@@ -256,9 +257,9 @@ public final class NotationsPaneViewController: NSViewController {
         let key = key
         Task { [weak self] in
             let current: Notation? = await Task.detached(priority: .utility) {
-                if let id, let byID = try? store.notation(id: id), byID.state == .active { return byID }
+                if let id, let byID = try? await store.notation(id: id), byID.state == .active { return byID }
                 guard let key else { return nil }
-                return try? store.activeNotation(for: key)
+                return try? await store.activeNotation(for: key)
             }.value
             guard let self, self.pendingContent == nil, self.savesInFlight == 0, self.key == key else { return }
             self.notationID = current?.id
