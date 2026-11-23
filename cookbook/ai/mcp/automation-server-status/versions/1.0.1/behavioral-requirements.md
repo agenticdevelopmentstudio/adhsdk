@@ -1,0 +1,21 @@
+
+- **main-actor-isolation**: The type MUST be `@MainActor`, so every property read and write, and the `url` and `line` accessors, run on the main actor. The static `line(port:isRegistered:failureReason:)` is a pure function of its arguments and is not tied to an instance.
+- **observable-object**: The type MUST be an `ObservableObject` whose four stored values are `@Published`, so a view can observe changes.
+- **initial-values**: A new instance MUST have `port` nil, `token` nil, `isRegistered` false and `failureReason` nil. `init()` takes no arguments.
+- **port-meaning**: `port` MUST hold the port actually listening as a `UInt16`, nil until the endpoint starts or when it failed. The model does not set or clear it; the host does.
+- **token-meaning**: `token` MUST hold the bearer token for the registration command, or nil. The model does not generate, store or redact it.
+- **registered-meaning**: `isRegistered` MUST mean whether `~/.claude.json` lists this server on this port. The model does not read that file; the host sets the flag.
+- **failure-reason-meaning**: `failureReason` MUST hold why the endpoint is not running, when it is not, or nil. The model does not clear it when `port` changes.
+- **url-nil-without-port**: `url` MUST be nil when `port` is nil.
+- **url-format**: When `port` is set, `url` MUST be `http://127.0.0.1:<port><MCPHTTPEndpoint.path>`, where `MCPHTTPEndpoint.path` is `/mcp`, so a port of 51477 gives `http://127.0.0.1:51477/mcp`.
+- **url-ignores-failure**: `url` MUST depend on `port` alone; a set `failureReason` MUST NOT hide it.
+- **line-failure-first**: The status sentence MUST be `Not running: <failureReason>` whenever `failureReason` is non-nil, regardless of `port` and `isRegistered`.
+- **line-starting**: With `failureReason` nil and `port` nil, the sentence MUST be `Starting.`
+- **line-listening-registered**: With `failureReason` nil and `port` set, the sentence MUST be `Listening on port <port>. Registered with Claude Code.` when `isRegistered` is true.
+- **line-listening-unregistered**: With `failureReason` nil and `port` set, the sentence MUST be `Listening on port <port>. Not registered with Claude Code.` when `isRegistered` is false.
+- **line-port-unformatted**: The port in the sentence MUST be printed as a plain integer with no grouping separator.
+- **line-instance-delegates-to-static**: The instance `line` MUST return `AutomationServerStatus.line(port:isRegistered:failureReason:)` for its current values.
+- **line-static-for-publisher-values**: The static `line(port:isRegistered:failureReason:)` MUST be callable with explicit values. The reason is the source's comment: the panel renders from the value a `@Published` property publishes, which "arrive before the property itself changes", so the sentence cannot be read back off `self` there.
+- **no-io**: The component MUST NOT read or write files, open a network connection, spawn a process or post a notification.
+- **no-validation**: The component MUST NOT validate its values: it accepts any `UInt16` port including 0, any string token or reason, and any combination of the four values.
+

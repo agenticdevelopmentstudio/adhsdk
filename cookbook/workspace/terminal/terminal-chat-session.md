@@ -2,11 +2,11 @@
 id: 00ef3e01-de2f-4f48-bd3c-86f15fb4f72b
 title: "Terminal Chat Session"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-14
-modified: 2026-11-14
+modified: 2026-11-23
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -35,7 +35,7 @@ approved-date: ""
 
 What is lost against typing into the terminal is everything interactive: tab completion, a line editor, a full-screen program. None of it goes through the chat, and output drawn on the alternate screen is not reported.
 
-The session serves two kinds of caller. A person reads the transcript and types into the composer, through the chat-session contract (`events`, `send`, `interrupt`, `close`). A program, such as `adterm` through the control server or a persona's terminal tool, calls `run`, `waitForOutput`, `interruptAndWait` and `screen`, each of which hands back a string. Output is reported once it has been quiet for a short period, or once it has waited a maximum latency, and new output is found by comparing the terminal's screen against a tracker of what has already been reported ([adhsdk.ingredient.foundation.terminal.terminal-output-tracker](cookbook:6e81fe86-b97d-4af9-a45b-0ace8784fbed)). The default settle, timeout, interrupt timeout and line count come from [adhsdk.ingredient.foundation.terminal.terminal-chat-control](cookbook:b71b349b-5c60-41f4-b664-49085ac5d988).
+The session serves two kinds of caller. A person reads the transcript and types into the composer, through the chat-session contract (`events`, `send`, `interrupt`, `close`). A program, such as Claude Code through the app's Terminal Chat tools (`TerminalChatDirectoryToolSource`) or a persona's terminal tool, calls `run`, `waitForOutput`, `interruptAndWait` and `screen`, each of which hands back a string. Output is reported once it has been quiet for a short period, or once it has waited a maximum latency, and new output is found by comparing the terminal's screen against a tracker of what has already been reported ([adhsdk.ingredient.foundation.terminal.terminal-output-tracker](cookbook:6e81fe86-b97d-4af9-a45b-0ace8784fbed)). The default settle, timeout, interrupt timeout and line count come from [adhsdk.ingredient.foundation.terminal.terminal-chat-control](cookbook:b71b349b-5c60-41f4-b664-49085ac5d988).
 
 ## Behavioral Requirements
 
@@ -177,7 +177,7 @@ Not applicable: the session contains no analytics call.
 
 - **Data collected**: Everything typed into the terminal and everything it prints, passed through the chat as transcript events and returned strings.
 - **Storage**: In memory only: the unsent events and up to 64 KiB of unclaimed output, until claimed or the chat is released; the transcript is the subscriber's.
-- **Transmission**: None by this type; a persona's tool or the control server relays the strings it returns.
+- **Transmission**: None by this type; a persona's tool or the app's Terminal Chat tools relay the strings it returns.
 - **Retention**: Replies are retained as unclaimed output until a wait claims them, the chat is dropped, or the 64 KiB limit forces them out.
 - **Concealment**: The session does no concealment of its own; a private terminal's screen, and its `presentable` text of the echo, are already concealed, and every reply is read off that screen.
 - **Security**: Anyone with the session can type any command into the connected shell; the session performs no authorization.
@@ -254,3 +254,4 @@ Separation of concerns passes: screen diffing is the tracker's, the protocol def
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-23 | Mike Fullerton | Apps suite Phase 4: programs reach the session through the Terminal Chat tools, not the control server. |

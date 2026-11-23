@@ -84,3 +84,22 @@
 
 - **confines-to-ui-thread**: The component MUST be usable only on the UI thread. This covers the settings store, every setting and observer, and every storage provider (including the in-memory, plain persistent, secure persistent, embedded-database, and cloud-synced backends); plain value types such as colors are not confined. Consumers built on these types, such as settings-window models, are specified in their own ingredients.
 
+Shared settings
+
+- **shared-keys-membership**: A shared-settings key set MUST contain a key exactly when the key's name is one of its names or starts with one of its prefixes. The suite's set MUST hold the active theme id, the custom themes, the terminal font name, font size, cursor shape and cursor blink, the AI provider configuration list, and the prefix `aiplugin.config.`.
+- **routed-unrouted-to-fallback**: The routed provider MUST send every get, set, remove and contains for a key outside its key set to the provider it wraps, unchanged.
+- **routed-reads-before-load**: Until a load has succeeded, a routed key MUST read the cached value when one was written through this provider, and otherwise the wrapped provider's value, so an app that cannot reach the backend still shows the values it had.
+- **routed-reads-after-load**: Once a load has succeeded, every routed key MUST be answered from the cache, and a routed key the backend does not hold MUST read as its default.
+- **routed-write-order**: A routed set or remove MUST update the cache at once, publish the key on the change stream, and then reach the backend after every earlier routed write, in the order written. The wrapped provider MUST NOT be written for a routed key.
+- **routed-backend-change**: A backend change for a routed key MUST refetch that key; the cache MUST be updated and the key published only when the value differs, and a change for a key with a write still unanswered MUST NOT be applied, so the echo of the app's own write is silent.
+- **routed-load-failure**: A failed load MUST throw and leave the wrapped provider answering; calling start again retries it.
+- **routed-install-keeps-instance**: Installing a routed provider MUST replace the shared settings store instance's plain provider without replacing the instance, so observable settings constructed earlier keep reading through it and keep hearing its changes.
+- **shared-store-versions**: The shared-settings store MUST give a key version 1 on its first write and one more on each later write; a key with no row is at version 0.
+- **shared-store-optimistic**: A write or remove that names an expected version MUST be refused with a version-conflict error when the key is at any other version, leaving the value as it was; a write that names none always succeeds.
+- **shared-store-json-only**: The shared-settings store MUST refuse a value that is not one JSON value (a fragment such as `13` or `"Menlo"` counts as one).
+- **shared-store-import-if-absent**: The import's write MUST store a value only when the key has none, and MUST report whether it stored it.
+- **shared-store-change-stream**: Every write or remove that changes something MUST publish the key on the store's change stream.
+- **shared-secrets-read**: For a secure AI provider key (`aiplugin.config.` prefix), a read MUST try the shared Keychain group first; on a miss it MUST read the app's own secure provider and, when that holds a value, copy it into the shared group without deleting it from the app's own service.
+- **shared-secrets-write-remove**: A write of such a key MUST go to the shared group only; a remove MUST clear it from both places, so a cleared secret is not copied forward again.
+- **shared-secrets-other-keys**: Every other secure key MUST stay with the app's own secure provider.
+- **shared-secrets-install-once**: Installing the shared-group provider twice MUST NOT stack a second provider, and a binary without the access-group entitlement MUST install nothing.

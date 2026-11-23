@@ -1,0 +1,116 @@
+{
+  "format": 2,
+  "meta": {
+    "id": "ed460f60-2a13-4a3c-b7eb-53c531bf0741",
+    "title": "MCP Registration",
+    "type": "ingredient",
+    "version": "1.0.0",
+    "status": "review",
+    "language": "en",
+    "created": "2026-11-14",
+    "modified": "2026-11-14",
+    "author": "Mike Fullerton",
+    "copyright": "2026 Mike Fullerton",
+    "license": "MIT",
+    "summary": "Builds the one-time claude mcp add command that registers the local MCP endpoint with Claude Code, and checks the Claude config to see whether it is registered.",
+    "platforms": [
+      "swift",
+      "macos"
+    ],
+    "tags": [
+      "mcp",
+      "registration",
+      "claude-code"
+    ],
+    "depends-on": [],
+    "related": [
+      "52650804-a096-4b71-b4eb-da3afa95ac56"
+    ],
+    "references": [],
+    "approved-by": "",
+    "approved-date": ""
+  },
+  "synced": "fbe92ad6a7598541",
+  "parts": [
+    {
+      "part": "intro"
+    },
+    {
+      "part": "overview",
+      "heading": "Overview"
+    },
+    {
+      "part": "behavioral-requirements",
+      "heading": "Behavioral Requirements"
+    },
+    {
+      "part": "appearance",
+      "heading": "Appearance"
+    },
+    {
+      "part": "states",
+      "heading": "States"
+    },
+    {
+      "part": "accessibility",
+      "heading": "Accessibility"
+    },
+    {
+      "part": "conformance-test-vectors",
+      "heading": "Conformance Test Vectors"
+    },
+    {
+      "part": "edge-cases",
+      "heading": "Edge Cases"
+    },
+    {
+      "part": "configuration",
+      "heading": "Configuration"
+    },
+    {
+      "part": "deep-linking",
+      "heading": "Deep Linking"
+    },
+    {
+      "part": "localization",
+      "heading": "Localization"
+    },
+    {
+      "part": "accessibility-options",
+      "heading": "Accessibility Options"
+    },
+    {
+      "part": "feature-flags",
+      "heading": "Feature Flags"
+    },
+    {
+      "part": "analytics",
+      "heading": "Analytics"
+    },
+    {
+      "part": "privacy",
+      "heading": "Privacy"
+    },
+    {
+      "part": "logging",
+      "heading": "Logging"
+    },
+    {
+      "part": "platform-notes",
+      "heading": "Platform Notes"
+    },
+    {
+      "part": "design-decisions",
+      "heading": "Design Decisions"
+    },
+    {
+      "part": "compliance",
+      "heading": "Compliance"
+    },
+    {
+      "part": "history",
+      "heading": "Change History"
+    }
+  ],
+  "names_hosts": "The code this spec describes names Claude itself (its CLI, hook events, paths or literal labels); the spec states those values."
+}

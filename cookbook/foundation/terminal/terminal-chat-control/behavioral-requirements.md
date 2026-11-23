@@ -17,7 +17,7 @@
 - **response-init-defaults**: `Response.init` MUST default every parameter to nil, so `Response(output: "ok")` sets `output` alone.
 - **response-success**: `isSuccess` MUST be true exactly when `error` is nil.
 - **response-failure**: `Response.failure(_:)` MUST build a response whose only field set is `error`.
-- **response-app**: `app` MUST name the app answering, for a client talking to several.
+- **response-app**: `app` MAY name the app answering, for a client talking to several; the tools (`TerminalChatDirectoryToolSource`) answer plain text and leave it unset.
 - **response-chat**: `chat` MUST name the chat that answered a run, wait, interrupt or screen.
 - **default-settle**: `Defaults.settle` MUST be 1.5 seconds.
 - **default-timeout**: `Defaults.timeout` MUST be 60 seconds.
@@ -25,28 +25,13 @@
 - **default-lines**: `Defaults.lines` MUST be 40.
 - **default-maximums**: `Defaults.maximumSettle` MUST be 60 seconds and `Defaults.maximumTimeout` MUST be 600 seconds.
 - **default-timeout-for-action**: `Defaults.timeout(for:)` MUST return `interruptTimeout` for `interrupt` and `timeout` for every other action.
-- **defaults-single-statement**: `Defaults` MUST be the one statement of these numbers, read by the chat session's own defaults, the app's server, the transport's wait and the tool's usage text. The one exception is the 15-second transport margin in `send`, which is a literal in `send` and not a `Defaults` member.
+- **defaults-single-statement**: `Defaults` MUST be the one statement of these numbers, read by the chat session's own defaults, the app's tools and the tools' descriptions.
 - **resolve-prefix**: `resolve(_:in:)` MUST pick the chat whose id starts with the query, compared ignoring case.
 - **resolve-only-chat**: `resolve` MUST pick the only chat when the query is nil and exactly one chat exists.
 - **resolve-none**: `resolve` MUST fail with `No Terminal Chat with id <query>.` when a query matches no chat, using the query lowercased, and with `There is no Terminal Chat open.` when the query is nil and there are no chats.
 - **resolve-many**: `resolve` MUST fail with `More than one Terminal Chat matches — choose one of: <ids>` when more than one chat matches, with the ids joined by a comma and a space, and this applies to a nil query when several chats exist.
 - **resolve-error-type**: The failure MUST be a `ResolveError` that carries a `message` and is `Equatable`.
-- **socket-directory**: `socketDirectory` MUST be `~/Library/Application Support/TerminalChat/sockets`, not named after any one app, so a client finds every running host the same way.
-- **socket-url**: `socketURL(pid:in:)` MUST be the directory plus `<pid>.sock`.
-- **prepare-owner-only**: `prepareSocketDirectory(_:)` MUST create the directory with permissions 0700 and set them to 0700 on an existing directory, so the sockets in it are reachable by this user alone.
-- **prepare-removes-stale**: `prepareSocketDirectory(_:)` MUST remove the sockets of processes that are no longer running.
-- **prepare-error**: `prepareSocketDirectory(_:)` MUST throw when it cannot create the directory or set its permissions, and MUST ignore a failure to remove a stale socket.
-- **host-fields**: A `Host` MUST carry `pid` (`Int32`) and `socket` (a file `URL`), and be `Sendable` and `Equatable`.
-- **running-hosts**: `runningHosts(in:)` MUST return a `Host` for each `<pid>.sock` file whose process is running, sorted by pid ascending.
-- **running-hosts-skip-names**: `runningHosts` MUST skip any file whose name does not end in `.sock` or whose stem is not an integer.
-- **running-test**: A process MUST count as running when `kill(pid, 0)` succeeds or fails with `EPERM`.
-- **running-hosts-missing-directory**: `runningHosts` MUST return an empty list when the directory cannot be read.
-- **wire-framing**: A message in either direction MUST be one UTF-8 JSON value on a single line terminated by `\n`, with exactly one request line and one reply line per connection. A sample request is `{"action":"run","chat":"a1b2","command":"ls"}` and a sample reply is `{"app":"Example","chat":"a1b2c3d4","output":"file.txt"}`.
-- **send-contract**: `send(_:to:wait:)` MUST encode the request as JSON, send it over the host's socket and decode the reply as a `Response`.
-- **send-wait-margin**: When `wait` is not given, `send` MUST wait the request's `timeout` (or the action's default timeout) plus 15 seconds, so a long `run` is not cut off by the transport before the app reports it.
-- **send-short-wait**: A request that runs nothing, such as a `list` asked of every host, SHOULD pass a short `wait`, so one stalled app cannot hold up the rest.
-- **send-errors**: `send` MUST throw when encoding fails, the connection fails or times out, or the reply is not a valid `Response`.
-- **host-answer-shape**: The host MUST answer `list` with `chats` and every other success with `chat` and `output`; the server fills `app` on every reply that comes from a decoded request, but not on the `Not a Terminal Chat request.` reply to one that does not decode.
+- **host-answer-shape**: The host MUST answer `list` with the chats and every other success with the chat's output; the tools answer the chats as JSON and the output as plain text, and a failure as an error result carrying the message.
 - **host-clamp**: The host MUST clamp `settle` and `timeout` to at least 0.1 seconds and at most `maximumSettle` and `maximumTimeout`.
 - **host-run-needs-command**: The host MUST fail a `run` with a missing or empty `command` with `run needs a command.`.
 - **host-not-connected**: The host MUST fail a request for a chat that has no terminal with the message `Terminal Chat <id> is not connected to a terminal — use Connect to Terminal in its pane's Settings.`, where `<id>` is the resolved chat's full id.
@@ -54,6 +39,4 @@
 - **host-settle-cap**: The chat session MUST hold `settle` to at most half of `timeout` for a wait, so output that stops early is not judged unfinished against the deadline.
 - **host-list-order**: The host MUST list chats sorted by project and then `paneNumber`.
 - **host-screen-trim**: `screen` MUST drop trailing blank lines before taking the last `lines` lines.
-- **host-malformed-request**: The host MUST answer a request that does not decode with `Not a Terminal Chat request.`.
-- **host-shutting-down**: The host MUST answer a request that arrives as the app is shutting down with `The app is shutting down.`.
-
+- **transport-independent**: `TerminalChatControl` MUST define no transport: no socket, no client call and no host discovery; a host serves the protocol through its own transport, the app's MCP tools.

@@ -2,11 +2,11 @@
 id: dac3e46e-2eeb-4ebd-b88d-4e4999870db7
 title: "HostMCPServer"
 type: ingredient
-version: 1.0.1
+version: 1.1.0
 status: review
 language: en
 created: 2026-11-14
-modified: 2026-11-14
+modified: 2026-11-23
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -43,7 +43,7 @@ Construction and registration
 - **register-appends**: `register(_:prefix:)` MUST append the source to the registration list; registration order is the order sources are listed and the order they are searched on a call.
 - **prefix-default**: When no prefix is given, the registration MUST use the empty prefix.
 - **registrations-survive-stop**: Registrations MUST survive `stop()`, so a later `serve(over:)` serves the same tools; callers MUST NOT re-register.
-- **caller-header-name**: The server MUST expose the header name `X-ADKitchen-Pane` as `callerHeader`.
+- **caller-header-name**: The server MUST expose the header name `X-ADHD-Pane` as `callerHeader`, the old name `X-ADKitchen-Pane` as `legacyCallerHeader`, and both, in that order, as `callerHeaders`.
 
 Serving
 
@@ -74,7 +74,7 @@ Calling
 - **call-arguments-json**: The source MUST receive the call's arguments encoded as a JSON object; absent arguments MUST be sent as an empty object.
 - **call-arguments-fallback**: If the arguments cannot be encoded, the source MUST receive the bytes of `{}`.
 - **call-asks-definitions**: Before dispatching, the server MUST ask the candidate source for its current definitions to confirm it advertises the bare name.
-- **call-caller**: The source MUST receive the value of the `X-ADKitchen-Pane` request header as the caller, or nil when there is no HTTP request or no such header.
+- **call-caller**: The source MUST receive the value of the first of `callerHeaders` the request carries (`X-ADHD-Pane`, then `X-ADKitchen-Pane`) as the caller, or nil when there is no HTTP request or neither header.
 - **caller-header-case**: The header lookup MUST be case-insensitive, as the request type's header accessor is; the test sets the lowercase `x-adkitchen-pane`.
 - **call-result-text**: A result whose content does not start with the PNG data-URL prefix MUST become one text content item carrying the content unchanged.
 - **call-result-error-flag**: The MCP result's `isError` MUST equal the source's error flag.
@@ -116,7 +116,7 @@ Derived from `HostMCPServerTests` where named; the rest are traced to the source
 | host-mcp-server-008 | serve-stops-previous, fresh-server-per-serve | Serve over a first pair and connect, then serve over a second pair and connect a new client (`testSecondServeStopsTheFirst`) | The second client initializes without error and lists `a` |
 | host-mcp-server-009 | call-caller, caller-header-case | Request with header `x-adkitchen-pane: pane-7`; read caller, call the server with it (`testCallerHeaderReachesTheSource`) | Caller `pane-7`; the source records caller `pane-7` |
 | host-mcp-server-010 | call-caller | No request, or a request with no header | Caller is nil |
-| host-mcp-server-011 | caller-header-name | Read `HostMCPServer.callerHeader` | `X-ADKitchen-Pane` |
+| host-mcp-server-011 | caller-header-name | Read `HostMCPServer.callerHeader`, `legacyCallerHeader` and `callerHeaders` | `X-ADHD-Pane`; `X-ADKitchen-Pane`; both, the new name first |
 | host-mcp-server-012 | list-schema-fallback | Source whose definition's schema bytes are not JSON; `tools/list` | The tool is listed with schema type `object` and empty properties |
 | host-mcp-server-013 | call-arguments-json | Call with no arguments | Source receives `{}` |
 | host-mcp-server-014 | call-image-error-flag | Source returns the PNG data URL with the error flag true | Image content with `isError` true |
@@ -158,7 +158,9 @@ Derived from `HostMCPServerTests` where named; the rest are traced to the source
 | `source` | `ChatToolSource` | none | A tool source added with `register(_:prefix:)` |
 | `prefix` | String, optional | empty | Put before every tool name the source advertises; removed before a call reaches it |
 | `transport` | `Transport` | none (required) | The MCP transport passed to `serve(over:)` |
-| `callerHeader` | static String | `X-ADKitchen-Pane` | Request header naming the calling pane |
+| `callerHeader` | static String | `X-ADHD-Pane` | Request header naming the calling pane |
+| `legacyCallerHeader` | static String | `X-ADKitchen-Pane` | The header's name before adhd served the tools; still read |
+| `callerHeaders` | static [String] | `[callerHeader, legacyCallerHeader]` | Every name the caller is read from, in order |
 
 ## Deep Linking
 
@@ -267,5 +269,6 @@ The server keeps routing, the MCP translation and transport choice separate: tra
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.0 | 2026-11-23 | Mike Fullerton | Apps suite Phase 4: callerHeader is X-ADHD-Pane; legacyCallerHeader and callerHeaders added. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Conformance tests added (HostMCPServerConformanceTests.swift, 14 new vectors; 24 of 25 covered with HostMCPServerTests); unit-test-coverage now partial (host-mcp-server-022 skipped: Logger not capturable). |
 | 1.0.0 | 2026-11-14 | Mike Fullerton | Initial creation |

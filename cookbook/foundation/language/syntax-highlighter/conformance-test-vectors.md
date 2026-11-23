@@ -25,3 +25,4 @@
 | syntax-highlighter-022 | limits | a grammar matching `a` once per character: a 9 000-character line with `lineTimeLimit` 1 ms, and fifty 2 000-character lines with `timeBudget` 0 | nil both times; a following one-line call is highlighted. |
 
 | syntax-highlighter-023 | cancellation | `highlight` called from a task already cancelled, on a new highlighter | throws `CancellationError`; no engine created. |
+| syntax-highlighter-024 | bundled-resources | a bundle with no `TextMate` folder; one whose folder holds only `highlighter.js` and `onig.wasm`; one whose folder holds every required file | nil; nil; resources over that folder (`BundledTextMateResourcesTests.testABundleWithoutTheFolderAnswersNil`, `testAFolderMissingARequiredFileAnswersNil`, `testTheFixtureFolderLoads`) |

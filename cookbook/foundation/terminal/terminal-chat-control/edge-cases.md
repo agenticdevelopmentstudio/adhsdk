@@ -8,13 +8,6 @@
 - **Out-of-range timing**: a `settle` or `timeout` of zero or a negative number clamps to 0.1 seconds and a value above the maximum clamps down to it; the request is never rejected for this.
 - **Screen line count**: a `lines` below 1 is raised to 1 by the chat session's `screen`.
 - **Command that outlasts the wait**: `run` returns what it has when the timeout passes and reports the command as still running; the client MUST use `wait` for more.
-- **Stale sockets**: a socket whose process has exited is skipped by `runningHosts` and removed by `prepareSocketDirectory`; a pid reused by another process can look running, and the connection then fails.
-- **Other user's process**: `kill(pid, 0)` failing with `EPERM` still counts as running.
-- **Stalled host**: a host that never answers holds only its own call, when the caller passes a short `wait`.
-- **Malformed request or reply**: the host answers `Not a Terminal Chat request.` and the client throws on an undecodable reply.
-- **Concurrent access**: one request per connection; the chat session ends a previous wait with what it had when a new one starts, so two clients driving the same chat can cut each other's wait short.
-- **Error and offline states**: with the app not running, no socket is live and the client finds no host.
-- **Oversized request**: a request longer than the socket server's 1 MiB limit is dropped unanswered, so the client's call fails.
-- **Different user**: the socket server closes a connection whose peer user id is not its own, so another user's client gets no reply.
-- **Shutdown**: a request that arrives as the host is shutting down is answered `The app is shutting down.`.
-
+- **Malformed arguments**: the tools answer an error naming the tool when the arguments do not decode.
+- **Concurrent access**: calls are served one at a time on the main actor; the chat session ends a previous wait with what it had when a new one starts, so two clients driving the same chat can cut each other's wait short.
+- **App not running**: the tools are served by the running app's MCP host, so with the app not running there is nothing to call; the host's own error reaches the client.

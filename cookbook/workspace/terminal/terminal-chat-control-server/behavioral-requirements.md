@@ -3,34 +3,25 @@
 - **directory-remove**: `remove(id:)` MUST delete the entry for that id and MUST do nothing for an unknown id.
 - **directory-weak**: The directory MUST hold each session weakly, and a session that has been released MUST drop out of the listing the next time the chats are read.
 - **chat-id**: `chatID(forNode:)` MUST return the first 8 characters of the node id's UUID string, lowercased.
-- **chats-sorted**: The chats MUST be ordered by project name, then by pane number, using the project names as listed (after concealment).
+- **chats-sorted**: `chatEntries` MUST be ordered by project name, then by pane number, using the project names as listed (after concealment).
 - **chats-connected**: A chat's `connected` flag MUST be true exactly when its session has a terminal.
 - **chats-presentable**: A chat's project and directory path MUST be passed through the connected terminal's `presentable` text, so a private terminal conceals them as its screen does, and MUST be listed as given when the session has no terminal.
-- **server-start**: `start()` MUST prepare the socket directory, listen at the socket for this process's id in that directory and keep the listener.
-- **server-start-idempotent**: Calling `start()` while a server already exists MUST do nothing.
-- **server-start-error**: An error from preparing the directory or from starting the listener MUST propagate to the caller, and no server MUST be kept.
-- **server-stop**: `stop()` MUST stop the listener and release it, and MUST be safe when not started.
-- **answer-decode-failure**: A request that does not decode as a control request MUST be answered with the error "Not a Terminal Chat request."
-- **answer-app-name**: Every answer to a request that decodes, success or failure, MUST carry the app name the server was created with; the decode-failure, shutting-down and encode-fallback answers carry none.
-- **answer-shutting-down**: A request that arrives after the server object is gone MUST be answered with the error "The app is shutting down."
-- **answer-encode-fallback**: When the answer cannot be encoded, the server MUST send the JSON object with the error "Could not encode the reply."
-- **list-action**: A list request MUST return every chat in the directory, with no chat resolved.
-- **resolve-chat**: Any other action MUST resolve its target by prefix, or the only chat when none is named, and MUST answer the resolution error's message when there are none or several ("No Terminal Chat with id <prefix>." for a named prefix that matches none, "There is no Terminal Chat open." when none is named and none exist, and "More than one Terminal Chat matches — choose one of: <ids>" for several).
+- **five-tools**: `toolDefinitions()` MUST offer exactly `list`, `run`, `wait`, `interrupt` and `screen`; `run` MUST require `command`, and `chat` MUST be optional on every tool that takes it.
+- **unknown-tool**: A call naming any other tool MUST answer "Unknown tool <name>." as an error.
+- **bad-arguments**: Arguments that do not decode MUST answer an error naming the tool; empty arguments MUST be treated as no arguments.
+- **list-action**: `list` MUST answer every chat as pretty-printed JSON with sorted keys, with no chat resolved and never as an error.
+- **resolve-chat**: Every other tool MUST resolve its target with `TerminalChatControl.resolve`, by prefix or the only chat when none is named, and MUST answer the resolution error's message as an error when there are none or several.
 - **not-connected**: When the resolved chat has no terminal, the answer MUST be the error "Terminal Chat <id> is not connected to a terminal — use Connect to Terminal in its pane's Settings."
 - **settle-clamp**: The settle time MUST be the requested seconds, or 1.5 when none, raised to at least 0.1 and capped at 60, expressed in whole milliseconds.
 - **timeout-clamp**: The timeout MUST be the requested seconds, or 60 for run and wait and 10 for interrupt when none, raised to at least 0.1 and capped at 600, expressed in whole milliseconds.
-- **run-needs-command**: A run request with no command or an empty command MUST be answered with the error "run needs a command.", and nothing MUST be typed.
-- **run-action**: A run request MUST type the command into the chat and answer with the chat id and the reply, using the settle and timeout.
-- **wait-action**: A wait request MUST answer with the chat id and more output from the chat, using the settle and timeout.
-- **interrupt-action**: An interrupt request MUST send the interrupt through the chat and answer with the chat id and what the terminal printed, using the settle and timeout.
-- **screen-action**: A screen request MUST answer with the chat id and the last lines of the terminal's screen, 40 lines when the request names none, and an empty string when the session has no screen text; the session drops trailing blank rows before taking the last lines.
+- **interrupt-default-timings**: `interrupt` MUST ignore any settle or timeout it is given and use the defaults.
+- **run-needs-command**: A run with no command or an empty command MUST be answered with the error "run needs a command.", and nothing MUST be typed.
+- **run-action**: `run` MUST type the command into the chat and answer the reply, using the settle and timeout.
+- **wait-action**: `wait` MUST answer more output from the chat, using the settle and timeout.
+- **interrupt-action**: `interrupt` MUST send the interrupt through the chat and answer what the terminal printed.
+- **screen-action**: `screen` MUST answer the last lines of the terminal's screen, 40 lines when the call names none, and an empty string when the session has no screen text.
 - **through-chat**: Commands MUST go through the chat session, never straight to the terminal.
 - **concealed-reply**: A reply from a chat connected to a private terminal MUST be what that terminal shows, with its privacy words in place of the real ones.
-- **socket-owner-only**: The listening socket MUST be reachable by this user alone: the directory owner-only, the socket file owner-only and a peer with another user id refused.
-- **slow-client-timeout**: An accepted connection MUST have a 10 second limit on each read and write, so a client that sends nothing is dropped.
-- **one-request-per-connection**: Each connection MUST carry one request line and receive one answer line, then close.
-- **request-size-cap**: A request longer than 1 MiB MUST be dropped unanswered.
-- **main-actor**: The directory and the server MUST be used only from the main actor; the socket handler hops to the main actor to answer.
-- **lines-bounds**: The server MUST pass the requested line count to the session unclamped; the session raises it to at least 1 and returns at most the lines it has, so zero or a negative number yields one line and a very large number yields every line of the screen (trailing blank rows are dropped first).
-- **caller-authorization**: NEEDS REVIEW: Not implemented in source. Beyond the same-user peer check, the server does not authenticate which process or user session connects, so any process of the same user can type into any connected chat, including a private one; evidence that settles it is a product decision on whether the same-user boundary is the intended limit.
-
+- **main-actor**: The directory MUST be used only from the main actor; the tool source hops to the main actor to read it and to drive a chat.
+- **lines-bounds**: The tool source MUST pass the requested line count to the session unclamped; the session raises it to at least 1 and returns at most the lines it has.
+- **caller-authorization**: NEEDS REVIEW: The tool source does no authorization of its own; who may call it is the MCP host's bearer-token check, so any client holding the host's token can type into any connected chat, including a private one; evidence that settles it is a product decision on whether the host's token is the intended limit.

@@ -4,15 +4,15 @@
     "id": "b71b349b-5c60-41f4-b664-49085ac5d988",
     "title": "Terminal Chat Control",
     "type": "ingredient",
-    "version": "1.0.2",
+    "version": "2.0.0",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
-    "modified": "2026-11-14",
+    "modified": "2026-11-23",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
-    "summary": "The protocol an outside process such as adterm uses to list Terminal Chats, type into one and read back the reply over a per-app Unix socket.",
+    "summary": "The protocol an outside process such as Claude Code uses, through the app's MCP tools, to list Terminal Chats, type into one and read back the reply.",
     "platforms": [
       "swift",
       "macos"
@@ -33,7 +33,7 @@
     "approved-date": ""
   },
   "names_hosts": "The code this spec describes names Claude itself (its CLI, hook events, paths or literal labels); the spec states those values.",
-  "synced": "d13ef75fc1830b1a",
+  "synced": "5ad4d410c25443ad",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

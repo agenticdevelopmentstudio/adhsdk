@@ -12,6 +12,6 @@
 **Approved**: pending
 
 **Decision**: The model is `@MainActor` and publishes the bearer token as a plain `String?`.
-**Rationale**: The panel is main-thread UI, so isolating the model there avoids locking. The token is published only so the panel can build the registration command; the model adds no protection for it, so where it is persisted and who can read it is decided by the host feature and the instance's holders.
+**Rationale**: The panel is main-thread UI, so isolating the model there avoids locking. The token is published only for the Coding Partner's MCP config, and the registration command is published ready-made as `command`, so the panel copies text that holds no token; the model adds no protection for it, so where it is persisted and who can read it is decided by the host feature and the instance's holders.
 **Approved**: pending
 

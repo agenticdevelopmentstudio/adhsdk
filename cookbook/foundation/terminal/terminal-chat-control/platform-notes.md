@@ -1,7 +1,7 @@
 
-- **SwiftUI**: Not used here; the app's Terminal Chat panes are served by the host and need no change to be driven.
-- **Compose**: a Kotlin port keeps the same JSON field names and uses a Unix domain socket in the filesystem namespace (`LocalSocket` with `LocalSocketAddress.Namespace.FILESYSTEM`, or `UnixDomainSocketAddress` on a desktop JVM), not the abstract namespace, which has no directory to scan and no 0700 protection; the five actions and the resolver are plain logic.
-- **React/Web**: a browser cannot open a Unix socket; a Node client can, with the same newline-terminated JSON lines, `net.createConnection` and a timeout of the request's wait.
-- **AppKit / UIKit**: The source is Swift in `packages/apple/AgenticDeveloperHubSDK/Core/Terminal/TerminalChatControl.swift`: a caseless `public enum` with nested `Codable` types, `FileManager` for the socket directory, `kill(pid, 0)` for liveness and `UnixSocketLineClient` for the call.
-- **WinUI 3**: Use C# `record` types with `System.Text.Json` and the same property names, `AF_UNIX` sockets (Windows 10 version 1803 and later) in an ACL-restricted folder under `%LOCALAPPDATA%`, with a directory ACL limited to the current user in place of 0700, and `Process.GetProcessById` for liveness. A named pipe is the alternative, but pipes live in `\\.\pipe\`, not in a directory, so a directory ACL cannot protect them and a client cannot discover them by scanning; use a pipe-name scheme that includes the pid plus a pipe security descriptor limited to the current user.
+- **SwiftUI**: Not used here; the app's Terminal Chat panes are served by the tools and need no change to be driven.
+- **Compose**: a Kotlin port keeps the same field names as `kotlinx.serialization` data classes; the five actions and the resolver are plain logic.
+- **React/Web**: a TypeScript port keeps the same field names as interfaces and the resolver as a pure function; the transport is the host's MCP server.
+- **AppKit / UIKit**: The source is Swift in `packages/apple/AgenticDeveloperHubSDK/Core/Terminal/TerminalChatControl.swift`: a caseless `public enum` with nested `Codable` types, the `Defaults` constants and `resolve`.
+- **WinUI 3**: Use C# `record` types with `System.Text.Json` and the same property names, and the resolver as a static method; the transport is the host's MCP server.
 

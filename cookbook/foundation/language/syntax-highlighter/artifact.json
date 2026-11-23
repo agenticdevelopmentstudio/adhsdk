@@ -4,11 +4,11 @@
     "id": "6708bfd4-5b29-4bf9-b180-05904873906e",
     "title": "Syntax Highlighter",
     "type": "ingredient",
-    "version": "1.2.1",
+    "version": "1.3.0",
     "status": "review",
     "language": "en",
     "created": "2026-11-13",
-    "modified": "2026-11-16",
+    "modified": "2026-11-23",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -35,7 +35,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "33ee57ae7c3192b0",
+  "synced": "8ca1faad1e772abd",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

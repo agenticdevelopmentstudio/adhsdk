@@ -2,11 +2,11 @@
 id: 03ac452d-50c9-4438-9cfb-9cb2c2b65249
 title: "MCP HTTP Endpoint"
 type: ingredient
-version: 1.0.0
+version: 1.1.0
 status: review
 language: en
 created: 2026-11-14
-modified: 2026-11-14
+modified: 2026-11-23
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -31,7 +31,7 @@ approved-date: ""
 
 ## Overview
 
-The MCP HTTP Endpoint is the listening half of the app's automation surface. It takes a `HostMCPServer` and serves it to local MCP clients (Claude Code, for one) over MCP Streamable HTTP on `127.0.0.1`. FlyingFox owns the socket. The MCP SDK's `StatelessHTTPServerTransport` owns the protocol, including Origin and Host checks, Accept and Content-Type checks, and the protocol-version check. The endpoint adds what the SDK leaves to the host:
+The MCP HTTP Endpoint is the listening half of the app's automation surface. It takes a `HostMCPServer` and serves it to local MCP clients (Claude Code, for one) over MCP Streamable HTTP on `127.0.0.1`. FlyingFox owns the socket. The MCP SDK's `StatelessHTTPServerTransport` owns the protocol, including Origin and Host checks, Accept and Content-Type checks, and the protocol-version check. What the SDK leaves to the host is split in two. `MCPStatelessHTTPHandler` (`packages/apple/AgenticDeveloperHubSDK/Core/MCP/MCPStatelessHTTPHandler.swift`, in the core target) depends on no socket and is shared with adhd's `/mcp` route: it owns the id rewriting, cancellation and the collected body. The endpoint owns the socket-side policy, the bearer token, the route and the lifecycle. Together they add:
 
 - A bearer token on every request.
 - One `POST /mcp` route, with 404 and 405 for everything else.
@@ -39,9 +39,9 @@ The MCP HTTP Endpoint is the listening half of the app's automation surface. It 
 - Cancellation. Because a request runs under an id its caller did not send, the endpoint translates a caller's `notifications/cancelled` to the id the SDK knows, and turns FlyingFox's request timeout, which on its own cancels only the HTTP handler, into the same cancellation, so the tool call stops when the client is told it failed.
 - A start and stop lifecycle that survives a busy port and a stop that races a start.
 
-It is an actor. One instance serves one `HostMCPServer` on one port. The registration side, which writes the command that points Claude Code at this endpoint, is the MCP registration ingredient (ai/mcp/mcp-registration). The client-side MCP plumbing is the sibling [adhsdk.ingredient.ai.mcp.mcp-plumbing](cookbook:52650804-a096-4b71-b4eb-da3afa95ac56).
+It is an actor. One instance serves one `HostMCPServer` on one port. The registration side, which builds the command that points Claude Code at adhd's endpoint, is [adhsdk.ingredient.ai.mcp.mcp-registration](cookbook:ed460f60-2a13-4a3c-b7eb-53c531bf0741). The client-side MCP plumbing is the sibling [adhsdk.ingredient.ai.mcp.mcp-plumbing](cookbook:52650804-a096-4b71-b4eb-da3afa95ac56).
 
-The source is `packages/apple/AgenticDeveloperHubSDK/macOS/Features/MCP/MCPHTTPEndpoint.swift`. It depends on the core `HostMCPServer` (`serve(over:)`, `stop()`, `callerHeader`), FlyingFox, and the MCP SDK.
+The source is `packages/apple/AgenticDeveloperHubSDK/macOS/Features/MCP/MCPHTTPEndpoint.swift`. It depends on the core `HostMCPServer` (`stop()`) and `MCPStatelessHTTPHandler` (which calls `serve(over:)` and reads `callerHeaders`), FlyingFox, and the MCP SDK.
 
 ## Behavioral Requirements
 
@@ -58,7 +58,7 @@ Starting and stopping
 - **start-loopback-only**: The listening address MUST be `127.0.0.1`, never a wildcard or external address.
 - **start-falls-back-to-ephemeral**: When binding the preferred port fails and the preferred port is not 0 and no stop was requested, `start()` MUST log that the port is taken and bind port 0, then return the ephemeral port the system gave.
 - **start-idempotent-when-running**: `start()` called while running MUST return the port it is already on without binding again.
-- **start-serves-before-listening**: `start()` MUST first call `server.serve(over:)` with a fresh stateless transport, and only then bind the socket, so the first request already finds a served server.
+- **start-serves-before-listening**: `start()` MUST first build an `MCPStatelessHTTPHandler` over the server (which calls `server.serve(over:)` with a fresh stateless transport), and only then bind the socket, so the first request already finds a served server.
 - **start-while-starting-or-stopping**: `start()` called while another `start()` is binding, or while a `stop()` is tearing down, MUST throw `StartError.alreadyStarting`.
 - **start-bind-confirmation**: `start()` MUST treat the bind as failed when the HTTP server's run loop ends early or does not report listening within 5 seconds, and MUST read the bound port from the listening address (IPv4 or IPv6); any other address kind, or no address, MUST fail with a file-not-found Cocoa error.
 - **start-failure-cleans-up**: When `start()` throws for any reason, it MUST tear down everything it built (listener, run task, transport, port, server), return to idle, clear the stop request, and rethrow.
@@ -76,41 +76,46 @@ Authorization
 
 Routing
 
-- **route-post-only**: Only `POST /mcp` MUST reach the MCP transport.
+- **route-post-only**: Only `POST /mcp` MUST reach the handler, which passes it to the MCP transport.
 - **route-wrong-method-405**: A request to `/mcp` with any other method MUST be answered 405 with the header `Allow: POST`.
 - **route-wrong-path-404**: A request to any other path MUST be answered 404.
 
-Id rewriting
+Id rewriting (in `MCPStatelessHTTPHandler`)
 
 - **rewrite-single-object-with-id**: A request body that is a single JSON object whose `id` is a string or an integer MUST be forwarded with its `id` replaced by a fresh UUID string, and the original id MUST be remembered.
-- **rewrite-passthrough**: A body that is an array, has no `id`, has a null, boolean or fractional `id`, or cannot be parsed or re-serialised MUST be forwarded unchanged. A null id is no id to the SDK (a notification), so the endpoint MUST NOT turn it into a request.
-- **rewrite-restore-response**: In the response body, when it is a JSON object whose `id` equals the unique id, the endpoint MUST put the caller's original id back, preserving its type (integer stays integer, string stays string). Any other response body MUST pass through unchanged.
+- **rewrite-passthrough**: A body that is an array, has no `id`, has a null, boolean or fractional `id`, or cannot be parsed or re-serialised MUST be forwarded unchanged. A null id is no id to the SDK (a notification), so the handler MUST NOT turn it into a request.
+- **rewrite-restore-response**: In the response body, when it is a JSON object whose `id` equals the unique id, the handler MUST put the caller's original id back, preserving its type (integer stays integer, string stays string). Any other response body MUST pass through unchanged.
 
 Caller identity
 
-- **caller-header-forwarded**: The endpoint MUST forward every request header to the transport so the server can read the caller header (`HostMCPServer.callerHeader`, `X-ADKitchen-Pane`) and give the tool source the caller id; a request without it reaches the source with no caller.
+- **caller-header-forwarded**: The endpoint MUST forward every request header to the handler and the handler to the transport, so the server can read the caller header (`HostMCPServer.callerHeader`, `X-ADHD-Pane`, or the legacy `X-ADKitchen-Pane`, matched without regard to case, the new name winning when both are sent) and give the tool source the caller id; a request without either reaches the source with no caller.
 
-Cancellation
+Cancellation (in `MCPStatelessHTTPHandler`)
 
 - **cancel-recognise**: A body MUST be treated as a cancellation when it is a JSON object with no rewritable id, whose `method` is the MCP cancelled-notification name (`notifications/cancelled`), and whose `params.requestId` is a string or an integer.
-- **cancel-keyed-by-caller**: The endpoint MUST track in-flight requests by the pair (caller header value or empty, the id the caller sent) so a cancellation from one caller cannot stop another caller's request that happens to use the same id.
-- **cancel-translate**: For a recognised cancellation whose key is in flight, the endpoint MUST forward the notification with `params.requestId` replaced by the unique id, then release the waiting request (see `cancel-release`).
-- **cancel-unknown-passes**: For a cancellation whose key is not in flight (already answered, or another caller's), the endpoint MUST forward it unchanged and the SDK ignores it; the HTTP answer to the notification itself MUST be the transport's (202 with no body).
+- **cancel-keyed-by-caller**: The handler MUST track in-flight requests by the pair (caller header value or empty, the id the caller sent) so a cancellation from one caller cannot stop another caller's request that happens to use the same id.
+- **cancel-translate**: For a recognised cancellation whose key is in flight, the handler MUST forward the notification with `params.requestId` replaced by the unique id, then release the waiting request (see `cancel-release`).
+- **cancel-unknown-passes**: For a cancellation whose key is not in flight (already answered, or another caller's), the handler MUST forward it unchanged and the SDK ignores it; the HTTP answer to the notification itself MUST be the transport's (202 with no body).
 - **cancel-release**: Releasing a cancelled request MUST send the transport a JSON-RPC error response for the unique id with code `-32800` and message `request cancelled: <reason>`, so the HTTP call waiting on it is answered rather than held open until the timeout. A release arriving after a real response finds no waiter and the transport drops it.
-- **cancel-timeout-forwarded**: When FlyingFox's request timeout cancels a handler, the endpoint MUST send the transport a `notifications/cancelled` for the unique id with reason `the HTTP request timed out`, and then release it, so the tool call stops and the client is answered.
+- **cancel-timeout-forwarded**: When the task awaiting `handle(method:headers:body:)` is cancelled (FlyingFox's request timeout cancels the endpoint's request handler, or a connection drops), the handler MUST send the transport a `notifications/cancelled` for the unique id with reason `the HTTP request was cancelled`, and then release it, so the tool call stops and the client is answered.
 - **inflight-reuse-last-wins**: When a caller reuses an id while the first request is still in flight, the later request's unique id MUST win the key; the earlier request's completion MUST NOT forget the later entry.
 - **inflight-cleared-on-completion**: A request's in-flight entry MUST be removed when its handler returns.
 
 Response mapping
 
-- **response-status-map**: The SDK's status code MUST be mapped to the matching FlyingFox status for 200, 202, 400, 401, 403, 404, 405, 406, 421 and 500, and to a status with that numeric code and an empty phrase otherwise.
-- **response-headers-copied**: The SDK response's headers MUST be copied onto the FlyingFox response.
-- **response-stream-collected**: A streamed SDK response MUST be collected into one body. A stream that fails midway MUST become an empty 500, never a truncated 200.
+- **response-status-map**: The handler's status code MUST be mapped to the matching FlyingFox status for 200, 202, 400, 401, 403, 404, 405, 406, 421 and 500, and to a status with that numeric code and an empty phrase otherwise.
+- **response-headers-copied**: The handler response's headers MUST be copied onto the FlyingFox response.
+- **response-stream-collected**: The handler MUST collect a streamed SDK response into one body. A stream that fails midway MUST become an empty 500, never a truncated 200.
 
 Logging
 
 - **log-outcomes**: The endpoint MUST log each handled request's path and status, each 401, each cancellation, the port-taken fallback, and the listening port, none of which includes the token or body.
 
+The handler on its own
+
+- **handler-api**: `MCPStatelessHTTPHandler` MUST be a `public actor` with `init(server: HostMCPServer, path: String = "/mcp") async throws`, which serves the server over a fresh stateless transport, and `handle(method:headers:body:) async -> (status: Int, headers: [String: String], body: Data)`.
+- **handler-post-only**: `handle` MUST answer any method other than `POST` (compared without regard to case) with 405, the header `Allow: POST` and an empty body, without reaching the transport.
+- **handler-no-auth**: The handler MUST NOT check authentication or the path; both stay with whatever owns the socket.
 ## Appearance
 
 Not applicable — this is a network service actor, not a visual component.
@@ -144,7 +149,7 @@ Not applicable — this is a network service actor with no user interface.
 | mcphttp-endpoint-006 | rewrite-restore-response | Two concurrent `tools/call` requests, both `"id": 1`, from panes `pane-A` and `pane-B` | Each answer carries id 1 and text `caller:<its pane>`, and the source saw both panes (`testConcurrentCallsWithTheSameIdKeepTheirOwnCaller`) |
 | mcphttp-endpoint-007 | rewrite-restore-response | `tools/list` with `"id": "abc"` | Status 200 and the response id is the string `abc` (`testStringIdsRoundTripToo`) |
 | mcphttp-endpoint-008 | rewrite-passthrough | `tools/list` with `"id": null` | Status 202 and no body (`testNullIdIsStillANotification`) |
-| mcphttp-endpoint-009 | caller-header-forwarded | `tools/call whoami` with header `X-ADKitchen-Pane: pane-7`; then the same with no header | Text `caller:pane-7`; then `caller:none` (`testCallerHeaderReachesTheSource`, `testMissingCallerHeaderIsNone`) |
+| mcphttp-endpoint-009 | caller-header-forwarded | `tools/call whoami` with header `X-ADHD-Pane: pane-7`; with `X-ADKitchen-Pane: pane-old`; then with no header | Text `caller:pane-7`; `caller:pane-old`; then `caller:none` (`testCallerHeaderReachesTheSource`, `testLegacyCallerHeaderReachesTheSource`, `testMissingCallerHeaderIsNone`) |
 | mcphttp-endpoint-010 | cancel-recognise, cancel-translate, cancel-release | A 2 second `sleep` call with id 5 from pane-C; after 0.3 seconds a `notifications/cancelled` for id 5 from pane-C | The cancel POST answers 202 with no body; the call answers 200 in under 1.5 seconds with id 5 and an `error`; the tool recorded `cancelled` (`testCallerCancellationReachesTheTool`) |
 | mcphttp-endpoint-011 | cancel-keyed-by-caller | The same `sleep` call from pane-C and a cancellation for id 5 from pane-D | The cancel answers 202; the sleep call finishes with a `result`; the tool recorded `finished` (`testCancellationFromAnotherCallerCancelsNothing`) |
 | mcphttp-endpoint-012 | cancel-timeout-forwarded | An endpoint with `requestTimeout` 0.5 and a 2 second `sleep` call | Status 500 in under 1.5 seconds and the tool recorded `cancelled` (`testHTTPTimeoutCancelsTheTool`) |
@@ -154,7 +159,11 @@ Not applicable — this is a network service actor with no user interface.
 | mcphttp-endpoint-016 | stop-while-starting, start-while-starting-or-stopping | `stop()` called while `start()` is binding; then a second `start()` during a stop | The first `start()` throws `stoppedWhileStarting`; the second throws `alreadyStarting` (derived from the phase switch; no test) |
 | mcphttp-endpoint-017 | rewrite-passthrough | Bodies `[{"id":1}]`, `{"id":1.5,"method":"x"}`, `{"id":true}` and `not json` | Each is forwarded unchanged (derived from `rewriteID`; no test) |
 | mcphttp-endpoint-018 | cancel-unknown-passes | A cancellation for id 99 when nothing is in flight | Status 202 with no body and no other request disturbed (derived from the cancel branch; no test) |
-
+| mcphttp-endpoint-019 | handler-api, rewrite-restore-response | The handler driven directly: `initialize` with id 7, `tools/list` with id 1, `tools/call b` with id `"req-1"` | Status 200 each; ids 7, 1 and `req-1` come back; the server name, the tool list `a`, `b` and the text `echo:b` (`MCPStatelessHTTPHandlerTests.testInitializeRoundTrip`, `testToolsListRoundTrip`, `testToolsCallRoundTrip`) |
+| mcphttp-endpoint-020 | caller-header-forwarded | The handler with `X-ADHD-Pane: pane-7`, `x-adhd-pane: pane-lower`, `X-ADKitchen-Pane: pane-old`, then none; and `caller(in:)` with both names | The source sees `pane-7`, `pane-lower`, `pane-old`, nil; with both names the new one wins (`testCallerHeaderReachesCallTool`, `testCallerIsReadFromEitherName`) |
+| mcphttp-endpoint-021 | handler-post-only | `handle` with `GET` and `DELETE` | Status 405 with `Allow: POST` (`testAMethodOtherThanPostIs405`) |
+| mcphttp-endpoint-022 | rewrite-single-object-with-id, rewrite-restore-response, rewrite-passthrough | `rewriteID` on id 42, then `restoreID`; `rewriteID` on ids `null`, `true`, `1.5` | The sent id is the unique string and 42 comes back as an integer; the other three are not rewritten (`testIdRewriteRoundTrips`, `testOnlyStringAndIntegerIdsAreRewritten`) |
+| mcphttp-endpoint-023 | cancel-recognise | `cancellation(in:)` on a cancelled notification for id 5, renamed `u-1`; and on a `tools/list` request | `params.requestId` becomes `u-1`; the request is not a cancellation (`testACancellationNotificationIsRecognised`) |
 ## Edge Cases
 
 - **Null and empty input**: An empty body, or a body that does not parse, MUST be forwarded unchanged and the SDK answers it (MUST, per `rewrite-passthrough`). An empty token string MUST still be compared byte for byte, so the only authorised header is exactly `Bearer ` (MUST, per `auth-constant-time`).
@@ -204,7 +213,7 @@ Not applicable: the source emits no analytics event; its only reporting is the d
 
 ## Privacy
 
-- **Data collected**: Request bodies are tool calls and their arguments from a local MCP client, plus the caller-pane header. The endpoint reads them to route and rewrite ids and does not keep them past the request.
+- **Data collected**: Request bodies are tool calls and their arguments from a local MCP client, plus the caller-pane header. The endpoint and its handler read them to route and rewrite ids and does not keep them past the request.
 - **Storage**: The endpoint stores nothing durable. The in-flight table holds only caller and id strings for the life of a request. The token is held in memory.
 - **Transmission**: The socket binds `127.0.0.1` only, so nothing is reachable from another machine, and traffic is plain HTTP on loopback guarded by the bearer token.
 - **Retention**: Nothing is retained after a request completes or the endpoint stops.
@@ -219,7 +228,7 @@ Not applicable: the source emits no analytics event; its only reporting is the d
 
 ## Platform Notes
 
-- **SwiftUI**: The source is `packages/apple/AgenticDeveloperHubSDK/macOS/Features/MCP/MCPHTTPEndpoint.swift`, a `public actor` built into the macOS framework target on FlyingFox and the MCP SDK. The host's automation feature, which lives outside this source, starts it and publishes the returned port to `AutomationServerStatus`, which builds the URL from `MCPHTTPEndpoint.path`; the endpoint has no view of its own. Await `start()` and `stop()` off the main actor.
+- **SwiftUI**: The source is `packages/apple/AgenticDeveloperHubSDK/macOS/Features/MCP/MCPHTTPEndpoint.swift`, a `public actor` built into the macOS framework target on FlyingFox, over `MCPStatelessHTTPHandler` in the core target, which any other HTTP server (adhd's) can host the same way. The host's automation feature, which lives outside this source, starts it and publishes the returned port to `AutomationServerStatus`, which builds the URL from `MCPHTTPEndpoint.path`; the endpoint has no view of its own. Await `start()` and `stop()` off the main actor.
 - **Compose**: Port as a class owning a coroutine scope, using an embedded HTTP server (Ktor with the CIO engine bound to `127.0.0.1`), a `Mutex`-guarded phase enum, a `ConcurrentHashMap` for in-flight keys, and `withContext` plus `Job.cancel` for timeout forwarding. Desktop JVM targets only; an Android app has no local MCP client to serve.
 - **React/Web**: Not meaningful in a browser, which cannot listen on a port. A Node.js or Electron host ports it with `http.createServer` bound to `127.0.0.1`, `crypto.timingSafeEqual` over equal-length buffers for the token (after a length check, since the Swift version folds the length into the accumulator), an `AbortController` per request for timeout cancellation, and a `Map` for the in-flight table.
 - **AppKit / UIKit**: Identical to the SwiftUI note; the endpoint is UI-free. Any AppKit surface only displays the status that the returned port yields.
@@ -234,6 +243,7 @@ Not applicable: the source emits no analytics event; its only reporting is the d
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/MCP/MCPStatelessHTTPHandler.swift` | unverified |
 
 ## Design Decisions
 
@@ -278,9 +288,10 @@ Not applicable: the source emits no analytics event; its only reporting is the d
 | [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
 | [adc.check.security.secure-transport](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0a75f61f-9508-506e-b92e-0f5b29a91c95) | partial | Security |
 
-`secure-authentication` passes on the constant-time bearer check made before the body is read. `secure-log-output` passes because the log lines carry only path, status and port. `timeout-configuration` and `timeout-handling` pass on the injectable 120 second timeout that is forwarded into the SDK as a real cancellation. `error-recovery` passes on the failed-start cleanup and the fallback to an ephemeral port. `separation-of-concerns` passes: the SDK keeps the protocol, FlyingFox the socket, and this actor the host policy. `unit-test-coverage` is partial: the suite covers routing, auth, id round-trips, cancellation and the port fallback, but no test drives `stop()` during `start()`, a second `start()` during a stop, or the array, fractional, boolean and unparseable bodies (only the null id has a test). `secure-transport` is partial by design: traffic is plain HTTP, confined to the loopback address and guarded by the bearer token.
+`secure-authentication` passes on the constant-time bearer check made before the body is read. `secure-log-output` passes because the log lines carry only path, status and port. `timeout-configuration` and `timeout-handling` pass on the injectable 120 second timeout that is forwarded into the SDK as a real cancellation. `error-recovery` passes on the failed-start cleanup and the fallback to an ephemeral port. `separation-of-concerns` passes: the SDK keeps the protocol, FlyingFox the socket, `MCPStatelessHTTPHandler` the socket-free host policy (ids, cancellation, collected body) and this actor the token, route and lifecycle. `unit-test-coverage` is partial: the suite covers routing, auth, id round-trips, cancellation and the port fallback, but no test drives `stop()` during `start()`, a second `start()` during a stop, or the array and unparseable bodies (the null, boolean and fractional ids have tests). `secure-transport` is partial by design: traffic is plain HTTP, confined to the loopback address and guarded by the bearer token.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.0 | 2026-11-23 | Mike Fullerton | Apps suite Phase 4: id rewriting, cancellation and body collection move into MCPStatelessHTTPHandler, shared with adhd; the caller header is X-ADHD-Pane with X-ADKitchen-Pane still read. |

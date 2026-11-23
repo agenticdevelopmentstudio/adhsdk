@@ -462,6 +462,13 @@
             "state": "planned"
           },
           "platform": "windows"
+        },
+        {
+          "conformance": {
+            "state": "unverified"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/Core/MCP/MCPStatelessHTTPHandler.swift",
+          "platform": "apple"
         }
       ],
       "kind": "ingredient",
@@ -8837,6 +8844,41 @@
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/LaunchAtLogin/LaunchAtLoginManager.swift",
           "platform": "apple"
+        },
+        {
+          "conformance": {
+            "state": "unverified"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/SharedSettingKeys.swift",
+          "platform": "apple"
+        },
+        {
+          "conformance": {
+            "state": "unverified"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/SharedSettingsBackend.swift",
+          "platform": "apple"
+        },
+        {
+          "conformance": {
+            "state": "unverified"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/RoutedSettingsStorageProvider.swift",
+          "platform": "apple"
+        },
+        {
+          "conformance": {
+            "state": "unverified"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/Database/Daemon/SharedSettings/SharedSettingsStore.swift",
+          "platform": "apple"
+        },
+        {
+          "conformance": {
+            "state": "unverified"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIPlugins/AIProviderSharedSecrets.swift",
+          "platform": "apple"
         }
       ],
       "kind": "ingredient",
@@ -9109,6 +9151,13 @@
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/GrammarContributionPoint.swift",
           "platform": "macos"
+        },
+        {
+          "conformance": {
+            "state": "unverified"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/Language/Syntax/BundledTextMateResources.swift",
+          "platform": "apple"
         }
       ],
       "kind": "ingredient",
@@ -11349,15 +11398,6 @@
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:00970e3e7a45c253e48875f4fbe8bd651d572210399c5b0c67c5c872539f458d",
-            "state": "confirmed",
-            "version": "1.0.0"
-          },
-          "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/TerminalSession/TerminalChatControlServer.swift",
-          "platform": "macos"
-        },
-        {
-          "conformance": {
             "state": "planned"
           },
           "platform": "apple"
@@ -11379,6 +11419,20 @@
             "state": "planned"
           },
           "platform": "windows"
+        },
+        {
+          "conformance": {
+            "state": "unverified"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/TerminalSession/TerminalChatDirectory.swift",
+          "platform": "apple"
+        },
+        {
+          "conformance": {
+            "state": "unverified"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/TerminalSession/TerminalChatDirectoryToolSource.swift",
+          "platform": "apple"
         }
       ],
       "kind": "ingredient",

@@ -13,7 +13,7 @@ Derived from `HostMCPServerTests` where named; the rest are traced to the source
 | host-mcp-server-008 | serve-stops-previous, fresh-server-per-serve | Serve over a first pair and connect, then serve over a second pair and connect a new client (`testSecondServeStopsTheFirst`) | The second client initializes without error and lists `a` |
 | host-mcp-server-009 | call-caller, caller-header-case | Request with header `x-adkitchen-pane: pane-7`; read caller, call the server with it (`testCallerHeaderReachesTheSource`) | Caller `pane-7`; the source records caller `pane-7` |
 | host-mcp-server-010 | call-caller | No request, or a request with no header | Caller is nil |
-| host-mcp-server-011 | caller-header-name | Read `HostMCPServer.callerHeader` | `X-ADKitchen-Pane` |
+| host-mcp-server-011 | caller-header-name | Read `HostMCPServer.callerHeader`, `legacyCallerHeader` and `callerHeaders` | `X-ADHD-Pane`; `X-ADKitchen-Pane`; both, the new name first |
 | host-mcp-server-012 | list-schema-fallback | Source whose definition's schema bytes are not JSON; `tools/list` | The tool is listed with schema type `object` and empty properties |
 | host-mcp-server-013 | call-arguments-json | Call with no arguments | Source receives `{}` |
 | host-mcp-server-014 | call-image-error-flag | Source returns the PNG data URL with the error flag true | Image content with `isError` true |
