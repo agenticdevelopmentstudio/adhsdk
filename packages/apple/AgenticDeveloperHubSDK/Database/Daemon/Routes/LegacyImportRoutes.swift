@@ -14,9 +14,12 @@ import Foundation
 /// ``LegacyImportReport`` per directory imported.
 ///
 /// Each source commits on its own, so one that fails does not undo the one
-/// before it. A failure answers 500 with the same ``Response``: the report of
-/// every source that landed, the failed source's error, and `error`, one
-/// sentence saying which failed and which landed. A source after the failed
+/// before it, and a source commits in batches, so one that fails part way
+/// keeps the batches it committed. A failure answers 500 with the same
+/// ``Response``: the report of every source that landed, the failed source's
+/// error and, when any of its rows committed, its partial report (the failed
+/// store marked `failed`), and `error`, one sentence saying which failed and
+/// what landed. A source after the failed
 /// one is not attempted (stenographerd goes first for a reason) and says so.
 /// The import is idempotent, so the fix is to re-run it.
 public enum LegacyImportRoutes {
@@ -90,15 +93,21 @@ public enum LegacyImportRoutes {
         ])
     }
 
-    /// One source's outcome: its report, or why it was not imported.
+    /// One source's outcome: its report, or why it was not imported. A failed
+    /// source carries the report of what it committed before the failure,
+    /// when that is any rows at all.
     enum Outcome: Sendable {
         case imported(LegacyImportReport)
-        case failed(String)
+        case failed(String, partial: LegacyImportReport?)
         case notAttempted
 
+        /// The report of what this source committed, whole or partial.
         var report: LegacyImportReport? {
-            if case .imported(let report) = self { return report }
-            return nil
+            switch self {
+            case .imported(let report): return report
+            case .failed(_, let partial): return partial
+            case .notAttempted: return nil
+            }
         }
 
         var isNotAttempted: Bool {
@@ -123,9 +132,13 @@ public enum LegacyImportRoutes {
             do {
                 outcomes.append((kind, .imported(
                     try importer.importStores(kind: kind, directory: URL(fileURLWithPath: path)))))
+            } catch let failure as LegacyImportFailure {
+                failed = true
+                let partial = failure.report.totalInserted > 0 ? failure.report : nil
+                outcomes.append((kind, .failed(failure.localizedDescription, partial: partial)))
             } catch {
                 failed = true
-                outcomes.append((kind, .failed(error.localizedDescription)))
+                outcomes.append((kind, .failed(error.localizedDescription, partial: nil)))
             }
         }
         return outcomes
@@ -138,15 +151,21 @@ public enum LegacyImportRoutes {
         }
         func reason(_ kind: LegacySessionImporter.SourceKind) -> String? {
             switch outcome(kind) {
-            case .failed(let message): return message
+            case .failed(let message, _): return message
             case .notAttempted: return "Not attempted: an earlier source failed."
             case .imported, nil: return nil
             }
         }
         var error: String?
         for (kind, result) in outcomes {
-            guard case .failed(let message) = result else { continue }
-            let landed = outcomes.compactMap(\.1.report).map { "\(wireName($0.source)) (\($0.totalInserted) rows)" }
+            guard case .failed(let message, let partial) = result else { continue }
+            var landed = outcomes.compactMap { _, outcome -> String? in
+                guard case .imported(let report) = outcome else { return nil }
+                return "\(wireName(report.source)) (\(report.totalInserted) rows)"
+            }
+            if let partial {
+                landed.append("\(partial.totalInserted) rows of \(wireName(kind)) before it failed")
+            }
             let skipped = outcomes.filter { $0.1.isNotAttempted }.map { wireName($0.0) }
             let reason = message.hasSuffix(".") ? String(message.dropLast()) : message
             var sentence = "The \(wireName(kind)) import failed: \(reason)."

@@ -312,6 +312,63 @@ final class LegacySessionImporterTests: XCTestCase {
         XCTAssertEqual(second.totalInserted, 0, "\(second)")
     }
 
+    private struct BatchFailure: Error {}
+
+    /// An importer whose first committed batch of the raw archive is followed
+    /// by a failure, the way a malformed row in a later batch fails.
+    private func importerFailingAfterOneRawBatch() -> LegacySessionImporter {
+        let failing = LegacySessionImporter(target: importer.target, batchRows: 1)
+        failing.batchCommitted = { schema in
+            if schema == "dst_raw" { throw BatchFailure() }
+        }
+        return failing
+    }
+
+    /// A failure part way through still says what committed: the main
+    /// database's rows and the raw archive's one committed batch.
+    func testAFailurePartWayReportsWhatCommitted() throws {
+        try makeStenographerSource()
+
+        XCTAssertThrowsError(
+            try importerFailingAfterOneRawBatch().importStores(kind: .stenographerd, directory: sourceDirectory)
+        ) { error in
+            guard let failure = error as? LegacyImportFailure else {
+                return XCTFail("expected a LegacyImportFailure, got \(error)")
+            }
+            XCTAssertTrue(failure.underlying is BatchFailure)
+            let main = failure.report.store("stenographer.db")
+            XCTAssertEqual(main?.status, .imported)
+            XCTAssertEqual(main?.inserted["sessions"], 2)
+            let raw = failure.report.store(self.rawFileName)
+            XCTAssertEqual(raw?.status, .failed)
+            XCTAssertEqual(raw?.inserted["raw_record"], 1, "the one batch that committed")
+            XCTAssertNotNil(raw?.note)
+            XCTAssertNil(failure.report.store(EventStore.fileName), "not reached")
+        }
+        XCTAssertEqual(try count("SELECT COUNT(*) FROM sessions"), 2, "the main database stays committed")
+    }
+
+    /// The route's sentence names the rows that committed before the failure,
+    /// never "Nothing was imported", and the reply carries the partial report.
+    func testTheRouteReportsAPartialImport() async throws {
+        try makeStenographerSource()
+        let table = LegacyImportRoutes.table(importer: importerFailingAfterOneRawBatch())
+        let body = try JSONEncoder().encode(LegacyImportRoutes.Request(stenographer: sourceDirectory.path, adkd: nil))
+
+        let response = await table.handle(RouteRequest(method: "POST", path: "/import-legacy", body: body))
+
+        XCTAssertEqual(response?.status, 500)
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+        let reply = try decoder.decode(LegacyImportRoutes.Response.self, from: try XCTUnwrap(response?.body))
+        let partial = try XCTUnwrap(reply.stenographer, "the partial report")
+        XCTAssertEqual(partial.store(rawFileName)?.status, .failed)
+        XCTAssertNotNil(reply.stenographerError)
+        let sentence = try XCTUnwrap(reply.error)
+        XCTAssertFalse(sentence.contains("Nothing was imported"), sentence)
+        XCTAssertTrue(sentence.contains("rows of stenographer before it failed"), sentence)
+    }
+
     func testTheBatchSizeIsAtLeastOne() {
         XCTAssertEqual(LegacySessionImporter(target: importer.target, batchRows: 0).batchRows, 1)
         XCTAssertEqual(LegacySessionImporter(target: importer.target).batchRows,
