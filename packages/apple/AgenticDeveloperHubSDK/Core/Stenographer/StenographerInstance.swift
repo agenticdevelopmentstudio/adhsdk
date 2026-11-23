@@ -155,6 +155,11 @@ public struct StenographerInstance: Sendable, Equatable {
     /// sides are tested against. A port another readable definition already
     /// declares is refused here (`portTakenByAnotherInstance`), so a named
     /// instance's port is its own, as the type promises.
+    ///
+    /// A clash with another definition (shared data root or port) is charged
+    /// to the newer of the two only (``definitionsPreceding(_:home:)``): the
+    /// definition that was there first keeps resolving, so a bad edit to a new
+    /// instance never takes down a working one.
     public static func validate(_ definition: Definition, fileName: String, home: URL) throws {
         guard definition.name == fileName else {
             throw ResolutionError.nameMismatch(file: fileName, declared: definition.name)
@@ -174,7 +179,7 @@ public struct StenographerInstance: Sendable, Equatable {
         // Each instance's lock is keyed on its own label, so nothing else stops
         // two definitions that share a data root from running on one set of databases,
         // or two that share a port from one answering the other's clients.
-        let others = otherDefinitions(excluding: definition.name, home: home)
+        let others = definitionsPreceding(definition.name, home: home)
         for other in others {
             let otherRoot = canonicalComponents(other.dataRoot)
             if root.starts(with: otherRoot) || otherRoot.starts(with: root) {
@@ -190,6 +195,26 @@ public struct StenographerInstance: Sendable, Equatable {
         guard socket.utf8.count < socketPathLimit else {
             throw ResolutionError.socketPathTooLong(path: socket, limit: socketPathLimit)
         }
+    }
+
+    /// The other definitions that take precedence over `name`'s in a clash:
+    /// every one whose file was created before `name.json`, or at the same
+    /// instant with a name that sorts first. With no `name.json` yet (a
+    /// definition being checked before it is written) that is all of them, so
+    /// the newcomer is the one refused.
+    static func definitionsPreceding(_ name: String, home: URL) -> [Definition] {
+        let others = otherDefinitions(excluding: name, home: home)
+        guard let own = creationDate(of: name, home: home) else { return others }
+        return others.filter { other in
+            guard let created = creationDate(of: other.name, home: home) else { return true }
+            return created < own || (created == own && other.name < name)
+        }
+    }
+
+    /// When `name.json` was created, or nil when it does not exist.
+    static func creationDate(of name: String, home: URL) -> Date? {
+        let file = definitionsDirectory(home: home).appendingPathComponent("\(name).json")
+        return (try? FileManager.default.attributesOfItem(atPath: file.path))?[.creationDate] as? Date
     }
 
     /// Every readable definition in the definitions directory but `name`'s.

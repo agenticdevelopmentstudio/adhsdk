@@ -49,6 +49,57 @@ final class StenographerInstancePortTests: XCTestCase {
         }
     }
 
+    private func setCreated(_ name: String, _ date: Date) throws {
+        let file = StenographerInstance.definitionsDirectory(home: home).appendingPathComponent("\(name).json")
+        try FileManager.default.setAttributes([.creationDate: date], ofItemAtPath: file.path)
+    }
+
+    /// A newer definition that takes an existing one's port is the only one
+    /// refused: the one that was there first keeps resolving.
+    func testTheEarlierDefinitionKeepsItsPort() throws {
+        try write(.init(name: "home", dataRoot: dataRoot("home"), httpPort: 22960))
+        try write(.init(name: "lab", dataRoot: dataRoot("lab"), httpPort: 22960))
+        try setCreated("home", Date(timeIntervalSince1970: 1_700_000_000))
+        try setCreated("lab", Date(timeIntervalSince1970: 1_700_000_600))
+
+        XCTAssertEqual(try StenographerInstance.resolve(name: "home", home: home).httpPort, 22960)
+        XCTAssertThrowsError(try StenographerInstance.resolve(name: "lab", home: home)) { error in
+            XCTAssertEqual(error as? StenographerInstance.ResolutionError,
+                           .portTakenByAnotherInstance(port: 22960, instance: "home"))
+        }
+    }
+
+    /// Precedence is by creation, not by name: a newer `alpha` loses to an
+    /// older `zulu`.
+    func testPrecedenceFollowsCreationNotName() throws {
+        try write(.init(name: "zulu", dataRoot: dataRoot("zulu"), httpPort: 22961))
+        try write(.init(name: "alpha", dataRoot: dataRoot("alpha"), httpPort: 22961))
+        try setCreated("zulu", Date(timeIntervalSince1970: 1_700_000_000))
+        try setCreated("alpha", Date(timeIntervalSince1970: 1_700_000_600))
+
+        XCTAssertNoThrow(try StenographerInstance.resolve(name: "zulu", home: home))
+        XCTAssertThrowsError(try StenographerInstance.resolve(name: "alpha", home: home)) { error in
+            XCTAssertEqual(error as? StenographerInstance.ResolutionError,
+                           .portTakenByAnotherInstance(port: 22961, instance: "zulu"))
+        }
+    }
+
+    /// The same holds for a shared data root: the older instance resolves.
+    func testTheEarlierDefinitionKeepsItsDataRoot() throws {
+        let root = dataRoot("shared")
+        try write(.init(name: "home", dataRoot: root, httpPort: 22962))
+        try write(.init(name: "lab", dataRoot: root, httpPort: 22963))
+        try setCreated("home", Date(timeIntervalSince1970: 1_700_000_000))
+        try setCreated("lab", Date(timeIntervalSince1970: 1_700_000_600))
+
+        XCTAssertNoThrow(try StenographerInstance.resolve(name: "home", home: home))
+        XCTAssertThrowsError(try StenographerInstance.resolve(name: "lab", home: home)) { error in
+            guard case .overlapsAnotherInstance(_, let instance, _)? = error as? StenographerInstance.ResolutionError
+            else { return XCTFail("expected overlapsAnotherInstance, got \(error)") }
+            XCTAssertEqual(instance, "home")
+        }
+    }
+
     func testDistinctPortsAreAccepted() throws {
         try write(.init(name: "alpha", dataRoot: dataRoot("alpha"), httpPort: 22952))
         let beta = StenographerInstance.Definition(name: "beta", dataRoot: dataRoot("beta"), httpPort: 22953)

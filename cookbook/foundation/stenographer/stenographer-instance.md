@@ -2,7 +2,7 @@
 id: fe798f91-076e-41fc-9713-907b744c5539
 title: "Stenographer Instance"
 type: ingredient
-version: 1.2.0
+version: 1.3.0
 status: review
 language: en
 created: 2026-11-21
@@ -90,10 +90,11 @@ The type is a `Sendable`, `Equatable` struct holding an optional `Definition`. I
 - **absolute-data-root**: `validate` MUST throw `relativeDataRoot(dataRoot)` when `dataRoot` does not begin with `/`.
 - **port-range**: `validate` MUST throw `invalidPort(port)` when `httpPort` is outside 1024 to 65535 inclusive.
 - **port-not-reserved**: `validate` MUST throw `invalidPort(port)` when `httpPort` is in `reservedHTTPPorts`.
-- **port-unique-across-instances**: `validate` MUST throw `portTakenByAnotherInstance(port:instance:)`, naming the first other definition in file-name order whose `httpPort` equals this definition's, so a named instance's port is its own and two instances never contend for one port. It considers the same peers as `instance-overlap` (`other-definitions`), so a definition's own file never collides with it and an unreadable peer is skipped.
+- **port-unique-across-instances**: `validate` MUST throw `portTakenByAnotherInstance(port:instance:)`, naming the first preceding definition in file-name order whose `httpPort` equals this definition's, so a named instance's port is its own and two instances never contend for one port. It considers the same peers as `instance-overlap` (`definition-precedence` over `other-definitions`), so a definition's own file never collides with it, an unreadable peer is skipped, and only the newer of two clashing definitions is refused.
 - **protected-roots**: `protectedRoots(home:)` MUST return, in order, `<home>/Library/Application Support/<baseLabel>`, `<home>/Library/Logs/<baseLabel>`, `<home>/Library/Application Support/<legacyLabel>`, `<home>/Library/Logs/<legacyLabel>` and `<home>/.claude`, where `legacyLabel` is `com.agentic-cookbook.stenographer`.
 - **installed-overlap**: `validate` MUST throw `overlapsInstalledState(dataRoot:protected:)`, naming the first protected root in `protectedRoots` order, when the canonical data root equals, contains or lies inside that protected root.
-- **instance-overlap**: `validate` MUST throw `overlapsAnotherInstance(dataRoot:instance:otherRoot:)`, naming the first other definition in file-name order, when the canonical data root equals, contains or lies inside that definition's canonical data root.
+- **instance-overlap**: `validate` MUST throw `overlapsAnotherInstance(dataRoot:instance:otherRoot:)`, naming the first preceding definition (`definition-precedence`) in file-name order, when the canonical data root equals, contains or lies inside that definition's canonical data root.
+- **definition-precedence**: the clash checks MUST consider only the other definitions that precede this one (`definitionsPreceding(_:home:)`): those whose file was created before `<name>.json`, or at the same instant with a name that sorts first, and every other definition when `<name>.json` does not exist yet. A clash is therefore charged to the newer definition alone, and the one that was there first keeps resolving.
 - **overlap-by-components**: Overlap MUST be decided by whole path components, so `com.agenticdevelopmentstudio.stenographer.instances` does not overlap `com.agenticdevelopmentstudio.stenographer`.
 - **other-definitions**: `otherDefinitions(excluding:home:)` MUST consider every `.json` file in the definitions directory except `<name>.json`, sorted by file name, and MUST skip any file that cannot be read, does not decode, declares a name different from its file name, or has a data root that does not begin with `/`.
 - **other-definitions-missing-directory**: When the definitions directory is missing or unreadable, `otherDefinitions` MUST return an empty list.
@@ -188,6 +189,9 @@ Vectors 041 to 044 are `StenographerInstancePortTests` (`Tests/AgenticDeveloperH
 | stenographer-instance-042 | port-unique-across-instances, other-definitions | `D/alpha.json` and `D/beta.json` both declare `httpPort` 22951; resolve `beta` (`testResolvingADefinitionWhosePortIsTakenFails`) | `portTakenByAnotherInstance(port: 22951, instance: "alpha")`. |
 | stenographer-instance-043 | port-unique-across-instances | `D/alpha.json` declares 22952; validate `beta` with 22953 (`testDistinctPortsAreAccepted`) | No error. |
 | stenographer-instance-044 | port-unique-across-instances, other-definitions | Only `D/alpha.json`, `httpPort` 22954; resolve `alpha` (`testADefinitionDoesNotCollideWithItsOwnFile`) | Resolves with `httpPort` 22954. |
+| stenographer-instance-045 | definition-precedence, port-unique-across-instances | `D/home.json` created first and `D/lab.json` later both declare 22960 (`testTheEarlierDefinitionKeepsItsPort`) | `home` resolves with 22960; resolving `lab` throws `portTakenByAnotherInstance(port: 22960, instance: "home")`. |
+| stenographer-instance-046 | definition-precedence | `D/zulu.json` created before `D/alpha.json`, both 22961 (`testPrecedenceFollowsCreationNotName`) | `zulu` resolves; `alpha` throws `portTakenByAnotherInstance(port: 22961, instance: "zulu")`. |
+| stenographer-instance-047 | definition-precedence, instance-overlap | `D/home.json` created before `D/lab.json`, one shared data root (`testTheEarlierDefinitionKeepsItsDataRoot`) | `home` resolves; `lab` throws `overlapsAnotherInstance` naming `home`. |
 
 ## Edge Cases
 
@@ -201,7 +205,7 @@ Vectors 041 to 044 are `StenographerInstancePortTests` (`Tests/AgenticDeveloperH
 - **Case and firmlink aliases**: A data root that differs from a protected root only by letter case, or by a leading `/System/Volumes/Data`, MUST be treated as the same path.
 - **Symlinks**: An existing symlink anywhere in the data root MUST be followed before comparing. A dangling symlink MUST be followed to its target. A symlink chain deeper than 32 dangling links MUST stop being followed, and the remaining component MUST be kept as written.
 - **Unreadable peer definitions**: A peer file that cannot be read, does not decode, declares a mismatched name or has a relative data root MUST be skipped in the overlap and port checks; that peer is refused only when it is itself resolved.
-- **Two instances with the same port**: MUST be refused: resolving the second throws `portTakenByAnotherInstance` naming the first (`port-unique-across-instances`).
+- **Two instances with the same port**: MUST be refused for the newer one only: resolving it throws `portTakenByAnotherInstance` naming the older, which keeps resolving (`port-unique-across-instances`, `definition-precedence`).
 - **Concurrent access**: `current` is a Swift `static let`, initialised once and thread-safe. `resolve` holds no shared state and may run on any thread. The file system is not locked: a definition file written or removed between the existence check and the read MUST surface as `undefined` or `unreadable`, and two definitions written at the same moment may each pass the overlap check before the other exists; the script that writes definitions owns that ordering.
 - **Error states**: Every failure MUST be thrown as a `ResolutionError`; no failure is swallowed in `resolve` or `validate`. `otherDefinitions` deliberately returns an empty list for a missing directory and drops unreadable peers. `current` MUST turn a thrown error into a stderr line and exit status 78.
 - **Offline / disconnected state**: Not applicable: the type performs no network access; `httpPort` is a number the daemon binds elsewhere.
@@ -340,6 +344,7 @@ a compiled doc or skill shows those rows as a derived section here. -->
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.3.0 | 2026-11-23 | Mike Fullerton | Clashes are charged to the newer definition only (definition-precedence): an existing instance keeps resolving when a newcomer takes its port or data root; vectors 045 to 047 (review f3). |
 | 1.2.0 | 2026-11-23 | Mike Fullerton | adhd's ports are reserved: reservedHTTPPorts is {22848, 22849, 22850, 22871} (review f2). |
 | 1.1.1 | 2026-11-22 | Mike Fullerton | Retired the stenographerd port 22847: no default HTTP port, base URL or client address; a named instance may take 22847 (review f1). |
 | 1.1.0 | 2026-11-22 | Mike Fullerton | The retired stenographerd's port 22847 is no longer reserved; reservedHTTPPorts is {22848, 22849}. |

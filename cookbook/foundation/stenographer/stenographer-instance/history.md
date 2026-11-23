@@ -1,6 +1,7 @@
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.3.0 | 2026-11-23 | Mike Fullerton | Clashes are charged to the newer definition only (definition-precedence): an existing instance keeps resolving when a newcomer takes its port or data root; vectors 045 to 047 (review f3). |
 | 1.2.0 | 2026-11-23 | Mike Fullerton | adhd's ports are reserved: reservedHTTPPorts is {22848, 22849, 22850, 22871} (review f2). |
 | 1.1.1 | 2026-11-22 | Mike Fullerton | Retired the stenographerd port 22847: no default HTTP port, base URL or client address; a named instance may take 22847 (review f1). |
 | 1.1.0 | 2026-11-22 | Mike Fullerton | The retired stenographerd's port 22847 is no longer reserved; reservedHTTPPorts is {22848, 22849}. |
