@@ -93,6 +93,11 @@ export interface SupportGrant {
   decidedAt: string | null;
   expiresAt: string | null;
   revokedAt: string | null;
+  /**
+   * The backend's own word on where the grant stands, worked out on its clock when the list was
+   * read. `grantState` prefers it; absent (a hand-built grant) the state comes from the times.
+   */
+  status?: SupportGrantStatus;
 }
 
 /** A grant, for a product admin or an operator: the person it is over as well. */
@@ -132,6 +137,7 @@ export const toSupportGrant = (w: SupportGrantWire): SupportGrant => ({
   decidedAt: w.decided_at ?? null,
   expiresAt: w.expires_at ?? null,
   revokedAt: w.revoked_at ?? null,
+  status: w.status,
 });
 
 export const toSupportAdminGrant = (w: SupportGrantWire): SupportAdminGrant => ({

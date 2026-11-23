@@ -185,12 +185,27 @@ export type SupportGrantState = "pending" | "live" | "ended";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
+/** The backend's status, as the three states a pane shows. */
+const STATUS_STATE: Record<SupportGrantStatus, SupportGrantState> = {
+  pending: "pending",
+  live: "live",
+  denied: "ended",
+  lapsed: "ended",
+  expired: "ended",
+  revoked: "ended",
+};
+
 /**
- * Where a grant stands at `now`: `pending` while undecided and not yet lapsed, `live` while
- * approved, unrevoked and before `expiresAt`, `ended` for everything else (denied, revoked,
- * expired, or lapsed after `SUPPORT_LAPSE_DAYS` undecided).
+ * Where a grant stands. The backend's `status` is the authority and is used whenever the grant
+ * carries one, so a client clock that runs fast or slow never hides Revoke on a grant Support can
+ * still read under. Without a status the state is worked out at `now`: `pending` while undecided
+ * and not yet lapsed, `live` while approved, unrevoked and before `expiresAt`, `ended` for
+ * everything else (denied, revoked, expired, or lapsed after `SUPPORT_LAPSE_DAYS` undecided).
  */
 export function grantState(grant: SupportGrant, now: Date = new Date()): SupportGrantState {
+  if (grant.status && Object.prototype.hasOwnProperty.call(STATUS_STATE, grant.status)) {
+    return STATUS_STATE[grant.status];
+  }
   const t = now.getTime();
   if (grant.revokedAt) return "ended";
   if (grant.decision === null) {

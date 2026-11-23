@@ -331,7 +331,33 @@ describe("publicSupportApi", () => {
 
 describe("grantState", () => {
   const NOW = new Date("2026-11-22T12:00:00.000Z");
-  const grant = (over: Partial<SupportGrantWire>): SupportGrant => toSupportGrant(wireGrant(over));
+  // The clock rules: a grant with no status, as a hand-built one has.
+  const grant = (over: Partial<SupportGrantWire>): SupportGrant => ({
+    ...toSupportGrant(wireGrant(over)),
+    status: undefined,
+  });
+
+  it("maps the backend's status onto the three states", () => {
+    expect(toSupportGrant(wireGrant({ status: "live" })).status).toBe("live");
+    for (const [status, state] of [
+      ["pending", "pending"],
+      ["live", "live"],
+      ["denied", "ended"],
+      ["lapsed", "ended"],
+      ["expired", "ended"],
+      ["revoked", "ended"],
+    ] as const) {
+      expect(grantState(toSupportGrant(wireGrant({ status })), NOW)).toBe(state);
+    }
+  });
+
+  it("prefers the backend's status to a clock that disagrees", () => {
+    // The client clock runs past expires_at, but the backend still reads the grant as live.
+    const live = toSupportGrant(
+      wireGrant({ status: "live", decision: "approved", expires_at: "2026-11-22T11:00:00.000Z" }),
+    );
+    expect(grantState(live, NOW)).toBe("live");
+  });
 
   it("is pending while undecided and inside the lapse window", () => {
     expect(grantState(grant({}), NOW)).toBe("pending");
