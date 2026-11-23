@@ -401,6 +401,18 @@ replaces the allow-list field the client-auth form used to carry.
   assignment with subject kind `customer`, the chosen subject and the role, on the
   ecosystem target. Revoke MUST delete that holder's assignment. Both MUST reload
   the holders afterward, run one at a time, and show a failure in the pane.
+- **pane-caller**: the sign-up list, product roles and sets panes MUST accept an
+  optional caller, either `manager` (the default: a workspace manager in the hub)
+  or `product_admin` (a product's own admin on its admin site, phase 6), so the
+  admin site mounts the same panes the hub does. A caller narrows only what the
+  backend would refuse that caller anyway. The sign-up list pane behaves the same
+  for both.
+- **product-roles-admin-seats-protected**: for the `product_admin` caller, the
+  holders of the product's `admin` role (the system role whose slug is `admin`)
+  MUST be listed without a Revoke button and the pane MUST say "Admins are added here
+  and removed by the product's managers."; every other role keeps Revoke, and the
+  manager caller keeps Revoke on every role. The backend refuses a product admin any
+  change to an admin seat (422 `admin_seat_protected`).
 
 ### Sets (web)
 
@@ -433,6 +445,19 @@ replaces the allow-list field the client-auth form used to carry.
   with each set's name (its id when unknown), then `<N> customer would conflict.` or
   `<N> customers would conflict.` when a count is given. Any other error MUST show
   its own message, or "Something went wrong." when it has none.
+- **sets-pane-caller-limits**: for the `product_admin` caller, the editor MUST NOT
+  show the usage-tier limit (`usage.tier`), and MUST cap the storage-quota limit
+  (`storage.quota_bytes`) at the default quota (5 GiB): the field's maximum is that
+  many bytes and a larger whole number is refused with "<label> can be at most <N>."
+  with nothing sent. The manager caller sees every limit and no cap.
+- **sets-pane-tier-locked**: for the `product_admin` caller, a set whose stored values
+  include `usage.tier` MUST show "This set has a usage tier, which only the product's
+  managers can change, so its permissions and limits are theirs to change too. What it
+  contains is yours." and a Save that would change its values MUST show that text and
+  send nothing, because a set's values are written whole and the backend refuses a
+  product admin any write naming the tier; a change to what the set contains is still
+  sent.
+
 
 ### Billing and the workspace gate (web)
 

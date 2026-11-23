@@ -2,11 +2,11 @@
 id: 9069ccf9-0357-4311-9671-91ee2793adae
 title: "Site Registry"
 type: ingredient
-version: 1.2.0
+version: 1.3.0
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-11-22
+modified: 2026-11-23
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -97,6 +97,15 @@ router, and a downstream OAuth-return-origin sync process.
 - **admin-only-derives-admin-ids-and-drops-footer**: The admin-only id set MUST be
   exactly the identifiers of every site definition marked `adminOnly`, and every such
   entry MUST be excluded from the footer site list.
+- **product-admin-site-registered**: The roster MUST define a `product-admin` site (a
+  product's own admin site, phase 6) that is `adminOnly`, not `crawlable`, and has no home
+  route (`hasHome` false), with `product-admin.agenticdeveloperhub.com` as its production
+  host; because it is `adminOnly` it MUST be absent from the footer site list. It MUST be in
+  the main-family roster, MUST sit in the console section of the family roster between
+  `admin` and `builds`, and MUST be hand-rolled in the per-site build table
+  (`handRolledConfig`), since its root app holds the site's own `/auth/*` route handlers.
+  The one deployed app serves every product's admin site and picks the product by host, so
+  the registry's host is only the default.
 - **listed-sites-filter**: The listed-sites set MUST be exactly the roster entries
   whose `listed` field is not literally `false`; a `listed: false` entry MUST remain
   resolvable by site lookup and identifier validation and MUST only be excluded from
@@ -254,7 +263,7 @@ router, and a downstream OAuth-return-origin sync process.
   segments MUST name a hub workspace feature with no corresponding registry site (a
   hub-only knob, such as an ecosystem's member list, the persona-data management
   surface; a product knob with a row on the product rail, such as `roles`,
-  `signup-list`, or `sets`; or a bespoke rail route such as `email-signup`); a feature that is some site's own implementation MUST be keyed in the
+  `signup-list`, `sets`, or `admin-site`; or a bespoke rail route such as `email-signup`); a feature that is some site's own implementation MUST be keyed in the
   feature-segment map by that site's identifier instead.
 
 ### Workspace routing
@@ -506,7 +515,7 @@ Not applicable: this is the site family's data registry and routing-resolution m
 | site-registry-060 | site-url-falls-back-to-bare-path | The cross-site URL builder for an identifier that is not a site, path `/x`, host `agenticdeveloperhub.com` (traced to "siteUrl falls through to the raw path for an unknown id") | `'/x'` |
 | site-registry-061 | site-prod-url-ignores-current-environment | The production URL builder for `hub`, path `/` (traced to "siteProdUrl is host-independent and always https") | `'https://agenticdeveloperhub.com/'` |
 | site-registry-062 | site-home-path-fallback | The home path for `hub` (traced to "siteHomePath is /home only for sites that expose one") | `'/home'` when `hasHome` is true; `'/'` otherwise |
-
+| site-registry-063 | product-admin-site-registered | The `product-admin` site's definition, the main-family roster, the footer list and the family roster's tail (traced to "registers the product admin site: its folder, not crawlable, admin-gated, a main app") | Its production host is `product-admin.agenticdeveloperhub.com`; the directory name `product-admin.agenticdeveloperhub` identifies it; it is not crawlable; it is in the admin-only ids and the main-family roster and not in the footer list; the roster ends `status`, `admin`, `product-admin`, `builds` |
 ## Edge Cases
 
 - **Null and empty input** (MUST): Building the workspace link for an empty slug
@@ -645,7 +654,12 @@ an empty result, or the input path unchanged) with no side channel.
   workspace-slug round trip (`siteWorkspaceHref` and `siteWorkspaceSlug` plus
   `SITE_LANDING_SEGMENTS` and `HUB_ROUTE_SEGMENTS`), the per-site build table
   (`SITE_BUILD` and `siteBuildConfig`) kept outside the file's `<gen:sites>` region, and
-  `ssoReturnOrigins`. `reserved-slugs.ts` holds `RESERVED_SLUGS`, `isReservedSlug`, and
+  `ssoReturnOrigins`. The phase-6 `product-admin` site is one `SITES` row (`adminOnly`,
+  `crawlable: false`), one `SITE_BUILD` entry (`handRolledConfig: true`), one entry in
+  `MAIN_SITE_IDS`, one `SITE_STORIES` entry in `story.ts` (a `chapter` of the `backend`
+  pillar, like `admin`), and `admin-site` in `HUB_EXTRA_FEATURE_SEGMENTS`; its
+  `devDependencies` carry `@adh-sdk/product-admin` for the one test that holds that
+  package's rail equal to the site's share of the route table. `reserved-slugs.ts` holds `RESERVED_SLUGS`, `isReservedSlug`, and
   `isReservedSlugAnywhere`. `legal.ts` holds the privacy and terms paths and URLs.
   `fleets.ts` holds `MARKETING_FLEET_SITE_IDS`, `PLACEHOLDER_FLEET_SITE_IDS`, and
   `DIRECTORY_SITES`. `story.ts` holds `SITE_STORIES`, `getSiteStory`, and the three
@@ -694,7 +708,7 @@ an empty result, or the input path unchanged) with no side channel.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/adh-registry/src/sites/` | confirmed (1.2.0) |
+| web | `packages/web/packages/adh-registry/src/sites/` | confirmed (1.3.0) |
 
 ## Design Decisions
 
@@ -801,6 +815,7 @@ second copy that could drift.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.3.0 | 2026-11-23 | Mike Fullerton | Phase 6: the product-admin site (admin-gated, hand-rolled build, main family) and the admin-site hub segment |
 | 1.2.0 | 2026-11-22 | Mike Fullerton | Added legal paths and URLs, fleet directory, nativeApp sites, local-sites list; SSO list now excludes nativeApp and grants nothing by itself. |
 | 1.1.1 | 2026-10-04 | Mike Fullerton | Inverted prohibitions (none/neither/no X MUST) restated as MUST NOT. |
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to adh/sites/. |

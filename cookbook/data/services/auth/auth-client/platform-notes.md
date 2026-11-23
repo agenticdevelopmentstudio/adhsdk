@@ -9,6 +9,12 @@
   global presence checks (`window`/`document`) are what this recipe's
   "no interactive host environment" guards resolve to in source — they gate
   every operation that would otherwise run during server-side rendering.
+  `ProductAdminAuthProvider.tsx` (React context, the one file in this ingredient
+  that is not framework-free) is the product admin site's session: it sets itself
+  as the token source (`AccessTokenSource`, `setAccessTokenSource` and
+  `accessTokenSource` in `tokens.ts`) so every `@adh-sdk/data` client sends its
+  in-memory bearer through `authedJson`, and `refreshAccessToken` in `refresh.ts`
+  asks that source first. The hub's `AuthProvider` is unchanged.
 - **SwiftUI / AppKit / UIKit**: `URLSession` replaces `fetch`; the Keychain
   (not `UserDefaults`) is the idiomatic store for the access token, though
   this component's own decision to never persist the refresh token still

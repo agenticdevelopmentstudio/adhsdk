@@ -2,11 +2,11 @@
 id: 3ea9329e-5acc-4c43-b5ce-bb8c50570104
 title: "Authentication Client"
 type: ingredient
-version: 1.1.2
+version: 2.0.0
 status: review
 language: en
 created: 2026-09-23
-modified: 2026-11-14
+modified: 2026-11-23
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -61,6 +61,8 @@ request wrapper the rest of the app builds on. It has no visual surface of
 its own — every UI component in the auth family (login forms, callback pages,
 account-security screens) is a consumer of this contract, not part of it.
 
+
+A twelfth, React-based module covers a second kind of session. The product admin site (phase 6), where a product's own admins manage that product at its own host, keeps its access token in memory only, with its refresh token as an HttpOnly cookie on the site's origin. Its provider installs an access-token source that the request wrapper and the refresh operation ask before storage, so every data client sends the site's bearer unchanged; with no source installed, nothing differs.
 ## Behavioral Requirements
 
 - **default-runtime-config**: the runtime configuration MUST default to
@@ -114,8 +116,18 @@ account-security screens) is a consumer of this contract, not part of it.
 - **clear-tokens-clears-sibling-user-key**: clearing the token bundle MUST
   remove both the tokens entry and the sibling cached-user entry (keyed as
   `${storageKey}:user`), then invoke every session-change subscriber.
-- **read-access-token-derivation**: reading the stored access token MUST
-  return the token bundle's access token, or nothing if no bundle is stored.
+- **read-access-token-derivation**: reading the access token MUST return the
+  installed token source's current token when a source is installed (see
+  **access-token-source-seam**); otherwise the stored token bundle's access
+  token, or nothing if no bundle is stored.
+- **access-token-source-seam**: a token source is an object with a synchronous
+  `read` (the current access token or nothing) and an asynchronous `refresh` (a
+  new token, or nothing when the session is gone). Installing one, or removing it
+  by installing nothing, MUST invoke every session-change subscriber, because the
+  token every request sends has moved. With none installed (the default) no
+  behavior differs from the storage-backed session. The announcement used to do
+  this is exported for this package's own source only and is not part of the
+  package's public surface.
 - **session-change-subscription**: session-change subscription MUST register
   a callback to be called on every subsequent token write/clear, and MUST
   return an unsubscribe function that removes that callback from the
@@ -152,6 +164,11 @@ account-security screens) is a consumer of this contract, not part of it.
   same in-flight promise to every caller while a refresh is outstanding,
   issuing exactly one network request regardless of how many callers invoke
   it concurrently.
+- **refresh-delegates-to-token-source**: when a token source is installed, the
+  refresh operation MUST return the source's own refresh result and MUST NOT
+  issue the storage-and-cookie refresh request, touch its in-flight promise or
+  generation counter, or write the token bundle; the source owns its own
+  single-flight.
 - **refresh-request-shape**: a refresh attempt MUST `POST` the literal body
   `'{}'` to the configured refresh path with credentials included and header
   `Content-Type: application/json`.
@@ -479,6 +496,46 @@ account-security screens) is a consumer of this contract, not part of it.
   function MUST substitute the provider label lookup's result for the given
   provider slug into its returned string.
 
+### Product admin session (web)
+
+The session for a product's own admin site (phase 6): the product's admins, signed
+in with the product's customer login, managing that product at its own host. It
+is a sibling of the hub's session provider, not a mode of it: a page under one
+MUST NOT mount the other.
+
+- **product-admin-session-start**: on mount the provider MUST install a token
+  source (a ref-held in-memory token, never storage or a URL) and `POST`
+  `/auth/session` with credentials included, the site's own route handler, whose
+  refresh token is an HttpOnly cookie on the site's origin. A `401` MUST clear the
+  token and navigate to `/auth/signin?return=<current path and query,
+  URL-encoded>`. Any other non-OK status, or an answer with no `accessToken`
+  string, is a failure, handled as in **product-admin-session-account**.
+- **product-admin-session-account**: once a token is held, the provider MUST read
+  `GET /api/v1/account` and map it to the user (id, email, name, avatar URL, each
+  absent value as nothing), the product's ecosystem id and the product role slugs
+  held (an empty list when absent). A session whose roles include `admin` MUST read
+  `ready`; any other MUST read `no-access`. Until then it reads `loading`. A
+  failure of the session or account read for any reason but a `401` MUST start the
+  sign-in again with the same return path rather than render.
+- **product-admin-session-refresh**: after each token the provider MUST schedule a
+  refresh one minute (`PRODUCT_ADMIN_REFRESH_LEAD_MS`) before the token expires,
+  never sooner than five seconds from now. Expiry is the answer's `expiresAt`
+  (unix seconds when below `1e12`, else unix milliseconds, or an ISO 8601 string),
+  else the token's own `exp` claim; with neither, nothing is scheduled and a `401`
+  still refreshes on demand through the token source. Concurrent refreshes MUST
+  share one in-flight promise.
+- **product-admin-session-stale-answers**: an answer that lands after the provider
+  unmounted or remounted MUST be dropped: it adopts no token and navigates
+  nowhere. On unmount the provider MUST cancel its timer and remove its token
+  source only if it is still the installed one.
+- **product-admin-session-signout**: sign-out MUST cancel the timer, `POST`
+  `/auth/signout` with credentials included, and then, whether or not that
+  request failed, clear the token and account and navigate to `/auth/signin`.
+- **product-admin-session-hook**: the session hook MUST return the status, the
+  account, the access token and sign-out, and MUST throw outside the provider.
+  Navigation MUST go through the provider's `navigate` prop when given, else
+  `window.location.assign`.
+
 ### Security
 
 This recipe is a security-relevant recipe: it handles bearer session tokens,
@@ -660,7 +717,11 @@ component.
 | auth-client-118 | sensitive-data-classification / access-token-transmission | Unconditional error reporting called with a context object that happens to include an access-token field | Not applicable as a runtime check — the error-report context type documents the scalar-only contract; this vector records that no call site in this recipe passes a token as context |
 | auth-client-119 | refresh-token-never-persisted | Token extraction from a body carrying `{ token: 'T', refreshToken: 'server-side-rt' }`, then writing the resulting bundle; inspecting the persistent store | The stored JSON's `refreshToken` field is `''`, never `'server-side-rt'` |
 | auth-client-120 | token-subject-not-an-authorization-decision | An access token with an unsigned/forged `sub` claim | Reading the token's subject claim returns that claim's value unverified — documents that callers MUST NOT treat it as an authorization fact |
-
+| auth-client-121 | access-token-source-seam, read-access-token-derivation, refresh-delegates-to-token-source | A token source whose `read` answers `'M'` installed while a stored bundle holds `'S'`; then reading the access token, refreshing, and removing the source | The read is `'M'` and the refresh is the source's own, with no refresh request sent; every install and removal invokes the session-change subscribers; after removal the read is `'S'` |
+| auth-client-122 | product-admin-session-start, product-admin-session-account | The provider mounted where `POST /auth/session` answers `{ accessToken: 'T', expiresAt }` and `GET /api/v1/account` answers roles `['admin']`; then an account whose roles lack `admin` | The first reads `ready` with the token held in memory and the mapped account; the second reads `no-access` |
+| auth-client-123 | product-admin-session-start | `POST /auth/session` answering `401` on the page `/users?q=a` | The browser is sent to `/auth/signin?return=%2Fusers%3Fq%3Da` |
+| auth-client-124 | product-admin-session-refresh | A token whose `expiresAt` is 10 minutes ahead | The next `POST /auth/session` fires at nine minutes |
+| auth-client-125 | product-admin-session-signout, product-admin-session-stale-answers | Sign-out; then the provider unmounted | Sign-out posts `/auth/signout`, drops the token and navigates to `/auth/signin`; unmount removes the token source |
 ## Edge Cases
 
 - **Null/empty input**: token extraction from `{}` (neither field present) —
@@ -856,6 +917,12 @@ keeps an expected 4xx (wrong password, stale code) off this log.
   global presence checks (`window`/`document`) are what this recipe's
   "no interactive host environment" guards resolve to in source — they gate
   every operation that would otherwise run during server-side rendering.
+  `ProductAdminAuthProvider.tsx` (React context, the one file in this ingredient
+  that is not framework-free) is the product admin site's session: it sets itself
+  as the token source (`AccessTokenSource`, `setAccessTokenSource` and
+  `accessTokenSource` in `tokens.ts`) so every `@adh-sdk/data` client sends its
+  in-memory bearer through `authedJson`, and `refreshAccessToken` in `refresh.ts`
+  asks that source first. The hub's `AuthProvider` is unchanged.
 - **SwiftUI / AppKit / UIKit**: `URLSession` replaces `fetch`; the Keychain
   (not `UserDefaults`) is the idiomatic store for the access token, though
   this component's own decision to never persist the refresh token still
@@ -896,17 +963,18 @@ keeps an expected 4xx (wrong password, stale code) off this log.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/auth/src/account-security.ts` | confirmed (1.1.2) |
-| web | `packages/web/packages/auth/src/asBase.ts` | confirmed (1.1.2) |
-| web | `packages/web/packages/auth/src/client.ts` | confirmed (1.1.2) |
-| web | `packages/web/packages/auth/src/config.ts` | confirmed (1.1.2) |
-| web | `packages/web/packages/auth/src/labels.ts` | confirmed (1.1.2) |
-| web | `packages/web/packages/auth/src/mfa.ts` | confirmed (1.1.2) |
-| web | `packages/web/packages/auth/src/refresh.ts` | confirmed (1.1.2) |
-| web | `packages/web/packages/auth/src/report.ts` | confirmed (1.1.2) |
-| web | `packages/web/packages/auth/src/sso.ts` | confirmed (1.1.2) |
-| web | `packages/web/packages/auth/src/tokens.ts` | confirmed (1.1.2) |
-| web | `packages/web/packages/auth/src/types.ts` | confirmed (1.1.2) |
+| web | `packages/web/packages/auth/src/account-security.ts` | confirmed (2.0.0) |
+| web | `packages/web/packages/auth/src/asBase.ts` | confirmed (2.0.0) |
+| web | `packages/web/packages/auth/src/client.ts` | confirmed (2.0.0) |
+| web | `packages/web/packages/auth/src/config.ts` | confirmed (2.0.0) |
+| web | `packages/web/packages/auth/src/labels.ts` | confirmed (2.0.0) |
+| web | `packages/web/packages/auth/src/mfa.ts` | confirmed (2.0.0) |
+| web | `packages/web/packages/auth/src/refresh.ts` | confirmed (2.0.0) |
+| web | `packages/web/packages/auth/src/report.ts` | confirmed (2.0.0) |
+| web | `packages/web/packages/auth/src/sso.ts` | confirmed (2.0.0) |
+| web | `packages/web/packages/auth/src/tokens.ts` | confirmed (2.0.0) |
+| web | `packages/web/packages/auth/src/types.ts` | confirmed (2.0.0) |
+| web | `packages/web/packages/auth/src/ProductAdminAuthProvider.tsx` | confirmed (2.0.0) |
 
 ## Design Decisions
 
@@ -1075,6 +1143,7 @@ honestly-reported gap in the source, not a hidden one.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 2.0.0 | 2026-11-23 | Mike Fullerton | Phase 6: the access-token source seam and ProductAdminAuthProvider, the product admin site's in-memory session |
 | 1.1.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (conformance-vectors.test.ts, 119 of 120 vectors; auth-client-118 skipped as a static property); vector text corrected to the /v1 API; unit-test-coverage now passed. |
 | 1.1.1 | 2026-10-04 | Mike Fullerton | Cite separation-of-concerns and unit-test-coverage in Compliance. |
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to data/services/auth/. |

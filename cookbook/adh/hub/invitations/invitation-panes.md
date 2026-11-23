@@ -2,11 +2,11 @@
 id: a9222936-8474-4073-8581-d314a258bf0a
 title: "Invitation Panes"
 type: ingredient
-version: 1.2.3
+version: 2.0.0
 status: review
 language: en
 created: 2026-09-23
-modified: 2026-11-14
+modified: 2026-11-23
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -77,7 +77,15 @@ three string constants: `"invitation_requests"` (Requests), `"pending_users"`
   Requests — "Delete requests?" / "This removes the selected invitation requests.";
   Pending Users — "Delete pending users?" / "This removes the selected pending
   users."; Invites — "Delete invites?" / "This removes the selected sent invites."
-- **notes-action-requires-selection**: The "Admin notes" toolbar action MUST
+- **notes-slots-optional**: Both notes render-prop slots (the notes-and-history
+  renderer and the notes-modal renderer) are optional. A pane given neither (the
+  product admin site, phase 6, which keeps no admin records) MUST render no notes or
+  history content in a row's detail (the Requests and Pending Users details keep
+  their Source and note lines, and the Invites detail is empty), MUST render no notes
+  modal, and MUST NOT offer the "Admin notes" toolbar action; the Pending Users pane
+  keeps "Send invitation" and "Add users". With the modal renderer given, the
+  action is offered as below.
+- **notes-action-requires-selection**: When offered, the "Admin notes" toolbar action MUST
   require a non-empty selection.
 - **notes-action-sets-first-selected-id**: Activating "Admin notes" MUST set the
   pane's admin-notes target id to the first id among the ids the action was
@@ -254,7 +262,7 @@ happens upstream of this component, not within it.
 | invitation-panes-032 | shows-delete-confirm-copy | Inspect the Invites pane's delete-confirmation copy | title "Delete invites?", description "This removes the selected sent invites." |
 | invitation-panes-033 | requests-and-pending-show-source-and-note | Select a pending-user row with lastSource "referral", lastNote "thanks" | Detail shows "Source: referral" and "Note from user: thanks" above the notes/history content |
 | invitation-panes-034 | pending-null-dates-render-dash | Render the Pending Users pane with a row whose "Last request" and "Last invite" values are both null | Both columns render "—" |
-
+| invitation-panes-035 | notes-slots-optional | Each of the three panes rendered with no notes renderers, a row selected | No "Admin notes" action in the toolbar and no notes or history content in the detail; the Pending Users pane still offers "Send invitation" and "Add users"; nothing throws |
 ## Edge Cases
 
 - **Null/empty input**: An empty row list on any pane is passed straight through to
@@ -495,7 +503,7 @@ logged (see Design Decisions).
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/adh-ui/src/blocks/invitation-panes.tsx` | confirmed (1.2.3) |
+| web | `packages/web/packages/adh-ui/src/blocks/invitation-panes.tsx` | confirmed (2.0.0) |
 
 ## Design Decisions
 
@@ -574,3 +582,4 @@ rejection reason is discarded via `() => undefined` with no log or rethrow
 | 1.2.1 | 2026-10-04 | Mike Fullerton | Add separation-of-concerns and unit-test-coverage compliance. |
 | 1.2.2 | 2026-10-04 | Mike Fullerton | Legacy recipe citations restored to the legacy recipes' own adhsdk://recipes/ domains; the adhsdk://recipes/ form named nothing. |
 | 1.2.3 | 2026-11-14 | Mike Fullerton | Conformance tests added (invitationPanes.test.tsx, 34 of 34 vectors); unit-test-coverage now passed. |
+| 2.0.0 | 2026-11-23 | Mike Fullerton | Phase 6: both notes slots optional; without them no Admin notes action, notes or history (product admin site) |

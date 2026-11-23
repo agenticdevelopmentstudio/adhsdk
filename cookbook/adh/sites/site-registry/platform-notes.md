@@ -26,7 +26,12 @@
   workspace-slug round trip (`siteWorkspaceHref` and `siteWorkspaceSlug` plus
   `SITE_LANDING_SEGMENTS` and `HUB_ROUTE_SEGMENTS`), the per-site build table
   (`SITE_BUILD` and `siteBuildConfig`) kept outside the file's `<gen:sites>` region, and
-  `ssoReturnOrigins`. `reserved-slugs.ts` holds `RESERVED_SLUGS`, `isReservedSlug`, and
+  `ssoReturnOrigins`. The phase-6 `product-admin` site is one `SITES` row (`adminOnly`,
+  `crawlable: false`), one `SITE_BUILD` entry (`handRolledConfig: true`), one entry in
+  `MAIN_SITE_IDS`, one `SITE_STORIES` entry in `story.ts` (a `chapter` of the `backend`
+  pillar, like `admin`), and `admin-site` in `HUB_EXTRA_FEATURE_SEGMENTS`; its
+  `devDependencies` carry `@adh-sdk/product-admin` for the one test that holds that
+  package's rail equal to the site's share of the route table. `reserved-slugs.ts` holds `RESERVED_SLUGS`, `isReservedSlug`, and
   `isReservedSlugAnywhere`. `legal.ts` holds the privacy and terms paths and URLs.
   `fleets.ts` holds `MARKETING_FLEET_SITE_IDS`, `PLACEHOLDER_FLEET_SITE_IDS`, and
   `DIRECTORY_SITES`. `story.ts` holds `SITE_STORIES`, `getSiteStory`, and the three

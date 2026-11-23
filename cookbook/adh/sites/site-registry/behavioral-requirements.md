@@ -30,6 +30,15 @@
 - **admin-only-derives-admin-ids-and-drops-footer**: The admin-only id set MUST be
   exactly the identifiers of every site definition marked `adminOnly`, and every such
   entry MUST be excluded from the footer site list.
+- **product-admin-site-registered**: The roster MUST define a `product-admin` site (a
+  product's own admin site, phase 6) that is `adminOnly`, not `crawlable`, and has no home
+  route (`hasHome` false), with `product-admin.agenticdeveloperhub.com` as its production
+  host; because it is `adminOnly` it MUST be absent from the footer site list. It MUST be in
+  the main-family roster, MUST sit in the console section of the family roster between
+  `admin` and `builds`, and MUST be hand-rolled in the per-site build table
+  (`handRolledConfig`), since its root app holds the site's own `/auth/*` route handlers.
+  The one deployed app serves every product's admin site and picks the product by host, so
+  the registry's host is only the default.
 - **listed-sites-filter**: The listed-sites set MUST be exactly the roster entries
   whose `listed` field is not literally `false`; a `listed: false` entry MUST remain
   resolvable by site lookup and identifier validation and MUST only be excluded from
@@ -187,7 +196,7 @@
   segments MUST name a hub workspace feature with no corresponding registry site (a
   hub-only knob, such as an ecosystem's member list, the persona-data management
   surface; a product knob with a row on the product rail, such as `roles`,
-  `signup-list`, or `sets`; or a bespoke rail route such as `email-signup`); a feature that is some site's own implementation MUST be keyed in the
+  `signup-list`, `sets`, or `admin-site`; or a bespoke rail route such as `email-signup`); a feature that is some site's own implementation MUST be keyed in the
   feature-segment map by that site's identifier instead.
 
 ### Workspace routing

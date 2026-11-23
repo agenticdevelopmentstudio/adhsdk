@@ -50,8 +50,18 @@
 - **clear-tokens-clears-sibling-user-key**: clearing the token bundle MUST
   remove both the tokens entry and the sibling cached-user entry (keyed as
   `${storageKey}:user`), then invoke every session-change subscriber.
-- **read-access-token-derivation**: reading the stored access token MUST
-  return the token bundle's access token, or nothing if no bundle is stored.
+- **read-access-token-derivation**: reading the access token MUST return the
+  installed token source's current token when a source is installed (see
+  **access-token-source-seam**); otherwise the stored token bundle's access
+  token, or nothing if no bundle is stored.
+- **access-token-source-seam**: a token source is an object with a synchronous
+  `read` (the current access token or nothing) and an asynchronous `refresh` (a
+  new token, or nothing when the session is gone). Installing one, or removing it
+  by installing nothing, MUST invoke every session-change subscriber, because the
+  token every request sends has moved. With none installed (the default) no
+  behavior differs from the storage-backed session. The announcement used to do
+  this is exported for this package's own source only and is not part of the
+  package's public surface.
 - **session-change-subscription**: session-change subscription MUST register
   a callback to be called on every subsequent token write/clear, and MUST
   return an unsubscribe function that removes that callback from the
@@ -88,6 +98,11 @@
   same in-flight promise to every caller while a refresh is outstanding,
   issuing exactly one network request regardless of how many callers invoke
   it concurrently.
+- **refresh-delegates-to-token-source**: when a token source is installed, the
+  refresh operation MUST return the source's own refresh result and MUST NOT
+  issue the storage-and-cookie refresh request, touch its in-flight promise or
+  generation counter, or write the token bundle; the source owns its own
+  single-flight.
 - **refresh-request-shape**: a refresh attempt MUST `POST` the literal body
   `'{}'` to the configured refresh path with credentials included and header
   `Content-Type: application/json`.
@@ -414,6 +429,46 @@
 - **link-copy-provider-substitution**: every account-linking modal copy
   function MUST substitute the provider label lookup's result for the given
   provider slug into its returned string.
+
+### Product admin session (web)
+
+The session for a product's own admin site (phase 6): the product's admins, signed
+in with the product's customer login, managing that product at its own host. It
+is a sibling of the hub's session provider, not a mode of it: a page under one
+MUST NOT mount the other.
+
+- **product-admin-session-start**: on mount the provider MUST install a token
+  source (a ref-held in-memory token, never storage or a URL) and `POST`
+  `/auth/session` with credentials included, the site's own route handler, whose
+  refresh token is an HttpOnly cookie on the site's origin. A `401` MUST clear the
+  token and navigate to `/auth/signin?return=<current path and query,
+  URL-encoded>`. Any other non-OK status, or an answer with no `accessToken`
+  string, is a failure, handled as in **product-admin-session-account**.
+- **product-admin-session-account**: once a token is held, the provider MUST read
+  `GET /api/v1/account` and map it to the user (id, email, name, avatar URL, each
+  absent value as nothing), the product's ecosystem id and the product role slugs
+  held (an empty list when absent). A session whose roles include `admin` MUST read
+  `ready`; any other MUST read `no-access`. Until then it reads `loading`. A
+  failure of the session or account read for any reason but a `401` MUST start the
+  sign-in again with the same return path rather than render.
+- **product-admin-session-refresh**: after each token the provider MUST schedule a
+  refresh one minute (`PRODUCT_ADMIN_REFRESH_LEAD_MS`) before the token expires,
+  never sooner than five seconds from now. Expiry is the answer's `expiresAt`
+  (unix seconds when below `1e12`, else unix milliseconds, or an ISO 8601 string),
+  else the token's own `exp` claim; with neither, nothing is scheduled and a `401`
+  still refreshes on demand through the token source. Concurrent refreshes MUST
+  share one in-flight promise.
+- **product-admin-session-stale-answers**: an answer that lands after the provider
+  unmounted or remounted MUST be dropped: it adopts no token and navigates
+  nowhere. On unmount the provider MUST cancel its timer and remove its token
+  source only if it is still the installed one.
+- **product-admin-session-signout**: sign-out MUST cancel the timer, `POST`
+  `/auth/signout` with credentials included, and then, whether or not that
+  request failed, clear the token and account and navigate to `/auth/signin`.
+- **product-admin-session-hook**: the session hook MUST return the status, the
+  account, the access token and sign-out, and MUST throw outside the provider.
+  Navigation MUST go through the provider's `navigate` prop when given, else
+  `window.location.assign`.
 
 ### Security
 

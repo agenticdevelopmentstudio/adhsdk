@@ -1,6 +1,7 @@
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 2.2.0 | 2026-11-23 | Mike Fullerton | Phase 6: a pane caller for the sign-up list, roles and sets panes; admin seats protected, usage tier hidden, storage quota capped for a product admin |
 | 2.1.0 | 2026-11-22 | Mike Fullerton | Phase 5: sign-up list, product roles, sets, billing placeholder and workspace gate panes; the login allow-list is now a switch whose emails live in the sign-up list; client-auth updates are POSTs; passwordEnabled |
 | 2.0.0 | 2026-11-15 | Mike Fullerton | Login allow-list by email (loginAllowedEmails, login_allowed_emails): the client-auth pane's Who can sign in editor, lowercased on save, with email-shape, 254-character and 500-entry bounds |
 | 1.2.1 | 2026-10-04 | Mike Fullerton | Design Decisions keep the Decision / Rationale / Approved triple; each decision's platform line is folded into its rationale. |
