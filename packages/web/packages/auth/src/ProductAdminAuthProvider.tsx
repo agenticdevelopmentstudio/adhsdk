@@ -93,6 +93,35 @@ function toAccount(w: ProductAdminAccountWire): ProductAdminAccount {
   }
 }
 
+/** A session from `POST /auth/session`; null is its 401, no session. */
+type SessionAnswer = { accessToken: string; expiresAt: unknown } | null
+
+// The one `POST /auth/session` in flight in this page, shared by every caller until it answers.
+// It lives at module scope, not in a mount, because the site's `/auth/*` handlers ROTATE the
+// refresh cookie: a second POST sent before the first answers presents a cookie that has just
+// been spent, and the server takes that as a lost session. A StrictMode remount, or an unmount
+// and a new provider while a request is out, therefore joins this request; each mount decides for
+// itself (by its generation) whether to adopt what comes back.
+let sessionRequest: Promise<SessionAnswer> | null = null
+
+function requestSession(): Promise<SessionAnswer> {
+  if (sessionRequest) return sessionRequest
+  const req = (async (): Promise<SessionAnswer> => {
+    const res = await fetch('/auth/session', { method: 'POST', credentials: 'include' })
+    if (res.status === 401) return null
+    if (!res.ok) throw new Error(`HTTP ${res.status} from /auth/session`)
+    const body = (await res.json()) as { accessToken?: unknown; expiresAt?: unknown }
+    if (typeof body.accessToken !== 'string' || !body.accessToken) {
+      throw new Error('/auth/session answered without an accessToken')
+    }
+    return { accessToken: body.accessToken, expiresAt: body.expiresAt }
+  })().finally(() => {
+    if (sessionRequest === req) sessionRequest = null
+  })
+  sessionRequest = req
+  return req
+}
+
 function currentPath(): string {
   if (typeof window === 'undefined') return '/'
   return `${window.location.pathname}${window.location.search}`
@@ -120,7 +149,8 @@ export function ProductAdminAuthProvider({ children, navigate }: ProductAdminAut
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const inFlightRef = useRef<Promise<string | null> | null>(null)
   // Bumped on every mount and unmount: an answer that lands for an older mount is dropped, so a
-  // StrictMode remount or an unmount mid-request never adopts a token or navigates.
+  // StrictMode remount or an unmount mid-request never adopts a token or navigates. The request
+  // itself is shared across mounts (`requestSession`), so dropping an answer never costs a POST.
   const genRef = useRef(0)
 
   const adopt = useCallback((token: string | null) => {
@@ -133,21 +163,15 @@ export function ProductAdminAuthProvider({ children, navigate }: ProductAdminAut
     if (inFlightRef.current) return inFlightRef.current
     const gen = genRef.current
     const run = (async (): Promise<string | null> => {
-      const res = await fetch('/auth/session', { method: 'POST', credentials: 'include' })
+      const answer = await requestSession()
       if (gen !== genRef.current) return null
-      if (res.status === 401) {
+      if (!answer) {
         adopt(null)
         go(`/auth/signin?return=${encodeURIComponent(currentPath())}`)
         return null
       }
-      if (!res.ok) throw new Error(`HTTP ${res.status} from /auth/session`)
-      const body = (await res.json()) as { accessToken?: unknown; expiresAt?: unknown }
-      if (typeof body.accessToken !== 'string' || !body.accessToken) {
-        throw new Error('/auth/session answered without an accessToken')
-      }
-      if (gen !== genRef.current) return null
-      adopt(body.accessToken)
-      const exp = expiryMs(body.expiresAt, body.accessToken)
+      adopt(answer.accessToken)
+      const exp = expiryMs(answer.expiresAt, answer.accessToken)
       if (timerRef.current) clearTimeout(timerRef.current)
       timerRef.current = null
       if (exp !== null) {
@@ -156,7 +180,7 @@ export function ProductAdminAuthProvider({ children, navigate }: ProductAdminAut
           void refresh().catch(() => undefined)
         }, wait)
       }
-      return body.accessToken
+      return answer.accessToken
     })().finally(() => {
       if (inFlightRef.current === run) inFlightRef.current = null
     })

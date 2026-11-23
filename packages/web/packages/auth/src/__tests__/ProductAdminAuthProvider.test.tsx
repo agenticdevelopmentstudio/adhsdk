@@ -3,6 +3,7 @@
 // /api/v1/account and /auth/signout are asserted, and the bearer it supplies is read back through
 // readAccessToken, the same seam every @adh-sdk/data client sends from.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { StrictMode } from 'react'
 import { act, render, waitFor } from '@testing-library/react'
 import {
   PRODUCT_ADMIN_REFRESH_LEAD_MS,
@@ -178,6 +179,30 @@ describe('ProductAdminAuthProvider', () => {
       await new Promise((r) => setTimeout(r, 20))
     })
     expect(callsTo('/auth/session')).toHaveLength(1)
+  })
+
+  it('sends one POST /auth/session across a StrictMode remount, and the second mount adopts it', async () => {
+    let release: (r: Response) => void = () => undefined
+    fetchMock.mockImplementation(async (url: string) => {
+      if (url === '/auth/session') return new Promise<Response>((r) => (release = r))
+      if (url === '/api/v1/account') return json(200, account(['admin']))
+      throw new Error(`unexpected fetch ${url}`)
+    })
+    render(
+      <StrictMode>
+        <ProductAdminAuthProvider navigate={navigate}>
+          <Probe />
+        </ProductAdminAuthProvider>
+      </StrictMode>,
+    )
+    expect(callsTo('/auth/session')).toHaveLength(1)
+    await act(async () => {
+      release(json(200, { accessToken: 'tok-1', expiresAt: Math.floor(Date.now() / 1000) + 3600 }))
+    })
+    await waitFor(() => expect(seen?.status).toBe('ready'))
+    expect(callsTo('/auth/session')).toHaveLength(1)
+    expect(readAccessToken()).toBe('tok-1')
+    expect(navigate).not.toHaveBeenCalled()
   })
 
   it('removes its token source on unmount', async () => {
