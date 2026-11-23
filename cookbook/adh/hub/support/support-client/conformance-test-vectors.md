@@ -3,7 +3,7 @@ Vectors are asserted in `packages/web/packages/data/src/support/__tests__/suppor
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
-| support-client-001 | side-prefix, grants-read | `supportApi("customer").grants()` then the same for `account` | A `GET` of `/api/v1/customer/support/grants` with `limit=100`, then `/api/v1/account/support/grants`; rows are camel-cased |
+| support-client-001 | side-prefix, grants-read | `supportApi("customer").grants()` then the same for `account` | `listAllV1` of `/api/v1/customer/support/grants`, then of `/api/v1/account/support/grants`, so every page is read; rows are camel-cased |
 | support-client-002 | decide-and-revoke | `approve`, `deny` and `revoke` of `"a/b"` on `account` | `POST` of `/api/v1/account/support/grants/a%2Fb/approve`, `.../deny`, `.../revoke`, no body |
 | support-client-003 | access-read | `access({ grantId: "g1", cursor: "c1" })`, then `access()` | The first carries `grant_id=g1`, `cursor=c1` and `limit=50`; the second only `limit=50`; `nextCursor` is the last id when more remain, else `null` |
 | support-client-004 | grant-state | With no `status`: an undecided grant, one undecided for seven days, an approved one expiring later, an approved one past `expiresAt`, a denied one, a revoked one | `pending`, `ended`, `live`, `ended`, `ended`, `ended` |

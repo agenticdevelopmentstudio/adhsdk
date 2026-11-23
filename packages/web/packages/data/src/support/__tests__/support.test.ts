@@ -8,6 +8,7 @@ vi.mock("../../http", async (importOriginal) => ({
   ...(await importOriginal<typeof import("../../http")>()),
   authedJson: vi.fn(),
   authedRequest: vi.fn(),
+  listAllV1: vi.fn(),
   listV1Page: vi.fn(),
 }));
 
@@ -32,16 +33,17 @@ import {
   type SupportGrantWire,
   type SupportReadWire,
 } from "..";
-import { authedJson, authedRequest, listV1Page } from "../../http";
+import { authedJson, authedRequest, listAllV1, listV1Page } from "../../http";
 
 const mockedJson = vi.mocked(authedJson);
 const mockedRequest = vi.mocked(authedRequest);
 const mockedPage = vi.mocked(listV1Page);
+const mockedAll = vi.mocked(listAllV1);
 
 const ECO = "0b9c4a52-6c3e-4d7e-9a1f-2f4c1d2e3a4b";
 const GRANT = "5f0e1d2c-3b4a-4958-8776-655443322110";
 
-const call = (m: typeof mockedJson | typeof mockedRequest | typeof mockedPage, i = 0) => {
+const call = (m: typeof mockedJson | typeof mockedRequest | typeof mockedPage | typeof mockedAll, i = 0) => {
   const [url, init] = m.mock.calls[i] as [string, RequestInit | undefined];
   const u = new URL(url, "https://x.test");
   return { path: u.pathname, params: Object.fromEntries(u.searchParams), init };
@@ -79,16 +81,17 @@ beforeEach(() => {
   mockedJson.mockReset();
   mockedRequest.mockReset();
   mockedPage.mockReset();
+  mockedAll.mockReset();
   mockedRequest.mockResolvedValue(undefined as never);
 });
 
 describe("supportApi", () => {
   it.each(["customer", "account"] as const)("lists the %s's grants and camel-cases them", async (side) => {
-    mockedJson.mockResolvedValueOnce({ object: "list", data: [wireGrant()], has_more: false });
+    mockedAll.mockResolvedValueOnce([wireGrant()]);
     const grants = await supportApi(side).grants();
-    const c = call(mockedJson);
+    const c = call(mockedAll);
+    // listAllV1 follows has_more itself, so every grant arrives, not only the first page.
     expect(c.path).toBe(`/api/v1/${side}/support/grants`);
-    expect(c.params.limit).toBe("100");
     expect(grants).toEqual([
       expect.objectContaining({
         id: GRANT,
@@ -112,7 +115,7 @@ describe("supportApi", () => {
   });
 
   it("rethrows a 404 so the caller can tell the switch is off", async () => {
-    mockedJson.mockRejectedValueOnce(new AuthHttpError(404, "Not found"));
+    mockedAll.mockRejectedValueOnce(new AuthHttpError(404, "Not found"));
     const err = await supportApi("customer").grants().catch((e: unknown) => e);
     expect(isSupportOff(err)).toBe(true);
   });
@@ -139,9 +142,9 @@ describe("supportApi", () => {
 
 describe("supportAdminApi", () => {
   it("lists with the ecosystem uuid and keeps the target", async () => {
-    mockedJson.mockResolvedValueOnce({ object: "list", data: [wireGrant()], has_more: false });
+    mockedAll.mockResolvedValueOnce([wireGrant()]);
     const [g] = await supportAdminApi.list(ECO);
-    const c = call(mockedJson);
+    const c = call(mockedAll);
     expect(c.path).toBe("/api/v1/support/grants");
     expect(c.params.ecosystem).toBe(ECO);
     expect(g).toEqual(expect.objectContaining({ targetId: "cust-1", targetName: "Sam" }));

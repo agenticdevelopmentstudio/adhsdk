@@ -26,7 +26,7 @@
 
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { responseError } from "@adh-sdk/auth/client";
-import { authedJson, authedRequest, httpStatus, listV1Page, withV1Query, type V1List } from "../http";
+import { authedJson, authedRequest, httpStatus, listAllV1, listV1Page, withV1Query } from "../http";
 import { enc } from "../client-helpers";
 import {
   toSupportAccessRow,
@@ -315,10 +315,11 @@ export function supportApi(side: SupportSide) {
     await authedRequest(`${base}/grants/${enc(id)}/${verb}`, { method: "POST" });
   };
   return {
-    /** Every grant over the caller. A 404 is rethrown unchanged (`isSupportOff`). */
+    /** Every grant over the caller, following `has_more` page by page (the backend keeps up to
+     *  200, the gateway serves 100 a page). A 404 is rethrown unchanged (`isSupportOff`). */
     async grants(): Promise<SupportGrant[]> {
-      const page = await authedJson<V1List<SupportGrantWire>>(withV1Query(`${base}/grants`, { limit: 100 }));
-      return (page?.data ?? []).map(toSupportGrant);
+      const rows = await listAllV1<SupportGrantWire>(`${base}/grants`);
+      return rows.map(toSupportGrant);
     },
     approve: decide("approve"),
     deny: decide("deny"),
@@ -362,11 +363,10 @@ const rowCursor = (rows: Record<string, unknown>[], hasMore: boolean): string | 
 /** A product admin's calls, always naming the product by its ecosystem uuid. The viewer's two
  *  reads are GETs; there is no function that writes to the viewer's paths. */
 export const supportAdminApi = {
+  /** Every grant of the product, following `has_more` page by page. */
   async list(ecosystemId: string): Promise<SupportAdminGrant[]> {
-    const page = await authedJson<V1List<SupportGrantWire>>(
-      withV1Query(ADMIN_GRANTS_PATH, { ecosystem: ecosystemId, limit: 100 }),
-    );
-    return (page?.data ?? []).map(toSupportAdminGrant);
+    const rows = await listAllV1<SupportGrantWire>(withV1Query(ADMIN_GRANTS_PATH, { ecosystem: ecosystemId }));
+    return rows.map(toSupportAdminGrant);
   },
 
   /** Ask for a grant. The reason and length are checked by the pane and the backend (422). */
