@@ -125,6 +125,11 @@ export const SITE_ROUTE_SEGMENTS: readonly string[] = [
   'oidc',
   'explore',
   'old-landing',
+  // hub — app/(hub)/(auth)/support, the page a customer's emailed support-access link opens
+  // (phase 7), beside `/<workspace>/support`.
+  // A real top-level directory, so it shadows a workspace slugged `support` exactly as the words
+  // above do; it used to sit in RESERVED_HANDLE_WORDS as taste, before the page existed.
+  'support',
   // hub — app/{privacy-policy,terms-of-use}, the family's legal text bare at the hub's root
   // (adh-registry's `sites/legal.ts`). Every site's footer links these two addresses, and the
   // hub's own `/privacy` and `/terms` redirect to them; the template's `privacy` and `terms` are
@@ -264,7 +269,6 @@ export const RESERVED_HANDLE_WORDS: readonly string[] = [
   'signup',
   'static',
   'status',
-  'support',
   'user',
   'users',
   // The hub's feature vocabulary. Every one of these is a SECOND segment — `/<workspace>/teams`,
