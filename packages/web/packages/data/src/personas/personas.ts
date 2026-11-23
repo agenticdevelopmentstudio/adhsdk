@@ -311,9 +311,11 @@ export type ModelInfo = {
   /** False for a switched-off model the provider no longer lists; true when the wire omits it. */
   offered: boolean;
 };
-// Spec-typed, but keep the rich `models` typing: the backend column is jsonb so the
-// spec documents PersonaServiceModel loosely (string | object); the registry UI needs
-// the structured ModelInfo, so override just that field.
+// Spec-typed, but keep the rich `models` typing: the spec's PersonaServiceModel is an
+// open object requiring only `id`, `available` and `offered`, while the registry UI needs
+// the structured ModelInfo, so override just that field. The reader stays more tolerant
+// than the spec (bare-string ids, missing flags, unreadable entries dropped), which the
+// generated Python and Swift clients are not.
 export type UserService = Omit<ServiceRow, "models"> & { models: ModelInfo[] };
 // Re-exported so connect-form UIs can read a template's transport/auth spec
 // (url-var placeholders, auth kind) without reaching into ./wire directly.

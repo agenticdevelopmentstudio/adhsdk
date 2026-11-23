@@ -274,9 +274,10 @@ export interface ServiceTemplateRow {
 }
 
 /** Backend row for `GET /persona/services` (and a single service, redacted —
- *  never the raw apiKey). `models` is a jsonb column the spec types loosely
- *  (string | object per entry); the personas client's `ModelInfo` recovers the
- *  structured shape client-side. */
+ *  never the raw apiKey). The spec types each `models` entry as PersonaServiceModel,
+ *  an open object with required `id`, `available` and `offered`; this type stays
+ *  looser (string | object) because the personas client still reads legacy bare-string
+ *  entries and missing flags, and its `ModelInfo` recovers the structured shape. */
 export interface ServiceRow {
   id: string;
   templateId?: string | null;
