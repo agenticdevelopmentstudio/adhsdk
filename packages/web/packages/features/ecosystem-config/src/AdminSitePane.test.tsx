@@ -148,12 +148,26 @@ describe("AdminSitePane", () => {
     expect(await screen.findByText("Another product's admin site uses admin.example.com.")).toBeInTheDocument();
   });
 
-  it("removes a site", async () => {
+  it("removes a site only after the confirmation", async () => {
     site.get.mockResolvedValue({ site: SITE, enabled: true });
     site.remove.mockResolvedValue(undefined);
     renderPane(<AdminSitePane ecosystemId={eco()} />);
     fireEvent.click(await screen.findByRole("button", { name: "Remove" }));
+    await screen.findByText("Remove the admin site?");
+    expect(site.remove).not.toHaveBeenCalled();
+    // The dialog renders in a portal after the pane, so its Remove is the last one.
+    fireEvent.click(screen.getAllByRole("button", { name: "Remove" }).at(-1)!);
     await waitFor(() => expect(site.remove).toHaveBeenCalledWith(eco()));
+  });
+
+  it("sends nothing when the removal is cancelled", async () => {
+    site.get.mockResolvedValue({ site: SITE, enabled: true });
+    renderPane(<AdminSitePane ecosystemId={eco()} />);
+    fireEvent.click(await screen.findByRole("button", { name: "Remove" }));
+    await screen.findByText("Remove the admin site?");
+    fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+    await waitFor(() => expect(screen.queryByText("Remove the admin site?")).toBeNull());
+    expect(site.remove).not.toHaveBeenCalled();
   });
 
   it("lists the admin role's holders, read on the ecosystem target", async () => {
