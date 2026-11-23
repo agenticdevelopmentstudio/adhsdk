@@ -170,7 +170,7 @@ describe("ModelsTable Available column", () => {
 
     fireEvent.click(await screen.findByRole("checkbox", { name: "Available: m1" }));
 
-    expect(await screen.findByText("boom")).toBeInTheDocument();
+    expect(await screen.findByText("m1: boom")).toBeInTheDocument();
     expect(report).toHaveBeenCalledWith(expect.any(Error), {
       feature: "services",
       step: "setModelAvailability",
@@ -212,13 +212,34 @@ describe("ModelsTable Available column", () => {
 
     // The second fails: reported, shown inline, its box re-enabled at the last known state.
     settle.m2!.reject(new Error("m2 failed"));
-    expect(await screen.findByText("m2 failed")).toBeInTheDocument();
+    expect(await screen.findByText("m2: m2 failed")).toBeInTheDocument();
     await waitFor(() => expect(box("m2")).not.toHaveAttribute("data-disabled"));
     expect(box("m2")).toHaveAttribute("aria-checked", "true");
     expect(report).toHaveBeenCalledWith(expect.any(Error), {
       feature: "services",
       step: "setModelAvailability",
     });
+  });
+
+  it("one model's failure stays on screen while another model changes, until its own retry", async () => {
+    const both = withModels([
+      { id: "m1", available: true, offered: true },
+      { id: "m2", available: true, offered: true },
+    ]);
+    list.mockResolvedValue([both]);
+    setModelAvailability.mockRejectedValueOnce(new Error("m1 failed")).mockResolvedValue(both);
+    renderSection();
+
+    fireEvent.click(await screen.findByRole("checkbox", { name: "Available: m1" }));
+    expect(await screen.findByText("m1: m1 failed")).toBeInTheDocument();
+
+    fireEvent.click(box("m2"));
+    await waitFor(() => expect(setModelAvailability).toHaveBeenCalledTimes(2));
+    await waitFor(() => expect(box("m2")).not.toHaveAttribute("data-disabled"));
+    expect(screen.getByText("m1: m1 failed")).toBeInTheDocument();
+
+    fireEvent.click(box("m1"));
+    await waitFor(() => expect(screen.queryByText("m1: m1 failed")).toBeNull());
   });
 
   it("answers that arrive out of order each change only their own model", async () => {

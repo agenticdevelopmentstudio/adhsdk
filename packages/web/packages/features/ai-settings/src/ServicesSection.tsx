@@ -124,7 +124,9 @@ function ModelsTable({
   models: ModelInfo[];
   onUpdated?: (model: string, entry: ModelInfo | undefined) => void;
 }) {
-  const [error, setError] = useState<string | null>(null);
+  // The last failure of each model's change, by id. Kept per model so one model's failure stays on
+  // screen while another model changes; a model's own retry is what clears it.
+  const [errors, setErrors] = useState<ReadonlyMap<string, string>>(() => new Map());
   // The models whose change is in flight, by id. A set, not one id: two quick changes on different
   // models each disable their own box until their own request settles, so the first to answer
   // cannot re-enable a box whose request is still running.
@@ -133,7 +135,12 @@ function ModelsTable({
   async function handleAvailableChange(model: string, available: boolean) {
     if (pending.has(model)) return;
     setPending((prev) => new Set(prev).add(model));
-    setError(null);
+    setErrors((prev) => {
+      if (!prev.has(model)) return prev;
+      const next = new Map(prev);
+      next.delete(model);
+      return next;
+    });
     try {
       const updated = await api.services.setModelAvailability(serviceId, model, available);
       onUpdated?.(
@@ -143,7 +150,9 @@ function ModelsTable({
       revalidateResources((key) => key === PERSONA_SERVICES_CACHE_KEY);
     } catch (err) {
       reportUnexpectedAuthError(err, { feature: "services", step: "setModelAvailability" });
-      setError(err instanceof Error ? err.message : "Failed to change the model's availability.");
+      const message =
+        err instanceof Error ? err.message : "Failed to change the model's availability.";
+      setErrors((prev) => new Map(prev).set(model, message));
     } finally {
       setPending((prev) => {
         const next = new Set(prev);
@@ -160,7 +169,12 @@ function ModelsTable({
   }
   return (
     <div className="flex flex-col gap-2">
-      <ErrorText error={error} />
+      {[...errors].map(([model, message]) => (
+        <ErrorText
+          key={model}
+          error={`${models.find((m) => m.id === model)?.displayName ?? model}: ${message}`}
+        />
+      ))}
       <div className="overflow-hidden rounded-lg border border-apt-border">
         <table className="w-full border-collapse text-sm">
           <thead>
