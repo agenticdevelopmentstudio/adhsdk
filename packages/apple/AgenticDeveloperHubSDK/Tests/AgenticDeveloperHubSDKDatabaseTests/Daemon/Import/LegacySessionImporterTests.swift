@@ -1,6 +1,7 @@
 import XCTest
 import Foundation
 import GRDB
+import os
 import AgenticDeveloperHubSDKCore
 @testable import AgenticDeveloperHubSDKDatabase
 
@@ -310,6 +311,46 @@ final class LegacySessionImporterTests: XCTestCase {
         XCTAssertEqual(first.store(IngestSpool.defaultDBName)?.inserted["spooled_event"], 1)
         XCTAssertEqual(first.store("stenographer.db")?.inserted["event_log"], 2)
         XCTAssertEqual(second.totalInserted, 0, "\(second)")
+    }
+
+    /// Between batches the import does not hold the main database's write
+    /// lane: a writer on another thread, the way live ingestion records a
+    /// session, gets the lane within a short deadline after every batch.
+    func testBatchesReleaseTheMainDatabasesWriteLaneBetweenThem() throws {
+        try makeStenographerSource()
+        let batched = LegacySessionImporter(target: importer.target, batchRows: 1)
+        let database = try XCTUnwrap(db)
+        var writes = 0
+        var failures: [String] = []
+        batched.batchCommitted = { schema in
+            let done = DispatchSemaphore(value: 0)
+            let outcome = OSAllocatedUnfairLock<String?>(initialState: nil)
+            DispatchQueue.global().async {
+                defer { done.signal() }
+                do {
+                    try database.write(deadline: .seconds(2)) { conn in
+                        try conn.execute(sql: "CREATE TABLE IF NOT EXISTS between_batches (n INTEGER)")
+                        try conn.execute(sql: "INSERT INTO between_batches (n) VALUES (1)")
+                    }
+                } catch {
+                    outcome.withLock { $0 = "\(schema): \(error)" }
+                }
+            }
+            if done.wait(timeout: .now() + 10) == .timedOut {
+                failures.append("\(schema): the write never returned")
+            } else if let failure = outcome.withLock({ $0 }) {
+                failures.append(failure)
+            }
+            writes += 1
+        }
+
+        let report = try batched.importStores(kind: .stenographerd, directory: sourceDirectory)
+
+        XCTAssertEqual(failures, [], "the main database's write lane was still held after a batch")
+        XCTAssertGreaterThan(writes, 0)
+        XCTAssertEqual(try count("SELECT COUNT(*) FROM between_batches"), writes)
+        XCTAssertEqual(report.store(rawFileName)?.inserted["raw_record"], 2)
+        XCTAssertEqual(report.store(IngestSpool.defaultDBName)?.inserted["spooled_event"], 1)
     }
 
     private struct BatchFailure: Error {}
