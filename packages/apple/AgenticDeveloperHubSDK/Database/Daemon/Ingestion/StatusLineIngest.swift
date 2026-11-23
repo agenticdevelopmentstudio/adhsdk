@@ -21,6 +21,26 @@ extension DaemonDatabase {
         )
     }
 
+    /// The pre-rename handler: session metrics and the version schema only,
+    /// no rate-limit snapshots, as it always did. Kept, deprecated, so a
+    /// consumer that still names it builds and behaves as before.
+    @available(*, deprecated, renamed: "sessionStatusLineIngest",
+               message: "sessionStatusLineIngest also records rate_limit_snapshots")
+    public static var statusLineMetricsIngest: StatusLineIngest {
+        { database, sessionId, hookData, _, accountEmail in
+            try database.recordStatusLineMetrics(sessionId: sessionId, hookData: hookData, accountEmail: accountEmail)
+        }
+    }
+
+    /// The pre-rename entry point: records the payload's version schema in
+    /// `claude_versions` and its figures in `session_metrics`, and no
+    /// rate-limit snapshot. Must run inside `ingestEvent`'s write transaction.
+    @available(*, deprecated, renamed: "ingestStatusLinePayload(sessionId:hookData:timestamp:accountEmail:)",
+               message: "ingestStatusLinePayload also records rate_limit_snapshots")
+    public func ingestStatusLineMetrics(sessionId: String, hookData: [String: Any], accountEmail: String) throws {
+        try recordStatusLineMetrics(sessionId: sessionId, hookData: hookData, accountEmail: accountEmail)
+    }
+
     /// Routes a StatusLine hook payload into three places:
     ///   1. `rate_limit_snapshots` — one row per render, deduped against the
     ///      session's most recent row when `weekly_pct` / `five_hour_pct` /
@@ -133,6 +153,13 @@ extension DaemonDatabase {
             }
         }
 
+        try recordStatusLineMetrics(sessionId: sessionId, hookData: hookData, accountEmail: accountEmail)
+    }
+
+    /// Parts 2 and 3 of ``ingestStatusLinePayload(sessionId:hookData:timestamp:accountEmail:)``:
+    /// the version schema and the `session_metrics` columns, inside the
+    /// caller's write transaction.
+    private func recordStatusLineMetrics(sessionId: String, hookData: [String: Any], accountEmail: String) throws {
         // 2. claude_versions: union field paths across captures. First-seen
         // blob wins; subsequent captures only enlarge the path set.
         let claudeVersion = hookData["version"] as? String ?? ""

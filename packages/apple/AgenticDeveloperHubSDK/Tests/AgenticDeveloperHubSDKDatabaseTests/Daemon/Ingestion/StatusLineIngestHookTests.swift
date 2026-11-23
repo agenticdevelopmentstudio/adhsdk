@@ -1,6 +1,7 @@
 import AgenticDeveloperHubSDKCore
 import XCTest
 import Foundation
+import GRDB
 @testable import AgenticDeveloperHubSDKDatabase
 
 /// The injected `StatusLine` hook: `ingestEvent` hands a StatusLine payload to
@@ -20,6 +21,34 @@ final class StatusLineIngestHookTests: XCTestCase {
             lock.lock(); defer { lock.unlock() }
             return calls
         }
+    }
+
+    /// The deprecated `statusLineMetricsIngest` still records the session's
+    /// figures and version schema, and still writes no rate-limit snapshot.
+    @available(*, deprecated)
+    func testTheDeprecatedMetricsIngestKeepsItsOldBehavior() throws {
+        let (store, path) = try TestDaemonDatabase.makeSessionDatabase(
+            statusLineIngest: DaemonDatabase.statusLineMetricsIngest
+        )
+        defer { TestDaemonDatabase.remove(path: path) }
+
+        try store.ingestEvent(
+            eventType: "StatusLine", timestamp: "2026-06-01T12:01:00Z",
+            hookData: [
+                "session_id": "old", "cwd": "/tmp", "version": "2.1.0",
+                "context_window": ["context_window_size": 200_000, "remaining_percentage": 40],
+                "rate_limits": ["seven_day": ["used_percentage": 12.0, "resets_at": 1_780_000_000]]
+            ]
+        )
+
+        let (used, versions, snapshots) = try store.read { conn in
+            (try Int.fetchOne(conn, sql: "SELECT context_used_pct FROM session_metrics WHERE session_id = 'old'"),
+             try Int.fetchOne(conn, sql: "SELECT COUNT(*) FROM claude_versions WHERE claude_version = '2.1.0'"),
+             try Int.fetchOne(conn, sql: "SELECT COUNT(*) FROM rate_limit_snapshots"))
+        }
+        XCTAssertEqual(used, 60)
+        XCTAssertEqual(versions, 1)
+        XCTAssertEqual(snapshots, 0, "the old handler never wrote rate-limit snapshots")
     }
 
     func testOnlyAStatusLineEventReachesTheHook() throws {
