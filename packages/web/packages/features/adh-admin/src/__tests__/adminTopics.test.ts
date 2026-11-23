@@ -68,3 +68,12 @@ describe("AI processing topics", () => {
     }
   });
 });
+
+describe("the operator's provider catalog (phase 8)", () => {
+  it("keeps the llm-providers id with the label AI Providers", () => {
+    const topic = ADMIN_TOPICS.find((t) => t.id === "llm-providers");
+    expect(topic?.label).toBe("AI Providers");
+    expect(topic?.category).toBe("ai-processing");
+    expect(ADMIN_PANES["llm-providers"]).toBeDefined();
+  });
+});

@@ -151,6 +151,7 @@ const ICONS: Record<string, LucideIcon> = {
   // the registry below, so a site added to HUB_FEATURE_SEGMENT arrives with the glyph
   // its own menu row already wears instead of an empty slot.
   '/admin-site': UserCog,
+  '/ai-settings': Sparkles,
   '/all-data': Database,
   '/applications': AppWindow,
   '/email-signup': Mail,

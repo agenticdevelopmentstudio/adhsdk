@@ -9,7 +9,7 @@ from attrs import field as _attrs_field
 from ..types import UNSET, Unset
 
 if TYPE_CHECKING:
-    from ..models.persona_service_model_type_1 import PersonaServiceModelType1
+    from ..models.persona_service_model import PersonaServiceModel
 
 
 T = TypeVar("T", bound="PostV1ProviderTemplatesByIdVerifyResponse200")
@@ -20,31 +20,25 @@ class PostV1ProviderTemplatesByIdVerifyResponse200:
     """
     Attributes:
         ok (bool):
-        models (list[PersonaServiceModelType1 | str] | Unset):
+        models (list[PersonaServiceModel] | Unset):
         error (str | Unset):
         object_ (Literal['provider_template'] | Unset):
     """
 
     ok: bool
-    models: list[PersonaServiceModelType1 | str] | Unset = UNSET
+    models: list[PersonaServiceModel] | Unset = UNSET
     error: str | Unset = UNSET
     object_: Literal["provider_template"] | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
-        from ..models.persona_service_model_type_1 import PersonaServiceModelType1
-
         ok = self.ok
 
-        models: list[dict[str, Any] | str] | Unset = UNSET
+        models: list[dict[str, Any]] | Unset = UNSET
         if not isinstance(self.models, Unset):
             models = []
             for models_item_data in self.models:
-                models_item: dict[str, Any] | str
-                if isinstance(models_item_data, PersonaServiceModelType1):
-                    models_item = models_item_data.to_dict()
-                else:
-                    models_item = models_item_data
+                models_item = models_item_data.to_dict()
                 models.append(models_item)
 
         error = self.error
@@ -69,31 +63,17 @@ class PostV1ProviderTemplatesByIdVerifyResponse200:
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
-        from ..models.persona_service_model_type_1 import PersonaServiceModelType1
+        from ..models.persona_service_model import PersonaServiceModel
 
         d = dict(src_dict)
         ok = d.pop("ok")
 
         _models = d.pop("models", UNSET)
-        models: list[PersonaServiceModelType1 | str] | Unset = UNSET
+        models: list[PersonaServiceModel] | Unset = UNSET
         if _models is not UNSET:
             models = []
             for models_item_data in _models:
-
-                def _parse_models_item(data: object) -> PersonaServiceModelType1 | str:
-                    try:
-                        if not isinstance(data, dict):
-                            raise TypeError()
-                        componentsschemas_persona_service_model_type_1 = (
-                            PersonaServiceModelType1.from_dict(data)
-                        )
-
-                        return componentsschemas_persona_service_model_type_1
-                    except (TypeError, ValueError, AttributeError, KeyError):
-                        pass
-                    return cast(PersonaServiceModelType1 | str, data)
-
-                models_item = _parse_models_item(models_item_data)
+                models_item = PersonaServiceModel.from_dict(models_item_data)
 
                 models.append(models_item)
 

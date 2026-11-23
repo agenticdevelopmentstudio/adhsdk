@@ -9,7 +9,7 @@ from attrs import field as _attrs_field
 from ..types import UNSET, Unset
 
 if TYPE_CHECKING:
-    from ..models.persona_service_model_type_1 import PersonaServiceModelType1
+    from ..models.persona_service_model import PersonaServiceModel
 
 
 T = TypeVar("T", bound="PersonaService")
@@ -25,7 +25,7 @@ class PersonaService:
         base_url (str):
         has_api_key (bool):
         connect_status (str):
-        models (list[PersonaServiceModelType1 | str]):
+        models (list[PersonaServiceModel]):
         template_id (None | str | Unset):
         connect_error (None | str | Unset):
         last_connected_at (None | str | Unset):
@@ -40,7 +40,7 @@ class PersonaService:
     base_url: str
     has_api_key: bool
     connect_status: str
-    models: list[PersonaServiceModelType1 | str]
+    models: list[PersonaServiceModel]
     template_id: None | str | Unset = UNSET
     connect_error: None | str | Unset = UNSET
     last_connected_at: None | str | Unset = UNSET
@@ -50,8 +50,6 @@ class PersonaService:
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
-        from ..models.persona_service_model_type_1 import PersonaServiceModelType1
-
         id = self.id
 
         provider_kind = self.provider_kind
@@ -66,11 +64,7 @@ class PersonaService:
 
         models = []
         for models_item_data in self.models:
-            models_item: dict[str, Any] | str
-            if isinstance(models_item_data, PersonaServiceModelType1):
-                models_item = models_item_data.to_dict()
-            else:
-                models_item = models_item_data
+            models_item = models_item_data.to_dict()
             models.append(models_item)
 
         template_id: None | str | Unset
@@ -139,7 +133,7 @@ class PersonaService:
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
-        from ..models.persona_service_model_type_1 import PersonaServiceModelType1
+        from ..models.persona_service_model import PersonaServiceModel
 
         d = dict(src_dict)
         id = d.pop("id")
@@ -157,21 +151,7 @@ class PersonaService:
         models = []
         _models = d.pop("models")
         for models_item_data in _models:
-
-            def _parse_models_item(data: object) -> PersonaServiceModelType1 | str:
-                try:
-                    if not isinstance(data, dict):
-                        raise TypeError()
-                    componentsschemas_persona_service_model_type_1 = (
-                        PersonaServiceModelType1.from_dict(data)
-                    )
-
-                    return componentsschemas_persona_service_model_type_1
-                except (TypeError, ValueError, AttributeError, KeyError):
-                    pass
-                return cast(PersonaServiceModelType1 | str, data)
-
-            models_item = _parse_models_item(models_item_data)
+            models_item = PersonaServiceModel.from_dict(models_item_data)
 
             models.append(models_item)
 

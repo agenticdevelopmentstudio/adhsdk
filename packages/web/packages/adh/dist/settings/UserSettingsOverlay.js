@@ -251,6 +251,7 @@ var RESERVED_HANDLE_WORDS = [
   // home, agenticdevelopercommunities.com's own workspace became `/<workspace>/communities`, so
   // the word is a live hub route again and is reserved on the ordinary grounds beside it.
   "admin-site",
+  "ai-settings",
   "all-data",
   "communities",
   "dashboards",

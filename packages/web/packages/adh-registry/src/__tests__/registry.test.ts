@@ -10,7 +10,7 @@ import { dirname, resolve } from 'node:path'
 // (TS7053) even though "does the hub route this site?" is exactly what these cases ask. The
 // accessor is where that widening is supposed to live — see its doc comment in registry.ts.
 import type { SiteId } from '../sites/registry'
-import { SITES, LISTED_SITES, FOOTER_SITES, MAIN_SITE_IDS, MARKETING_SITE_IDS, SITE_CATEGORIES, groupSitesByCategory, getSite, detectEnv, buildSiteHref, siteUrl, ssoReturnOrigins, HUB_FEATURE_SEGMENT, hubFeatureSegment, SITE_FOR_HUB_SEGMENT, HUB_WORKSPACE_SEGMENTS, siteWorkspaceHref, siteWorkspaceSlug, SITE_LANDING_SEGMENTS, HUB_ROUTE_SEGMENTS, siteIdForDir, ADMIN_SITE_IDS } from '../sites/registry'
+import { SITES, LISTED_SITES, FOOTER_SITES, MAIN_SITE_IDS, MARKETING_SITE_IDS, SITE_CATEGORIES, groupSitesByCategory, getSite, detectEnv, buildSiteHref, siteUrl, ssoReturnOrigins, HUB_FEATURE_SEGMENT, hubFeatureSegment, SITE_FOR_HUB_SEGMENT, HUB_WORKSPACE_SEGMENTS, siteWorkspaceHref, siteWorkspaceSlug, SITE_LANDING_SEGMENTS, HUB_ROUTE_SEGMENTS, siteIdForDir, ADMIN_SITE_IDS, HUB_EXTRA_FEATURE_SEGMENTS } from '../sites/registry'
 // The generated route map — imported ONLY here. `registry.ts` keeps its landing-segment
 // set as a hand-written literal so the always-loaded header never pulls the family's
 // whole route inventory into its bundle; this is the oracle that keeps the two equal.
@@ -1203,5 +1203,16 @@ describe('HUB_WORKSPACE_SEGMENTS', () => {
     // The hub's own reverse-lockstep test used to have to exempt this one entry by name.
     expect(HUB_WORKSPACE_SEGMENTS.has('home')).toBe(false)
     expect(HUB_WORKSPACE_SEGMENTS.has('products')).toBe(true)
+  })
+})
+
+describe('AI Settings segment (phase 8)', () => {
+  it('lists ai-settings among the hub extra feature segments', () => {
+    expect(HUB_EXTRA_FEATURE_SEGMENTS).toContain('ai-settings')
+    expect(HUB_WORKSPACE_SEGMENTS.has('ai-settings')).toBe(true)
+  })
+  it('keeps llm-providers and persona-services, which redirect to it until Cleanup', () => {
+    expect(HUB_EXTRA_FEATURE_SEGMENTS).toContain('llm-providers')
+    expect(HUB_EXTRA_FEATURE_SEGMENTS).toContain('persona-services')
   })
 })

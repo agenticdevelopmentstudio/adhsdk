@@ -1026,12 +1026,17 @@ export const HUB_EXTRA_FEATURE_SEGMENTS = [
   // at `tokens`: the workspace's ecosystem sign-in configuration is a hub knob with no site
   // behind it, which is precisely what this list is. `tokens` went the other way — it is the
   // authentication site's own feature now, not the hub's.
+  // `persona-services` and `llm-providers` (below) stay until Cleanup: the hub serves both only
+  // as redirects to `ai-settings` now (phase 8), keeping the sub-path, so old links still land.
   'all-data', 'persona-services', 'auth', 'members', 'settings',
   // Ecosystem topics + LLM Providers promoted onto the root workspace rail (each is a
   // `/<slug>/<segment>` route with a FEATURE_META entry, no distinct registry site to
   // switch into) — kept lockstep with FEATURE_META by the reverse-lockstep test (#9).
   'applications', 'invitations', 'signin-apps', 'feature-flags',
   'server-bags', 'sync', 'llm-providers',
+  // AI Settings (phase 8): the provider connections and their per-model availability, a feature
+  // of its own that Personas requires. `llm-providers` above redirects here until Cleanup.
+  'ai-settings',
   // Product roles (phase 5): a product knob, a row on the product rail and only a route here.
   'roles',
   // Sign-up list (phase 5): likewise a product knob, a product rail row and only a route here.

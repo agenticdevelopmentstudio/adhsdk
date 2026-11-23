@@ -69,16 +69,16 @@ describe("the category rail", () => {
     expect(screen.getByTestId("detail").textContent).toBe("none");
     // Communication's own sections are on screen, and AI Processing's are gone.
     expect(screen.queryByText("Messaging")).not.toBeNull();
-    expect(screen.queryByText("LLM Providers")).toBeNull();
+    expect(screen.queryByText("AI Providers")).toBeNull();
   });
 
   it("keeps a section's category open once the section closes", async () => {
     render(<Router initial="llm-providers" />);
     // Re-clicking the open section closes it, the in-page way back up.
-    fireEvent.click(row("LLM Providers"));
+    fireEvent.click(row("AI Providers"));
     await settle();
     expect(screen.getByTestId("detail").textContent).toBe("none");
-    expect(screen.queryByText("LLM Providers")).not.toBeNull();
+    expect(screen.queryByText("AI Providers")).not.toBeNull();
   });
 });
 

@@ -1722,7 +1722,7 @@ from .persona_memory_scope import PersonaMemoryScope
 from .persona_memory_source import PersonaMemorySource
 from .persona_memory_status import PersonaMemoryStatus
 from .persona_service import PersonaService
-from .persona_service_model_type_1 import PersonaServiceModelType1
+from .persona_service_model import PersonaServiceModel
 from .persona_sheet import PersonaSheet
 from .persona_sheet_badges_item import PersonaSheetBadgesItem
 from .persona_sheet_stats import PersonaSheetStats
@@ -1836,6 +1836,12 @@ from .post_v1_ai_services_body import PostV1AiServicesBody
 from .post_v1_ai_services_body_provider_kind import PostV1AiServicesBodyProviderKind
 from .post_v1_ai_services_by_id_body import PostV1AiServicesByIdBody
 from .post_v1_ai_services_by_id_connect_response_200 import PostV1AiServicesByIdConnectResponse200
+from .post_v1_ai_services_by_id_model_availability_body import (
+    PostV1AiServicesByIdModelAvailabilityBody,
+)
+from .post_v1_ai_services_by_id_model_availability_response_200 import (
+    PostV1AiServicesByIdModelAvailabilityResponse200,
+)
 from .post_v1_ai_services_by_id_refresh_models_response_200 import (
     PostV1AiServicesByIdRefreshModelsResponse200,
 )
@@ -5018,7 +5024,7 @@ __all__ = (
     "PersonaMemorySource",
     "PersonaMemoryStatus",
     "PersonaService",
-    "PersonaServiceModelType1",
+    "PersonaServiceModel",
     "PersonaSheet",
     "PersonaSheetBadgesItem",
     "PersonaSheetStats",
@@ -5104,6 +5110,8 @@ __all__ = (
     "PostV1AiServicesBodyProviderKind",
     "PostV1AiServicesByIdBody",
     "PostV1AiServicesByIdConnectResponse200",
+    "PostV1AiServicesByIdModelAvailabilityBody",
+    "PostV1AiServicesByIdModelAvailabilityResponse200",
     "PostV1AiServicesByIdRefreshModelsResponse200",
     "PostV1AiServicesByIdResponse200",
     "PostV1AiServicesResponse201",

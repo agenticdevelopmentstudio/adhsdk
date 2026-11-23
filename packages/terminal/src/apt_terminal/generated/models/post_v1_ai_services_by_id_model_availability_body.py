@@ -6,28 +6,51 @@ from typing import Any, TypeVar
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
-T = TypeVar("T", bound="PersonaServiceModelType1")
+T = TypeVar("T", bound="PostV1AiServicesByIdModelAvailabilityBody")
 
 
 @_attrs_define
-class PersonaServiceModelType1:
-    """Model descriptor"""
+class PostV1AiServicesByIdModelAvailabilityBody:
+    """
+    Attributes:
+        model (str):
+        available (bool):
+    """
 
+    model: str
+    available: bool
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
+        model = self.model
+
+        available = self.available
+
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
+        field_dict.update(
+            {
+                "model": model,
+                "available": available,
+            }
+        )
 
         return field_dict
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
-        persona_service_model_type_1 = cls()
+        model = d.pop("model")
 
-        persona_service_model_type_1.additional_properties = d
-        return persona_service_model_type_1
+        available = d.pop("available")
+
+        post_v1_ai_services_by_id_model_availability_body = cls(
+            model=model,
+            available=available,
+        )
+
+        post_v1_ai_services_by_id_model_availability_body.additional_properties = d
+        return post_v1_ai_services_by_id_model_availability_body
 
     @property
     def additional_keys(self) -> list[str]:

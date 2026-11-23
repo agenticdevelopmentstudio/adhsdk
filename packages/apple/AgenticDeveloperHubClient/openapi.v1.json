@@ -10983,17 +10983,27 @@
         }
       },
       "PersonaServiceModel": {
-        "oneOf": [
-          {
+        "type": "object",
+        "required": [
+          "id",
+          "available",
+          "offered"
+        ],
+        "additionalProperties": true,
+        "properties": {
+          "id": {
             "type": "string",
             "description": "Model id"
           },
-          {
-            "type": "object",
-            "additionalProperties": true,
-            "description": "Model descriptor"
+          "available": {
+            "type": "boolean",
+            "description": "False when switched off in AI Settings"
+          },
+          "offered": {
+            "type": "boolean",
+            "description": "False for a switched-off model the provider no longer lists"
           }
-        ]
+        }
       },
       "ProviderTemplateModel": {
         "type": "object",
@@ -27835,6 +27845,114 @@
         "x-adh-object": "ai_service",
         "x-adh-replaces": [
           "POST /persona/services/{id}/connect"
+        ]
+      }
+    },
+    "/v1/ai_services/{id}/model_availability": {
+      "post": {
+        "tags": [
+          "persona"
+        ],
+        "summary": "Switch one model of the connection off or on in AI Settings",
+        "description": "Replaces PUT /persona/services/{id}/models/availability.",
+        "operationId": "postV1AiServicesByIdModelAvailability",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "model",
+                  "available"
+                ],
+                "properties": {
+                  "model": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200
+                  },
+                  "available": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Persona service (redacted)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "object": {
+                          "type": "string",
+                          "const": "ai_service"
+                        }
+                      }
+                    },
+                    {
+                      "$ref": "#/components/schemas/PersonaService"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          }
+        },
+        "x-adh-object": "ai_service",
+        "x-adh-replaces": [
+          "PUT /persona/services/{id}/models/availability"
         ]
       }
     },

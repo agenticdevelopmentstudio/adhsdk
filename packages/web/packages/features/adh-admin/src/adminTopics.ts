@@ -142,6 +142,15 @@ export const ADMIN_TOPICS: AdminTopic[] = [
     icon: Cpu,
   },
   {
+    // The id stays `llm-providers` (its pane, route and saved links key on it); only the label
+    // changed in phase 8, so the operator's catalog reads apart from the workspace's AI Settings.
+    id: "llm-providers",
+    category: "ai-processing",
+    label: "AI Providers",
+    description: "Provider-template catalog personas connect to",
+    icon: Cable,
+  },
+  {
     id: "audit",
     category: "access",
     label: "Audit",
@@ -196,13 +205,6 @@ export const ADMIN_TOPICS: AdminTopic[] = [
     label: "Invitations",
     description: "Requests, pending, and sent invites",
     icon: Mail,
-  },
-  {
-    id: "llm-providers",
-    category: "ai-processing",
-    label: "LLM Providers",
-    description: "Provider-template catalog personas connect to",
-    icon: Cable,
   },
   {
     id: "messaging",

@@ -938,6 +938,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/ai_services/{id}/model_availability": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Switch one model of the connection off or on in AI Settings
+         * @description Replaces PUT /persona/services/{id}/models/availability.
+         */
+        post: operations["postV1AiServicesByIdModelAvailability"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/ai_services/{id}/refresh_models": {
         parameters: {
             query?: never;
@@ -17727,7 +17747,14 @@ export interface components {
             models: components["schemas"]["PersonaServiceModel"][];
             models_fetched_at?: string | null;
         };
-        PersonaServiceModel: string | {
+        PersonaServiceModel: {
+            /** @description Model id */
+            id: string;
+            /** @description False when switched off in AI Settings */
+            available: boolean;
+            /** @description False for a switched-off model the provider no longer lists */
+            offered: boolean;
+        } & {
             [key: string]: unknown;
         };
         ProviderTemplateModel: {
@@ -24331,6 +24358,65 @@ export interface operations {
                         /** @constant */
                         object?: "ai_service";
                     } & components["schemas"]["PersonaService"];
+                };
+            };
+            /** @description Error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+        };
+    };
+    postV1AiServicesByIdModelAvailability: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    model: string;
+                    available: boolean;
+                };
+            };
+        };
+        responses: {
+            /** @description Persona service (redacted) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        object?: "ai_service";
+                    } & components["schemas"]["PersonaService"];
+                };
+            };
+            /** @description Error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
                 };
             };
             /** @description Error */

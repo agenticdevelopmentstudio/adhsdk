@@ -478,6 +478,13 @@ public protocol APIProtocol: Sendable {
     /// - Remark: HTTP `POST /v1/ai_services/{id}/connect`.
     /// - Remark: Generated from `#/paths//v1/ai_services/{id}/connect/post(postV1AiServicesByIdConnect)`.
     func postV1AiServicesByIdConnect(_ input: Operations.PostV1AiServicesByIdConnect.Input) async throws -> Operations.PostV1AiServicesByIdConnect.Output
+    /// Switch one model of the connection off or on in AI Settings
+    ///
+    /// Replaces PUT /persona/services/{id}/models/availability.
+    ///
+    /// - Remark: HTTP `POST /v1/ai_services/{id}/model_availability`.
+    /// - Remark: Generated from `#/paths//v1/ai_services/{id}/model_availability/post(postV1AiServicesByIdModelAvailability)`.
+    func postV1AiServicesByIdModelAvailability(_ input: Operations.PostV1AiServicesByIdModelAvailability.Input) async throws -> Operations.PostV1AiServicesByIdModelAvailability.Output
     /// Re-fetch + persist the provider catalog (probes the provider, like connect)
     ///
     /// Replaces POST /persona/services/{id}/models/refresh.
@@ -8815,6 +8822,23 @@ extension APIProtocol {
         try await postV1AiServicesByIdConnect(Operations.PostV1AiServicesByIdConnect.Input(
             path: path,
             headers: headers
+        ))
+    }
+    /// Switch one model of the connection off or on in AI Settings
+    ///
+    /// Replaces PUT /persona/services/{id}/models/availability.
+    ///
+    /// - Remark: HTTP `POST /v1/ai_services/{id}/model_availability`.
+    /// - Remark: Generated from `#/paths//v1/ai_services/{id}/model_availability/post(postV1AiServicesByIdModelAvailability)`.
+    public func postV1AiServicesByIdModelAvailability(
+        path: Operations.PostV1AiServicesByIdModelAvailability.Input.Path,
+        headers: Operations.PostV1AiServicesByIdModelAvailability.Input.Headers = .init(),
+        body: Operations.PostV1AiServicesByIdModelAvailability.Input.Body
+    ) async throws -> Operations.PostV1AiServicesByIdModelAvailability.Output {
+        try await postV1AiServicesByIdModelAvailability(Operations.PostV1AiServicesByIdModelAvailability.Input(
+            path: path,
+            headers: headers,
+            body: body
         ))
     }
     /// Re-fetch + persist the provider catalog (probes the provider, like connect)
@@ -42190,62 +42214,79 @@ public enum Components {
             }
         }
         /// - Remark: Generated from `#/components/schemas/PersonaServiceModel`.
-        @frozen public enum PersonaServiceModel: Codable, Hashable, Sendable {
+        public struct PersonaServiceModel: Codable, Hashable, Sendable {
             /// Model id
             ///
-            /// - Remark: Generated from `#/components/schemas/PersonaServiceModel/case1`.
-            case case1(Swift.String)
-            /// Model descriptor
+            /// - Remark: Generated from `#/components/schemas/PersonaServiceModel/id`.
+            public var id: Swift.String
+            /// False when switched off in AI Settings
             ///
-            /// - Remark: Generated from `#/components/schemas/PersonaServiceModel/case2`.
-            public struct Case2Payload: Codable, Hashable, Sendable {
-                /// A container of undocumented properties.
-                public var additionalProperties: OpenAPIRuntime.OpenAPIObjectContainer
-                /// Creates a new `Case2Payload`.
-                ///
-                /// - Parameters:
-                ///   - additionalProperties: A container of undocumented properties.
-                public init(additionalProperties: OpenAPIRuntime.OpenAPIObjectContainer = .init()) {
-                    self.additionalProperties = additionalProperties
-                }
-                public init(from decoder: any Swift.Decoder) throws {
-                    additionalProperties = try decoder.decodeAdditionalProperties(knownKeys: [])
-                }
-                public func encode(to encoder: any Swift.Encoder) throws {
-                    try encoder.encodeAdditionalProperties(additionalProperties)
-                }
+            /// - Remark: Generated from `#/components/schemas/PersonaServiceModel/available`.
+            public var available: Swift.Bool
+            /// False for a switched-off model the provider no longer lists
+            ///
+            /// - Remark: Generated from `#/components/schemas/PersonaServiceModel/offered`.
+            public var offered: Swift.Bool
+            /// A container of undocumented properties.
+            public var additionalProperties: OpenAPIRuntime.OpenAPIObjectContainer
+            /// Creates a new `PersonaServiceModel`.
+            ///
+            /// - Parameters:
+            ///   - id: Model id
+            ///   - available: False when switched off in AI Settings
+            ///   - offered: False for a switched-off model the provider no longer lists
+            ///   - additionalProperties: A container of undocumented properties.
+            public init(
+                id: Swift.String,
+                available: Swift.Bool,
+                offered: Swift.Bool,
+                additionalProperties: OpenAPIRuntime.OpenAPIObjectContainer = .init()
+            ) {
+                self.id = id
+                self.available = available
+                self.offered = offered
+                self.additionalProperties = additionalProperties
             }
-            /// Model descriptor
-            ///
-            /// - Remark: Generated from `#/components/schemas/PersonaServiceModel/case2`.
-            case case2(Components.Schemas.PersonaServiceModel.Case2Payload)
+            public enum CodingKeys: String, CodingKey {
+                case id
+                case available
+                case offered
+            }
             public init(from decoder: any Swift.Decoder) throws {
-                var errors: [any Swift.Error] = []
-                do {
-                    self = .case1(try decoder.decodeFromSingleValueContainer())
-                    return
-                } catch {
-                    errors.append(error)
-                }
-                do {
-                    self = .case2(try .init(from: decoder))
-                    return
-                } catch {
-                    errors.append(error)
-                }
-                throw Swift.DecodingError.failedToDecodeOneOfSchema(
-                    type: Self.self,
-                    codingPath: decoder.codingPath,
-                    errors: errors
+                let container = try decoder.container(keyedBy: CodingKeys.self)
+                self.id = try container.decode(
+                    Swift.String.self,
+                    forKey: .id
                 )
+                self.available = try container.decode(
+                    Swift.Bool.self,
+                    forKey: .available
+                )
+                self.offered = try container.decode(
+                    Swift.Bool.self,
+                    forKey: .offered
+                )
+                additionalProperties = try decoder.decodeAdditionalProperties(knownKeys: [
+                    "id",
+                    "available",
+                    "offered"
+                ])
             }
             public func encode(to encoder: any Swift.Encoder) throws {
-                switch self {
-                case let .case1(value):
-                    try encoder.encodeToSingleValueContainer(value)
-                case let .case2(value):
-                    try value.encode(to: encoder)
-                }
+                var container = encoder.container(keyedBy: CodingKeys.self)
+                try container.encode(
+                    self.id,
+                    forKey: .id
+                )
+                try container.encode(
+                    self.available,
+                    forKey: .available
+                )
+                try container.encode(
+                    self.offered,
+                    forKey: .offered
+                )
+                try encoder.encodeAdditionalProperties(additionalProperties)
             }
         }
         /// - Remark: Generated from `#/components/schemas/ProviderTemplateModel`.
@@ -79990,6 +80031,367 @@ public enum Operations {
             /// - Throws: An error if `self` is not `.notFound`.
             /// - SeeAlso: `.notFound`.
             public var notFound: Operations.PostV1AiServicesByIdConnect.Output.NotFound {
+                get throws {
+                    switch self {
+                    case let .notFound(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "notFound",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        @frozen public enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            public init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            public var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            public static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// Switch one model of the connection off or on in AI Settings
+    ///
+    /// Replaces PUT /persona/services/{id}/models/availability.
+    ///
+    /// - Remark: HTTP `POST /v1/ai_services/{id}/model_availability`.
+    /// - Remark: Generated from `#/paths//v1/ai_services/{id}/model_availability/post(postV1AiServicesByIdModelAvailability)`.
+    public enum PostV1AiServicesByIdModelAvailability {
+        public static let id: Swift.String = "postV1AiServicesByIdModelAvailability"
+        public struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/v1/ai_services/{id}/model_availability/POST/path`.
+            public struct Path: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/ai_services/{id}/model_availability/POST/path/id`.
+                public var id: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - id:
+                public init(id: Swift.String) {
+                    self.id = id
+                }
+            }
+            public var path: Operations.PostV1AiServicesByIdModelAvailability.Input.Path
+            /// - Remark: Generated from `#/paths/v1/ai_services/{id}/model_availability/POST/header`.
+            public struct Headers: Sendable, Hashable {
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.PostV1AiServicesByIdModelAvailability.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.PostV1AiServicesByIdModelAvailability.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            public var headers: Operations.PostV1AiServicesByIdModelAvailability.Input.Headers
+            /// - Remark: Generated from `#/paths/v1/ai_services/{id}/model_availability/POST/requestBody`.
+            @frozen public enum Body: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/ai_services/{id}/model_availability/POST/requestBody/json`.
+                public struct JsonPayload: Codable, Hashable, Sendable {
+                    /// - Remark: Generated from `#/paths/v1/ai_services/{id}/model_availability/POST/requestBody/json/model`.
+                    public var model: Swift.String
+                    /// - Remark: Generated from `#/paths/v1/ai_services/{id}/model_availability/POST/requestBody/json/available`.
+                    public var available: Swift.Bool
+                    /// Creates a new `JsonPayload`.
+                    ///
+                    /// - Parameters:
+                    ///   - model:
+                    ///   - available:
+                    public init(
+                        model: Swift.String,
+                        available: Swift.Bool
+                    ) {
+                        self.model = model
+                        self.available = available
+                    }
+                    public enum CodingKeys: String, CodingKey {
+                        case model
+                        case available
+                    }
+                }
+                /// - Remark: Generated from `#/paths/v1/ai_services/{id}/model_availability/POST/requestBody/content/application\/json`.
+                case json(Operations.PostV1AiServicesByIdModelAvailability.Input.Body.JsonPayload)
+            }
+            public var body: Operations.PostV1AiServicesByIdModelAvailability.Input.Body
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            ///   - headers:
+            ///   - body:
+            public init(
+                path: Operations.PostV1AiServicesByIdModelAvailability.Input.Path,
+                headers: Operations.PostV1AiServicesByIdModelAvailability.Input.Headers = .init(),
+                body: Operations.PostV1AiServicesByIdModelAvailability.Input.Body
+            ) {
+                self.path = path
+                self.headers = headers
+                self.body = body
+            }
+        }
+        @frozen public enum Output: Sendable, Hashable {
+            public struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/ai_services/{id}/model_availability/POST/responses/200/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/ai_services/{id}/model_availability/POST/responses/200/content/json`.
+                    public struct JsonPayload: Codable, Hashable, Sendable {
+                        /// - Remark: Generated from `#/paths/v1/ai_services/{id}/model_availability/POST/responses/200/content/json/value1`.
+                        public struct Value1Payload: Codable, Hashable, Sendable {
+                            /// - Remark: Generated from `#/paths/v1/ai_services/{id}/model_availability/POST/responses/200/content/json/value1/object`.
+                            @frozen public enum ObjectPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                                case aiService = "ai_service"
+                            }
+                            /// - Remark: Generated from `#/paths/v1/ai_services/{id}/model_availability/POST/responses/200/content/json/value1/object`.
+                            public var object: Operations.PostV1AiServicesByIdModelAvailability.Output.Ok.Body.JsonPayload.Value1Payload.ObjectPayload?
+                            /// Creates a new `Value1Payload`.
+                            ///
+                            /// - Parameters:
+                            ///   - object:
+                            public init(object: Operations.PostV1AiServicesByIdModelAvailability.Output.Ok.Body.JsonPayload.Value1Payload.ObjectPayload? = nil) {
+                                self.object = object
+                            }
+                            public enum CodingKeys: String, CodingKey {
+                                case object
+                            }
+                        }
+                        /// - Remark: Generated from `#/paths/v1/ai_services/{id}/model_availability/POST/responses/200/content/json/value1`.
+                        public var value1: Operations.PostV1AiServicesByIdModelAvailability.Output.Ok.Body.JsonPayload.Value1Payload
+                        /// - Remark: Generated from `#/paths/v1/ai_services/{id}/model_availability/POST/responses/200/content/json/value2`.
+                        public var value2: Components.Schemas.PersonaService
+                        /// Creates a new `JsonPayload`.
+                        ///
+                        /// - Parameters:
+                        ///   - value1:
+                        ///   - value2:
+                        public init(
+                            value1: Operations.PostV1AiServicesByIdModelAvailability.Output.Ok.Body.JsonPayload.Value1Payload,
+                            value2: Components.Schemas.PersonaService
+                        ) {
+                            self.value1 = value1
+                            self.value2 = value2
+                        }
+                        public init(from decoder: any Swift.Decoder) throws {
+                            self.value1 = try .init(from: decoder)
+                            self.value2 = try .init(from: decoder)
+                        }
+                        public func encode(to encoder: any Swift.Encoder) throws {
+                            try self.value1.encode(to: encoder)
+                            try self.value2.encode(to: encoder)
+                        }
+                    }
+                    /// - Remark: Generated from `#/paths/v1/ai_services/{id}/model_availability/POST/responses/200/content/application\/json`.
+                    case json(Operations.PostV1AiServicesByIdModelAvailability.Output.Ok.Body.JsonPayload)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Operations.PostV1AiServicesByIdModelAvailability.Output.Ok.Body.JsonPayload {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostV1AiServicesByIdModelAvailability.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostV1AiServicesByIdModelAvailability.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// Persona service (redacted)
+            ///
+            /// - Remark: Generated from `#/paths//v1/ai_services/{id}/model_availability/post(postV1AiServicesByIdModelAvailability)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.PostV1AiServicesByIdModelAvailability.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            public var ok: Operations.PostV1AiServicesByIdModelAvailability.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct BadRequest: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/ai_services/{id}/model_availability/POST/responses/400/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/ai_services/{id}/model_availability/POST/responses/400/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostV1AiServicesByIdModelAvailability.Output.BadRequest.Body
+                /// Creates a new `BadRequest`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostV1AiServicesByIdModelAvailability.Output.BadRequest.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/ai_services/{id}/model_availability/post(postV1AiServicesByIdModelAvailability)/responses/400`.
+            ///
+            /// HTTP response code: `400 badRequest`.
+            case badRequest(Operations.PostV1AiServicesByIdModelAvailability.Output.BadRequest)
+            /// The associated value of the enum case if `self` is `.badRequest`.
+            ///
+            /// - Throws: An error if `self` is not `.badRequest`.
+            /// - SeeAlso: `.badRequest`.
+            public var badRequest: Operations.PostV1AiServicesByIdModelAvailability.Output.BadRequest {
+                get throws {
+                    switch self {
+                    case let .badRequest(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "badRequest",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct Unauthorized: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/ai_services/{id}/model_availability/POST/responses/401/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/ai_services/{id}/model_availability/POST/responses/401/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostV1AiServicesByIdModelAvailability.Output.Unauthorized.Body
+                /// Creates a new `Unauthorized`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostV1AiServicesByIdModelAvailability.Output.Unauthorized.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/ai_services/{id}/model_availability/post(postV1AiServicesByIdModelAvailability)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            case unauthorized(Operations.PostV1AiServicesByIdModelAvailability.Output.Unauthorized)
+            /// The associated value of the enum case if `self` is `.unauthorized`.
+            ///
+            /// - Throws: An error if `self` is not `.unauthorized`.
+            /// - SeeAlso: `.unauthorized`.
+            public var unauthorized: Operations.PostV1AiServicesByIdModelAvailability.Output.Unauthorized {
+                get throws {
+                    switch self {
+                    case let .unauthorized(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "unauthorized",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct NotFound: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/ai_services/{id}/model_availability/POST/responses/404/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/ai_services/{id}/model_availability/POST/responses/404/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostV1AiServicesByIdModelAvailability.Output.NotFound.Body
+                /// Creates a new `NotFound`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostV1AiServicesByIdModelAvailability.Output.NotFound.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/ai_services/{id}/model_availability/post(postV1AiServicesByIdModelAvailability)/responses/404`.
+            ///
+            /// HTTP response code: `404 notFound`.
+            case notFound(Operations.PostV1AiServicesByIdModelAvailability.Output.NotFound)
+            /// The associated value of the enum case if `self` is `.notFound`.
+            ///
+            /// - Throws: An error if `self` is not `.notFound`.
+            /// - SeeAlso: `.notFound`.
+            public var notFound: Operations.PostV1AiServicesByIdModelAvailability.Output.NotFound {
                 get throws {
                     switch self {
                     case let .notFound(response):
