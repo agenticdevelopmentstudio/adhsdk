@@ -82,6 +82,11 @@ export interface EcosystemsTopicConfig {
    *  unknown (an older backend sends none), so the hub-data rows (Notes, Documents, …) never show
    *  on a product or a container. Omit for a row every type draws. */
   types?: readonly string[];
+  /** For a GROUP row (Storage, Users): the member ids it draws, in the group's own order. Omit to
+   *  draw every member. A host narrows a group when some of its members are run elsewhere — the
+   *  product rail keeps Users ▸ Email Signup and Users ▸ Authentication once a product's own admin
+   *  site runs its people (phase 6). Ignored on a row that is not a group. */
+  members?: readonly string[];
 }
 
 /** What `renderTopicPane` needs to reconstruct a host-owned config pane's exact call
@@ -733,7 +738,9 @@ export function EcosystemsFeature({
             key={t.id}
             levelId={`ecosystem-${t.id}`}
             title={t.label}
-            items={groupMembers(ecoId, titleFor, renderTopicPane, renderFeaturePanel)[t.id]}
+            items={groupMembers(ecoId, titleFor, renderTopicPane, renderFeaturePanel)[t.id].filter(
+              (member) => t.members == null || t.members.includes(member.id),
+            )}
             urlSelection={{ selectedId: leaf.leafId, onSelect: leaf.onSelect }}
             renderSubLeaf={subLeafFor}
           />

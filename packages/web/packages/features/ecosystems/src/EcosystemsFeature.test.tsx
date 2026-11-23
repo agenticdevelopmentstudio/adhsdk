@@ -176,6 +176,28 @@ describe("a feature still provisioning", () => {
   });
 });
 
+// A group row's `members` narrows its sub-rail: the product rail keeps Users ▸ Email Signup and
+// Users ▸ Authentication once the product's own admin site runs its people (phase 6).
+describe("a group row's members", () => {
+  const USERS_ROW = { id: "invitations", label: "Users", icon: null };
+
+  it("draws every member when the row names none", async () => {
+    renderFeature({ topics: [USERS_ROW, ...IN_PACKAGE_TOPICS], activeTopic: "invitations" });
+    expect(await screen.findByText("Pending users")).toBeInTheDocument();
+    expect(screen.getByText("Authentication")).toBeInTheDocument();
+  });
+
+  it("draws only the members the row names", async () => {
+    renderFeature({
+      topics: [{ ...USERS_ROW, members: ["email-signup", "auth"] }, ...IN_PACKAGE_TOPICS],
+      activeTopic: "invitations",
+    });
+    expect(await screen.findByText("Authentication")).toBeInTheDocument();
+    expect(screen.getByText("Email Signup")).toBeInTheDocument();
+    for (const gone of ["Requests", "Pending users", "Invites"]) expect(screen.queryByText(gone)).toBeNull();
+  });
+});
+
 // The default-ecosystem lookup: a refetch that fails behind a resolved id is not "didn't resolve".
 describe("a failed re-read of the workspace's default ecosystem", () => {
   it("keeps the resolved ecosystem instead of the couldn't-load notice", async () => {
