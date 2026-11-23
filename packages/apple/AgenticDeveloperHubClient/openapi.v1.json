@@ -11375,6 +11375,19 @@
           }
         }
       },
+      "ProviderTemplateVerifyModel": {
+        "type": "object",
+        "required": [
+          "id"
+        ],
+        "additionalProperties": true,
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Model id"
+          }
+        }
+      },
       "ProviderTemplateVerifyResult": {
         "type": "object",
         "required": [
@@ -11387,7 +11400,7 @@
           "models": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/PersonaServiceModel"
+              "$ref": "#/components/schemas/ProviderTemplateVerifyModel"
             }
           },
           "error": {

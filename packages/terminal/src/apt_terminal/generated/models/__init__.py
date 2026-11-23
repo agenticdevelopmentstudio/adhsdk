@@ -3449,6 +3449,7 @@ from .provider_template_model import ProviderTemplateModel
 from .provider_template_model_metadata_type_0 import ProviderTemplateModelMetadataType0
 from .provider_template_model_source import ProviderTemplateModelSource
 from .provider_template_provider_kind import ProviderTemplateProviderKind
+from .provider_template_verify_model import ProviderTemplateVerifyModel
 from .provider_template_verify_result import ProviderTemplateVerifyResult
 from .provisioned_feature import ProvisionedFeature
 from .provisioned_feature_state import ProvisionedFeatureState
@@ -6163,6 +6164,7 @@ __all__ = (
     "ProviderTemplateModelMetadataType0",
     "ProviderTemplateModelSource",
     "ProviderTemplateProviderKind",
+    "ProviderTemplateVerifyModel",
     "ProviderTemplateVerifyResult",
     "ProvisionedFeature",
     "ProvisionedFeatureState",

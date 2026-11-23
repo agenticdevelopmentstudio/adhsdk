@@ -17859,9 +17859,15 @@ export interface components {
             page: number;
             page_size: number;
         };
+        ProviderTemplateVerifyModel: {
+            /** @description Model id */
+            id: string;
+        } & {
+            [key: string]: unknown;
+        };
         ProviderTemplateVerifyResult: {
             ok: boolean;
-            models?: components["schemas"]["PersonaServiceModel"][];
+            models?: components["schemas"]["ProviderTemplateVerifyModel"][];
             error?: string;
         };
         PublicOwner: {

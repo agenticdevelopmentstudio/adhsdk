@@ -9,7 +9,7 @@ from attrs import field as _attrs_field
 from ..types import UNSET, Unset
 
 if TYPE_CHECKING:
-    from ..models.persona_service_model import PersonaServiceModel
+    from ..models.provider_template_verify_model import ProviderTemplateVerifyModel
 
 
 T = TypeVar("T", bound="ProviderTemplateVerifyResult")
@@ -20,12 +20,12 @@ class ProviderTemplateVerifyResult:
     """
     Attributes:
         ok (bool):
-        models (list[PersonaServiceModel] | Unset):
+        models (list[ProviderTemplateVerifyModel] | Unset):
         error (str | Unset):
     """
 
     ok: bool
-    models: list[PersonaServiceModel] | Unset = UNSET
+    models: list[ProviderTemplateVerifyModel] | Unset = UNSET
     error: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
@@ -57,17 +57,19 @@ class ProviderTemplateVerifyResult:
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
-        from ..models.persona_service_model import PersonaServiceModel
+        from ..models.provider_template_verify_model import (
+            ProviderTemplateVerifyModel,
+        )
 
         d = dict(src_dict)
         ok = d.pop("ok")
 
         _models = d.pop("models", UNSET)
-        models: list[PersonaServiceModel] | Unset = UNSET
+        models: list[ProviderTemplateVerifyModel] | Unset = UNSET
         if _models is not UNSET:
             models = []
             for models_item_data in _models:
-                models_item = PersonaServiceModel.from_dict(models_item_data)
+                models_item = ProviderTemplateVerifyModel.from_dict(models_item_data)
 
                 models.append(models_item)
 

@@ -42903,12 +42903,54 @@ public enum Components {
                 case pageSize = "page_size"
             }
         }
+        /// - Remark: Generated from `#/components/schemas/ProviderTemplateVerifyModel`.
+        public struct ProviderTemplateVerifyModel: Codable, Hashable, Sendable {
+            /// Model id
+            ///
+            /// - Remark: Generated from `#/components/schemas/ProviderTemplateVerifyModel/id`.
+            public var id: Swift.String
+            /// A container of undocumented properties.
+            public var additionalProperties: OpenAPIRuntime.OpenAPIObjectContainer
+            /// Creates a new `ProviderTemplateVerifyModel`.
+            ///
+            /// - Parameters:
+            ///   - id: Model id
+            ///   - additionalProperties: A container of undocumented properties.
+            public init(
+                id: Swift.String,
+                additionalProperties: OpenAPIRuntime.OpenAPIObjectContainer = .init()
+            ) {
+                self.id = id
+                self.additionalProperties = additionalProperties
+            }
+            public enum CodingKeys: String, CodingKey {
+                case id
+            }
+            public init(from decoder: any Swift.Decoder) throws {
+                let container = try decoder.container(keyedBy: CodingKeys.self)
+                self.id = try container.decode(
+                    Swift.String.self,
+                    forKey: .id
+                )
+                additionalProperties = try decoder.decodeAdditionalProperties(knownKeys: [
+                    "id"
+                ])
+            }
+            public func encode(to encoder: any Swift.Encoder) throws {
+                var container = encoder.container(keyedBy: CodingKeys.self)
+                try container.encode(
+                    self.id,
+                    forKey: .id
+                )
+                try encoder.encodeAdditionalProperties(additionalProperties)
+            }
+        }
         /// - Remark: Generated from `#/components/schemas/ProviderTemplateVerifyResult`.
         public struct ProviderTemplateVerifyResult: Codable, Hashable, Sendable {
             /// - Remark: Generated from `#/components/schemas/ProviderTemplateVerifyResult/ok`.
             public var ok: Swift.Bool
             /// - Remark: Generated from `#/components/schemas/ProviderTemplateVerifyResult/models`.
-            public var models: [Components.Schemas.PersonaServiceModel]?
+            public var models: [Components.Schemas.ProviderTemplateVerifyModel]?
             /// - Remark: Generated from `#/components/schemas/ProviderTemplateVerifyResult/error`.
             public var error: Swift.String?
             /// Creates a new `ProviderTemplateVerifyResult`.
@@ -42919,7 +42961,7 @@ public enum Components {
             ///   - error:
             public init(
                 ok: Swift.Bool,
-                models: [Components.Schemas.PersonaServiceModel]? = nil,
+                models: [Components.Schemas.ProviderTemplateVerifyModel]? = nil,
                 error: Swift.String? = nil
             ) {
                 self.ok = ok
