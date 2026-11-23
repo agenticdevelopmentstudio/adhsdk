@@ -23,4 +23,10 @@ export { ApplicationsGroup } from "./ApplicationsGroup";
 
 // The rail as data. Re-exported for convenience, but a SERVER-safe consumer must import it from
 // `@adh-sdk/adh-products/topics` instead — this barrel is `use client` end to end.
-export { PRODUCT_TOPICS, HOST_RENDERED_TOPIC_IDS, visibleProductTopics, type ProductTopicId } from "./topics";
+export {
+  PRODUCT_TOPICS,
+  HOST_RENDERED_TOPIC_IDS,
+  visibleProductTopics,
+  type AdminSiteRailState,
+  type ProductTopicId,
+} from "./topics";

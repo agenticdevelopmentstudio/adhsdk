@@ -171,6 +171,19 @@ describe("visibleProductTopics", () => {
     expect(shown).toEqual(all.filter((id) => !MOVED.includes(id)));
     expect(shown).toContain("admin-site");
   });
+
+  it("not known yet: every pane, and no Admin site row unless the URL names it", () => {
+    const unknown = (routed?: string) => visibleProductTopics(PRODUCT_TOPICS, undefined, routed).map((t) => t.id);
+    expect(unknown()).toEqual(all.filter((id) => id !== "admin-site"));
+    expect(unknown("storage")).toEqual(all.filter((id) => id !== "admin-site"));
+    // A deep link or reload on Admin site keeps its row while the read is out, or after it failed.
+    expect(unknown("admin-site")).toEqual(all);
+  });
+
+  it("a known switch-off drops the Admin site row even when the URL names it", () => {
+    expect(visibleProductTopics(PRODUCT_TOPICS, { enabled: false, hasSite: false }, "admin-site").map((t) => t.id))
+      .toEqual(all.filter((id) => id !== "admin-site"));
+  });
 });
 
 // Notes, Documents, Research, Planning and Narratives belong to the hub-data ecosystems alone.
