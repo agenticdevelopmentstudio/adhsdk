@@ -5,7 +5,7 @@
   `"browser.agent.history_access"`, default `.none`, listed in
   `BrowserSettings.allKeys` and not in `globalOnlyKeyNames`; the row lives in
   `SessionPrivacySettingsPanel`'s History group. `BrowserHistoryTool.run(access:query:limit:store:backForward:privacy:)`
-  returns the reply string from a `BrowserHistoryStore?` and
+  returns the reply string from an `(any BrowserHistoryStoring)?` and
   `[BrowserVisitLine]` (`title`, `url`, `when: Date?`), leaving out every
   visit `BrowserAutomation.isDrivable` refuses (a `file:` address; the store
   reads with `recent(limit:excludingLocalFiles: true)` and
@@ -33,7 +33,24 @@
   entries are listed after them). `BrowserToolSet` adds the definition and
   dispatch, puts `browser_history` in `readToolNames`, and runs
   `requireAccess(for:on:)` first, which raises `closedRefusal()`. Refusals are
-  `ToolError(sentence:)`.
+  `ToolError(sentence:)`. Every pane directory makes a pane's handle with
+  `BrowserPaneHandle(pane:id:project:tab:)`, which reads the pane's
+  access, privacy, `historyStore` (`(any BrowserHistoryStoring)?`), history
+  access and Hide Images as they stand, so the tool sees the same settings
+  wherever the pane lives. `StandaloneBrowserPaneDirectory`
+  (`Automation/StandaloneBrowserPaneDirectory.swift`) lists the panes of
+  `WebBrowserWindowController.openWindows`, seen through the
+  `StandaloneBrowserWindow` protocol, front to back: one pane per window,
+  its id the window's, its project `"Web Browser"` and its tab the
+  window's title. Its `openBrowserPane` opens a new window with
+  `WebBrowserWindowController.openNew(engine:)`, which answers nil when no
+  browser of that engine can be built, refused as `openRefused`.
+  `CompositeBrowserPaneDirectory`
+  (`Automation/CompositeBrowserPaneDirectory.swift`) puts several
+  directories behind one: lists are concatenated, a lookup takes the first
+  answer, the last-used pane is the focused one in whichever directory has
+  it, and an open passes over a directory that answers `noWindow`. Each
+  directory leaves out hidden panes through `visible(_:)`.
 - **SwiftUI**: The row is a `Picker` bound to the layered setting; the tool
   is shared non-UI code.
 - **Compose**: A dropdown setting; the tool reads the WebView's

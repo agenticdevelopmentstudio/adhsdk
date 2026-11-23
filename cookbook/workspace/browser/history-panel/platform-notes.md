@@ -1,7 +1,7 @@
 
 - **macOS (AppKit)**: The list model is
   `@MainActor public final class BrowserHistoryListModel` with
-  `init(store: BrowserHistoryStore, pageSize: Int = 200)`,
+  `init(store: any BrowserHistoryStoring, pageSize: Int = 200)`,
   `private(set) var visits: [BrowserVisit]`, `var filter: String`,
   `func reload() async`, `func remove(_ ids: [Int64]) async`,
   `func clearAll() async` and `var onChange: (() -> Void)?`. It calls the

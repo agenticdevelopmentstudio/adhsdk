@@ -1,0 +1,63 @@
+{
+  "format": 2,
+  "meta": {
+    "id": "31c4c156-8f47-4ad1-9b40-e4ab2d7f4fb7",
+    "title": "Hidden Items Store",
+    "type": "ingredient",
+    "version": "0.1.2",
+    "status": "draft",
+    "language": "en",
+    "created": "2026-11-15",
+    "modified": "2026-11-16",
+    "author": "Mike Fullerton",
+    "copyright": "2026 Mike Fullerton",
+    "license": "MIT",
+    "summary": "The standalone database that keeps the browser's two hidden-item lists, the user's distracting items and the agent's excluded elements, apart, matches them to pages site-wide, and answers which selectors are in force for a page.",
+    "platforms": [
+      "swift",
+      "macos"
+    ],
+    "tags": [
+      "browser",
+      "privacy",
+      "hidden-items",
+      "persistence",
+      "sqlite"
+    ],
+    "depends-on": [],
+    "related": [],
+    "references": [
+      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/HiddenItems/BrowserHiddenItem.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/HiddenItems/BrowserHiddenItemsStore.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/WebBrowserWindowsFeature.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/BrowserHistoryStore.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Core/Privacy/PrivacySitePattern.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/BrowserPane/BrowserHiddenItemsStoreTests.swift (adhsdk)"
+    ],
+    "approved-by": "",
+    "approved-date": ""
+  },
+  "synced": "8bfce6d0fa55f355",
+  "parts": [
+    {"part": "intro"},
+    {"part": "overview", "heading": "Overview"},
+    {"part": "behavioral-requirements", "heading": "Behavioral Requirements"},
+    {"part": "appearance", "heading": "Appearance"},
+    {"part": "states", "heading": "States"},
+    {"part": "accessibility", "heading": "Accessibility"},
+    {"part": "conformance-test-vectors", "heading": "Conformance Test Vectors"},
+    {"part": "edge-cases", "heading": "Edge Cases"},
+    {"part": "configuration", "heading": "Configuration"},
+    {"part": "deep-linking", "heading": "Deep Linking"},
+    {"part": "localization", "heading": "Localization"},
+    {"part": "accessibility-options", "heading": "Accessibility Options"},
+    {"part": "feature-flags", "heading": "Feature Flags"},
+    {"part": "analytics", "heading": "Analytics"},
+    {"part": "privacy", "heading": "Privacy"},
+    {"part": "logging", "heading": "Logging"},
+    {"part": "platform-notes", "heading": "Platform Notes"},
+    {"part": "design-decisions", "heading": "Design Decisions"},
+    {"part": "compliance", "heading": "Compliance"},
+    {"part": "history", "heading": "Change History"}
+  ]
+}

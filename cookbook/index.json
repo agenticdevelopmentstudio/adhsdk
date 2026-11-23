@@ -3378,6 +3378,27 @@
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/SafariExtensions/SafariExtensionLibrary.swift",
           "platform": "macos"
+        },
+        {
+          "conformance": {
+            "state": "unverified"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/Database/Daemon/SafariExtensions/SafariExtensionCatalog.swift",
+          "platform": "macos"
+        },
+        {
+          "conformance": {
+            "state": "unverified"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/Database/Daemon/SafariExtensions/LocalSafariExtensionCatalog.swift",
+          "platform": "macos"
+        },
+        {
+          "conformance": {
+            "state": "unverified"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/Database/Daemon/SafariExtensions/SafariExtensionRecord.swift",
+          "platform": "macos"
         }
       ],
       "kind": "ingredient",
@@ -4721,21 +4742,35 @@
           "conformance": {
             "state": "unverified"
           },
-          "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/HiddenItems/BrowserHiddenItem.swift",
-          "platform": "macos"
-        },
-        {
-          "conformance": {
-            "state": "unverified"
-          },
-          "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/HiddenItems/BrowserHiddenItemsStore.swift",
-          "platform": "macos"
-        },
-        {
-          "conformance": {
-            "state": "unverified"
-          },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/WebBrowserWindowsFeature.swift",
+          "platform": "macos"
+        },
+        {
+          "conformance": {
+            "state": "unverified"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/Database/Daemon/Browser/BrowserHiddenItem.swift",
+          "platform": "macos"
+        },
+        {
+          "conformance": {
+            "state": "unverified"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/Database/Daemon/Browser/BrowserHiddenItemsStore.swift",
+          "platform": "macos"
+        },
+        {
+          "conformance": {
+            "state": "unverified"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/Database/Daemon/Browser/BrowserHiddenItemsStoring.swift",
+          "platform": "macos"
+        },
+        {
+          "conformance": {
+            "state": "unverified"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/Database/Daemon/Browser/BrowserStoreChanges.swift",
           "platform": "macos"
         }
       ],
@@ -6535,6 +6570,20 @@
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/History/",
           "platform": "macos"
+        },
+        {
+          "conformance": {
+            "state": "unverified"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/Database/Daemon/Browser/BrowserHistoryStore.swift",
+          "platform": "macos"
+        },
+        {
+          "conformance": {
+            "state": "unverified"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/Database/Daemon/Browser/BrowserHistoryStoring.swift",
+          "platform": "macos"
         }
       ],
       "kind": "ingredient",
@@ -7076,6 +7125,20 @@
             "state": "unverified"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/WebKitBrowserEngine.swift",
+          "platform": "macos"
+        },
+        {
+          "conformance": {
+            "state": "unverified"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Automation/StandaloneBrowserPaneDirectory.swift",
+          "platform": "macos"
+        },
+        {
+          "conformance": {
+            "state": "unverified"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Automation/CompositeBrowserPaneDirectory.swift",
           "platform": "macos"
         }
       ],

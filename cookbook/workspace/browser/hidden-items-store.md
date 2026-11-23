@@ -2,11 +2,11 @@
 id: 31c4c156-8f47-4ad1-9b40-e4ab2d7f4fb7
 title: "Hidden Items Store"
 type: ingredient
-version: 0.1.2
+version: 0.1.3
 status: draft
 language: en
 created: 2026-11-15
-modified: 2026-11-16
+modified: 2026-11-23
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -23,12 +23,14 @@ tags:
 depends-on: []
 related: []
 references:
-  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/HiddenItems/BrowserHiddenItem.swift (adhsdk)
-  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/HiddenItems/BrowserHiddenItemsStore.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Database/Daemon/Browser/BrowserHiddenItem.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Database/Daemon/Browser/BrowserHiddenItemsStore.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Database/Daemon/Browser/BrowserHiddenItemsStoring.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Database/Daemon/Browser/BrowserStoreChanges.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/WebBrowserWindowsFeature.swift (adhsdk)
-  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/BrowserHistoryStore.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Database/Daemon/Browser/BrowserHistoryStore.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/Core/Privacy/PrivacySitePattern.swift (adhsdk)
-  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/BrowserPane/BrowserHiddenItemsStoreTests.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKDatabaseTests/Browser/BrowserHiddenItemsStoreTests.swift (adhsdk)
 approved-by: ""
 approved-date: ""
 ---
@@ -165,9 +167,9 @@ Not applicable — this is a persistence component, not a visual component.
 | hidden-items-store-014 | standalone-file, file-in-app-home | Read the store's default location with no test home override | `~/.agenticdeveloperkitchen/BrowserHiddenItems.db`, a file of its own, not the project database |
 | hidden-items-store-015 | file-in-app-home | Read the default location with `APP_TEST_HOME` set to a scratch directory | `BrowserHiddenItems.db` under the scratch home's app directory, never the real home |
 | hidden-items-store-016 | opened-at-launch | Launch the browser feature and open two browser panes | One store is opened at launch and both panes answer from it (an entry added through one is in force in the other) |
-| hidden-items-store-017 | opened-at-launch | Start `openShared` on a valid file and read `shared` at once on the main actor | The read waits and returns the opened store, never nil; `hasShared` is true before the open finishes |
-| hidden-items-store-018 | opened-at-launch | Start `openShared` on a path that cannot be opened; read `shared` | The read returns nil and `onFailure` is called with the error |
-| hidden-items-store-019 | opened-at-launch | Start `openShared` on a valid file and await `sharedStore()` at once; repeat on a path that cannot be opened | The first await returns the opened store; the second returns nil |
+| hidden-items-store-017 | opened-at-launch | Start `openCurrent` on a valid file and read `current` at once on the main actor | The read waits and returns the opened store, never nil; `hasCurrent` is true before the open finishes |
+| hidden-items-store-018 | opened-at-launch | Start `openCurrent` on a path that cannot be opened; read `current` | The read returns nil and `onFailure` is called with the error |
+| hidden-items-store-019 | opened-at-launch | Start `openCurrent` on a valid file and await `currentStore()` at once; repeat on a path that cannot be opened | The first await returns the opened store; the second returns nil |
 
 ## Edge Cases
 
@@ -261,24 +263,38 @@ the caller, which logs them where it handles them.
 - **SwiftUI**: Not applicable as a home; the store imports only Foundation,
   GRDB and the toolkit's database module, so a SwiftUI host would use it
   unchanged.
-- **AppKit / UIKit**: `BrowserHiddenItemsStore` in
-  `macOS/Features/BrowserPane/HiddenItems/BrowserHiddenItemsStore.swift`,
+- **AppKit / UIKit**: The store is in the toolkit's database tier, below
+  the browser pane, so a daemon can serve the same lists:
+  `BrowserHiddenItemsStore` in
+  `Database/Daemon/Browser/BrowserHiddenItemsStore.swift`,
   with the value types `BrowserHiddenItem`, `BrowserHiddenItemList`
   (`user`, `agent`) and `BrowserHiddenItemScope` (`thisItem`, `allLikeIt`)
-  in `BrowserHiddenItem.swift`. Operations: `open(at:)`, `defaultURL`,
-  `items(list:for:)`, `enabledSelectors(list:for:)`, `add(_:)`,
-  `setEnabled(_:_:)`, `remove(_:)`, `isSiteSwitchOn(list:site:)`,
-  `setSiteSwitch(list:site:on:)`, and `didChangeNotification`. Opened
+  in `BrowserHiddenItem.swift`. Consumers hold the protocol
+  `BrowserHiddenItemsStoring` (`AnyObject, Sendable`, in
+  `BrowserHiddenItemsStoring.swift`), whose operations are all
+  `async throws`: `items(list:for:)`, `allItems(list:)`,
+  `enabledSelectors(list:for:)`, `isSiteSwitchOn(list:site:)`, `add(_:)`,
+  `setEnabled(_:_:)`, `remove(_:)` and `setSiteSwitch(list:site:on:)`, plus
+  `changes: AsyncStream<Void>`. The local store conforms with async
+  wrappers over its synchronous operations, each run through its `perform`
+  off the main thread, and keeps `open(at:)`, `defaultURL` and
+  `didChangeNotification`, which is
+  `Notification.Name.browserHiddenItemsDidChange` (in
+  `BrowserStoreChanges.swift`): every conforming store posts it with itself
+  as the object after each committed write, and its `changes` is
+  `BrowserStoreChanges.stream(of:from:)` over it. Opened
   through `BoundedDatabase` as `BrowserHistoryStore` is, with tables
   `hidden_item` (index on `(list, site)`) and `site_switch` (primary key
   `(list, site)`) in migration `v1`. Site matching and the default pattern
   are `PrivacySitePattern.matches(_:url:)` and
   `PrivacySitePattern.defaultPattern(for:)`. `WebBrowserWindowsFeature`
-  opens it at launch with `BrowserHiddenItemsStore.openShared(at:onFailure:)`,
-  unless a host or test already set one (`hasShared`, which answers without
-  waiting). `openShared` opens on a global `userInitiated` queue. Callers
+  opens it at launch with `BrowserHiddenItemsStore.openCurrent(at:onFailure:)`
+  into `BrowserHiddenItemsStore.current`, typed
+  `(any BrowserHiddenItemsStoring)?`,
+  unless a host or test already set one (`hasCurrent`, which answers without
+  waiting). `openCurrent` opens on a global `userInitiated` queue. Callers
   that can run during launch await
-  `BrowserHiddenItemsStore.sharedStore() async`, which awaits the
+  `BrowserHiddenItemsStore.currentStore() async`, which awaits the
   `PendingOpen` in flight (`value()`, resumed in `finish`), answers nil
   when the open failed, and awaits again when a setter or a newer open
   replaced the pending one: `WebKitBrowserEngine`'s hidden-items read (its
@@ -286,14 +302,15 @@ the caller, which logs them where it handles them.
   `openHiddenItemsStore() async` behind its three toolbar actions (each run
   in a `Task`), and the pane's `agentPageSource(engine:) async`, since a
   tab restored into an agent view reads during launch. The blocking
-  `shared` getter (a main-actor read waits on the `PendingOpen`'s
+  `current` getter (a main-actor read waits on the `PendingOpen`'s
   `NSCondition`) is for callers after launch only; the one left is
-  `BrowserToolSet`'s default `hiddenItems` closure. Setting `shared`
+  `BrowserToolSet`'s default `hiddenItems` closure. Setting `current`
   replaces an open in flight. A file that cannot be opened is logged through
-  `onFailure` and leaves `shared` nil, which every consumer takes as no
-  store. Main-actor callers go through an async `perform`
-  wrapper, as with `BrowserHistoryStore`, so no file access runs on the
-  main thread.
+  `onFailure` and leaves `current` nil, which every consumer takes as no
+  store. A host that keeps the lists elsewhere (a daemon's adapter) sets
+  its own `BrowserHiddenItemsStoring` as `current`. Main-actor callers
+  await the protocol's operations, so no file access runs on the main
+  thread.
 - **Compose**: Room or SQLDelight over one database file, two tables of the
   same shape; post changes on a `SharedFlow`.
 - **React/Web**: IndexedDB with two object stores; changes announced with
@@ -305,9 +322,11 @@ the caller, which logs them where it handles them.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/HiddenItems/BrowserHiddenItem.swift` | unverified |
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/HiddenItems/BrowserHiddenItemsStore.swift` | unverified |
 | macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/WebBrowserWindowsFeature.swift` | unverified |
+| macos | `packages/apple/AgenticDeveloperHubSDK/Database/Daemon/Browser/BrowserHiddenItem.swift` | unverified |
+| macos | `packages/apple/AgenticDeveloperHubSDK/Database/Daemon/Browser/BrowserHiddenItemsStore.swift` | unverified |
+| macos | `packages/apple/AgenticDeveloperHubSDK/Database/Daemon/Browser/BrowserHiddenItemsStoring.swift` | unverified |
+| macos | `packages/apple/AgenticDeveloperHubSDK/Database/Daemon/Browser/BrowserStoreChanges.swift` | unverified |
 
 ## Design Decisions
 
@@ -349,6 +368,7 @@ Notes: no compliance checks have been run against the code yet.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 0.1.3 | 2026-11-23 | Mike Fullerton | Moved to the database tier behind BrowserHiddenItemsStoring; the launch store is current (openCurrent, currentStore, hasCurrent). |
 | 0.1.2 | 2026-11-16 | Mike Fullerton | Opened off the main thread at launch; reads wait for the open; launch-time callers await sharedStore(). |
 | 0.1.1 | 2026-11-16 | Mike Fullerton | Implemented: opened at launch into BrowserHiddenItemsStore.shared; an unopenable file leaves no store. |
 | 0.1.0 | 2026-11-15 | Mike Fullerton | Initial creation (design-first, from the more privacy features design) |

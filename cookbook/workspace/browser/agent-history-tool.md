@@ -2,11 +2,11 @@
 id: 4ef7f4f9-1fa0-4267-ad82-0f35ba92a7d1
 title: "Agent History Tool"
 type: ingredient
-version: 0.1.4
+version: 0.1.5
 status: draft
 language: en
 created: 2026-11-15
-modified: 2026-11-16
+modified: 2026-11-23
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -26,6 +26,8 @@ references:
   - packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Automation/BrowserHistoryTool.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Automation/BrowserToolSet.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Automation/BrowserPaneDirectory.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Automation/StandaloneBrowserPaneDirectory.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Automation/CompositeBrowserPaneDirectory.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Automation/BrowserAgentPrivacy.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/BrowserSettings.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Settings/SessionPrivacySettingsPanel.swift (adhsdk)
@@ -299,7 +301,7 @@ reach the agent as tool errors.
   `"browser.agent.history_access"`, default `.none`, listed in
   `BrowserSettings.allKeys` and not in `globalOnlyKeyNames`; the row lives in
   `SessionPrivacySettingsPanel`'s History group. `BrowserHistoryTool.run(access:query:limit:store:backForward:privacy:)`
-  returns the reply string from a `BrowserHistoryStore?` and
+  returns the reply string from an `(any BrowserHistoryStoring)?` and
   `[BrowserVisitLine]` (`title`, `url`, `when: Date?`), leaving out every
   visit `BrowserAutomation.isDrivable` refuses (a `file:` address; the store
   reads with `recent(limit:excludingLocalFiles: true)` and
@@ -327,7 +329,24 @@ reach the agent as tool errors.
   entries are listed after them). `BrowserToolSet` adds the definition and
   dispatch, puts `browser_history` in `readToolNames`, and runs
   `requireAccess(for:on:)` first, which raises `closedRefusal()`. Refusals are
-  `ToolError(sentence:)`.
+  `ToolError(sentence:)`. Every pane directory makes a pane's handle with
+  `BrowserPaneHandle(pane:id:project:tab:)`, which reads the pane's
+  access, privacy, `historyStore` (`(any BrowserHistoryStoring)?`), history
+  access and Hide Images as they stand, so the tool sees the same settings
+  wherever the pane lives. `StandaloneBrowserPaneDirectory`
+  (`Automation/StandaloneBrowserPaneDirectory.swift`) lists the panes of
+  `WebBrowserWindowController.openWindows`, seen through the
+  `StandaloneBrowserWindow` protocol, front to back: one pane per window,
+  its id the window's, its project `"Web Browser"` and its tab the
+  window's title. Its `openBrowserPane` opens a new window with
+  `WebBrowserWindowController.openNew(engine:)`, which answers nil when no
+  browser of that engine can be built, refused as `openRefused`.
+  `CompositeBrowserPaneDirectory`
+  (`Automation/CompositeBrowserPaneDirectory.swift`) puts several
+  directories behind one: lists are concatenated, a lookup takes the first
+  answer, the last-used pane is the focused one in whichever directory has
+  it, and an open passes over a directory that answers `noWindow`. Each
+  directory leaves out hidden panes through `visible(_:)`.
 - **SwiftUI**: The row is a `Picker` bound to the layered setting; the tool
   is shared non-UI code.
 - **Compose**: A dropdown setting; the tool reads the WebView's
@@ -347,6 +366,8 @@ reach the agent as tool errors.
 | macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Automation/BrowserPaneDirectory.swift` | unverified |
 | macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/BrowserEngine.swift` | unverified |
 | macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/WebKitBrowserEngine.swift` | unverified |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Automation/StandaloneBrowserPaneDirectory.swift` | unverified |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Automation/CompositeBrowserPaneDirectory.swift` | unverified |
 
 ## Design Decisions
 
@@ -393,6 +414,7 @@ checks are run when the code lands and the recipe is confirmed against it.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 0.1.5 | 2026-11-23 | Mike Fullerton | Reads any BrowserHistoryStoring; claims the standalone and composite pane directories. |
 | 0.1.4 | 2026-11-16 | Mike Fullerton | Under Agent Privacy a browser_history query matches the concealed title and address, never the real text. |
 | 0.1.3 | 2026-11-16 | Mike Fullerton | browser_history conceals with every enabled privacy word, never lists file: URLs, and is refused while the privacy side is closed. |
 | 0.1.2 | 2026-11-16 | Mike Fullerton | Concealing through AgentPageBuilder(privacy:hideImages: false).conceal; BrowserPaneHandle.hidesImages is required and unused here. |

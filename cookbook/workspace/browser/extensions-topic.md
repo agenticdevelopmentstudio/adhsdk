@@ -2,11 +2,11 @@
 id: 213f008f-6e11-4d6d-ba91-dbcd7e9330cc
 title: "Extensions Settings Topic"
 type: ingredient
-version: 0.2.2
+version: 0.2.3
 status: draft
 language: en
 created: 2026-11-15
-modified: 2026-11-16
+modified: 2026-11-23
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -28,6 +28,9 @@ references:
   - packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Settings/ExtensionURLPromptController.swift (adhsdk, planned)
   - packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/SafariExtensions/SafariExtensionHost.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/SafariExtensions/SafariExtensionLibrary.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Database/Daemon/SafariExtensions/SafariExtensionCatalog.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Database/Daemon/SafariExtensions/LocalSafariExtensionCatalog.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Database/Daemon/SafariExtensions/SafariExtensionRecord.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/SafariExtensions/SafariAppExtension.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/SafariExtensions/WebStoreExtension.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/BrowserExtension.swift (adhsdk)
@@ -366,7 +369,19 @@ Not applicable: the design asks for no log line of the topic's own.
   when present, else `WebStoreExtension.localID(forPath:)` of its path or
   address, both Chrome's SHA-256 a–p mapping. Chrome Web Store… calls
   `WebBrowserWindowController.showExtensions(_:store:purpose:)`; Apple App
-  Store… opens `SafariAppExtension.storeURL`.
+  Store… opens `SafariAppExtension.storeURL`. The installed extensions are
+  kept by a `SafariExtensionCatalog`, in the toolkit's database tier
+  (`Database/Daemon/SafariExtensions/`): a list of `SafariExtensionRecord`
+  per scope (`SafariExtensionScope.global` or `.jar(UUID)`), read with
+  `records(scope:)` and written with `save(_:scope:)`;
+  `install(stagedAt:scope:)` moves a staged folder in under its folder name
+  (the id), replacing an installed copy; `remove(id:scope:)` deletes the
+  files and the record; `changes` announces the scope that changed.
+  `LocalSafariExtensionCatalog` keeps them under `SafariExtensions/` in the
+  app home. `SafariExtensionLibrary(catalog:scope:stagingRoot:)` stages
+  beside the catalog and commits through it, and
+  `SafariExtensionSupport.catalog` and `.stagingRoot` let a host serve a
+  catalog of its own (a daemon's), staging under a temporary directory.
 - **Compose**: A desktop `LazyColumn` table with a header row of icon buttons
   and a `Popup` from the gear; a `FileDialog` for Downloaded….
 - **React/Web**: A table with a header toolbar, a popover component anchored to
@@ -387,6 +402,9 @@ Not applicable: the design asks for no log line of the topic's own.
 | macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/SafariExtensions/WebStoreExtension.swift` | unverified |
 | macos | `packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/BrowserPane/SafariExtensionsTopicTests.swift` | unverified |
 | macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/SafariExtensions/SafariExtensionLibrary.swift` | unverified |
+| macos | `packages/apple/AgenticDeveloperHubSDK/Database/Daemon/SafariExtensions/SafariExtensionCatalog.swift` | unverified |
+| macos | `packages/apple/AgenticDeveloperHubSDK/Database/Daemon/SafariExtensions/LocalSafariExtensionCatalog.swift` | unverified |
+| macos | `packages/apple/AgenticDeveloperHubSDK/Database/Daemon/SafariExtensions/SafariExtensionRecord.swift` | unverified |
 
 ## Design Decisions
 
@@ -427,6 +445,7 @@ Notes: no compliance checks have been run; the code does not exist yet.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 0.2.3 | 2026-11-23 | Mike Fullerton | Installed extensions are kept by a SafariExtensionCatalog in the database tier; the library stages and commits through it. |
 | 0.2.2 | 2026-11-16 | Mike Fullerton | Review fix: a keyed replacement resets private and file access and re-grants the sites it lists. |
 | 0.2.1 | 2026-11-16 | Mike Fullerton | Every install stages off the main thread and refuses links (fail closed); 128 MB download cap; keyed takeover confirmed as a replacement; app-modal confirm and errors without a window; URL prompt has no instruction line. |
 | 0.2.0 | 2026-11-15 | Mike Fullerton | downloaded-refuses-links and downloaded-off-main: a downloaded folder with a symbolic link is refused, and staging runs off the main thread |

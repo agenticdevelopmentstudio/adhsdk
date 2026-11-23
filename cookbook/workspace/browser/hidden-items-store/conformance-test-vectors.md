@@ -17,7 +17,7 @@
 | hidden-items-store-014 | standalone-file, file-in-app-home | Read the store's default location with no test home override | `~/.agenticdeveloperkitchen/BrowserHiddenItems.db`, a file of its own, not the project database |
 | hidden-items-store-015 | file-in-app-home | Read the default location with `APP_TEST_HOME` set to a scratch directory | `BrowserHiddenItems.db` under the scratch home's app directory, never the real home |
 | hidden-items-store-016 | opened-at-launch | Launch the browser feature and open two browser panes | One store is opened at launch and both panes answer from it (an entry added through one is in force in the other) |
-| hidden-items-store-017 | opened-at-launch | Start `openShared` on a valid file and read `shared` at once on the main actor | The read waits and returns the opened store, never nil; `hasShared` is true before the open finishes |
-| hidden-items-store-018 | opened-at-launch | Start `openShared` on a path that cannot be opened; read `shared` | The read returns nil and `onFailure` is called with the error |
-| hidden-items-store-019 | opened-at-launch | Start `openShared` on a valid file and await `sharedStore()` at once; repeat on a path that cannot be opened | The first await returns the opened store; the second returns nil |
+| hidden-items-store-017 | opened-at-launch | Start `openCurrent` on a valid file and read `current` at once on the main actor | The read waits and returns the opened store, never nil; `hasCurrent` is true before the open finishes |
+| hidden-items-store-018 | opened-at-launch | Start `openCurrent` on a path that cannot be opened; read `current` | The read returns nil and `onFailure` is called with the error |
+| hidden-items-store-019 | opened-at-launch | Start `openCurrent` on a valid file and await `currentStore()` at once; repeat on a path that cannot be opened | The first await returns the opened store; the second returns nil |
 

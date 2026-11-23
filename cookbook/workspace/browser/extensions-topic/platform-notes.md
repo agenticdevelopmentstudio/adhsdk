@@ -46,7 +46,19 @@
   when present, else `WebStoreExtension.localID(forPath:)` of its path or
   address, both Chrome's SHA-256 a–p mapping. Chrome Web Store… calls
   `WebBrowserWindowController.showExtensions(_:store:purpose:)`; Apple App
-  Store… opens `SafariAppExtension.storeURL`.
+  Store… opens `SafariAppExtension.storeURL`. The installed extensions are
+  kept by a `SafariExtensionCatalog`, in the toolkit's database tier
+  (`Database/Daemon/SafariExtensions/`): a list of `SafariExtensionRecord`
+  per scope (`SafariExtensionScope.global` or `.jar(UUID)`), read with
+  `records(scope:)` and written with `save(_:scope:)`;
+  `install(stagedAt:scope:)` moves a staged folder in under its folder name
+  (the id), replacing an installed copy; `remove(id:scope:)` deletes the
+  files and the record; `changes` announces the scope that changed.
+  `LocalSafariExtensionCatalog` keeps them under `SafariExtensions/` in the
+  app home. `SafariExtensionLibrary(catalog:scope:stagingRoot:)` stages
+  beside the catalog and commits through it, and
+  `SafariExtensionSupport.catalog` and `.stagingRoot` let a host serve a
+  catalog of its own (a daemon's), staging under a temporary directory.
 - **Compose**: A desktop `LazyColumn` table with a header row of icon buttons
   and a `Popup` from the gear; a `FileDialog` for Downloaded….
 - **React/Web**: A table with a header toolbar, a popover component anchored to

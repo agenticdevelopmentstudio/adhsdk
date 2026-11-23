@@ -2,11 +2,11 @@
 id: 8bd94d87-6096-4fb1-82a7-d5f712c2958f
 title: "Agent Page Builder (Agent Gatekeeper)"
 type: ingredient
-version: 0.1.6
+version: 0.1.7
 status: draft
 language: en
 created: 2026-11-15
-modified: 2026-11-18
+modified: 2026-11-23
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -34,7 +34,7 @@ references:
   - packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Automation/BrowserSnapshot.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Automation/BrowserSnapshot.js (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Automation/BrowserHistoryTool.swift (adhsdk)
-  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/HiddenItems/BrowserHiddenItemsStore.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Database/Daemon/Browser/BrowserHiddenItemsStore.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/BrowserPane/AgentPageBuilderTests.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/BrowserPane/AgentPageWalkerWebViewTests.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/BrowserPane/AgentGatekeeperRoutingTests.swift (adhsdk)
@@ -728,6 +728,7 @@ plan's tests are `AgentPageBuilderTests` (builder, pure),
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 0.1.7 | 2026-11-23 | Mike Fullerton | The hidden-items store moved to the database tier (Database/Daemon/Browser). |
 | 0.1.6 | 2026-11-18 | Mike Fullerton | Words now carry terminals too; the browser still reads only sites (no behavior change). |
 | 0.1.5 | 2026-11-18 | Mike Fullerton | The Agent view draws no blank lines: runs of empty lines collapse to one. |
 | 0.1.4 | 2026-11-16 | Mike Fullerton | Review fixes: the page root is refused, the structural path is stable across injected styles, sibling indexes are linear, a withheld option does not leak, and text keeps its line breaks. |

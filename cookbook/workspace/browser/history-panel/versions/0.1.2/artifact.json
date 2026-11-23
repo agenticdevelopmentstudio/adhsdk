@@ -1,0 +1,66 @@
+{
+  "format": 2,
+  "meta": {
+    "id": "497f5d5f-e95b-473e-8798-cbe62ebcc425",
+    "title": "History Panel and Window",
+    "type": "ingredient",
+    "version": "0.1.2",
+    "status": "draft",
+    "language": "en",
+    "created": "2026-11-15",
+    "modified": "2026-11-16",
+    "author": "Mike Fullerton",
+    "copyright": "2026 Mike Fullerton",
+    "license": "MIT",
+    "summary": "A reusable browser History panel (a filter field over a list of visits, with remove, clear-all and open) on a list model that shows recent visits or searches them, and the standalone History window that hosts it in a projects-window-shaped shelf.",
+    "platforms": [
+      "swift",
+      "macos"
+    ],
+    "tags": [
+      "browser",
+      "history",
+      "privacy",
+      "filter",
+      "search",
+      "window"
+    ],
+    "depends-on": [],
+    "related": [],
+    "references": [
+      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/History/BrowserHistoryListModel.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/History/BrowserHistoryPanelViewController.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/History/BrowserHistoryWindowController.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/BrowserHistoryStore.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/WebBrowserWindowsFeature.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/WebBrowserPaneViewController.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/BrowserPane/BrowserHistoryListModelTests.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/BrowserPane/BrowserHistoryRecordingTests.swift (adhsdk)"
+    ],
+    "approved-by": "",
+    "approved-date": ""
+  },
+  "synced": "7153653a509e24fc",
+  "parts": [
+    {"part": "intro"},
+    {"part": "overview", "heading": "Overview"},
+    {"part": "behavioral-requirements", "heading": "Behavioral Requirements"},
+    {"part": "appearance", "heading": "Appearance"},
+    {"part": "states", "heading": "States"},
+    {"part": "accessibility", "heading": "Accessibility"},
+    {"part": "conformance-test-vectors", "heading": "Conformance Test Vectors"},
+    {"part": "edge-cases", "heading": "Edge Cases"},
+    {"part": "configuration", "heading": "Configuration"},
+    {"part": "deep-linking", "heading": "Deep Linking"},
+    {"part": "localization", "heading": "Localization"},
+    {"part": "accessibility-options", "heading": "Accessibility Options"},
+    {"part": "feature-flags", "heading": "Feature Flags"},
+    {"part": "analytics", "heading": "Analytics"},
+    {"part": "privacy", "heading": "Privacy"},
+    {"part": "logging", "heading": "Logging"},
+    {"part": "platform-notes", "heading": "Platform Notes"},
+    {"part": "design-decisions", "heading": "Design Decisions"},
+    {"part": "compliance", "heading": "Compliance"},
+    {"part": "history", "heading": "Change History"}
+  ]
+}

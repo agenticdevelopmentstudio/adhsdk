@@ -1,0 +1,67 @@
+{
+  "format": 2,
+  "meta": {
+    "id": "6cb13be9-e38c-496b-8326-5d1fdccfe778",
+    "title": "Hide From Agent",
+    "type": "ingredient",
+    "version": "0.1.6",
+    "status": "draft",
+    "language": "en",
+    "created": "2026-11-15",
+    "modified": "2026-11-18",
+    "author": "Mike Fullerton",
+    "copyright": "2026 Mike Fullerton",
+    "license": "MIT",
+    "summary": "A privacy-toolbar button whose menu enters the element picker's selecting mode on the agent list, on the live page or in the Agent preview (where a pick maps a node's ref back to its recorded selector), and opens a popover listing and toggling the site's agent-list entries.",
+    "platforms": [
+      "swift",
+      "macos"
+    ],
+    "tags": [
+      "browser",
+      "privacy",
+      "hidden-items",
+      "agent",
+      "element-picker"
+    ],
+    "depends-on": [],
+    "related": [],
+    "references": [
+      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/HiddenItems/BrowserHideFromAgentButton.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/HiddenItems/BrowserSelectingMode.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/HiddenItems/BrowserElementPicker.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/HiddenItems/BrowserPickDialogController.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/HiddenItems/BrowserHiddenItemsPopover.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/HiddenItems/BrowserHiddenItemsStore.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/AgentViews/BrowserAgentPreviewViewController.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Automation/AgentPage/AgentPage.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/WebBrowserPaneViewController.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/BrowserPane/BrowserHideFromAgentTests.swift (adhsdk)"
+    ],
+    "approved-by": "",
+    "approved-date": ""
+  },
+  "synced": "66c82a54b49da1b2",
+  "parts": [
+    {"part": "intro"},
+    {"part": "overview", "heading": "Overview"},
+    {"part": "behavioral-requirements", "heading": "Behavioral Requirements"},
+    {"part": "appearance", "heading": "Appearance"},
+    {"part": "states", "heading": "States"},
+    {"part": "accessibility", "heading": "Accessibility"},
+    {"part": "conformance-test-vectors", "heading": "Conformance Test Vectors"},
+    {"part": "edge-cases", "heading": "Edge Cases"},
+    {"part": "configuration", "heading": "Configuration"},
+    {"part": "deep-linking", "heading": "Deep Linking"},
+    {"part": "localization", "heading": "Localization"},
+    {"part": "accessibility-options", "heading": "Accessibility Options"},
+    {"part": "feature-flags", "heading": "Feature Flags"},
+    {"part": "analytics", "heading": "Analytics"},
+    {"part": "privacy", "heading": "Privacy"},
+    {"part": "logging", "heading": "Logging"},
+    {"part": "platform-notes", "heading": "Platform Notes"},
+    {"part": "design-decisions", "heading": "Design Decisions"},
+    {"part": "compliance", "heading": "Compliance"},
+    {"part": "history", "heading": "Change History"}
+  ]
+}

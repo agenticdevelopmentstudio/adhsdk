@@ -2,11 +2,11 @@
 id: 6cb13be9-e38c-496b-8326-5d1fdccfe778
 title: "Hide From Agent"
 type: ingredient
-version: 0.1.6
+version: 0.1.7
 status: draft
 language: en
 created: 2026-11-15
-modified: 2026-11-18
+modified: 2026-11-23
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -28,7 +28,7 @@ references:
   - packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/HiddenItems/BrowserElementPicker.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/HiddenItems/BrowserPickDialogController.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/HiddenItems/BrowserHiddenItemsPopover.swift (adhsdk)
-  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/HiddenItems/BrowserHiddenItemsStore.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Database/Daemon/Browser/BrowserHiddenItemsStore.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/AgentViews/BrowserAgentPreviewViewController.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Automation/AgentPage/AgentPage.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/WebBrowserPaneViewController.swift (adhsdk)
@@ -401,6 +401,7 @@ Notes: no compliance checks have been run.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 0.1.7 | 2026-11-23 | Mike Fullerton | The hidden-items store moved to the database tier (Database/Daemon/Browser). |
 | 0.1.6 | 2026-11-18 | Mike Fullerton | Replace Private Word… opens the Secrets window on the word. |
 | 0.1.5 | 2026-11-18 | Mike Fullerton | Context menu: Hide Distracting Item, Hide Item from Agents, Replace Private Word. |
 | 0.1.4 | 2026-11-18 | Mike Fullerton | Hide from Agent sits in the privacy toolbar's Agents group, styled like its items. |

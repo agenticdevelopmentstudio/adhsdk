@@ -4,11 +4,11 @@
     "id": "8bd94d87-6096-4fb1-82a7-d5f712c2958f",
     "title": "Agent Page Builder (Agent Gatekeeper)",
     "type": "ingredient",
-    "version": "0.1.6",
+    "version": "0.1.7",
     "status": "draft",
     "language": "en",
     "created": "2026-11-15",
-    "modified": "2026-11-18",
+    "modified": "2026-11-23",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -38,7 +38,7 @@
       "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Automation/BrowserSnapshot.swift (adhsdk)",
       "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Automation/BrowserSnapshot.js (adhsdk)",
       "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Automation/BrowserHistoryTool.swift (adhsdk)",
-      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/HiddenItems/BrowserHiddenItemsStore.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Database/Daemon/Browser/BrowserHiddenItemsStore.swift (adhsdk)",
       "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/BrowserPane/AgentPageBuilderTests.swift (adhsdk)",
       "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/BrowserPane/AgentPageWalkerWebViewTests.swift (adhsdk)",
       "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/BrowserPane/AgentGatekeeperRoutingTests.swift (adhsdk)"
@@ -46,7 +46,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "9e762748dafc5e97",
+  "synced": "1349d7b1db6e500b",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
