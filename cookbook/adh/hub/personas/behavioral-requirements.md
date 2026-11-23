@@ -195,8 +195,8 @@
   operations use, and MUST return it.
 - **set-model-availability-surfaces-failures**: `services.setModelAvailability` MUST send its
   request through `authedJson`, as `refreshModels` does, and add no error handling of its own, so
-  a non-ok answer (the backend's `404` for a service that is not the caller's, or `422` for a
-  model name that is empty or over 200 characters) rejects to its caller with an error carrying
+  a non-ok answer (the backend's `404` for a service that is not the caller's, or `400` for a
+  body that is invalid, such as a model name that is empty or over 200 characters) rejects to its caller with an error carrying
   that status.
 - **data-module-stays-under-personas**: the services client MUST stay in the data module under
   `data/src/personas/`; it does not move with the provider UI.
@@ -205,28 +205,42 @@
 
 - **provider-ui-lives-in-ai-settings**: the provider (service) UI, `ServicesSection` and the
   `useUserServices` hook, MUST live in the `@adh-sdk/ai-settings` package rather than in
-  `@adh-sdk/personas`; the personas package MUST depend on it. The ai-settings package is
+  `@adh-sdk/personas`; the personas package MUST depend on it. The ai-settings package's `format.ts` (the `fmtDate`
+  helper) moved with the screen and is internal to ai-settings: it is not exported from that
+  barrel and personas neither imports nor re-exports it. The ai-settings package is
   specified by [adhsdk.ingredient.adh.hub.ai-settings](cookbook:5fdf4ce9-cb7e-4490-a6d6-066690ef07ca).
 - **personas-reexports-provider-ui**: the personas package barrel (`index.ts`) MUST re-export
   `ServicesSection`, `useUserServices` and `PERSONA_SERVICES_CACHE_KEY` from
   `@adh-sdk/ai-settings`, as the same objects, so a host that imports them from personas does not
-  break.
+  break. These three names are the whole list: the `ServicesSectionProps` type and
+  `AiSettingsSection` are exported by ai-settings only.
 - **personas-reexports-are-temporary**: those three re-exports are kept for existing hosts, which
   MAY keep importing them from personas, and are removed by a later cleanup.
 - **personas-section-imports-from-ai-settings**: `PersonasSection` MUST import the services hook
-  and `PERSONA_SERVICES_CACHE_KEY` from `@adh-sdk/ai-settings`, not from a file of its own.
+  and `PERSONA_SERVICES_CACHE_KEY` from `@adh-sdk/ai-settings`, not from a file of its own, and
+  MUST pass the hook's rows to `PersonaEditor` as its `services` prop; the editor itself does not
+  call the hook.
 - **services-cache-key-unchanged**: `PERSONA_SERVICES_CACHE_KEY` MUST keep its name and its
   value `"persona-services"`, so the admin host that shares the cache entry keeps hitting it.
 - **editor-model-select-lists-available-only**: the persona editor's model select MUST list only
-  models whose `available` is true.
-- **editor-keeps-switched-off-saved-model**: when the persona's saved model is switched off, the
-  select MUST show that model as the current value, labelled with the model id followed by
-  " (not available)", together with an inline note that reads "This model is switched off in AI
-  Settings. Choose another model, or switch it back on in AI Settings.", so saving other fields
-  does not silently change the model.
-- **editor-service-switch-reset-unchanged**: the editor MUST still clear the model when the
-  selected service changes to one whose models do not contain it; the availability filter does
-  not alter that reset.
+  models whose `available` is not `false` (the data client always sets it, defaulting to true).
+- **editor-keeps-switched-off-saved-model**: the editor MUST decide whether the current model is
+  switched off from its DRAFT, not from the saved persona: it looks up the draft's `serviceId` in
+  the `services` prop and, within that service's `models`, the entry whose id equals the draft's
+  `model` with `available === false`. When one is found, the select MUST show that model as the
+  current value, labelled with the model id followed by " (not available)" and placed first after
+  the "No model selected" option, together with an inline note that reads "This model is switched
+  off in AI Settings. Choose another model, or switch it back on in AI Settings.", so saving other
+  fields does not silently change the model. The check is re-evaluated against the draft, so it
+  follows a service or model the user changes before saving.
+- **editor-model-select-disabled-when-empty**: the model select MUST be disabled when the draft
+  has no service, or when its service has no available model and no switched-off current model.
+- **editor-service-switch-reset-unchanged**: when the draft's service changes, the editor MUST
+  clear the draft's model if the new service is found and none of its `models` has that id; the
+  availability filter does not alter that reset, which counts a switched-off model as listed. A
+  model the new service lists but has switched off is therefore kept, and then shows as "(not
+  available)". The reset runs only when the draft's `serviceId` changes, not when the `services`
+  prop reloads, and it does nothing when the new service is not in `services`.
 
 ### Special interests and interest documents
 

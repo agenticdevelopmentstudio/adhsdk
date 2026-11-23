@@ -6713,9 +6713,9 @@
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:dddbf15ed29ef5872da3720b1e7f2fbec9a46e6da955edc3a149c2b8c881d697",
+            "hash": "sha256:bf8934e31ca022ca134368a466940407a41d5fd936807e53f4253415053b55f6",
             "state": "confirmed",
-            "version": "1.1.2"
+            "version": "1.2.0"
           },
           "location": "packages/web/packages/data/src/personas/",
           "platform": "web"
@@ -6724,10 +6724,19 @@
           "conformance": {
             "hash": "sha256:5a8aeec8886ce055455e29e169af4fb62c394bd1a8e7d9bedafb464052d19324",
             "state": "confirmed",
-            "version": "1.1.2"
+            "version": "1.2.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Hub/Features/Personas/",
           "platform": "apple"
+        },
+        {
+          "conformance": {
+            "hash": "sha256:8166409aaff3f2641a543a1703938e006aac580ca8d9fb9302861f29993a1b4c",
+            "state": "confirmed",
+            "version": "1.2.0"
+          },
+          "location": "packages/web/packages/features/personas/",
+          "platform": "web"
         }
       ],
       "kind": "ingredient",
@@ -8391,7 +8400,17 @@
       "rdid": "adhsdk.ingredient.ui.components.display.line-viewer"
     },
     "5fdf4ce9-cb7e-4490-a6d6-066690ef07ca": {
-      "implementations": [],
+      "implementations": [
+        {
+          "conformance": {
+            "hash": "sha256:7f46d306f740f9cba2a15f8a9c34860223a05fc7e78569a5a40762d47adddb67",
+            "state": "confirmed",
+            "version": "1.0.1"
+          },
+          "location": "packages/web/packages/features/ai-settings/",
+          "platform": "web"
+        }
+      ],
       "kind": "ingredient",
       "path": "adh/hub/ai-settings",
       "rdid": "adhsdk.ingredient.adh.hub.ai-settings"
@@ -13492,9 +13511,9 @@
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:1153c50fff740b0b69d2fa531d88b153918a9cb44e3b1a5124a0774cccf3ea7d",
+            "hash": "sha256:439b1107b9c749349686974fa1badb0911e1495381508736889164c58ee36311",
             "state": "confirmed",
-            "version": "1.4.0"
+            "version": "1.5.0"
           },
           "location": "packages/web/packages/adh-registry/src/sites/",
           "platform": "web"
@@ -22523,7 +22542,7 @@
         },
         {
           "conformance": {
-            "hash": "sha256:6f939ccfef524ccd6e870e99db4b11660d1b74bb150412bd5231031df8a15451",
+            "hash": "sha256:119e9ac778ea6107a4ef63d0d5d3a3edbbd61f5f240c2a4aec599f0331bb3d0c",
             "state": "confirmed",
             "version": "1.2.0"
           },

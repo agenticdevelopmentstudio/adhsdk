@@ -13,9 +13,10 @@
   against the loaded baseline for the Save gate.
 - **React/Web**: The source platform. The files are `ServicesSection.tsx` (the section, the create form,
   the editor and the models table), `useUserServices.ts` (the cached list and the exported key),
-  `AiSettingsSection.tsx` (`ServicesSection` titled "AI Settings"), `index.ts` (the barrel with
-  `ServicesSection`, `AiSettingsSection`, `useUserServices` and the key),
-  `package.json` and `sources.css`. It is a client component built from the shared UI blocks
+  `format.ts` (`fmtDate`), `AiSettingsSection.tsx` (`ServicesSection` titled "AI Settings", taking
+  `Omit<ServicesSectionProps, "title">`), `index.ts` (the barrel with `ServicesSection`, its
+  `ServicesSectionProps` type, `AiSettingsSection`, `useUserServices` and the key), `package.json`,
+  `sources.css` and the tests `ServicesSection.test.tsx` and `ModelsTable.test.tsx`. It is a client component built from the shared UI blocks
   (hierarchical detail view, field groups, button bar, create dialog, rail host) and the shared list
   resource hook. Selection is dual mode (URL or state) and the pane is published into a rail host when
   one exists. The availability call and the revalidation go through the personas data client and the
@@ -24,9 +25,11 @@
   detail. The models table is an `NSTableView` with a checkbox cell (`NSButton` of switch type) or a
   `UITableView` with `UISwitch` accessory views, each given the accessibility label "Available: <display
   name>". The Save gate maps to `isDocumentEdited` on AppKit, and an unsaved-changes sheet on selection
-  change. The Apple model item (`PersonasModels.swift`, generated from the OpenAPI) carries `available`
-  and `offered` as optional fields; read a missing `available` as available and a missing `offered` as
-  offered.
+  change. The hand-written Apple model item (`PersonaServiceModel` in `PersonasModels.swift`) carries only
+  `id` and `displayName`, so it does not carry `available` or `offered` yet. The regenerated client's
+  `Components.Schemas.PersonaServiceModel` (generated `Types.swift`) carries both as required `Bool`
+  fields; an Apple implementation needs them on its own model item, or to read the generated type,
+  before it can draw the Available switch.
 - **WinUI 3**: Use a `NavigationView` (or a two-column `Grid` with a `ListView`) for the rail, with an
   `ItemTemplate` showing name and a subtitle `TextBlock`; the pane is a `ScrollViewer` holding
   `StackPanel` groups (`Expander` or `HeaderedContentControl` for Service, Connection and Models). Create

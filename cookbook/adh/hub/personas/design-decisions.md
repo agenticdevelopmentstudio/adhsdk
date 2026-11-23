@@ -16,10 +16,12 @@ personas today; the re-exports (the same objects) keep them working. The cache k
 and value so the admin host that shares the cache entry is untouched.
 **Approved**: pending
 
-**Decision**: the persona editor keeps a switched-off saved model as the current value, labelled
-"(not available)" with an inline note, instead of dropping it from the select.
+**Decision**: the persona editor keeps the draft's switched-off model as the current value,
+labelled "(not available)" with an inline note, instead of dropping it from the select.
 **Rationale**: a select with no matching option would silently change the model on the next save
-of an unrelated field. The existing reset when the service changes is unchanged.
+of an unrelated field. The existing reset when the service changes is unchanged, and it counts a
+switched-off model as listed, so a model the new service lists but has switched off survives a
+service switch and shows as "(not available)" rather than being cleared.
 **Approved**: pending
 
 **Decision**: `Persona.cannedChat`/`.chatStatus` are typed as the Hub `JSONValue` (with

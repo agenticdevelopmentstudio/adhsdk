@@ -17,8 +17,8 @@ offered", unticked.
 row stays visible so the record can be cleared.
 **Approved**: pending
 
-**Decision**: `ServicesSection` and `useUserServices` were moved from the personas package into this
-one with `git mv`, not copied, so file history follows them.
+**Decision**: `ServicesSection`, `useUserServices` and the `fmtDate` helper (`format.ts`) were moved
+from the personas package into this one with `git mv`, not copied, so file history follows them.
 **Rationale**: Per the design, the move is one carve-out in phase 8; the personas package's re-exports,
 which keep host imports working until Cleanup removes them, are specified by
 [adhsdk.ingredient.adh.hub.personas](cookbook:4af83bb1-0178-462a-b0fc-ae009b63133f).

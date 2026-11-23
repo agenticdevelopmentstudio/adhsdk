@@ -13,9 +13,9 @@ supported) or has no Apple client at all in the given sources.
 
 Phase 8 (AI Settings) adds a per-workspace on/off switch for each model of a provider
 connection. The data client gains `services.setModelAvailability` and each model it returns
-carries `available` and `offered`; the Apple model item gains an optional `available`; and the
+carries `available` and `offered`; the generated Apple client's `PersonaServiceModel` gains required `available` and `offered` booleans (the hand-written Apple persona models do not carry them); and the
 web personas feature package stops owning the provider UI (it moves to the `@adh-sdk/ai-settings`
 feature package, specified by
 [adhsdk.ingredient.adh.hub.ai-settings](cookbook:5fdf4ce9-cb7e-4490-a6d6-066690ef07ca)), keeps
-re-exporting it for one phase, and filters its model select by availability.
+re-exporting it until a later cleanup, and filters its model select by availability.
 

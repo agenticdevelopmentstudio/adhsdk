@@ -14,4 +14,8 @@
   vs. anonymous) is being previewed.
 - Each field's wire strategy (`trimRequired` / `trimOptional` / `raw` / `omit`) is compiled into
   the draft-to-payload conversion and is not caller-configurable at runtime.
-
+- `services` (prop of the web `PersonaEditor`): the caller's `UserService` rows, each with its
+  `models` as `ModelInfo`; the editor's service select and model select derive from the row the
+  draft's `serviceId` names. `PersonasSection` supplies it from `useUserServices`.
+- `setModelAvailability(id, model, available)` (web `services` client): the service id, the model
+  name and the new switch state; sent as `{ model, available }`.

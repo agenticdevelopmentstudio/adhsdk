@@ -16,6 +16,7 @@
 | Model available | The row's Available checkbox is ticked. |
 | Model unavailable | The row's Available checkbox is unticked. |
 | Model no longer offered | The row shows "No longer offered" and an unticked, enabled checkbox. |
+| Availability change pending | That model's Available checkbox is disabled; the other rows' checkboxes stay enabled. |
 | Availability change failed | An error line shows the message; the checkbox shows the service's last known state. |
 | Create modal open | The "New service" modal is over the rail with its Name field focused. |
 | Create refused | The modal shows the validation message under the form. |

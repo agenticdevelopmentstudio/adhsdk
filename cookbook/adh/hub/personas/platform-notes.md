@@ -11,9 +11,13 @@
   Sendable, Equatable, Identifiable` structs. `Persona.cannedChat`/`.chatStatus` are typed as the
   Hub `JSONValue` (hand-written `Decodable`, `==`/`hash(into:)` that treats `.int` and `.number`
   as the same JSON number) — not the unrelated, simpler `JSONValue` under `Sync/`. Errors from the
-  data source are wrapped as `HubError.wrap(error)`. `PersonaServiceModel` carries an optional
-  `available` (generated from the OpenAPI); a missing `available` is read as available, matching
-  the web `ModelInfo` default. The Apple side has no availability filter or toggle of its own.
+  data source are wrapped as `HubError.wrap(error)`. The hand-written
+  `PersonaServiceModel` in `PersonasModels.swift` has only `id` and `displayName`, so it carries
+  no availability at all and the Apple side has no availability filter or toggle of its own. The
+  regenerated OpenAPI client (`Components.Schemas.PersonaServiceModel` in the generated
+  `Types.swift` under `AgenticDeveloperHubClient`) carries `available` and `offered` as required
+  `Swift.Bool`, with no default for an omitted key, unlike the web `ModelInfo` reads; nothing in
+  the hand-written persona models reads them yet.
 - **React / TypeScript (web, already implemented)**: the client family under
   `packages/web/packages/data/src/personas/` is the wider of the two implementations — it covers
   services, provider templates, tool/may-act/approval grants, per-user tool consent, special
@@ -23,7 +27,9 @@
   `packages/web/packages/features/personas` re-exports `ServicesSection`, `useUserServices` and
   `PERSONA_SERVICES_CACHE_KEY` from `@adh-sdk/ai-settings` (the provider UI's new home, a sibling
   package laid out like it, with `.` and `./sources.css` exports under the `development`
-  condition), and its `PersonaEditor` filters the model select.
+  condition), and its `PersonaEditor` filters the model select and keeps the draft's switched-off model as the
+  current value. Its `package.json` lists `@adh-sdk/ai-settings` as a `workspace:*` dependency, and
+  `PersonasSection` reads the services through that package's `useUserServices`.
 - **Jetpack Compose / Kotlin (Android, port target)**: the rootLevel→facet-rail→form navigation
   has no existing implementation to port from directly; a Compose port would mirror
   `HTDVDataSource`'s `rootLevel()`/`child(for:)` shape with a `ViewModel` exposing `StateFlow`

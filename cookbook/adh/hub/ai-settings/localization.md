@@ -31,5 +31,7 @@
 | n/a (literal) | Authenticates via the `<header>` header., Uses AWS SigV4 signing — not yet supported by this client., Uses OAuth — not yet supported by this client. | Auth hints for header, sigv4 and oauth2 templates |
 
 All strings are literals in source with no message catalog; number formatting uses fixed "K" and "M"
-suffixes and a fixed dollar sign, not locale formatting.
+suffixes and a fixed dollar sign, not locale formatting; the Last and Fetched timestamps are the one
+locale-formatted value, through `fmtDate` (the viewer's locale date and time, an em dash when absent
+or unparseable).
 

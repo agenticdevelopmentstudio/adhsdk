@@ -2,7 +2,7 @@
 id: 5fdf4ce9-cb7e-4490-a6d6-066690ef07ca
 title: "AI Settings"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-23
@@ -73,8 +73,14 @@ Available column and "No longer offered" were added in the same phase.
   a host adds one import line.
 - **ai-settings-section**: The package MUST export `AiSettingsSection`, which MUST render
   `ServicesSection` with the title "AI Settings".
-- **services-section-export**: The package MUST export `ServicesSection`, `useUserServices` and
-  `PERSONA_SERVICES_CACHE_KEY`.
+- **ai-settings-section-props**: `AiSettingsSection` MUST take the props of `ServicesSection` except
+  `title` (`Omit<ServicesSectionProps, "title">`, defaulting to `{}`) and pass them through, so a host's
+  `urlSelection` still reaches `ServicesSection`.
+- **services-section-export**: The package MUST export `ServicesSection`, its props type
+  `ServicesSectionProps`, `useUserServices` and `PERSONA_SERVICES_CACHE_KEY`.
+- **format-helper**: The package MUST own `fmtDate` in its own `format.ts` (moved from the personas
+  package with the section), which MUST return an em dash ("—") for an absent or unparseable timestamp
+  and otherwise the date in the viewer's locale format.
 
 ### The services cache
 
@@ -199,10 +205,15 @@ Available column and "No longer offered" were added in the same phase.
 - **connect-result**: After connecting, the editor MUST adopt the returned service. A `failed` status
   with an error MUST show that error; a `connected` status MUST show "Connected successfully."
 - **last-connected**: When the service has a last-connected time, the Connection group MUST show it as
-  "Last: <date>".
+  "Last: <date>", formatted by `fmtDate`.
 - **refresh-button**: The Models group MUST offer a Refresh button reading "Refreshing…" and disabled
   while the call runs, and on success MUST adopt the returned service.
-- **fetched-at**: When the models were fetched, the Models group MUST show "Fetched: <date>".
+- **fetched-at**: When the models were fetched, the Models group MUST show "Fetched: <date>", formatted
+  by `fmtDate`.
+- **live-service-sync**: The editor MUST keep a live copy of its service, replaced by the `service` prop
+  whenever the prop changes (the list's re-read after a save, connect, refresh or availability change)
+  and by the service a Connect, a Refresh or an availability change answers, so the Connection group,
+  the Models group and the API key hint show the row as last read.
 - **refresh-models-failure**: NEEDS REVIEW: Not implemented in source. A failed Connect or Refresh is only reported (steps `connect` and `refreshModels`) and shows no message of its own; the screen needs a decision on whether a failed refresh should say so, settled by the owner of the screen's error design.
 - **api-link**: The editor's button bar MUST carry the service API entry for path `/v1/ai_services/{id}`
   titled "Service API".
@@ -225,14 +236,19 @@ Available column and "No longer offered" were added in the same phase.
 - **available-checkbox**: Each row MUST show an Available checkbox, ticked exactly when the model's
   `available` is true; a model with no `available` value MUST read as available.
 - **available-change**: Changing the checkbox MUST call the data client's `setModelAvailability` with the
-  service id, the model and the new checked value, then revalidate the services cache
-  (`PERSONA_SERVICES_CACHE_KEY`).
+  service id, the model and the new checked value, then hand the answered service to the editor and
+  revalidate the services cache (`PERSONA_SERVICES_CACHE_KEY`).
+- **available-change-pending**: While a model's change is in flight, that model's own checkbox MUST be
+  disabled and the other rows' checkboxes MUST stay enabled. Only the latest in-flight model is tracked: when a second change starts before the first answers,
+  the first model's checkbox is enabled again while its request still runs, and whichever request
+  answers first clears the pending state, enabling the other box before its own request answers.
 - **available-change-failure**: When `setModelAvailability` fails, the screen MUST report the failure
   through `reportUnexpectedAuthError`, the helper its other writes use, with feature `services` and
   step `setModelAvailability`; MUST show the error's message in an error line; and the checkbox MUST
   show the service's last known state, so it does not stay flipped.
-- **no-longer-offered**: A model whose `offered` is false MUST show "No longer offered" and an unticked
-  checkbox. A model with no `offered` value MUST read as offered.
+- **no-longer-offered**: A model whose `offered` is false MUST show "No longer offered" beside its
+  checkbox, which is unticked because such a model arrives with `available` false. A model with no
+  `offered` value MUST read as offered.
 - **re-enable-no-longer-offered**: The checkbox of a no-longer-offered model MUST stay enabled. Ticking
   it MUST call `setModelAvailability(id, model, true)`, and once the services cache revalidates the
   row MUST be gone, because the backend deletes the off record and so no longer appends the name.
@@ -240,8 +256,10 @@ Available column and "No longer offered" were added in the same phase.
 
 ### The data contract this screen relies on
 
-- **model-item-shape**: Each model item the screen reads MUST carry `available` (boolean, true when the
-  wire omits it) and `offered` (boolean, true when the wire omits it), beside its other fields.
+- **model-item-shape**: Each model item the screen reads MUST carry `available` (boolean, true unless
+  the wire says false) and `offered` (boolean, true unless the wire says false), beside its other
+  fields; the data client's model decoder (`modelFromWire`) fills them, and reads a bare string entry
+  as a model with that id.
 - **set-availability-call**: The data client MUST expose `services.setModelAvailability(id, model,
   available)` beside `refreshModels`, sending `POST /api/v1/ai_services/{id}/model_availability` with
   the body `{ model, available }` and reading the answer, the updated service, with the service
@@ -292,6 +310,7 @@ All values are design tokens and utility classes in source; the component define
 | Model available | The row's Available checkbox is ticked. |
 | Model unavailable | The row's Available checkbox is unticked. |
 | Model no longer offered | The row shows "No longer offered" and an unticked, enabled checkbox. |
+| Availability change pending | That model's Available checkbox is disabled; the other rows' checkboxes stay enabled. |
 | Availability change failed | An error line shows the message; the checkbox shows the service's last known state. |
 | Create modal open | The "New service" modal is over the rail with its Name field focused. |
 | Create refused | The modal shows the validation message under the form. |
@@ -322,9 +341,10 @@ Pressed and hover states of buttons belong to the shared button component and ar
 ## Conformance Test Vectors
 
 The first eight vectors come from the named tests in `ServicesSection.test.tsx` beside the source, and
-the ninth from the setup every one of them shares. The others are derived from the source's own
-functions and from the phase 8 design. A vector marked "owed: ModelsTable.test.tsx (phase 8 Task 10)"
-has no test yet; that file is not written.
+the ninth from the setup every one of them shares. Vectors 016, 017, 018, 026, 027, 028 and 029 come
+from the named tests in `ModelsTable.test.tsx` beside it, which renders the real `ServicesSection` and
+mocks only the personas data client. The others are derived from the source's own functions and from
+the phase 8 design.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
@@ -343,17 +363,20 @@ has no test yet; that file is not written.
 | ai-settings-013 | number-format | Context 1,500,000; 128,000; 900; absent | "1.5M"; "128K"; "900"; an em dash ("—"). |
 | ai-settings-014 | price-format, dash-for-missing | Input price 3, output price absent | "$3.00" and an em dash ("—"). |
 | ai-settings-015 | capability-chips | A model supporting tools and thinking only; a model supporting none | Chips "tools" and "thinking"; a lone em dash ("—"). |
-| ai-settings-016 | available-checkbox | A model `{ id: "m1", available: true }`; one with `available: false`; one with no `available` (owed: ModelsTable.test.tsx (phase 8 Task 10)) | Ticked; unticked; ticked. |
-| ai-settings-017 | available-change, set-availability-call | Untick the box of model `m1` on service `svc_1` (owed: ModelsTable.test.tsx (phase 8 Task 10)) | `setModelAvailability("svc_1", "m1", false)` is called and the services cache is revalidated. |
-| ai-settings-018 | no-longer-offered, disabled-names-appended | A model with `offered: false` and `available: false` (owed: ModelsTable.test.tsx (phase 8 Task 10)) | The row shows "No longer offered" and an unticked checkbox. |
+| ai-settings-016 | available-checkbox | A model `{ id: "m1", available: true }`; one with `available: false`; one with no `available` (test "ticks the box exactly when the model is available, and reads a missing value as available") | Ticked; unticked; ticked. |
+| ai-settings-017 | available-change, set-availability-call | Untick the box of model `m1` on service `svc_1` (test "unticking calls setModelAvailability and revalidates the services cache") | `setModelAvailability("svc_1", "m1", false)` is called; the services cache is revalidated, with a matcher that accepts `PERSONA_SERVICES_CACHE_KEY` and rejects `"personas"`; the box then reads unticked. |
+| ai-settings-018 | no-longer-offered, disabled-names-appended | A model with `offered: false` and `available: false`, after a listed model (test "shows a no-longer-offered model with the text and an unticked box") | The row shows "No longer offered" once and an unticked checkbox, after the listed model's row. |
 | ai-settings-019 | table-empty | A service with an empty model list | the text "No models yet — Connect or Refresh." and no table. |
 | ai-settings-020 | cache-key-kept | Import `PERSONA_SERVICES_CACHE_KEY` from this package | It is the string `"persona-services"`. |
 | ai-settings-021 | ai-settings-section | Render `AiSettingsSection` | The rail heading reads "AI Settings". |
 | ai-settings-022 | services-read-failure | The list call rejects | The failure is reported with feature `services`, step `list`, and the pane shows the error rather than "Loading…". |
 | ai-settings-023 | template-failure-degrades | The template call rejects while the create modal is open | The failure is reported (step `templates`), the template group is absent and the fields work by hand. |
 | ai-settings-025 | delete-confirmation | Press Delete and decline the confirmation | No delete call is made. |
-| ai-settings-026 | available-change-failure | Untick the box of a ticked model `m1` on service `svc_1` while `setModelAvailability` rejects with "boom" (owed: ModelsTable.test.tsx (phase 8 Task 10)) | The failure is reported with feature `services`, step `setModelAvailability`; an error line reads "boom"; the box is ticked again. |
-| ai-settings-027 | re-enable-no-longer-offered | Tick the box of model `m9` with `offered: false` and `available: false` on service `svc_1`; the revalidated list no longer carries `m9` (owed: ModelsTable.test.tsx (phase 8 Task 10)) | The box was enabled; `setModelAvailability("svc_1", "m9", true)` is called; after revalidation no `m9` row is shown. |
+| ai-settings-026 | available-change-failure | Untick the box of a ticked model `m1` on service `svc_1` while `setModelAvailability` rejects with "boom" (test "a failed change is reported, shows the message, and leaves the box at its last known state") | The failure is reported with feature `services`, step `setModelAvailability`; an error line reads "boom"; the box is ticked again. |
+| ai-settings-027 | re-enable-no-longer-offered | Tick the box of model `m9` with `offered: false` and `available: false` on service `svc_1`; the revalidated list no longer carries `m9` (test "re-enabling a no-longer-offered model calls through, and the re-read list drops its row") | The box was enabled; `setModelAvailability("svc_1", "m9", true)` is called; after revalidation no `m9` row is shown. |
+| ai-settings-028 | table-columns | A service with one model (test "puts Available last, after Caps") | The last two column headers read "Caps" and "Available". |
+| ai-settings-029 | available-checkbox | A model with id `m1` and display name "Model One" (test "names each box after the model's display name") | A checkbox named "Available: Model One" exists. |
+| ai-settings-030 | available-change-pending | Two models; untick the first while its call is unresolved | The first model's checkbox is disabled and the second's is enabled; once the call settles the first is enabled again. |
 
 ## Edge Cases
 
@@ -394,6 +417,7 @@ has no test yet; that file is not written.
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `urlSelection` | `{ serviceId?: string; onSelectService: (id: string or null) => void }` | omitted | Makes the open service URL-driven and deep-linkable; omitted, selection is internal state. |
+| `AiSettingsSection` props | `Omit<ServicesSectionProps, "title">` | `{}` | The same options as `ServicesSection` except the title, fixed at "AI Settings", so a host's `urlSelection` survives. |
 | `title` | string | "Persona Services" for `ServicesSection`; "AI Settings" for `AiSettingsSection` | The rail level heading, for example the label a host's Settings topic uses. |
 | `PERSONA_SERVICES_CACHE_KEY` | string | `"persona-services"` | The cache key of the services list, exported for callers that write services without the hook. |
 
@@ -437,7 +461,9 @@ segments specified by [adhsdk.ingredient.adh.sites.site-registry](cookbook:9069c
 | n/a (literal) | Authenticates via the `<header>` header., Uses AWS SigV4 signing — not yet supported by this client., Uses OAuth — not yet supported by this client. | Auth hints for header, sigv4 and oauth2 templates |
 
 All strings are literals in source with no message catalog; number formatting uses fixed "K" and "M"
-suffixes and a fixed dollar sign, not locale formatting.
+suffixes and a fixed dollar sign, not locale formatting; the Last and Fetched timestamps are the one
+locale-formatted value, through `fmtDate` (the viewer's locale date and time, an em dash when absent
+or unparseable).
 
 ## Accessibility Options
 
@@ -492,9 +518,10 @@ feature `create-resource-dialog` and step `save`.
   against the loaded baseline for the Save gate.
 - **React/Web**: The source platform. The files are `ServicesSection.tsx` (the section, the create form,
   the editor and the models table), `useUserServices.ts` (the cached list and the exported key),
-  `AiSettingsSection.tsx` (`ServicesSection` titled "AI Settings"), `index.ts` (the barrel with
-  `ServicesSection`, `AiSettingsSection`, `useUserServices` and the key),
-  `package.json` and `sources.css`. It is a client component built from the shared UI blocks
+  `format.ts` (`fmtDate`), `AiSettingsSection.tsx` (`ServicesSection` titled "AI Settings", taking
+  `Omit<ServicesSectionProps, "title">`), `index.ts` (the barrel with `ServicesSection`, its
+  `ServicesSectionProps` type, `AiSettingsSection`, `useUserServices` and the key), `package.json`,
+  `sources.css` and the tests `ServicesSection.test.tsx` and `ModelsTable.test.tsx`. It is a client component built from the shared UI blocks
   (hierarchical detail view, field groups, button bar, create dialog, rail host) and the shared list
   resource hook. Selection is dual mode (URL or state) and the pane is published into a rail host when
   one exists. The availability call and the revalidation go through the personas data client and the
@@ -503,9 +530,11 @@ feature `create-resource-dialog` and step `save`.
   detail. The models table is an `NSTableView` with a checkbox cell (`NSButton` of switch type) or a
   `UITableView` with `UISwitch` accessory views, each given the accessibility label "Available: <display
   name>". The Save gate maps to `isDocumentEdited` on AppKit, and an unsaved-changes sheet on selection
-  change. The Apple model item (`PersonasModels.swift`, generated from the OpenAPI) carries `available`
-  and `offered` as optional fields; read a missing `available` as available and a missing `offered` as
-  offered.
+  change. The hand-written Apple model item (`PersonaServiceModel` in `PersonasModels.swift`) carries only
+  `id` and `displayName`, so it does not carry `available` or `offered` yet. The regenerated client's
+  `Components.Schemas.PersonaServiceModel` (generated `Types.swift`) carries both as required `Bool`
+  fields; an Apple implementation needs them on its own model item, or to read the generated type,
+  before it can draw the Available switch.
 - **WinUI 3**: Use a `NavigationView` (or a two-column `Grid` with a `ListView`) for the rail, with an
   `ItemTemplate` showing name and a subtitle `TextBlock`; the pane is a `ScrollViewer` holding
   `StackPanel` groups (`Expander` or `HeaderedContentControl` for Service, Connection and Models). Create
@@ -519,6 +548,12 @@ feature `create-resource-dialog` and step `save`.
   `VisualState` of the row (checkbox unchecked, secondary-brush text). Save is a `Button` whose
   `IsEnabled` is `IsDirty && IsValid`; guard navigation with the `NavigationView.ItemInvoked` handler and
   a `ContentDialog`. Numbers use the same K/M rule, not `ToString("N0")`.
+
+## Reference Implementations
+
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| web | `packages/web/packages/features/ai-settings/` | confirmed (1.0.1) |
 
 ## Design Decisions
 
@@ -540,8 +575,8 @@ offered", unticked.
 row stays visible so the record can be cleared.
 **Approved**: pending
 
-**Decision**: `ServicesSection` and `useUserServices` were moved from the personas package into this
-one with `git mv`, not copied, so file history follows them.
+**Decision**: `ServicesSection`, `useUserServices` and the `fmtDate` helper (`format.ts`) were moved
+from the personas package into this one with `git mv`, not copied, so file history follows them.
 **Rationale**: Per the design, the move is one carve-out in phase 8; the personas package's re-exports,
 which keep host imports working until Cleanup removes them, are specified by
 [adhsdk.ingredient.adh.hub.personas](cookbook:4af83bb1-0178-462a-b0fc-ae009b63133f).
@@ -594,9 +629,9 @@ must not be reported twice under two contexts.
 `separation-of-concerns` is `partial`: transport lives in the personas data module and the services
 list in `useUserServices`, but the section, the create form, the editor, the models table and the pure
 helpers (substitution, label, number format) share one component file. `unit-test-coverage` is
-`partial`: `ServicesSection.test.tsx` covers the Save gate and the exit guard; the Available checkbox,
-"No longer offered", a failed availability change and re-enabling have no test yet (their vectors are
-owed), and the create modal, the template logic, the number and price formatting, and Connect and
+`partial`: `ServicesSection.test.tsx` covers the Save gate and the exit guard, and `ModelsTable.test.tsx`
+covers the Available column, "No longer offered", a failed availability change and re-enabling; the
+create modal, the template logic, the number and price formatting, and Connect and
 Refresh have no test beside them. `error-response-handling` is `partial`: list, save, delete,
 availability and create-form failures show a
 message, a template failure degrades, but a failed Connect or Refresh is only reported (see the open
@@ -610,4 +645,5 @@ and a return to the pane paints from cache while re-reading.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-23 | Mike Fullerton | Phase 8 verify pass against the code: format.ts moved too, editor syncs liveService from its prop, a box is disabled only while its own request runs, ServicesSectionProps, ModelsTable.test.tsx vectors, Apple model item corrected |
 | 1.0.0 | 2026-11-23 | Mike Fullerton | Initial creation: the AI Settings package for phase 8 |

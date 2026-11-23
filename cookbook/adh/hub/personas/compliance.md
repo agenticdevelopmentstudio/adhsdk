@@ -16,15 +16,17 @@ thoroughly covered by `PersonasModuleTests.swift`, and `canned.ts`/`chat-status.
 `demo-preview.ts`/`fields.ts`/`personas.ts`/`special-interests.ts` each have a matching
 `__tests__/*.test.ts` file — but `persona-abilities.ts`, `persona-user-tools.ts`, and `wire.ts`
 have no dedicated test file in this checkout. `__tests__/conformance-vectors.test.ts` has one
-test for each of fourteen of the table's twenty-two conformance vectors: the four web-side
+test for each of fourteen of the table's twenty-four conformance vectors: the four web-side
 vectors (demo eligibility and chat-status parsing and resolution) pass, and the ten
 Swift-only vectors (`testRootLevelListsPersonas` through `testPersonaDecodesFromWebJSON`) are
 skipped there because the web package has no facet-navigation module or Codable decode, and are
-covered by `PersonasModuleTests.swift`. The eight phase 8 vectors are owed and have no test yet,
-so this surface is untested: `services.setModelAvailability` (request, returned service, and
-failure status), the `ModelInfo` `available`/`offered` defaults and the bare-string read, the
-identity of the personas re-exports with the `@adh-sdk/ai-settings` objects, and the persona
-editor's availability filter and switched-off saved model. `server-side-authorization` passes: every grant
+covered by `PersonasModuleTests.swift`. Of the ten phase 8 vectors, four are covered by tests in the web
+personas feature package: the re-export identity and key value (`reexports.test.ts`) and the
+editor's availability filter, switched-off current model and save-keeps-model (`PersonaEditor.test.tsx`,
+describe "PersonaEditor model availability"). Six have no test yet, so this surface is
+untested: `services.setModelAvailability` (request, returned service, and failure status), the
+`ModelInfo` `available`/`offered` defaults, including the bare-string read, whose nearest existing
+test asserts neither flag, and the editor's disabled model select. `server-side-authorization` passes: every grant
 surface (`personaMayActApi`, `personaToolsApi`, `personaUserToolsApi`, `personaApprovalsApi`)
 defers the actual authorization decision to the server and the client contains no local
 permission check; `interestDocumentsApi`'s act-as-persona header is likewise checked by the

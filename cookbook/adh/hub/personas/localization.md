@@ -14,6 +14,9 @@ The given implementations hardcode English user-facing strings rather than local
 - The persona editor's switched-off model strings: the option label, the model id followed by
   `" (not available)"`, and the inline note
   `"This model is switched off in AI Settings. Choose another model, or switch it back on in AI Settings."`.
+- The persona editor's model-select strings: the placeholder options `"No service"`,
+  `"Pick a service first"` and `"No model selected"`, and each model option's label (the model's
+  `displayName`, else its id).
 - The demo-preview, chat-status, and demo-eligibility logic carries no user-facing strings of its
   own — its outputs are rendered by a presentation layer this ingredient does not own — except the
   built-in chat-status word presets' English word pairs (`"thinking"`, `"responding"`, etc.),
