@@ -378,6 +378,13 @@ describe("groupAccess", () => {
     expect(accessTable({ path: "/v1/support/grants/x" })).toBeNull();
   });
 
+  it("keeps a malformed escape as logged rather than throwing", () => {
+    expect(accessTable({ path: "/v1/support/grants/x/data/content/no%E0tes" })).toEqual({
+      schema: "content",
+      table: "no%E0tes",
+    });
+  });
+
   it("counts reads of one table on one day as one group, newest group first", () => {
     const groups = groupAccess([
       read("r1", "2026-11-20T12:00:00"),

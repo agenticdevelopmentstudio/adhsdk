@@ -201,11 +201,21 @@ export function grantState(grant: SupportGrant, now: Date = new Date()): Support
   return "ended";
 }
 
+/** A path segment decoded, or as logged when its escapes are malformed: one odd log row must
+ *  never take the whole log down with a URIError. */
+const decodeSegment = (s: string): string => {
+  try {
+    return decodeURIComponent(s);
+  } catch {
+    return s;
+  }
+};
+
 /** The `schema.table` a logged read's path names, from its `/data/{schema}/{table}` segments. */
 export function accessTable(row: Pick<SupportAccess, "path">): { schema: string; table: string } | null {
   const m = /\/data\/([^/?#]+)\/([^/?#]+)/.exec(row.path);
   if (!m) return null;
-  return { schema: decodeURIComponent(m[1]!), table: decodeURIComponent(m[2]!) };
+  return { schema: decodeSegment(m[1]!), table: decodeSegment(m[2]!) };
 }
 
 /** The reads of one grant on one table on one local calendar day. */
