@@ -128,10 +128,22 @@ export type ProductTopicId = (typeof PRODUCT_TOPICS)[number]["id"];
 /** The rows a product's own admin site takes over from the hub once the site is up. */
 export const ADMIN_SITE_MOVED_TOPIC_IDS = ["invitations", "roles", "signup-list", "sets"] as const;
 
+/** A product's admin site as the rail reads it: the `product_admin_site` switch, and whether the
+ *  product has a site set up. */
+export interface AdminSiteRailState {
+  enabled: boolean;
+  hasSite: boolean;
+}
+
 /**
  * The rail for one product, given its admin site (phase 6): `enabled` is the
  * `product_admin_site` switch, `hasSite` whether the product has a site set up.
  *
+ * - Not known yet (`site` undefined: the read is in flight, or failed with no answer): the hub
+ *   keeps every pane and the Admin site row waits, unless the URL names it (`routed`). A deep link
+ *   or a reload on Admin site keeps its row while the read is out, the way heldTopics keeps a
+ *   routed feature row; dropping it left the pane on "Select a topic to view." for good when the
+ *   read failed.
  * - Switch off: no Admin site row, and the hub keeps every pane.
  * - Switch on, no site yet: the Admin site row is drawn, so a manager can set the site up, and the
  *   hub keeps every pane (add before remove: nothing moves until the site exists).
@@ -140,8 +152,11 @@ export const ADMIN_SITE_MOVED_TOPIC_IDS = ["invitations", "roles", "signup-list"
  */
 export function visibleProductTopics<T extends { id: string }>(
   topics: readonly T[],
-  { enabled, hasSite }: { enabled: boolean; hasSite: boolean },
+  site: AdminSiteRailState | undefined,
+  routed?: string,
 ): T[] {
+  if (site === undefined) return topics.filter((t) => t.id !== "admin-site" || t.id === routed);
+  const { enabled, hasSite } = site;
   if (!enabled) return topics.filter((t) => t.id !== "admin-site");
   if (!hasSite) return [...topics];
   const moved = new Set<string>(ADMIN_SITE_MOVED_TOPIC_IDS);

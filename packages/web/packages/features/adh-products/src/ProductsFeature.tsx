@@ -452,13 +452,15 @@ export function ProductsFeature({
     [workspaceSlug, renderTransfer, basePath],
   );
   // The open product's admin site decides which rows the hub keeps (visibleProductTopics). Until
-  // it answers, the product reads as switch-off: every pane stays and the Admin site row waits.
+  // it answers, or if it fails with no answer, every pane stays and the Admin site row waits —
+  // unless the URL names Admin site, whose row is kept so a deep link or reload still opens it.
   const { data: adminSite } = useAdminSite(activeEcoId);
+  const known = adminSite !== undefined;
   const enabled = adminSite?.enabled ?? false;
   const hasSite = adminSite?.site != null;
   const topics = useMemo(
-    () => visibleProductTopics(PRODUCT_TOPIC_CONFIGS, { enabled, hasSite }),
-    [enabled, hasSite],
+    () => visibleProductTopics(PRODUCT_TOPIC_CONFIGS, known ? { enabled, hasSite } : undefined, activeTopic),
+    [known, enabled, hasSite, activeTopic],
   );
   return (
     <EcosystemsFeature
