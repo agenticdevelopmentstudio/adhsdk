@@ -13,12 +13,23 @@ public final class ScriptableNotation: NSObject {
     public let notationID: UUID
     private let store: any NotationsStoring
     private let lookup: @MainActor (UUID) -> Notation?
+    private let contentWritten: @MainActor (UUID, String) -> Void
 
-    /// - Parameter lookup: The notation as last read, or `nil` once gone.
-    public init(notationID: UUID, store: any NotationsStoring, lookup: @escaping @MainActor (UUID) -> Notation?) {
+    /// - Parameters:
+    ///   - lookup: The notation as last read, or `nil` once gone.
+    ///   - contentWritten: Told of a script's write before it is saved, so
+    ///     what `lookup` answers can show it at once: a script that sets the
+    ///     content and reads it back must get what it set.
+    public init(
+        notationID: UUID,
+        store: any NotationsStoring,
+        lookup: @escaping @MainActor (UUID) -> Notation?,
+        contentWritten: @escaping @MainActor (UUID, String) -> Void = { _, _ in }
+    ) {
         self.notationID = notationID
         self.store = store
         self.lookup = lookup
+        self.contentWritten = contentWritten
         super.init()
     }
 
@@ -37,6 +48,7 @@ public final class ScriptableNotation: NSObject {
         get { notation?.content ?? "" }
         set {
             let store = store, id = notationID
+            contentWritten(id, newValue)
             NotationsSaveQueue.shared.enqueue { _ = try? await store.updateContent(id: id, content: newValue) }
         }
     }

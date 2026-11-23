@@ -99,7 +99,20 @@ public final class NotationsFeature: AppFeature {
     }
 
     private func scriptable(_ id: UUID) -> ScriptableNotation {
-        ScriptableNotation(notationID: id, store: store) { [weak self] in self?.scriptedNotation($0) }
+        ScriptableNotation(
+            notationID: id, store: store,
+            lookup: { [weak self] in self?.scriptedNotation($0) },
+            contentWritten: { [weak self] in self?.noteScriptedContent($1, of: $0) })
+    }
+
+    /// Puts a script's write into `scriptingSnapshot` before the store has
+    /// saved it, so the script reads back what it set. A read already in
+    /// flight began before the write and is dropped; the save's own change
+    /// brings the stored notation.
+    func noteScriptedContent(_ content: String, of id: UUID) {
+        guard let index = scriptingSnapshot.firstIndex(where: { $0.id == id }) else { return }
+        snapshotGeneration += 1
+        scriptingSnapshot[index].content = content
     }
 
     /// Re-reads every notation into `scriptingSnapshot`; a newer read
