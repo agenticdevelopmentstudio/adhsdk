@@ -6713,7 +6713,7 @@
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:bf8934e31ca022ca134368a466940407a41d5fd936807e53f4253415053b55f6",
+            "hash": "sha256:a4a59ad80b7ba51858b546784815fc8193527afba61843195b1377cb22580d41",
             "state": "confirmed",
             "version": "1.2.0"
           },
@@ -6731,7 +6731,7 @@
         },
         {
           "conformance": {
-            "hash": "sha256:8166409aaff3f2641a543a1703938e006aac580ca8d9fb9302861f29993a1b4c",
+            "hash": "sha256:f3a8976547112a3a2584b42cdf6a339d650c0a44e5a0861be07a4a37e130d4c6",
             "state": "confirmed",
             "version": "1.2.0"
           },
@@ -8403,9 +8403,9 @@
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:a4de8b6c909d2003a63967feb4868de548b1f73a9dada74d76d8fbe2e0365edf",
+            "hash": "sha256:3f27ebbd43ff099fc059371a625482c30b93caf52117bf2dd945d56e62557822",
             "state": "confirmed",
-            "version": "1.0.2"
+            "version": "1.0.4"
           },
           "location": "packages/web/packages/features/ai-settings/",
           "platform": "web"
