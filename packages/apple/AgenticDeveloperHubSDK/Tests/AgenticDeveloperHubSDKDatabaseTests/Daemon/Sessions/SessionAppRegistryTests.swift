@@ -13,6 +13,31 @@ final class SessionAppRegistryTests: XCTestCase {
         SessionAppRegistry(daemonPid: daemonPid)
     }
 
+    /// One hop releases the slot and reports who holds it afterwards.
+    func testUnregisterAndReportReleasesAndReportsTheStateAfterwards() async {
+        let registry = makeRegistry()
+        _ = await registry.register(pid: appPid)
+
+        let first = await registry.unregisterAndReport(pid: appPid)
+        let second = await registry.unregisterAndReport(pid: appPid)
+
+        XCTAssertTrue(first.released)
+        XCTAssertNil(first.owner)
+        XCTAssertFalse(second.released)
+        XCTAssertNil(second.owner)
+    }
+
+    /// A pid that does not own the slot releases nothing; the owner is named.
+    func testUnregisterAndReportFromANonOwnerKeepsTheOwner() async {
+        let registry = makeRegistry()
+        _ = await registry.register(pid: appPid)
+
+        let report = await registry.unregisterAndReport(pid: 4_242)
+
+        XCTAssertFalse(report.released)
+        XCTAssertEqual(report.owner, appPid)
+    }
+
     func testALivePidRegistersAndHoldsTheSlot() async {
         let registry = makeRegistry()
 

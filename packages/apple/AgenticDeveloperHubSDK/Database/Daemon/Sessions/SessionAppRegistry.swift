@@ -72,6 +72,15 @@ public actor SessionAppRegistry {
         return true
     }
 
+    /// Releases the slot if `pid` owns it and reports the state afterwards, in
+    /// one isolation hop: no register can run between the release and the
+    /// owner read, so the reply describes exactly what this release left.
+    /// `released` is true only when this call gave up the slot.
+    public func unregisterAndReport(pid: Int32) -> (released: Bool, owner: Int32?) {
+        let released = unregister(pid: pid)
+        return (released, currentOwner())
+    }
+
     public func currentOwner() -> Int32? {
         guard let pid = ownerPid else { return nil }
         if Self.isAlive(pid: pid) { return pid }

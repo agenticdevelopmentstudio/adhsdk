@@ -52,13 +52,17 @@ public enum ActivityRoutes {
     /// holds the slot after the call, and the live owner's pid (nil when no one
     /// holds it). An unregister's reply is the registry's state afterwards, so
     /// `registered` is never true there and `ownerPid` names whoever else owns it.
+    /// `released` is set on an unregister's reply only: true when that call
+    /// gave up the caller's slot, false when the caller held nothing to give.
     public struct AppRegistryResponse: Codable, Sendable, Equatable {
         public let ownerPid: Int32?
         public let registered: Bool
+        public let released: Bool?
 
-        public init(ownerPid: Int32?, registered: Bool) {
+        public init(ownerPid: Int32?, registered: Bool, released: Bool? = nil) {
             self.ownerPid = ownerPid
             self.registered = registered
+            self.released = released
         }
     }
 
@@ -148,14 +152,14 @@ public enum ActivityRoutes {
                 }
             },
             // Idempotent: releases the slot only if the caller owns it, and
-            // answers the state afterwards. 200, or 400 for a pid that could
-            // never own it.
+            // answers the state afterwards, read in the same actor hop as the
+            // release so a concurrent register cannot slip between them. 200,
+            // or 400 for a pid that could never own it.
             RouteTable.route("POST", where: { $0 == ["app", "unregister"] }) { request, _ in
                 guard let pid = decodePid(request) else { return .error(missingBody, status: 400) }
                 guard registry.isValidOwner(pid: pid) else { return .error(invalidPid, status: 400) }
-                _ = await registry.unregister(pid: pid)
-                let owner = await registry.currentOwner()
-                return .json(AppRegistryResponse(ownerPid: owner, registered: owner == pid))
+                let (released, owner) = await registry.unregisterAndReport(pid: pid)
+                return .json(AppRegistryResponse(ownerPid: owner, registered: owner == pid, released: released))
             }
         ]
     }

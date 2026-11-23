@@ -272,6 +272,19 @@ final class ActivityRoutesTests: XCTestCase {
         let reply = try object(try await send("POST", "/app/unregister", body: pidBody(4_242), table: table))
 
         XCTAssertEqual(reply["registered"] as? Bool, false)
+        XCTAssertEqual(reply["released"] as? Bool, false)
         XCTAssertEqual((reply["owner_pid"] as? NSNumber)?.int32Value, appPid)
+    }
+
+    /// The reply says whether this call released the caller's slot.
+    func testUnregisterSaysWhetherItReleasedTheSlot() async throws {
+        let table = registryTable()
+        _ = try await send("POST", "/app/register", body: pidBody(appPid), table: table)
+
+        let first = try object(try await send("POST", "/app/unregister", body: pidBody(appPid), table: table))
+        let second = try object(try await send("POST", "/app/unregister", body: pidBody(appPid), table: table))
+
+        XCTAssertEqual(first["released"] as? Bool, true)
+        XCTAssertEqual(second["released"] as? Bool, false)
     }
 }
