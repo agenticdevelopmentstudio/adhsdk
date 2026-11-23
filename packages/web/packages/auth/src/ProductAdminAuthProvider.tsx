@@ -219,9 +219,16 @@ export function ProductAdminAuthProvider({ children, navigate }: ProductAdminAut
   }, [refresh, go])
 
   const signOut = useCallback(async () => {
+    // A refresh already out (the timer's, or a 401 retry's) must not land after sign-out and bring
+    // the bearer and its timer back: a new generation drops its answer.
+    genRef.current += 1
+    inFlightRef.current = null
     if (timerRef.current) clearTimeout(timerRef.current)
     timerRef.current = null
     try {
+      // Let that refresh finish at the server first, so /auth/signout revokes the refresh cookie
+      // it rotated to rather than the one it spent.
+      await sessionRequest?.catch(() => undefined)
       await fetch('/auth/signout', { method: 'POST', credentials: 'include' })
     } finally {
       adopt(null)
