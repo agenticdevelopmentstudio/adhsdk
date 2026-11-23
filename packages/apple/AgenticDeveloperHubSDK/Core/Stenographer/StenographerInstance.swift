@@ -75,11 +75,18 @@ public struct StenographerInstance: Sendable, Equatable {
 
     public static let baseLabel = "com.agenticdevelopmentstudio.stenographer"
     /// Ports a named instance may never take: the installed account router's,
-    /// and the retired Kitchen daemon adkd's (22849), which a Kitchen older
-    /// than the apps suite's Phase 3 may still be running.
+    /// the retired Kitchen daemon adkd's (22849), which a Kitchen older than
+    /// the apps suite's Phase 3 may still be running, and the Hub daemon
+    /// adhd's on both channels (``adhdHTTPPorts``), which serves Stenographer
+    /// now.
     public static let reservedHTTPPorts: Set<Int> = [
         StenographerIdentifiers.routerPort, 22849
-    ]
+    ].union(adhdHTTPPorts)
+    /// adhd's loopback ports: the release daemon's 22850 (`DaemonContract.port`
+    /// in `AgenticDeveloperHubClient`, which this tier cannot import) and the
+    /// dev daemon's 22871 (adh-daemon's `DaemonIdentity.devPort`). Mirrored
+    /// here; the tests pin both values.
+    public static let adhdHTTPPorts: Set<Int> = [22850, 22871]
     /// Names whose label `<baseLabel>.<name>` is already taken: the usage
     /// widget's bundle id, the directory that holds the definitions, and the
     /// installed daemon's launch-throttle identifier (`<baseLabel>.daemon`),

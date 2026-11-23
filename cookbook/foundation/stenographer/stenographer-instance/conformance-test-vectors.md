@@ -4,7 +4,7 @@ Vectors 041 to 044 are `StenographerInstancePortTests` (`Tests/AgenticDeveloperH
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
 | stenographer-instance-001 | default-has-no-definition, default-values | `StenographerInstance.default` | `isDefault` true; `name` absent; `label` `com.agenticdevelopmentstudio.stenographer`; `httpPort` absent; `dataRoot` absent. |
-| stenographer-instance-002 | base-label, default-port, reserved-ports, reserved-names, selection-keys, socket-constants | The static constants. | `baseLabel` `com.agenticdevelopmentstudio.stenographer`; no `defaultHTTPPort`; `reservedHTTPPorts` {22848, 22849}; `reservedNames` {usagewidget, instances, daemon}; `environmentKey` `STENOGRAPHER_INSTANCE`; `argumentFlag` `-instance`; `socketFileName` `stenographer.sock`; `socketPathLimit` 104. |
+| stenographer-instance-002 | base-label, default-port, reserved-ports, reserved-names, selection-keys, socket-constants | The static constants. | `baseLabel` `com.agenticdevelopmentstudio.stenographer`; no `defaultHTTPPort`; `reservedHTTPPorts` {22848, 22849, 22850, 22871}; `adhdHTTPPorts` {22850, 22871}; `reservedNames` {usagewidget, instances, daemon}; `environmentKey` `STENOGRAPHER_INSTANCE`; `argumentFlag` `-instance`; `socketFileName` `stenographer.sock`; `socketPathLimit` 104. |
 | stenographer-instance-003 | definitions-directory | `definitionsDirectory(home: /h)` | `/h/Library/Application Support/com.agenticdevelopmentstudio.stenographer.instances/`. |
 | stenographer-instance-004 | environment-wins | environment `{STENOGRAPHER_INSTANCE: "dev"}`, arguments `["app", "-instance", "other"]` | `"dev"`. |
 | stenographer-instance-005 | empty-environment-is-default | environment `{STENOGRAPHER_INSTANCE: ""}`, arguments `["app", "-instance", "other"]` | absent. |
@@ -24,7 +24,7 @@ Vectors 041 to 044 are `StenographerInstancePortTests` (`Tests/AgenticDeveloperH
 | stenographer-instance-019 | absolute-data-root | `dataRoot` `"steno-dev"` | `relativeDataRoot("steno-dev")`. |
 | stenographer-instance-020 | port-range | `httpPort` 1023, then 65536 | `invalidPort(1023)`, then `invalidPort(65536)`. |
 | stenographer-instance-021 | port-range | `httpPort` 1024, then 65535 | Both pass the port check. |
-| stenographer-instance-022 | port-not-reserved | `httpPort` 22848 and 22849; then 22847 | `invalidPort` for each of the first two; 22847 resolves. |
+| stenographer-instance-022 | port-not-reserved | `httpPort` 22848, 22849, 22850 and 22871; then 22847 | `invalidPort` for each of the first four; 22847 resolves. |
 | stenographer-instance-023 | protected-roots | `protectedRoots(home: /h)` | Five URLs in order: `/h/Library/Application Support/com.agenticdevelopmentstudio.stenographer`, `/h/Library/Logs/com.agenticdevelopmentstudio.stenographer`, `/h/Library/Application Support/com.agentic-cookbook.stenographer`, `/h/Library/Logs/com.agentic-cookbook.stenographer`, `/h/.claude`. |
 | stenographer-instance-024 | installed-overlap | `dataRoot` `H/Library/Application Support/com.agenticdevelopmentstudio.stenographer/dev` | `overlapsInstalledState` naming the current support directory (the data root lies inside it). |
 | stenographer-instance-025 | installed-overlap | `dataRoot` equal to `H` | `overlapsInstalledState` naming the current support directory (the data root contains it). |
@@ -38,7 +38,7 @@ Vectors 041 to 044 are `StenographerInstancePortTests` (`Tests/AgenticDeveloperH
 | stenographer-instance-033 | socket-length | `dataRoot` is an 85-byte absolute path (socket path 103 bytes) | Passes the socket check. |
 | stenographer-instance-034 | socket-length | `dataRoot` is an 86-byte absolute path (socket path 104 bytes) | `socketPathTooLong(path: <dataRoot>/stenographer.sock, limit: 104)`. |
 | stenographer-instance-035 | validate-order | `D/dev.json` declares `"name": "daemon"`, `dataRoot` `"x"`, `httpPort` 1 | `nameMismatch(file: "dev", declared: "daemon")`, the first check. |
-| stenographer-instance-036 | error-description | `invalidPort(80)`; `reservedName("daemon")` | `instance httpPort 80 must be 1024-65535 and not one of 22848, 22849`; `instance name 'daemon' is reserved: com.agenticdevelopmentstudio.stenographer.daemon already names something else`. |
+| stenographer-instance-036 | error-description | `invalidPort(80)`; `reservedName("daemon")` | `instance httpPort 80 must be 1024-65535 and not one of 22848, 22849, 22850, 22871`; `instance name 'daemon' is reserved: com.agenticdevelopmentstudio.stenographer.daemon already names something else`. |
 | stenographer-instance-037 | current-failure-exit, current-failure-status | Launch a process that reads `current` with `STENOGRAPHER_INSTANCE=nosuch` and no definition | Standard error is `stenographer: instance 'nosuch' is not defined (no <path>); create it with scripts/stenographer_instance.py create` and the exit status is 78. |
 | stenographer-instance-038 | current-once | Read `current` twice in one process after changing the definition file between reads | Both reads return the same value; the file is read once. |
 | stenographer-instance-039 | equality | Two named instances resolved from the same definition; one named and the default | Equal; not equal. |

@@ -9,7 +9,7 @@ The `ResolutionError` descriptions are hardcoded English strings and are not loc
 | `unreadable` | `instance definition <path> is unreadable: <reason>` | Read or decode failed. |
 | `nameMismatch` | `instance definition <file>.json declares name '<declared>'` | Declared name differs from the file name. |
 | `relativeDataRoot` | `instance dataRoot '<root>' must be an absolute path` | Data root does not start with `/`. |
-| `invalidPort` | `instance httpPort <port> must be 1024-65535 and not one of 22848, 22849` | Port out of range or reserved; the reserved list is sorted ascending. |
+| `invalidPort` | `instance httpPort <port> must be 1024-65535 and not one of 22848, 22849, 22850, 22871` | Port out of range or reserved; the reserved list is sorted ascending. |
 | `overlapsInstalledState` | `instance dataRoot '<root>' overlaps <protected>, which the installed Stenographer owns` | Data root overlaps a protected root. |
 | `overlapsAnotherInstance` | `instance dataRoot '<root>' overlaps instance '<instance>''s dataRoot '<otherRoot>'` | Data root overlaps another definition's. |
 | `portTakenByAnotherInstance` | `instance httpPort <port> is already instance '<instance>''s httpPort` | Another definition declares the same port. |
