@@ -476,4 +476,4 @@ replaces the allow-list field the client-auth form used to carry.
 
 ### Product totals job counts (web)
 
-- **totals-pane-jobs**: `ProductTotalsPane` MUST, when the totals it is given carry a non-empty `jobsByStatus`, show one count for each job status beside the eight figures, and MUST show no jobs section when the map is empty or absent. The pane MUST NOT sum the statuses itself into a new total.
+- **totals-pane-jobs**: `ProductTotalsPane` MUST show, after Storage and before the two waiting counts, a "Jobs" figure that is the sum of every status in `jobsByStatus`, followed by one figure for each status in name order, labeled "Jobs <status>" with underscores read as spaces ("Jobs timed out"). When the map is empty it MUST show "Jobs" as 0 and no status figures. The sum is the only total the pane derives; it never filters a status out.

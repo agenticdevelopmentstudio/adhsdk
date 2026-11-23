@@ -6,5 +6,5 @@
 - **Switch on and a site (MUST)**: Users ▸ Email Signup and Users ▸ Authentication stay on the hub; the admin site has no page for them.
 - **A cancelled confirmation (MUST NOT)**: nothing is sent.
 - **Quota above the default (MUST NOT send)**: refused before any request.
-- **A step-up refusal (MUST)**: a request or an opening refused as `step_up_required` MUST send the admin through `stepUp('/support')` and back to `/support`, with no error shown.
-- **Support access off (MUST)**: a 404 on the grants read MUST show the not-available note and no request form.
+- **A step-up refusal (MUST)**: a request or a revoke refused as `step_up_required` is handled as [support-step-up](#requirements/support-step-up) says.
+- **Support access off (MUST)**: a 404 on the grants read is handled as [support-switch-off](#requirements/support-switch-off) says.

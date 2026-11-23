@@ -547,7 +547,7 @@ MUST NOT mount the other.
   `window.location.assign`; a new `navigate` on each render MUST NOT restart the
   session.
 
-- **product-admin-session-step-up**: the product admin session hook MUST also return `stepUp(returnPath?)`, which MUST navigate (through the provider's `navigate`, else `window.location.assign`) to `/auth/signin?return=<returnPath, or the current path and query, URL-encoded>&prompt=login&max_age=600`. It MUST NOT clear the token or the account, since the person is still signed in when it is called, and MUST NOT call `/auth/signout`. The site's own sign-in route turns `prompt` and `max_age` into the authorize request, so the second factor runs again.
+- **product-admin-session-step-up**: the product admin session hook MUST also return `stepUp(returnPath?)`, which MUST navigate (through the provider's `navigate`, else `window.location.assign`) to `/auth/signin?return=<returnPath, or the current path and query, URL-encoded>&prompt=login&max_age=600`, the URL the package also exports as `stepUpSigninUrl(returnPath)` so a page outside the provider can build the same link. It MUST NOT clear the token or the account, since the person is still signed in when it is called, and MUST NOT call `/auth/signout`. The site's own sign-in route turns `prompt` and `max_age` into the authorize request, so the second factor runs again.
 
 ### Security
 
@@ -982,18 +982,19 @@ keeps an expected 4xx (wrong password, stale code) off this log.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/auth/src/account-security.ts` | confirmed (2.0.0) |
-| web | `packages/web/packages/auth/src/asBase.ts` | confirmed (2.0.0) |
-| web | `packages/web/packages/auth/src/client.ts` | confirmed (2.0.0) |
-| web | `packages/web/packages/auth/src/config.ts` | confirmed (2.0.0) |
-| web | `packages/web/packages/auth/src/labels.ts` | confirmed (2.0.0) |
-| web | `packages/web/packages/auth/src/mfa.ts` | confirmed (2.0.0) |
-| web | `packages/web/packages/auth/src/refresh.ts` | confirmed (2.0.0) |
-| web | `packages/web/packages/auth/src/report.ts` | confirmed (2.0.0) |
-| web | `packages/web/packages/auth/src/sso.ts` | confirmed (2.0.0) |
-| web | `packages/web/packages/auth/src/tokens.ts` | confirmed (2.0.0) |
-| web | `packages/web/packages/auth/src/types.ts` | confirmed (2.0.0) |
-| web | `packages/web/packages/auth/src/ProductAdminAuthProvider.tsx` | confirmed (2.0.0) |
+| web | `packages/web/packages/auth/src/account-security.ts` | confirmed (2.1.0) |
+| web | `packages/web/packages/auth/src/asBase.ts` | confirmed (2.1.0) |
+| web | `packages/web/packages/auth/src/client.ts` | confirmed (2.1.0) |
+| web | `packages/web/packages/auth/src/config.ts` | confirmed (2.1.0) |
+| web | `packages/web/packages/auth/src/labels.ts` | confirmed (2.1.0) |
+| web | `packages/web/packages/auth/src/mfa.ts` | confirmed (2.1.0) |
+| web | `packages/web/packages/auth/src/refresh.ts` | confirmed (2.1.0) |
+| web | `packages/web/packages/auth/src/report.ts` | confirmed (2.1.0) |
+| web | `packages/web/packages/auth/src/sso.ts` | confirmed (2.1.0) |
+| web | `packages/web/packages/auth/src/tokens.ts` | confirmed (2.1.0) |
+| web | `packages/web/packages/auth/src/types.ts` | confirmed (2.1.0) |
+| web | `packages/web/packages/auth/src/ProductAdminAuthProvider.tsx` | confirmed (2.1.0) |
+| web | `packages/web/packages/auth/src/index.ts` | confirmed (2.1.0) |
 
 ## Design Decisions
 

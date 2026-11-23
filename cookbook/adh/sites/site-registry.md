@@ -97,7 +97,7 @@ router, and a downstream OAuth-return-origin sync process.
 - **admin-only-derives-admin-ids-and-drops-footer**: The admin-only id set MUST be
   exactly the identifiers of every site definition marked `adminOnly`, and every such
   entry MUST be excluded from the footer site list.
-- **support-routes-in-shares**: the generated hub route table, `routes.hub.generated.ts`, MUST list the hosted `/support` page in the `hub` share (between `/signup` and `/terms-of-use`) and the `/support` topic in the `product-admin` share. These lines are written in the SDK by hand, because the generator runs only in the website; the website proves them with the generator's `--check`.
+- **support-routes-in-shares**: The hub's generated route shares MUST list the hosted `/support` page in the `hub` share, the `/support` topic in the `product-admin` share, and the operator admin site's three pages, `/break-glass`, `/support-access` and `/support-grants`, in the `admin` share, each in the sorted place [route-list-per-site-is-normalized](#requirements/route-list-per-site-is-normalized) gives it.
 - **product-admin-site-registered**: The roster MUST define a `product-admin` site (a
   product's own admin site, phase 6) that is `adminOnly`, not `crawlable`, and has no home
   route (`hasHome` false), with `product-admin.agenticdeveloperhub.com` as its production
@@ -517,7 +517,7 @@ Not applicable: this is the site family's data registry and routing-resolution m
 | site-registry-061 | site-prod-url-ignores-current-environment | The production URL builder for `hub`, path `/` (traced to "siteProdUrl is host-independent and always https") | `'https://agenticdeveloperhub.com/'` |
 | site-registry-062 | site-home-path-fallback | The home path for `hub` (traced to "siteHomePath is /home only for sites that expose one") | `'/home'` when `hasHome` is true; `'/'` otherwise |
 | site-registry-063 | product-admin-site-registered | The `product-admin` site's definition, the main-family roster, the footer list and the family roster's tail (traced to "registers the product admin site: its folder, not crawlable, admin-gated, a main app") | Its production host is `product-admin.agenticdeveloperhub.com`; the directory name `product-admin.agenticdeveloperhub` identifies it; it is not crawlable; it is in the admin-only ids and the main-family roster and not in the footer list; the roster ends `status`, `admin`, `product-admin`, `builds` |
-| site-registry-064 | support-routes-in-shares | The `hub` and `product-admin` route shares | `/support` is in each, and the website generator's `--check` reports no drift |
+| site-registry-064 | support-routes-in-shares | The `hub`, `product-admin` and `admin` route shares | `/support` is in the first two, `/break-glass`, `/support-access` and `/support-grants` are in `admin`, and the website generator's `--check` reports no drift |
 ## Edge Cases
 
 - **Null and empty input** (MUST): Building the workspace link for an empty slug
@@ -662,7 +662,10 @@ an empty result, or the input path unchanged) with no side channel.
   pillar, like `admin`), and `admin-site` in `HUB_EXTRA_FEATURE_SEGMENTS`; its
   `devDependencies` carry `@adh-sdk/product-admin` for the one test that holds that
   package's rail equal to the site's share of the route table. `reserved-slugs.ts` holds `RESERVED_SLUGS`, `isReservedSlug`, and
-  `isReservedSlugAnywhere`. `legal.ts` holds the privacy and terms paths and URLs.
+  `isReservedSlugAnywhere`. The support routes of
+  **support-routes-in-shares** sit in `routes.hub.generated.ts` and are written in the
+  SDK by hand, because the generator runs only in the website, which proves them with
+  the generator's `--check`. `legal.ts` holds the privacy and terms paths and URLs.
   `fleets.ts` holds `MARKETING_FLEET_SITE_IDS`, `PLACEHOLDER_FLEET_SITE_IDS`, and
   `DIRECTORY_SITES`. `story.ts` holds `SITE_STORIES`, `getSiteStory`, and the three
   generated rings `TOUR_MAIN`, `TOUR_MARKETING`, and `TOUR_PLACEHOLDER` merged by object
@@ -710,7 +713,7 @@ an empty result, or the input path unchanged) with no side channel.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/adh-registry/src/sites/` | confirmed (1.3.0) |
+| web | `packages/web/packages/adh-registry/src/sites/` | confirmed (1.4.0) |
 
 ## Design Decisions
 

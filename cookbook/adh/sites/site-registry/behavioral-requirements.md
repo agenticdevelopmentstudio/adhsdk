@@ -30,7 +30,7 @@
 - **admin-only-derives-admin-ids-and-drops-footer**: The admin-only id set MUST be
   exactly the identifiers of every site definition marked `adminOnly`, and every such
   entry MUST be excluded from the footer site list.
-- **support-routes-in-shares**: the generated hub route table, `routes.hub.generated.ts`, MUST list the hosted `/support` page in the `hub` share (between `/signup` and `/terms-of-use`) and the `/support` topic in the `product-admin` share. These lines are written in the SDK by hand, because the generator runs only in the website; the website proves them with the generator's `--check`.
+- **support-routes-in-shares**: The hub's generated route shares MUST list the hosted `/support` page in the `hub` share, the `/support` topic in the `product-admin` share, and the operator admin site's three pages, `/break-glass`, `/support-access` and `/support-grants`, in the `admin` share, each in the sorted place [route-list-per-site-is-normalized](#requirements/route-list-per-site-is-normalized) gives it.
 - **product-admin-site-registered**: The roster MUST define a `product-admin` site (a
   product's own admin site, phase 6) that is `adminOnly`, not `crawlable`, and has no home
   route (`hasHome` false), with `product-admin.agenticdeveloperhub.com` as its production

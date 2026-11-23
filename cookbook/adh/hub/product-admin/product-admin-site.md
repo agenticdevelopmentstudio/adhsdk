@@ -58,13 +58,13 @@ The pieces:
 
 - **admin-site-pane**: `AdminSitePane` MUST show, for the selected product, the site's current host with a form that sets it up, changes it, or removes it; MUST say so when no product is selected; and MUST show the backend's sentence when a host is refused. A removal takes the site down at once, so it MUST wait for the manager's confirmation in a destructive alert dialog, and MUST send nothing when it is cancelled.
 - **admin-site-admins**: the page MUST list the holders of the `admin` role, read on the ecosystem target, and MUST add an admin as a sign-up list entry carrying the admin role's id. An address already on the list MUST keep the set its entry grants; only the role changes. After the write the Sign-up list page's cached list MUST be read again, and no other list. An address that is not an email MUST be refused without a request.
-- **totals-pane**: `ProductTotalsPane` MUST show the eight totals (customers, new in 7 and 30 days, active in 7 and 30 days, storage, pending invitations, pending requests) for the product it is given, and MUST say when it is loading and when it could not load. When the totals carry `jobsByStatus`, it MUST also show the product's background jobs as one count for each status, and MUST show nothing for jobs when the map is empty or absent.
+- **totals-pane**: `ProductTotalsPane` MUST show the eight totals (customers, new in 7 and 30 days, active in 7 and 30 days, storage, pending invitations, pending requests) for the product it is given, and MUST say when it is loading and when it could not load. It MUST also show the product's background jobs from `jobsByStatus`: a "Jobs" total, the sum of the statuses, then one count for each status in name order; when the map is empty it shows "Jobs" as 0 and no status count.
 
 ### Support page
 
-- **support-page**: the Support page MUST render `SupportGrantsPane` ([adhsdk.ingredient.adh.hub.support.support-panes](cookbook:2eff6ca4-5479-44b3-8636-04e455009a10)) for the product it is given, at `/support`, and MUST be listed in `PRODUCT_ADMIN_TOPICS` (see **topics-list**).
-- **support-step-up**: when the Support page's request, or the opening of a live grant, is refused as `step_up_required`, the page MUST send the admin through `stepUp('/support')` of the product admin session ([adhsdk.ingredient.data.services.auth.auth-client](cookbook:3ea9329e-5acc-4c43-b5ce-bb8c50570104)) and bring them back to `/support`; the site's own sign-in route carries `prompt=login` and `max_age=600` on that second pass.
-- **support-switch-off**: when the backend answers the grants read with 404 (consented access is off), the page MUST say that support access is not available instead of showing an error.
+- **support-page**: the Support page MUST render `SupportGrantsPane` ([adhsdk.ingredient.adh.hub.support.support-panes](cookbook:2eff6ca4-5479-44b3-8636-04e455009a10)) for the product it is given, at `/support`, and MUST be listed in `PRODUCT_ADMIN_TOPICS` (see [topics-list](#requirements/topics-list)).
+- **support-step-up**: when the Support page's request for access, or its revoke of a grant, is refused as `step_up_required`, the page MUST send the admin through `stepUp('/support')` of the product admin session ([adhsdk.ingredient.data.services.auth.auth-client](cookbook:3ea9329e-5acc-4c43-b5ce-bb8c50570104)) and bring them back to `/support`, with no error shown; the sign-in parameters of that second pass are the authentication client's.
+- **support-switch-off**: when the backend answers the grants read with 404 (consented access is off), the page MUST say that support access is not available instead of showing an error, and MUST NOT show the request form.
 
 ### Which pages move
 
@@ -75,7 +75,7 @@ The pieces:
 
 ## Appearance
 
-The users pane is a searchable table with a Previous and Next pager; each row has its actions. The Admin site page is a form for the host above a list of admins with an add field. The totals page is a grid of eight stat cards. The text of each comes from the panes; the look is the shared UI kit's.
+The users pane is a searchable table with a Previous and Next pager; each row has its actions. The Admin site page is a form for the host above a list of admins with an add field. The totals page is a grid of stat cards: the eight totals, a Jobs total and one card per job status. The text of each comes from the panes; the look is the shared UI kit's.
 
 ## States
 
@@ -90,7 +90,7 @@ Not applicable beyond the shared UI kit: the panes use its table, form, dialog a
 
 ## Conformance Test Vectors
 
-Vectors marked with a test name are asserted in `features/product-admin/src/__tests__/`, `features/ecosystem-config/src/AdminSitePane.test.tsx`, `features/ecosystem-config/src/ProductTotalsPane.test.tsx` and `features/adh-products/src/__tests__/topics.test.tsx`. The others follow from the source.
+Vectors marked with a test name are asserted in `features/product-admin/src/__tests__/`, `features/ecosystem-config/src/AdminSitePane.test.tsx`, `features/ecosystem-config/src/ProductTotalsPane.test.tsx`, `features/adh-products/src/__tests__/topics.test.tsx` and `features/support-access/src/__tests__/SupportGrantsPane.test.tsx`. The others follow from the source.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
@@ -113,9 +113,9 @@ Vectors marked with a test name are asserted in `features/product-admin/src/__te
 | product-admin-site-018 | visible-topics | Switch on and a site (test: "switch on and a site: Users keeps Email Signup and Authentication, and nothing else") | The Users row carries members `email-signup` and `auth` |
 | product-admin-site-019 | run-at-admin-site | Each moved topic and four others, with each switch and site state (test: "runAtAdminSite: the moved topics, only with the switch on and a site") | True for the moved topics with the switch on and a site; false otherwise |
 | product-admin-site-013 | hide-admin-records | Each of the three panes given `hideAdminRecords`, then not (tests: "mounts the notes editor and offers Admin notes by default", "mounts no notes editor and offers no Admin notes when set") | Set: no notes editor, no history, no Admin notes; unset: all three |
-| product-admin-site-020 | support-page, support-step-up | The Support page for a product; a request refused as `step_up_required` | `SupportGrantsPane` renders for the product; `stepUp('/support')` is called |
-| product-admin-site-021 | totals-pane | Totals carrying `jobsByStatus` of `{ failed: 2, done: 9 }`, then an empty map | One count for each status; then no jobs line |
-| product-admin-site-022 | support-switch-off | The grants read answered 404 | A note that support access is not available, no error |
+| product-admin-site-020 | support-page, support-step-up | The Support page for a product; a request refused as `step_up_required`, then a revoke refused the same way (test, for the request: "sends a step_up_required refusal through stepUp('/support')"; the revoke follows from the source) | `SupportGrantsPane` renders for the product; each refusal calls `stepUp('/support')`, which returns to `/support`, and no error is shown |
+| product-admin-site-021 | totals-pane | Totals carrying `jobsByStatus` of `{ failed: 2, done: 9 }`, then an empty map | A "Jobs" total of 11, then "Jobs done" 9 and "Jobs failed" 2; then "Jobs" 0 and no status count |
+| product-admin-site-022 | support-switch-off | The grants read answered 404 (test: "says support access is off when the grants read answers 404") | A note that support access is not available, no error and no request form |
 ## Edge Cases
 
 - **No product selected (MUST)**: the Admin site page and the totals page say so and make no request.
@@ -125,8 +125,8 @@ Vectors marked with a test name are asserted in `features/product-admin/src/__te
 - **Switch on and a site (MUST)**: Users ▸ Email Signup and Users ▸ Authentication stay on the hub; the admin site has no page for them.
 - **A cancelled confirmation (MUST NOT)**: nothing is sent.
 - **Quota above the default (MUST NOT send)**: refused before any request.
-- **A step-up refusal (MUST)**: a request or an opening refused as `step_up_required` MUST send the admin through `stepUp('/support')` and back to `/support`, with no error shown.
-- **Support access off (MUST)**: a 404 on the grants read MUST show the not-available note and no request form.
+- **A step-up refusal (MUST)**: a request or a revoke refused as `step_up_required` is handled as [support-step-up](#requirements/support-step-up) says.
+- **Support access off (MUST)**: a 404 on the grants read is handled as [support-switch-off](#requirements/support-switch-off) says.
 ## Configuration
 
 | Option | Type | Default | Description |
@@ -177,11 +177,11 @@ Not applicable: no file contains a log call.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/features/product-admin/src/` | confirmed (1.0.1) |
-| web | `packages/web/packages/features/ecosystem-config/src/AdminSitePane.tsx` | confirmed (1.0.1) |
-| web | `packages/web/packages/features/ecosystem-config/src/ProductTotalsPane.tsx` | confirmed (1.0.1) |
-| web | `packages/web/packages/features/adh-products/src/topics.ts` | confirmed (1.0.1) |
-| web | `packages/web/packages/features/ecosystems/src/EcosystemInvitationPanes.tsx` | confirmed (1.0.1) |
+| web | `packages/web/packages/features/product-admin/src/` | confirmed (2.0.0) |
+| web | `packages/web/packages/features/ecosystem-config/src/AdminSitePane.tsx` | confirmed (2.0.0) |
+| web | `packages/web/packages/features/ecosystem-config/src/ProductTotalsPane.tsx` | confirmed (2.0.0) |
+| web | `packages/web/packages/features/adh-products/src/topics.ts` | confirmed (2.0.0) |
+| web | `packages/web/packages/features/ecosystems/src/EcosystemInvitationPanes.tsx` | confirmed (2.0.0) |
 
 ## Design Decisions
 

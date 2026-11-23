@@ -65,7 +65,7 @@ Every call carries the product's ecosystem uuid in an `ecosystem` query paramete
 
 ### Admin site
 
-- **admin-site-read**: `adminSiteApi.get` MUST `GET` `/api/v1/admin_site?ecosystem=<uuid>` and map the body to `{ site, enabled }`. `enabled` is whether the `product_admin_site` switch is on, coerced to a boolean. `site` is `null` when the product has none, else `{ id, host, applicationId, clientId, createdAt, updatedAt }` from `host`, `application_id`, `client_id` and the epoch-seconds `created` and `updated`.
+- **admin-site-read**: `adminSiteApi.get` MUST `GET` `/api/v1/admin_site?ecosystem=<uuid>` and map the body to `{ site, enabled, contentGated }`. `enabled` is whether the `product_admin_site` switch is on, coerced to a boolean. `contentGated` is the body's `content_gated` (content enforcement is on, so the hub reads only the product's house rows), coerced to a boolean; a body without it, from a backend that predates it, MUST read as `false`, not gated. `site` is `null` when the product has none, else `{ id, host, applicationId, clientId, createdAt, updatedAt }` from `host`, `application_id`, `client_id` and the epoch-seconds `created` and `updated`.
 - **admin-site-put**: `adminSiteApi.put` MUST `POST` `{ host }` to the same path, which sets the site up or moves it, and return the new state. The backend answers 409 when the product already has its own `admin-site` application or another product's site uses the host; the error is left for the caller to show.
 - **admin-site-remove**: `adminSiteApi.remove` MUST `DELETE` the same path and return nothing.
 - **admin-site-hooks**: `useAdminSite` MUST be disabled while there is no ecosystem id and read under the key `["product-admin", <id>, "admin-site"]`. `usePutAdminSite` MUST, on success, write the returned state straight into that cache entry. `useRemoveAdminSite` MUST, on success, invalidate it.
@@ -96,12 +96,13 @@ Vectors marked with a test name are asserted in `packages/web/packages/data/src/
 | product-admin-client-006 | quota | `setQuota("eco-1", "u1", 1073741824)` answered `{ quota_bytes: 1073741824 }` (test: "sets the quota with POST (the backend's PUT) and reads quota_bytes back") | A `POST` of `.../u1/quota?ecosystem=eco-1` with `{"bytes":1073741824}`; the result is `{ quotaBytes: 1073741824 }` |
 | product-admin-client-007 | delete-customer, customer-id-encoded | `deleteCustomer("eco-1", "u1")` (test: "deletes a customer with DELETE"), and the id `a/b` | A `DELETE` of `.../customers/u1?ecosystem=eco-1`; the second id appears as `a%2Fb` |
 | product-admin-client-008 | admin-seat-protected | A 422 error whose body is `{ error: { code: "admin_seat_protected" } }`, then a 422 with another code, then a 403 carrying that code (test: "recognizes the 422 admin_seat_protected body" and "refuses any other error") | True, false, false |
-| product-admin-client-009 | admin-site-read | `get("eco-1")` over a body with a site and `enabled: true`, then over `{ site: null, enabled: false }` (tests: "reads the site and the switch", "reads no site") | The first maps the site's fields camel-cased; the second is `{ site: null, enabled: false }` |
+| product-admin-client-009 | admin-site-read | `get("eco-1")` over a body with a site and `enabled: true`, then over `{ site: null, enabled: false }` (tests: "reads the site and the switch", "reads no site") | The first maps the site's fields camel-cased; the second is `{ site: null, enabled: false, contentGated: false }`, a body without `content_gated` reading as not gated |
 | product-admin-client-010 | admin-site-put, admin-site-remove | `put("eco-1", "admin.example.com")`, then `remove("eco-1")` (tests: "sets the site up with POST and the host", "takes the site down with DELETE") | A `POST` of `/api/v1/admin_site?ecosystem=eco-1` with `{"host":"admin.example.com"}`; then a `DELETE` of the same path |
 | product-admin-client-011 | roster-writes-invalidate | Any roster write succeeding for "eco-1" | The roster queries and the totals query of "eco-1" are invalidated |
 | product-admin-client-012 | totals-hook, customers-hook, admin-site-hooks | Each read hook given `null`, `undefined` or `""` | No request is made |
 | product-admin-client-013 | quota | The constant `DEFAULT_QUOTA_BYTES` (test: "is the backend's 5 GiB") | 5368709120 |
 | product-admin-client-014 | totals-jobs | `fetchProductTotals("eco-1")` over a body with `jobs_by_status: { failed: 2, done: 9 }`, then over one without it | `jobsByStatus` is `{ failed: 2, done: 9 }`, then `{}` |
+| product-admin-client-015 | admin-site-read | `get("eco-1")` over a body with `content_gated: true`, then over one without the field (tests: "reads content enforcement as contentGated (phase 7)", "reads a backend without content_gated as not gated") | `contentGated` is `true`, then `false` |
 ## Edge Cases
 
 - **Empty and absent ids (MUST)**: the read hooks are disabled for an empty, null or undefined ecosystem id and make no request; a hook given no id still builds a stable query key from an empty string.
@@ -165,10 +166,10 @@ Not applicable: no file contains a log call; a failure surfaces only as a thrown
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/data/src/product-admin/product-totals.ts` | confirmed (1.0.0) |
-| web | `packages/web/packages/data/src/product-admin/product-customers.ts` | confirmed (1.0.0) |
-| web | `packages/web/packages/data/src/product-admin/admin-site.ts` | confirmed (1.0.0) |
-| web | `packages/web/packages/data/src/product-admin/index.ts` | confirmed (1.0.0) |
+| web | `packages/web/packages/data/src/product-admin/product-totals.ts` | confirmed (1.1.0) |
+| web | `packages/web/packages/data/src/product-admin/product-customers.ts` | confirmed (1.1.0) |
+| web | `packages/web/packages/data/src/product-admin/admin-site.ts` | confirmed (1.1.0) |
+| web | `packages/web/packages/data/src/product-admin/index.ts` | confirmed (1.1.0) |
 
 ## Design Decisions
 

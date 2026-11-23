@@ -7,7 +7,11 @@
 **Rationale**: A grant is read-only in the design; a control that could never succeed would only mislead.
 **Approved**: pending
 
-**Decision**: The product admin pane starts the step-up and the data client only recognises it.
+**Decision**: The product admin pane starts the step-up (through the session's `stepUp` or an `onStepUp` prop) and the data client only recognises it (`isStepUpRequired`).
 **Rationale**: Navigation belongs to the session provider; the pane decides where to return to.
+**Approved**: pending
+
+**Decision**: The strings are English literals in the components for now, with no localization layer.
+**Rationale**: No hub pane is localized yet, so these follow the rest; the debt is paid when the hub adopts a localization layer, and **Localization** says what a port must do meanwhile.
 **Approved**: pending
 

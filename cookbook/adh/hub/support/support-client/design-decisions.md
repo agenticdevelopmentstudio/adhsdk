@@ -4,7 +4,7 @@
 **Approved**: pending
 
 **Decision**: The viewer client has no write function.
-**Rationale**: The phase 7 design gives a grant read-only reach with no write route behind it; leaving the function out keeps a pane from offering one.
+**Rationale**: The support access design gives a grant read-only reach with no write route behind it; leaving the function out keeps a pane from offering one.
 **Approved**: pending
 
 **Decision**: The client never redirects for step-up; it only recognises the refusal.

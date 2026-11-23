@@ -532,7 +532,7 @@ replaces the allow-list field the client-auth form used to carry.
 
 ### Product totals job counts (web)
 
-- **totals-pane-jobs**: `ProductTotalsPane` MUST, when the totals it is given carry a non-empty `jobsByStatus`, show one count for each job status beside the eight figures, and MUST show no jobs section when the map is empty or absent. The pane MUST NOT sum the statuses itself into a new total.
+- **totals-pane-jobs**: `ProductTotalsPane` MUST show, after Storage and before the two waiting counts, a "Jobs" figure that is the sum of every status in `jobsByStatus`, followed by one figure for each status in name order, labeled "Jobs <status>" with underscores read as spaces ("Jobs timed out"). When the map is empty it MUST show "Jobs" as 0 and no status figures. The sum is the only total the pane derives; it never filters a status out.
 ## Appearance
 
 Not applicable: this is a set of navigation/data-orchestration topics and data
@@ -609,7 +609,7 @@ component not among these given sources.
 | ecosystem-config-049 | product-roles-admin-seats-protected, pane-caller | The roles pane for the `product_admin` caller, then for the manager caller, each showing the `admin` role with a holder and another role with a holder | For `product_admin` the admin role's holder has no Revoke button and the note "Admins are added here and removed by the product's managers." shows, while the other role's holder keeps Revoke; for the manager both keep Revoke and no note shows |
 | ecosystem-config-050 | sets-pane-caller-limits | The sets editor for the `product_admin` caller on a catalog declaring a usage tier and a storage quota; the quota set to 5368709121, then Save | The tier field is absent and the quota field's maximum is 5368709120; the Save shows "<label> can be at most 5368709120." and sends nothing |
 | ecosystem-config-051 | sets-pane-tier-locked | A set whose values include `usage.tier`, opened by the `product_admin` caller; a permission toggled, then Save; then only a contained set toggled, then Save | The locked note shows; the first Save shows it as an error and sends nothing; the second sends the containment alone |
-| ecosystem-config-052 | totals-pane-jobs | `ProductTotalsPane` given totals with `jobsByStatus` of `{ failed: 2, done: 9 }`, then with `{}` | Two status counts shown; then no jobs section |
+| ecosystem-config-052 | totals-pane-jobs | `ProductTotalsPane` given totals with `jobsByStatus` of `{ running: 3, done: 1200, failed: 4, timed_out: 1 }`, then with `{}` | "Jobs" 1,208, then "Jobs done", "Jobs failed", "Jobs running" and "Jobs timed out"; then "Jobs" 0 and no status figure |
 ## Edge Cases
 
 - **Path deeper than one segment**: sign-in apps, feature flags, server bags, and
@@ -927,9 +927,9 @@ kind.
 | Platform | Location | Conformance |
 |----------|----------|-------------|
 | apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/EcosystemConfig/` | confirmed (2.2.0) |
-| web | `packages/web/packages/data/src/ecosystem-config/` | confirmed (2.2.0) |
-| web | `packages/web/packages/features/ecosystem-config/src/` | confirmed (2.2.0) |
-| web | `packages/web/packages/data/src/ecosystem-config/sync-tables.ts` | confirmed (2.2.0) |
+| web | `packages/web/packages/data/src/ecosystem-config/` | confirmed (2.3.0) |
+| web | `packages/web/packages/features/ecosystem-config/src/` | confirmed (2.3.0) |
+| web | `packages/web/packages/data/src/ecosystem-config/sync-tables.ts` | confirmed (2.3.0) |
 | apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/EcosystemConfig/AuthSettingsTopic.swift` | confirmed (2.2.0) |
 | apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/EcosystemConfig/EcosystemConfigModels.swift` | confirmed (2.2.0) |
 | apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/EcosystemConfig/FeatureFlagsTopic.swift` | confirmed (2.2.0) |
@@ -937,11 +937,11 @@ kind.
 | apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/EcosystemConfig/SigninAppsTopic.swift` | confirmed (2.2.0) |
 | apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/EcosystemConfig/StorageTokensRail.swift` | confirmed (2.2.0) |
 | apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/EcosystemConfig/StorageTokensTopic.swift` | confirmed (2.2.0) |
-| web | `packages/web/packages/data/src/ecosystem-config/feature-flags.ts` | confirmed (2.2.0) |
-| web | `packages/web/packages/data/src/ecosystem-config/server-bags.ts` | confirmed (2.2.0) |
-| web | `packages/web/packages/data/src/ecosystem-config/client-auth.ts` | confirmed (2.2.0) |
-| web | `packages/web/packages/data/src/ecosystem-config/storage-tokens.ts` | confirmed (2.2.0) |
-| web | `packages/web/packages/data/src/ecosystem-config/wire.ts` | confirmed (2.2.0) |
+| web | `packages/web/packages/data/src/ecosystem-config/feature-flags.ts` | confirmed (2.3.0) |
+| web | `packages/web/packages/data/src/ecosystem-config/server-bags.ts` | confirmed (2.3.0) |
+| web | `packages/web/packages/data/src/ecosystem-config/client-auth.ts` | confirmed (2.3.0) |
+| web | `packages/web/packages/data/src/ecosystem-config/storage-tokens.ts` | confirmed (2.3.0) |
+| web | `packages/web/packages/data/src/ecosystem-config/wire.ts` | confirmed (2.3.0) |
 | apple | `packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKHubTests/EcosystemConfigTopicsTests.swift` | confirmed (2.2.0) |
 | apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/Ecosystems/EcosystemTopic.swift` | confirmed (2.2.0) |
 | apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/Ecosystems/EcosystemsModels.swift` | confirmed (2.2.0) |
@@ -951,14 +951,14 @@ kind.
 | apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/Support/JSONValue.swift` | confirmed (2.2.0) |
 | apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/Applications/ApplicationsTopic.swift` | confirmed (2.2.0) |
 | apple | `packages/apple/AgenticDeveloperHubSDK/project.yml` | confirmed (2.2.0) |
-| web | `packages/web/packages/features/ecosystem-config/src/dialog-state/bag-dialog-state.ts` | confirmed (2.2.0) |
-| web | `packages/web/packages/features/ecosystem-config/src/dialog-state/flag-dialog-state.ts` | confirmed (2.2.0) |
-| web | `packages/web/packages/features/ecosystem-config/src/ApplicationClientAuthSection.tsx` | confirmed (2.2.0) |
-| web | `packages/web/packages/features/ecosystem-config/src/SyncTablesPane.tsx` | confirmed (2.2.0) |
-| web | `packages/web/packages/features/ecosystem-config/src/sync-tables-hooks.ts` | confirmed (2.2.0) |
-| web | `packages/web/packages/features/ecosystem-config/src/ClientAuthFields.tsx` | confirmed (2.2.0) |
-| web | `packages/web/packages/features/ecosystem-config/src/client-auth-model.ts` | confirmed (2.2.0) |
-| web | `packages/web/packages/features/ecosystem-config/src/ClientAuthSettingsPane.tsx` | confirmed (2.2.0) |
+| web | `packages/web/packages/features/ecosystem-config/src/dialog-state/bag-dialog-state.ts` | confirmed (2.3.0) |
+| web | `packages/web/packages/features/ecosystem-config/src/dialog-state/flag-dialog-state.ts` | confirmed (2.3.0) |
+| web | `packages/web/packages/features/ecosystem-config/src/ApplicationClientAuthSection.tsx` | confirmed (2.3.0) |
+| web | `packages/web/packages/features/ecosystem-config/src/SyncTablesPane.tsx` | confirmed (2.3.0) |
+| web | `packages/web/packages/features/ecosystem-config/src/sync-tables-hooks.ts` | confirmed (2.3.0) |
+| web | `packages/web/packages/features/ecosystem-config/src/ClientAuthFields.tsx` | confirmed (2.3.0) |
+| web | `packages/web/packages/features/ecosystem-config/src/client-auth-model.ts` | confirmed (2.3.0) |
+| web | `packages/web/packages/features/ecosystem-config/src/ClientAuthSettingsPane.tsx` | confirmed (2.3.0) |
 
 ## Design Decisions
 

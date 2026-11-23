@@ -1,5 +1,5 @@
 
-Vectors marked with a test name are asserted in `features/product-admin/src/__tests__/`, `features/ecosystem-config/src/AdminSitePane.test.tsx`, `features/ecosystem-config/src/ProductTotalsPane.test.tsx` and `features/adh-products/src/__tests__/topics.test.tsx`. The others follow from the source.
+Vectors marked with a test name are asserted in `features/product-admin/src/__tests__/`, `features/ecosystem-config/src/AdminSitePane.test.tsx`, `features/ecosystem-config/src/ProductTotalsPane.test.tsx`, `features/adh-products/src/__tests__/topics.test.tsx` and `features/support-access/src/__tests__/SupportGrantsPane.test.tsx`. The others follow from the source.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
@@ -22,6 +22,6 @@ Vectors marked with a test name are asserted in `features/product-admin/src/__te
 | product-admin-site-018 | visible-topics | Switch on and a site (test: "switch on and a site: Users keeps Email Signup and Authentication, and nothing else") | The Users row carries members `email-signup` and `auth` |
 | product-admin-site-019 | run-at-admin-site | Each moved topic and four others, with each switch and site state (test: "runAtAdminSite: the moved topics, only with the switch on and a site") | True for the moved topics with the switch on and a site; false otherwise |
 | product-admin-site-013 | hide-admin-records | Each of the three panes given `hideAdminRecords`, then not (tests: "mounts the notes editor and offers Admin notes by default", "mounts no notes editor and offers no Admin notes when set") | Set: no notes editor, no history, no Admin notes; unset: all three |
-| product-admin-site-020 | support-page, support-step-up | The Support page for a product; a request refused as `step_up_required` | `SupportGrantsPane` renders for the product; `stepUp('/support')` is called |
-| product-admin-site-021 | totals-pane | Totals carrying `jobsByStatus` of `{ failed: 2, done: 9 }`, then an empty map | One count for each status; then no jobs line |
-| product-admin-site-022 | support-switch-off | The grants read answered 404 | A note that support access is not available, no error |
+| product-admin-site-020 | support-page, support-step-up | The Support page for a product; a request refused as `step_up_required`, then a revoke refused the same way (test, for the request: "sends a step_up_required refusal through stepUp('/support')"; the revoke follows from the source) | `SupportGrantsPane` renders for the product; each refusal calls `stepUp('/support')`, which returns to `/support`, and no error is shown |
+| product-admin-site-021 | totals-pane | Totals carrying `jobsByStatus` of `{ failed: 2, done: 9 }`, then an empty map | A "Jobs" total of 11, then "Jobs done" 9 and "Jobs failed" 2; then "Jobs" 0 and no status count |
+| product-admin-site-022 | support-switch-off | The grants read answered 404 (test: "says support access is off when the grants read answers 404") | A note that support access is not available, no error and no request form |

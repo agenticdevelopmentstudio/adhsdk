@@ -32,7 +32,10 @@
   pillar, like `admin`), and `admin-site` in `HUB_EXTRA_FEATURE_SEGMENTS`; its
   `devDependencies` carry `@adh-sdk/product-admin` for the one test that holds that
   package's rail equal to the site's share of the route table. `reserved-slugs.ts` holds `RESERVED_SLUGS`, `isReservedSlug`, and
-  `isReservedSlugAnywhere`. `legal.ts` holds the privacy and terms paths and URLs.
+  `isReservedSlugAnywhere`. The support routes of
+  **support-routes-in-shares** sit in `routes.hub.generated.ts` and are written in the
+  SDK by hand, because the generator runs only in the website, which proves them with
+  the generator's `--check`. `legal.ts` holds the privacy and terms paths and URLs.
   `fleets.ts` holds `MARKETING_FLEET_SITE_IDS`, `PLACEHOLDER_FLEET_SITE_IDS`, and
   `DIRECTORY_SITES`. `story.ts` holds `SITE_STORIES`, `getSiteStory`, and the three
   generated rings `TOUR_MAIN`, `TOUR_MARKETING`, and `TOUR_PLACEHOLDER` merged by object

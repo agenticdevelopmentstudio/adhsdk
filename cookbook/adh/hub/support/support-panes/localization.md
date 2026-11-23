@@ -1,3 +1,2 @@
 
-All strings (headings, button names, state badges, the log sentences with their counts and days) go through the SDK's localization, with plural forms for the read count.
-
+The strings (headings, button names, state badges, the log sentences with their counts and days) are English literals in the components; none goes through a localization layer yet. The read count has its own words ("once", "twice", "N times") and the day is named as a person says it ("today", "yesterday", the weekday, then the date), using the browser's locale only for a grant's time. A port MUST localize every string and use plural forms for the read count.
