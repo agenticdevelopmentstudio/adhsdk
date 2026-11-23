@@ -18,7 +18,8 @@ export function hoursPhrase(hours: number): string {
   return rest === 0 ? plural(days, "day") : `${plural(days, "day")} and ${plural(rest, "hour")}`;
 }
 
-const when = (iso: string | null) => {
+/** A grant's time, short and local: "Fri, 20 Nov, 10:00". Empty for none. */
+export const grantTime = (iso: string | null) => {
   if (!iso) return "";
   const d = new Date(iso);
   return Number.isNaN(d.getTime())
@@ -27,7 +28,7 @@ const when = (iso: string | null) => {
 };
 
 /** Why an ended grant ended, from its own fields. */
-function endedLabel(g: SupportGrant): string {
+export function endedLabel(g: SupportGrant): string {
   if (g.revokedAt) return "Revoked";
   if (g.decision === "denied") return "Denied";
   if (g.decision === null) return "Lapsed";
@@ -75,8 +76,8 @@ export function GrantCard({
       <p className="text-xs text-apt-text-muted">
         {breakGlass
           ? `Opened without asking you, in an emergency, for ${hoursPhrase(grant.requestedFor)}.`
-          : `Asked ${when(grant.requestedAt)} to view your content for ${hoursPhrase(grant.requestedFor)}.`}
-        {state === "live" && grant.expiresAt ? ` Ends ${when(grant.expiresAt)}.` : ""}
+          : `Asked ${grantTime(grant.requestedAt)} to view your content for ${hoursPhrase(grant.requestedFor)}.`}
+        {state === "live" && grant.expiresAt ? ` Ends ${grantTime(grant.expiresAt)}.` : ""}
       </p>
 
       {state === "pending" && (

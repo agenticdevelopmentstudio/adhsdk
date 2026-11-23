@@ -18,6 +18,7 @@ const TOTALS = {
   active7d: 40,
   active30d: 310,
   storageBytes: 3 * 1024 * 1024,
+  jobsByStatus: { running: 3, done: 1200, failed: 4, timed_out: 1 },
   pendingInvitations: 2,
   pendingRequests: 7,
 };
@@ -40,6 +41,27 @@ describe("ProductTotalsPane", () => {
     expect(figure("Storage")).toContain("3.0 MB");
     expect(figure("Invitations waiting")).toContain("2");
     expect(figure("Requests waiting")).toContain("7");
+  });
+
+  it("shows the jobs' total and one figure per status", () => {
+    hook.mockReturnValue({ data: TOTALS, error: null, isPending: false } as unknown as HookResult);
+    render(<ProductTotalsPane ecosystemId="eco-1" />);
+    expect(figure("Jobs")).toContain("1,208");
+    expect(figure("Jobs done")).toContain("1,200");
+    expect(figure("Jobs failed")).toContain("4");
+    expect(figure("Jobs running")).toContain("3");
+    expect(figure("Jobs timed out")).toContain("1");
+  });
+
+  it("shows no jobs as a zero total and no status figures", () => {
+    hook.mockReturnValue({
+      data: { ...TOTALS, jobsByStatus: {} },
+      error: null,
+      isPending: false,
+    } as unknown as HookResult);
+    render(<ProductTotalsPane ecosystemId="eco-1" />);
+    expect(figure("Jobs")).toContain("0");
+    expect(screen.queryByText(/^Jobs /)).toBeNull();
   });
 
   it("says it is loading, and says when it could not load", () => {

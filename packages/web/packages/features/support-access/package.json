@@ -31,6 +31,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@adh-sdk/auth": "workspace:*",
     "@adh-sdk/data": "workspace:*",
     "@adh-sdk/ui": "workspace:*",
     "@tanstack/react-query": "^5.62.0",
@@ -42,7 +43,6 @@
     "react-dom": "^19.0.0"
   },
   "devDependencies": {
-    "@adh-sdk/auth": "workspace:*",
     "@base-ui/react": "1.5.0",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",

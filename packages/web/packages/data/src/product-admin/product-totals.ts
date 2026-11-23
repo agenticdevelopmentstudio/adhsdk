@@ -17,6 +17,8 @@ export interface ProductTotalsWire {
   active7d: number;
   active30d: number;
   storage_bytes: number;
+  /** Absent from a backend older than phase 7. */
+  jobs_by_status?: Record<string, number>;
   pending_invitations: number;
   pending_requests: number;
 }
@@ -32,6 +34,8 @@ export interface ProductTotals {
   active30d: number;
   /** Bytes in the customers' ready attachments. */
   storageBytes: number;
+  /** The customers' jobs by status (phase 7, read through the definer aggregates); `{}` for none. */
+  jobsByStatus: Record<string, number>;
   /** Invitations sent and not yet used. */
   pendingInvitations: number;
   /** Requests for an invitation. */
@@ -47,6 +51,7 @@ export const toProductTotals = (w: ProductTotalsWire): ProductTotals => ({
   active7d: w.active7d,
   active30d: w.active30d,
   storageBytes: w.storage_bytes,
+  jobsByStatus: w.jobs_by_status ?? {},
   pendingInvitations: w.pending_invitations,
   pendingRequests: w.pending_requests,
 });

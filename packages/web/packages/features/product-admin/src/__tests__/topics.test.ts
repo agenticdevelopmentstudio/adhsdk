@@ -6,7 +6,7 @@ import { describe, expect, it } from "vitest";
 import { PRODUCT_ADMIN_TOPICS } from "../product-admin-topics";
 
 describe("PRODUCT_ADMIN_TOPICS", () => {
-  it("names the eight pages in rail order, ids unique", () => {
+  it("names the nine pages in rail order, ids unique", () => {
     expect(PRODUCT_ADMIN_TOPICS.map((t) => t.href)).toEqual([
       "/users",
       "/requests",
@@ -16,6 +16,7 @@ describe("PRODUCT_ADMIN_TOPICS", () => {
       "/signup-list",
       "/sets",
       "/totals",
+      "/support",
     ]);
     expect(new Set(PRODUCT_ADMIN_TOPICS.map((t) => t.id)).size).toBe(PRODUCT_ADMIN_TOPICS.length);
   });

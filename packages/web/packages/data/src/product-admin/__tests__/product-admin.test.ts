@@ -52,6 +52,7 @@ describe("totals", () => {
       active7d: 1,
       active30d: 3,
       storage_bytes: 42,
+      jobs_by_status: { done: 7, failed: 1 },
       pending_invitations: 4,
       pending_requests: 5,
     });
@@ -67,9 +68,24 @@ describe("totals", () => {
       active7d: 1,
       active30d: 3,
       storageBytes: 42,
+      jobsByStatus: { done: 7, failed: 1 },
       pendingInvitations: 4,
       pendingRequests: 5,
     });
+  });
+
+  it("reads a body without jobs_by_status as no jobs", async () => {
+    mockedJson.mockResolvedValueOnce({
+      customers: 0,
+      new7d: 0,
+      new30d: 0,
+      active7d: 0,
+      active30d: 0,
+      storage_bytes: 0,
+      pending_invitations: 0,
+      pending_requests: 0,
+    });
+    expect((await fetchProductTotals(ECO)).jobsByStatus).toEqual({});
   });
 });
 

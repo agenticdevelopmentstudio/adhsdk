@@ -21,8 +21,10 @@ import {
   operatorSupportApi,
   publicSupportApi,
   SUPPORT_CONTENT_TABLES,
+  SUPPORT_BREAK_GLASS_HOURS_MAX,
   SUPPORT_LAPSE_DAYS,
   supportAdminApi,
+  supportRequestProblem,
   supportApi,
   toSupportGrant,
   type SupportAccess,
@@ -415,5 +417,26 @@ describe("SUPPORT_CONTENT_TABLES", () => {
     expect(new Set(SUPPORT_CONTENT_TABLES).size).toBe(89);
     for (const t of SUPPORT_CONTENT_TABLES) expect(t).toMatch(/^[a-z_]+\.[a-z_]+$/);
     expect(SUPPORT_CONTENT_TABLES).toContain("content.notes");
+  });
+});
+
+describe("supportRequestProblem", () => {
+  const reason = "Your export failed and I need to see it.";
+  it("passes a reason of 10 to 500 characters and 1 to 168 hours", () => {
+    expect(supportRequestProblem({ reason, hours: 24 })).toBeNull();
+    expect(supportRequestProblem({ reason: "x".repeat(10), hours: 1 })).toBeNull();
+    expect(supportRequestProblem({ reason: "x".repeat(500), hours: 168 })).toBeNull();
+  });
+
+  it("refuses a short or long reason, counting it trimmed", () => {
+    expect(supportRequestProblem({ reason: "   too short   ", hours: 24 })).toMatch(/at least 10/);
+    expect(supportRequestProblem({ reason: "x".repeat(501), hours: 24 })).toMatch(/500/);
+  });
+
+  it("refuses a length outside the range, or not whole", () => {
+    expect(supportRequestProblem({ reason, hours: 0 })).toMatch(/1 to 168/);
+    expect(supportRequestProblem({ reason, hours: 169 })).toMatch(/1 to 168/);
+    expect(supportRequestProblem({ reason, hours: 1.5 })).toMatch(/1 to 168/);
+    expect(supportRequestProblem({ reason, hours: 5 }, SUPPORT_BREAK_GLASS_HOURS_MAX)).toMatch(/1 to 4/);
   });
 });

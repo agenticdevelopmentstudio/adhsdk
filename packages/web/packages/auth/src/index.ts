@@ -6,6 +6,8 @@ export type { MfaChallenge, MfaMethod, MfaCodeMethod } from './mfa'
 export {
   ProductAdminAuthProvider,
   useProductAdminAuth,
+  useOptionalProductAdminAuth,
+  stepUpSigninUrl,
   PRODUCT_ADMIN_REFRESH_LEAD_MS,
 } from './ProductAdminAuthProvider'
 export type {

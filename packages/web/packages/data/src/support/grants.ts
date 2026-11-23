@@ -52,6 +52,37 @@ export const SUPPORT_LAPSE_DAYS = 7;
 export const SUPPORT_PAGE_SIZE = 50;
 
 /**
+ * The limits 0309's definer functions enforce (answered 422), so a form can say so before it
+ * sends: a reason of 10 to 500 characters; a consented grant of 1 hour to 7 days; a break-glass
+ * grant of 1 to 4 hours with an attestation of at least 40 characters and a reference.
+ */
+export const SUPPORT_REASON_MIN = 10;
+export const SUPPORT_REASON_MAX = 500;
+export const SUPPORT_HOURS_MAX = 168;
+export const SUPPORT_BREAK_GLASS_HOURS_MAX = 4;
+export const SUPPORT_ATTESTATION_MIN = 40;
+/** The length a request form starts at. */
+export const SUPPORT_HOURS_DEFAULT = 24;
+
+/**
+ * What is wrong with a request's reason and length, as one sentence for the form; null when it
+ * would pass. `maxHours` is {@link SUPPORT_HOURS_MAX}, or {@link SUPPORT_BREAK_GLASS_HOURS_MAX}
+ * for break-glass.
+ */
+export function supportRequestProblem(
+  req: { reason: string; hours: number },
+  maxHours: number = SUPPORT_HOURS_MAX,
+): string | null {
+  const n = req.reason.trim().length;
+  if (n < SUPPORT_REASON_MIN) return `Give a reason of at least ${SUPPORT_REASON_MIN} characters.`;
+  if (n > SUPPORT_REASON_MAX) return `Keep the reason to ${SUPPORT_REASON_MAX} characters or fewer.`;
+  if (!Number.isInteger(req.hours) || req.hours < 1 || req.hours > maxHours) {
+    return `Ask for a whole number of hours from 1 to ${maxHours}.`;
+  }
+  return null;
+}
+
+/**
  * The tables the read-only viewer offers, as `schema.table`. A copy of the `content` list in
  * adhbackend's `src/db/rls-forms.json` (read there by `db/content-tables.ts`), which is the
  * authority: a table the backend refuses answers 404 and the viewer shows it as unavailable.
@@ -592,7 +623,7 @@ export function useOperatorSupportAccess(filters: Partial<OperatorSupportAccessF
   });
 }
 
-function useOperatorMutation<V>(fn: (v: V) => Promise<unknown>) {
+function useOperatorMutation<V, R>(fn: (v: V) => Promise<R>) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: fn,

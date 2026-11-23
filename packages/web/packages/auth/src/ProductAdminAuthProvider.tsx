@@ -51,6 +51,20 @@ export interface ProductAdminAuthValue {
   account: ProductAdminAccount | null
   accessToken: string | null
   signOut: () => Promise<void>
+  /**
+   * Send the browser through sign-in again with a fresh second factor (phase 7 step-up): an
+   * answer of 403 `step_up_required` means the session is not aal 2 or its sign-in is more than
+   * ten minutes old. `returnPath` defaults to the current page.
+   */
+  stepUp: (returnPath?: string) => void
+}
+
+/**
+ * The sign-in URL for a step-up: `prompt=login` makes the login ask again even with a live
+ * session, and `max_age=600` matches the backend's ten-minute window.
+ */
+export function stepUpSigninUrl(returnPath: string): string {
+  return `/auth/signin?return=${encodeURIComponent(returnPath)}&prompt=login&max_age=600`
 }
 
 export interface ProductAdminAuthProviderProps {
@@ -264,9 +278,14 @@ export function ProductAdminAuthProvider({ children, navigate }: ProductAdminAut
     }
   }, [adopt, go])
 
+  const stepUp = useCallback(
+    (returnPath?: string) => go(stepUpSigninUrl(returnPath ?? currentPath())),
+    [go],
+  )
+
   const value = useMemo<ProductAdminAuthValue>(
-    () => ({ status, account, accessToken, signOut }),
-    [status, account, accessToken, signOut],
+    () => ({ status, account, accessToken, signOut, stepUp }),
+    [status, account, accessToken, signOut, stepUp],
   )
   return <ProductAdminAuthContext.Provider value={value}>{children}</ProductAdminAuthContext.Provider>
 }
@@ -276,4 +295,10 @@ export function useProductAdminAuth(): ProductAdminAuthValue {
   const v = useContext(ProductAdminAuthContext)
   if (!v) throw new Error('useProductAdminAuth must be used inside a ProductAdminAuthProvider')
   return v
+}
+
+/** The product admin session, or null outside a {@link ProductAdminAuthProvider}: for a pane that
+ *  also mounts on a site without one (it then takes its step-up from a prop instead). */
+export function useOptionalProductAdminAuth(): ProductAdminAuthValue | null {
+  return useContext(ProductAdminAuthContext)
 }

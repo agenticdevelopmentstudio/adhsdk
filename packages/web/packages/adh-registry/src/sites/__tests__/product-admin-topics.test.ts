@@ -15,4 +15,17 @@ describe("the product-admin rail", () => {
     expect(pages.length).toBeGreaterThan(0);
     expect(PRODUCT_ADMIN_TOPICS.map((t) => t.href).sort()).toEqual([...pages].sort());
   });
+
+  // Phase 7: the Support topic, a product admin's support grants, is a page of the site.
+  it("has the Support topic's href in the product-admin share", () => {
+    const support = PRODUCT_ADMIN_TOPICS.find((t) => t.id === "support");
+    expect(support?.href).toBe("/support");
+    expect(SITE_ROUTES["product-admin"]).toContain("/support");
+  });
+
+  it("has the operator site's three support pages in the admin share", () => {
+    for (const r of ["/support-grants", "/break-glass", "/support-access"]) {
+      expect(SITE_ROUTES.admin).toContain(r);
+    }
+  });
 });

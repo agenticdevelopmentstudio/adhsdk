@@ -8,6 +8,8 @@ import { act, render, waitFor } from '@testing-library/react'
 import {
   PRODUCT_ADMIN_REFRESH_LEAD_MS,
   ProductAdminAuthProvider,
+  stepUpSigninUrl,
+  useOptionalProductAdminAuth,
   useProductAdminAuth,
   type ProductAdminAuthValue,
 } from '../ProductAdminAuthProvider'
@@ -340,5 +342,41 @@ describe('ProductAdminAuthProvider', () => {
     await waitFor(() => expect(seen?.status).toBe('ready'))
     unmount()
     expect(accessTokenSource()).toBeNull()
+  })
+
+  // Phase 7: a 403 `step_up_required` sends the admin through sign-in again with a fresh factor.
+  it('steps up through sign-in with prompt=login and max_age=600', async () => {
+    routes({
+      '/auth/session': () => json(200, { accessToken: 'tok-1', expiresAt: Math.floor(Date.now() / 1000) + 3600 }),
+      '/api/v1/account': () => json(200, account(['admin'])),
+    })
+    render(
+      <ProductAdminAuthProvider navigate={navigate}>
+        <Probe />
+      </ProductAdminAuthProvider>,
+    )
+    await waitFor(() => expect(seen?.status).toBe('ready'))
+    act(() => seen!.stepUp('/support'))
+    expect(navigate).toHaveBeenCalledWith('/auth/signin?return=%2Fsupport&prompt=login&max_age=600')
+    act(() => seen!.stepUp())
+    expect(navigate).toHaveBeenLastCalledWith(
+      '/auth/signin?return=%2Fusers%3Fq%3Da&prompt=login&max_age=600',
+    )
+  })
+
+  it('builds the step-up URL on its own', () => {
+    expect(stepUpSigninUrl('/support?x=1')).toBe(
+      '/auth/signin?return=%2Fsupport%3Fx%3D1&prompt=login&max_age=600',
+    )
+  })
+
+  it('reads as null outside the provider through the optional hook', () => {
+    let optional: ProductAdminAuthValue | null | undefined
+    function OptionalProbe() {
+      optional = useOptionalProductAdminAuth()
+      return null
+    }
+    render(<OptionalProbe />)
+    expect(optional).toBeNull()
   })
 })
