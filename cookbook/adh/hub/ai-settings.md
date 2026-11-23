@@ -2,7 +2,7 @@
 id: 5fdf4ce9-cb7e-4490-a6d6-066690ef07ca
 title: "AI Settings"
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: 2026-11-23
@@ -239,9 +239,9 @@ Available column and "No longer offered" were added in the same phase.
   service id, the model and the new checked value, then hand the answered service to the editor and
   revalidate the services cache (`PERSONA_SERVICES_CACHE_KEY`).
 - **available-change-pending**: While a model's change is in flight, that model's own checkbox MUST be
-  disabled and the other rows' checkboxes MUST stay enabled. Only the latest in-flight model is tracked: when a second change starts before the first answers,
-  the first model's checkbox is enabled again while its request still runs, and whichever request
-  answers first clears the pending state, enabling the other box before its own request answers.
+  disabled and the other rows' checkboxes MUST stay enabled. Pending changes MUST be tracked per model:
+  when changes on different models overlap, each box MUST stay disabled until its own request settles,
+  and one request settling MUST NOT re-enable another model's box whose request is still running.
 - **available-change-failure**: When `setModelAvailability` fails, the screen MUST report the failure
   through `reportUnexpectedAuthError`, the helper its other writes use, with feature `services` and
   step `setModelAvailability`; MUST show the error's message in an error line; and the checkbox MUST
@@ -341,7 +341,7 @@ Pressed and hover states of buttons belong to the shared button component and ar
 ## Conformance Test Vectors
 
 The first eight vectors come from the named tests in `ServicesSection.test.tsx` beside the source, and
-the ninth from the setup every one of them shares. Vectors 016, 017, 018, 026, 027, 028 and 029 come
+the ninth from the setup every one of them shares. Vectors 016, 017, 018, 026, 027, 028, 029 and 031 come
 from the named tests in `ModelsTable.test.tsx` beside it, which renders the real `ServicesSection` and
 mocks only the personas data client. The others are derived from the source's own functions and from
 the phase 8 design.
@@ -377,6 +377,7 @@ the phase 8 design.
 | ai-settings-028 | table-columns | A service with one model (test "puts Available last, after Caps") | The last two column headers read "Caps" and "Available". |
 | ai-settings-029 | available-checkbox | A model with id `m1` and display name "Model One" (test "names each box after the model's display name") | A checkbox named "Available: Model One" exists. |
 | ai-settings-030 | available-change-pending | Two models; untick the first while its call is unresolved | The first model's checkbox is disabled and the second's is enabled; once the call settles the first is enabled again. |
+| ai-settings-031 | available-change-pending, available-change-failure | Untick `m1`, then `m2`, on service `svc_1` while both calls are unresolved; `m1`'s call resolves, then `m2`'s rejects with "m2 failed" (test "two overlapping changes on different models each keep their own box disabled until their own request settles") | Both boxes are disabled; after `m1` answers only `m1`'s box is enabled; after `m2` fails its box is enabled and ticked, an error line reads "m2 failed", and the failure is reported with step `setModelAvailability`. |
 
 ## Edge Cases
 
@@ -553,7 +554,7 @@ feature `create-resource-dialog` and step `save`.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/features/ai-settings/` | confirmed (1.0.1) |
+| web | `packages/web/packages/features/ai-settings/` | confirmed (1.0.2) |
 
 ## Design Decisions
 
@@ -645,5 +646,6 @@ and a return to the pane paints from cache while re-reading.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.2 | 2026-11-23 | Mike Fullerton | Track availability changes per model: overlapping changes on different models each keep their own box disabled until their own request settles; vector ai-settings-031. |
 | 1.0.1 | 2026-11-23 | Mike Fullerton | Phase 8 verify pass against the code: format.ts moved too, editor syncs liveService from its prop, a box is disabled only while its own request runs, ServicesSectionProps, ModelsTable.test.tsx vectors, Apple model item corrected |
 | 1.0.0 | 2026-11-23 | Mike Fullerton | Initial creation: the AI Settings package for phase 8 |

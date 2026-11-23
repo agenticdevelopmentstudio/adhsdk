@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 //
 // The models table's Available column (recipe adhsdk.ingredient.adh.hub.ai-settings, vectors
-// ai-settings-016, -017, -018, -026 and -027). Rendered through the real ServicesSection so the
+// ai-settings-016, -017, -018, -026, -027 and -031). Rendered through the real ServicesSection so the
 // change goes the whole way: the data client call, the services cache revalidation, and the list's
 // re-read landing back in the table. Only the `@adh-sdk/data/personas` transport is mocked;
 // `revalidateResources` and `reportUnexpectedAuthError` are spies that keep their real behaviour
@@ -177,6 +177,48 @@ describe("ModelsTable Available column", () => {
     });
     expect(box("m1")).toHaveAttribute("aria-checked", "true");
     expect(revalidate).not.toHaveBeenCalled();
+  });
+
+  // ai-settings-031
+  it("two overlapping changes on different models each keep their own box disabled until their own request settles", async () => {
+    const both = withModels([
+      { id: "m1", available: true, offered: true },
+      { id: "m2", available: true, offered: true },
+    ]);
+    list.mockResolvedValue([both]);
+    const settle: Record<string, { resolve: (s: UserService) => void; reject: (e: Error) => void }> =
+      {};
+    setModelAvailability.mockImplementation(
+      (_service, model) =>
+        new Promise<UserService>((resolve, reject) => {
+          settle[model] = { resolve, reject };
+        }),
+    );
+    renderSection();
+
+    fireEvent.click(await screen.findByRole("checkbox", { name: "Available: m1" }));
+    fireEvent.click(box("m2"));
+
+    await waitFor(() => expect(setModelAvailability).toHaveBeenCalledTimes(2));
+    expect(setModelAvailability).toHaveBeenNthCalledWith(1, "svc_1", "m1", false);
+    expect(setModelAvailability).toHaveBeenNthCalledWith(2, "svc_1", "m2", false);
+    await waitFor(() => expect(box("m1")).toHaveAttribute("data-disabled"));
+    expect(box("m2")).toHaveAttribute("data-disabled");
+
+    // The first request answers: only its own box comes back; m2's is still in flight.
+    settle.m1!.resolve(both);
+    await waitFor(() => expect(box("m1")).not.toHaveAttribute("data-disabled"));
+    expect(box("m2")).toHaveAttribute("data-disabled");
+
+    // The second fails: reported, shown inline, its box re-enabled at the last known state.
+    settle.m2!.reject(new Error("m2 failed"));
+    expect(await screen.findByText("m2 failed")).toBeInTheDocument();
+    await waitFor(() => expect(box("m2")).not.toHaveAttribute("data-disabled"));
+    expect(box("m2")).toHaveAttribute("aria-checked", "true");
+    expect(report).toHaveBeenCalledWith(expect.any(Error), {
+      feature: "services",
+      step: "setModelAvailability",
+    });
   });
 
   // ai-settings-027

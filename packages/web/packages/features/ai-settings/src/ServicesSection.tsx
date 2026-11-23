@@ -111,7 +111,8 @@ function CapChip({ label }: { label: string }) {
  *  reads the same entry). A model the provider no longer lists but which is still switched off
  *  arrives with `offered: false`: it shows "No longer offered", and its box stays enabled so it can
  *  be switched back on, after which the backend stops appending it and the row goes. A missing
- *  `available` or `offered` reads as true. */
+ *  `available` or `offered` reads as true. Each box is disabled while its own change is in flight;
+ *  changes on different models run side by side. */
 function ModelsTable({
   serviceId,
   models,
@@ -122,10 +123,14 @@ function ModelsTable({
   onUpdated?: (updated: UserService) => void;
 }) {
   const [error, setError] = useState<string | null>(null);
-  const [pending, setPending] = useState<string | null>(null);
+  // The models whose change is in flight, by id. A set, not one id: two quick changes on different
+  // models each disable their own box until their own request settles, so the first to answer
+  // cannot re-enable a box whose request is still running.
+  const [pending, setPending] = useState<ReadonlySet<string>>(() => new Set());
 
   async function handleAvailableChange(model: string, available: boolean) {
-    setPending(model);
+    if (pending.has(model)) return;
+    setPending((prev) => new Set(prev).add(model));
     setError(null);
     try {
       const updated = await api.services.setModelAvailability(serviceId, model, available);
@@ -135,7 +140,11 @@ function ModelsTable({
       reportUnexpectedAuthError(err, { feature: "services", step: "setModelAvailability" });
       setError(err instanceof Error ? err.message : "Failed to change the model's availability.");
     } finally {
-      setPending(null);
+      setPending((prev) => {
+        const next = new Set(prev);
+        next.delete(model);
+        return next;
+      });
     }
   }
 
@@ -193,7 +202,7 @@ function ModelsTable({
                     <Checkbox
                       aria-label={`Available: ${m.displayName ?? m.id}`}
                       checked={m.available !== false}
-                      disabled={pending === m.id}
+                      disabled={pending.has(m.id)}
                       onCheckedChange={(checked) => void handleAvailableChange(m.id, checked)}
                     />
                     {m.offered === false && (

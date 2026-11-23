@@ -227,8 +227,8 @@ describe("ai services and templates", () => {
     expect(rows[0]!.hasApiKey).toBe(true);
     expect(rows[0]!.templateId).toBe("t1");
     expect(rows[0]!.models).toEqual([
-      { id: "gpt", displayName: "GPT", contextWindow: 10 },
-      { id: "bare" },
+      { id: "gpt", displayName: "GPT", contextWindow: 10, available: true, offered: true },
+      { id: "bare", available: true, offered: true },
     ]);
   });
 
@@ -281,7 +281,9 @@ describe("ai services and templates", () => {
 
   it("lists a connection's models from /v1/models?service=", async () => {
     respond(list([{ object: "model", id: "gpt", displayName: "GPT" }]));
-    await expect(api.services.models("s1")).resolves.toEqual([{ id: "gpt", displayName: "GPT" }]);
+    await expect(api.services.models("s1")).resolves.toEqual([
+      { id: "gpt", displayName: "GPT", available: true, offered: true },
+    ]);
     expect(urlOf()).toBe("/api/v1/models?service=s1&limit=100");
   });
 

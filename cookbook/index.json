@@ -8403,9 +8403,9 @@
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:7f46d306f740f9cba2a15f8a9c34860223a05fc7e78569a5a40762d47adddb67",
+            "hash": "sha256:a4de8b6c909d2003a63967feb4868de548b1f73a9dada74d76d8fbe2e0365edf",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/web/packages/features/ai-settings/",
           "platform": "web"

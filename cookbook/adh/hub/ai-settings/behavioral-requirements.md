@@ -176,9 +176,9 @@
   service id, the model and the new checked value, then hand the answered service to the editor and
   revalidate the services cache (`PERSONA_SERVICES_CACHE_KEY`).
 - **available-change-pending**: While a model's change is in flight, that model's own checkbox MUST be
-  disabled and the other rows' checkboxes MUST stay enabled. Only the latest in-flight model is tracked: when a second change starts before the first answers,
-  the first model's checkbox is enabled again while its request still runs, and whichever request
-  answers first clears the pending state, enabling the other box before its own request answers.
+  disabled and the other rows' checkboxes MUST stay enabled. Pending changes MUST be tracked per model:
+  when changes on different models overlap, each box MUST stay disabled until its own request settles,
+  and one request settling MUST NOT re-enable another model's box whose request is still running.
 - **available-change-failure**: When `setModelAvailability` fails, the screen MUST report the failure
   through `reportUnexpectedAuthError`, the helper its other writes use, with feature `services` and
   step `setModelAvailability`; MUST show the error's message in an error line; and the checkbox MUST

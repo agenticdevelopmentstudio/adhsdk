@@ -1,6 +1,6 @@
 
 The first eight vectors come from the named tests in `ServicesSection.test.tsx` beside the source, and
-the ninth from the setup every one of them shares. Vectors 016, 017, 018, 026, 027, 028 and 029 come
+the ninth from the setup every one of them shares. Vectors 016, 017, 018, 026, 027, 028, 029 and 031 come
 from the named tests in `ModelsTable.test.tsx` beside it, which renders the real `ServicesSection` and
 mocks only the personas data client. The others are derived from the source's own functions and from
 the phase 8 design.
@@ -36,4 +36,5 @@ the phase 8 design.
 | ai-settings-028 | table-columns | A service with one model (test "puts Available last, after Caps") | The last two column headers read "Caps" and "Available". |
 | ai-settings-029 | available-checkbox | A model with id `m1` and display name "Model One" (test "names each box after the model's display name") | A checkbox named "Available: Model One" exists. |
 | ai-settings-030 | available-change-pending | Two models; untick the first while its call is unresolved | The first model's checkbox is disabled and the second's is enabled; once the call settles the first is enabled again. |
+| ai-settings-031 | available-change-pending, available-change-failure | Untick `m1`, then `m2`, on service `svc_1` while both calls are unresolved; `m1`'s call resolves, then `m2`'s rejects with "m2 failed" (test "two overlapping changes on different models each keep their own box disabled until their own request settles") | Both boxes are disabled; after `m1` answers only `m1`'s box is enabled; after `m2` fails its box is enabled and ticked, an error line reads "m2 failed", and the failure is reported with step `setModelAvailability`. |
 

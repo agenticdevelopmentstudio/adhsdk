@@ -4,7 +4,7 @@
     "id": "5fdf4ce9-cb7e-4490-a6d6-066690ef07ca",
     "title": "AI Settings",
     "type": "ingredient",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "status": "review",
     "language": "en",
     "created": "2026-11-23",
@@ -38,7 +38,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "8df6a7cbf4d401a9",
+  "synced": "875592ac28514366",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
