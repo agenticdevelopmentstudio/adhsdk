@@ -4,7 +4,7 @@ title: "Support Client"
 type: ingredient
 status: draft
 language: en
-summary: "Web client for consented support access: the customer's and hub user's grants and read log, a product admin's grant requests and read-only data viewer, the operator's grants, break-glass and read log, and the emailed-link page's calls, with their React Query hooks."
+summary: "Web client and React Query hooks for consented support access grants, the read-only viewer and the read log."
 platforms:
   - typescript
   - web
@@ -52,7 +52,7 @@ Four clients, one for each kind of caller. Every path is a `/v1` path.
 - **decide-and-revoke**: `approve`, `deny` and `revoke` MUST `POST` `.../grants/{id}/approve`, `.../deny` and `.../revoke`, with the id URL-encoded and no body, and return nothing.
 - **access-read**: `access({ grantId, cursor })` MUST `GET` `.../access`, with `grant` and `cursor` only when each is set, and MUST map each row to `{ id, grantId, granteeName, route, path, method, at }` with a `nextCursor` (`null` on the last page). The client MUST NOT page by itself.
 - **access-grouping**: the module MUST export `groupAccess(rows)`, grouping rows by grant, table (the route's table name) and calendar day in the viewer's time zone, and returning for each group its count and latest time. Groups are newest first.
-- **switch-off**: when `grants` is answered `404` (the `consented_access` switch is off) the client MUST rethrow the error unchanged, and `isSupportOff(error)` MUST return true only for an error whose HTTP status is 404.
+- **switch-off**: when the `grants` read is answered `404` (the `consented_access` switch is off) the client MUST rethrow the error unchanged. `isSupportOff(error)` MUST return true only for an error with HTTP status 404, and callers MUST apply it to the grants read alone, never to the viewer's paths, where a 404 means a refused table.
 
 ### A product admin
 
@@ -77,8 +77,9 @@ Four clients, one for each kind of caller. Every path is a `/v1` path.
 
 ### Hooks
 
+- **hook-names**: the module MUST export `useSupportGrants(side)`, `useSupportAccess(side, grantId?)`, `useDecideSupportGrant(side)` (approve, deny and revoke), `useAdminSupportGrants(ecosystemId)`, `useRequestSupportGrant(ecosystemId)`, `useRevokeAdminGrant(ecosystemId)`, `useSupportData(grantId, schema, table, cursor?)`, `useOperatorSupportGrants(filters)`, `useOperatorSupportAccess(filters)`, `useBreakGlass()` and `usePublicSupportGrant(id, token)`. The grants key MUST be `["support", <side>, "grants"]` and the log key `["support", <side>, "access", <grantId or "">]`; the product admin's keys MUST start `["support", "admin", <ecosystemId>]` and the operator's `["support", "operator"]`.
 - **hooks-keys**: every read hook MUST be disabled while a required id is empty, null or undefined, and MUST read under a key that starts `["support", <side or role>, ...]`.
-- **writes-invalidate**: the `approve`, `deny`, `revoke` and `request` hooks MUST, on success, invalidate the grant list and the access log of that side.
+- **writes-invalidate**: the `approve`, `deny`, `revoke` and `request` hooks MUST, on success, invalidate the grant list and the access log under the key prefix of the caller that made the write (the side's, the product admin's for that ecosystem, or the operator's). `useBreakGlass` MUST invalidate the operator prefix.
 
 ## Appearance
 
@@ -111,11 +112,12 @@ Vectors are to be asserted in `packages/web/packages/data/src/support/__tests__/
 | support-client-011 | switch-off | `grants()` answered 404 | The error is rethrown; `isSupportOff` is true |
 | support-client-012 | hooks-keys | Each read hook given `null`, `undefined` or `""` | No request is made |
 | support-client-013 | writes-invalidate | `approve` succeeding | The grant list and access log queries of that side are invalidated |
-
+| support-client-014 | switch-off | A viewer path answered 404, then the grants read answered 404 | The caller applies `isSupportOff` to the second only |
+| support-client-015 | hook-names | The exports of the module | Every hook of **hook-names** is exported with its key prefix |
 ## Edge Cases
 
 - **Switch off (MUST)**: the grants read is 404 while the backend's `consented_access` switch is off; the client rethrows and `isSupportOff` lets a caller hide its surface.
-- **A lapsed request (MUST)**: a request undecided for seven days is read as `ended` by `grantState`, whatever the backend has recorded yet.
+- **A lapsed request (MUST)**: a request undecided for seven days is read as `ended` by `grantState`, whatever the backend has recorded yet. The seven days are the named constant `SUPPORT_LAPSE_DAYS`, which mirrors the backend's rule that a request not decided in seven days is treated as denied.
 - **Empty and absent ids (MUST)**: the read hooks are disabled and make no request.
 - **A write that fails (MUST)**: a refusal is rethrown unchanged; nothing is invalidated.
 - **A refused table (MUST)**: a 404 from the viewer path reaches the caller as the transport's error; the client does not fall back to another route.
@@ -127,7 +129,7 @@ Vectors are to be asserted in `packages/web/packages/data/src/support/__tests__/
 | `side` | `"customer"` or `"account"` | none, required | Picks the person's own routes. |
 | `ecosystemId` | string | none, required for a product admin | The product's ecosystem uuid every product admin call names as `?ecosystem=<id>`. |
 | `SUPPORT_CONTENT_TABLES` | list of strings | the backend's content list | The tables the viewer offers. |
-| Transport | injected module imports | `authedJson`, `authedRequest`, `httpStatus`, `unixToIso`, `withV1Query` from `../http`, and `enc` from `../client-helpers` | The caller's environment supplies the token and base URL. The public client sends none. |
+| Transport | `http` argument to each client, and static imports | `authedJson`, `authedRequest`, `httpStatus`, `unixToIso`, `withV1Query` from `../http`, and `enc` from `../client-helpers` | Each client takes an `http` object built from those imports, so a test can pass a stub; the caller's environment supplies the token and base URL. The public client sends none. |
 
 ## Deep Linking
 
@@ -193,7 +195,7 @@ Not applicable: the module logs nothing; a failure surfaces only as a thrown err
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | partial | best-practices |
 | [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | best-practices |
 
-The module is not written yet, so both checks are partial until the code lands and the recipe is confirmed against it.
+The module is not written yet, so both checks are partial until the code lands and the ingredient is confirmed against it.
 
 ## Change History
 

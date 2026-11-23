@@ -4,7 +4,7 @@ title: "Support Panes"
 type: ingredient
 status: draft
 language: en
-summary: "The panes for consented support access: the customer's Support access pane, a product admin's request pane with its read-only viewer, and the operator's grants, break-glass and read-log panes."
+summary: "Panes for consented support access: the customer's, the product admin's with a read-only viewer, and the operator's."
 platforms:
   - typescript
   - web
@@ -41,10 +41,10 @@ The pieces:
 ### The person's pane
 
 - **pane-grants**: `SupportAccessPane({ side })` MUST list the caller's grants, pending first, then live, then ended; MUST show for each the grantee's name and role, the reason and the length asked for; MUST offer approve and deny on a pending grant, revoke on a live one, and nothing on an ended one, which is shown greyed. A grant with `consent` of `break_glass` MUST be marked as such.
-- **pane-log**: under each grant the pane MUST show the read log grouped by table and day, as a sentence ("Ana from Support viewed your notes, 3 times on Tuesday"), never one line for each row read. It pages with `nextCursor`.
-- **pane-actions**: approve, deny and revoke MUST send the call of the client for the pane's `side`, and MUST leave the list to refresh itself. A refusal MUST be shown as the backend words it.
-- **pane-hidden-when-off**: when the grants read is refused with a 404, the pane MUST render nothing and the settings tab MUST be hidden.
-- **settings-tab**: the hub's settings MUST list a "Support access" topic with the id `support-access`, rendering `SupportAccessPane side="account"`, with its icon, description and the endpoint `/v1/account/support` in `registry.tsx`.
+- **pane-log**: under each grant the pane MUST show the read log grouped by table and day, as a sentence ("Ana from Support viewed your notes, 3 times on Tuesday"), never one line for each row read. It MUST page with `nextCursor`.
+- **pane-actions**: approve, deny and revoke MUST send the call of the client for the pane's `side`, and MUST leave the list to refresh itself by the invalidation the client's write hooks perform. A refusal MUST be shown as the backend words it.
+- **pane-hidden-when-off**: when the grants read is refused with a 404 (applying `isSupportOff` to that read alone, so a refused viewer table is not mistaken for it), the pane MUST render nothing and the settings tab MUST be hidden.
+- **settings-tab**: the hub's settings MUST list a "Support access" topic with the id `support-access`, rendering `SupportAccessPane side="account"`, with its icon, description and the endpoint `/v1/account/support` in `packages/web/packages/adh/src/settings/registry.tsx`.
 
 ### The product admin's pane
 
@@ -101,7 +101,10 @@ Vectors are to be asserted in `src/__tests__/SupportAccessPane.test.tsx` and `Su
 | support-panes-009 | break-glass-form | An attestation of 39 characters | No request is sent |
 | support-panes-010 | product-admin-topic, route-share | The topic list and the route share | A `support` entry with `/support`; the `/support` line in each share |
 | support-panes-011 | settings-tab | The hub settings registry | A `support-access` topic with its endpoint, hidden on a 404 |
-
+| support-panes-012 | grant-list | A product with one live and one ended grant | Both listed with their states; revoke only on the live one |
+| support-panes-013 | viewer-open | A live grant opened | The tables of `SUPPORT_CONTENT_TABLES` are listed; one table pages its rows and one row opens |
+| support-panes-014 | log-pane, pane-ids | The log pane filtered by one grant; the registries | Only that grant's reads, newest first; the three ids present in `adminPanes.ts` and `adminTopics.ts` and exported |
+| support-panes-015 | break-glass-form | The form open | It says a second factor is required, and refuses a missing reference |
 ## Edge Cases
 
 - **A lapsed request (MUST)**: a request undecided for seven days shows as ended, with no approve button.
@@ -179,7 +182,7 @@ Not applicable: the panes log nothing.
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | partial | best-practices |
 | [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | best-practices |
 
-The panes are not written yet, so both checks are partial until the code lands and the recipe is confirmed against it.
+The panes are not written yet, so both checks are partial until the code lands and the ingredient is confirmed against it.
 
 ## Change History
 

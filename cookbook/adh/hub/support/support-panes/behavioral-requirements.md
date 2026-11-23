@@ -2,10 +2,10 @@
 ### The person's pane
 
 - **pane-grants**: `SupportAccessPane({ side })` MUST list the caller's grants, pending first, then live, then ended; MUST show for each the grantee's name and role, the reason and the length asked for; MUST offer approve and deny on a pending grant, revoke on a live one, and nothing on an ended one, which is shown greyed. A grant with `consent` of `break_glass` MUST be marked as such.
-- **pane-log**: under each grant the pane MUST show the read log grouped by table and day, as a sentence ("Ana from Support viewed your notes, 3 times on Tuesday"), never one line for each row read. It pages with `nextCursor`.
-- **pane-actions**: approve, deny and revoke MUST send the call of the client for the pane's `side`, and MUST leave the list to refresh itself. A refusal MUST be shown as the backend words it.
-- **pane-hidden-when-off**: when the grants read is refused with a 404, the pane MUST render nothing and the settings tab MUST be hidden.
-- **settings-tab**: the hub's settings MUST list a "Support access" topic with the id `support-access`, rendering `SupportAccessPane side="account"`, with its icon, description and the endpoint `/v1/account/support` in `registry.tsx`.
+- **pane-log**: under each grant the pane MUST show the read log grouped by table and day, as a sentence ("Ana from Support viewed your notes, 3 times on Tuesday"), never one line for each row read. It MUST page with `nextCursor`.
+- **pane-actions**: approve, deny and revoke MUST send the call of the client for the pane's `side`, and MUST leave the list to refresh itself by the invalidation the client's write hooks perform. A refusal MUST be shown as the backend words it.
+- **pane-hidden-when-off**: when the grants read is refused with a 404 (applying `isSupportOff` to that read alone, so a refused viewer table is not mistaken for it), the pane MUST render nothing and the settings tab MUST be hidden.
+- **settings-tab**: the hub's settings MUST list a "Support access" topic with the id `support-access`, rendering `SupportAccessPane side="account"`, with its icon, description and the endpoint `/v1/account/support` in `packages/web/packages/adh/src/settings/registry.tsx`.
 
 ### The product admin's pane
 

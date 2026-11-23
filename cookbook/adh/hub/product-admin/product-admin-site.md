@@ -13,6 +13,7 @@ tags:
   - hub
   - ui
 depends-on:
+  - 2eff6ca4-5479-44b3-8636-04e455009a10
   - 150bf00e-6c6b-4f91-a323-d307ebd5700d
   - 3ea9329e-5acc-4c43-b5ce-bb8c50570104
 version: 2.0.0
@@ -82,6 +83,7 @@ The users pane is a searchable table with a Previous and Next pager; each row ha
 - **Admin site page**: no product selected, no site (the form sets one up), a site (the form changes or removes it), and a refused host.
 - **Totals**: loading, loaded and failed.
 
+The Support page has four states: loading, loaded (grants listed), failed (the backend's message), and not available (the grants read answered 404 because consented access is off). A step-up refusal is not a state of the page: it leaves the page through the sign-in redirect and returns to `/support`.
 ## Accessibility
 
 Not applicable beyond the shared UI kit: the panes use its table, form, dialog and stat card components and add no focus handling of their own.
@@ -123,7 +125,8 @@ Vectors marked with a test name are asserted in `features/product-admin/src/__te
 - **Switch on and a site (MUST)**: Users ▸ Email Signup and Users ▸ Authentication stay on the hub; the admin site has no page for them.
 - **A cancelled confirmation (MUST NOT)**: nothing is sent.
 - **Quota above the default (MUST NOT send)**: refused before any request.
-
+- **A step-up refusal (MUST)**: a request or an opening refused as `step_up_required` MUST send the admin through `stepUp('/support')` and back to `/support`, with no error shown.
+- **Support access off (MUST)**: a 404 on the grants read MUST show the not-available note and no request form.
 ## Configuration
 
 | Option | Type | Default | Description |
@@ -135,7 +138,7 @@ Vectors marked with a test name are asserted in `features/product-admin/src/__te
 
 ## Deep Linking
 
-The pages are `/users`, `/requests`, `/pending`, `/invites`, `/roles`, `/signup-list`, `/sets` and `/totals` on the admin site's own host. On the hub the page is the product's `admin-site` topic, under the `admin-site` hub segment.
+The pages are `/users`, `/requests`, `/pending`, `/invites`, `/roles`, `/signup-list`, `/sets`, `/totals` and `/support` on the admin site's own host. On the hub the page is the product's `admin-site` topic, under the `admin-site` hub segment.
 
 ## Localization
 
@@ -149,6 +152,7 @@ Not applicable beyond the shared UI kit's behavior.
 
 - **`product_admin_site`**: the backend switch, read as `enabled` from the admin site answer. Off hides the Admin site row; on shows it, and with a site hides the moved pages.
 
+The Support page depends on the backend's `consented_access` switch, which the page reads only as a 404 on the grants read (see **support-switch-off**); it never reads the switch itself.
 ## Analytics
 
 Not applicable: the panes emit no event.
@@ -156,7 +160,7 @@ Not applicable: the panes emit no event.
 ## Privacy
 
 The users pane shows customers' emails, names, roles and storage to the product's own admins only. The roster is existence, not content. Who may read it is the backend's decision, made per request.
-
+- **Consented support access**: the Support page lets a product admin, once a customer approves, read that customer's content in a read-only viewer. The customer grants it, for a length they were told, every read is logged, and the backend requires a second factor from a recent sign-in for each request and opening.
 ## Logging
 
 Not applicable: no file contains a log call.

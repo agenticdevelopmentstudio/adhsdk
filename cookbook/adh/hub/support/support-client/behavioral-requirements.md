@@ -7,7 +7,7 @@
 - **decide-and-revoke**: `approve`, `deny` and `revoke` MUST `POST` `.../grants/{id}/approve`, `.../deny` and `.../revoke`, with the id URL-encoded and no body, and return nothing.
 - **access-read**: `access({ grantId, cursor })` MUST `GET` `.../access`, with `grant` and `cursor` only when each is set, and MUST map each row to `{ id, grantId, granteeName, route, path, method, at }` with a `nextCursor` (`null` on the last page). The client MUST NOT page by itself.
 - **access-grouping**: the module MUST export `groupAccess(rows)`, grouping rows by grant, table (the route's table name) and calendar day in the viewer's time zone, and returning for each group its count and latest time. Groups are newest first.
-- **switch-off**: when `grants` is answered `404` (the `consented_access` switch is off) the client MUST rethrow the error unchanged, and `isSupportOff(error)` MUST return true only for an error whose HTTP status is 404.
+- **switch-off**: when the `grants` read is answered `404` (the `consented_access` switch is off) the client MUST rethrow the error unchanged. `isSupportOff(error)` MUST return true only for an error with HTTP status 404, and callers MUST apply it to the grants read alone, never to the viewer's paths, where a 404 means a refused table.
 
 ### A product admin
 
@@ -32,6 +32,7 @@
 
 ### Hooks
 
+- **hook-names**: the module MUST export `useSupportGrants(side)`, `useSupportAccess(side, grantId?)`, `useDecideSupportGrant(side)` (approve, deny and revoke), `useAdminSupportGrants(ecosystemId)`, `useRequestSupportGrant(ecosystemId)`, `useRevokeAdminGrant(ecosystemId)`, `useSupportData(grantId, schema, table, cursor?)`, `useOperatorSupportGrants(filters)`, `useOperatorSupportAccess(filters)`, `useBreakGlass()` and `usePublicSupportGrant(id, token)`. The grants key MUST be `["support", <side>, "grants"]` and the log key `["support", <side>, "access", <grantId or "">]`; the product admin's keys MUST start `["support", "admin", <ecosystemId>]` and the operator's `["support", "operator"]`.
 - **hooks-keys**: every read hook MUST be disabled while a required id is empty, null or undefined, and MUST read under a key that starts `["support", <side or role>, ...]`.
-- **writes-invalidate**: the `approve`, `deny`, `revoke` and `request` hooks MUST, on success, invalidate the grant list and the access log of that side.
+- **writes-invalidate**: the `approve`, `deny`, `revoke` and `request` hooks MUST, on success, invalidate the grant list and the access log under the key prefix of the caller that made the write (the side's, the product admin's for that ecosystem, or the operator's). `useBreakGlass` MUST invalidate the operator prefix.
 

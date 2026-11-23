@@ -16,4 +16,5 @@ Vectors are to be asserted in `packages/web/packages/data/src/support/__tests__/
 | support-client-011 | switch-off | `grants()` answered 404 | The error is rethrown; `isSupportOff` is true |
 | support-client-012 | hooks-keys | Each read hook given `null`, `undefined` or `""` | No request is made |
 | support-client-013 | writes-invalidate | `approve` succeeding | The grant list and access log queries of that side are invalidated |
-
+| support-client-014 | switch-off | A viewer path answered 404, then the grants read answered 404 | The caller applies `isSupportOff` to the second only |
+| support-client-015 | hook-names | The exports of the module | Every hook of **hook-names** is exported with its key prefix |

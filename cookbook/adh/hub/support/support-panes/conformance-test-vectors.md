@@ -14,4 +14,7 @@ Vectors are to be asserted in `src/__tests__/SupportAccessPane.test.tsx` and `Su
 | support-panes-009 | break-glass-form | An attestation of 39 characters | No request is sent |
 | support-panes-010 | product-admin-topic, route-share | The topic list and the route share | A `support` entry with `/support`; the `/support` line in each share |
 | support-panes-011 | settings-tab | The hub settings registry | A `support-access` topic with its endpoint, hidden on a 404 |
-
+| support-panes-012 | grant-list | A product with one live and one ended grant | Both listed with their states; revoke only on the live one |
+| support-panes-013 | viewer-open | A live grant opened | The tables of `SUPPORT_CONTENT_TABLES` are listed; one table pages its rows and one row opens |
+| support-panes-014 | log-pane, pane-ids | The log pane filtered by one grant; the registries | Only that grant's reads, newest first; the three ids present in `adminPanes.ts` and `adminTopics.ts` and exported |
+| support-panes-015 | break-glass-form | The form open | It says a second factor is required, and refuses a missing reference |

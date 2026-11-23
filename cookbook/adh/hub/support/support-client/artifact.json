@@ -6,7 +6,7 @@
     "type": "ingredient",
     "status": "draft",
     "language": "en",
-    "summary": "Web client for consented support access: the customer's and hub user's grants and read log, a product admin's grant requests and read-only data viewer, the operator's grants, break-glass and read log, and the emailed-link page's calls, with their React Query hooks.",
+    "summary": "Web client and React Query hooks for consented support access grants, the read-only viewer and the read log.",
     "platforms": [
       "typescript",
       "web"
@@ -30,7 +30,7 @@
     "related": [],
     "references": []
   },
-  "synced": "a86e8460097370af",
+  "synced": "0cba69ebd30e6e6e",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

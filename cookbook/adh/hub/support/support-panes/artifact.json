@@ -6,7 +6,7 @@
     "type": "ingredient",
     "status": "draft",
     "language": "en",
-    "summary": "The panes for consented support access: the customer's Support access pane, a product admin's request pane with its read-only viewer, and the operator's grants, break-glass and read-log panes.",
+    "summary": "Panes for consented support access: the customer's, the product admin's with a read-only viewer, and the operator's.",
     "platforms": [
       "typescript",
       "web"
@@ -29,7 +29,7 @@
     "related": [],
     "references": []
   },
-  "synced": "1c0550ef108035b7",
+  "synced": "c27c7616af8fc720",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
