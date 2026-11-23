@@ -16,8 +16,9 @@ import { Select } from "@adh-sdk/ui/components/select";
 import { signupEmailError } from "./client-auth-model";
 import type { PaneCaller } from "./pane-caller";
 
-/** The cache key an ecosystem's sign-up list is read under. */
-const signupListKey = (ecosystemId: string) => `signup-list:${ecosystemId}`;
+/** The cache key an ecosystem's sign-up list is read under. Exported for this package's other
+ *  writers to the list (the Admin site pane), which must re-read it after a write. */
+export const signupListKey = (ecosystemId: string) => `signup-list:${ecosystemId}`;
 
 /**
  * An ecosystem's SIGN-UP LIST (phase 5): the emails that may sign in, each with the product role

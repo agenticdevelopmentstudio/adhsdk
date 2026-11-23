@@ -2,7 +2,7 @@
 
 import { useCallback, useMemo, useState, type FormEvent, type ReactNode } from "react";
 
-import { useResourceList } from "@adh-sdk/data";
+import { revalidateResources, useResourceList } from "@adh-sdk/data";
 import { accessApi, accessTargetKey, type AccessRoleRow } from "@adh-sdk/data/access";
 import { signupListApi } from "@adh-sdk/data/ecosystem-config";
 import { useAdminSite, usePutAdminSite, useRemoveAdminSite } from "@adh-sdk/data/product-admin";
@@ -13,6 +13,7 @@ import { Input } from "@adh-sdk/ui/components/input";
 import { signupEmailError } from "./client-auth-model";
 import { ProductTotalsPane } from "./ProductTotalsPane";
 import { RoleHolders, isAdminRole } from "./ProductRolesPane";
+import { signupListKey } from "./SignupListPane";
 
 const messageOf = (e: unknown) => (e instanceof Error ? e.message : "Something went wrong.");
 
@@ -187,6 +188,9 @@ function ProductAdmins({ ecosystemId }: { ecosystemId: string }) {
         roleId: adminRole.id,
         setId: listed?.setId ?? null,
       });
+      // The Sign-up list pane reads the same list from the cache: have it read again.
+      const listKey = signupListKey(ecosystemId);
+      revalidateResources((key) => key === listKey);
       setAdded(address);
       setEmail("");
     } catch (err) {
