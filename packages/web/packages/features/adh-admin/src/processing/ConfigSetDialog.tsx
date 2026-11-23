@@ -33,14 +33,21 @@ import { useConfigSetServices } from "./useConfigSetServices";
 const RUNNABLE_KINDS: ReadonlySet<string> = new Set(["openai", "anthropic", "gemini"]);
 
 /** A service's model list as the picker sees it: the column is jsonb, so an entry may be a bare
- *  string or an object with an `id` (and optionally a `displayName`). */
-function modelOptions(models: readonly unknown[] | undefined): { id: string; label: string }[] {
-  const out: { id: string; label: string }[] = [];
+ *  string or an object with an `id` (and optionally a `displayName` and the AI Settings
+ *  `available` flag). A model switched off in AI Settings is marked unavailable. */
+function modelOptions(
+  models: readonly unknown[] | undefined,
+): { id: string; label: string; available: boolean }[] {
+  const out: { id: string; label: string; available: boolean }[] = [];
   for (const m of models ?? []) {
-    if (typeof m === "string") out.push({ id: m, label: m });
+    if (typeof m === "string") out.push({ id: m, label: m, available: true });
     else if (m && typeof (m as { id?: unknown }).id === "string") {
-      const { id, displayName } = m as { id: string; displayName?: string };
-      out.push({ id, label: displayName ?? id });
+      const { id, displayName, available } = m as {
+        id: string;
+        displayName?: string;
+        available?: boolean;
+      };
+      out.push({ id, label: displayName ?? id, available: available !== false });
     }
   }
   return out;
@@ -91,10 +98,21 @@ export function ConfigSetDialog({
     () => services.find((s) => s.id === form.serviceId) ?? null,
     [services, form.serviceId],
   );
-  const options = useMemo(() => modelOptions(activeService?.models), [activeService]);
+  const allOptions = useMemo(() => modelOptions(activeService?.models), [activeService]);
+  // The select offers only the models switched on in AI Settings. The set's current model, when
+  // it is one the workspace switched off, stays listed under a "(not available)" label so editing
+  // another field never changes the model behind the admin's back.
+  const options = useMemo(
+    () =>
+      allOptions
+        .filter((m) => m.available || m.id === form.model)
+        .map((m) => (m.available ? m : { ...m, label: `${m.label} (not available)` })),
+    [allOptions, form.model],
+  );
   // Free text for the local LLM, and for a service that lists no models (the backend accepts any
-  // model then); a select only when the service has a known list to choose from.
-  const modelIsSelect = activeService !== null && options.length > 0;
+  // model then); a select only when the service has a known list to choose from, even when every
+  // model on it is switched off.
+  const modelIsSelect = activeService !== null && allOptions.length > 0;
   // Only an OpenAI-compatible service has a choice to make; every other kind always uses its own
   // schema constraint, and the local LLM takes a schema natively.
   const speaksOpenAI =

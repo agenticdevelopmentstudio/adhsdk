@@ -331,6 +331,12 @@ export function PersonaEditor({
   );
   const switchedOffModel =
     activeService?.models.find((m) => m.id === draft.model && m.available === false) ?? null;
+  // The host's model browser sees the same switched-on list, so it cannot pick a model the
+  // workspace turned off either.
+  const browsableService = useMemo(
+    () => (activeService ? { ...activeService, models: availableModels } : null),
+    [activeService, availableModels],
+  );
 
   // Returns whether the persona is now persisted — `false` on a blocked or failed save, read by
   // the Save/Cancel bar's onSave below (the button stays disabled while a request is in flight;
@@ -755,9 +761,9 @@ export function PersonaEditor({
                     ))}
                   </Select>
                 </div>
-                {activeService &&
+                {browsableService &&
                   renderModelDetails?.({
-                    service: activeService,
+                    service: browsableService,
                     selectedModelId: draft.model ?? null,
                     onSelect: (modelId) => set("model", modelId),
                   })}
