@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactElement } from "react";
 import { useQuery } from "@tanstack/react-query";
 
 import {
@@ -95,7 +95,7 @@ function RowView({
  * rows stay in memory only. A table the backend refuses (404) or a grant that has ended (403)
  * shows the reason in place.
  */
-export function SupportViewer({ grantId }: { grantId: string }) {
+export function SupportViewer({ grantId }: { grantId: string }): ReactElement {
   const [qualified, setQualified] = useState("");
   // The cursors of the pages before this one, so Previous can step back.
   const [cursors, setCursors] = useState<string[]>([]);

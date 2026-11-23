@@ -24,7 +24,16 @@
 // Not the operator-access log in @adh-sdk/adh-admin (`/v1/system/operator_access`): that one
 // records an operator's own actions across ecosystems; this one records reads under a grant.
 
-import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+  type InfiniteData,
+  type UseInfiniteQueryResult,
+  type UseMutationResult,
+  type UseQueryResult,
+} from "@tanstack/react-query";
 import { responseError } from "@adh-sdk/auth/client";
 import { authedJson, authedRequest, httpStatus, listAllV1, listV1Page, withV1Query } from "../http";
 import { enc } from "../client-helpers";
@@ -308,8 +317,19 @@ const accessPage = (rows: SupportAccess[], hasMore: boolean): SupportAccessPage 
   nextCursor: hasMore && rows.length > 0 ? rows[rows.length - 1]!.id : null,
 });
 
+/** The calls of the person a grant is over, as `supportApi` returns them. */
+export interface SupportApi {
+  /** Every grant over the caller, following `has_more` page by page. */
+  grants(): Promise<SupportGrant[]>;
+  approve(id: string): Promise<void>;
+  deny(id: string): Promise<void>;
+  revoke(id: string): Promise<void>;
+  /** One page of the read log, newest first; `grantId` narrows it to one grant. */
+  access(opts?: { grantId?: string; cursor?: string }): Promise<SupportAccessPage>;
+}
+
 /** The calls of the person a grant is over. `side` picks the routes and changes nothing else. */
-export function supportApi(side: SupportSide) {
+export function supportApi(side: SupportSide): SupportApi {
   const base = sidePath(side);
   const decide = (verb: "approve" | "deny" | "revoke") => async (id: string): Promise<void> => {
     await authedRequest(`${base}/grants/${enc(id)}/${verb}`, { method: "POST" });
@@ -563,7 +583,7 @@ export const SUPPORT_ADMIN_KEY = (ecosystemId: string) => ["support", "admin", e
 export const SUPPORT_OPERATOR_KEY = ["support", "operator"] as const;
 
 /** The caller's grants. `retry` stops at a 404: the switch is off, and asking again won't help. */
-export function useSupportGrants(side: SupportSide | null | undefined) {
+export function useSupportGrants(side: SupportSide | null | undefined): UseQueryResult<SupportGrant[], Error> {
   return useQuery({
     queryKey: SUPPORT_GRANTS_KEY(side ?? "customer"),
     queryFn: () => supportApi(side as SupportSide).grants(),
@@ -573,7 +593,10 @@ export function useSupportGrants(side: SupportSide | null | undefined) {
 }
 
 /** The read log, a page at a time (`fetchNextPage` follows `nextCursor`). */
-export function useSupportAccess(side: SupportSide | null | undefined, grantId?: string | null) {
+export function useSupportAccess(
+  side: SupportSide | null | undefined,
+  grantId?: string | null,
+): UseInfiniteQueryResult<InfiniteData<SupportAccessPage>, Error> {
   return useInfiniteQuery({
     queryKey: SUPPORT_ACCESS_KEY(side ?? "customer", grantId),
     queryFn: ({ pageParam }) =>
@@ -585,10 +608,12 @@ export function useSupportAccess(side: SupportSide | null | undefined, grantId?:
 }
 
 /** Approve, deny or revoke; refreshes the side's grants and its log. */
-export function useDecideSupportGrant(side: SupportSide) {
+export type SupportDecision = { id: string; action: "approve" | "deny" | "revoke" };
+
+export function useDecideSupportGrant(side: SupportSide): UseMutationResult<void, Error, SupportDecision> {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, action }: { id: string; action: "approve" | "deny" | "revoke" }) =>
+    mutationFn: ({ id, action }: SupportDecision) =>
       supportApi(side)[action](id),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: SUPPORT_GRANTS_KEY(side) });
@@ -597,7 +622,9 @@ export function useDecideSupportGrant(side: SupportSide) {
   });
 }
 
-export function useAdminSupportGrants(ecosystemId: string | null | undefined) {
+export function useAdminSupportGrants(
+  ecosystemId: string | null | undefined,
+): UseQueryResult<SupportAdminGrant[], Error> {
   return useQuery({
     queryKey: [...SUPPORT_ADMIN_KEY(ecosystemId ?? ""), "grants"],
     queryFn: () => supportAdminApi.list(ecosystemId as string),
@@ -605,7 +632,10 @@ export function useAdminSupportGrants(ecosystemId: string | null | undefined) {
   });
 }
 
-function useAdminMutation<V>(ecosystemId: string | null | undefined, fn: (eco: string, v: V) => Promise<unknown>) {
+function useAdminMutation<V, R>(
+  ecosystemId: string | null | undefined,
+  fn: (eco: string, v: V) => Promise<R>,
+): UseMutationResult<R, Error, V> {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (v: V) => fn(ecosystemId as string, v),
@@ -615,10 +645,14 @@ function useAdminMutation<V>(ecosystemId: string | null | undefined, fn: (eco: s
   });
 }
 
-export const useRequestSupportGrant = (ecosystemId: string | null | undefined) =>
+export const useRequestSupportGrant = (
+  ecosystemId: string | null | undefined,
+): UseMutationResult<SupportAdminGrant, Error, SupportGrantRequest> =>
   useAdminMutation(ecosystemId, (eco, req: SupportGrantRequest) => supportAdminApi.request(eco, req));
 
-export const useRevokeAdminGrant = (ecosystemId: string | null | undefined) =>
+export const useRevokeAdminGrant = (
+  ecosystemId: string | null | undefined,
+): UseMutationResult<void, Error, string> =>
   useAdminMutation(ecosystemId, (eco, id: string) => supportAdminApi.revoke(eco, id));
 
 /** One page of a content table in the viewer. Never retried: a 404 is a refused table and a 403
@@ -628,7 +662,7 @@ export function useSupportData(
   schema: string | null | undefined,
   table: string | null | undefined,
   cursor?: string,
-) {
+): UseQueryResult<SupportDataPage, Error> {
   return useQuery({
     queryKey: ["support", "admin", "data", grantId ?? "", schema ?? "", table ?? "", cursor ?? ""],
     queryFn: () => supportAdminApi.data(grantId as string, schema as string, table as string, { cursor }),
@@ -637,14 +671,18 @@ export function useSupportData(
   });
 }
 
-export function useOperatorSupportGrants(filters: OperatorGrantFilters = {}) {
+export function useOperatorSupportGrants(
+  filters: OperatorGrantFilters = {},
+): UseQueryResult<OperatorGrantPage, Error> {
   return useQuery({
     queryKey: [...SUPPORT_OPERATOR_KEY, "grants", filters.status ?? "", filters.consent ?? "", filters.cursor ?? ""],
     queryFn: () => operatorSupportApi.list(filters),
   });
 }
 
-export function useOperatorSupportAccess(filters: Partial<OperatorSupportAccessFilters>) {
+export function useOperatorSupportAccess(
+  filters: Partial<OperatorSupportAccessFilters>,
+): UseQueryResult<SupportAccessPage, Error> {
   return useQuery({
     queryKey: [...SUPPORT_OPERATOR_KEY, "access", filters.grantId ?? "", filters.cursor ?? ""],
     queryFn: () => operatorSupportApi.access(filters as OperatorSupportAccessFilters),
@@ -652,7 +690,7 @@ export function useOperatorSupportAccess(filters: Partial<OperatorSupportAccessF
   });
 }
 
-function useOperatorMutation<V, R>(fn: (v: V) => Promise<R>) {
+function useOperatorMutation<V, R>(fn: (v: V) => Promise<R>): UseMutationResult<R, Error, V> {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: fn,
@@ -662,15 +700,20 @@ function useOperatorMutation<V, R>(fn: (v: V) => Promise<R>) {
   });
 }
 
-export const useOperatorRequestGrant = () =>
+export const useOperatorRequestGrant = (): UseMutationResult<SupportAdminGrant, Error, OperatorGrantRequest> =>
   useOperatorMutation((body: OperatorGrantRequest) => operatorSupportApi.request(body));
 
-export const useOperatorRevokeGrant = () => useOperatorMutation((id: string) => operatorSupportApi.revoke(id));
+export const useOperatorRevokeGrant = (): UseMutationResult<void, Error, string> =>
+  useOperatorMutation((id: string) => operatorSupportApi.revoke(id));
 
-export const useBreakGlass = () => useOperatorMutation((body: BreakGlassRequest) => operatorSupportApi.breakGlass(body));
+export const useBreakGlass = (): UseMutationResult<SupportAdminGrant, Error, BreakGlassRequest> =>
+  useOperatorMutation((body: BreakGlassRequest) => operatorSupportApi.breakGlass(body));
 
 /** The emailed link's grant. Disabled until both the id and the token are there. */
-export function usePublicSupportGrant(id: string | null | undefined, token: string | null | undefined) {
+export function usePublicSupportGrant(
+  id: string | null | undefined,
+  token: string | null | undefined,
+): UseQueryResult<SupportLinkGrant, Error> {
   return useQuery({
     queryKey: ["support", "public", id ?? ""],
     queryFn: () => publicSupportApi.get(id as string, token as string),

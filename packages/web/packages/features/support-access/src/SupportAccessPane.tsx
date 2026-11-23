@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactElement } from "react";
 
 import {
   grantState,
@@ -35,7 +35,7 @@ function ordered(grants: readonly SupportGrant[], now: Date) {
  * nothing while the backend's `consented_access` switch is off (the grants read answers 404). A
  * refused action shows the backend's own message.
  */
-export function SupportAccessPane({ side }: { side: SupportSide }) {
+export function SupportAccessPane({ side }: { side: SupportSide }): ReactElement | null {
   const grants = useSupportGrants(side);
   const decide = useDecideSupportGrant(side);
   const [busyId, setBusyId] = useState<string | null>(null);

@@ -1,5 +1,7 @@
 "use client";
 
+import type { ReactElement } from "react";
+
 // The fields an operator's support grant names, shared by the Support Grants pane's request form
 // and the Break Glass pane: whose content (a product's customer or a hub user), the product for a
 // customer, the reason and the length. The limits are 0309's (supportRequestProblem); the backend
@@ -19,7 +21,7 @@ import { Textarea } from "@adh-sdk/ui/components/textarea";
 /** 8-4-4-4-12 hex, as the routes check a target and an ecosystem (adhbackend lib/uuid.ts). */
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-export const isUuidText = (v: string) => UUID_RE.test(v.trim());
+export const isUuidText = (v: string): boolean => UUID_RE.test(v.trim());
 
 /** What the form holds while the operator fills it. */
 export interface SupportTargetDraft {
@@ -80,7 +82,7 @@ export function SupportTargetFields({
   draft: SupportTargetDraft;
   onChange: (next: SupportTargetDraft) => void;
   maxHours: number;
-}) {
+}): ReactElement {
   const set = (patch: Partial<SupportTargetDraft>) => onChange({ ...draft, ...patch });
   return (
     <>

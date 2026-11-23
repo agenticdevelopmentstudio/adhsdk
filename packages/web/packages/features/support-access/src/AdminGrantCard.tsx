@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import type { ReactNode, ReactElement } from "react";
 
 import type { SupportAdminGrant, SupportGrantState } from "@adh-sdk/data/support";
 import { Badge } from "@adh-sdk/ui/components/badge";
@@ -23,7 +23,7 @@ export function AdminGrantCard({
   state: SupportGrantState;
   /** The actions: open and revoke on a live grant. */
   children?: ReactNode;
-}) {
+}): ReactElement {
   const breakGlass = grant.consent === "break_glass";
   const revokedBreakGlass = breakGlass && grant.revokedAt !== null;
   const target = grant.targetName ?? grant.targetId;

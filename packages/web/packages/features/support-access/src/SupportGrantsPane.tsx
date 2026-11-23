@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useState, type FormEvent, type ReactElement } from "react";
 
 import { useOptionalProductAdminAuth } from "@adh-sdk/auth";
 import { useProductCustomers } from "@adh-sdk/data/product-admin";
@@ -58,7 +58,11 @@ export interface SupportGrantsPaneProps {
  * through sign-in again and back to `returnPath`. While the backend's `consented_access` switch is
  * off the grants read answers 404 and the pane says support access is not on.
  */
-export function SupportGrantsPane({ ecosystemId, returnPath = "/support", onStepUp }: SupportGrantsPaneProps) {
+export function SupportGrantsPane({
+  ecosystemId,
+  returnPath = "/support",
+  onStepUp,
+}: SupportGrantsPaneProps): ReactElement {
   const auth = useOptionalProductAdminAuth();
   const stepUp = onStepUp ?? auth?.stepUp;
 

@@ -1,5 +1,7 @@
 "use client";
 
+import type { ReactElement } from "react";
+
 import { groupAccess, useSupportAccess, type SupportAccessGroup, type SupportSide } from "@adh-sdk/data/support";
 import { Button } from "@adh-sdk/ui/components/button";
 import { ErrorText } from "@adh-sdk/ui/components/error-text";
@@ -60,7 +62,7 @@ export function AccessLogList({
   grantId: string;
   granteeName: string;
   granteeRole: string;
-}) {
+}): ReactElement {
   const log = useSupportAccess(side, grantId);
   const rows = log.data?.pages.flatMap((p) => p.items) ?? [];
   const groups = groupAccess(rows);

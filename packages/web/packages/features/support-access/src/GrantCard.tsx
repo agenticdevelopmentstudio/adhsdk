@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import type { ReactNode, ReactElement } from "react";
 
 import type { SupportGrant, SupportGrantState } from "@adh-sdk/data/support";
 import { Badge } from "@adh-sdk/ui/components/badge";
@@ -19,7 +19,7 @@ export function hoursPhrase(hours: number): string {
 }
 
 /** A grant's time, short and local: "Fri, 20 Nov, 10:00". Empty for none. */
-export const grantTime = (iso: string | null) => {
+export const grantTime = (iso: string | null): string => {
   if (!iso) return "";
   const d = new Date(iso);
   return Number.isNaN(d.getTime())
@@ -53,7 +53,7 @@ export function GrantCard({
   onAction: (action: GrantAction) => void;
   /** The read log, shown under the grant. */
   children?: ReactNode;
-}) {
+}): ReactElement {
   const name = grant.granteeName;
   const breakGlass = grant.consent === "break_glass";
   return (
