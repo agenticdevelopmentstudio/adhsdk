@@ -4231,18 +4231,18 @@
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:0a6750ac734eb876542d4a1430b3b31ebfdf5ececc739eb414d8b6fd4c344124",
+            "hash": "sha256:7c29cb8bcf05684ca71f46ea9881a4b8169813e22113194fab1798a035cdfb48",
             "state": "confirmed",
-            "version": "1.0.0"
+            "version": "1.0.1"
           },
           "location": "packages/web/packages/features/product-admin/src/",
           "platform": "web"
         },
         {
           "conformance": {
-            "hash": "sha256:ba15473220b71752a162e44369015a50fbb8b20860ee2b74b8246d3270995be3",
+            "hash": "sha256:c84dd07d5be51a859a69bfe053e9007a12bcbaf72b509aaadc666307d35cbaed",
             "state": "confirmed",
-            "version": "1.0.0"
+            "version": "1.0.1"
           },
           "location": "packages/web/packages/features/ecosystem-config/src/AdminSitePane.tsx",
           "platform": "web"
@@ -4251,16 +4251,16 @@
           "conformance": {
             "hash": "sha256:9ca2c75bfcf4386ea7f4254e566c9ad6fc9a0dd203869a76655286b043f39886",
             "state": "confirmed",
-            "version": "1.0.0"
+            "version": "1.0.1"
           },
           "location": "packages/web/packages/features/ecosystem-config/src/ProductTotalsPane.tsx",
           "platform": "web"
         },
         {
           "conformance": {
-            "hash": "sha256:36de2eb948d6a05948adcec643b8bc7657723a4f45442f663882904e36fbe173",
+            "hash": "sha256:1f4aa53c1a46a707d3167468c8eedc9bf72c9641dd3c4fd40a0c563cd00e413e",
             "state": "confirmed",
-            "version": "1.0.0"
+            "version": "1.0.1"
           },
           "location": "packages/web/packages/features/adh-products/src/topics.ts",
           "platform": "web"
@@ -4269,7 +4269,7 @@
           "conformance": {
             "hash": "sha256:5fc22bd97221bfc083e8e00d7dafa9cca64679a184bd27d2f9335fa449e1774b",
             "state": "confirmed",
-            "version": "1.0.0"
+            "version": "1.0.1"
           },
           "location": "packages/web/packages/features/ecosystems/src/EcosystemInvitationPanes.tsx",
           "platform": "web"
@@ -5795,7 +5795,7 @@
         },
         {
           "conformance": {
-            "hash": "sha256:534deca353a52224fb324d697b271fcaf70640d41b1a120028356824a0fd0a3f",
+            "hash": "sha256:7b66ffc4a8d47fa9f4d5bc47e6dc162d48f5e51936122a8ac8058720c5512d62",
             "state": "confirmed",
             "version": "2.0.0"
           },

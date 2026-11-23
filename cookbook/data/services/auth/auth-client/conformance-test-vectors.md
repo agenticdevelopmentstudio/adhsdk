@@ -126,3 +126,8 @@
 | auth-client-123 | product-admin-session-start | `POST /auth/session` answering `401` on the page `/users?q=a` | The browser is sent to `/auth/signin?return=%2Fusers%3Fq%3Da` |
 | auth-client-124 | product-admin-session-refresh | A token whose `expiresAt` is 10 minutes ahead | The next `POST /auth/session` fires at nine minutes |
 | auth-client-125 | product-admin-session-signout, product-admin-session-stale-answers | Sign-out; then the provider unmounted | Sign-out posts `/auth/signout`, drops the token and navigates to `/auth/signin`; unmount removes the token source |
+| auth-client-126 | product-admin-session-stale-answers | A refresh pending when sign-out is clicked, then answering a token | The token is not adopted and no refresh is scheduled |
+| auth-client-127 | product-admin-session-refresh | The provider mounted under React StrictMode | One `POST /auth/session` is sent |
+| auth-client-128 | product-admin-session-cross-tab | Another tab holds the `adh-product-admin-session` lock | The provider's `POST /auth/session` waits for it; sign-out's `POST /auth/signout` takes the same lock |
+| auth-client-129 | product-admin-session-start | A stored hub token present, and a child that reads the access token in its first effect | The child reads the provider's token, never the stored one |
+| auth-client-130 | product-admin-session-hook | The provider given a new inline `navigate` on each render | One `POST /auth/session` is sent |
