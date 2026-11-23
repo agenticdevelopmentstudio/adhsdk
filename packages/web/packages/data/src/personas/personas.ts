@@ -79,13 +79,25 @@ async function slugAvailable(slug: string): Promise<SlugAvailability> {
 /** One model item of a service row or the live catalog. A bare string is the model id alone.
  *  `available` and `offered` read as true when the wire omits them, so an older backend that
  *  never sends them makes every model available; an entry the backend appended for a switched-off
- *  model the provider no longer lists keeps its `false` flags as read. */
-function modelFromWire(m: unknown): ModelInfo {
-  const item = (typeof m === "string" ? { id: m } : m) as Omit<ModelInfo, "available" | "offered"> & {
+ *  model the provider no longer lists keeps its `false` flags as read. Null for an entry that is
+ *  neither a string nor an object with a string `id` (the column is jsonb, so nothing stops one),
+ *  which the callers drop: one malformed entry must not fail the whole list. */
+function modelFromWire(m: unknown): ModelInfo | null {
+  if (typeof m === "string") return { id: m, available: true, offered: true };
+  if (!m || typeof m !== "object" || typeof (m as { id?: unknown }).id !== "string") return null;
+  const item = m as Omit<ModelInfo, "available" | "offered"> & {
     available?: boolean;
     offered?: boolean;
   };
   return { ...item, available: item.available !== false, offered: item.offered !== false };
+}
+
+/** Reads a wire model list, dropping the entries {@link modelFromWire} cannot read. */
+function modelsFromWire(models: readonly unknown[]): ModelInfo[] {
+  return models.flatMap((m) => {
+    const model = modelFromWire(m);
+    return model ? [model] : [];
+  });
 }
 
 /** The service row as the registry UI consumes it: `models` is a jsonb column whose entries
@@ -100,7 +112,7 @@ function serviceFromWire(r: V1AiService): UserService {
     baseUrl: r.base_url,
     hasApiKey: r.has_api_key,
     connectStatus: r.connect_status,
-    models: (r.models ?? []).map(modelFromWire),
+    models: modelsFromWire(r.models ?? []),
   };
   if (r.template_id !== undefined) out.templateId = r.template_id;
   if (r.connection_spec !== undefined) {
@@ -196,10 +208,12 @@ export const api = {
       listAllV1<Record<string, unknown> & { object?: string }>(
         withV1Query(`${V1}/models`, { service: id }),
       ).then((rows) =>
-        rows.map((row) => {
-          const { object: _object, ...model } = row;
-          return modelFromWire(model);
-        }),
+        modelsFromWire(
+          rows.map((row) => {
+            const { object: _object, ...model } = row;
+            return model;
+          }),
+        ),
       ),
     refreshModels: (id: string) =>
       authedJson<V1AiService>(`${V1}/ai_services/${enc(id)}/refresh_models`, {

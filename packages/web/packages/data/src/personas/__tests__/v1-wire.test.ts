@@ -232,6 +232,12 @@ describe("ai services and templates", () => {
     ]);
   });
 
+  it("drops a model entry it cannot read rather than failing the list", async () => {
+    respond(list([{ ...service, models: [null, 7, { name: "no id" }, "bare"] }]));
+    const rows = await api.services.list();
+    expect(rows[0]!.models).toEqual([{ id: "bare", available: true, offered: true }]);
+  });
+
   it("creates and patches with snake_case bodies (connection spec included)", async () => {
     respond(service);
     await api.services.create({
