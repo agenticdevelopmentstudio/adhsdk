@@ -16,7 +16,8 @@ final class StubBrowserEngine: BrowserEngine {
         self.providesOwnToolbar = providesOwnToolbar
     }
     weak var delegate: BrowserEngineDelegate?
-    var url: URL? { nil }
+    /// The page's address; a test sets it before telling the pane it moved.
+    var url: URL?
     var title: String? { nil }
     var isLoading = false
     var loadingChanges: AnyPublisher<Bool, Never> { Empty().eraseToAnyPublisher() }
