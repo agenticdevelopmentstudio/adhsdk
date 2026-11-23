@@ -438,9 +438,10 @@ is a sibling of the hub's session provider, not a mode of it: a page under one
 MUST NOT mount the other.
 
 - **product-admin-session-start**: on mount the provider MUST install a token
-  source (a ref-held in-memory token, never storage or a URL) and `POST`
-  `/auth/session` with credentials included, the site's own route handler, whose
-  refresh token is an HttpOnly cookie on the site's origin. A `401` MUST clear the
+  source (a ref-held in-memory token, never storage or a URL) before any child's
+  first effect runs, so a child's first request never reads a stored hub token,
+  and `POST` `/auth/session` with credentials included, the site's own route
+  handler, whose refresh token is an HttpOnly cookie on the site's origin. A `401` MUST clear the
   token and navigate to `/auth/signin?return=<current path and query,
   URL-encoded>`. Any other non-OK status, or an answer with no `accessToken`
   string, is a failure, handled as in **product-admin-session-account**.
@@ -457,18 +458,28 @@ MUST NOT mount the other.
   (unix seconds when below `1e12`, else unix milliseconds, or an ISO 8601 string),
   else the token's own `exp` claim; with neither, nothing is scheduled and a `401`
   still refreshes on demand through the token source. Concurrent refreshes MUST
-  share one in-flight promise.
+  share one in-flight promise, and so MUST a remount's (React StrictMode's mount,
+  unmount and mount): `POST /auth/session` spends the rotating refresh cookie, so
+  two requests with one cookie end the session.
+- **product-admin-session-cross-tab**: every request that spends the refresh
+  cookie (`POST /auth/session` and `POST /auth/signout`) MUST run under one Web
+  Lock (`navigator.locks`, name `adh-product-admin-session`) shared by every tab of
+  the site, so two tabs never present the same cookie at once. Where Web Locks are
+  unavailable the request runs without it.
 - **product-admin-session-stale-answers**: an answer that lands after the provider
-  unmounted or remounted MUST be dropped: it adopts no token and navigates
-  nowhere. On unmount the provider MUST cancel its timer and remove its token
+  unmounted, remounted or signed out MUST be dropped: it adopts no token, schedules
+  no refresh and navigates nowhere. On unmount the provider MUST cancel its timer and remove its token
   source only if it is still the installed one.
-- **product-admin-session-signout**: sign-out MUST cancel the timer, `POST`
-  `/auth/signout` with credentials included, and then, whether or not that
-  request failed, clear the token and account and navigate to `/auth/signin`.
+- **product-admin-session-signout**: sign-out MUST cancel the timer and drop any
+  refresh in flight (see **product-admin-session-stale-answers**), wait for a
+  `POST /auth/session` already sent to settle, `POST` `/auth/signout` with
+  credentials included, and then, whether or not that request failed, clear the
+  token and account and navigate to `/auth/signin`.
 - **product-admin-session-hook**: the session hook MUST return the status, the
   account, the access token and sign-out, and MUST throw outside the provider.
   Navigation MUST go through the provider's `navigate` prop when given, else
-  `window.location.assign`.
+  `window.location.assign`; a new `navigate` on each render MUST NOT restart the
+  session.
 
 ### Security
 

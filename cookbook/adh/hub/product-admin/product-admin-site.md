@@ -15,7 +15,7 @@ tags:
 depends-on:
   - 150bf00e-6c6b-4f91-a323-d307ebd5700d
   - 3ea9329e-5acc-4c43-b5ce-bb8c50570104
-version: 1.0.0
+version: 1.0.1
 created: 2026-11-23
 modified: 2026-11-23
 author: Mike Fullerton
@@ -48,21 +48,22 @@ The pieces:
 ### Users pane
 
 - **users-roster**: `ProductUsersPane` MUST list the customers of the product it is given, one page at a time, and MUST show each customer's name or email, roles, storage and whether they are paused.
-- **users-search-paging**: a search MUST restart at the first page; paging forward MUST pass the last page's `nextCursor`, and paging back MUST return to the page before, kept as a stack of cursors, never recomputed.
+- **users-search-paging**: a search MUST restart at the first page; paging forward MUST pass the last page's `nextCursor`, and paging back MUST return to the page before, kept as a stack of cursors, never recomputed. A later page that comes back empty (its last person was deleted) MUST step back a page, and MUST NOT say there are no users.
 - **users-confirm-writes**: pause, unpause, quota change and delete MUST each wait for the person's confirmation in an alert dialog, and MUST send nothing when it is cancelled.
 - **users-quota-gb**: the quota is entered in GB and MUST be refused, without a request, when it is above the product default (`DEFAULT_QUOTA_BYTES`, 5 GB). The pane says so.
 - **users-admin-protected**: when the backend refuses a pause or delete with `admin_seat_protected`, the pane MUST say that admins cannot be paused or deleted here; any other refusal MUST be shown as the backend says it.
 
 ### Admin site page (manager)
 
-- **admin-site-pane**: `AdminSitePane` MUST show, for the selected product, the site's current host with a form that sets it up, changes it, or removes it; MUST say so when no product is selected; and MUST show the backend's sentence when a host is refused.
-- **admin-site-admins**: the page MUST list the holders of the `admin` role, read on the ecosystem target, and MUST add an admin as a sign-up list entry carrying the admin role's id. An address that is not an email MUST be refused without a request.
+- **admin-site-pane**: `AdminSitePane` MUST show, for the selected product, the site's current host with a form that sets it up, changes it, or removes it; MUST say so when no product is selected; and MUST show the backend's sentence when a host is refused. A removal takes the site down at once, so it MUST wait for the manager's confirmation in a destructive alert dialog, and MUST send nothing when it is cancelled.
+- **admin-site-admins**: the page MUST list the holders of the `admin` role, read on the ecosystem target, and MUST add an admin as a sign-up list entry carrying the admin role's id. An address already on the list MUST keep the set its entry grants; only the role changes. After the write the Sign-up list page's cached list MUST be read again, and no other list. An address that is not an email MUST be refused without a request.
 - **totals-pane**: `ProductTotalsPane` MUST show the eight totals (customers, new in 7 and 30 days, active in 7 and 30 days, storage, pending invitations, pending requests) for the product it is given, and MUST say when it is loading and when it could not load.
 
 ### Which pages move
 
 - **admin-site-topic**: the product topic list MUST carry an `admin-site` row labeled "Admin site", for the `users` feature, that renders `AdminSitePane` with the help key `ecosystems/admin-site`.
-- **visible-topics**: `visibleProductTopics(topics, { enabled, hasSite })` MUST remove the `admin-site` row when the `product_admin_site` switch is off; MUST keep every row when it is on and no site exists yet; and MUST, when it is on and a site exists, also remove the moved topics: invitations, roles, signup-list and sets.
+- **visible-topics**: `visibleProductTopics(topics, site, routed)` MUST remove the `admin-site` row when the `product_admin_site` switch is off; MUST keep every row when it is on and no site exists yet; and MUST, when it is on and a site exists, remove roles, signup-list and sets and narrow the Users row (`invitations`) to its Email Signup and Authentication members (`ADMIN_SITE_KEPT_USERS_MEMBERS`, through the row's `members`), which the admin site has no page for. While the site is not known (`site` undefined: the read is in flight, or failed with no answer) it MUST keep every row but `admin-site`, and MUST keep `admin-site` too when the URL names it (`routed`), so a deep link or reload opens it.
+- **run-at-admin-site**: `runAtAdminSite(topicId, site)` MUST answer true exactly when the switch is on, a site exists and the topic is invitations, roles, signup-list or sets: the question a host that answers one topic at a time (the hub's `/<slug>/<topic>` routes, where `invitations` is the roster alone) asks.
 - **hide-admin-records**: the requests, pending and invites panes MUST take `hideAdminRecords`, which hides the developer's admin records: the panes MUST get neither notes slot and show no notes, no entity history and no "Admin notes" action. Without it the panes mount the notes editor and offer Admin notes.
 
 ## Appearance
@@ -92,11 +93,17 @@ Vectors marked with a test name are asserted in `features/product-admin/src/__te
 | product-admin-site-005 | users-confirm-writes | Unpause on a paused customer (test: "unpauses a paused user") | The pause is lifted |
 | product-admin-site-006 | users-quota-gb | A quota of 2 GB, then 6 GB (test: "sets a quota in GB, and refuses one above the default") | The first is sent in bytes; the second is refused with no request |
 | product-admin-site-007 | users-admin-protected | A pause answered 422 `admin_seat_protected`; then another refusal (tests: "says admins cannot be paused or deleted here on the backend's 422", "shows any other refusal as the backend says it") | The first shows the admins sentence; the second shows the backend's message |
-| product-admin-site-008 | admin-site-pane | No product; then a host set; then a refused host; then remove (tests: "says so when no product is selected", "sets a site up at a host", "shows the backend's sentence when the host is refused", "removes a site") | The note; a site put; the backend's sentence; a site removal |
+| product-admin-site-008 | admin-site-pane | No product; then a host set; then a refused host; then remove (tests: "says so when no product is selected", "sets a site up at a host", "shows the backend's sentence when the host is refused", "removes a site only after the confirmation") | The note; a site put; the backend's sentence; a site removal |
 | product-admin-site-009 | admin-site-admins | The admin role's holders; then an address added; then a non-email (tests: "lists the admin role's holders, read on the ecosystem target", "adds an admin as a sign-up list entry carrying the admin role", "refuses an address that is not an email, and sends nothing") | The holders listed; an entry put with the admin role; no request for the bad address |
 | product-admin-site-010 | totals-pane | A product with totals; then loading and failed (tests: "shows each figure, read for the product it is given", "says it is loading, and says when it could not load") | The eight figures; the loading and failed notes |
-| product-admin-site-011 | visible-topics | The four switch and site combinations (tests: "switch off, no site: every pane but the Admin site row", "switch off, a site: still every pane but the Admin site row", "switch on, no site yet: every pane, and the Admin site row to set one up", "switch on and a site: the people rows leave for the site, the Admin site row stays") | As the requirement states |
+| product-admin-site-011 | visible-topics | The four switch and site combinations (tests: "switch off, no site: every pane but the Admin site row", "switch off, a site: still every pane but the Admin site row", "switch on, no site yet: every pane, and the Admin site row to set one up", "switch on and a site: the people rows leave for the site, the Admin site row stays") | As the requirement states; Users stays, narrowed |
 | product-admin-site-012 | admin-site-topic | The product topic list | An `admin-site` row for the `users` feature |
+| product-admin-site-014 | users-search-paging | Page two's last person deleted (test: "steps back a page when a later page comes back empty, and never says there are no users") | The first page is read again; no "No users yet." |
+| product-admin-site-015 | admin-site-pane | Remove, then cancel (tests: "removes a site only after the confirmation", "sends nothing when the removal is cancelled") | The removal is sent only once confirmed; none when cancelled |
+| product-admin-site-016 | admin-site-admins | An address already listed with a set (test: "keeps the set of an address already on the sign-up list, and changes only its role") | The entry is put with the admin role and its own set |
+| product-admin-site-017 | visible-topics | The site not known yet, with and without the URL naming Admin site; then a known switch-off naming it (tests: "not known yet: every pane, and no Admin site row unless the URL names it", "a known switch-off drops the Admin site row even when the URL names it") | As the requirement states |
+| product-admin-site-018 | visible-topics | Switch on and a site (test: "switch on and a site: Users keeps Email Signup and Authentication, and nothing else") | The Users row carries members `email-signup` and `auth` |
+| product-admin-site-019 | run-at-admin-site | Each moved topic and four others, with each switch and site state (test: "runAtAdminSite: the moved topics, only with the switch on and a site") | True for the moved topics with the switch on and a site; false otherwise |
 | product-admin-site-013 | hide-admin-records | Each of the three panes given `hideAdminRecords`, then not (tests: "mounts the notes editor and offers Admin notes by default", "mounts no notes editor and offers no Admin notes when set") | Set: no notes editor, no history, no Admin notes; unset: all three |
 
 ## Edge Cases
@@ -104,6 +111,8 @@ Vectors marked with a test name are asserted in `features/product-admin/src/__te
 - **No product selected (MUST)**: the Admin site page and the totals page say so and make no request.
 - **A site that cannot be set (MUST)**: a host another product's site uses, or a product with its own admin application, is refused by the backend with a sentence; the page shows it.
 - **Switch on, no site (MUST)**: no page leaves the hub, so the manager keeps every page until the site is set up.
+- **Site not known yet, or its read failed (MUST)**: every page stays, and Admin site stays only when the URL names it.
+- **Switch on and a site (MUST)**: Users ▸ Email Signup and Users ▸ Authentication stay on the hub; the admin site has no page for them.
 - **A cancelled confirmation (MUST NOT)**: nothing is sent.
 - **Quota above the default (MUST NOT send)**: refused before any request.
 
@@ -114,7 +123,7 @@ Vectors marked with a test name are asserted in `features/product-admin/src/__te
 | `ecosystemId` | string | none, required | The product's ecosystem uuid every pane reads for. |
 | `caller` | `"manager"` or `"product_admin"` | `manager` | Which seat is using the roles, sign-up list and sets panes; see the ecosystem configuration recipe. |
 | `hideAdminRecords` | boolean | false | On the requests, pending and invites panes, hides the notes, history and Admin notes action. |
-| `{ enabled, hasSite }` | object | none | The input to `visibleProductTopics`: the `product_admin_site` switch and whether a site exists. |
+| `{ enabled, hasSite }` (`AdminSiteRailState`) | object or undefined | none | The input to `visibleProductTopics` and `runAtAdminSite`: the `product_admin_site` switch and whether a site exists; undefined while the site is not known. |
 
 ## Deep Linking
 
@@ -156,11 +165,11 @@ Not applicable: no file contains a log call.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/features/product-admin/src/` | confirmed (1.0.0) |
-| web | `packages/web/packages/features/ecosystem-config/src/AdminSitePane.tsx` | confirmed (1.0.0) |
-| web | `packages/web/packages/features/ecosystem-config/src/ProductTotalsPane.tsx` | confirmed (1.0.0) |
-| web | `packages/web/packages/features/adh-products/src/topics.ts` | confirmed (1.0.0) |
-| web | `packages/web/packages/features/ecosystems/src/EcosystemInvitationPanes.tsx` | confirmed (1.0.0) |
+| web | `packages/web/packages/features/product-admin/src/` | confirmed (1.0.1) |
+| web | `packages/web/packages/features/ecosystem-config/src/AdminSitePane.tsx` | confirmed (1.0.1) |
+| web | `packages/web/packages/features/ecosystem-config/src/ProductTotalsPane.tsx` | confirmed (1.0.1) |
+| web | `packages/web/packages/features/adh-products/src/topics.ts` | confirmed (1.0.1) |
+| web | `packages/web/packages/features/ecosystems/src/EcosystemInvitationPanes.tsx` | confirmed (1.0.1) |
 
 ## Design Decisions
 
@@ -189,4 +198,5 @@ The panes keep the data calls in the client and the page list in a plain module,
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-23 | Mike Fullerton | Admin site removal confirmed; adding an admin keeps a listed address's set and refreshes the Sign-up list; an emptied later Users page steps back; Users keeps Email Signup and Authentication once a site is up; a routed Admin site row is kept while the site is unknown; runAtAdminSite |
 | 1.0.0 | | | Initial creation |
