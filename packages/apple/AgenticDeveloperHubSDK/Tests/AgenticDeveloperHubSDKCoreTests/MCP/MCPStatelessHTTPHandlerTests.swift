@@ -121,6 +121,19 @@ final class MCPStatelessHTTPHandlerTests: XCTestCase {
         XCTAssertNil(MCPStatelessHTTPHandler.cancellation(in: Data(rpc("tools/list").utf8)))
     }
 
+    func testTheBodysFramingHeadersAreNotForwarded() {
+        let headers = MCPStatelessHTTPHandler.withoutFraming([
+            "Content-Type": "application/json", "content-length": "57", "Transfer-Encoding": "chunked"
+        ])
+        XCTAssertEqual(headers, ["Content-Type": "application/json"])
+    }
+
+    func testAnAnswerCarriesNoContentLengthOfTheRewrittenBody() async throws {
+        let reply = try await post(rpc("tools/list", id: #""a-much-longer-caller-id-than-ours-0123456789""#))
+        XCTAssertEqual(reply.status, 200)
+        XCTAssertNil(reply.headers.first { $0.key.caseInsensitiveCompare("Content-Length") == .orderedSame })
+    }
+
     func testTwoRequestsUnderOneKeyAreBothKeptAndNeitherIsCancelledByGuess() async {
         // Two sessions outside any pane, both sending id 3.
         let key = MCPStatelessHTTPHandler.inFlightKey(caller: nil, originalIDJSON: Data("[3]".utf8))
