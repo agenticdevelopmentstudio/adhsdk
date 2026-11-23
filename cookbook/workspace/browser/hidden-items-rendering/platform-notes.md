@@ -20,7 +20,7 @@
   the store's `perform` off the main thread, and a generation counter
   keeps only the last read asked for; a read answers `HiddenItemsRead`
   (`selectors`, `superseded`, `failed`), and awaits the store with
-  `BrowserHiddenItemsStore.sharedStore()`, never blocking on it, since an
+  `BrowserHiddenItemsStore.currentStore()`, never blocking on it, since an
   engine made at launch reads before the store's open is done. The
   navigation read in the policy decision (`prepareHiddenItems`, through
   `preparedHiddenItemSelectors`) reads again when a store-change refresh

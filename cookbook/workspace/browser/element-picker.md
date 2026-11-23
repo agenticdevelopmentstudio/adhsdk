@@ -2,11 +2,11 @@
 id: 8b187d98-795b-4a9d-9441-e7b8629fefe4
 title: "Element Picker"
 type: ingredient
-version: 0.1.4
+version: 0.1.5
 status: draft
 language: en
 created: 2026-11-15
-modified: 2026-11-18
+modified: 2026-11-23
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -29,7 +29,7 @@ references:
   - packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/HiddenItems/BrowserSelectingMode.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/HiddenItems/BrowserPickDialogController.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/HiddenItems/BrowserHiddenItemsPopover.swift (adhsdk)
-  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/HiddenItems/BrowserHiddenItemsStore.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Database/Daemon/Browser/BrowserHiddenItemsStore.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/BrowserAddressBarControls.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/WebBrowserPaneViewController.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/WebKitBrowserEngine.swift (adhsdk)
@@ -555,6 +555,7 @@ Notes: no compliance checks have been run against the code yet.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 0.1.5 | 2026-11-23 | Mike Fullerton | The hidden-items store moved to the database tier (Database/Daemon/Browser). |
 | 0.1.4 | 2026-11-18 | Mike Fullerton | The candidate builder is shared with the context menu, which reads the element under a right-click. |
 | 0.1.3 | 2026-11-16 | Mike Fullerton | Review fixes: frames ignore the pointer while picking, and the page root is refused for both hide lists. |
 | 0.1.2 | 2026-11-16 | Mike Fullerton | Hostless pages refused; All items like it needs a class and skips html/head/body/main; dialog through AppModalWindowSession; popovers close with the page; row lookup at click; failed saves beep. |

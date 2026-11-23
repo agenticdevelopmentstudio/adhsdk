@@ -2,11 +2,11 @@
 id: 497f5d5f-e95b-473e-8798-cbe62ebcc425
 title: "History Panel and Window"
 type: ingredient
-version: 0.1.2
+version: 0.1.3
 status: draft
 language: en
 created: 2026-11-15
-modified: 2026-11-16
+modified: 2026-11-23
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -27,7 +27,7 @@ references:
   - packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/History/BrowserHistoryListModel.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/History/BrowserHistoryPanelViewController.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/History/BrowserHistoryWindowController.swift (adhsdk)
-  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/BrowserHistoryStore.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Database/Daemon/Browser/BrowserHistoryStore.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/WebBrowserWindowsFeature.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/WebBrowserPaneViewController.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/BrowserPane/BrowserHistoryListModelTests.swift (adhsdk)
@@ -357,7 +357,7 @@ reporting is the builder's choice (see Design Decisions).
 
 - **macOS (AppKit)**: The list model is
   `@MainActor public final class BrowserHistoryListModel` with
-  `init(store: BrowserHistoryStore, pageSize: Int = 200)`,
+  `init(store: any BrowserHistoryStoring, pageSize: Int = 200)`,
   `private(set) var visits: [BrowserVisit]`, `var filter: String`,
   `func reload() async`, `func remove(_ ids: [Int64]) async`,
   `func clearAll() async` and `var onChange: (() -> Void)?`. It calls the
@@ -417,6 +417,8 @@ reporting is the builder's choice (see Design Decisions).
 | macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/History/BrowserHistoryPanelViewController.swift` | planned |
 | macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/History/BrowserHistoryWindowController.swift` | planned |
 | macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/History/` | unverified |
+| macos | `packages/apple/AgenticDeveloperHubSDK/Database/Daemon/Browser/BrowserHistoryStore.swift` | unverified |
+| macos | `packages/apple/AgenticDeveloperHubSDK/Database/Daemon/Browser/BrowserHistoryStoring.swift` | unverified |
 
 ## Design Decisions
 
@@ -476,6 +478,7 @@ the implementation is written and confirmed against this recipe.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 0.1.3 | 2026-11-23 | Mike Fullerton | The list model takes any BrowserHistoryStoring; the history store moved to the database tier. |
 | 0.1.2 | 2026-11-16 | Mike Fullerton | List reloads on every store write and on appearing; Return and double-click open every selected visit; local files excluded for the agent. |
 | 0.1.1 | 2026-11-15 | Mike Fullerton | A visit opens in the frontmost other window's focused browser pane |
 | 0.1.0 | 2026-11-15 | Mike Fullerton | Initial creation (design-first, from the more privacy features design) |

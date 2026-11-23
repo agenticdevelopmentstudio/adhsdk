@@ -51,7 +51,7 @@
   `AgentPageSource.reading(_:hiddenItems:privacy:hideImages:)` the tools use
   (through `WebBrowserPaneViewController.agentPageSource(engine:)`, which
   passes the pane's effective Hide Images, `agentHidesImages`, and awaits
-  the hidden-items store with `BrowserHiddenItemsStore.sharedStore()`,
+  the hidden-items store with `BrowserHiddenItemsStore.currentStore()`,
   since a tab restored into an agent view reads during launch).
   The agent view is laid over the tab's page holder, which is hidden, not
   removed, so the live page keeps its state. Under UIKit,

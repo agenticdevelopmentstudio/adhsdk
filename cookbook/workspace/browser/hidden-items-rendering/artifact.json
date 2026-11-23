@@ -4,11 +4,11 @@
     "id": "a40e6f97-06c4-4675-9ed7-9619a7c3e707",
     "title": "Hidden Items Rendering",
     "type": "ingredient",
-    "version": "0.1.1",
+    "version": "0.1.2",
     "status": "draft",
     "language": "en",
     "created": "2026-11-15",
-    "modified": "2026-11-16",
+    "modified": "2026-11-23",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -28,7 +28,7 @@
     "related": [],
     "references": [
       "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/HiddenItems/BrowserHiddenItemsStyle.swift (adhsdk)",
-      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/HiddenItems/BrowserHiddenItemsStore.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Database/Daemon/Browser/BrowserHiddenItemsStore.swift (adhsdk)",
       "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/WebKitBrowserEngine.swift (adhsdk)",
       "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/BrowserHiddenImages.swift (adhsdk)",
       "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/BrowserPane/BrowserHiddenItemsStyleTests.swift (adhsdk)"
@@ -36,7 +36,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "4855b0ba0a61dcae",
+  "synced": "54480eb76e665e97",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

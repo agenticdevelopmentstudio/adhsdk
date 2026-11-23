@@ -2,11 +2,11 @@
 id: cd862ce2-d93d-4094-be20-0abab33e2fa7
 title: "Agent Preview and Agent Source Views"
 type: ingredient
-version: 0.1.3
+version: 0.1.4
 status: draft
 language: en
 created: 2026-11-15
-modified: 2026-11-18
+modified: 2026-11-23
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -30,7 +30,7 @@ references:
   - packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/BrowserContentRules.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Automation/AgentPage/AgentPageSource.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Automation/AgentPage/AgentPage.swift (adhsdk)
-  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/HiddenItems/BrowserHiddenItemsStore.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Database/Daemon/Browser/BrowserHiddenItemsStore.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/macOS/UI/WebKit/WKWebView+QuietPresentation.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/BrowserPane/BrowserAgentViewsTests.swift (adhsdk)
 approved-by: ""
@@ -338,7 +338,7 @@ MUST NOT carry page content.
   `AgentPageSource.reading(_:hiddenItems:privacy:hideImages:)` the tools use
   (through `WebBrowserPaneViewController.agentPageSource(engine:)`, which
   passes the pane's effective Hide Images, `agentHidesImages`, and awaits
-  the hidden-items store with `BrowserHiddenItemsStore.sharedStore()`,
+  the hidden-items store with `BrowserHiddenItemsStore.currentStore()`,
   since a tab restored into an agent view reads during launch).
   The agent view is laid over the tab's page holder, which is hidden, not
   removed, so the live page keeps its state. Under UIKit,
@@ -415,6 +415,7 @@ plan's tests are in `BrowserAgentViewsTests`.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 0.1.4 | 2026-11-23 | Mike Fullerton | The hidden-items store moved to the database tier (Database/Daemon/Browser). Launch-time reads await currentStore(). |
 | 0.1.3 | 2026-11-18 | Mike Fullerton | Segments labelled Browser / Agent View / Agent Source, in a bordered box. |
 | 0.1.2 | 2026-11-16 | Mike Fullerton | Entering from Website blanks the view; source highlighted asynchronously; preview credit give-back; awaits the hidden-items store. |
 | 0.1.1 | 2026-11-16 | Mike Fullerton | Preview navigation allows one load per credit, zeroed when the latest own load ends; rebuilds in quick succession; reading(hideImages:) and agentPageSource(engine:). |
