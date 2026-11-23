@@ -18,8 +18,8 @@
   needs, not a decoding failure.
 - **persona-service-shape**: a persona service record MUST carry `id`, `name`, `providerKind`,
   `baseUrl`, `connectStatus`, and a list of service-model records; a service-model record MUST
-  carry `id` and an optional `displayName`. After phase 8 a service-model record also carries
-  availability, specified under Services and model availability below.
+  carry `id` and an optional `displayName`. A service-model record also carries availability,
+  specified under Services and model availability below.
 - **canned-chat-and-chat-status-are-opaque-json**: a persona's `cannedChat` and `chatStatus`
   fields MUST be treated as opaque JSON values whose equality comparison treats an integer and an
   equal-valued floating-point number as the same value, so round-tripped data is never seen as
@@ -168,7 +168,7 @@
   calling user's full allow-list for one persona's owner-granted tools in a single write; this
   consent layer is distinct from, and downstream of, the owner-level grants managed separately.
 
-### Services and model availability (phase 8)
+### Services and model availability
 
 - **services-models-come-from-the-service-row**: a screen that shows a connection's models
   (the models table and the persona editor's model select) MUST read them from the service row
@@ -178,23 +178,30 @@
   available.
 - **model-info-offered-defaults-true**: `ModelInfo` MUST carry `offered`, and MUST read it as
   `true` when the wire item omits it.
-- **model-unoffered-names-appended**: a model name that the provider no longer lists but that is
-  still switched off for the workspace MUST appear in the service's `models` with
-  `available: false` and `offered: false`, appended after the listed models.
+- **model-bare-string-read-as-id**: a wire model item that is a bare string MUST be read as
+  `{ id }` with that string as its id, and so, by the two defaults above, as available and
+  offered. The data client's service-from-wire mapping (`serviceFromWire` in `personas.ts`) does
+  this.
+- **model-unoffered-names-appended**: the backend appends to the service's `models`, after the
+  listed models, an entry with `available: false` and `offered: false` for each model name the
+  provider no longer lists but that is still switched off for the workspace; the client MUST keep
+  these entries in the order read, and MUST keep their `available` and `offered` flags as read.
 - **set-model-availability-request**: `services.setModelAvailability(id, model, available)` MUST
   send one `POST` to `/api/v1/ai_services/{id}/model_availability` (the client's `V1` prefix, the
-  id URL-encoded) with the JSON body `{ model, available }`, beside `refreshModels`.
+  id URL-encoded) with the JSON body `{ model, available }`, in the same `services` client as
+  `refreshModels`.
 - **set-model-availability-returns-service**: `services.setModelAvailability` MUST read the
   response as the updated service through the same service-from-wire mapping the other service
   operations use, and MUST return it.
 - **set-model-availability-surfaces-failures**: `services.setModelAvailability` MUST send its
   request through `authedJson`, as `refreshModels` does, and add no error handling of its own, so
-  a non-ok answer (the backend's `404` for a service that is not the caller's, or `422` for an
-  empty or over-long model name) rejects to its caller with an error carrying that status.
+  a non-ok answer (the backend's `404` for a service that is not the caller's, or `422` for a
+  model name that is empty or over 200 characters) rejects to its caller with an error carrying
+  that status.
 - **data-module-stays-under-personas**: the services client MUST stay in the data module under
-  `data/src/personas/` in this phase; it does not move with the provider UI.
+  `data/src/personas/`; it does not move with the provider UI.
 
-### Web personas feature package: provider UI and model filtering (phase 8)
+### Web personas feature package: provider UI and model filtering
 
 - **provider-ui-lives-in-ai-settings**: the provider (service) UI, `ServicesSection` and the
   `useUserServices` hook, MUST live in the `@adh-sdk/ai-settings` package rather than in
@@ -204,8 +211,8 @@
   `ServicesSection`, `useUserServices` and `PERSONA_SERVICES_CACHE_KEY` from
   `@adh-sdk/ai-settings`, as the same objects, so a host that imports them from personas does not
   break.
-- **personas-reexports-are-temporary**: those three re-exports SHOULD be removed when the
-  Cleanup phase removes the old names; until then a host MAY keep importing them from personas.
+- **personas-reexports-are-temporary**: those three re-exports are kept for existing hosts, which
+  MAY keep importing them from personas, and are removed by a later cleanup.
 - **personas-section-imports-from-ai-settings**: `PersonasSection` MUST import the services hook
   and `PERSONA_SERVICES_CACHE_KEY` from `@adh-sdk/ai-settings`, not from a file of its own.
 - **services-cache-key-unchanged**: `PERSONA_SERVICES_CACHE_KEY` MUST keep its name and its
@@ -213,8 +220,10 @@
 - **editor-model-select-lists-available-only**: the persona editor's model select MUST list only
   models whose `available` is true.
 - **editor-keeps-switched-off-saved-model**: when the persona's saved model is switched off, the
-  select MUST show that model as the current value, labelled with "(not available)", together
-  with an inline note, so saving other fields does not silently change the model.
+  select MUST show that model as the current value, labelled with the model id followed by
+  " (not available)", together with an inline note that reads "This model is switched off in AI
+  Settings. Choose another model, or switch it back on in AI Settings.", so saving other fields
+  does not silently change the model.
 - **editor-service-switch-reset-unchanged**: the editor MUST still clear the model when the
   selected service changes to one whose models do not contain it; the availability filter does
   not alter that reset.

@@ -21,10 +21,10 @@ tags:
   - hub
   - personas
   - data-source
-  - forms
   - chat-demo
   - access-control
-depends-on: []
+depends-on:
+  - 5fdf4ce9-cb7e-4490-a6d6-066690ef07ca
 related:
   - faa2c3f3-1ff7-45fb-b6da-efed3cc1d451
   - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/04fe1298-3880-4584-8a4a-c7a538eb5193
@@ -54,9 +54,6 @@ references:
   - packages/web/packages/data/src/personas/interest-documents.ts (adhsdk)
   - packages/web/packages/data/src/personas/persona-abilities.ts (adhsdk)
   - packages/web/packages/data/src/personas/persona-user-tools.ts (adhsdk)
-  - packages/web/packages/features/personas/src/index.ts (adhsdk)
-  - packages/web/packages/features/personas/src/PersonasSection.tsx (adhsdk)
-  - packages/web/packages/features/personas/src/PersonaEditor.tsx (adhsdk)
   - packages/web/packages/data/src/personas/__tests__/canned.test.ts (adhsdk)
   - packages/web/packages/data/src/personas/__tests__/chat-status.test.ts (adhsdk)
   - packages/web/packages/data/src/personas/__tests__/demo-preview.test.ts (adhsdk)
@@ -112,8 +109,8 @@ re-exporting it for one phase, and filters its model select by availability.
   needs, not a decoding failure.
 - **persona-service-shape**: a persona service record MUST carry `id`, `name`, `providerKind`,
   `baseUrl`, `connectStatus`, and a list of service-model records; a service-model record MUST
-  carry `id` and an optional `displayName`. After phase 8 a service-model record also carries
-  availability, specified under Services and model availability below.
+  carry `id` and an optional `displayName`. A service-model record also carries availability,
+  specified under Services and model availability below.
 - **canned-chat-and-chat-status-are-opaque-json**: a persona's `cannedChat` and `chatStatus`
   fields MUST be treated as opaque JSON values whose equality comparison treats an integer and an
   equal-valued floating-point number as the same value, so round-tripped data is never seen as
@@ -262,7 +259,7 @@ re-exporting it for one phase, and filters its model select by availability.
   calling user's full allow-list for one persona's owner-granted tools in a single write; this
   consent layer is distinct from, and downstream of, the owner-level grants managed separately.
 
-### Services and model availability (phase 8)
+### Services and model availability
 
 - **services-models-come-from-the-service-row**: a screen that shows a connection's models
   (the models table and the persona editor's model select) MUST read them from the service row
@@ -272,23 +269,30 @@ re-exporting it for one phase, and filters its model select by availability.
   available.
 - **model-info-offered-defaults-true**: `ModelInfo` MUST carry `offered`, and MUST read it as
   `true` when the wire item omits it.
-- **model-unoffered-names-appended**: a model name that the provider no longer lists but that is
-  still switched off for the workspace MUST appear in the service's `models` with
-  `available: false` and `offered: false`, appended after the listed models.
+- **model-bare-string-read-as-id**: a wire model item that is a bare string MUST be read as
+  `{ id }` with that string as its id, and so, by the two defaults above, as available and
+  offered. The data client's service-from-wire mapping (`serviceFromWire` in `personas.ts`) does
+  this.
+- **model-unoffered-names-appended**: the backend appends to the service's `models`, after the
+  listed models, an entry with `available: false` and `offered: false` for each model name the
+  provider no longer lists but that is still switched off for the workspace; the client MUST keep
+  these entries in the order read, and MUST keep their `available` and `offered` flags as read.
 - **set-model-availability-request**: `services.setModelAvailability(id, model, available)` MUST
   send one `POST` to `/api/v1/ai_services/{id}/model_availability` (the client's `V1` prefix, the
-  id URL-encoded) with the JSON body `{ model, available }`, beside `refreshModels`.
+  id URL-encoded) with the JSON body `{ model, available }`, in the same `services` client as
+  `refreshModels`.
 - **set-model-availability-returns-service**: `services.setModelAvailability` MUST read the
   response as the updated service through the same service-from-wire mapping the other service
   operations use, and MUST return it.
 - **set-model-availability-surfaces-failures**: `services.setModelAvailability` MUST send its
   request through `authedJson`, as `refreshModels` does, and add no error handling of its own, so
-  a non-ok answer (the backend's `404` for a service that is not the caller's, or `422` for an
-  empty or over-long model name) rejects to its caller with an error carrying that status.
+  a non-ok answer (the backend's `404` for a service that is not the caller's, or `422` for a
+  model name that is empty or over 200 characters) rejects to its caller with an error carrying
+  that status.
 - **data-module-stays-under-personas**: the services client MUST stay in the data module under
-  `data/src/personas/` in this phase; it does not move with the provider UI.
+  `data/src/personas/`; it does not move with the provider UI.
 
-### Web personas feature package: provider UI and model filtering (phase 8)
+### Web personas feature package: provider UI and model filtering
 
 - **provider-ui-lives-in-ai-settings**: the provider (service) UI, `ServicesSection` and the
   `useUserServices` hook, MUST live in the `@adh-sdk/ai-settings` package rather than in
@@ -298,8 +302,8 @@ re-exporting it for one phase, and filters its model select by availability.
   `ServicesSection`, `useUserServices` and `PERSONA_SERVICES_CACHE_KEY` from
   `@adh-sdk/ai-settings`, as the same objects, so a host that imports them from personas does not
   break.
-- **personas-reexports-are-temporary**: those three re-exports SHOULD be removed when the
-  Cleanup phase removes the old names; until then a host MAY keep importing them from personas.
+- **personas-reexports-are-temporary**: those three re-exports are kept for existing hosts, which
+  MAY keep importing them from personas, and are removed by a later cleanup.
 - **personas-section-imports-from-ai-settings**: `PersonasSection` MUST import the services hook
   and `PERSONA_SERVICES_CACHE_KEY` from `@adh-sdk/ai-settings`, not from a file of its own.
 - **services-cache-key-unchanged**: `PERSONA_SERVICES_CACHE_KEY` MUST keep its name and its
@@ -307,8 +311,10 @@ re-exporting it for one phase, and filters its model select by availability.
 - **editor-model-select-lists-available-only**: the persona editor's model select MUST list only
   models whose `available` is true.
 - **editor-keeps-switched-off-saved-model**: when the persona's saved model is switched off, the
-  select MUST show that model as the current value, labelled with "(not available)", together
-  with an inline note, so saving other fields does not silently change the model.
+  select MUST show that model as the current value, labelled with the model id followed by
+  " (not available)", together with an inline note that reads "This model is switched off in AI
+  Settings. Choose another model, or switch it back on in AI Settings.", so saving other fields
+  does not silently change the model.
 - **editor-service-switch-reset-unchanged**: the editor MUST still clear the model when the
   selected service changes to one whose models do not contain it; the availability filter does
   not alter that reset.
@@ -360,13 +366,14 @@ component.
 | LLM form: clear `serviceId` to `""`, save | The saved payload has `serviceId` and `model` both absent | `testLLMSaveClearsModelWhenServiceHasNoSuchModel` |
 | Resolving child content for each of the 8 unsupported facet ids | The detail form's sole value, keyed `"notice"`, equals `"Not available in this version"`; no form specification exists for that facet | `testUnsupportedFacetsShowNotice` |
 | Performing the persona-creation form's save action with `name: "Bob"`, `slug: "bob"`, empty `description`, and `modelPrompt: "You are Bob."` | The resulting create payload has `description` absent, `model == ""`, and `visibility == "private"` | `testCreateSpecAndPerform` |
-| Decode a service whose wire model item is `{ id: "m1" }` | The `ModelInfo` has `available == true` and `offered == true` | phase 8 design 3.3 and 3.5 (no test yet) |
-| Decode a service whose wire model item is `{ id: "gone", available: false, offered: false }` | The `ModelInfo` has `available == false` and `offered == false`, and it sits after the listed models | phase 8 design 3.3 (no test yet) |
-| `services.setModelAvailability("svc 1", "m1", false)` | One `POST` to `/api/v1/ai_services/svc%201/model_availability` with body `{ "model": "m1", "available": false }`; the returned value is the updated service | phase 8 design 3.5 (no test yet) |
-| `services.setModelAvailability` where the request answers `422` | The returned promise rejects with an error carrying status `422` | phase 8 design 3.3 (no test yet) |
-| Import `ServicesSection`, `useUserServices` and `PERSONA_SERVICES_CACHE_KEY` from the personas package and from `@adh-sdk/ai-settings` | Each pair is the same object; the key's value is `"persona-services"` | phase 8 design 3.5 (no test yet) |
-| Persona editor, service offering models `a` (available) and `b` (`available: false`), persona's saved model `a` | The model select lists `a` and not `b` | phase 8 design 3.5 (no test yet) |
-| Persona editor, same service, persona's saved model `b` | The select's current value is `b`, labelled "(not available)", with an inline note; saving another field leaves `model == "b"` | phase 8 design 3.5 (no test yet) |
+| Decode a service whose wire model item is `{ id: "m1" }` | The `ModelInfo` has `available == true` and `offered == true` | `docs/planning/2026-11-23-phase-8-ai-settings-design.md` (planning repo), section 3.5; owed (phase 8 Task 10) |
+| Decode a service whose wire model item is `{ id: "gone", available: false, offered: false }` | The `ModelInfo` has `available == false` and `offered == false`, and it sits after the listed models | `docs/planning/2026-11-23-phase-8-ai-settings-design.md` (planning repo), section 3.5; owed (phase 8 Task 10) |
+| Decode a service whose wire `models` is `["m1"]` | The `ModelInfo` is `{ id: "m1" }` with `available == true` and `offered == true` | `serviceFromWire` in `personas.ts`; owed (phase 8 Task 10) |
+| `services.setModelAvailability("svc 1", "m1", false)` | One `POST` to `/api/v1/ai_services/svc%201/model_availability` with body `{ "model": "m1", "available": false }`; the returned value is the updated service | `docs/planning/2026-11-23-phase-8-ai-settings-design.md` (planning repo), section 3.5; owed (phase 8 Task 10) |
+| `services.setModelAvailability` where the request answers `422` | The returned promise rejects with an error carrying status `422` | `docs/planning/2026-11-23-phase-8-ai-settings-design.md` (planning repo), section 3.5; owed (phase 8 Task 10) |
+| Import `ServicesSection`, `useUserServices` and `PERSONA_SERVICES_CACHE_KEY` from the personas package and from `@adh-sdk/ai-settings` | Each pair is the same object; the key's value is `"persona-services"` | `docs/planning/2026-11-23-phase-8-ai-settings-design.md` (planning repo), section 3.5; owed (phase 8 Task 10) |
+| Persona editor, service offering models `a` (available) and `b` (`available: false`), persona's saved model `a` | The model select lists `a` and not `b` | `docs/planning/2026-11-23-phase-8-ai-settings-design.md` (planning repo), section 3.5; owed (phase 8 Task 10) |
+| Persona editor, same service, persona's saved model `b` | The select's current value is `b`, labelled "b (not available)", with the inline note "This model is switched off in AI Settings. Choose another model, or switch it back on in AI Settings."; saving another field leaves `model == "b"` | `docs/planning/2026-11-23-phase-8-ai-settings-design.md` (planning repo), section 3.5; owed (phase 8 Task 10) |
 | Decode a persona payload with extra fields `userId`/`ownerKind`/`ownerId` | Decode succeeds; the resulting record's `name == "Ada"`, the unknown fields are dropped, and `cannedChat` decodes to the opaque JSON object `{"mode": "script", "turns": []}` | `testPersonaDecodesFromWebJSON` |
 | The demo-eligibility check, given `{ enabled: true, ink: { source: "* [unclosed\n", signInLine: "x" } }` | `true` — a syntax error in the ink script still advertises a demo | canned.test.ts, "does not compile the ink — a syntax error still advertises a demo" |
 | The demo-eligibility check, given a well-formed but disabled config, and separately given `null` | both `false` | canned.test.ts, "is false for a parked script and for no config at all" |
@@ -394,7 +401,7 @@ component.
 - A wire model item that omits `available` or `offered` MUST be read as `true` for each, so an
   older backend that never sends them makes every model available.
 - A model that is a bare string on the wire is read as `{ id }`, which then takes the same
-  defaults (`available` and `offered` both `true`).
+  defaults (`available` and `offered` both `true`), per `model-bare-string-read-as-id`.
 - A service whose models are all switched off leaves the editor's model select with no choice
   beyond "No model selected" (and the saved model, if any, labelled "(not available)").
 - Any failure from the underlying data source (e.g. offline) on the root-level listing,
@@ -414,8 +421,6 @@ component.
 
 - `dataSource`: the persona data source implementation injected into this domain's navigation
   contract — supplied by the host application, typically backed by its own API client.
-- `setModelAvailability(id, model, available)`: the service id, the model name (the backend
-  rejects an empty name or one over 200 characters), and the new availability.
 - `workspace` (optional, on list/create/update/delete): a workspace slug that scopes the operation
   to that workspace's owning principal instead of the caller's own rows.
 - `personaId` / `bucketId` / `typeId` / `rowId`: caller-supplied identifiers threading through the
@@ -450,8 +455,11 @@ The given implementations hardcode English user-facing strings rather than local
   `"Delete persona"`, `Delete persona "<name>"? This cannot be undone.`, and field placeholders
   such as `"Bob"`, `"bob"`, `"A one-line summary of this persona."`) are all English literals with
   no localization mechanism in these implementations.
+- The persona editor's switched-off model strings: the option label, the model id followed by
+  `" (not available)"`, and the inline note
+  `"This model is switched off in AI Settings. Choose another model, or switch it back on in AI Settings."`.
 - The demo-preview, chat-status, and demo-eligibility logic carries no user-facing strings of its
-  own — its outputs are rendered by a presentation layer this recipe does not own — except the
+  own — its outputs are rendered by a presentation layer this ingredient does not own — except the
   built-in chat-status word presets' English word pairs (`"thinking"`, `"responding"`, etc.),
   which are persisted author-facing content, not chrome.
 
@@ -459,7 +467,7 @@ The given implementations hardcode English user-facing strings rather than local
 
 Not applicable — this is a data-access and navigation-orchestration component; the given
 implementations expose no accessibility-options surface of their own (icon names such as a
-"person" glyph are cosmetic hints consumed by a presentation layer this recipe does not own).
+"person" glyph are cosmetic hints consumed by a presentation layer this ingredient does not own).
 
 ## Feature Flags
 
@@ -500,9 +508,9 @@ confirmed by inspection of every given source file in this domain.
   Sendable, Equatable, Identifiable` structs. `Persona.cannedChat`/`.chatStatus` are typed as the
   Hub `JSONValue` (hand-written `Decodable`, `==`/`hash(into:)` that treats `.int` and `.number`
   as the same JSON number) — not the unrelated, simpler `JSONValue` under `Sync/`. Errors from the
-  data source are wrapped as `HubError.wrap(error)`. From phase 8 `PersonaServiceModel` gains an
-  optional `available` (generated from the OpenAPI); the Apple side has no availability filter
-  or toggle of its own.
+  data source are wrapped as `HubError.wrap(error)`. `PersonaServiceModel` carries an optional
+  `available` (generated from the OpenAPI); a missing `available` is read as available, matching
+  the web `ModelInfo` default. The Apple side has no availability filter or toggle of its own.
 - **React / TypeScript (web, already implemented)**: the client family under
   `packages/web/packages/data/src/personas/` is the wider of the two implementations — it covers
   services, provider templates, tool/may-act/approval grants, per-user tool consent, special
@@ -531,7 +539,7 @@ confirmed by inspection of every given source file in this domain.
   /`resolveChatStatus`, and `demoPreviewApi` are deliberately duplicated logic that must agree
   with the backend's authoritative implementation (`backend/src/adh/src/llm/canned/config.ts`,
   `backend/src/adh/src/db/schema/persona.ts`, `adh/docs/planning/demo-chat-ink-engine.md §10`); any
-  port MUST keep its copy in lockstep with the backend rather than treating this recipe's
+  port MUST keep its copy in lockstep with the backend rather than treating this ingredient's
   TypeScript as the source of truth — "when they disagree, the backend wins," per `wire.ts`'s own
   comment.
 
@@ -553,7 +561,9 @@ switched back on.
 **Approved**: pending
 
 **Decision**: the provider UI moves to `@adh-sdk/ai-settings`, and the personas package re-exports
-`ServicesSection`, `useUserServices` and `PERSONA_SERVICES_CACHE_KEY` until Cleanup.
+`ServicesSection`, `useUserServices` and `PERSONA_SERVICES_CACHE_KEY` for existing hosts until the
+hub foundation's Cleanup phase (the "Cleanup (after the owner deploys)" section of
+`docs/planning/2026-11-18-hub-foundation-phase-checklist.md` in the planning repo) removes them.
 **Rationale**: AI Settings is no longer a personas concern, but hosts import these names from
 personas today; the re-exports (the same objects) keep them working. The cache key keeps its name
 and value so the admin host that shares the cache entry is untouched.
@@ -649,10 +659,15 @@ thoroughly covered by `PersonasModuleTests.swift`, and `canned.ts`/`chat-status.
 `demo-preview.ts`/`fields.ts`/`personas.ts`/`special-interests.ts` each have a matching
 `__tests__/*.test.ts` file — but `persona-abilities.ts`, `persona-user-tools.ts`, and `wire.ts`
 have no dedicated test file in this checkout. `__tests__/conformance-vectors.test.ts` has one
-test per conformance vector: the four web-side vectors (demo eligibility and chat-status parsing
-and resolution) pass, and the ten Swift-only vectors (`testRootLevelListsPersonas` through
-`testPersonaDecodesFromWebJSON`) are skipped there because the web package has no facet-navigation
-module or Codable decode, and are covered by `PersonasModuleTests.swift`. `server-side-authorization` passes: every grant
+test for each of fourteen of the table's twenty-two conformance vectors: the four web-side
+vectors (demo eligibility and chat-status parsing and resolution) pass, and the ten
+Swift-only vectors (`testRootLevelListsPersonas` through `testPersonaDecodesFromWebJSON`) are
+skipped there because the web package has no facet-navigation module or Codable decode, and are
+covered by `PersonasModuleTests.swift`. The eight phase 8 vectors are owed and have no test yet,
+so this surface is untested: `services.setModelAvailability` (request, returned service, and
+failure status), the `ModelInfo` `available`/`offered` defaults and the bare-string read, the
+identity of the personas re-exports with the `@adh-sdk/ai-settings` objects, and the persona
+editor's availability filter and switched-off saved model. `server-side-authorization` passes: every grant
 surface (`personaMayActApi`, `personaToolsApi`, `personaUserToolsApi`, `personaApprovalsApi`)
 defers the actual authorization decision to the server and the client contains no local
 permission check; `interestDocumentsApi`'s act-as-persona header is likewise checked by the

@@ -22,7 +22,12 @@ tags:
   - ui
 depends-on:
   - 4af83bb1-0178-462a-b0fc-ae009b63133f
-related: []
+related:
+  - 4af83bb1-0178-462a-b0fc-ae009b63133f
+  - 9069ccf9-0357-4311-9671-91ee2793adae
+  - 0bba1f5b-bc8d-4f76-b1c9-329b627f7ee8
+  - 8ce108f2-b64b-4e01-8dbb-94ef3397b46a
+  - 9f87b4cd-f3a0-482b-830d-c1482ed51bbe
 references: []
 approved-by: ""
 approved-date: ""
@@ -40,16 +45,20 @@ modal over the rail, never in a blank editor. The editor holds the service's fie
 base URL, API key), a Connection group with a Connect button, and a Models group with a Refresh
 button and a table of the provider's models.
 
-The package was carved out of the personas package and keeps that package's behavior, with the phase 8
-changes stated below as requirements. After phase 8 each model in the table has an Available checkbox,
-ticked by default, which switches the model on or off for this workspace, and a model the provider no
-longer lists but which is still switched off shows as "No longer offered". `AiSettingsSection` is
-`ServicesSection` titled "AI Settings". The service list is read through `useUserServices`, one cache
-entry shared with the persona editor's service picker; its key keeps the name
-`PERSONA_SERVICES_CACHE_KEY` and the value `"persona-services"`. The data client, the model and service
-types, and the wire shapes belong to the personas data module (see
-[adhsdk.ingredient.adh.hub.personas](cookbook:4af83bb1-0178-462a-b0fc-ae009b63133f)); this recipe covers
-the screen, its hook and its package layout.
+Each model in the table has an Available checkbox, ticked by default, which switches the model on or
+off for this workspace, and a model the provider no longer lists but which is still switched off shows
+as "No longer offered". `AiSettingsSection` is `ServicesSection` titled "AI Settings". The service list
+is read through `useUserServices`, one cache entry shared with the persona editor's service picker; its
+key keeps the name `PERSONA_SERVICES_CACHE_KEY` and the value `"persona-services"`. The data client, the
+model and service types, and the wire shapes belong to the personas data module; the personas package's
+re-exports of this package, its import of it in `PersonasSection` and the persona editor's model select
+are specified by [adhsdk.ingredient.adh.hub.personas](cookbook:4af83bb1-0178-462a-b0fc-ae009b63133f),
+and the `ai-settings` hub segment and the redirect-only `llm-providers` and `persona-services` segments
+by [adhsdk.ingredient.adh.sites.site-registry](cookbook:9069ccf9-0357-4311-9671-91ee2793adae). This
+ingredient covers the screen, its hook and its package layout.
+
+The package was carved out of the personas package in phase 8 and keeps that package's behavior; the
+Available column and "No longer offered" were added in the same phase.
 
 ## Behavioral Requirements
 
@@ -62,17 +71,10 @@ the screen, its hook and its package layout.
 - **sources-css**: `sources.css` MUST register the package's own `src` and `dist` files as Tailwind
   sources, and MUST chain the `sources.css` of each dependency whose components the package mounts, so
   a host adds one import line.
-- **moved-with-history**: `ServicesSection` and `useUserServices` MUST be moved from the personas
-  package into this one, not copied, so file history follows.
 - **ai-settings-section**: The package MUST export `AiSettingsSection`, which MUST render
   `ServicesSection` with the title "AI Settings".
 - **services-section-export**: The package MUST export `ServicesSection`, `useUserServices` and
   `PERSONA_SERVICES_CACHE_KEY`.
-- **personas-reexport**: The personas package MUST depend on this package and MUST re-export
-  `ServicesSection`, `useUserServices` and `PERSONA_SERVICES_CACHE_KEY` from its barrel as the same
-  objects, so a host that imports them from personas keeps working until Cleanup removes the
-  re-exports.
-- **personas-section-import**: `PersonasSection` MUST import these three from this package.
 
 ### The services cache
 
@@ -209,8 +211,8 @@ the screen, its hook and its package layout.
 ### The models table
 
 - **table-empty**: With no models the table MUST be replaced by the text "No models yet", a dash, then "Connect or Refresh."
-- **table-columns**: The table MUST keep the columns Model, Family, Context, Max out, $/1M in, $/1M
-  out and Caps, in that order, and MUST gain an Available column.
+- **table-columns**: The table MUST show the columns Model, Family, Context, Max out, $/1M in, $/1M
+  out, Caps and Available, in that order, so Available is the last column.
 - **models-from-service-row**: The table MUST render the models carried by the service row, not a live
   model route.
 - **model-name**: A model's first column MUST show its display name, else its id.
@@ -226,36 +228,31 @@ the screen, its hook and its package layout.
 - **available-change**: Changing the checkbox MUST call the data client's `setModelAvailability` with the
   service id, the model and the new checked value, then revalidate the services cache
   (`PERSONA_SERVICES_CACHE_KEY`).
+- **available-change-failure**: When `setModelAvailability` fails, the screen MUST report the failure
+  through `reportUnexpectedAuthError`, the helper its other writes use, with feature `services` and
+  step `setModelAvailability`; MUST show the error's message in an error line; and the checkbox MUST
+  show the service's last known state, so it does not stay flipped.
 - **no-longer-offered**: A model whose `offered` is false MUST show "No longer offered" and an unticked
   checkbox. A model with no `offered` value MUST read as offered.
+- **re-enable-no-longer-offered**: The checkbox of a no-longer-offered model MUST stay enabled. Ticking
+  it MUST call `setModelAvailability(id, model, true)`, and once the services cache revalidates the
+  row MUST be gone, because the backend deletes the off record and so no longer appends the name.
 - **model-key**: Rows MUST be keyed by model id.
 
 ### The data contract this screen relies on
 
 - **model-item-shape**: Each model item the screen reads MUST carry `available` (boolean, true when the
-  wire omits it) and `offered` (boolean, true when the wire omits it), in addition to its existing
-  fields.
+  wire omits it) and `offered` (boolean, true when the wire omits it), beside its other fields.
 - **set-availability-call**: The data client MUST expose `services.setModelAvailability(id, model,
-  available)` beside `refreshModels`, calling `POST /api/v1/ai_services/{id}/model_availability` (the v1
-  route `/v1/ai_services/{id}/model_availability`) with the body
-  `{ model, available }` and reading the answer, the updated service, with the service decoder.
-- **disabled-names-appended**: Names the provider no longer lists but which remain switched off MUST be
-  appended to a service's model list with `offered` false and `available` false.
+  available)` beside `refreshModels`, sending `POST /api/v1/ai_services/{id}/model_availability` with
+  the body `{ model, available }` and reading the answer, the updated service, with the service
+  decoder.
+- **disabled-names-appended**: The backend appends to a service's model list each name the provider no
+  longer lists but which remains switched off, with `offered` false and `available` false. The screen
+  MUST render those entries in the order they arrive, each with an unticked checkbox and "No longer
+  offered".
 
-### Dependent screens
-
-- **persona-select-available-only**: The persona editor's model select MUST list only available models.
-- **persona-keeps-saved-model**: A persona whose saved model is switched off MUST show that model as the
-  current value labelled "(not available)" with an inline note, so saving other fields does not change
-  the model.
-- **persona-service-change-reset**: Changing the persona's service MUST still reset its model, as before.
-
-### Registry and routing
-
-- **segment-ai-settings**: The hub registry's extra feature segments MUST include `ai-settings`; the
-  generated routes, the reserved slugs and the menu icons MUST each gain an `ai-settings` entry.
-- **redirect-only-segments**: The `llm-providers` and `persona-services` segments MUST stay as
-  redirect-only segments until Cleanup removes them.
+The backend serves that path as the v1 route `POST /v1/ai_services/{id}/model_availability`.
 
 ## Appearance
 
@@ -287,7 +284,7 @@ All values are design tokens and utility classes in source; the component define
 | Read failed | The error appears in the overview hint (rows listed) or in the pane (no rows). |
 | Empty list | The rail says "No services yet." and the pane shows the select hint. |
 | Dirty editor | Save is enabled once the draft is valid; a blocker message shows when a required field is blank; an exit guard is published. |
-| Saving | The Save button reads as saving and the editor's fields are unchanged. |
+| Saving | The Save button reads "Saving…" and is disabled, as is Cancel; the editor's fields are unchanged. |
 | Connecting | The Connect button reads "Connecting…" and is disabled. |
 | Connect failed | The connect error is shown under the button. |
 | Connected | "Connected successfully." in green. |
@@ -295,7 +292,8 @@ All values are design tokens and utility classes in source; the component define
 | No models | The table is replaced by the text "No models yet", a dash, then "Connect or Refresh." |
 | Model available | The row's Available checkbox is ticked. |
 | Model unavailable | The row's Available checkbox is unticked. |
-| Model no longer offered | The row shows "No longer offered" and an unticked checkbox. |
+| Model no longer offered | The row shows "No longer offered" and an unticked, enabled checkbox. |
+| Availability change failed | An error line shows the message; the checkbox shows the service's last known state. |
 | Create modal open | The "New service" modal is over the rail with its Name field focused. |
 | Create refused | The modal shows the validation message under the form. |
 | Disabled control | The Provider select in the editor is disabled. |
@@ -306,9 +304,12 @@ Pressed and hover states of buttons belong to the shared button component and ar
 
 - **Role/trait**: The models table is a native table with header cells; the Available control is a
   checkbox; the create modal is a modal dialog labelled "New service"; the blocker message in the
-  button bar has the status role; every error line (list, save, delete, create and connect errors) is
-  the shared `ErrorText` with the alert role; the rail icons are marked decorative.
-- **available-checkbox-label**: NEEDS REVIEW: Not implemented in source. Neither the design nor the source says how each row's Available checkbox is named for assistive technology; a row with only a bare checkbox cannot be told apart from the next, and the screen's reviewer needs to decide on a per-model accessible name (for example the model's display name) before this is testable.
+  button bar has the status role; every error line (list, save, delete, create, connect and
+  availability errors) is the shared `ErrorText` with the alert role; the rail icons are marked
+  decorative.
+- **available-checkbox-label**: Each row's Available checkbox MUST have the accessible name "Available"
+  plus the model's display name, for example `aria-label="Available: <display name>"`, so one row's box
+  can be told from the next.
 - **Keyboard**: Every control is a native input, select, button or checkbox, so it takes the platform's
   default keyboard path; the source adds no custom key handling.
 - **Announce state changes**: The blocker message announces itself (status role) and every error line
@@ -323,7 +324,8 @@ Pressed and hover states of buttons belong to the shared button component and ar
 
 The first eight vectors come from the named tests in `ServicesSection.test.tsx` beside the source, and
 the ninth from the setup every one of them shares. The others are derived from the source's own
-functions and from the phase 8 design; the plan's `ModelsTable.test.tsx` covers the Available vectors.
+functions and from the phase 8 design. A vector marked "owed: ModelsTable.test.tsx (phase 8 Task 10)"
+has no test yet; that file is not written.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
@@ -342,16 +344,17 @@ functions and from the phase 8 design; the plan's `ModelsTable.test.tsx` covers 
 | ai-settings-013 | number-format | Context 1,500,000; 128,000; 900; absent | "1.5M"; "128K"; "900"; the dash glyph. |
 | ai-settings-014 | price-format, dash-for-missing | Input price 3, output price absent | "$3.00" and the dash glyph. |
 | ai-settings-015 | capability-chips | A model supporting tools and thinking only; a model supporting none | Chips "tools" and "thinking"; a lone dash glyph. |
-| ai-settings-016 | available-checkbox | A model `{ id: "m1", available: true }`; one with `available: false`; one with no `available` | Ticked; unticked; ticked. |
-| ai-settings-017 | available-change, set-availability-call | Untick the box of model `m1` on service `svc_1` | `setModelAvailability("svc_1", "m1", false)` is called and the services cache is revalidated. |
-| ai-settings-018 | no-longer-offered | A model with `offered: false` and `available: false` | The row shows "No longer offered" and an unticked checkbox. |
+| ai-settings-016 | available-checkbox | A model `{ id: "m1", available: true }`; one with `available: false`; one with no `available` (owed: ModelsTable.test.tsx (phase 8 Task 10)) | Ticked; unticked; ticked. |
+| ai-settings-017 | available-change, set-availability-call | Untick the box of model `m1` on service `svc_1` (owed: ModelsTable.test.tsx (phase 8 Task 10)) | `setModelAvailability("svc_1", "m1", false)` is called and the services cache is revalidated. |
+| ai-settings-018 | no-longer-offered, disabled-names-appended | A model with `offered: false` and `available: false` (owed: ModelsTable.test.tsx (phase 8 Task 10)) | The row shows "No longer offered" and an unticked checkbox. |
 | ai-settings-019 | table-empty | A service with an empty model list | the text "No models yet", a dash, then "Connect or Refresh." and no table. |
-| ai-settings-020 | cache-key-kept, personas-reexport | Import the key from this package and from the personas package | Both are the string `"persona-services"`, and the three re-exports are the same objects. |
+| ai-settings-020 | cache-key-kept | Import `PERSONA_SERVICES_CACHE_KEY` from this package | It is the string `"persona-services"`. |
 | ai-settings-021 | ai-settings-section | Render `AiSettingsSection` | The rail heading reads "AI Settings". |
 | ai-settings-022 | services-read-failure | The list call rejects | The failure is reported with feature `services`, step `list`, and the pane shows the error rather than "Loading…". |
 | ai-settings-023 | template-failure-degrades | The template call rejects while the create modal is open | The failure is reported (step `templates`), the template group is absent and the fields work by hand. |
-| ai-settings-024 | persona-keeps-saved-model | A persona saved with model `m2`, which is switched off | The persona editor's select shows `m2 (not available)` with a note, and lists no other unavailable model. |
 | ai-settings-025 | delete-confirmation | Press Delete and decline the confirmation | No delete call is made. |
+| ai-settings-026 | available-change-failure | Untick the box of a ticked model `m1` on service `svc_1` while `setModelAvailability` rejects with "boom" (owed: ModelsTable.test.tsx (phase 8 Task 10)) | The failure is reported with feature `services`, step `setModelAvailability`; an error line reads "boom"; the box is ticked again. |
+| ai-settings-027 | re-enable-no-longer-offered | Tick the box of model `m9` with `offered: false` and `available: false` on service `svc_1`; the revalidated list no longer carries `m9` (owed: ModelsTable.test.tsx (phase 8 Task 10)) | The box was enabled; `setModelAvailability("svc_1", "m9", true)` is called; after revalidation no `m9` row is shown. |
 
 ## Edge Cases
 
@@ -371,7 +374,8 @@ functions and from the phase 8 design; the plan's `ModelsTable.test.tsx` covers 
   (MUST). A failed create keeps the modal open and shows the error message, or "Failed to create."
   (MUST). A failed template read degrades to an empty catalog (MUST). A failed connect or refresh is
   reported but shows no message of its own (see the open question on `refresh-models-failure`). A failed
-  availability call has no specified user-visible state in the design, so this recipe sets none.
+  availability call is reported, shows an error line and leaves the checkbox at the service's last
+  known state (MUST).
 - **Offline or disconnected state**: The screen does no offline handling of its own. With no
   connection the list read fails and is shown as an error, and every write fails as described above;
   nothing is queued or retried (MUST NOT retry).
@@ -397,8 +401,8 @@ functions and from the phase 8 design; the plan's `ModelsTable.test.tsx` covers 
 ## Deep Linking
 
 Not applicable at the screen level: the component owns no URL. A host supplies `urlSelection` to make
-the open service deep-linkable; the route segment is the host's (`ai-settings`, with `llm-providers`
-and `persona-services` redirecting to it until Cleanup).
+the open service deep-linkable; the route segment is the host's (`ai-settings`, with the redirect-only
+segments specified by [adhsdk.ingredient.adh.sites.site-registry](cookbook:9069ccf9-0357-4311-9671-91ee2793adae)).
 
 ## Localization
 
@@ -415,7 +419,23 @@ and `persona-services` redirecting to it until Cleanup).
 | n/a (literal) | Connected successfully. | Connect result |
 | n/a (literal) | A name is required., Select a provider., A base URL is required. | Required-field messages |
 | n/a (literal) | Fill in all the URL fields., Fill in all the header fields. | Create-only messages |
-| n/a (literal) | Failed to save service., Failed to delete service. | Fallback error messages |
+| n/a (literal) | Failed to save service., Failed to delete service., Failed to create. | Fallback error messages |
+| n/a (literal) | Model, Family, Context, Max out, $/1M in, $/1M out, Caps | Models table columns |
+| n/a (literal) | tools, vision, thinking | Capability chips |
+| n/a (literal) | Available: <display name> | Accessible name of a row's Available checkbox |
+| n/a (literal) | Connection, Models | Editor group titles |
+| n/a (literal) | Name, Provider, Base URL, API key | Field labels |
+| n/a (literal) | Cannot change after creation. | Provider hint in the editor |
+| n/a (literal) | Leave blank to keep the existing key., •••• set, sk-… | API key hint and placeholders |
+| n/a (literal) | Select a provider, OpenAI, Anthropic, Google Gemini | Provider placeholder and choices |
+| n/a (literal) | Last: <date>, Fetched: <date> | Connection and Models timestamps |
+| n/a (literal) | Save, Saving… | Save button, idle and while saving (shared button bar) |
+| n/a (literal) | Service API | Title of the editor's API entry |
+| n/a (literal) | Delete service "<name>"? This cannot be undone. | Delete confirmation |
+| n/a (literal) | Start from a template, Custom (no template) | Template group and its first option |
+| n/a (literal) | e.g. <example>, Filled in from the values above. | URL variable hint; read-only Base URL hint |
+| n/a (literal) | No first-party API, Use <name> | Informational template cards and gateway button |
+| n/a (literal) | Authenticates via the `<header>` header., Uses AWS SigV4 signing, a dash, then not yet supported by this client., Uses OAuth, a dash, then not yet supported by this client. | Auth hints for header, sigv4 and oauth2 templates |
 
 All strings are literals in source with no message catalog; number formatting uses fixed "K" and "M"
 suffixes and a fixed dollar sign, not locale formatting.
@@ -454,7 +474,7 @@ shared auth error reporter with a feature and step, which is error reporting, no
 
 Not applicable: the component contains no logging calls. Failures go to the shared reporter
 `reportUnexpectedAuthError` with feature `services` and the step (`list`, `templates`, `save`,
-`delete`, `connect`, `refreshModels`). A failed create is reported by the shared create dialog with
+`delete`, `connect`, `refreshModels`, `setModelAvailability`). A failed create is reported by the shared create dialog with
 feature `create-resource-dialog` and step `save`.
 
 ## Platform Notes
@@ -462,13 +482,14 @@ feature `create-resource-dialog` and step `save`.
 - **SwiftUI**: Start from a `NavigationSplitView` whose sidebar is a `List` of services (name as the
   title, provider kind as the subtitle, a `Label` with an SF Symbol) and whose detail is a `Form` with
   `Section`s for Service, Connection and Models. Create in a `.sheet`. The models table is a `Table`
-  with `TableColumn`s and a `Toggle` column for Available; format counts with a custom `K`/`M` rule, not
-  `formatted()`, to match this recipe. Unsaved-change protection has no automatic equivalent: use a
+  with `TableColumn`s and a `Toggle` column for Available, each toggle given
+  `.accessibilityLabel("Available: <display name>")`; format counts with a custom `K`/`M` rule, not
+  `formatted()`, to match this ingredient. Unsaved-change protection has no automatic equivalent: use a
   confirmation dialog on selection change.
 - **Compose**: A list-detail layout (`ListDetailPaneScaffold`) with a `LazyColumn` rail and a form
   `Column`; create in a `ModalBottomSheet` or dialog. The models table is a `LazyColumn` of rows with a
-  `Checkbox` (use `Modifier.toggleable` on the row so the whole row is the target and the label is the
-  model name) and an `AssistChip` row for capabilities. Keep the draft in a `ViewModel` and compare
+  `Checkbox` (use `Modifier.toggleable` on the row so the whole row is the target, with a
+  `contentDescription` of "Available: <display name>") and an `AssistChip` row for capabilities. Keep the draft in a `ViewModel` and compare
   against the loaded baseline for the Save gate.
 - **React/Web**: The source platform. The files are `ServicesSection.tsx` (the section, the create form,
   the editor and the models table), `useUserServices.ts` (the cached list and the exported key),
@@ -481,9 +502,11 @@ feature `create-resource-dialog` and step `save`.
   list cache.
 - **AppKit / UIKit**: A split view controller with an `NSOutlineView` or `UITableView` rail and a form
   detail. The models table is an `NSTableView` with a checkbox cell (`NSButton` of switch type) or a
-  `UITableView` with `UISwitch` accessory views. The Save gate maps to `isDocumentEdited` on AppKit, and
-  an unsaved-changes sheet on selection change. The Apple model item (`PersonasModels.swift`, generated
-  from the OpenAPI) carries `available` as an optional field; read a missing value as available.
+  `UITableView` with `UISwitch` accessory views, each given the accessibility label "Available: <display
+  name>". The Save gate maps to `isDocumentEdited` on AppKit, and an unsaved-changes sheet on selection
+  change. The Apple model item (`PersonasModels.swift`, generated from the OpenAPI) carries `available`
+  and `offered` as optional fields; read a missing `available` as available and a missing `offered` as
+  offered.
 - **WinUI 3**: Use a `NavigationView` (or a two-column `Grid` with a `ListView`) for the rail, with an
   `ItemTemplate` showing name and a subtitle `TextBlock`; the pane is a `ScrollViewer` holding
   `StackPanel` groups (`Expander` or `HeaderedContentControl` for Service, Connection and Models). Create
@@ -492,7 +515,7 @@ feature `create-resource-dialog` and step `save`.
   editing; API key is a `PasswordBox`. Template choice is a `ComboBox`; informational templates are
   `Border` cards with `HyperlinkButton`s for "Use <name>". The models table is a `DataGrid` (Windows
   Community Toolkit) or an `ItemsRepeater` of rows with a `CheckBox` column bound two-way to
-  `Available`; give each box `AutomationProperties.Name` set to the model's display name, and use
+  `Available`; give each box `AutomationProperties.Name` set to "Available: <display name>", and use
   `AutomationProperties.LiveSetting` on the blocker and connect messages. "No longer offered" is a
   `VisualState` of the row (checkbox unchecked, secondary-brush text). Save is a `Button` whose
   `IsEnabled` is `IsDirty && IsValid`; guard navigation with the `NavigationView.ItemInvoked` handler and
@@ -518,10 +541,11 @@ offered", unticked.
 row stays visible so the record can be cleared.
 **Approved**: pending
 
-**Decision**: `ServicesSection` and `useUserServices` are moved with history into this package, and the
-personas package re-exports them until Cleanup.
-**Rationale**: Per the design, no host import breaks during the phase, and the re-exports are removed
-once hosts import from the new package.
+**Decision**: `ServicesSection` and `useUserServices` were moved from the personas package into this
+one with `git mv`, not copied, so file history follows them.
+**Rationale**: Per the design, the move is one carve-out in phase 8; the personas package's re-exports,
+which keep host imports working until Cleanup removes them, are specified by
+[adhsdk.ingredient.adh.hub.personas](cookbook:4af83bb1-0178-462a-b0fc-ae009b63133f).
 **Approved**: pending
 
 **Decision**: The `title` default stays "Persona Services" on `ServicesSection`; `AiSettingsSection`
@@ -531,7 +555,8 @@ supplies "AI Settings".
 **Approved**: pending
 
 **Decision**: Creating a service is a modal, never a blank editor leaf.
-**Rationale**: The source comment cites the hierarchical detail view's `must-create-in-modal` rule; the
+**Rationale**: The source comment cites the `must-create-in-modal` rule of
+[adhsdk.recipe.ui.blocks.hierarchical-topic-detail](cookbook:0bba1f5b-bc8d-4f76-b1c9-329b627f7ee8); the
 created service is then selected so its Connection and Models groups open.
 **Approved**: pending
 
@@ -570,9 +595,11 @@ must not be reported twice under two contexts.
 `separation-of-concerns` is `partial`: transport lives in the personas data module and the services
 list in `useUserServices`, but the section, the create form, the editor, the models table and the pure
 helpers (substitution, label, number format) share one component file. `unit-test-coverage` is
-`partial`: `ServicesSection.test.tsx` covers the Save gate and the exit guard, and the plan's
-`ModelsTable.test.tsx` covers the Available checkbox and "No longer offered", but the create modal, the
-template logic, the number and price formatting, and Connect and Refresh have no test beside them. `error-response-handling` is `partial`: list, save, delete and create-form failures show a
+`partial`: `ServicesSection.test.tsx` covers the Save gate and the exit guard; the Available checkbox,
+"No longer offered", a failed availability change and re-enabling have no test yet (their vectors are
+owed), and the create modal, the template logic, the number and price formatting, and Connect and
+Refresh have no test beside them. `error-response-handling` is `partial`: list, save, delete,
+availability and create-form failures show a
 message, a template failure degrades, but a failed Connect or Refresh is only reported (see the open
 question on `refresh-models-failure`). `secure-storage` passes for the client: the API key is sent only
 when typed, is shown in a password field and is never read back. `semantic-markup` passes: the models

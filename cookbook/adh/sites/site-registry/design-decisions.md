@@ -88,3 +88,14 @@ every test case from the list itself, and saying nothing else in prose, removes 
 second copy that could drift.
 **Approved**: pending
 
+**Decision**: When `ai-settings` replaces the hub segments `llm-providers` and
+`persona-services`, the two old segments stay in the hub-only extra segments as
+redirect-only segments, and the hub site, not this registry, does the redirect to
+`ai-settings`. They are removed in a later cleanup, once no link uses them.
+**Rationale**: Stored links and bookmarks still point at the old segments. Dropping
+them from the list now would stop those links resolving as hub workspace segments, so
+they would fail before any redirect could run. The registry says which segments
+resolve; the hub site is where the request lands, so the redirect sits there, next to
+the page it sends the reader to.
+**Approved**: pending
+

@@ -8,17 +8,10 @@
 - **sources-css**: `sources.css` MUST register the package's own `src` and `dist` files as Tailwind
   sources, and MUST chain the `sources.css` of each dependency whose components the package mounts, so
   a host adds one import line.
-- **moved-with-history**: `ServicesSection` and `useUserServices` MUST be moved from the personas
-  package into this one, not copied, so file history follows.
 - **ai-settings-section**: The package MUST export `AiSettingsSection`, which MUST render
   `ServicesSection` with the title "AI Settings".
 - **services-section-export**: The package MUST export `ServicesSection`, `useUserServices` and
   `PERSONA_SERVICES_CACHE_KEY`.
-- **personas-reexport**: The personas package MUST depend on this package and MUST re-export
-  `ServicesSection`, `useUserServices` and `PERSONA_SERVICES_CACHE_KEY` from its barrel as the same
-  objects, so a host that imports them from personas keeps working until Cleanup removes the
-  re-exports.
-- **personas-section-import**: `PersonasSection` MUST import these three from this package.
 
 ### The services cache
 
@@ -155,8 +148,8 @@
 ### The models table
 
 - **table-empty**: With no models the table MUST be replaced by the text "No models yet", a dash, then "Connect or Refresh."
-- **table-columns**: The table MUST keep the columns Model, Family, Context, Max out, $/1M in, $/1M
-  out and Caps, in that order, and MUST gain an Available column.
+- **table-columns**: The table MUST show the columns Model, Family, Context, Max out, $/1M in, $/1M
+  out, Caps and Available, in that order, so Available is the last column.
 - **models-from-service-row**: The table MUST render the models carried by the service row, not a live
   model route.
 - **model-name**: A model's first column MUST show its display name, else its id.
@@ -172,34 +165,29 @@
 - **available-change**: Changing the checkbox MUST call the data client's `setModelAvailability` with the
   service id, the model and the new checked value, then revalidate the services cache
   (`PERSONA_SERVICES_CACHE_KEY`).
+- **available-change-failure**: When `setModelAvailability` fails, the screen MUST report the failure
+  through `reportUnexpectedAuthError`, the helper its other writes use, with feature `services` and
+  step `setModelAvailability`; MUST show the error's message in an error line; and the checkbox MUST
+  show the service's last known state, so it does not stay flipped.
 - **no-longer-offered**: A model whose `offered` is false MUST show "No longer offered" and an unticked
   checkbox. A model with no `offered` value MUST read as offered.
+- **re-enable-no-longer-offered**: The checkbox of a no-longer-offered model MUST stay enabled. Ticking
+  it MUST call `setModelAvailability(id, model, true)`, and once the services cache revalidates the
+  row MUST be gone, because the backend deletes the off record and so no longer appends the name.
 - **model-key**: Rows MUST be keyed by model id.
 
 ### The data contract this screen relies on
 
 - **model-item-shape**: Each model item the screen reads MUST carry `available` (boolean, true when the
-  wire omits it) and `offered` (boolean, true when the wire omits it), in addition to its existing
-  fields.
+  wire omits it) and `offered` (boolean, true when the wire omits it), beside its other fields.
 - **set-availability-call**: The data client MUST expose `services.setModelAvailability(id, model,
-  available)` beside `refreshModels`, calling `POST /api/v1/ai_services/{id}/model_availability` (the v1
-  route `/v1/ai_services/{id}/model_availability`) with the body
-  `{ model, available }` and reading the answer, the updated service, with the service decoder.
-- **disabled-names-appended**: Names the provider no longer lists but which remain switched off MUST be
-  appended to a service's model list with `offered` false and `available` false.
+  available)` beside `refreshModels`, sending `POST /api/v1/ai_services/{id}/model_availability` with
+  the body `{ model, available }` and reading the answer, the updated service, with the service
+  decoder.
+- **disabled-names-appended**: The backend appends to a service's model list each name the provider no
+  longer lists but which remains switched off, with `offered` false and `available` false. The screen
+  MUST render those entries in the order they arrive, each with an unticked checkbox and "No longer
+  offered".
 
-### Dependent screens
-
-- **persona-select-available-only**: The persona editor's model select MUST list only available models.
-- **persona-keeps-saved-model**: A persona whose saved model is switched off MUST show that model as the
-  current value labelled "(not available)" with an inline note, so saving other fields does not change
-  the model.
-- **persona-service-change-reset**: Changing the persona's service MUST still reset its model, as before.
-
-### Registry and routing
-
-- **segment-ai-settings**: The hub registry's extra feature segments MUST include `ai-settings`; the
-  generated routes, the reserved slugs and the menu icons MUST each gain an `ai-settings` entry.
-- **redirect-only-segments**: The `llm-providers` and `persona-services` segments MUST stay as
-  redirect-only segments until Cleanup removes them.
+The backend serves that path as the v1 route `POST /v1/ai_services/{id}/model_availability`.
 

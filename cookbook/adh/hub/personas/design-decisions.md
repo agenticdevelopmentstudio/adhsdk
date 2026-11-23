@@ -8,7 +8,9 @@ switched back on.
 **Approved**: pending
 
 **Decision**: the provider UI moves to `@adh-sdk/ai-settings`, and the personas package re-exports
-`ServicesSection`, `useUserServices` and `PERSONA_SERVICES_CACHE_KEY` until Cleanup.
+`ServicesSection`, `useUserServices` and `PERSONA_SERVICES_CACHE_KEY` for existing hosts until the
+hub foundation's Cleanup phase (the "Cleanup (after the owner deploys)" section of
+`docs/planning/2026-11-18-hub-foundation-phase-checklist.md` in the planning repo) removes them.
 **Rationale**: AI Settings is no longer a personas concern, but hosts import these names from
 personas today; the re-exports (the same objects) keep them working. The cache key keeps its name
 and value so the admin host that shares the cache entry is untouched.

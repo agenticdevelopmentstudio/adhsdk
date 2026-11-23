@@ -11,9 +11,11 @@
 `separation-of-concerns` is `partial`: transport lives in the personas data module and the services
 list in `useUserServices`, but the section, the create form, the editor, the models table and the pure
 helpers (substitution, label, number format) share one component file. `unit-test-coverage` is
-`partial`: `ServicesSection.test.tsx` covers the Save gate and the exit guard, and the plan's
-`ModelsTable.test.tsx` covers the Available checkbox and "No longer offered", but the create modal, the
-template logic, the number and price formatting, and Connect and Refresh have no test beside them. `error-response-handling` is `partial`: list, save, delete and create-form failures show a
+`partial`: `ServicesSection.test.tsx` covers the Save gate and the exit guard; the Available checkbox,
+"No longer offered", a failed availability change and re-enabling have no test yet (their vectors are
+owed), and the create modal, the template logic, the number and price formatting, and Connect and
+Refresh have no test beside them. `error-response-handling` is `partial`: list, save, delete,
+availability and create-form failures show a
 message, a template failure degrades, but a failed Connect or Refresh is only reported (see the open
 question on `refresh-models-failure`). `secure-storage` passes for the client: the API key is sent only
 when typed, is shown in a password field and is never read back. `semantic-markup` passes: the models

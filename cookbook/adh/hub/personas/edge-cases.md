@@ -18,7 +18,7 @@
 - A wire model item that omits `available` or `offered` MUST be read as `true` for each, so an
   older backend that never sends them makes every model available.
 - A model that is a bare string on the wire is read as `{ id }`, which then takes the same
-  defaults (`available` and `offered` both `true`).
+  defaults (`available` and `offered` both `true`), per `model-bare-string-read-as-id`.
 - A service whose models are all switched off leaves the editor's model select with no choice
   beyond "No model selected" (and the saved model, if any, labelled "(not available)").
 - Any failure from the underlying data source (e.g. offline) on the root-level listing,

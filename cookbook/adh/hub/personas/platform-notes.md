@@ -11,9 +11,9 @@
   Sendable, Equatable, Identifiable` structs. `Persona.cannedChat`/`.chatStatus` are typed as the
   Hub `JSONValue` (hand-written `Decodable`, `==`/`hash(into:)` that treats `.int` and `.number`
   as the same JSON number) — not the unrelated, simpler `JSONValue` under `Sync/`. Errors from the
-  data source are wrapped as `HubError.wrap(error)`. From phase 8 `PersonaServiceModel` gains an
-  optional `available` (generated from the OpenAPI); the Apple side has no availability filter
-  or toggle of its own.
+  data source are wrapped as `HubError.wrap(error)`. `PersonaServiceModel` carries an optional
+  `available` (generated from the OpenAPI); a missing `available` is read as available, matching
+  the web `ModelInfo` default. The Apple side has no availability filter or toggle of its own.
 - **React / TypeScript (web, already implemented)**: the client family under
   `packages/web/packages/data/src/personas/` is the wider of the two implementations — it covers
   services, provider templates, tool/may-act/approval grants, per-user tool consent, special
@@ -42,7 +42,7 @@
   /`resolveChatStatus`, and `demoPreviewApi` are deliberately duplicated logic that must agree
   with the backend's authoritative implementation (`backend/src/adh/src/llm/canned/config.ts`,
   `backend/src/adh/src/db/schema/persona.ts`, `adh/docs/planning/demo-chat-ink-engine.md §10`); any
-  port MUST keep its copy in lockstep with the backend rather than treating this recipe's
+  port MUST keep its copy in lockstep with the backend rather than treating this ingredient's
   TypeScript as the source of truth — "when they disagree, the backend wins," per `wire.ts`'s own
   comment.
 

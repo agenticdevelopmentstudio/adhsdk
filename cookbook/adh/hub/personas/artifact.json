@@ -24,11 +24,12 @@
       "hub",
       "personas",
       "data-source",
-      "forms",
       "chat-demo",
       "access-control"
     ],
-    "depends-on": [],
+    "depends-on": [
+      "5fdf4ce9-cb7e-4490-a6d6-066690ef07ca"
+    ],
     "related": [
       "faa2c3f3-1ff7-45fb-b6da-efed3cc1d451",
       "00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/04fe1298-3880-4584-8a4a-c7a538eb5193",
@@ -59,9 +60,6 @@
       "packages/web/packages/data/src/personas/interest-documents.ts (adhsdk)",
       "packages/web/packages/data/src/personas/persona-abilities.ts (adhsdk)",
       "packages/web/packages/data/src/personas/persona-user-tools.ts (adhsdk)",
-      "packages/web/packages/features/personas/src/index.ts (adhsdk)",
-      "packages/web/packages/features/personas/src/PersonasSection.tsx (adhsdk)",
-      "packages/web/packages/features/personas/src/PersonaEditor.tsx (adhsdk)",
       "packages/web/packages/data/src/personas/__tests__/canned.test.ts (adhsdk)",
       "packages/web/packages/data/src/personas/__tests__/chat-status.test.ts (adhsdk)",
       "packages/web/packages/data/src/personas/__tests__/demo-preview.test.ts (adhsdk)",
@@ -72,7 +70,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "0d4b5be48ac77c91",
+  "synced": "6bedf29a0ac8d91a",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

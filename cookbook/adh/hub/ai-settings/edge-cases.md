@@ -15,7 +15,8 @@
   (MUST). A failed create keeps the modal open and shows the error message, or "Failed to create."
   (MUST). A failed template read degrades to an empty catalog (MUST). A failed connect or refresh is
   reported but shows no message of its own (see the open question on `refresh-models-failure`). A failed
-  availability call has no specified user-visible state in the design, so this recipe sets none.
+  availability call is reported, shows an error line and leaves the checkbox at the service's last
+  known state (MUST).
 - **Offline or disconnected state**: The screen does no offline handling of its own. With no
   connection the list read fails and is shown as an error, and every write fails as described above;
   nothing is queued or retried (MUST NOT retry).

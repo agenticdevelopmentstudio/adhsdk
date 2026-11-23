@@ -17,10 +17,11 @@ offered", unticked.
 row stays visible so the record can be cleared.
 **Approved**: pending
 
-**Decision**: `ServicesSection` and `useUserServices` are moved with history into this package, and the
-personas package re-exports them until Cleanup.
-**Rationale**: Per the design, no host import breaks during the phase, and the re-exports are removed
-once hosts import from the new package.
+**Decision**: `ServicesSection` and `useUserServices` were moved from the personas package into this
+one with `git mv`, not copied, so file history follows them.
+**Rationale**: Per the design, the move is one carve-out in phase 8; the personas package's re-exports,
+which keep host imports working until Cleanup removes them, are specified by
+[adhsdk.ingredient.adh.hub.personas](cookbook:4af83bb1-0178-462a-b0fc-ae009b63133f).
 **Approved**: pending
 
 **Decision**: The `title` default stays "Persona Services" on `ServicesSection`; `AiSettingsSection`
@@ -30,7 +31,8 @@ supplies "AI Settings".
 **Approved**: pending
 
 **Decision**: Creating a service is a modal, never a blank editor leaf.
-**Rationale**: The source comment cites the hierarchical detail view's `must-create-in-modal` rule; the
+**Rationale**: The source comment cites the `must-create-in-modal` rule of
+[adhsdk.recipe.ui.blocks.hierarchical-topic-detail](cookbook:0bba1f5b-bc8d-4f76-b1c9-329b627f7ee8); the
 created service is then selected so its Connection and Models groups open.
 **Approved**: pending
 

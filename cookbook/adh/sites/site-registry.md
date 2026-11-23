@@ -98,7 +98,10 @@ router, and a downstream OAuth-return-origin sync process.
   exactly the identifiers of every site definition marked `adminOnly`, and every such
   entry MUST be excluded from the footer site list.
 - **support-routes-in-shares**: The hub's generated route shares MUST list the hosted `/support` page in the `hub` share, the `/support` topic in the `product-admin` share, and the operator admin site's three pages, `/break-glass`, `/support-access` and `/support-grants`, in the `admin` share, each in the sorted place [route-list-per-site-is-normalized](#requirements/route-list-per-site-is-normalized) gives it.
-- **ai-settings-hub-segment**: `HUB_EXTRA_FEATURE_SEGMENTS` MUST include `ai-settings`, the hub knob that holds the workspace's AI Settings (services and their models), and the `hub` route share in `routes.hub.generated.ts` MUST carry an `ai-settings` line matching its one `llm-providers` line: `/[workspace]/ai-settings/[[...path]]`, in sorted place (after `/[workspace]/admin-site/[[...path]]`). The `/llm-providers` line in the `admin` share is the operator console's own provider page, whose id stays, and it gains no `ai-settings` line. `llm-providers` and `persona-services` MUST stay in `HUB_EXTRA_FEATURE_SEGMENTS` as redirect-only segments, so a stored link to either still resolves as a hub workspace segment; a comment beside them MUST say they redirect until Cleanup, and the website, not this module, MUST do the redirect to `ai-settings`, keeping the sub-path.
+- **ai-settings-extra-segment**: The hub-only extra segments MUST include `ai-settings`, the hub knob that holds the workspace's AI Settings (services and their models).
+- **ai-settings-hub-route-line**: The hub route share MUST carry one workspace line for `ai-settings`, `/[workspace]/ai-settings/[[...path]]`, matching its one `llm-providers` workspace line, in sorted place (after `/[workspace]/admin-site/[[...path]]`).
+- **admin-share-no-ai-settings**: The admin route share MUST NOT gain an `ai-settings` line. Its `/llm-providers` line is the operator console's own provider page, whose identifier stays.
+- **legacy-provider-segments-redirect-only**: `llm-providers` and `persona-services` MUST stay in the hub-only extra segments as redirect-only segments, so a stored link to either still resolves as a hub workspace segment. This module MUST NOT redirect them; the hub site does the redirect to `ai-settings`, keeping the sub-path.
 - **product-admin-site-registered**: The roster MUST define a `product-admin` site (a
   product's own admin site, phase 6) that is `adminOnly`, not `crawlable`, and has no home
   route (`hasHome` false), with `product-admin.agenticdeveloperhub.com` as its production
@@ -519,7 +522,10 @@ Not applicable: this is the site family's data registry and routing-resolution m
 | site-registry-062 | site-home-path-fallback | The home path for `hub` (traced to "siteHomePath is /home only for sites that expose one") | `'/home'` when `hasHome` is true; `'/'` otherwise |
 | site-registry-063 | product-admin-site-registered | The `product-admin` site's definition, the main-family roster, the footer list and the family roster's tail (traced to "registers the product admin site: its folder, not crawlable, admin-gated, a main app") | Its production host is `product-admin.agenticdeveloperhub.com`; the directory name `product-admin.agenticdeveloperhub` identifies it; it is not crawlable; it is in the admin-only ids and the main-family roster and not in the footer list; the roster ends `status`, `admin`, `product-admin`, `builds` |
 | site-registry-064 | support-routes-in-shares | The `hub`, `product-admin` and `admin` route shares | `/support` is in the first two, `/break-glass`, `/support-access` and `/support-grants` are in `admin`, and the website generator's `--check` reports no drift |
-| site-registry-065 | ai-settings-hub-segment | `HUB_EXTRA_FEATURE_SEGMENTS`, the `hub` and `admin` route shares, and `HUB_WORKSPACE_SEGMENTS` membership for `ai-settings`, `llm-providers` and `persona-services` (the phase 8 design; no registry test names these yet) | The extra-segments list contains `ai-settings`, `llm-providers` and `persona-services`; the `hub` share contains `/[workspace]/ai-settings/[[...path]]` in sorted place and no `/ai-settings`; the `admin` share still has `/llm-providers` and no `/ai-settings`; all three are members of `HUB_WORKSPACE_SEGMENTS`, and the website generator's `--check` reports no drift |
+| site-registry-065 | ai-settings-extra-segment | The hub-only extra segments and the hub workspace segments, for `ai-settings`; owed (phase 8 Task 11) | The extra-segments list contains `ai-settings`, and it is a hub workspace segment |
+| site-registry-066 | legacy-provider-segments-redirect-only | The hub-only extra segments and the hub workspace segments, for `llm-providers` and `persona-services`; owed (phase 8 Task 11) | The extra-segments list still contains both, and both are still hub workspace segments |
+| site-registry-067 | ai-settings-hub-route-line | The `hub` route share | It contains `/[workspace]/ai-settings/[[...path]]` in sorted place and no `/ai-settings`, and the website generator's `--check` reports no drift |
+| site-registry-068 | admin-share-no-ai-settings | The `admin` route share | It still has `/llm-providers` and has no `/ai-settings` |
 ## Edge Cases
 
 - **Null and empty input** (MUST): Building the workspace link for an empty slug
@@ -661,7 +667,7 @@ an empty result, or the input path unchanged) with no side channel.
   `ssoReturnOrigins`. The phase-6 `product-admin` site is one `SITES` row (`adminOnly`,
   `crawlable: false`), one `SITE_BUILD` entry (`handRolledConfig: true`), one entry in
   `MAIN_SITE_IDS`, one `SITE_STORIES` entry in `story.ts` (a `chapter` of the `backend`
-  pillar, like `admin`), and `admin-site` in `HUB_EXTRA_FEATURE_SEGMENTS`, which phase 8 extends with `ai-settings` (keeping `llm-providers` and `persona-services` as redirect-only segments until Cleanup); its
+  pillar, like `admin`), and `admin-site` in `HUB_EXTRA_FEATURE_SEGMENTS`, which phase 8 extends with `ai-settings` (keeping `llm-providers` and `persona-services` as redirect-only segments, with a source comment beside them saying they redirect until Cleanup), and the `hub` share in `routes.hub.generated.ts` carries its `/[workspace]/ai-settings/[[...path]]` line; its
   `devDependencies` carry `@adh-sdk/product-admin` for the one test that holds that
   package's rail equal to the site's share of the route table. `reserved-slugs.ts` holds `RESERVED_SLUGS`, `isReservedSlug`, and
   `isReservedSlugAnywhere`. The support routes of
@@ -808,6 +814,17 @@ every test case from the list itself, and saying nothing else in prose, removes 
 second copy that could drift.
 **Approved**: pending
 
+**Decision**: When `ai-settings` replaces the hub segments `llm-providers` and
+`persona-services`, the two old segments stay in the hub-only extra segments as
+redirect-only segments, and the hub site, not this registry, does the redirect to
+`ai-settings`. They are removed in a later cleanup, once no link uses them.
+**Rationale**: Stored links and bookmarks still point at the old segments. Dropping
+them from the list now would stop those links resolving as hub workspace segments, so
+they would fail before any redirect could run. The registry says which segments
+resolve; the hub site is where the request lands, so the redirect sits there, next to
+the page it sends the reader to.
+**Approved**: pending
+
 ## Compliance
 
 | Check | Status | Category |
@@ -816,13 +833,13 @@ second copy that could drift.
 | [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
 | [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | failed | Internationalization |
 
-`separation-of-concerns` passes because each concern lives in its own file: site identity and routing in `registry.ts`, slug reservation in `reserved-slugs.ts`, the legal addresses in `legal.ts`, the fleet directory in `fleets.ts`, the generated route map in the thirteen `routes.*.generated.ts` shares plus the hand-written merge in `routes.generated.ts`, and brand-story and tour data in `story.ts`. Per-site build-only data sits in its own `SITE_BUILD` table outside the scaffolded region, so scaffolding, build configuration, and routing data cannot clobber each other's regeneration. `unit-test-coverage` is partial: `registry.test.ts`, `registry-characterisation.test.ts`, `siteRoutes.test.ts`, `story.test.ts`, `tour-region.test.ts`, `fleets.test.ts`, `sites/__tests__/reserved-slugs.test.ts`, and `sites/__tests__/build-fields.test.ts` cover environment classification and fallback, the local-sites list, the workspace-slug round trip, the return-origin list per environment including the `nativeApp` exclusion, the scaffold-region isolation invariant, the reserved-slug contract, the route-share invariants, the fleet directory, and the brand-story and tour invariants, but no test imports `legal.ts`, so the legal paths and URLs have no coverage. `no-hardcoded-strings` fails: every `SiteDef`'s `label`, `fullLabel`, `shortLabel`, and `description` is a literal English string with no localization or string-catalog indirection (see Localization above), and `siteHeaderTitle`'s `"Agentic Developer <X>"` derivation is built from the same hardcoded convention, so a translated presentation of the switcher, footer, or header cannot be produced from this file alone.
+`separation-of-concerns` passes because each concern lives in its own file: site identity and routing in `registry.ts`, slug reservation in `reserved-slugs.ts`, the legal addresses in `legal.ts`, the fleet directory in `fleets.ts`, the generated route map in the thirteen `routes.*.generated.ts` shares plus the hand-written merge in `routes.generated.ts`, and brand-story and tour data in `story.ts`. Per-site build-only data sits in its own `SITE_BUILD` table outside the scaffolded region, so scaffolding, build configuration, and routing data cannot clobber each other's regeneration. `unit-test-coverage` is partial: `registry.test.ts`, `registry-characterisation.test.ts`, `siteRoutes.test.ts`, `story.test.ts`, `tour-region.test.ts`, `fleets.test.ts`, `sites/__tests__/reserved-slugs.test.ts`, and `sites/__tests__/build-fields.test.ts` cover environment classification and fallback, the local-sites list, the workspace-slug round trip, the return-origin list per environment including the `nativeApp` exclusion, the scaffold-region isolation invariant, the reserved-slug contract, the route-share invariants, the fleet directory, and the brand-story and tour invariants, but no test imports `legal.ts`, so the legal paths and URLs have no coverage, and the phase 8 segment rules (`ai-settings-extra-segment` and `legacy-provider-segments-redirect-only`) have no registry test yet. That test is owed by phase 8 Task 11, whose plan says the registry segment test gains `ai-settings`, and vectors 065 and 066 are marked owed until it lands. `no-hardcoded-strings` fails: every `SiteDef`'s `label`, `fullLabel`, `shortLabel`, and `description` is a literal English string with no localization or string-catalog indirection (see Localization above), and `siteHeaderTitle`'s `"Agentic Developer <X>"` derivation is built from the same hardcoded convention, so a translated presentation of the switcher, footer, or header cannot be produced from this file alone.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
-| 1.5.0 | 2026-11-23 | Mike Fullerton | Phase 8: ai-settings joins the hub extra segments; llm-providers and persona-services stay as redirect-only segments until Cleanup; hub route share gains the workspace ai-settings line |
+| 1.5.0 | 2026-11-23 | Mike Fullerton | Phase 8: added ai-settings-extra-segment, ai-settings-hub-route-line, admin-share-no-ai-settings and legacy-provider-segments-redirect-only, and the Design Decision that keeps the old segments redirect-only until a later cleanup |
 | 1.4.0 | 2026-11-23 | Mike Fullerton | Phase 7: consented support access |
 | 1.3.0 | 2026-11-23 | Mike Fullerton | Phase 6: the product-admin site (admin-gated, hand-rolled build, main family) and the admin-site hub segment |
 | 1.2.0 | 2026-11-22 | Mike Fullerton | Added legal paths and URLs, fleet directory, nativeApp sites, local-sites list; SSO list now excludes nativeApp and grants nothing by itself. |

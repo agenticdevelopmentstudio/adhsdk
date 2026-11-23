@@ -1,7 +1,7 @@
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
-| 1.5.0 | 2026-11-23 | Mike Fullerton | Phase 8: ai-settings joins the hub extra segments; llm-providers and persona-services stay as redirect-only segments until Cleanup; hub route share gains the workspace ai-settings line |
+| 1.5.0 | 2026-11-23 | Mike Fullerton | Phase 8: added ai-settings-extra-segment, ai-settings-hub-route-line, admin-share-no-ai-settings and legacy-provider-segments-redirect-only, and the Design Decision that keeps the old segments redirect-only until a later cleanup |
 | 1.4.0 | 2026-11-23 | Mike Fullerton | Phase 7: consented support access |
 | 1.3.0 | 2026-11-23 | Mike Fullerton | Phase 6: the product-admin site (admin-gated, hand-rolled build, main family) and the admin-site hub segment |
 | 1.2.0 | 2026-11-22 | Mike Fullerton | Added legal paths and URLs, fleet directory, nativeApp sites, local-sites list; SSO list now excludes nativeApp and grants nothing by itself. |
