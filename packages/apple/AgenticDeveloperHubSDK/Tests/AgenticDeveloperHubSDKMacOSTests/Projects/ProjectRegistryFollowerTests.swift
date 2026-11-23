@@ -68,6 +68,19 @@ final class ProjectRegistryFollowerTests: XCTestCase {
         XCTAssertNil(try windowState.repo(id: shared.id))
     }
 
+    /// The kept path matches however either side spells it.
+    func testTheKeptPathMatchesAnotherSpellingOfIt() async throws {
+        let shared = GitRepo(path: "/tmp/follower-spelled/", name: "registered home")
+        try registry.insert(shared)
+        let other = GitRepo(path: "/tmp/follower-spelled-other", name: "other")
+
+        startFollowing(keepingLocal: "/tmp/./follower-spelled")
+        try registry.insert(other)
+
+        try await waitUntil("other mirrored") { try self.windowState.repo(id: other.id) != nil }
+        XCTAssertNil(try windowState.repo(id: shared.id))
+    }
+
     func testStopLeavesTheMirroredRowsAndFollowsNoFurther() async throws {
         let kept = GitRepo(path: "/tmp/follower-kept", name: "kept")
         try registry.insert(kept)
