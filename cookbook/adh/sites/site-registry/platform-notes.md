@@ -29,7 +29,7 @@
   `ssoReturnOrigins`. The phase-6 `product-admin` site is one `SITES` row (`adminOnly`,
   `crawlable: false`), one `SITE_BUILD` entry (`handRolledConfig: true`), one entry in
   `MAIN_SITE_IDS`, one `SITE_STORIES` entry in `story.ts` (a `chapter` of the `backend`
-  pillar, like `admin`), and `admin-site` in `HUB_EXTRA_FEATURE_SEGMENTS`; its
+  pillar, like `admin`), and `admin-site` in `HUB_EXTRA_FEATURE_SEGMENTS`, which phase 8 extends with `ai-settings` (keeping `llm-providers` and `persona-services` as redirect-only segments until Cleanup); its
   `devDependencies` carry `@adh-sdk/product-admin` for the one test that holds that
   package's rail equal to the site's share of the route table. `reserved-slugs.ts` holds `RESERVED_SLUGS`, `isReservedSlug`, and
   `isReservedSlugAnywhere`. The support routes of

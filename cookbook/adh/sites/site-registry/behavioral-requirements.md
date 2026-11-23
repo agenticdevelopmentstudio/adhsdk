@@ -31,6 +31,7 @@
   exactly the identifiers of every site definition marked `adminOnly`, and every such
   entry MUST be excluded from the footer site list.
 - **support-routes-in-shares**: The hub's generated route shares MUST list the hosted `/support` page in the `hub` share, the `/support` topic in the `product-admin` share, and the operator admin site's three pages, `/break-glass`, `/support-access` and `/support-grants`, in the `admin` share, each in the sorted place [route-list-per-site-is-normalized](#requirements/route-list-per-site-is-normalized) gives it.
+- **ai-settings-hub-segment**: `HUB_EXTRA_FEATURE_SEGMENTS` MUST include `ai-settings`, the hub knob that holds the workspace's AI Settings (services and their models), and the `hub` route share in `routes.hub.generated.ts` MUST carry an `ai-settings` line matching its one `llm-providers` line: `/[workspace]/ai-settings/[[...path]]`, in sorted place (after `/[workspace]/admin-site/[[...path]]`). The `/llm-providers` line in the `admin` share is the operator console's own provider page, whose id stays, and it gains no `ai-settings` line. `llm-providers` and `persona-services` MUST stay in `HUB_EXTRA_FEATURE_SEGMENTS` as redirect-only segments, so a stored link to either still resolves as a hub workspace segment; a comment beside them MUST say they redirect until Cleanup, and the website, not this module, MUST do the redirect to `ai-settings`, keeping the sub-path.
 - **product-admin-site-registered**: The roster MUST define a `product-admin` site (a
   product's own admin site, phase 6) that is `adminOnly`, not `crawlable`, and has no home
   route (`hasHome` false), with `product-admin.agenticdeveloperhub.com` as its production
@@ -196,7 +197,7 @@
 - **hub-extra-segments-have-no-registry-site**: An entry in the hub-only extra
   segments MUST name a hub workspace feature with no corresponding registry site (a
   hub-only knob, such as an ecosystem's member list, the persona-data management
-  surface; a product knob with a row on the product rail, such as `roles`,
+  surface, or the workspace's `ai-settings`; a product knob with a row on the product rail, such as `roles`,
   `signup-list`, `sets`, or `admin-site`; or a bespoke rail route such as `email-signup`); a feature that is some site's own implementation MUST be keyed in the
   feature-segment map by that site's identifier instead.
 

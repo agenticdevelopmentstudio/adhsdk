@@ -2,7 +2,7 @@
 id: 9069ccf9-0357-4311-9671-91ee2793adae
 title: "Site Registry"
 type: ingredient
-version: 1.4.0
+version: 1.5.0
 status: review
 language: en
 created: 2026-09-24
@@ -98,6 +98,7 @@ router, and a downstream OAuth-return-origin sync process.
   exactly the identifiers of every site definition marked `adminOnly`, and every such
   entry MUST be excluded from the footer site list.
 - **support-routes-in-shares**: The hub's generated route shares MUST list the hosted `/support` page in the `hub` share, the `/support` topic in the `product-admin` share, and the operator admin site's three pages, `/break-glass`, `/support-access` and `/support-grants`, in the `admin` share, each in the sorted place [route-list-per-site-is-normalized](#requirements/route-list-per-site-is-normalized) gives it.
+- **ai-settings-hub-segment**: `HUB_EXTRA_FEATURE_SEGMENTS` MUST include `ai-settings`, the hub knob that holds the workspace's AI Settings (services and their models), and the `hub` route share in `routes.hub.generated.ts` MUST carry an `ai-settings` line matching its one `llm-providers` line: `/[workspace]/ai-settings/[[...path]]`, in sorted place (after `/[workspace]/admin-site/[[...path]]`). The `/llm-providers` line in the `admin` share is the operator console's own provider page, whose id stays, and it gains no `ai-settings` line. `llm-providers` and `persona-services` MUST stay in `HUB_EXTRA_FEATURE_SEGMENTS` as redirect-only segments, so a stored link to either still resolves as a hub workspace segment; a comment beside them MUST say they redirect until Cleanup, and the website, not this module, MUST do the redirect to `ai-settings`, keeping the sub-path.
 - **product-admin-site-registered**: The roster MUST define a `product-admin` site (a
   product's own admin site, phase 6) that is `adminOnly`, not `crawlable`, and has no home
   route (`hasHome` false), with `product-admin.agenticdeveloperhub.com` as its production
@@ -263,7 +264,7 @@ router, and a downstream OAuth-return-origin sync process.
 - **hub-extra-segments-have-no-registry-site**: An entry in the hub-only extra
   segments MUST name a hub workspace feature with no corresponding registry site (a
   hub-only knob, such as an ecosystem's member list, the persona-data management
-  surface; a product knob with a row on the product rail, such as `roles`,
+  surface, or the workspace's `ai-settings`; a product knob with a row on the product rail, such as `roles`,
   `signup-list`, `sets`, or `admin-site`; or a bespoke rail route such as `email-signup`); a feature that is some site's own implementation MUST be keyed in the
   feature-segment map by that site's identifier instead.
 
@@ -518,6 +519,7 @@ Not applicable: this is the site family's data registry and routing-resolution m
 | site-registry-062 | site-home-path-fallback | The home path for `hub` (traced to "siteHomePath is /home only for sites that expose one") | `'/home'` when `hasHome` is true; `'/'` otherwise |
 | site-registry-063 | product-admin-site-registered | The `product-admin` site's definition, the main-family roster, the footer list and the family roster's tail (traced to "registers the product admin site: its folder, not crawlable, admin-gated, a main app") | Its production host is `product-admin.agenticdeveloperhub.com`; the directory name `product-admin.agenticdeveloperhub` identifies it; it is not crawlable; it is in the admin-only ids and the main-family roster and not in the footer list; the roster ends `status`, `admin`, `product-admin`, `builds` |
 | site-registry-064 | support-routes-in-shares | The `hub`, `product-admin` and `admin` route shares | `/support` is in the first two, `/break-glass`, `/support-access` and `/support-grants` are in `admin`, and the website generator's `--check` reports no drift |
+| site-registry-065 | ai-settings-hub-segment | `HUB_EXTRA_FEATURE_SEGMENTS`, the `hub` and `admin` route shares, and `HUB_WORKSPACE_SEGMENTS` membership for `ai-settings`, `llm-providers` and `persona-services` (the phase 8 design; no registry test names these yet) | The extra-segments list contains `ai-settings`, `llm-providers` and `persona-services`; the `hub` share contains `/[workspace]/ai-settings/[[...path]]` in sorted place and no `/ai-settings`; the `admin` share still has `/llm-providers` and no `/ai-settings`; all three are members of `HUB_WORKSPACE_SEGMENTS`, and the website generator's `--check` reports no drift |
 ## Edge Cases
 
 - **Null and empty input** (MUST): Building the workspace link for an empty slug
@@ -659,7 +661,7 @@ an empty result, or the input path unchanged) with no side channel.
   `ssoReturnOrigins`. The phase-6 `product-admin` site is one `SITES` row (`adminOnly`,
   `crawlable: false`), one `SITE_BUILD` entry (`handRolledConfig: true`), one entry in
   `MAIN_SITE_IDS`, one `SITE_STORIES` entry in `story.ts` (a `chapter` of the `backend`
-  pillar, like `admin`), and `admin-site` in `HUB_EXTRA_FEATURE_SEGMENTS`; its
+  pillar, like `admin`), and `admin-site` in `HUB_EXTRA_FEATURE_SEGMENTS`, which phase 8 extends with `ai-settings` (keeping `llm-providers` and `persona-services` as redirect-only segments until Cleanup); its
   `devDependencies` carry `@adh-sdk/product-admin` for the one test that holds that
   package's rail equal to the site's share of the route table. `reserved-slugs.ts` holds `RESERVED_SLUGS`, `isReservedSlug`, and
   `isReservedSlugAnywhere`. The support routes of
@@ -820,6 +822,7 @@ second copy that could drift.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.5.0 | 2026-11-23 | Mike Fullerton | Phase 8: ai-settings joins the hub extra segments; llm-providers and persona-services stay as redirect-only segments until Cleanup; hub route share gains the workspace ai-settings line |
 | 1.4.0 | 2026-11-23 | Mike Fullerton | Phase 7: consented support access |
 | 1.3.0 | 2026-11-23 | Mike Fullerton | Phase 6: the product-admin site (admin-gated, hand-rolled build, main family) and the admin-site hub segment |
 | 1.2.0 | 2026-11-22 | Mike Fullerton | Added legal paths and URLs, fleet directory, nativeApp sites, local-sites list; SSO list now excludes nativeApp and grants nothing by itself. |

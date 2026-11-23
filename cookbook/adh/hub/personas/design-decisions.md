@@ -1,4 +1,25 @@
 
+**Decision**: the model lists a screen shows come from the service row, annotated with `available`
+and `offered`, not from the live model route.
+**Rationale**: the models table and the persona editor both already read the service row's
+cached models, so annotating the row reaches every screen with one change. Names the provider no
+longer lists are appended with `offered: false` so a switched-off name stays visible and can be
+switched back on.
+**Approved**: pending
+
+**Decision**: the provider UI moves to `@adh-sdk/ai-settings`, and the personas package re-exports
+`ServicesSection`, `useUserServices` and `PERSONA_SERVICES_CACHE_KEY` until Cleanup.
+**Rationale**: AI Settings is no longer a personas concern, but hosts import these names from
+personas today; the re-exports (the same objects) keep them working. The cache key keeps its name
+and value so the admin host that shares the cache entry is untouched.
+**Approved**: pending
+
+**Decision**: the persona editor keeps a switched-off saved model as the current value, labelled
+"(not available)" with an inline note, instead of dropping it from the select.
+**Rationale**: a select with no matching option would silently change the model on the next save
+of an unrelated field. The existing reset when the service changes is unchanged.
+**Approved**: pending
+
 **Decision**: `Persona.cannedChat`/`.chatStatus` are typed as the Hub `JSONValue` (with
 hand-written `Decodable`, cross-`.int`/`.number` equality, and `hash(into:)`), not the simpler,
 unrelated `JSONValue` under `Sync/`.

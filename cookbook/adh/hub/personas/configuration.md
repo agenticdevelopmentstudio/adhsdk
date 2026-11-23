@@ -1,6 +1,8 @@
 
 - `dataSource`: the persona data source implementation injected into this domain's navigation
   contract — supplied by the host application, typically backed by its own API client.
+- `setModelAvailability(id, model, available)`: the service id, the model name (the backend
+  rejects an empty name or one over 200 characters), and the new availability.
 - `workspace` (optional, on list/create/update/delete): a workspace slug that scopes the operation
   to that workspace's owning principal instead of the caller's own rows.
 - `personaId` / `bucketId` / `typeId` / `rowId`: caller-supplied identifiers threading through the

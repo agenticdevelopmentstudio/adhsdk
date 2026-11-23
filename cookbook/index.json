@@ -8390,6 +8390,12 @@
       "path": "ui/components/display/line-viewer",
       "rdid": "adhsdk.ingredient.ui.components.display.line-viewer"
     },
+    "5fdf4ce9-cb7e-4490-a6d6-066690ef07ca": {
+      "implementations": [],
+      "kind": "ingredient",
+      "path": "adh/hub/ai-settings",
+      "rdid": "adhsdk.ingredient.adh.hub.ai-settings"
+    },
     "60a907a2-2cc8-4c0c-bb54-3b0516d280b6": {
       "implementations": [
         {
